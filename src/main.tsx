@@ -135,7 +135,9 @@ const tree = (
                     App.tsx still owns its own CssVarsProvider / I18nProvider.
                     Lifting those is a separate, bigger refactor. */}
                 <Route element={<AuthShell />}>
-                    {/* Guest-only routes (redirect to /jointeam if already logged in) */}
+                    {/* Guest-only routes (redirect to last workspace /
+                        Genos home if already logged in; /jointeam only
+                        when the user has no team yet) */}
                     <Route element={<GuestGuard />}>
                         <Route element={<SignInForm />} path="/" />
                         <Route element={<SignUpForm />} path="/signup" />

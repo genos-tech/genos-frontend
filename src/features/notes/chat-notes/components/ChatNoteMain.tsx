@@ -48,6 +48,8 @@ interface ChatNoteMainProps {
     /** Host modal's z-index when rendered inside the UrlLinkModal, so the
      *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
     hostZIndex?: number;
+    /** Mobile notes-home: back to the sidebar list. */
+    onMobileBack?: () => void;
 }
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -64,6 +66,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         useNM,
         useCM,
         hostZIndex,
+        onMobileBack,
     } = props;
 
     const { accessToken } = useAuth();
@@ -252,14 +255,19 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                     justifyContent="space-between"
                     sx={{
                         width: "100%",
-                        height: "30px",
+                        // Keep back + title + actions on one row on
+                        // mobile (see ChatNoteHeader).
+                        minHeight: { xs: 48, md: 30 },
+                        height: { xs: "auto", md: "30px" },
                         // Task-page panel wraps this Main with its
                         // own header zone, so we pull up by 15px to
                         // sit flush with that surround. Notes-home
                         // and chat-page use the standard 10px top
                         // gap.
-                        mt: isInTaskPage ? "-15px" : "10px",
+                        mt: isInTaskPage ? "-15px" : { xs: "4px", md: "10px" },
                         mb: "5px",
+                        px: { xs: 0.5, md: 0 },
+                        minWidth: 0,
                     }}
                 >
                     <ChatNoteHeader
@@ -269,6 +277,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         isInChatPage={isInChatPage}
                         isInTaskPage={isInTaskPage}
                         myself={myself}
+                        onMobileBack={onMobileBack}
                         openDeleteNote={openDeleteNote}
                         openSearchBox={openSearchBox}
                         setMyself={setMyself}

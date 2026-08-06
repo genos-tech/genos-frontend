@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
@@ -109,6 +110,7 @@ export const TimelineView = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
 
     const days = useMemo(() => timelineDays(view, anchor), [view, anchor]);
 
@@ -145,7 +147,9 @@ export const TimelineView = ({
     const headerLine = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
     const nowLine = isDark ? "rgba(239,68,68,0.85)" : "rgba(239,68,68,1)";
 
-    const HOUR_GUTTER_PX = 64;
+    // Desktop keeps a 64px gutter so "11 PM" labels never wrap.
+    // Mobile shrinks it — week view needs every pixel for day columns.
+    const HOUR_GUTTER_PX = isMobile ? 40 : 64;
 
     return (
         <Box
@@ -435,7 +439,7 @@ export const TimelineView = ({
                                         transform: "translateY(-50%)",
                                     }}
                                 >
-                                    {hourLabel(h)}
+                                    {isMobile ? `${h % 12 === 0 ? 12 : h % 12}` : hourLabel(h)}
                                 </Box>
                             );
                         })}

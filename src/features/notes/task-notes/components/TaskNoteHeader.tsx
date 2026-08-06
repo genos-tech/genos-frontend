@@ -2,8 +2,9 @@ import { ReactNode, useMemo } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Stack } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { buildTaskNoteContextCrumbs, TaskNoteCrumbKind } from "../../../../utils/note";
@@ -22,6 +23,7 @@ interface TaskNoteHeaderProps {
 
 export const TaskNoteHeader = ({ useNM }: TaskNoteHeaderProps) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
 
     // Container ancestry of the open task note, prepended to the note
     // breadcrumb: Project → Milestone (if any) → parent Task (if a
@@ -37,6 +39,21 @@ export const TaskNoteHeader = ({ useNM }: TaskNoteHeaderProps) => {
             })),
         [useNM.currentTaskNoteChain]
     );
+
+    // Mobile: title only — shares the single header row with back +
+    // actions (breadcrumbs are desktop chrome).
+    if (isMobile) {
+        const chain = useNM.currentTaskNoteChain ?? [];
+        const title =
+            useNM.currentTaskNote?.title ||
+            chain[chain.length - 1]?.title ||
+            t.notes.header.taskNotesLabel;
+        return (
+            <Typography level="title-sm" sx={{ flex: 1, minWidth: 0, fontWeight: 700 }} noWrap>
+                {title}
+            </Typography>
+        );
+    }
 
     return (
         <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0, flex: 1 }}>

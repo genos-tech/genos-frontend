@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
-import { Box, Stack } from "@mui/joy";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -32,6 +34,8 @@ type TaskNoteMainProps = {
     /** Host modal's z-index when rendered inside the UrlLinkModal, so the
      *  header's ⋮ menu lifts above it. Undefined on page surfaces. */
     hostZIndex?: number;
+    /** Mobile notes-home: back to the sidebar list. */
+    onMobileBack?: () => void;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -47,7 +51,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         useNM,
         useTM,
         hostZIndex,
+        onMobileBack,
     } = props;
+    const isMobile = useIsMobile();
 
     const { accessToken } = useAuth();
 
@@ -199,17 +205,36 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                     justifyContent="space-between"
                     sx={{
                         width: "100%",
-                        height: "30px",
-                        mt: isInTaskPage ? "-15px" : "10px",
+                        minHeight: isMobile ? 48 : 30,
+                        height: isMobile ? "auto" : "30px",
+                        mt: isInTaskPage ? "-15px" : isMobile ? "4px" : "10px",
                         mb: "5px",
+                        px: isMobile ? 0.5 : 0,
+                        gap: 0.5,
+                        flexWrap: "nowrap",
+                        minWidth: 0,
                     }}
                 >
+                    {isMobile && onMobileBack && isInTaskPage === false && (
+                        <IconButton
+                            aria-label="Back to notes list"
+                            size="sm"
+                            sx={{ flexShrink: 0 }}
+                            variant="plain"
+                            onClick={onMobileBack}
+                        >
+                            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                    )}
+
                     {isInTaskPage === true && (
                         <Box
                             sx={{
                                 ml: "5px",
                                 mb: "5px",
-                                width: "40%",
+                                width: isMobile ? "auto" : "40%",
+                                flex: isMobile ? 1 : undefined,
+                                minWidth: 0,
                             }}
                         >
                             <ACTaskNotes

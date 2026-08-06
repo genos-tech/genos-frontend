@@ -3,8 +3,10 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
-import { Chip, Stack } from "@mui/joy";
+import { Chip, IconButton, Stack, Typography } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { buildFolderCrumbChain } from "../../../../utils/note";
@@ -27,6 +29,7 @@ interface TeamNoteHeaderProps {
 // space "who else can see this" is part of knowing where you are.
 export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const { teamNoteFolders, teamNoteMeta, currentMyNote } = useNM;
 
     // Team notes ride `currentMyNote` (they're personal notes), so the
@@ -49,6 +52,39 @@ export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
 
     const folder = folderId != null ? teamNoteFolders.find((f) => f.folderId === folderId) : null;
     const visibility = folder?.effectiveVisibility ?? null;
+    const visibilityLabel =
+        visibility === "public"
+            ? t.notes.teamNotes.visibilityPublic
+            : t.notes.teamNotes.visibilityPrivate;
+
+    // Mobile: title + icon-only visibility (full "Only people I invite"
+    // chip forced a second header row). Shares one row with back +
+    // actions.
+    if (isMobile) {
+        return (
+            <Stack alignItems="center" direction="row" spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                <Typography level="title-sm" sx={{ flex: 1, minWidth: 0, fontWeight: 700 }} noWrap>
+                    {currentMyNote?.title || t.notes.sidebar.teamNotes}
+                </Typography>
+                {visibility && (
+                    <AppTooltip size="sm" title={visibilityLabel}>
+                        <IconButton
+                            aria-label={visibilityLabel}
+                            size="sm"
+                            sx={{ flexShrink: 0 }}
+                            variant="plain"
+                        >
+                            {visibility === "public" ? (
+                                <PublicRoundedIcon sx={{ fontSize: 18 }} />
+                            ) : (
+                                <LockRoundedIcon sx={{ fontSize: 18 }} />
+                            )}
+                        </IconButton>
+                    </AppTooltip>
+                )}
+            </Stack>
+        );
+    }
 
     return (
         <Stack alignItems="center" direction="row" spacing={1} sx={{ flex: 1, minWidth: 0 }}>
@@ -64,6 +100,7 @@ export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
                 <Chip
                     color={visibility === "public" ? "success" : "neutral"}
                     size="sm"
+                    sx={{ flexShrink: 0, fontSize: 10 }}
                     variant="soft"
                     startDecorator={
                         visibility === "public" ? (
@@ -72,11 +109,8 @@ export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
                             <LockRoundedIcon sx={{ fontSize: 12 }} />
                         )
                     }
-                    sx={{ flexShrink: 0, fontSize: 10 }}
                 >
-                    {visibility === "public"
-                        ? t.notes.teamNotes.visibilityPublic
-                        : t.notes.teamNotes.visibilityPrivate}
+                    {visibilityLabel}
                 </Chip>
             )}
         </Stack>

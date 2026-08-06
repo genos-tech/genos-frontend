@@ -31,10 +31,24 @@ type NoteContentRendererProps = {
     useNM: NoteManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    /** Mobile notes-home: back to the sidebar list. Forwarded into
+     *  each Main so the header can own the back button on one row. */
+    onMobileBack?: () => void;
 };
 
 export const NoteContentRenderer = (props: NoteContentRendererProps) => {
-    const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
+    const {
+        myself,
+        setMyself,
+        useUISM,
+        socket,
+        useTEM,
+        usePM,
+        useNM,
+        useCM,
+        useTM,
+        onMobileBack,
+    } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -315,6 +329,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 <MyNoteMain
                     isInTaskPage={false}
                     myself={myself}
+                    onMobileBack={onMobileBack}
                     setMyself={setMyself}
                     socket={socket}
                     useCM={useCM}
@@ -329,6 +344,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 <TaskNoteMain
                     isInTaskPage={false}
                     myself={myself}
+                    onMobileBack={onMobileBack}
                     setMyself={setMyself}
                     socket={socket}
                     useCM={useCM}
@@ -345,6 +361,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                     isInChatPage={false}
                     isInTaskPage={false}
                     myself={myself}
+                    onMobileBack={onMobileBack}
                     setMyself={setMyself}
                     socket={socket}
                     useCM={useCM}

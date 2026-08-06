@@ -21,6 +21,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { useAuth } from "../../../context/AuthContext";
 import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
 import { CalendarEventModal } from "../../integrations/components/CalendarEventModal";
 import { ReconnectGoogleCalendarButton } from "../../integrations/components/ReconnectGoogleCalendarButton";
@@ -127,6 +128,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
 
     // View persisted to localStorage so reopening the modal lands
     // on whatever granularity the user was last using. Anchor is
@@ -486,68 +488,104 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
-                    // Wider to make room for the timeline views —
-                    // 7 day columns plus the hour gutter need
-                    // ~140px per column to keep overlapping event
-                    // blocks legible. The extra ~240px over the
-                    // pre-multi-account width is the source rail.
-                    width: { xs: "96vw", md: 1340 },
-                    maxWidth: "96vw",
-                    maxHeight: "92vh",
-                    p: 2,
+                    // Desktop: wide enough for week timeline + source
+                    // rail. Mobile: edge-to-edge so the grid isn't
+                    // squeezed inside a 96vw card with chrome padding.
+                    width: { xs: "100vw", md: 1340 },
+                    maxWidth: { xs: "100vw", md: "96vw" },
+                    height: { xs: "100dvh", md: "auto" },
+                    maxHeight: { xs: "100dvh", md: "92vh" },
+                    p: { xs: 1, md: 2 },
+                    m: { xs: 0, md: undefined },
+                    borderRadius: { xs: 0, md: "md" },
                     overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
                 }}
             >
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={1}
-                    sx={{ mb: 1.5, flexShrink: 0, flexWrap: "wrap" }}
-                >
-                    <IconButton
-                        aria-label={t.calendar.prev}
-                        size="sm"
-                        variant="plain"
-                        onClick={stepBackward}
+                <Stack spacing={isMobile ? 1 : 0} sx={{ mb: { xs: 1, md: 1.5 }, flexShrink: 0 }}>
+                    {/* Nav row: prev / title / next / today / close.
+                        On mobile this is its own row so the view
+                        buttons below don't fight the title for width. */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ flexWrap: "nowrap", minWidth: 0 }}
                     >
-                        <ChevronLeftRoundedIcon />
-                    </IconButton>
-                    <Typography level="title-lg" sx={{ minWidth: 200, textAlign: "center" }}>
-                        {headerTitle}
-                    </Typography>
-                    <IconButton
-                        aria-label={t.calendar.next}
-                        size="sm"
-                        variant="plain"
-                        onClick={stepForward}
-                    >
-                        <ChevronRightRoundedIcon />
-                    </IconButton>
-                    <Button size="sm" variant="outlined" onClick={jumpToday}>
-                        {t.calendar.today}
-                    </Button>
-                    <Box sx={{ flex: 1 }} />
-                    {/* View tabs — segmented button group. The
-                        active view gets `solid`, others `outlined`.
-                        Ordered widest → narrowest so the user's
-                        eye scans the granularity. */}
-                    <ButtonGroup size="sm" variant="outlined">
-                        {viewButton("month", t.calendar.views.month)}
-                        {viewButton("week", t.calendar.views.week)}
-                        {viewButton("3day", t.calendar.views.threeDay)}
-                        {viewButton("day", t.calendar.views.day)}
-                    </ButtonGroup>
-                    {loading && <CircularProgress size="sm" />}
-                    <IconButton
-                        aria-label={t.calendar.close}
-                        size="sm"
-                        variant="plain"
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
+                        <IconButton
+                            aria-label={t.calendar.prev}
+                            size="sm"
+                            variant="plain"
+                            onClick={stepBackward}
+                        >
+                            <ChevronLeftRoundedIcon />
+                        </IconButton>
+                        <Typography
+                            level={isMobile ? "title-sm" : "title-lg"}
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                textAlign: "center",
+                                // Desktop keeps a readable floor so the
+                                // chevrons don't collapse onto the title;
+                                // mobile lets it shrink and ellipsize.
+                                ...(isMobile
+                                    ? {
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          whiteSpace: "nowrap",
+                                      }
+                                    : { minWidth: 180 }),
+                            }}
+                        >
+                            {headerTitle}
+                        </Typography>
+                        <IconButton
+                            aria-label={t.calendar.next}
+                            size="sm"
+                            variant="plain"
+                            onClick={stepForward}
+                        >
+                            <ChevronRightRoundedIcon />
+                        </IconButton>
+                        <Button size="sm" variant="outlined" onClick={jumpToday}>
+                            {t.calendar.today}
+                        </Button>
+                        {!isMobile && <Box sx={{ flex: 1 }} />}
+                        {!isMobile && (
+                            <ButtonGroup size="sm" variant="outlined">
+                                {viewButton("month", t.calendar.views.month)}
+                                {viewButton("week", t.calendar.views.week)}
+                                {viewButton("3day", t.calendar.views.threeDay)}
+                                {viewButton("day", t.calendar.views.day)}
+                            </ButtonGroup>
+                        )}
+                        {loading && <CircularProgress size="sm" />}
+                        <IconButton
+                            aria-label={t.calendar.close}
+                            size="sm"
+                            variant="plain"
+                            onClick={onClose}
+                        >
+                            <CloseRoundedIcon />
+                        </IconButton>
+                    </Stack>
+                    {/* View tabs on their own row on mobile — four
+                        equal segments across the full width so none
+                        get clipped by the title/chevrons above. */}
+                    {isMobile && (
+                        <ButtonGroup
+                            size="sm"
+                            sx={{ width: "100%", "& > button": { flex: 1 } }}
+                            variant="outlined"
+                        >
+                            {viewButton("month", t.calendar.views.month)}
+                            {viewButton("week", t.calendar.views.week)}
+                            {viewButton("3day", t.calendar.views.threeDay)}
+                            {viewButton("day", t.calendar.views.day)}
+                        </ButtonGroup>
+                    )}
                 </Stack>
 
                 {error && (
@@ -632,13 +670,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
 
                 {showGrid && (
                     <Stack
-                        direction="row"
-                        spacing={1.5}
+                        // Mobile: source strip on top, grid below.
+                        // Desktop: side rail + grid (original layout).
+                        direction={isMobile ? "column" : "row"}
+                        spacing={isMobile ? 1 : 1.5}
                         sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}
                     >
                         <CalendarSourcePicker
                             calendars={sources.calendars}
                             colorBySource={colorBySource}
+                            layout={isMobile ? "strip" : "rail"}
                             loading={sources.loading}
                             selectedKeys={sources.selectedKeys}
                             onAddAccount={startConnectFlow}
@@ -650,6 +691,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             sx={{
                                 flex: 1,
                                 minWidth: 0,
+                                minHeight: 0,
                                 display: "flex",
                                 flexDirection: "column",
                                 // The sticky-scroll handler owns
@@ -671,9 +713,9 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                 </Stack>
                             ) : view === "month" ? (
                                 <MonthView
+                                    busyLabel={t.calendar.busy}
                                     colorBySource={colorBySource}
                                     events={events}
-                                    busyLabel={t.calendar.busy}
                                     eventsByDay={eventsByDay}
                                     focused={anchor.startOf("month")}
                                     freeBusySources={sources.freeBusySources}
@@ -731,6 +773,13 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                             key={`${e.id}-${idx}`}
                                             size="md"
                                             variant="soft"
+                                            startDecorator={
+                                                e.hangoutLink ? (
+                                                    <VideoCameraFrontRoundedIcon
+                                                        sx={{ fontSize: 14 }}
+                                                    />
+                                                ) : undefined
+                                            }
                                             sx={{
                                                 cursor: "pointer",
                                                 justifyContent: "flex-start",
@@ -740,13 +789,6 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                                     ? `3px solid ${color}`
                                                     : undefined,
                                             }}
-                                            startDecorator={
-                                                e.hangoutLink ? (
-                                                    <VideoCameraFrontRoundedIcon
-                                                        sx={{ fontSize: 14 }}
-                                                    />
-                                                ) : undefined
-                                            }
                                             onClick={() => {
                                                 setPopoverDayKey(null);
                                                 openEdit(e);

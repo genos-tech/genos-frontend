@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Box, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -82,8 +81,6 @@ const MobileOverlay = ({
 export const MobileNoteHome = (props: MobileNoteHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useNM, useCM, usePM, useTM, useSM } =
         props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
 
     // Mobile pane selection. Sidebar is the default landing surface;
     // tapping a note flips to content view. Back button returns to
@@ -115,20 +112,6 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
 
     const handleBack = () => setMobileViewMode("sidebar");
 
-    // Title for the mobile content header. Falls back to "Notes" so
-    // the chrome stays consistent across loading states.
-    const headerTitle = (() => {
-        const activeTab = useNM.tabsApi.activeTab;
-        if (activeTab?.title) return activeTab.title;
-        if (useNM.currentNoteType === 1) return useNM.currentMyNote?.title || "My Note";
-        if (useNM.currentNoteType === 2) return useNM.currentTaskNote?.title || "Task Note";
-        if (useNM.currentNoteType === 3) return useNM.currentChatNote?.title || "Chat Note";
-        if (useNM.currentNoteType === 4) return useNM.currentMyNote?.title || "Shared Note";
-        // 8 = Team Notes; like shared notes it is backed by currentMyNote.
-        if (useNM.currentNoteType === 8) return useNM.currentMyNote?.title || "Team Note";
-        return "Notes";
-    })();
-
     return (
         <Box
             sx={{
@@ -155,67 +138,23 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
             )}
 
             {showContent && (
-                <>
-                    {/* Compact mobile header with back button + note
-                        title. The desktop NoteSidebar/tab strip is the
-                        primary navigation surface; on mobile that's
-                        replaced by this single-row header. */}
-                    <Stack
-                        direction="row"
-                        sx={{
-                            alignItems: "center",
-                            gap: 0.5,
-                            px: 1,
-                            py: 0.75,
-                            borderBottom: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                            background: isDark
-                                ? "rgba(var(--gp-dark-surface-b-rgb), 0.85)"
-                                : "rgba(252,250,255,0.85)",
-                            backdropFilter: "blur(8px)",
-                            minHeight: "56px",
-                            flexShrink: 0,
-                        }}
-                    >
-                        <IconButton
-                            aria-label="Back to notes list"
-                            size="sm"
-                            sx={{ flexShrink: 0 }}
-                            variant="plain"
-                            onClick={handleBack}
-                        >
-                            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                        <Typography
-                            level="title-sm"
-                            sx={{ flex: 1, minWidth: 0, fontWeight: 700 }}
-                            noWrap
-                        >
-                            {headerTitle}
-                        </Typography>
-                    </Stack>
-
-                    {/* `overflowX: hidden`, not `overflow: auto`: a note is
-                        read by scrolling DOWN, and nothing in it should be
-                        able to drag the page sideways. Anything genuinely
-                        wider than the phone — the header's action strip, a
-                        table, a code block — owns its own horizontal
-                        scroller so it stays reachable without moving the
-                        editor underneath it. */}
-                    <Box sx={{ flex: 1, minHeight: 0, overflowX: "hidden", overflowY: "auto" }}>
-                        <NoteContentRenderer
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
-                </>
+                // No separate mobile title bar — back + title + actions
+                // live in the note Main header as a single row (see
+                // MyNoteMain / TaskNoteMain / ChatNoteHeader).
+                <Box sx={{ flex: 1, minHeight: 0, overflowX: "hidden", overflowY: "auto" }}>
+                    <NoteContentRenderer
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        onMobileBack={handleBack}
+                    />
+                </Box>
             )}
 
             {/* Task preview overlay — surfaced from a task note when

@@ -7,6 +7,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
@@ -109,6 +110,7 @@ export const MonthView = ({
 }: MonthViewProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
 
     const grid = useMemo(() => buildMonthGrid(focused, 0), [focused]);
     const weekLabels = useMemo(() => weekdayLabels(0), []);
@@ -276,7 +278,11 @@ export const MonthView = ({
                     return (
                         <Box
                             key={week[0].toString()}
-                            sx={{ position: "relative", minHeight: 84, minWidth: 0 }}
+                            sx={{
+                                position: "relative",
+                                minHeight: isMobile ? 56 : 84,
+                                minWidth: 0,
+                            }}
                         >
                             {/* Day cells, each owning its own content. */}
                             <Box

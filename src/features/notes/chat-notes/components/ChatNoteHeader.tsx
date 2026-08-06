@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
@@ -14,7 +15,7 @@ import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRou
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TagRoundedIcon from "@mui/icons-material/TagRounded";
-import { Box, IconButton, Stack } from "@mui/joy";
+import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
@@ -27,6 +28,7 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -73,6 +75,9 @@ interface ChatNoteHeaderProps {
      *  behind the modal (≥10020) — pass the host's z so it lifts above.
      *  Undefined on page surfaces → default z. */
     hostZIndex?: number;
+    /** Mobile notes-home: back to the sidebar list. Undefined on
+     *  desktop / chat-page / task-page embeds. */
+    onMobileBack?: () => void;
 }
 
 export const ChatNoteHeader = ({
@@ -96,11 +101,13 @@ export const ChatNoteHeader = ({
     onCreateChildNote,
     onDeleteNote,
     hostZIndex,
+    onMobileBack,
 }: ChatNoteHeaderProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
+    const isMobile = useIsMobile();
     // Per-note notification mute (in the ⋮ menu, not a header icon).
     const notifCtx = useNotificationsContext();
     const { t } = useTranslation();
@@ -272,13 +279,32 @@ export const ChatNoteHeader = ({
             justifyContent="space-between"
             sx={{
                 width: "100%",
+                minWidth: 0,
+                // Keep back + title + actions on ONE row on mobile —
+                // wrapping was the broken 2-row header.
+                flexWrap: "nowrap",
+                gap: 0.5,
             }}
         >
+            {isMobile && onMobileBack && (
+                <IconButton
+                    aria-label="Back to notes list"
+                    size="sm"
+                    sx={{ flexShrink: 0 }}
+                    variant="plain"
+                    onClick={onMobileBack}
+                >
+                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            )}
+
             {isInChatPage === true && useNM.currentChatNote && (
                 <Box
                     sx={{
                         ml: "5px",
-                        width: "40%",
+                        width: isMobile ? "auto" : "40%",
+                        flex: isMobile ? 1 : undefined,
+                        minWidth: 0,
                     }}
                 >
                     <ACChatChildNotes
@@ -297,21 +323,49 @@ export const ChatNoteHeader = ({
                     spacing={1}
                     sx={{ minWidth: 0, flex: 1 }}
                 >
-                    <NoteBreadcrumbs
-                        color="warning"
-                        contextCrumbs={contextCrumbs}
-                        icon={<QuestionAnswerRoundedIcon />}
-                        label={t.notes.header.chatNotesLabel}
-                        noteChain={useNM.currentChatNoteChain}
-                        onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
-                    />
+                    {isMobile ? (
+                        <Typography
+                            level="title-sm"
+                            sx={{ flex: 1, minWidth: 0, fontWeight: 700 }}
+                            noWrap
+                        >
+                            {useNM.currentChatNote?.title || t.notes.header.chatNotesLabel}
+                        </Typography>
+                    ) : (
+                        <NoteBreadcrumbs
+                            color="warning"
+                            contextCrumbs={contextCrumbs}
+                            icon={<QuestionAnswerRoundedIcon />}
+                            label={t.notes.header.chatNotesLabel}
+                            noteChain={useNM.currentChatNoteChain}
+                            onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
+                        />
+                    )}
                     {/* Version history moved to the ⋮ (More) menu below. */}
                 </Stack>
             )}
 
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ pb: 0.5 }}>
-                {/* Chat Avatars with styled containers */}
-                {chat && chat.chatType === 1 && (
+            <Stack
+                alignItems="center"
+                direction="row"
+                spacing={0.75}
+                sx={{
+                    pb: isMobile ? 0 : 0.5,
+                    flexShrink: 0,
+                    minWidth: 0,
+                    maxWidth: isMobile ? "55%" : undefined,
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    scrollbarWidth: "none",
+                    "&::-webkit-scrollbar": { display: "none" },
+                    "& > *": { flexShrink: 0 },
+                }}
+            >
+                {/* Chat Avatars with styled containers — desktop only.
+                    On mobile the single-row header can't spare the
+                    avatar pill; Open Related Chat still reaches the
+                    channel. */}
+                {!isMobile && chat && chat.chatType === 1 && (
                     <Box sx={avatarContainerStyle}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
@@ -326,7 +380,7 @@ export const ChatNoteHeader = ({
                         />
                     </Box>
                 )}
-                {chat && chat.chatType === 2 && (
+                {!isMobile && chat && chat.chatType === 2 && (
                     <Box sx={avatarContainerStyle}>
                         <GMAvatar
                             gmChat={chat}
@@ -340,7 +394,7 @@ export const ChatNoteHeader = ({
                         />
                     </Box>
                 )}
-                {chat && chat.chatType === 3 && (
+                {!isMobile && chat && chat.chatType === 3 && (
                     <Box sx={avatarContainerStyle}>
                         <ProjectAvatar
                             myself={myself}

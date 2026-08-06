@@ -1,5 +1,37 @@
 import "@testing-library/jest-dom/vitest";
 
+// Node 25+ exposes a stub `localStorage` global that throws / is
+// undefined unless `--localstorage-file` is passed. jsdom normally
+// provides its own, but Vitest's worker can leave the Node stub in
+// place — polyfill a minimal in-memory store so auth/guard tests that
+// call `localStorage.clear()` keep working.
+if (
+    typeof globalThis !== "undefined" &&
+    (typeof globalThis.localStorage === "undefined" ||
+        typeof globalThis.localStorage?.clear !== "function")
+) {
+    const store = new Map<string, string>();
+    const memoryStorage: Storage = {
+        get length() {
+            return store.size;
+        },
+        clear: () => store.clear(),
+        getItem: (key) => (store.has(key) ? store.get(key)! : null),
+        key: (index) => [...store.keys()][index] ?? null,
+        removeItem: (key) => {
+            store.delete(key);
+        },
+        setItem: (key, value) => {
+            store.set(key, String(value));
+        },
+    };
+    Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        writable: true,
+        value: memoryStorage,
+    });
+}
+
 // jsdom doesn't ship `window.matchMedia`. Mantine (used by BlockNote's
 // `@blocknote/mantine` view) reads it at first render to detect the
 // system color scheme — without this stub, every test that mounts a
