@@ -70,6 +70,31 @@ const truncate = (text: string): string => {
     return `${trimmed.slice(0, QUERY_PREVIEW_MAX - 1).trimEnd()}…`;
 };
 
+/**
+ * Should a finished run stay silent because the user is watching it?
+ *
+ * `surfaceShowing` is the caller's own "my window is up" state: the
+ * Spotlight overlay being open, `/workspace/genos` being the active
+ * route, or a thread / note Ask modal being mounted.
+ *
+ * Showing is necessary but not sufficient. Every Ask surface survives
+ * being left behind — the Genos page is a plain route that can sit in a
+ * background tab for hours, and the overlay and modals both stay open
+ * across a tab switch. Announcing to someone who is sitting on the
+ * answer is noise; going silent because a tab they abandoned happens to
+ * still be parked on Genos loses the exact case this notice exists for.
+ * So the run only counts as watched when the tab is also in front of
+ * them.
+ *
+ * Visibility rather than focus, deliberately: that is the same signal
+ * the server's push gate runs on (`presence.py` is fed by
+ * `visibilityState` heartbeats). Sharing it is what gets a hidden tab
+ * exactly one card — the page raises its own, and the server's push
+ * replaces it through the shared tag instead of stacking a second.
+ */
+export const isRunBeingWatched = (surfaceShowing: boolean): boolean =>
+    surfaceShowing && (typeof document === "undefined" || document.visibilityState !== "hidden");
+
 const surfaceLabel = (surface: AgentRunSurface): string => {
     const t = getMessages().services.notifications.agentRun;
     switch (surface) {
@@ -85,9 +110,9 @@ const surfaceLabel = (surface: AgentRunSurface): string => {
 /**
  * Fire the "your backgrounded answer is ready" notice.
  *
- * Callers are responsible for the *policy* decision — only call this when
- * the run's surface was actually closed, otherwise the user gets a toast
- * for an answer they just watched stream in. (The manager's active-surface
+ * Callers are responsible for the *policy* decision — gate on
+ * `isRunBeingWatched` first, otherwise the user gets a toast for an
+ * answer they just watched stream in. (The manager's active-surface
  * check can't help here: an agent run has no chat/thread source to match
  * against.)
  *

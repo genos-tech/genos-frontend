@@ -53,7 +53,10 @@ import {
     type AgentSessionSummary,
     type PendingApprovalPayload,
 } from "../../services/agentApi";
-import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
+import {
+    isRunBeingWatched,
+    notifyAgentRunComplete,
+} from "../../services/notifications/agentRunNotice";
 import type { NotificationManager } from "../../services/notifications/notificationManager";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
@@ -306,8 +309,9 @@ export const useSpotlight = ({
             const live = liveRunRef.current;
             if (!live || live.turnId !== turnId) return;
             // User watched it finish — overlay open OR the Genos page
-            // showing the same conversation full-page.
-            if (isOpenRef.current || isPageActiveRef.current) return;
+            // showing the same conversation full-page, in a tab they
+            // are actually looking at.
+            if (isRunBeingWatched(isOpenRef.current || isPageActiveRef.current)) return;
             if (notifiedTurnIdsRef.current.has(turnId)) return;
             notifiedTurnIdsRef.current.add(turnId);
             notifyAgentRunComplete(notificationManagerRef.current, {

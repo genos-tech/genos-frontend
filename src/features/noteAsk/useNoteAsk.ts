@@ -23,7 +23,10 @@ import {
     type NoteContext,
     type NoteSummaryResponse,
 } from "../../services/agentApi";
-import { notifyAgentRunComplete } from "../../services/notifications/agentRunNotice";
+import {
+    isRunBeingWatched,
+    notifyAgentRunComplete,
+} from "../../services/notifications/agentRunNotice";
 import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
 import {
     sessionTurnToCompleted,
@@ -120,7 +123,7 @@ export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskR
         ),
         onRunComplete: useCallback(
             (result: AgentRunResult) => {
-                if (isOpenRef.current) return; // user watched it finish
+                if (isRunBeingWatched(isOpenRef.current)) return; // watched it finish
                 notifyAgentRunComplete(notifications?.manager, {
                     surface: "note",
                     askedQuery: result.askedQuery,
