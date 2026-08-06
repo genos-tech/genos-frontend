@@ -21,6 +21,7 @@ import {
     ModalImportMarkdown,
 } from "../features/notes/common/components/ModalImportMarkdown";
 import { NoteManagementState } from "../hooks/notes/useNoteManagement";
+import { UserProps } from "../types/admin";
 import { ChatNoteMetaProps, TaskNoteMetaProps } from "../types/notes";
 
 const taskMeta = [
@@ -52,9 +53,14 @@ const taskMeta = [
 
 const useNM = {
     myNoteFolders: [],
+    // Read to tell a personal destination from a team one, which decides
+    // which folder API a whole-folder import creates against.
+    teamNoteFolders: [],
     taskNoteMeta: taskMeta,
     chatNoteMeta: [] as ChatNoteMetaProps[],
 } as unknown as NoteManagementState;
+
+const myself = { userId: "u1", teamId: "t1" } as UserProps;
 
 const renderModal = (context: ImportMarkdownContext, allowDestinationChange: boolean) =>
     render(
@@ -62,6 +68,7 @@ const renderModal = (context: ImportMarkdownContext, allowDestinationChange: boo
             <ModalImportMarkdown
                 allowDestinationChange={allowDestinationChange}
                 context={context}
+                myself={myself}
                 open={true}
                 useNM={useNM}
                 onClose={() => {}}
@@ -79,6 +86,7 @@ const rerenderModal = (
             <ModalImportMarkdown
                 allowDestinationChange={allowDestinationChange}
                 context={context}
+                myself={myself}
                 open={true}
                 useNM={useNM}
                 onClose={() => {}}

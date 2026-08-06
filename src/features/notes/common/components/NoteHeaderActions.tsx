@@ -755,6 +755,7 @@ export const NoteHeaderActions = ({
                 <ModalImportMarkdown
                     context={importContext}
                     hostZIndex={hostZIndex}
+                    myself={myself}
                     open={importMdOpen}
                     useNM={useNM}
                     allowDestinationChange

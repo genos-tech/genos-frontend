@@ -194,6 +194,27 @@ export const notes = {
         importButton: "Import",
         readError: "Couldn't read that file.",
         importError: "Import failed — the note wasn't created.",
+        // Batch import of a whole exported folder tree (built for Notion
+        // exports, which is why the copy mentions them by name — that is
+        // the thing in the user's other tab while they read this).
+        modeFile: "One file",
+        modeFolder: "Whole folder",
+        chooseFolder: "Choose a folder…",
+        folderHint:
+            "Every subfolder becomes a note folder and every markdown file becomes a note inside it. Notion's page ids are stripped from the names, and images are brought over with the pages.",
+        planEmpty: "That folder has no markdown files in it.",
+        planSummary: "{folders} folders, {notes} notes",
+        previewHeading: "What will be created",
+        previewMore: "…and {count} more",
+        importFolderButton: "Import folder",
+        importingLabel: "Imported {done} of {total}",
+        stopButton: "Stop",
+        resultNotes: "Created {notes} notes in {folders} folders.",
+        resultImages: "Brought over {count} images.",
+        resultImagesFailed: "{count} images couldn't be brought over.",
+        resultFailures: "{count} pages failed and were skipped.",
+        resultCancelled: "Stopped early. Everything created up to that point was kept.",
+        resultDone: "Done",
     },
     autocomplete: {
         searchAria: "Search",

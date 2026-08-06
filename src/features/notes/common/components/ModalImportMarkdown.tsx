@@ -8,12 +8,18 @@ import {
     Modal,
     ModalDialog,
     Stack,
+    Tab,
+    TabList,
+    Tabs,
     Typography,
 } from "@mui/joy";
 import Autocomplete, { createFilterOptions } from "@mui/joy/Autocomplete";
 
+import { useOptionalAccessToken } from "../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { resolveUploadLimitBytes } from "../../../../services/uploadLimit";
+import { UserProps } from "../../../../types/admin";
 import { MyNoteFolderProps } from "../../../../types/notes";
 import {
     buildChatNoteDestinations,
@@ -22,6 +28,8 @@ import {
     taskDestinationKey,
 } from "../services/noteImportDestinations";
 import { markdownToNoteBlocks, titleFromFilename } from "../services/noteMarkdown";
+import type { ImportDestination } from "../services/runFolderImport";
+import { FolderImportPanel } from "./FolderImportPanel";
 
 /** Where the imported note gets created — mirrors the surface the ⋮ menu
  *  was opened from, and seeds the destination picker. */
@@ -41,6 +49,9 @@ interface Props {
     onClose: () => void;
     context: ImportMarkdownContext;
     useNM: NoteManagementState;
+    /** Owner of the created notes, and the uploader of record for any
+     *  images a folder import brings over. */
+    myself: UserProps;
     /** Lift above the UrlLinkModal when the header is modal-hosted —
      *  same convention as every other note-header dialog. */
     hostZIndex?: number;
@@ -106,11 +117,25 @@ export const ModalImportMarkdown = ({
     onClose,
     context,
     useNM,
+    myself,
     hostZIndex,
     allowDestinationChange = false,
 }: Props) => {
     const { t } = useTranslation();
+    // Optional rather than `useAuth`: this dialog is rendered from the
+    // sidebar and three headers, and losing all of them to a missing
+    // provider would be a poor trade for a mode that can simply not be
+    // offered without a token.
+    const accessToken = useOptionalAccessToken();
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Only my-notes (personal and team alike) have folders to recreate a
+    // tree in; a task or chat note has exactly one home.
+    const canImportFolder = context.kind === "my" && accessToken != null;
+    const [mode, setMode] = useState<"file" | "folder">("file");
+    // Resolved once the folder tab is opened, so oversize images are
+    // skipped locally instead of each one costing a 413.
+    const [uploadLimitBytes, setUploadLimitBytes] = useState<number | null>(null);
 
     const [fileName, setFileName] = useState<string | null>(null);
     const [fileText, setFileText] = useState<string | null>(null);
@@ -152,8 +177,20 @@ export const ModalImportMarkdown = ({
             );
             setImporting(false);
             setError(null);
+            setMode("file");
         }
     }, [open]);
+
+    useEffect(() => {
+        if (mode !== "folder") return;
+        let live = true;
+        void resolveUploadLimitBytes(accessToken).then((bytes) => {
+            if (live) setUploadLimitBytes(bytes);
+        });
+        return () => {
+            live = false;
+        };
+    }, [mode, accessToken]);
 
     // Task / chat destinations, keyed by their anchor. Only real tasks and
     // real chats can hold a note, so these lists carry no project or
@@ -189,6 +226,31 @@ export const ModalImportMarkdown = ({
     ]);
 
     const selectedDestination = destinationOptions.find((o) => o.key === destinationKey) ?? null;
+
+    // Which folder tree the import plants into. Personal and team folders
+    // are different endpoints with different access rules, and the only
+    // thing that distinguishes them here is whether the destination id
+    // appears in the team list — the same test `handleCreateNewMyNote`
+    // uses to decide which sidebar bucket a new note belongs to.
+    const folderDestination = useMemo<ImportDestination>(() => {
+        const folderId =
+            destinationKey && destinationKey !== MY_ROOT_KEY ? Number(destinationKey) : null;
+        const isTeam =
+            folderId != null && useNM.teamNoteFolders.some((f) => f.folderId === folderId);
+        return { kind: isTeam ? "team" : "personal", parentFolderId: folderId };
+    }, [destinationKey, useNM.teamNoteFolders]);
+
+    // The server is now the source of truth for a few hundred new rows,
+    // and none of them went through the optimistic single-note path.
+    const refreshAfterFolderImport = () => {
+        if (folderDestination.kind === "team") {
+            void useNM.getTeamNoteFolders();
+            void useNM.getTeamNoteMeta();
+        } else {
+            void useNM.getMyNoteFolders();
+            void useNM.getMyNoteMeta();
+        }
+    };
 
     const handleFilePicked = async (file: File) => {
         setError(null);
@@ -277,80 +339,113 @@ export const ModalImportMarkdown = ({
             }
             onClose={onClose}
         >
-            <ModalDialog sx={{ minWidth: 380, maxWidth: 460 }}>
+            <ModalDialog sx={{ minWidth: 380, maxWidth: 480 }}>
                 <Typography level="title-lg">{t.notes.importMd.heading}</Typography>
-                <Stack spacing={2} sx={{ mt: 1 }}>
-                    {error && (
-                        <Typography level="body-sm" sx={{ color: "danger.500" }}>
-                            {error}
-                        </Typography>
-                    )}
 
-                    {/* Hidden native input; the button forwards the click.
-                        .txt is accepted on purpose — plain text is valid
-                        markdown and it saves a rename. */}
-                    <input
-                        ref={fileInputRef}
-                        accept=".md,.markdown,.txt"
-                        style={{ display: "none" }}
-                        type="file"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) void handleFilePicked(file);
-                            // Allow re-picking the same file.
-                            e.target.value = "";
-                        }}
-                    />
-                    <Button
-                        color="neutral"
-                        startDecorator={<UploadFileRoundedIcon />}
-                        variant="outlined"
-                        onClick={() => fileInputRef.current?.click()}
+                {/* Folders only exist under my-notes, so a task or chat
+                    note gets the single-file dialog it has always had. */}
+                {canImportFolder && (
+                    <Tabs
+                        size="sm"
+                        sx={{ bgcolor: "transparent", mt: 1 }}
+                        value={mode}
+                        onChange={(_e, v) => setMode(v as "file" | "folder")}
                     >
-                        {fileName ?? t.notes.importMd.chooseFile}
-                    </Button>
+                        <TabList sx={{ borderRadius: "sm", p: 0.5 }} disableUnderline>
+                            <Tab value="file" disableIndicator>
+                                {t.notes.importMd.modeFile}
+                            </Tab>
+                            <Tab value="folder" disableIndicator>
+                                {t.notes.importMd.modeFolder}
+                            </Tab>
+                        </TabList>
+                    </Tabs>
+                )}
 
-                    <FormControl required>
-                        <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
-                        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                {/* Destination, type-to-search. Every option is a real
+                    folder, task or chat — a note can't live on a
+                    project or on a "DM" / "GM" bucket, so those rows
+                    have no entry here. Clearing the field is ignored
+                    (a note always lands somewhere): the previous pick
+                    stays selected. Shared by both modes: a folder
+                    import needs a destination just as much. */}
+                {destinationOptions.length > 0 && (
+                    <FormControl sx={{ mt: 2 }}>
+                        <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
+                        <Autocomplete
+                            filterOptions={filterDestinations}
+                            getOptionLabel={(option) => option.label}
+                            isOptionEqualToValue={(option, value) => option.key === value.key}
+                            options={destinationOptions}
+                            value={selectedDestination}
+                            autoHighlight
+                            onChange={(_e, v) => {
+                                if (v) setDestinationKey(v.key);
+                            }}
+                        />
                     </FormControl>
+                )}
 
-                    {/* Destination, type-to-search. Every option is a real
-                        folder, task or chat — a note can't live on a
-                        project or on a "DM" / "GM" bucket, so those rows
-                        have no entry here. Clearing the field is ignored
-                        (a note always lands somewhere): the previous pick
-                        stays selected. */}
-                    {destinationOptions.length > 0 && (
-                        <FormControl>
-                            <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                            <Autocomplete
-                                autoHighlight
-                                filterOptions={filterDestinations}
-                                getOptionLabel={(option) => option.label}
-                                isOptionEqualToValue={(option, value) => option.key === value.key}
-                                options={destinationOptions}
-                                value={selectedDestination}
-                                onChange={(_e, v) => {
-                                    if (v) setDestinationKey(v.key);
-                                }}
-                            />
-                        </FormControl>
-                    )}
+                {mode === "folder" && accessToken ? (
+                    <FolderImportPanel
+                        accessToken={accessToken}
+                        destination={folderDestination}
+                        myself={myself}
+                        uploadLimitBytes={uploadLimitBytes}
+                        onClose={onClose}
+                        onImported={refreshAfterFolderImport}
+                    />
+                ) : (
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                        {error && (
+                            <Typography level="body-sm" sx={{ color: "danger.500" }}>
+                                {error}
+                            </Typography>
+                        )}
 
-                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                        <Button disabled={importing} variant="plain" onClick={onClose}>
-                            {t.common.actions.cancel}
-                        </Button>
+                        {/* Hidden native input; the button forwards the click.
+                            .txt is accepted on purpose — plain text is valid
+                            markdown and it saves a rename. */}
+                        <input
+                            ref={fileInputRef}
+                            accept=".md,.markdown,.txt"
+                            style={{ display: "none" }}
+                            type="file"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleFilePicked(file);
+                                // Allow re-picking the same file.
+                                e.target.value = "";
+                            }}
+                        />
                         <Button
-                            disabled={importing || fileText == null || !title.trim()}
-                            loading={importing}
-                            onClick={handleImport}
+                            color="neutral"
+                            startDecorator={<UploadFileRoundedIcon />}
+                            variant="outlined"
+                            onClick={() => fileInputRef.current?.click()}
                         >
-                            {t.notes.importMd.importButton}
+                            {fileName ?? t.notes.importMd.chooseFile}
                         </Button>
+
+                        <FormControl required>
+                            <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
+                            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                        </FormControl>
+
+                        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                            <Button disabled={importing} variant="plain" onClick={onClose}>
+                                {t.common.actions.cancel}
+                            </Button>
+                            <Button
+                                disabled={importing || fileText == null || !title.trim()}
+                                loading={importing}
+                                onClick={handleImport}
+                            >
+                                {t.notes.importMd.importButton}
+                            </Button>
+                        </Stack>
                     </Stack>
-                </Stack>
+                )}
             </ModalDialog>
         </Modal>
     );

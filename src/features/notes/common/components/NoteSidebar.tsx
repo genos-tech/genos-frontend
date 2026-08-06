@@ -2033,6 +2033,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             {importModalContext && (
                 <ModalImportMarkdown
                     context={importModalContext}
+                    myself={myself}
                     open={importModalContext !== null}
                     useNM={useNM}
                     onClose={() => setImportModalContext(null)}
