@@ -103,6 +103,16 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         setMobileViewMode("content");
     }, [useNM.tabsApi.openTick]);
 
+    // Closing the last tab leaves `mobileViewMode` stuck on "content",
+    // which shows the empty "No Note Selected" pane with no way back to
+    // the list (the back button only lives on an open note's header).
+    // Drop back to the sidebar whenever nothing is open.
+    useEffect(() => {
+        if (useNM.tabsApi.tabs.length === 0) {
+            setMobileViewMode("sidebar");
+        }
+    }, [useNM.tabsApi.tabs.length]);
+
     // (The Home dashboard used to need its own flip-to-content signal
     // here, since it wasn't a tab. With Home gone, `openTick` above is
     // the only trigger.)
