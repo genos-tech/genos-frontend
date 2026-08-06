@@ -10,12 +10,16 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { formatSize, MessageAttachments } from "../features/channel/components/MessageAttachments";
 import { MessagesPaneV3 } from "../features/channel/components/MessagesPaneV3";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind, type Channel, type Message, type MessageAttachment } from "../types/channel";
+import { setMediaAccessToken } from "../utils/mediaAuth";
+
+const API_HOST = "https://api.genosai.dev";
+const CHANNEL_UUID = "11111111-2222-3333-4444-555555555555";
 
 vi.mock("../db/config/schema", () => ({
     initDB: vi.fn().mockRejectedValue(new Error("IDB stubbed off in tests")),
@@ -187,6 +191,98 @@ describe("MessageAttachments", () => {
         expect(preview).toBeInTheDocument();
         expect(preview).toHaveAttribute("src", "https://cdn.example.com/chats/c/m/screenshot.png");
         expect(screen.queryByTestId("message-attachment-preview-a-pdf")).toBeNull();
+    });
+
+    // The reported bug: the recipient saw a broken image captioned with
+    // the filename, and `{"detail": "Not found."}` in the console — the
+    // per-file media ACL refusing the request, because an <img> can only
+    // offer the browser's `refresh` cookie and that cookie identified
+    // someone who wasn't in the conversation.
+    describe("protected /media/ thumbnails", () => {
+        const PROTECTED = `${API_HOST}/media/chats/${CHANNEL_UUID}/messages/9/screenshot.png`;
+
+        beforeEach(() => {
+            vi.stubGlobal(
+                "URL",
+                Object.assign(URL, {
+                    createObjectURL: vi.fn(() => "blob:authed-image"),
+                    revokeObjectURL: vi.fn(),
+                })
+            );
+            vi.stubGlobal(
+                "fetch",
+                vi.fn(async () => ({
+                    ok: true,
+                    blob: async () => ({ size: 32, type: "image/png" }) as unknown as Blob,
+                }))
+            );
+        });
+
+        afterEach(() => {
+            setMediaAccessToken(null);
+            vi.unstubAllGlobals();
+        });
+
+        it("renders the session-authenticated blob, never the raw URL", async () => {
+            setMediaAccessToken("tok-att");
+            const atts = [fakeAttachment("a-img", PROTECTED, "image/png", 32)];
+            render(<MessageAttachments attachments={atts} messageId="m-1" />);
+
+            // Crucially it does not paint the protected URL first: that
+            // request would be made by the browser with the cookie, and
+            // its failure is what the user saw.
+            expect(screen.queryByTestId("message-attachment-preview-a-img")).toBeNull();
+
+            const preview = await screen.findByTestId("message-attachment-preview-a-img");
+            expect(preview).toHaveAttribute("src", "blob:authed-image");
+            expect(fetch).toHaveBeenCalledWith(
+                PROTECTED,
+                expect.objectContaining({ headers: { Authorization: "Bearer tok-att" } })
+            );
+        });
+
+        it("still shows the picture when the fetch fails", async () => {
+            // Falling back to the plain URL keeps the browser's cookie
+            // attempt, i.e. exactly today's behaviour — this change can
+            // fix a broken image but must never break a working one.
+            vi.stubGlobal(
+                "fetch",
+                vi.fn(async () => ({ ok: false, status: 404 }))
+            );
+            setMediaAccessToken("tok-att");
+            render(
+                <MessageAttachments
+                    attachments={[fakeAttachment("a-img", PROTECTED, "image/png", 32)]}
+                    messageId="m-1"
+                />
+            );
+            const preview = await screen.findByTestId("message-attachment-preview-a-img");
+            expect(preview).toHaveAttribute("src", PROTECTED);
+        });
+
+        it("downloads the chip through the token instead of navigating", async () => {
+            setMediaAccessToken("tok-att");
+            render(
+                <MessageAttachments
+                    attachments={[fakeAttachment("a-img", PROTECTED, "image/png", 32)]}
+                    messageId="m-1"
+                />
+            );
+            const link = screen.getByTestId("message-attachment-link-a-img");
+            // href is retained for copy-link / middle-click, but a plain
+            // navigation would land on the API's JSON error page.
+            expect(link).toHaveAttribute("href", PROTECTED);
+
+            const clickEvent = new MouseEvent("click", { bubbles: true, cancelable: true });
+            link.dispatchEvent(clickEvent);
+            expect(clickEvent.defaultPrevented).toBe(true);
+            await vi.waitFor(() =>
+                expect(fetch).toHaveBeenCalledWith(
+                    PROTECTED,
+                    expect.objectContaining({ headers: { Authorization: "Bearer tok-att" } })
+                )
+            );
+        });
     });
 
     it("falls back to 'attachment' when the URL has no filename", () => {
