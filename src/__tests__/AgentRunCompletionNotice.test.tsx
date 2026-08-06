@@ -7,9 +7,15 @@
 //   1. Overlay/modal CLOSED when the run finishes  -> notify.
 //   2. Overlay/modal OPEN when it finishes         -> stay quiet (the
 //      user is looking right at the answer).
-//   3. Explicit Cancel                             -> stay quiet (they
+//   3. Genos page (/workspace/genos) showing the same conversation
+//      full-page                                   -> stay quiet, same
+//      reason: an Ask surface is up either way.
+//   4. ...but only while the tab is VISIBLE. A surface parked in a tab
+//      the user walked away from is exactly what this feature is for,
+//      so a hidden tab notifies even with Genos or the overlay open.
+//   5. Explicit Cancel                             -> stay quiet (they
 //      stopped it on purpose).
-//   4. One notice per run, whatever the stream does on its way out.
+//   6. One notice per run, whatever the stream does on its way out.
 
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,7 +23,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAgentQA } from "../features/agentQA";
 import { useSpotlight } from "../features/spotlight/useSpotlight";
 import { askAgentStream } from "../services/agentApi";
-import { notifyAgentRunComplete } from "../services/notifications/agentRunNotice";
+import {
+    isRunBeingWatched,
+    notifyAgentRunComplete,
+} from "../services/notifications/agentRunNotice";
 import { NotificationManager } from "../services/notifications/notificationManager";
 
 vi.mock("../services/agentApi", () => ({
@@ -40,6 +49,13 @@ const makeManager = () => {
     const manager = new NotificationManager({ currentUserId: "me" });
     return { manager, notify: vi.spyOn(manager, "notify") };
 };
+
+// jsdom reports "visible" by default, so every test that doesn't call
+// this is implicitly the "user is sitting in front of the tab" case.
+const hideTab = () =>
+    vi
+        .spyOn(document, "visibilityState", "get")
+        .mockReturnValue("hidden" as DocumentVisibilityState);
 
 describe("agent run completion notice — Spotlight", () => {
     beforeEach(() => {
@@ -104,6 +120,93 @@ describe("agent run completion notice — Spotlight", () => {
 
         await waitFor(() => expect(result.current.turns).toHaveLength(1));
         expect(notify).not.toHaveBeenCalled();
+    });
+
+    it("stays quiet while the Genos page is showing the same conversation", async () => {
+        // The page renders the same SpotlightContent the overlay does,
+        // with the overlay itself closed — so `isOpen` is false and only
+        // `isPageActive` stands between the user and a notice for an
+        // answer streaming in front of them.
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDelta("Because the migration timed out.");
+            args.onDone("sess-5", "run-12");
+        });
+
+        const { manager, notify } = makeManager();
+        const { result } = renderHook(() =>
+            useSpotlight({
+                accessToken: "test-token",
+                teamId: "team-1",
+                notificationManager: manager,
+                isPageActive: true,
+            })
+        );
+
+        act(() => result.current.onAsk("why did the deploy fail?"));
+
+        await waitFor(() => expect(result.current.turns).toHaveLength(1));
+        expect(notify).not.toHaveBeenCalled();
+    });
+
+    it("notifies when the Genos page sits in a tab the user has left", async () => {
+        // The counterpart to the test above: the route is still Genos,
+        // but the user is off in another tab. Suppressing here would
+        // silently drop the notice for the case it was built for.
+        let finish: (() => void) | null = null;
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDelta("Partial…");
+            finish = () => args.onDone("sess-6", "run-13");
+        });
+
+        const { manager, notify } = makeManager();
+        const { result } = renderHook(() =>
+            useSpotlight({
+                accessToken: "test-token",
+                teamId: "team-1",
+                notificationManager: manager,
+                isPageActive: true,
+            })
+        );
+
+        act(() => result.current.onAsk("summarise last week"));
+
+        const hidden = hideTab();
+        try {
+            act(() => finish?.());
+            await waitFor(() => expect(notify).toHaveBeenCalledTimes(1));
+            expect(notify.mock.calls[0][0].id).toBe("agent_run_done:run-13");
+        } finally {
+            hidden.mockRestore();
+        }
+    });
+
+    it("notifies when the overlay sits open in a tab the user has left", async () => {
+        let finish: (() => void) | null = null;
+        vi.mocked(askAgentStream).mockImplementation(async (args) => {
+            args.onDelta("Partial…");
+            finish = () => args.onDone("sess-7", "run-14");
+        });
+
+        const { manager, notify } = makeManager();
+        const { result } = renderHook(() =>
+            useSpotlight({
+                accessToken: "test-token",
+                teamId: "team-1",
+                notificationManager: manager,
+            })
+        );
+
+        act(() => result.current.open());
+        act(() => result.current.onAsk("what broke the build?"));
+
+        const hidden = hideTab();
+        try {
+            act(() => finish?.());
+            await waitFor(() => expect(notify).toHaveBeenCalledTimes(1));
+            expect(notify.mock.calls[0][0].id).toBe("agent_run_done:run-14");
+        } finally {
+            hidden.mockRestore();
+        }
     });
 
     it("stays quiet for a run the user cancelled", async () => {
@@ -205,6 +308,22 @@ describe("agent run completion notice — useAgentQA (thread / note surfaces)", 
 
         await waitFor(() => expect(onRunComplete).toHaveBeenCalledTimes(2));
         expect(onRunComplete.mock.calls[1][0].askedQuery).toBe("second");
+    });
+});
+
+describe("isRunBeingWatched", () => {
+    it("only counts a surface as watched when the tab is visible too", () => {
+        expect(isRunBeingWatched(true)).toBe(true);
+        expect(isRunBeingWatched(false)).toBe(false);
+
+        const hidden = hideTab();
+        try {
+            // The surface is still up — the user just isn't there.
+            expect(isRunBeingWatched(true)).toBe(false);
+            expect(isRunBeingWatched(false)).toBe(false);
+        } finally {
+            hidden.mockRestore();
+        }
     });
 });
 
