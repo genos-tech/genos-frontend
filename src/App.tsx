@@ -80,7 +80,11 @@ import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { useTodoGroups } from "./hooks/useTodoGroups";
-import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
+import {
+    registerApiHealthListener,
+    unregisterApiHealthListener,
+    type ApiDownReason,
+} from "./services/api";
 import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
@@ -203,10 +207,14 @@ export const App = () => {
 
     // API server health tracking
     const [showApiDown, setShowApiDown] = useState(false);
+    // Which flavour of unreachable the last failure was, so the banner can
+    // say something more useful than "unreachable". Undefined falls back
+    // to the generic copy.
+    const [apiDownReason, setApiDownReason] = useState<ApiDownReason | undefined>(undefined);
     const apiFailCountRef = useRef(0);
     const apiRecoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleApiHealth = useCallback((isDown: boolean) => {
+    const handleApiHealth = useCallback((isDown: boolean, reason?: ApiDownReason) => {
         if (isDown) {
             apiFailCountRef.current += 1;
             if (apiRecoverTimerRef.current) {
@@ -215,6 +223,10 @@ export const App = () => {
             }
             if (apiFailCountRef.current >= API_DOWN_THRESHOLD) {
                 setShowApiDown(true);
+                // Latest failure wins: a network that drops mid-session
+                // reads as "offline" from then on, even though the first
+                // failures over the threshold were plain timeouts.
+                setApiDownReason(reason);
             }
         } else {
             apiFailCountRef.current = 0;
@@ -223,6 +235,7 @@ export const App = () => {
             }
             apiRecoverTimerRef.current = setTimeout(() => {
                 setShowApiDown(false);
+                setApiDownReason(undefined);
                 apiRecoverTimerRef.current = null;
             }, 1000);
         }
@@ -1339,6 +1352,7 @@ export const App = () => {
                                                         }
                                                     />
                                                     <ConnectionStatusSnackbar
+                                                        apiDownReason={apiDownReason}
                                                         showApiDown={showApiDown}
                                                         showWsDisconnected={showWsDisconnected}
                                                     />

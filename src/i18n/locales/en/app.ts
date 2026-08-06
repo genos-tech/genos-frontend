@@ -5,7 +5,16 @@ export const app = {
     },
     snackbar: {
         wsLost: "Real-time connection lost. Attempting to reconnect...",
+        // The same banner, said three ways. "Unreachable" alone reads
+        // identically whether the device lost its network, the server
+        // never answered, or the connection was refused — and those send
+        // whoever is reading it somewhere different. Picked from
+        // `ApiDownReason` in the api.ts interceptor; `apiDown` stays the
+        // fallback for a failure that couldn't be placed.
         apiDown: "API server is unreachable.",
+        apiDownOffline: "You're offline. Genos will reconnect when your network is back.",
+        apiDownTimeout: "The API server isn't responding — requests are timing out.",
+        apiDownUnreachable: "Can't reach the API server. Retrying...",
         // Transient per-request failures (RequestErrorSnackbar). Distinct
         // from the two banners above, which mean the server / socket is
         // unreachable; these fire for a single failed request while the app

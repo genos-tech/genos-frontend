@@ -148,6 +148,9 @@ export const fr: DeepPartial<Messages> = {
         snackbar: {
             wsLost: "Connexion temps réel perdue. Tentative de reconnexion…",
             apiDown: "Le serveur API est injoignable.",
+            apiDownOffline: "Vous êtes hors ligne. Genos se reconnectera dès le retour du réseau.",
+            apiDownTimeout: "Le serveur API ne répond pas — les requêtes expirent.",
+            apiDownUnreachable: "Impossible de joindre le serveur API. Nouvelle tentative…",
             serverError: "Erreur du serveur. Veuillez réessayer dans un instant.",
             permissionDenied: "Vous n'avez pas la permission de faire cela.",
             requestFailed: "Impossible de traiter la requête. Veuillez réessayer.",
