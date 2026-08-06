@@ -17,6 +17,10 @@ import { ChatNoteEditor } from "./ChatNoteEditor";
 interface ChatNoteEditorPanelProps {
     tab: NoteTab & { kind: "chat" };
     isActive: boolean;
+    /** Stretch to the host's leftover height instead of growing with the
+     *  document. Set by the mobile notes-home editor pool, where the
+     *  page height is pinned and only this editor may scroll. */
+    fillHeight?: boolean;
     accessToken: string | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -33,6 +37,7 @@ interface ChatNoteEditorPanelProps {
 export const ChatNoteEditorPanel = ({
     tab,
     isActive,
+    fillHeight = false,
     accessToken,
     myself,
     setMyself,
@@ -109,11 +114,13 @@ export const ChatNoteEditorPanel = ({
     return (
         <Box
             sx={{
-                display: isActive ? "block" : "none",
+                display: isActive ? (fillHeight ? "flex" : "block") : "none",
+                flexDirection: "column",
                 paddingX: "5px",
                 paddingTop: "0px",
                 paddingBottom: "5px",
                 width: "100%",
+                ...(fillHeight ? { flex: 1, minHeight: 0 } : {}),
             }}
         >
             <ChatNoteEditor

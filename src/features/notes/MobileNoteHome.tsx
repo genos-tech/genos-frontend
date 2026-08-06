@@ -141,7 +141,20 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
                 // No separate mobile title bar — back + title + actions
                 // live in the note Main header as a single row (see
                 // MyNoteMain / TaskNoteMain / ChatNoteHeader).
-                <Box sx={{ flex: 1, minHeight: 0, overflowX: "hidden", overflowY: "auto" }}>
+                //
+                // Deliberately not scrollable: the note header and tab
+                // strip have to stay put, so the only vertical scroller
+                // is the BlockNote editor further down. See the
+                // `.note-editor-pool-fill` rules in App.css.
+                <Box
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden",
+                    }}
+                >
                     <NoteContentRenderer
                         myself={myself}
                         setMyself={setMyself}
