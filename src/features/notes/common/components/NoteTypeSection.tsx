@@ -79,21 +79,27 @@ export function NoteTypeSection({
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     opacity: isDisabled ? 0.5 : 1,
                     cursor: isDisabled ? "not-allowed" : "pointer",
-                    "&:hover": {
-                        backgroundColor: isDisabled
-                            ? "transparent"
-                            : isDark
-                              ? "rgba(255,255,255,0.06)"
-                              : "rgba(0,0,0,0.04)",
+                    // Hover-only on real pointers — sticky :hover on touch
+                    // can eat the first tap before the section expands.
+                    "@media (hover: hover) and (pointer: fine)": {
+                        "&:hover": {
+                            backgroundColor: isDisabled
+                                ? "transparent"
+                                : isDark
+                                  ? "rgba(255,255,255,0.06)"
+                                  : "rgba(0,0,0,0.04)",
+                        },
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
                             ? "rgba(var(--gp-brand-700-rgb), 0.15)"
                             : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.2)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                            },
                         },
                     },
                     "&.Mui-disabled": {

@@ -102,20 +102,28 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                     gap: 0.75,
                     minHeight: 30,
                     transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
-                        "& .favorite-remove-btn": {
-                            opacity: 1,
+                    // Hover-only on real pointers — sticky :hover on touch
+                    // eats the first tap (note won't open until tap #2).
+                    "@media (hover: hover) and (pointer: fine)": {
+                        "&:hover": {
+                            backgroundColor: isDark
+                                ? "rgba(255,255,255,0.05)"
+                                : "rgba(0,0,0,0.03)",
+                            "& .favorite-remove-btn": {
+                                opacity: 1,
+                            },
                         },
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
                             ? "rgba(var(--gp-brand-700-rgb), 0.12)"
                             : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                            },
                         },
                     },
                 }}
@@ -175,7 +183,8 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                     )}
                 </ListItemContent>
 
-                {/* Remove from favorites button */}
+                {/* Remove from favorites button — hover-revealed on
+                    desktop, always visible on touch. */}
                 <IconButton
                     className="favorite-remove-btn"
                     color="warning"
@@ -187,10 +196,13 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         minHeight: 20,
                         borderRadius: "4px",
                         transition: "opacity 0.15s ease",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(245,158,11,0.15)"
-                                : "rgba(245,158,11,0.1)",
+                        "@media (hover: none)": { opacity: 1 },
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(245,158,11,0.15)"
+                                    : "rgba(245,158,11,0.1)",
+                            },
                         },
                     }}
                     onClick={handleRemoveFavorite}

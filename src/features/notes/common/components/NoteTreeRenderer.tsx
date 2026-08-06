@@ -170,25 +170,32 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                         gap: 0.75,
                         minHeight: 30,
                         transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.05)"
-                                : "rgba(0,0,0,0.03)",
-                            "& .favorite-btn": {
-                                opacity: 1,
-                            },
-                            "& .row-menu-btn": {
-                                opacity: 1,
+                        // Hover-only on real pointers — sticky :hover on
+                        // touch eats the first tap (note won't open until
+                        // tap #2) because hover reveals the star / ⋯.
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.05)"
+                                    : "rgba(0,0,0,0.03)",
+                                "& .favorite-btn": {
+                                    opacity: 1,
+                                },
+                                "& .row-menu-btn": {
+                                    opacity: 1,
+                                },
                             },
                         },
                         "&.Mui-selected": {
                             backgroundColor: isDark
                                 ? "rgba(var(--gp-brand-700-rgb), 0.12)"
                                 : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                            "@media (hover: hover) and (pointer: fine)": {
+                                "&:hover": {
+                                    backgroundColor: isDark
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                                },
                             },
                         },
                     }}
@@ -269,7 +276,8 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                         </Typography>
                     </ListItemContent>
 
-                    {/* Favorite toggle button */}
+                    {/* Favorite toggle button — hover-revealed on desktop,
+                        always visible on touch (no hover to reveal). */}
                     <IconButton
                         className="favorite-btn"
                         color="warning"
@@ -281,10 +289,13 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             minHeight: 20,
                             borderRadius: "4px",
                             transition: "opacity 0.15s ease, background-color 0.15s ease",
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(245,158,11,0.15)"
-                                    : "rgba(245,158,11,0.1)",
+                            "@media (hover: none)": { opacity: 1 },
+                            "@media (hover: hover) and (pointer: fine)": {
+                                "&:hover": {
+                                    backgroundColor: isDark
+                                        ? "rgba(245,158,11,0.15)"
+                                        : "rgba(245,158,11,0.1)",
+                                },
                             },
                         }}
                         onClick={handleFavoriteClick}
@@ -302,13 +313,15 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     </IconButton>
 
                     {/* Optional per-row "⋯" menu (hover-revealed like the
-                        star; stays visible while its menu is open). */}
+                        star; stays visible while its menu is open; always
+                        visible on touch). */}
                     {menuItems && menuItems.length > 0 && (
                         <Box
                             className="row-menu-btn"
                             sx={{
                                 opacity: rowMenuOpen ? 1 : 0,
                                 transition: "opacity 0.15s ease",
+                                "@media (hover: none)": { opacity: 1 },
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >

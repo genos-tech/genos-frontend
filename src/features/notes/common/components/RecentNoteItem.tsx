@@ -135,17 +135,25 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                     gap: 0.75,
                     minHeight: 30,
                     transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                    // Hover-only on real pointers — sticky :hover on touch
+                    // can eat the first tap before the note opens.
+                    "@media (hover: hover) and (pointer: fine)": {
+                        "&:hover": {
+                            backgroundColor: isDark
+                                ? "rgba(255,255,255,0.05)"
+                                : "rgba(0,0,0,0.03)",
+                        },
                     },
                     "&.Mui-selected": {
                         backgroundColor: isDark
                             ? "rgba(var(--gp-brand-700-rgb), 0.12)"
                             : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                        "@media (hover: hover) and (pointer: fine)": {
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(var(--gp-brand-700-rgb), 0.18)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
+                            },
                         },
                     },
                 }}
