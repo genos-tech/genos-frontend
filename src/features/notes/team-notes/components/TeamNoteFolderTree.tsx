@@ -7,6 +7,7 @@ import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRena
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import FolderZipRoundedIcon from "@mui/icons-material/FolderZipRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
@@ -28,6 +29,7 @@ import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
 export type TeamFolderActionHandlers = {
     onCreateNoteHere: (folderId: number) => void;
     onImportNoteHere: (folderId: number) => void;
+    onExportFolder: (folder: TeamNoteFolderTreeNode) => void;
     onCreateSubfolder: (folder: TeamNoteFolderTreeNode) => void;
     onRenameFolder: (folder: TeamNoteFolderTreeNode) => void;
     onMoveFolder: (folder: TeamNoteFolderTreeNode) => void;
@@ -151,6 +153,15 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
             onClick: () => actions.onManageMembers(folder),
         });
     }
+    // Offered to viewers too: taking a copy of what you can already read
+    // is not a write, and a read-only share is exactly the case where
+    // someone wants their own copy.
+    menuItems.push({
+        id: "export-folder",
+        label: t.notes.exportZip.menuItem,
+        icon: <FolderZipRoundedIcon sx={{ fontSize: 16 }} />,
+        onClick: () => actions.onExportFolder(folder),
+    });
     if (isOwner) {
         menuItems.push({
             id: "delete",

@@ -7,6 +7,7 @@ import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRena
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import FolderZipRoundedIcon from "@mui/icons-material/FolderZipRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -27,6 +28,7 @@ import {
 export type FolderActionHandlers = {
     onCreateNoteHere: (folderId: number) => void;
     onImportNoteHere: (folderId: number) => void;
+    onExportFolder: (folder: MyNoteFolderTreeNode) => void;
     onCreateSubfolder: (folderId: number) => void;
     onRenameFolder: (folder: MyNoteFolderTreeNode) => void;
     onMoveFolder: (folder: MyNoteFolderTreeNode) => void;
@@ -163,6 +165,12 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                             label: t.notes.header.importMarkdown,
                             icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
                             onClick: () => actions.onImportNoteHere(folder.folderId),
+                        },
+                        {
+                            id: "export-folder",
+                            label: t.notes.exportZip.menuItem,
+                            icon: <FolderZipRoundedIcon sx={{ fontSize: 16 }} />,
+                            onClick: () => actions.onExportFolder(folder),
                         },
                         {
                             id: "new-subfolder",

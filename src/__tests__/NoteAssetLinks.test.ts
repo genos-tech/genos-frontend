@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import {
     collectRelativeAssetHrefs,
+    collectRemoteAssetHrefs,
     isRelativeAssetHref,
     resolveAssetPath,
     rewriteAssetHrefs,
@@ -91,6 +92,32 @@ describe("collectRelativeAssetHrefs", () => {
     });
 });
 
+describe("collectRemoteAssetHrefs", () => {
+    it("finds the links an export has to fetch a copy of", () => {
+        const blocks = [
+            image("https://api/media/a.png"),
+            { type: "paragraph", content: [], children: [image("http://api/media/b.png")] },
+            image("https://api/media/a.png"),
+        ];
+        expect(collectRemoteAssetHrefs(blocks)).toEqual([
+            "https://api/media/a.png",
+            "http://api/media/b.png",
+        ]);
+    });
+
+    it("ignores anything already carried by the markdown itself", () => {
+        // A data URI needs no copy; a relative link has no bytes to fetch.
+        const blocks = [image("data:image/png;base64,AAAA"), image("Roadmap/shot.png")];
+        expect(collectRemoteAssetHrefs(blocks)).toEqual([]);
+    });
+
+    it("ignores non-media blocks that happen to carry a url prop", () => {
+        expect(
+            collectRemoteAssetHrefs([{ type: "paragraph", props: { url: "https://x/a.png" } }])
+        ).toEqual([]);
+    });
+});
+
 describe("rewriteAssetHrefs", () => {
     it("swaps in the uploaded URL and leaves everything else intact", () => {
         const blocks = [image("a.png", { previewWidth: 300 })];
@@ -129,5 +156,15 @@ describe("rewriteAssetHrefs", () => {
         );
         const child = (out[0] as { children: { props: { url: string } }[] }).children[0];
         expect(child.props.url).toBe("https://api/media/a.png");
+    });
+
+    it("runs the other way too, for an export", () => {
+        // Same function, absolute → relative: what puts a zip's own copy
+        // of an image behind the link.
+        const out = rewriteAssetHrefs(
+            [image("https://api/media/notes/personal/10/shot.png")],
+            new Map([["https://api/media/notes/personal/10/shot.png", "Launch/shot.png"]])
+        );
+        expect((out[0] as { props: { url: string } }).props.url).toBe("Launch/shot.png");
     });
 });

@@ -216,6 +216,25 @@ export const notes = {
         resultCancelled: "Stopped early. Everything created up to that point was kept.",
         resultDone: "Done",
     },
+    // Batch export of a folder tree — the mirror of importMd's folder
+    // half, and deliberately laid out so its zip can be imported back.
+    exportZip: {
+        menuItem: "Export folder as .zip",
+        heading: "Export folder",
+        summary: "{folders} subfolders, {notes} notes",
+        empty: "That folder has no notes in it.",
+        hint: "Every note becomes a markdown file inside a folder tree matching this one, with its images alongside it.",
+        exportButton: "Export",
+        progress: "Exported {done} of {total}",
+        stop: "Stop",
+        resultNotes: "Exported {count} notes.",
+        resultImages: "Included {count} images.",
+        resultImagesFailed:
+            "{count} images couldn't be downloaded — those links still point at Genos.",
+        resultFailures: "{count} notes couldn't be read and were skipped.",
+        resultCancelled: "Stopped early. The zip holds everything gathered up to that point.",
+        done: "Done",
+    },
     autocomplete: {
         searchAria: "Search",
         searchChildNotes: "Search Child Notes",
