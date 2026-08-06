@@ -464,6 +464,20 @@ input[type="checkbox"] {
     color: #be185d; /* Pink for code */
 }
 
+/* Quoted text, per bubble variant.
+   `@blocknote/core` already draws the rule + indent via
+   `[data-content-type=quote] blockquote`, but its one colour (#7d797a) was
+   picked for a white page: it lands at ~3:1 on the dark bubbles and off
+   palette on the sent ones. Only the two colours are overridden here.
+   The `[data-content-type="quote"]` step is load-order insurance, not
+   decoration — without it these selectors TIE BlockNote's on specificity,
+   and its stylesheet arrives with a lazily-imported editor chunk, i.e.
+   after App.css. */
+.bn-message-bubble-box-light [data-content-type="quote"] blockquote {
+    border-left-color: var(--gp-brand-700);
+    color: #4b5563; /* Muted gray against the body's near-black */
+}
+
 /* Light mode - Sent messages (light indigo background #eef2ff) */
 .bn-message-bubble-box-light-me .bn-editor {
     background-color: transparent;
@@ -474,6 +488,11 @@ input[type="checkbox"] {
 .bn-message-bubble-box-light-me code {
     background-color: rgba(99, 102, 241, 0.15) !important;
     color: var(--gp-brand-700); /* Purple for code */
+}
+
+.bn-message-bubble-box-light-me [data-content-type="quote"] blockquote {
+    border-left-color: var(--gp-brand-700);
+    color: #4338ca; /* Lighter indigo against the body's deep indigo */
 }
 
 /* Dark mode - Received messages (dark gray background #1f2937) */
@@ -488,6 +507,11 @@ input[type="checkbox"] {
     color: #fb923c; /* Orange for code */
 }
 
+.bn-message-bubble-box-dark [data-content-type="quote"] blockquote {
+    border-left-color: #818cf8;
+    color: #cbd5e1;
+}
+
 /* Dark mode - Sent messages (deep indigo background #312e81) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
@@ -498,6 +522,11 @@ input[type="checkbox"] {
 .bn-message-bubble-box-dark-me code {
     background-color: rgba(255, 255, 255, 0.15) !important;
     color: #fbbf24; /* Amber for code */
+}
+
+.bn-message-bubble-box-dark-me [data-content-type="quote"] blockquote {
+    border-left-color: #a5b4fc;
+    color: #c7d2fe;
 }
 
 /* Editor common styles */
@@ -948,6 +977,14 @@ div[data-floating-ui-focusable] {
     color: #be185d;
 }
 
+/* Quoted text — see the note in the message-bubble section above for why
+   the selector carries `[data-content-type="quote"]`. Same two colours as
+   the received bubble, whose background this shares. */
+.task-comment-preview-light [data-content-type="quote"] blockquote {
+    border-left-color: var(--gp-brand-700);
+    color: #4b5563;
+}
+
 .task-comment-preview-dark .bn-editor {
     color: #e0e7ff; /* Light indigo text on dark indigo background */
     background-color: transparent;
@@ -957,6 +994,12 @@ div[data-floating-ui-focusable] {
 .task-comment-preview-dark code {
     background-color: rgba(255, 255, 255, 0.12) !important;
     color: #fbbf24;
+}
+
+/* Same pair as the dark sent bubble — identical indigo background. */
+.task-comment-preview-dark [data-content-type="quote"] blockquote {
+    border-left-color: #a5b4fc;
+    color: #c7d2fe;
 }
 
 /* Inbox preview */
@@ -985,6 +1028,12 @@ div[data-floating-ui-focusable] {
     color: var(--code-light-color);
 }
 
+/* Quoted text — see the note in the message-bubble section above. */
+.inbox-preview-light [data-content-type="quote"] blockquote {
+    border-left-color: var(--gp-brand-700);
+    color: #4b5563;
+}
+
 .inbox-preview-dark .bn-editor {
     color: white;
     background-color: transparent;
@@ -994,6 +1043,11 @@ div[data-floating-ui-focusable] {
 .inbox-preview-dark code {
     background-color: var(--code-dark-bg) !important;
     color: var(--code-dark-color);
+}
+
+.inbox-preview-dark [data-content-type="quote"] blockquote {
+    border-left-color: #818cf8;
+    color: #cbd5e1;
 }
 
 /* Todo per-item notes editor.

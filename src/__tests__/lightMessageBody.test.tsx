@@ -152,6 +152,18 @@ const cases: Array<{ name: string; content: any[] }> = [
         ],
     },
     {
+        // The `<blockquote>` element is the whole styling contract here:
+        // `@blocknote/core`'s only quote rule is
+        // `[data-content-type=quote] blockquote`, so emitting the usual
+        // `<p>` left a quoted message painted like the paragraph above it.
+        name: "quote",
+        content: [
+            { type: "paragraph", content: [{ type: "text", text: "before", styles: {} }] },
+            { type: "quote", content: [{ type: "text", text: "quoted", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
         name: "lists",
         content: [
             { type: "bulletListItem", content: [{ type: "text", text: "a", styles: {} }] },

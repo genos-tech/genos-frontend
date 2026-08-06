@@ -151,7 +151,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     };
 
     return (
-        <Box display="flex">
+        // `gap`, because the picks are square-ish buttons sized to a 16px
+        // glyph: with none, adjacent emoji touch and the hover highlight
+        // reads as one continuous strip rather than four targets.
+        <Box sx={{ display: "flex", gap: 0.5 }}>
             {showUnderBarOption && (
                 <>
                     {groupedReactions.length < 3 && (
@@ -163,7 +166,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                                     variant="plain"
                                     sx={{
                                         minWidth: "auto",
-                                        paddingX: "4px",
+                                        paddingX: "6px",
                                         paddingY: "0",
                                         fontSize: "16px",
                                         "&:hover": {
@@ -187,7 +190,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             variant="plain"
                             sx={{
                                 minWidth: "auto",
-                                paddingX: "4px",
+                                paddingX: "6px",
                                 paddingY: "0",
                                 fontSize: "16px",
                                 fontWeight: "bold",

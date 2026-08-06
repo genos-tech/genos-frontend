@@ -274,7 +274,7 @@ const InlineContent = ({
 /* ------------------------------------------------------------------ */
 
 /** The inline wrapper element differs per block type, matching BlockNote:
- *  headings use `<hN>`, everything else `<p>`. */
+ *  headings use `<hN>`, quotes `<blockquote>`, everything else `<p>`. */
 function InlineWrapper({
     block,
     ctx,
@@ -297,6 +297,15 @@ function InlineWrapper({
         const level = Number(block.props?.level) || 1;
         const Tag = (level === 1 ? "h1" : level === 2 ? "h2" : "h3") as "h1" | "h2" | "h3";
         return <Tag className="bn-inline-content">{inner}</Tag>;
+    }
+    // A quote's inline content goes straight into a `<blockquote>` — the
+    // block's spec returns that one element as BOTH `dom` and `contentDOM`,
+    // so unlike every other block there is no inner `<p>`. The element is
+    // the whole styling contract: `@blocknote/core`'s only quote rule is
+    // `[data-content-type=quote] blockquote`, so a `<p>` here left a quote
+    // painted exactly like the paragraph above it.
+    if (block.type === "quote") {
+        return <blockquote className="bn-inline-content">{inner}</blockquote>;
     }
     return <p className="bn-inline-content">{inner}</p>;
 }
