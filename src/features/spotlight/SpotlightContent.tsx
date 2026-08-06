@@ -132,6 +132,11 @@ export interface SpotlightContentProps {
     // callers that don't wire it (tests) keep working: the picker then
     // simply doesn't render.
     projects?: ProjectProps[];
+    // Project id → avatar url, resolved by `projectAvatarSrcMap` where
+    // the chat list is in scope. Threaded for the same reason as
+    // `projects`: a project's avatar lives on its PM chat, which this
+    // overlay can't reach. Absent ids fall back to the generic icon.
+    projectAvatars?: Map<number, string>;
     filterProjectIds?: number[];
     onChangeFilterProjects?: (projectIds: number[]) => void;
     // Navigate to the entity's own page, closing Spotlight. Now the
@@ -248,6 +253,7 @@ export const SpotlightContent = ({
     filterServices,
     onToggleFilterService,
     projects,
+    projectAvatars,
     filterProjectIds,
     onChangeFilterProjects,
     onSelect,
@@ -1044,6 +1050,7 @@ export const SpotlightContent = ({
                                 ariaLabel={t.spotlight.filter.projectAriaLabel}
                                 isDark={isDark}
                                 placeholder={t.spotlight.filter.projectPlaceholder}
+                                projectAvatars={projectAvatars}
                                 projects={projects ?? EMPTY_PROJECTS}
                                 selectedIds={selectedProjectIds}
                                 onChange={onChangeFilterProjects}

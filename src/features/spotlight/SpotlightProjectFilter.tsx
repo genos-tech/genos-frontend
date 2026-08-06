@@ -7,11 +7,12 @@
 //
 // The option row is `ProjectIdentityRow`, the same component the task
 // pickers (`ACTeamProjects`) and the task sidebar render, so a project
-// looks like itself everywhere: labels first, then the name. Avatars are
-// resolved from a project's PM chat, which this overlay has no access to
-// (it mounts outside the chat provider tree), so options fall back to
-// the generic project icon — the documented `avatarSrc`-absent path in
-// `ProjectIdentityRow`, not a new one.
+// looks like itself everywhere: avatar, labels, then the name. Avatars
+// live on a project's PM chat, which this overlay can't reach (it mounts
+// outside the chat provider tree), so they arrive pre-resolved in
+// `projectAvatars` — threaded from App like `projects` itself. A project
+// missing from that map falls back to the generic project icon, the
+// documented `avatarSrc`-absent path in `ProjectIdentityRow`.
 
 import { Autocomplete, AutocompleteOption, Box, Chip, Typography } from "@mui/joy";
 
@@ -30,6 +31,9 @@ type SpotlightProjectFilterProps = {
     projects: ProjectProps[];
     /** Currently scoped project ids. Empty = every project. */
     selectedIds: number[];
+    /** Project id → avatar url, from `projectAvatarSrcMap`. Absent ids
+     *  fall back to the generic project icon. */
+    projectAvatars?: Map<number, string>;
     onChange: (projectIds: number[]) => void;
     isDark: boolean;
     placeholder: string;
@@ -39,6 +43,7 @@ type SpotlightProjectFilterProps = {
 export const SpotlightProjectFilter = ({
     projects,
     selectedIds,
+    projectAvatars,
     onChange,
     isDark,
     placeholder,
@@ -73,7 +78,11 @@ export const SpotlightProjectFilter = ({
                     key={option.projectId}
                     sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
                 >
-                    <ProjectIdentityRow maxLabels={2} project={option} />
+                    <ProjectIdentityRow
+                        avatarSrc={projectAvatars?.get(option.projectId)}
+                        maxLabels={2}
+                        project={option}
+                    />
                 </AutocompleteOption>
             )}
             renderTags={(value, getTagProps) =>

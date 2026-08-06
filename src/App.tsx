@@ -49,6 +49,7 @@ import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
 import { loadTeamTaskList } from "./features/tasks/services/loadTaskSearchList";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
+import { projectAvatarSrcMap } from "./features/tasks/utils/projectAvatar";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
@@ -439,6 +440,13 @@ export const App = () => {
         () => usePM.teamProjects.filter((p) => p.isJoined === true),
         [usePM.teamProjects]
     );
+
+    // Avatars for the rows of that picker. Resolved here because a
+    // project's image lives on its PM chat rather than on the project
+    // record, and `allChats` is in scope at this level but not inside
+    // the overlay. Built as a map in one pass over the chats so an
+    // option list is a lookup per row, not a rescan.
+    const projectAvatars = useMemo(() => projectAvatarSrcMap(useCM.allChats), [useCM.allChats]);
 
     // Push freshly-cached IDB data into React state after a background
     // network refresh writes it. Shared by the cache-first boot refresh and
@@ -1293,6 +1301,7 @@ export const App = () => {
                                                                 spotlightMentionMembers
                                                             }
                                                             openHistory={spotlight.openHistory}
+                                                            projectAvatars={projectAvatars}
                                                             projects={spotlightFilterProjects}
                                                             query={spotlight.query}
                                                             results={spotlight.results}
@@ -1738,6 +1747,9 @@ export const App = () => {
                                                                                                                         }
                                                                                                                         mentionMembers={
                                                                                                                             spotlightMentionMembers
+                                                                                                                        }
+                                                                                                                        projectAvatars={
+                                                                                                                            projectAvatars
                                                                                                                         }
                                                                                                                         projects={
                                                                                                                             spotlightFilterProjects

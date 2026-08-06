@@ -21,7 +21,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ACTeamProjects } from "../features/tasks/components/autocompletes/ACTeamProjects";
-import { projectAvatarSrc } from "../features/tasks/utils/projectAvatar";
+import { projectAvatarSrc, projectAvatarSrcMap } from "../features/tasks/utils/projectAvatar";
 import type { ChatManagementState } from "../hooks/chats/useChatManagement";
 import type { ProjectManagementState } from "../hooks/common/useProjectManagement";
 import type { TaskProps } from "../types/tasks";
@@ -133,5 +133,38 @@ describe("projectAvatarSrc", () => {
         expect(projectAvatarSrc(99, chats)).toBeUndefined();
         expect(projectAvatarSrc(1, undefined)).toBeUndefined();
         expect(projectAvatarSrc(undefined, chats)).toBeUndefined();
+    });
+});
+
+describe("projectAvatarSrcMap", () => {
+    // The batch form, for hosts that render a list of projects and take
+    // the avatars as a prop (the Spotlight / Genos project filter).
+    const allChats = [
+        // Same decoys as above: a DM for project 1 must lose to the PM
+        // chat, and a PM chat with no project at all must not throw.
+        {
+            chatType: 1,
+            project: { projectId: 1 },
+            profileImagePath: "https://cdn.test/wrong-dm.png",
+        },
+        { chatType: 3, project: { projectId: 1 }, profileImagePath: "https://cdn.test/p1.png" },
+        { chatType: 3, project: { projectId: 2 }, profileImagePath: undefined },
+        { chatType: 3, profileImagePath: "https://cdn.test/orphan.png" },
+    ] as unknown as ChatManagementState["allChats"];
+
+    it("resolves every project in one pass, agreeing with the single-project form", () => {
+        const avatars = projectAvatarSrcMap(allChats);
+        expect(avatars.get(1)).toBe("https://cdn.test/p1.png");
+        expect(avatars.get(1)).toBe(projectAvatarSrc(1, allChats));
+    });
+
+    it("omits projects the row should fall back to the generic icon for", () => {
+        const avatars = projectAvatarSrcMap(allChats);
+        // PM chat exists but carries no image.
+        expect(avatars.has(2)).toBe(false);
+        // No PM chat at all.
+        expect(avatars.has(99)).toBe(false);
+        // Pre-auth, before any chat has loaded.
+        expect(projectAvatarSrcMap(undefined).size).toBe(0);
     });
 });
