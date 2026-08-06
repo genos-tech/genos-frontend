@@ -8,7 +8,6 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Box,
     Button,
-    Chip,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -25,7 +24,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
-import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
+import { loadMyTeams, membershipTeams } from "../../features/admin/services/loadMyTeams";
 import { switchTeam } from "../../features/admin/services/switchTeam";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
@@ -126,7 +125,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
         (async () => {
             try {
                 const loaded: Team[] = await loadMyTeams(accessToken, myself.userId);
-                if (!cancelled) setTeams(loaded);
+                if (!cancelled) setTeams(membershipTeams(loaded));
             } catch {
                 // Non-fatal: the team row just shows the current team only.
             }
@@ -143,7 +142,6 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
             setMyself,
             teamId: team.teamId,
             teamName: team.teamName,
-            isGuest: team.isGuest,
         });
         setTeamsOpen(false);
         onClose();
@@ -262,13 +260,6 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                                     <Typography level="body-md" sx={{ flex: 1, minWidth: 0 }}>
                                         {team.teamName}
                                     </Typography>
-                                    {/* Someone else's team, here because they
-                                        shared something with ours. */}
-                                    {team.isGuest && (
-                                        <Chip color="neutral" size="sm" variant="soft">
-                                            {t.admin.teamDropdown.guestTeam}
-                                        </Chip>
-                                    )}
                                     {isCurrent && (
                                         <CheckCircleRoundedIcon
                                             sx={{ fontSize: 18, color: palette.accent }}
