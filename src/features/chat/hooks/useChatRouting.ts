@@ -16,6 +16,7 @@ import {
 import { resolveV3MessageUuid, resolveV3ThreadRootUuid } from "../utils/channelIdResolvers";
 import { buildChatPath, CHAT_TYPE_MAP, CHAT_TYPE_REVERSE_MAP } from "../utils/chatPaths";
 import { parseChatRoute } from "../utils/parseChatRoute";
+import { threadIdentityFromChannel } from "../utils/threadIdentity";
 import {
     chatKey,
     recallThread,
@@ -169,13 +170,24 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
                 return;
             }
 
+            // Inherited from the parent channel, the way
+            // `moveToSpecificThreadChat` does it — see `threadIdentity.ts`
+            // for what went wrong when this leg hardcoded `myself` instead.
+            const { chatName, dmPartnerUser } = threadIdentityFromChannel(
+                useCM.allChats,
+                chatId,
+                paneType,
+                useCM.currentMainChat,
+                myself
+            );
+
             // Keys sorted alphabetically per `sort-keys`.
             const firstMessage = threadMessages[0];
             const newThread: ThreadProps = {
                 chatId,
-                chatName: useCM.currentMainChat?.chatName || "",
+                chatName,
                 chatType: paneType,
-                dmPartnerUser: myself,
+                dmPartnerUser,
                 messages: threadMessages,
                 moveToSpecificIndex: undefined,
                 project: firstMessage.project,

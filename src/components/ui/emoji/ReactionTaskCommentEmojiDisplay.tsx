@@ -189,7 +189,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                                     variant="plain"
                                     sx={{
                                         minWidth: "auto",
-                                        paddingX: "4px",
+                                        paddingX: "6px",
                                         marginBottom: 0.5,
                                         fontSize: "16px",
                                         "&:hover": {
@@ -213,7 +213,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                             variant="plain"
                             sx={{
                                 minWidth: "auto",
-                                paddingX: "4px",
+                                paddingX: "6px",
                                 marginBottom: 0.5,
                                 fontSize: "16px",
                                 "&:hover": {

@@ -27,6 +27,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -156,6 +157,19 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const isYou: boolean =
         myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId &&
         useCM.currentThreadChat?.chatType === 1;
+
+    // A DM thread's title is the partner's name. Resolve it live rather than
+    // printing the `chatName` copied off the channel row, which was
+    // denormalized at write time and so still holds the old name after a
+    // rename. Same treatment `HeaderUserName` gives the main pane, so the
+    // two headers can't disagree about who you're talking to. GM/PM/MDM
+    // threads keep their group name (`userId` undefined → fallback).
+    const dmDisplayName = useResolvedUserName(
+        useCM.currentThreadChat?.chatType === 1
+            ? useCM.currentThreadChat?.dmPartnerUser?.userId
+            : undefined,
+        useCM.currentThreadChat?.chatName ?? ""
+    );
 
     // Action button style
     const actionButtonStyle = {
@@ -421,7 +435,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }}
                         noWrap
                     >
-                        {useCM.currentThreadChat?.chatName || "Thread"}
+                        {dmDisplayName || "Thread"}
                     </Typography>
                     <ExternalChatChip
                         allChats={useCM.allChats}
@@ -588,9 +602,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }}
                         noWrap
                     >
-                        {isYou
-                            ? `${useCM.currentThreadChat?.chatName} (you)`
-                            : useCM.currentThreadChat?.chatName}
+                        {isYou ? `${dmDisplayName} (you)` : dmDisplayName}
                     </Typography>
                 )}
 
