@@ -39,8 +39,7 @@ const FAILURE_REASON_MESSAGES: Record<string, string> = {
     // whoever lands here picked the wrong account at the provider's
     // chooser.
     not_a_login_account:
-        "That account was only connected for calendar access, so it can't sign you in. " +
-        "Pick a different account on the Google or GitHub screen, or use the address you signed up with.",
+        "That account was only connected for calendar access, so it can't sign you in.",
     provider_already_connected:
         "You already have an account connected for this provider. Disconnect it first.",
     unknown_provider: "Unknown OAuth provider.",
@@ -62,7 +61,7 @@ const failureMessage = (reason: string, primary: string | null): string => {
     if (!REMEDY_IS_ANOTHER_METHOD.has(reason)) return base;
     const method =
         (primary && SIGN_IN_METHOD_LABELS[primary]) || "the method you originally signed up with";
-    return `${base} Sign in with ${method} instead.`;
+    return `${base} Sign in with ${method} instead, or pick a different account on the provider's screen.`;
 };
 
 export const OAuthSuccessHandler = () => {
