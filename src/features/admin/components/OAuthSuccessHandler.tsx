@@ -24,8 +24,7 @@ interface MeResponse {
 }
 
 const FAILURE_REASON_MESSAGES: Record<string, string> = {
-    email_in_use:
-        "An account already exists for this email. Sign in with your existing method instead.",
+    email_in_use: "An account already exists for this email address.",
     consent_denied: "OAuth consent was denied. You can try again any time.",
     bad_callback: "OAuth callback was malformed. Please try again.",
     invalid_state:
@@ -34,16 +33,35 @@ const FAILURE_REASON_MESSAGES: Record<string, string> = {
     not_authenticated: "You need to be signed in to connect a third-party account.",
     already_connected_to_other_user: "This account is already connected to a different user.",
     // Returned when someone tries to sign in with a provider account
-    // they attached for API access (e.g. a second Google account added
-    // just to see its calendar). Connecting an account deliberately does
-    // NOT make it a way to sign in, so the message points them back to
-    // the method they actually signed up with.
+    // that belongs to somebody else's Genos account and was attached
+    // there only for API access — a colleague's Google added to see one
+    // more calendar. Signing in with your OWN address is allowed, so
+    // whoever lands here picked the wrong account at the provider's
+    // chooser.
     not_a_login_account:
-        "This account is connected for calendar access only, not for signing in. " +
-        "Use the account you originally signed up with.",
+        "That account was only connected for calendar access, so it can't sign you in.",
     provider_already_connected:
         "You already have an account connected for this provider. Disconnect it first.",
     unknown_provider: "Unknown OAuth provider.",
+};
+
+// Reasons whose remedy is "use the method this account actually signs in
+// with". The backend sends `primary` alongside them so we can name it
+// instead of leaving the user to guess.
+const REMEDY_IS_ANOTHER_METHOD = new Set(["email_in_use", "not_a_login_account"]);
+
+const SIGN_IN_METHOD_LABELS: Record<string, string> = {
+    email: "your email and password",
+    google: "Google",
+    github: "GitHub",
+};
+
+const failureMessage = (reason: string, primary: string | null): string => {
+    const base = FAILURE_REASON_MESSAGES[reason] || "OAuth flow failed.";
+    if (!REMEDY_IS_ANOTHER_METHOD.has(reason)) return base;
+    const method =
+        (primary && SIGN_IN_METHOD_LABELS[primary]) || "the method you originally signed up with";
+    return `${base} Sign in with ${method} instead, or pick a different account on the provider's screen.`;
 };
 
 export const OAuthSuccessHandler = () => {
@@ -59,10 +77,10 @@ export const OAuthSuccessHandler = () => {
     useEffect(() => {
         let cancelled = false;
 
-        const failureFromQuery = new URLSearchParams(window.location.search).get("error");
+        const query = new URLSearchParams(window.location.search);
+        const failureFromQuery = query.get("error");
         if (failureFromQuery) {
-            const message = FAILURE_REASON_MESSAGES[failureFromQuery] || "OAuth flow failed.";
-            setError(message);
+            setError(failureMessage(failureFromQuery, query.get("primary")));
             return;
         }
 
