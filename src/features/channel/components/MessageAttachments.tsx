@@ -7,6 +7,11 @@
  * preview thumbnail above the chip so users see the picture without
  * clicking through.
  *
+ * Both the thumbnail and the download go through the authenticated media
+ * path (`utils/mediaAuth`) rather than letting the browser authenticate
+ * them with its cookie — see that module for why the cookie is not
+ * trustworthy here.
+ *
  * Read-only on the v3 surfaces for now: there is no v3 upload endpoint
  * yet (legacy uploads still go to `/api/v2/chat/attachment/`). This
  * surface displays whatever the backend serializer returns, so once a
@@ -17,7 +22,9 @@
 import type { CSSProperties } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useProtectedMediaSrc } from "../../../hooks/common/useProtectedMediaSrc";
 import type { MessageAttachment } from "../../../types/channel";
+import { downloadFile } from "../../../utils/downloadUtils";
 
 interface MessageAttachmentsProps {
     messageId: string;
@@ -74,14 +81,18 @@ function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
     const isImage = (attachment.mime || "").startsWith("image/");
     const filename = extractFilename(attachment.fileUrl);
     const sizeLabel = formatSize(attachment.sizeBytes);
+    // `/media/` attachments are gated per file, and an <img> can only offer
+    // the browser's cookie — which has proven to be the wrong user's, or
+    // blocked outright. Resolve to a blob fetched as the signed-in session.
+    const previewSrc = useProtectedMediaSrc(isImage ? attachment.fileUrl : undefined);
     return (
         <div data-testid={`message-attachment-${messageId}-${attachment.id}`}>
-            {isImage && (
+            {isImage && previewSrc && (
                 <img
                     alt={filename}
                     data-testid={`message-attachment-preview-${attachment.id}`}
                     loading="lazy"
-                    src={attachment.fileUrl}
+                    src={previewSrc}
                     style={PREVIEW_STYLE}
                 />
             )}
@@ -93,6 +104,14 @@ function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
                     rel="noreferrer"
                     style={CHIP_STYLE}
                     target="_blank"
+                    onClick={(e) => {
+                        // Same credential problem, one step worse: a plain
+                        // navigation would replace the tab with the API's
+                        // JSON error. `downloadFile` carries the session
+                        // token. `href` stays for copy-link / middle-click.
+                        e.preventDefault();
+                        void downloadFile(attachment.fileUrl, filename);
+                    }}
                 >
                     <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>
                     <span

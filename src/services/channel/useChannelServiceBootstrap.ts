@@ -25,6 +25,7 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+import { setMediaAccessToken } from "../../utils/mediaAuth";
 import { channelService } from "./channelService";
 import { registerSocketRouter, V3_NAMESPACE } from "./socketRouter";
 
@@ -54,6 +55,11 @@ export function useChannelServiceBootstrap(
     // the effect.)
     channelService.setAccessToken(accessToken);
     channelService.setCurrentUserId(userId);
+    // Same push, for the non-React module that loads protected `/media/`
+    // attachments: an `<img>` can't carry a header, so without this the
+    // picture is at the mercy of whatever `refresh` cookie the browser
+    // decides to attach (`utils/mediaAuth`).
+    setMediaAccessToken(accessToken);
     // Before the effect, so the reset lands ahead of the socket teardown
     // below rather than a tick after it — otherwise events for the old
     // team could still be applied into the new team's store.

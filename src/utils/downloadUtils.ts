@@ -1,3 +1,5 @@
+import { mediaAuthHeaders, resolveProtectedMediaUrl } from "./mediaAuth";
+
 /**
  * Upgrade an `http://` URL to `https://` when the current page is served
  * over HTTPS. Media URLs are persisted into message bodies as absolute
@@ -35,9 +37,14 @@ export const upgradeInsecureUrl = (url: string): string => {
  * content can't be un-baked, so upgrade the scheme at render time.
  *
  * No-op on plain-http pages (local dev) and for `blob:` / relative URLs.
+ *
+ * Also where protected attachments pick up the session's own credential
+ * instead of relying on the browser to attach the refresh cookie — see
+ * `utils/mediaAuth`. Being the single interception point is what lets that
+ * apply to every editor and preview surface without touching any of them.
  */
 export const resolveInsecureFileUrl = (url: string): Promise<string> =>
-    Promise.resolve(upgradeInsecureUrl(url));
+    resolveProtectedMediaUrl(upgradeInsecureUrl(url));
 
 /**
  * Downloads a file from a URL using blob to ensure proper local download
@@ -47,12 +54,16 @@ export const downloadFile = async (rawUrl: string, filename?: string): Promise<v
     const url = upgradeInsecureUrl(rawUrl);
     try {
         // Fetch the file as a blob to handle CORS and ensure proper download.
-        // `credentials: "include"` attaches the HttpOnly refresh cookie —
-        // the backend's /media/ routes require it for attachment paths
-        // (avatars stay public). Bare fetch() defaults to same-origin
-        // credentials, which sends nothing to the cross-origin API host
-        // and would 401 every attachment download.
-        const response = await fetch(url, { credentials: "include" });
+        // Two credentials, because either can be the one that works. The
+        // Bearer header is the session's actual identity; `credentials:
+        // "include"` attaches the HttpOnly refresh cookie, which is all
+        // there is when no token has been pushed in yet. Bare fetch()
+        // defaults to same-origin credentials, which sends nothing to the
+        // cross-origin API host and would 401 every attachment download.
+        const response = await fetch(url, {
+            credentials: "include",
+            headers: mediaAuthHeaders(),
+        });
         if (!response.ok) throw new Error("Network response was not ok");
 
         const blob = await response.blob();

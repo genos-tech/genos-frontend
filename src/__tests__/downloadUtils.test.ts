@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { downloadFile, resolveInsecureFileUrl, upgradeInsecureUrl } from "../utils/downloadUtils";
+import { setMediaAccessToken } from "../utils/mediaAuth";
 
 describe("downloadFile", () => {
     let createElementSpy: ReturnType<typeof vi.spyOn>;
@@ -67,12 +68,35 @@ describe("downloadFile", () => {
 
         await downloadFile("http://api.genosai.dev/media/chats/x/shot.png", "shot.png");
 
-        // Scheme upgraded AND credentials attached — the HttpOnly refresh
-        // cookie is what authenticates protected /media/ paths.
+        // Scheme upgraded AND both credentials offered: the cookie, plus
+        // the session's own Bearer token when one has been pushed in
+        // (`utils/mediaAuth`) — an `<img>` can't send a header, but a
+        // download fetch can, and the cookie alone has proven unreliable.
         expect(fetchMock).toHaveBeenCalledWith("https://api.genosai.dev/media/chats/x/shot.png", {
             credentials: "include",
+            headers: {},
         });
         vi.unstubAllGlobals();
+    });
+
+    it("sends the session token when one is available", async () => {
+        vi.stubGlobal("location", { protocol: "https:" });
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            blob: () => Promise.resolve(new Blob(["content"], { type: "image/png" })),
+        });
+        global.fetch = fetchMock;
+        setMediaAccessToken("tok-dl");
+        try {
+            await downloadFile("https://api.genosai.dev/media/chats/x/shot.png", "shot.png");
+            expect(fetchMock).toHaveBeenCalledWith(
+                "https://api.genosai.dev/media/chats/x/shot.png",
+                expect.objectContaining({ headers: { Authorization: "Bearer tok-dl" } })
+            );
+        } finally {
+            setMediaAccessToken(null);
+            vi.unstubAllGlobals();
+        }
     });
 });
 
