@@ -16,6 +16,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../components/messageBody/MessageBody";
+import { EmojiText } from "../../../components/ui/emoji/EmojiText";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
@@ -496,7 +497,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         </Typography>
                         {/* The message itself, quoted. A reminder whose
                             subject you have to go and look up is a reminder
-                            you postpone, so the text comes with it. */}
+                            you postpone, so the text comes with it.
+
+                            Through `EmojiText` because this preview is the
+                            message's stored `body_text`, where a custom
+                            emoji is its `:name:` shortcode — printed raw it
+                            reads as literal text in the one place the
+                            reader is being asked to recognise their own
+                            message. Same treatment as the chat list,
+                            activity feed and flagged list. */}
                         {reminderPreview !== "" && (
                             <Typography
                                 level="body-sm"
@@ -511,7 +520,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     color: isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.68)",
                                 }}
                             >
-                                {reminderPreview}
+                                <EmojiText text={reminderPreview} />
                             </Typography>
                         )}
                     </Stack>
