@@ -92,6 +92,7 @@ import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
 import { ModalDeleteNote } from "./ModalDeleteNote";
+import { ExportFolderTarget, ModalExportFolder } from "./ModalExportFolder";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
@@ -649,6 +650,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         null
     );
 
+    // "Export folder as .zip" from a sidebar folder row. One dialog host
+    // serves both trees; `source` only tells the runner whether the bulk
+    // body endpoint covers this folder's notes.
+    const [exportFolderTarget, setExportFolderTarget] = useState<ExportFolderTarget | null>(null);
+    const exportingTeamFolder = exportFolderTarget?.source === "team";
+
     // Builds the shared "Export as Markdown" row-menu item for any note
     // row. Sidebar buckets 4 (shared) and 8 (team) are UI-only aliases
     // of personal notes, so the export goes out as type 1 — see
@@ -737,6 +744,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
+        onExportFolder: (folder) =>
+            setExportFolderTarget({
+                folderId: folder.folderId,
+                name: folder.name,
+                source: "personal",
+            }),
         onCreateSubfolder: (folderId) =>
             setFolderNameModal({ mode: "create", parentFolderId: folderId }),
         onRenameFolder: (folder) => setFolderNameModal({ mode: "rename", folder }),
@@ -972,6 +985,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
+        onExportFolder: (folder) =>
+            setExportFolderTarget({
+                folderId: folder.folderId,
+                name: folder.name,
+                source: "team",
+            }),
         onCreateSubfolder: (parent) => setTeamFolderModal({ mode: "create-child", parent }),
         onRenameFolder: (folder) => setTeamFolderModal({ mode: "rename", folder }),
         onMoveFolder: (folder) => setTeamMoveModal(folder),
@@ -2039,6 +2058,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     onClose={() => setImportModalContext(null)}
                 />
             )}
+            {/* "Export folder as .zip" from a folder row, either tree. */}
+            <ModalExportFolder
+                accessToken={accessToken}
+                folders={exportingTeamFolder ? useNM.teamNoteFolders : useNM.myNoteFolders}
+                myself={myself}
+                noteMeta={exportingTeamFolder ? useNM.teamNoteMeta : useNM.myNoteMeta}
+                target={exportFolderTarget}
+                onClose={() => setExportFolderTarget(null)}
+            />
             <ModalDeleteNote
                 hasChildren={deleteNoteModal?.hasChildren ?? false}
                 noteTitle={deleteNoteModal?.title ?? ""}

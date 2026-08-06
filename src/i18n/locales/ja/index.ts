@@ -1539,6 +1539,23 @@ export const ja: DeepPartial<Messages> = {
             resultCancelled: "途中で停止しました。それまでに作成された内容はそのまま残ります。",
             resultDone: "完了",
         },
+        exportZip: {
+            menuItem: "フォルダを .zip でエクスポート",
+            heading: "フォルダをエクスポート",
+            summary: "サブフォルダ {folders} 件、ノート {notes} 件",
+            empty: "このフォルダにはノートがありません。",
+            hint: "各ノートは、このフォルダと同じ階層のマークダウンファイルとして書き出され、画像も一緒に含まれます。",
+            exportButton: "エクスポート",
+            progress: "{total} 件中 {done} 件をエクスポート済み",
+            stop: "停止",
+            resultNotes: "ノート {count} 件をエクスポートしました。",
+            resultImages: "画像 {count} 件を含めました。",
+            resultImagesFailed:
+                "画像 {count} 件をダウンロードできませんでした。該当のリンクは Genos を指したままです。",
+            resultFailures: "ノート {count} 件を読み込めず、スキップされました。",
+            resultCancelled: "途中で停止しました。それまでに取得した内容が zip に含まれています。",
+            done: "完了",
+        },
         autocomplete: {
             searchAria: "検索",
             searchChildNotes: "子ノートを検索",
