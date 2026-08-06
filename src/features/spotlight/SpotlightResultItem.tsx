@@ -34,6 +34,10 @@ interface Props {
      *  project (DMs, personal notes, todos) and for a project the
      *  viewer's `teamProjects` hasn't loaded. */
     project?: ProjectProps;
+    /** Note id → sidebar space, for the personal notes that aren't in My
+     *  Notes. Absent ids are My Notes; an absent map degrades to the old
+     *  behaviour of calling every personal note one. */
+    noteScopes?: ReadonlyMap<number, "shared" | "team">;
     /** Row activation. `viaModifier` reports whether Cmd/Ctrl was held,
      *  which the parent reads as "navigate to the page instead of opening
      *  the preview modal" — the row itself stays unaware of that rule. */
@@ -97,7 +101,16 @@ const DARK_TEXT_SOFT = "#a89bbf";
 // — keeps the two surfaces from drifting. Accepts the translation
 // dictionary so the labels stay locale-aware without turning this pure
 // helper into a hook.
-export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): string => {
+//
+// `noteScopes` answers a question the search index cannot: My, Shared
+// and Team notes are one backend type, indexed identically, so a hit on
+// a team note arrives claiming `note_type: "personal"` and reads as "My
+// note" without it. See `personalNoteScopes`.
+export const entitySubtitle = (
+    r: SpotlightResult,
+    ts: SpotlightMessages,
+    noteScopes?: ReadonlyMap<number, "shared" | "team">
+): string => {
     if (r.entity_type === "chat") {
         switch (r.chat_type) {
             case "dm":
@@ -128,8 +141,12 @@ export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): strin
     }
     if (r.entity_type === "note") {
         switch (r.note_type) {
-            case "personal":
+            case "personal": {
+                const scope = r.note_id == null ? undefined : noteScopes?.get(Number(r.note_id));
+                if (scope === "team") return ts.entitySubtitle.noteTeam;
+                if (scope === "shared") return ts.entitySubtitle.noteShared;
                 return ts.entitySubtitle.notePersonal;
+            }
             case "task":
                 return ts.entitySubtitle.noteTask;
             case "chat":
@@ -287,7 +304,14 @@ function windowAroundMatch(text: string, query: string, extraTerms?: string[]): 
     return prefix + text.slice(start, end).trim() + suffix;
 }
 
-const SpotlightResultItemInner = ({ result, query, isHighlighted, project, onSelect }: Props) => {
+const SpotlightResultItemInner = ({
+    result,
+    query,
+    isHighlighted,
+    project,
+    noteScopes,
+    onSelect,
+}: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -372,7 +396,7 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, project, onSel
                             flexShrink: 0,
                         }}
                     >
-                        {entitySubtitle(result, t.spotlight)}
+                        {entitySubtitle(result, t.spotlight, noteScopes)}
                     </Typography>
                     {(() => {
                         const badge = badgeFor(result);

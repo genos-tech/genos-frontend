@@ -1544,6 +1544,8 @@ export const zh: DeepPartial<Messages> = {
             task: "任务",
             project: "项目",
             notePersonal: "我的笔记",
+            noteTeam: "团队笔记",
+            noteShared: "共享笔记",
             noteTask: "任务笔记",
             noteChat: "聊天笔记",
             noteFallback: "笔记",

@@ -1771,6 +1771,8 @@ export const ja: DeepPartial<Messages> = {
             task: "タスク",
             project: "プロジェクト",
             notePersonal: "マイノート",
+            noteTeam: "チームノート",
+            noteShared: "共有ノート",
             noteTask: "タスクノート",
             noteChat: "チャットノート",
             noteFallback: "ノート",

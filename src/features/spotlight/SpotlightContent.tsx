@@ -137,6 +137,12 @@ export interface SpotlightContentProps {
     // `projects`: a project's avatar lives on its PM chat, which this
     // overlay can't reach. Absent ids fall back to the generic icon.
     projectAvatars?: Map<number, string>;
+    // Note id → the sidebar space it lives in, for the personal notes
+    // that aren't in My Notes. Threaded for the same reason as
+    // `projectAvatars`: the answer lives in note state this surface
+    // can't reach, and the search hit doesn't carry it — My, Shared and
+    // Team notes are one indexed type. Absent ids are My Notes.
+    noteScopes?: ReadonlyMap<number, "shared" | "team">;
     filterProjectIds?: number[];
     onChangeFilterProjects?: (projectIds: number[]) => void;
     // Navigate to the entity's own page, closing Spotlight. Now the
@@ -254,6 +260,7 @@ export const SpotlightContent = ({
     onToggleFilterService,
     projects,
     projectAvatars,
+    noteScopes,
     filterProjectIds,
     onChangeFilterProjects,
     onSelect,
@@ -1080,6 +1087,7 @@ export const SpotlightContent = ({
                 historyMode={historyMode}
                 historySessions={historySessions}
                 isDark={isDark}
+                noteScopes={noteScopes}
                 ts={t.spotlight}
                 turns={turns}
                 variant={variant}
@@ -1204,6 +1212,7 @@ export const SpotlightContent = ({
                             return (
                                 <SpotlightResultItem
                                     key={`${r.entity_type}:${r.entity_id}`}
+                                    noteScopes={noteScopes}
                                     project={rowProject}
                                     query={deferredQuery}
                                     result={r}
@@ -1265,6 +1274,9 @@ interface ConversationPanelProps {
     onFeedback?: (runId: string, rating: number) => void;
     askDisabled: boolean;
     ts: SpotlightMessages;
+    // Passed down for the source chips, which name each cited entity with
+    // the same vocabulary as the result rows.
+    noteScopes?: ReadonlyMap<number, "shared" | "team">;
     // History panel — when historyMode !== "closed" the panel renders
     // a read-only archive in place of turns/ask. The "open history"
     // entry point lives in the input row (always visible across modes),
@@ -1311,6 +1323,7 @@ const ConversationPanel = memo(
         onFeedback,
         askDisabled,
         ts,
+        noteScopes,
         historyMode,
         historySessions,
         historyDetail,
@@ -1579,6 +1592,7 @@ const ConversationPanel = memo(
                                 isCurrent={false}
                                 isDark={isDark}
                                 mentions={turn.mentions}
+                                noteScopes={noteScopes}
                                 runId={turn.runId}
                                 toolEvents={turn.toolEvents}
                                 ts={ts}
@@ -1599,6 +1613,7 @@ const ConversationPanel = memo(
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
                                 mentions={ask.askedMentions}
+                                noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}
                                 runId={ask.runId}
                                 toolEvents={ask.toolEvents}
@@ -1663,6 +1678,9 @@ interface TurnViewProps {
     runId?: string | null;
     onFeedback?: (runId: string, rating: number) => void;
     ts: SpotlightMessages;
+    // Lets a cited note read as "Team note" rather than "My note" — see
+    // `entitySubtitle`.
+    noteScopes?: ReadonlyMap<number, "shared" | "team">;
 }
 
 // Citation-token parsing (CITATION_PATTERN / CITATION_HREF_PREFIX /
@@ -1761,6 +1779,7 @@ const TurnViewInner = ({
     runId,
     onFeedback,
     ts,
+    noteScopes,
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
     const [showAllSources, setShowAllSources] = useState(false);
@@ -2045,7 +2064,7 @@ const TurnViewInner = ({
                                             <HighlightedText
                                                 extraTerms={s.matched_terms}
                                                 query={askedQuery}
-                                                text={_chipLabel(s, ts)}
+                                                text={_chipLabel(s, ts, noteScopes)}
                                             />
                                         </Chip>
                                     ))}
@@ -2181,7 +2200,11 @@ function _titleSnippet(title: string | null, maxLen = 32): string {
     return t.length > maxLen ? t.slice(0, maxLen) + "…" : t;
 }
 
-function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
+function _chipLabel(
+    s: SpotlightResult,
+    ts: SpotlightMessages,
+    noteScopes?: ReadonlyMap<number, "shared" | "team">
+): string {
     const title = _titleSnippet(s.title);
     const sep = title ? `: ${title}` : "";
 
@@ -2192,7 +2215,7 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
     // matched chunk was a thread reply / task comment. The full-string
     // templates in `ts.chip.*` keep composed labels translatable rather
     // than concatenating translated pieces.
-    const subtitle = entitySubtitle(s, ts);
+    const subtitle = entitySubtitle(s, ts, noteScopes);
     const badge = badgeFor(s);
 
     if (s.entity_type === "task" && s.task_id) {

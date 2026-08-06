@@ -102,6 +102,10 @@ export const spotlight = {
         task: "Task",
         project: "Project",
         notePersonal: "My note",
+        // Same backend type as notePersonal — the space comes from the
+        // sidebar, not the note. See `personalNoteScopes`.
+        noteTeam: "Team note",
+        noteShared: "Shared note",
         noteTask: "Task note",
         noteChat: "Chat note",
         noteFallback: "Note",

@@ -46,6 +46,7 @@ interface GenosHomeProps {
     mentionGroups?: MentionGroup[];
     projects?: ProjectProps[];
     projectAvatars?: Map<number, string>;
+    noteScopes?: ReadonlyMap<number, "shared" | "team">;
     onSelect: (r: SpotlightResult) => void;
     onPreview: (r: SpotlightResult) => void;
     onOpenSettings: () => void;
@@ -61,6 +62,7 @@ export const GenosHome = ({
     mentionGroups,
     projects,
     projectAvatars,
+    noteScopes,
     onSelect,
     onPreview,
     onOpenSettings,
@@ -304,6 +306,7 @@ export const GenosHome = ({
                         isLoading={spotlight.isLoading}
                         mentionGroups={mentionGroups}
                         mentionMembers={mentionMembers}
+                        noteScopes={noteScopes}
                         openHistory={spotlight.openHistory}
                         projectAvatars={projectAvatars}
                         projects={projects}

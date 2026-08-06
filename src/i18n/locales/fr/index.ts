@@ -1592,6 +1592,8 @@ export const fr: DeepPartial<Messages> = {
             task: "Tâche",
             project: "Projet",
             notePersonal: "Ma note",
+            noteTeam: "Note d'équipe",
+            noteShared: "Note partagée",
             noteTask: "Note de tâche",
             noteChat: "Note de conversation",
             noteFallback: "Note",
