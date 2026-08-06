@@ -153,6 +153,7 @@ describe("parseInternalUrl - chat targets", () => {
     // strings; the old integer coercion dropped every UUID link to a route.
     const CHAT_UUID = "873e9667-065d-44d9-94ad-c6c2c4d3706e";
     const THREAD_UUID = "2fa7e71d-ac74-44b5-b22b-d6e11082b594";
+    const MESSAGE_UUID = "5b1c7e02-9f43-4a1e-8f0c-2b7c9d1e4a56";
 
     it("parses a chatMain target (legacy numeric id, kept as a string)", () => {
         expect(parseInternalUrl(`${ORIGIN}/workspace/chat/dm/5`)).toEqual({
@@ -185,6 +186,26 @@ describe("parseInternalUrl - chat targets", () => {
             chatId: "5",
             messageId: 99,
         });
+    });
+
+    it("keeps a v3 UUID messageId verbatim (Spotlight / citation links)", () => {
+        // Integer-coercing this segment NaN'd every UUID, so the preview
+        // opened with no focus target at all. `ModalChatView` resolves
+        // either shape against the loaded rows.
+        expect(
+            parseInternalUrl(`${ORIGIN}/workspace/chat/dm/${CHAT_UUID}/message/${MESSAGE_UUID}`)
+        ).toEqual({
+            kind: "chatMain",
+            chatType: 1,
+            chatId: CHAT_UUID,
+            messageId: MESSAGE_UUID,
+        });
+    });
+
+    it("drops a message segment that is neither a seq nor a UUID", () => {
+        expect(
+            parseInternalUrl(`${ORIGIN}/workspace/chat/dm/${CHAT_UUID}/message/not-an-id`)
+        ).toMatchObject({ kind: "chatMain", messageId: undefined });
     });
 
     it("prefers a thread target when a thread segment is present (deeper wins)", () => {

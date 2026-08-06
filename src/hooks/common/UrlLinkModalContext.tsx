@@ -4,14 +4,16 @@ import { createContext, ReactNode, useContext } from "react";
 // open the URL-link modal without prop-drilling through MessageBubble /
 // ThreadMessageBubble / TaskCommentBubble / InboxBubble.
 //
-// `opts.zIndex` mirrors `OpenModalByHrefOptions` — callers layered above
-// the modal's 10020 default (e.g. the task diagram opening a node
-// preview from a modal-hosted graph) pass the stacking level the
-// preview must render at.
+// `opts` mirrors the subset of `OpenModalByHrefOptions` these consumers
+// can use: `zIndex` for callers layered above the modal's 10020 default
+// (e.g. the task diagram opening a node preview from a modal-hosted
+// graph), and `fullPageHref` to offer the preview's Move-to-page button
+// without needing a `navigate` — which these consumers can't assume,
+// since some of them render outside a router.
 type UrlLinkModalContextValue = {
     openModalByHref: (
         href: string,
-        opts?: { zIndex?: number }
+        opts?: { zIndex?: number; fullPageHref?: string }
     ) => "opened" | "navigated" | "external";
 };
 

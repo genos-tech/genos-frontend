@@ -7,6 +7,10 @@ import { MessagesPane } from "../../../features/chat/MainChatPane";
 import { loadV3SpecificMessages } from "../../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../../features/chat/services/loadV3SpecificThreadMessages";
 import { ThreadPane } from "../../../features/chat/ThreadChatPane";
+import {
+    focusUuidForMainChat,
+    focusUuidForThread,
+} from "../../../features/chat/utils/messageFocusKey";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
@@ -150,10 +154,13 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
                 const lastMessage = messages[messages.length - 1];
                 const moveToSpecificIndex =
-                    target.kind === "chatMain" && target.messageId
-                        ? `${target.chatId}-${target.messageId}`
-                        : target.kind === "chatThread"
-                          ? `${target.chatId}-${target.threadId}`
+                    target.kind === "chatThread"
+                        ? // The thread root IS a main-channel message, and
+                          // `target.threadId` is its v3 UUID — the same key
+                          // the parent bubble carries.
+                          (target.threadId as unknown as string)
+                        : target.messageId !== undefined
+                          ? focusUuidForMainChat(target.messageId, target.chatType, messages)
                           : undefined;
 
                 const newChat: ChatProps = {
@@ -198,9 +205,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
 
                     const firstMessage = threadMessages[0];
                     const useTaskIdAsThreadId = target.chatType === 3;
-                    const threadMoveIndex = target.messageId
-                        ? `${target.chatId}-${target.threadId}-${target.messageId}`
-                        : `${target.chatId}-${target.threadId}-1`;
+                    const threadMoveIndex = focusUuidForThread(target.messageId, threadMessages);
 
                     const newThread: ThreadProps = {
                         chatId: target.chatId,

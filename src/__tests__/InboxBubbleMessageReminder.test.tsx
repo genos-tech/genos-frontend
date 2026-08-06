@@ -54,12 +54,17 @@ const renderBubble = (item: InboxItemProps, openModalByHref = vi.fn()) => {
     return openModalByHref;
 };
 
+// The href names the MESSAGE, not just the chat — that segment is what
+// lets the preview scroll to and highlight the bubble the reminder is
+// about. See `message_reminders.chat_href`.
+const REMINDER_HREF = "/workspace/chat/gm/ch-1/message/111";
+
 const fullOptionals = {
     kind: "message_reminder",
     sender_name: "Alice",
     chat_name: "release-team",
     preview: "ship the release notes",
-    href: "/workspace/chat/gm/ch-1",
+    href: REMINDER_HREF,
     remind_at: "2026-08-05T09:00:00Z",
 };
 
@@ -73,7 +78,16 @@ describe("InboxBubble message reminder", () => {
     it("names the chat on the open chip and routes through the modal", () => {
         const open = renderBubble(reminderItem(fullOptionals));
         fireEvent.click(screen.getByRole("button", { name: /release-team/ }));
-        expect(open).toHaveBeenCalledWith("/workspace/chat/gm/ch-1");
+        expect(open).toHaveBeenCalledWith(REMINDER_HREF, { fullPageHref: REMINDER_HREF });
+    });
+
+    it("offers the chat's own page as well as the preview", () => {
+        // `fullPageHref` is what puts the Move-to-page button on the
+        // preview: reading the message in place and going to the chat are
+        // both reasonable answers to a reminder, so the card offers both.
+        const open = renderBubble(reminderItem(fullOptionals));
+        fireEvent.click(screen.getByRole("button", { name: /release-team/ }));
+        expect(open.mock.calls[0][1]).toEqual({ fullPageHref: REMINDER_HREF });
     });
 
     it("falls back to a generic sentence and chip without a sender or chat name", () => {
@@ -82,7 +96,7 @@ describe("InboxBubble message reminder", () => {
         );
         expect(screen.getByText("You asked to be reminded about this message.")).toBeTruthy();
         fireEvent.click(screen.getByRole("button", { name: /open message/i }));
-        expect(open).toHaveBeenCalledWith("/workspace/chat/gm/ch-1");
+        expect(open).toHaveBeenCalledWith(REMINDER_HREF, { fullPageHref: REMINDER_HREF });
     });
 
     it("renders no open chip when the link is missing", () => {

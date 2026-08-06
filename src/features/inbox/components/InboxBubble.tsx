@@ -598,7 +598,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
 
                 {/* Jump to the message the reminder is about. Same URL-link
                     modal as the note affordance, so acting on a reminder
-                    doesn't cost you the inbox you were working through. */}
+                    doesn't cost you the inbox you were working through —
+                    with `fullPageHref` offering the preview's Move-to-page
+                    button for when the reader wants the chat itself. The
+                    href names the message, so either way it opens focused
+                    on the bubble rather than at the chat. */}
                 {reminderOptionals && reminderHref !== "" && urlLinkModal && (
                     <Box sx={{ pl: BODY_TEXT_INDENT }}>
                         <Chip
@@ -621,7 +625,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     whiteSpace: "nowrap",
                                 },
                             }}
-                            onClick={() => urlLinkModal.openModalByHref(reminderHref)}
+                            onClick={() =>
+                                urlLinkModal.openModalByHref(reminderHref, {
+                                    fullPageHref: reminderHref,
+                                })
+                            }
                         >
                             {reminderChatName
                                 ? fmt(t.inbox.messageReminder.openInNamed, {
