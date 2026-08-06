@@ -171,13 +171,21 @@ export const deletePushSubscription = async (
 // suppresses push for this device only — the tab you're looking at shows
 // the in-app toast while your other devices still get the push. Sent only
 // while the tab is visible.
+//
+// `surface` additionally says WHICH conversation is on screen (see
+// `viewingSurface.ts`), which lets the server skip an activity-feed row
+// for a message the user is already reading. Empty string retracts.
 export const sendPresenceHeartbeat = async (
-    accessToken: string | null | undefined
+    accessToken: string | null | undefined,
+    surface: string = ""
 ): Promise<void> => {
     const api = authApi(accessToken);
     if (!api) return;
     try {
-        await api.post("/user/presence/heartbeat/", { device_id: getDeviceId() });
+        await api.post("/user/presence/heartbeat/", {
+            device_id: getDeviceId(),
+            surface,
+        });
     } catch {
         // Presence is a hint; a missed beat just means a push that could
         // have been suppressed might fire. No user-visible damage.
