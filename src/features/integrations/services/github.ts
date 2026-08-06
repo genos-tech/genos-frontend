@@ -20,6 +20,21 @@ export interface GithubPullsResponse {
     total_count: number;
 }
 
+/**
+ * Every request in this module owns its own failure: the panels render a
+ * message inline through `surfaceError`, and the task-linked lookups
+ * degrade to an empty list on purpose. The shared toast from the api.ts
+ * interceptor either doubles up on that or contradicts it outright.
+ *
+ * It also mis-attributes the most common failure here. These endpoints
+ * proxy GitHub, so when GitHub refuses the call — a token whose scopes
+ * don't cover the repo, an org that hasn't granted the app access — the
+ * backend surfaces it as a 502. That's a GitHub permission problem, not
+ * Genos being down, and "Server error. Please try again shortly." is the
+ * wrong thing to tell someone about it (retrying will never help).
+ */
+const noSharedToast = { suppressErrorToast: true } as const;
+
 const surfaceError = (
     error: unknown,
     setErrorMessage?: (value: string) => void
@@ -46,6 +61,7 @@ export const listMyPulls = async (
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.get<GithubPullsResponse>("/github/pulls/", {
+            ...noSharedToast,
             params: { state: opts.state || "open" },
         });
         return res.data;
@@ -98,7 +114,10 @@ export const listAccessibleRepos = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get<GithubAccessibleReposResponse>("/github/accessible-repos/");
+        const res = await api.get<GithubAccessibleReposResponse>(
+            "/github/accessible-repos/",
+            noSharedToast
+        );
         return res.data;
     } catch (error) {
         return surfaceError(error, setErrorMessage) === "github_not_connected"
@@ -117,7 +136,7 @@ export const getPullDetail = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get(`/github/pulls/${owner}/${repo}/${number}/`);
+        const res = await api.get(`/github/pulls/${owner}/${repo}/${number}/`, noSharedToast);
         return res.data;
     } catch (error) {
         return surfaceError(error, setErrorMessage) === "github_not_connected"
@@ -171,6 +190,7 @@ export const loadLinkedBranches = async (
         const params: Record<string, string | number> = { task_id: taskId };
         if (options?.bypassCache) params.fresh = "1";
         const res = await api.get<LinkedBranchesResponse>("/github/branches/for-task/", {
+            ...noSharedToast,
             params,
         });
         return res.data.branches ?? [];
@@ -192,6 +212,7 @@ export const loadLinkedPulls = async (
         const params: Record<string, string | number> = { task_id: taskId };
         if (options?.bypassCache) params.fresh = "1";
         const res = await api.get<LinkedPullsResponse>("/github/pulls/for-task/", {
+            ...noSharedToast,
             params,
         });
         return res.data.pulls ?? [];
@@ -256,6 +277,7 @@ const flushPullsBatch = async (): Promise<void> => {
         try {
             const ids = [...new Set(chunk.map((w) => w.taskId))];
             const res = await api.get<LinkedPullsBatchResponse>("/github/pulls/for-tasks/", {
+                ...noSharedToast,
                 params: { task_ids: ids.join(",") },
             });
             const byTask = res.data.pulls_by_task ?? {};
