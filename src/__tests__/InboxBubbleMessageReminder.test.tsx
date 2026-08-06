@@ -10,10 +10,12 @@
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InboxBubble } from "../features/inbox/components/InboxBubble";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
+import type { TeamEmoji } from "../services/teamEmojiApi";
+import { setTeamEmojiList } from "../services/teamEmojiStore";
 import type { InboxItemProps } from "../types/common";
 
 vi.mock("../components/editors/bnChatPreview", () => ({
@@ -114,5 +116,39 @@ describe("InboxBubble message reminder", () => {
     it("is an activity, not a request — no approve or reject", () => {
         renderBubble(reminderItem(fullOptionals));
         expect(screen.queryByRole("button", { name: /approve|reject/i })).toBeNull();
+    });
+});
+
+describe("InboxBubble message reminder — custom emoji in the quote", () => {
+    // The preview is the message's stored `body_text`, where a team emoji
+    // is its canonical `:name:` shortcode. Printed raw it reads as literal
+    // text in the one place the reader has to recognise their own message.
+    const nightKing: TeamEmoji = {
+        emojiId: 1,
+        name: "nightking",
+        url: "https://api.example.com/media/team_emoji/t1/u1-nightking.png",
+        createdBy: "u1",
+        tsCreatedAt: "2026-08-05T00:00:00Z",
+    };
+
+    afterEach(() => {
+        setTeamEmojiList([]);
+    });
+
+    it("renders a shortcode in the quote as the emoji image", () => {
+        setTeamEmojiList([nightKing]);
+        renderBubble(reminderItem({ ...fullOptionals, preview: "winter is coming :nightking:" }));
+
+        const img = screen.getByAltText(":nightking:");
+        expect(img).toHaveAttribute("src", nightKing.url);
+        expect(screen.getByText(/winter is coming/)).toBeInTheDocument();
+        expect(screen.queryByText(/:nightking:/)).toBeNull();
+    });
+
+    it("leaves an unknown shortcode as text (deleted or another team's emoji)", () => {
+        renderBubble(reminderItem({ ...fullOptionals, preview: "rip :nightking:" }));
+
+        expect(screen.getByText(/:nightking:/)).toBeInTheDocument();
+        expect(screen.queryByRole("img")).toBeNull();
     });
 });
