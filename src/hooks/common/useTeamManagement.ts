@@ -64,12 +64,21 @@ export const useTeamManagement = (
         }
     };
 
-    // Update team when myself changes
+    // Update team when myself changes.
+    //
+    // `currentTeamId` is deliberately NOT advanced here. `useAppInitialization`
+    // owns it, and only sets it once the team-switch wipe of the team-scoped
+    // IndexedDB stores has finished. Everything team-scoped keys off it —
+    // `refreshAllData`, the socket, the project/task and service managers — so
+    // publishing the new id from here (synchronously, while that wipe was still
+    // awaiting) started the new team's network sync against the OLD team's
+    // cache. The inbox sync is the one that showed it: it read the previous
+    // team's delta checkpoint, asked the server for "everything since then",
+    // got the handful of rows that changed in the meantime, and left an
+    // otherwise empty inbox behind — with `bootRefreshedTeamRef` in App
+    // suppressing any further refresh for that team.
     useEffect(() => {
         initCurrentTeam();
-        if (myself.teamId !== currentTeamId) {
-            setCurrentTeamId(myself.teamId);
-        }
 
         if (!myself.userId) return;
 

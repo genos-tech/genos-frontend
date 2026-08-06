@@ -18,6 +18,13 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
 
     loadInbox: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
+            // Flat, not per-team, because the store it vouches for is flat
+            // too: one team's inbox at a time, cleared and refilled on a
+            // full load. Key and rows are therefore wiped together by the
+            // team switch (`clearTeamScopedStores` covers SYNC_CHECKPOINTS),
+            // which is the only thing that keeps them consistent — so no
+            // team-scoped sync may start before that wipe has finished.
+            // See `useAppInitialization`, which owns the ordering.
             key: "inbox",
             fetcher: async (since) => {
                 const response = await loadInbox(myself.teamId, myself.userId, accessToken, since);
