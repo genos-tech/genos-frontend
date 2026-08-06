@@ -1,11 +1,14 @@
 /**
- * Relative media links in an imported note body.
+ * Media links in a note body, in both directions.
  *
- * A Notion export writes its images as paths next to the markdown file
- * ("Roadmap%20abc/Screenshot.png"), which mean nothing once the note is
- * on a server. The importer has to find those links, upload the picked
- * file each one points at, and put the resulting URL back — otherwise
- * every image in a migrated page is a dead reference.
+ * IMPORT: a Notion export writes its images as paths next to the
+ * markdown file ("Roadmap%20abc/Screenshot.png"), which mean nothing
+ * once the note is on a server. The importer finds those links, uploads
+ * the file each one points at, and puts the resulting URL back.
+ *
+ * EXPORT: the reverse. A note's images are absolute URLs behind the
+ * API's auth, so a zip has to carry copies and point the markdown at
+ * them relatively — which is also what makes the result re-importable.
  *
  * Deliberately operating on the PARSED blocks rather than the markdown
  * text: `markdownToNoteBlocks` has already decided what is a media block
@@ -72,7 +75,8 @@ const eachMediaBlock = (blocks: unknown[], visit: (block: AnyRecord) => void): v
     }
 };
 
-/** Every relative media href in `blocks`, deduped, in document order. */
+/** Every relative media href in `blocks`, deduped, in document order.
+ *  What an import has to resolve against the picked folder. */
 export const collectRelativeAssetHrefs = (blocks: unknown[]): string[] => {
     const found = new Set<string>();
     eachMediaBlock(blocks, (block) => {
@@ -82,27 +86,45 @@ export const collectRelativeAssetHrefs = (blocks: unknown[]): string[] => {
     return [...found];
 };
 
+/** Every http(s) media href in `blocks`, deduped, in document order.
+ *  What an export has to fetch a copy of. `data:` URIs are excluded —
+ *  they are already carried by the markdown itself. */
+export const collectRemoteAssetHrefs = (blocks: unknown[]): string[] => {
+    const found = new Set<string>();
+    eachMediaBlock(blocks, (block) => {
+        const url = (block.props as AnyRecord | undefined)?.url;
+        if (typeof url === "string" && /^https?:\/\//i.test(url)) found.add(url);
+    });
+    return [...found];
+};
+
 /**
- * Replace the relative hrefs listed in `uploaded` with their new URLs.
+ * Point every media block listed in `replacements` at its new href.
  *
- * Returns a new tree; blocks whose href has no entry (nothing in the
- * picked folder matched, or the upload failed) are returned untouched, so
- * a partial result still carries every image that did make it.
+ * Keyed by the href as it appears in the block, so the same function
+ * serves an import (relative → uploaded URL) and an export (absolute URL
+ * → path inside the zip).
+ *
+ * Returns a new tree; blocks whose href has no entry are returned
+ * untouched, so a partial result still carries every image that did make
+ * it across.
  */
-export const rewriteAssetHrefs = (blocks: unknown[], uploaded: Map<string, string>): unknown[] => {
-    if (uploaded.size === 0) return blocks;
+export const rewriteAssetHrefs = (
+    blocks: unknown[],
+    replacements: Map<string, string>
+): unknown[] => {
+    if (replacements.size === 0) return blocks;
     return blocks.map((raw) => {
         if (!raw || typeof raw !== "object") return raw;
         const block = raw as AnyRecord;
         const next: AnyRecord = { ...block };
         if (Array.isArray(block.children)) {
-            next.children = rewriteAssetHrefs(block.children, uploaded);
+            next.children = rewriteAssetHrefs(block.children, replacements);
         }
         if (typeof block.type === "string" && MEDIA_BLOCK_TYPES.has(block.type)) {
             const props = (block.props ?? {}) as AnyRecord;
-            const replacement = isRelativeAssetHref(props.url)
-                ? uploaded.get(props.url)
-                : undefined;
+            const replacement =
+                typeof props.url === "string" ? replacements.get(props.url) : undefined;
             if (replacement) next.props = { ...props, url: replacement };
         }
         return next;
