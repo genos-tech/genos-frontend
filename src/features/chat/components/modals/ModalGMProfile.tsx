@@ -572,17 +572,27 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     },
                                 }}
                             >
+                                {/* Column under the avatar on a phone, the same
+                                    shape ModalTeamProfile and
+                                    ModalProjectProfile use. This is the modal's
+                                    only body — no separate mobile branch
+                                    renders these fields — and the dialog around
+                                    it is full-screen on xs, so hiding this at a
+                                    breakpoint leaves an empty sheet. */}
                                 <Stack
-                                    direction="row"
-                                    sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
+                                    alignItems={{ xs: "stretch", md: "flex-start" }}
+                                    direction={{ xs: "column", md: "row" }}
+                                    sx={{ display: "flex", my: 1, width: "100%", minWidth: 0 }}
                                 >
                                     {/* Avatar Section */}
                                     <Box
                                         sx={{
-                                            pl: "20px",
-                                            pr: "40px",
+                                            pl: { xs: 0, md: "20px" },
+                                            pr: { xs: 0, md: "40px" },
+                                            mb: { xs: 2, md: 0 },
                                             position: "relative",
                                             display: "inline-block",
+                                            alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
                                         <Avatar
@@ -661,7 +671,15 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     </Box>
 
                                     {/* Details Section */}
-                                    <Stack spacing={2} sx={{ flexGrow: 1 }}>
+                                    <Stack
+                                        spacing={2}
+                                        sx={{
+                                            flexGrow: 1,
+                                            minWidth: 0,
+                                            width: "100%",
+                                            maxWidth: "100%",
+                                        }}
+                                    >
                                         <Stack direction="column" spacing={1.5}>
                                             {/* Group name — inline rename for owners. */}
                                             <FormControl>
@@ -899,10 +917,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                                 <FormControl>
                                                     <Stack
-                                                        alignItems="center"
-                                                        direction="row"
+                                                        direction={{ xs: "column", sm: "row" }}
                                                         justifyContent="space-between"
+                                                        spacing={{ xs: 1, sm: 0 }}
                                                         sx={{ mb: 1 }}
+                                                        alignItems={{
+                                                            xs: "stretch",
+                                                            sm: "center",
+                                                        }}
                                                     >
                                                         <Stack
                                                             alignItems="center"
@@ -994,7 +1016,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 />
                                                             }
                                                             sx={{
-                                                                width: "220px",
+                                                                width: { xs: "100%", sm: "220px" },
+                                                                maxWidth: "100%",
                                                                 "--Input-focusedThickness": "1px",
                                                                 "--Input-radius": "8px",
                                                                 background: styles.inputBg,
@@ -1111,7 +1134,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             </Box>
 
                                             {/* Is Private & Created Date */}
-                                            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                                            <Stack
+                                                direction="row"
+                                                spacing={4}
+                                                sx={{ mt: 1, flexWrap: "wrap", rowGap: 1.5 }}
+                                            >
                                                 <FormControl>
                                                     <FormLabel
                                                         sx={{

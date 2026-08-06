@@ -1,10 +1,11 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
     Box,
     Button,
@@ -24,6 +25,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { ModalTeamProfile } from "../../features/admin/components/modals/ModalTeamProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { loadMyTeams, membershipTeams } from "../../features/admin/services/loadMyTeams";
 import { switchTeam } from "../../features/admin/services/switchTeam";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -33,7 +36,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
-import { Team, UserProps } from "../../types/admin";
+import { Team, TeamProfileProps, UserProps } from "../../types/admin";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { SettingsModal } from "./SettingsModal";
 
@@ -53,16 +56,19 @@ const RowButton = ({
     label,
     detail,
     danger,
+    disabled,
     onClick,
 }: {
     icon: ReactNode;
     label: string;
     detail?: string;
     danger?: boolean;
+    disabled?: boolean;
     onClick: () => void;
 }) => (
     <Button
         color={danger ? "danger" : "neutral"}
+        disabled={disabled}
         size="lg"
         startDecorator={icon}
         variant="plain"
@@ -103,8 +109,20 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
     const signOut = useSignOut();
     const isMobile = useIsMobile();
 
-    const [teams, setTeams] = useState<Team[]>([]);
+    // `getMyTeams` answers with full team profiles (roster, owner, created
+    // date), which is everything both the switcher and the team-profile
+    // modal need — so it is fetched once and kept whole here rather than
+    // narrowed on arrival and re-fetched for the modal the way the desktop
+    // dropdown does it.
+    const [myTeams, setMyTeams] = useState<TeamProfileProps[]>([]);
     const [teamsOpen, setTeamsOpen] = useState(false);
+    const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
+    const [teamProfileOpen, setTeamProfileOpen] = useState(false);
+    // Opening a member (or the owner) from inside the team profile. The
+    // desktop sidebar owns the same pair for the same reason: the profile
+    // modal only reports which user was tapped, it doesn't show them.
+    const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
+    const [userProfileOpen, setUserProfileOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     // SettingsModal fires listConnections/listCalendars from mount effects
     // that don't check `open`, so mounting it eagerly would cost every
@@ -124,8 +142,8 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
         let cancelled = false;
         (async () => {
             try {
-                const loaded: Team[] = await loadMyTeams(accessToken, myself.userId);
-                if (!cancelled) setTeams(membershipTeams(loaded));
+                const loaded: TeamProfileProps[] = await loadMyTeams(accessToken, myself.userId);
+                if (!cancelled) setMyTeams(loaded ?? []);
             } catch {
                 // Non-fatal: the team row just shows the current team only.
             }
@@ -134,6 +152,14 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
             cancelled = true;
         };
     }, [open, accessToken, myself.userId]);
+
+    // Host-team shells arrive here too (a chat or folder another
+    // organization shared with us). They aren't teams you can switch into.
+    const switchableTeams = useMemo(() => membershipTeams(myTeams), [myTeams]);
+    const currentTeamProfile = useMemo(
+        () => myTeams.find((team) => team.teamId === myself.teamId) ?? null,
+        [myTeams, myself.teamId]
+    );
 
     const handleSwitchTeam = (team: Team) => {
         switchTeam({
@@ -178,6 +204,26 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     <Divider sx={{ my: 1 }} />
 
                     <Stack spacing={0.5}>
+                        {/* Same label and order as the desktop team
+                            dropdown, which opens this modal from the row
+                            above its team list. Disabled until the fetch
+                            above lands — there is no profile to show yet,
+                            and a tap that silently does nothing reads as a
+                            broken button. */}
+                        <RowButton
+                            disabled={!currentTeamProfile}
+                            icon={<VisibilityRoundedIcon />}
+                            label={t.admin.teamDropdown.showTeamProfile}
+                            onClick={() => {
+                                setTeamProfile(currentTeamProfile);
+                                setTeamProfileOpen(true);
+                                // The profile is full-screen on mobile, so
+                                // the sheet underneath is invisible anyway;
+                                // closing it means one back-tap returns to
+                                // the workspace rather than to this menu.
+                                onClose();
+                            }}
+                        />
                         <RowButton
                             detail={myself.teamName}
                             icon={<GroupsRoundedIcon />}
@@ -239,7 +285,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     </Stack>
                     <Divider sx={{ mb: 1 }} />
                     <Stack spacing={0.5}>
-                        {teams.map((team) => {
+                        {switchableTeams.map((team) => {
                             const isCurrent = team.teamId === myself.teamId;
                             return (
                                 <Sheet
@@ -271,6 +317,37 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     </Stack>
                 </Box>
             </Drawer>
+
+            {teamProfile && (
+                <ModalTeamProfile
+                    myself={myself}
+                    openModalTeamProfile={teamProfileOpen}
+                    setAvatarUserId={setAvatarUserId}
+                    setMyself={setMyself}
+                    setOpenModalTeamProfile={setTeamProfileOpen}
+                    setOpenUserProfile={setUserProfileOpen}
+                    setTeamProfile={setTeamProfile}
+                    socket={socket}
+                    teamProfile={teamProfile}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            )}
+
+            {avatarUserId && (
+                <UserProfile
+                    isYou={false}
+                    myself={myself}
+                    openUserProfile={userProfileOpen}
+                    setMyself={setMyself}
+                    setOpenUserProfile={setUserProfileOpen}
+                    socket={socket}
+                    useCM={useCM}
+                    user={useTEM.teamMemberProfiles[avatarUserId]}
+                    useUISM={useUISM}
+                />
+            )}
 
             {settingsMounted && (
                 <SettingsModal
