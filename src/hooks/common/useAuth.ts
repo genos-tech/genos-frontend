@@ -17,6 +17,9 @@ const WATCHED_STORAGE_KEYS = new Set<string>([
     "isOfflineForced",
     "role",
     "baseCountry",
+    "phoneNumber",
+    "currentLocation",
+    "aboutMe",
     "customStatus",
     "avatarImgPath",
 ]);
@@ -71,6 +74,16 @@ export const useMyself = (accessToken: string | null) => {
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
                 baseCountry: localStorage.getItem("baseCountry") || "",
+                phoneNumber: localStorage.getItem("phoneNumber") || "",
+                currentLocation: localStorage.getItem("currentLocation") || "",
+                // `timezone` is deliberately absent. It exists so one
+                // person's card can show ANOTHER person's clock; on your
+                // own profile the fallback it powers would just tell you
+                // the time you can already see. So your own card shows a
+                // clock only once you've picked a location — which is the
+                // case where it's worth something, because it's showing
+                // you what your colleagues see.
+                aboutMe: localStorage.getItem("aboutMe") || "",
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             };

@@ -3,7 +3,11 @@
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
         "target": "ES2020",
         "useDefineForClassFields": true,
-        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        // `ES2022.Intl` alone rather than a target bump: `utils/userTimezone`
+        // builds the location picker from `Intl.supportedValuesOf("timeZone")`,
+        // which is ES2022 and typed nowhere in ES2020. Adding just the Intl
+        // slice keeps every other ES2022 feature out of the emitted syntax.
+        "lib": ["ES2020", "ES2022.Intl", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "skipLibCheck": true,
 
