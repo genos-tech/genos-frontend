@@ -22,6 +22,7 @@ import { useLongPress } from "../../../hooks/common/useLongPress";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
+import { isV3Uuid } from "../../../utils/legacyId";
 import { useChannel } from "../hooks/useChannel";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
@@ -72,7 +73,11 @@ export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPane
     useEffect(() => {
         if (!channel || messages.length === 0) return;
         if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-        const latest = messages[messages.length - 1];
+        // Newest message the SERVER knows about. An unacked message of our
+        // own sits at the tail as an optimistic echo whose `id` is a
+        // `corr-<random>` correlation id; that's not a cursor the backend
+        // can resolve, so scan past it to the newest persisted row.
+        const latest = [...messages].reverse().find((m) => isV3Uuid(m.id));
         if (!latest || latest.id === readCursor?.lastReadMessageId) return;
         void channelService.markRead(channelId, latest.id).catch(() => {
             /* transient errors are fine — next render re-tries */

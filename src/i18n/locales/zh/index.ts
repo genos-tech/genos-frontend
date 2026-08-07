@@ -718,6 +718,8 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "创建任务失败",
+            bodyEditorUnavailable:
+                "创建任务失败——描述编辑器丢失了本地存储，可能未包含您最新的内容。请重试。",
             threadAlreadyHasTask: "此话题已关联任务——一个话题只能关联一个任务。",
             taskLimitReached:
                 "您已使用本套餐每月 {limit} 次任务创建中的 {used} 次。升级套餐以创建更多任务。",
@@ -850,7 +852,7 @@ export const zh: DeepPartial<Messages> = {
                 requestMessagePrefix: "已发送加入该项目的申请：",
                 requestMessageSuffix: "。",
                 sendMessageFailed: "发送收件箱消息失败",
-                joinFailed: "加入新建项目失败",
+                joinFailed: "加入项目失败",
             },
             createTag: {
                 heading: "新建标签",

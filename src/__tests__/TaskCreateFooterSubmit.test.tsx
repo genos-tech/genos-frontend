@@ -12,6 +12,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { consumeYjsPersistenceFailure } from "../db/utils/yjsPersistence";
 import { TaskCreateFooter } from "../features/tasks/components/contents/base/TaskCreateFooter";
 import { uploadNewTask, type UploadNewTaskResult } from "../features/tasks/services/uploadNewTask";
 
@@ -19,7 +20,12 @@ vi.mock("../features/tasks/services/uploadNewTask", () => ({
     uploadNewTask: vi.fn(),
 }));
 
+vi.mock("../db/utils/yjsPersistence", () => ({
+    consumeYjsPersistenceFailure: vi.fn(() => false),
+}));
+
 const uploadNewTaskMock = vi.mocked(uploadNewTask);
+const consumeYjsPersistenceFailureMock = vi.mocked(consumeYjsPersistenceFailure);
 
 const myself = { userId: "u1", userName: "Me", teamId: "t1" } as any;
 
@@ -73,6 +79,7 @@ const clickCreate = (getByText: ReturnType<typeof renderFooter>["getByText"]) =>
 describe("TaskCreateFooter submit", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        consumeYjsPersistenceFailureMock.mockReturnValue(false);
         // `lastProjectId` is asserted in both directions below, so it can't
         // carry over between tests.
         localStorage.clear();
@@ -127,5 +134,41 @@ describe("TaskCreateFooter submit", () => {
         expect(getByText("Create Task").closest("button")).toBeDisabled();
         clickCreate(getByText);
         expect(uploadNewTaskMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses to create when the body editor's local cache failed", async () => {
+        // The description is a collaborative Yjs document. If its local
+        // cache threw, edits made while it was broken never reached the
+        // document, so creating now persists a body missing whatever the
+        // user typed — the "task created, description empty" outcome. The
+        // form has to stop and say so instead.
+        consumeYjsPersistenceFailureMock.mockReturnValue(true);
+        const { getByText, setTitleError, setTitleErrorOpen, setIsSubmitted } = renderFooter();
+
+        clickCreate(getByText);
+
+        expect(consumeYjsPersistenceFailureMock).toHaveBeenCalledWith("task-body:101");
+        expect(uploadNewTaskMock).not.toHaveBeenCalled();
+        expect(setIsSubmitted).not.toHaveBeenCalled();
+        expect(setTitleErrorOpen).toHaveBeenCalledWith(true);
+        expect(setTitleError).toHaveBeenCalledWith(expect.stringContaining("Please try again"));
+        // The lock is never taken, so the button the message tells them to
+        // press is still live.
+        await waitFor(() => expect(getByText("Create Task").closest("button")).not.toBeDisabled());
+    });
+
+    it("lets the retry through — the failure is reported once, not latched", async () => {
+        // `consumeYjsPersistenceFailure` clears the flag as it reports, so
+        // the retry this message asks for must actually reach the backend.
+        // Latching it would wedge the form instead of protecting it.
+        consumeYjsPersistenceFailureMock.mockReturnValueOnce(true).mockReturnValue(false);
+        uploadNewTaskMock.mockResolvedValue({ ok: true, taskId: 101 } as UploadNewTaskResult);
+        const { getByText, setIsSubmitted } = renderFooter();
+
+        clickCreate(getByText);
+        expect(uploadNewTaskMock).not.toHaveBeenCalled();
+
+        clickCreate(getByText);
+        await waitFor(() => expect(setIsSubmitted).toHaveBeenCalledWith(true));
     });
 });

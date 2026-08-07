@@ -745,6 +745,8 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "No se pudo crear la tarea",
+            bodyEditorUnavailable:
+                "No se pudo crear la tarea: el editor de la descripción perdió su almacenamiento local y puede que no tenga tu texto más reciente. Inténtalo de nuevo.",
             threadAlreadyHasTask:
                 "Este hilo ya tiene una tarea: un hilo solo puede vincularse a una tarea.",
             taskLimitReached:
@@ -879,7 +881,7 @@ export const es: DeepPartial<Messages> = {
                 requestMessagePrefix: "Ha enviado una solicitud para unirse al proyecto: ",
                 requestMessageSuffix: ".",
                 sendMessageFailed: "No se pudo enviar el mensaje a la bandeja",
-                joinFailed: "No se pudo unir al proyecto creado",
+                joinFailed: "No se pudo unir al proyecto",
             },
             createTag: {
                 heading: "Crear nueva etiqueta",

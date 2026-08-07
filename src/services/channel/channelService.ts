@@ -54,6 +54,7 @@ import type {
     ReadCursor,
     UserLite,
 } from "../../types/channel";
+import { isV3Uuid } from "../../utils/legacyId";
 
 /**
  * v3 REST base URL.
@@ -1875,6 +1876,20 @@ export class ChannelService {
         threadRootId?: string
     ): Promise<ReadCursor | undefined> {
         if (!this.socket?.connected) {
+            return Promise.resolve(undefined);
+        }
+        // An unacked message is rendered from its optimistic echo, whose
+        // `id` is the `corr-<random>` correlation id — not a server row.
+        // Callers pick the cursor by "newest / last visible bubble", so
+        // the user's own in-flight message is exactly what they hand us
+        // here. Forwarding it means Django looks up a UUIDField by a
+        // non-UUID string and 500s. Skip: the echo is replaced by the
+        // real row on ack, and the next advance carries the real id.
+        if (!isV3Uuid(lastReadMessageId)) {
+            return Promise.resolve(undefined);
+        }
+        // Absent (main timeline) is fine; present-but-malformed is not.
+        if (threadRootId != null && !isV3Uuid(threadRootId)) {
             return Promise.resolve(undefined);
         }
         return this.socketEmitOrThrow<ReadCursor>("read.advance", {

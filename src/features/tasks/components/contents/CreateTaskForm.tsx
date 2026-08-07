@@ -30,6 +30,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
+import { consumeYjsPersistenceFailure } from "../../../../db/utils/yjsPersistence";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -908,6 +909,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         if (!useSM || !taskContent || !taskContent.project?.projectId) return;
         if (!taskTitle.trim()) return;
         if (missingRequiredFields.length > 0) return;
+        // Same body-integrity gate the task path applies in
+        // `TaskCreateFooter` — the description comes from the same
+        // collaborative document, so it can be just as incomplete.
+        if (consumeYjsPersistenceFailure(`task-body:${taskContent.id}`)) {
+            setTitleError(t.tasks.errors.bodyEditorUnavailable);
+            setTitleErrorOpen(true);
+            return;
+        }
         setIsCreatingMilestone(true);
         const projectId = taskContent.project.projectId;
         const created = await useSM.createNewMilestone({

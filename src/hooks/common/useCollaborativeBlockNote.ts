@@ -8,9 +8,9 @@ import {
 } from "@blocknote/core/comments";
 import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
-import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 
+import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 
@@ -163,7 +163,13 @@ export function useCollaborativeBlockNote({
         // so the editor renders with content on the first frame instead of
         // showing blank for the ~200-300 ms the Hocuspocus connection takes.
         // New write-updates are forwarded automatically; no manual sync needed.
-        const idb = new IndexeddbPersistence(documentName, yjsDoc);
+        //
+        // Via `createYjsPersistence`, not the y-indexeddb constructor: the
+        // raw provider writes from inside a Yjs update observer and lets
+        // IndexedDB errors escape into the transaction, which takes the
+        // Hocuspocus observer and the editor's own sync down with it. See
+        // that module for the failure it removes.
+        const idb = createYjsPersistence(documentName, yjsDoc);
 
         const trySeedFallback = () => {
             if (!seededRef.current) {
@@ -273,7 +279,9 @@ export function useCollaborativeBlockNote({
 
     useEffect(() => {
         return () => {
-            idbProvider?.destroy();
+            // Resolves once the connection is closed; never rejects. An
+            // unmount has nothing to wait for, so don't.
+            void destroyYjsPersistence(idbProvider);
         };
     }, [idbProvider]);
 

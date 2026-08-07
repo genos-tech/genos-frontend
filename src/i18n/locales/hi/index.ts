@@ -743,6 +743,8 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "टास्क नहीं बनाया जा सका",
+            bodyEditorUnavailable:
+                "टास्क नहीं बनाया जा सका — विवरण एडिटर का लोकल स्टोरेज खो गया और उसमें आपका नवीनतम टेक्स्ट शायद न हो। कृपया फिर से कोशिश करें।",
             threadAlreadyHasTask:
                 "इस थ्रेड में पहले से एक टास्क है — एक थ्रेड केवल एक टास्क से जुड़ सकता है।",
             taskLimitReached:
@@ -877,7 +879,7 @@ export const hi: DeepPartial<Messages> = {
                 requestMessagePrefix: "ने प्रोजेक्ट जॉइन करने का अनुरोध भेजा है: ",
                 requestMessageSuffix: ".",
                 sendMessageFailed: "इनबॉक्स मेसेज नहीं भेजा जा सका",
-                joinFailed: "बनाए गए प्रोजेक्ट को जॉइन नहीं किया जा सका",
+                joinFailed: "प्रोजेक्ट को जॉइन नहीं किया जा सका",
             },
             createTag: {
                 heading: "नया टैग बनाएँ",

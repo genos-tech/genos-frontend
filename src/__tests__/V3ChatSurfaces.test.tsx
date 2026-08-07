@@ -278,28 +278,55 @@ describe("MessagesPaneV3 — interactions", () => {
         localStorage.setItem("userId", "u-me");
     });
 
+    // The cursor is a server message id, so the pane only considers
+    // messages whose id is UUID-shaped — the rest of this suite's "m-1"
+    // placeholders don't qualify.
+    const UUID_1 = "aaaaaaaa-1111-4111-8111-111111111111";
+    const UUID_2 = "bbbbbbbb-2222-4222-8222-222222222222";
+
     it("calls markRead with the latest message id when the channel is opened", async () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
-        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "first"));
-        channelService.handleMessageCreated(fakeMessage("m-2", "c-1", "second"));
+        channelService.handleMessageCreated(fakeMessage(UUID_1, "c-1", "first"));
+        channelService.handleMessageCreated(fakeMessage(UUID_2, "c-1", "second"));
 
         const spy = vi.spyOn(channelService, "markRead").mockResolvedValue(undefined);
         render(<MessagesPaneV3 channelId="c-1" />);
 
         await waitFor(() => {
-            expect(spy).toHaveBeenCalledWith("c-1", "m-2");
+            expect(spy).toHaveBeenCalledWith("c-1", UUID_2);
         });
+        spy.mockRestore();
+    });
+
+    it("marks the newest PERSISTED message read, skipping an unacked echo", async () => {
+        // A message we've sent but the server hasn't acked sits at the
+        // tail with its `corr-<random>` correlation id as its `id`.
+        // Sending that as the cursor 500s in Django (UUIDField lookup),
+        // so the pane has to fall back to the newest real row.
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(fakeMessage(UUID_1, "c-1", "persisted"));
+        channelService.handleMessageCreated(
+            fakeMessage("corr-iuxb112kesbmsiu9ms3", "c-1", "in flight")
+        );
+
+        const spy = vi.spyOn(channelService, "markRead").mockResolvedValue(undefined);
+        render(<MessagesPaneV3 channelId="c-1" />);
+
+        await waitFor(() => {
+            expect(spy).toHaveBeenCalledWith("c-1", UUID_1);
+        });
+        expect(spy).not.toHaveBeenCalledWith("c-1", "corr-iuxb112kesbmsiu9ms3");
         spy.mockRestore();
     });
 
     it("does not call markRead again when the cursor already points at the latest", () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
-        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "hi"));
+        channelService.handleMessageCreated(fakeMessage(UUID_1, "c-1", "hi"));
         channelService.handleReadAdvanced({
             id: "cur-1",
             channelId: "c-1",
             threadRootId: null,
-            lastReadMessageId: "m-1",
+            lastReadMessageId: UUID_1,
             lastReadAt: "2026-01-01T00:02:00Z",
         });
 

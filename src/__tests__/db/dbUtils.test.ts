@@ -4,11 +4,19 @@ import "fake-indexeddb/auto";
 
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { IndexeddbPersistence } from "y-indexeddb";
+import * as Y from "yjs";
 
 import { DB_NAME, DB_VERSION, initDB, STORES } from "../../db/config";
 import { DatabaseUtils } from "../../db/utils/database";
 import { HelperUtils } from "../../db/utils/helpers";
 import { ValidationUtils } from "../../db/utils/validation";
+import {
+    consumeYjsPersistenceFailure,
+    createYjsPersistence,
+    destroyYjsPersistence,
+    hasYjsPersistenceFailed,
+} from "../../db/utils/yjsPersistence";
 
 // ---------------------------------------------------------------------------
 // HelperUtils — pure helpers
@@ -759,6 +767,131 @@ describe("DatabaseUtils", () => {
             } finally {
                 (indexedDB as any).databases = original;
             }
+        });
+
+        const noneActive = {
+            taskIds: new Set<number>(),
+            myNoteIds: new Set<number>(),
+            chatNoteIds: new Set<number>(),
+            taskNoteIds: new Set<number>(),
+        };
+
+        it("keeps a document an editor currently has open, allow-list or not", async () => {
+            // The allow-list comes from cached rows, which lag: a task
+            // being drafted has no `taskMeta` row until its first save.
+            // Deleting its DB out from under the open editor is what made
+            // new tasks save with an empty description.
+            const doc = new Y.Doc();
+            const persistence = createYjsPersistence("task-body:4242", doc);
+            await persistence.whenSynced;
+            try {
+                expect(await DatabaseUtils.sweepOrphanYjsDatabases(noneActive)).toBe(0);
+                expect((await indexedDB.databases()).map((d) => d.name)).toContain(
+                    "task-body:4242"
+                );
+            } finally {
+                await destroyYjsPersistence(persistence);
+                doc.destroy();
+            }
+        });
+
+        it("sweeps the same document again once the editor has closed it", async () => {
+            const doc = new Y.Doc();
+            const persistence = createYjsPersistence("task-body:4243", doc);
+            await persistence.whenSynced;
+            await destroyYjsPersistence(persistence);
+            doc.destroy();
+
+            expect(await DatabaseUtils.sweepOrphanYjsDatabases(noneActive)).toBe(1);
+            expect((await indexedDB.databases()).map((d) => d.name)).not.toContain(
+                "task-body:4243"
+            );
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // yjsPersistence — the local Yjs cache must never break the document
+    // -----------------------------------------------------------------------
+    describe("createYjsPersistence", () => {
+        const DOC = "task-body:9001";
+
+        afterEach(() => {
+            consumeYjsPersistenceFailure(DOC);
+        });
+
+        // Drive the provider into the state the browser leaves it in after
+        // it closes the connection for a `versionchange`: `db` is still set
+        // but every `transaction()` on it throws.
+        const breakConnection = (persistence: IndexeddbPersistence) => {
+            (persistence as unknown as { db: unknown }).db = {
+                transaction: () => {
+                    throw new DOMException(
+                        "Failed to execute 'transaction' on 'IDBDatabase': " +
+                            "The database connection is closing.",
+                        "InvalidStateError"
+                    );
+                },
+            };
+        };
+
+        it("keeps later update observers running when the cache throws", async () => {
+            const doc = new Y.Doc();
+            const persistence = createYjsPersistence(DOC, doc);
+            await persistence.whenSynced;
+
+            // Registered AFTER the cache, exactly like the Hocuspocus
+            // provider is. Upstream y-indexeddb throws out of the Yjs
+            // transaction, so this never ran and the edit reached neither
+            // the collab server nor the editor's own sync.
+            const downstream = vi.fn();
+            doc.on("update", downstream);
+            breakConnection(persistence);
+
+            expect(() => doc.getText("t").insert(0, "hello")).not.toThrow();
+            expect(downstream).toHaveBeenCalledTimes(1);
+            expect(hasYjsPersistenceFailed(DOC)).toBe(true);
+
+            await destroyYjsPersistence(persistence);
+            doc.destroy();
+        });
+
+        it("detaches after the first failure instead of throwing per keystroke", async () => {
+            const doc = new Y.Doc();
+            const persistence = createYjsPersistence(DOC, doc);
+            await persistence.whenSynced;
+
+            let transactionAttempts = 0;
+            (persistence as unknown as { db: unknown }).db = {
+                transaction: () => {
+                    transactionAttempts += 1;
+                    throw new DOMException("closing", "InvalidStateError");
+                },
+            };
+
+            doc.getText("t").insert(0, "a");
+            doc.getText("t").insert(1, "b");
+            doc.getText("t").insert(2, "c");
+            expect(transactionAttempts).toBe(1);
+            expect(doc.getText("t").toString()).toBe("abc");
+
+            await destroyYjsPersistence(persistence);
+            doc.destroy();
+        });
+
+        it("consumeYjsPersistenceFailure reports once then clears", async () => {
+            const doc = new Y.Doc();
+            const persistence = createYjsPersistence(DOC, doc);
+            await persistence.whenSynced;
+            breakConnection(persistence);
+            doc.getText("t").insert(0, "x");
+
+            // One report so the user is told to retry, then clear — the
+            // cache has detached, so leaving it set would wedge the retry.
+            expect(consumeYjsPersistenceFailure(DOC)).toBe(true);
+            expect(consumeYjsPersistenceFailure(DOC)).toBe(false);
+
+            await destroyYjsPersistence(persistence);
+            doc.destroy();
         });
     });
 

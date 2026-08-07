@@ -750,6 +750,8 @@ export const fr: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "Échec de la création de la tâche",
+            bodyEditorUnavailable:
+                "Échec de la création de la tâche : l'éditeur de description a perdu son stockage local et ne contient peut-être pas votre texte le plus récent. Veuillez réessayer.",
             threadAlreadyHasTask:
                 "Ce fil a déjà une tâche — un fil ne peut être lié qu'à une seule tâche.",
             taskLimitReached:
@@ -884,7 +886,7 @@ export const fr: DeepPartial<Messages> = {
                 requestMessagePrefix: "A envoyé une demande pour rejoindre le projet : ",
                 requestMessageSuffix: ".",
                 sendMessageFailed: "Échec de l'envoi d'un message dans la boîte de réception",
-                joinFailed: "Échec de l'adhésion au projet créé",
+                joinFailed: "Échec de l'adhésion au projet",
             },
             createTag: {
                 heading: "Créer un nouveau tag",
