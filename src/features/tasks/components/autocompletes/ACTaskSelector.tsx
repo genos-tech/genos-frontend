@@ -24,7 +24,7 @@ import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { statuses } from "../../utils/taskMeta";
-import { ProjectIdentityRow } from "../ProjectIdentityRow";
+import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 
 // Resolve a status string ("Open" / "WIP" / …) into the canonical
@@ -204,7 +204,6 @@ export const ACTaskSelector = ({
                         placeholder={pickerT.projectPlaceholder}
                         size={size}
                         slotProps={listboxSlotProps}
-                        startDecorator={<FolderRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
                         sx={INPUT_SX}
                         value={selectedProject}
                         renderOption={(optionProps, opt) => (
@@ -228,6 +227,21 @@ export const ACTaskSelector = ({
                                 />
                             </AutocompleteOption>
                         )}
+                        startDecorator={
+                            // The closed field can only show the option
+                            // LABEL — a bare name. This puts the row's
+                            // avatar and markers back next to it.
+                            <ProjectIdentityDecorator
+                                project={selectedProject}
+                                avatarSrc={projectAvatarSrc(
+                                    selectedProject?.projectId,
+                                    useCM?.allChats
+                                )}
+                                fallback={
+                                    <FolderRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />
+                                }
+                            />
+                        }
                         onChange={(_e, value) => setSelectedProject(value)}
                     />
                 </Box>

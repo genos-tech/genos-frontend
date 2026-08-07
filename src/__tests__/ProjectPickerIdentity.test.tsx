@@ -44,18 +44,26 @@ const usePM = {
             projectLabels: [],
             isPrivate: true,
         },
+        {
+            projectId: 3,
+            projectName: "Gamma",
+            projectTags: [],
+            projectLabels: [],
+            isExternal: true,
+            hostTeamName: "Partner Co",
+        },
     ],
     setCurrentProject: vi.fn(),
 } as unknown as ProjectManagementState;
 
-const renderPicker = (useCM?: ChatManagementState) =>
+const renderPicker = (useCM?: ChatManagementState, taskContent?: Partial<TaskProps>) =>
     render(
         <CssVarsProvider>
             <ACTeamProjects
                 isOpenProjectList={false}
                 setIsOpenProjectList={vi.fn()}
                 setTaskContent={vi.fn()}
-                taskContent={{ id: 1 } as unknown as TaskProps}
+                taskContent={{ id: 1, ...taskContent } as unknown as TaskProps}
                 useCM={useCM}
                 usePM={usePM}
             />
@@ -97,6 +105,42 @@ describe("ACTeamProjects option rows", () => {
             args.some((a) => typeof a === "string" && a.includes("ownerState"))
         );
         expect(leaked).toBe(false);
+    });
+});
+
+describe("ACTeamProjects closed field", () => {
+    // A closed Autocomplete is a text <input>, so the selected project can
+    // only be its `getOptionLabel` string — the identity has to be
+    // re-attached as a decorator or the row's meaning is lost the moment
+    // the listbox shuts. These assert both halves of that arrangement.
+    //
+    // The selection is deliberately the STUB the picker's own `onChange`
+    // writes onto the task — id and name, nothing else. Reading the marks
+    // off it would blank them right after a pick, so they have to be
+    // resolved against `teamProjects`.
+    const selected = {
+        project: { projectId: 3, projectName: "Gamma", projectTags: [] },
+    } as unknown as Partial<TaskProps>;
+
+    it("keeps the plain name as the input's value", () => {
+        renderPicker(undefined, selected);
+
+        expect(screen.getAllByRole("combobox")[0]).toHaveValue("Gamma");
+    });
+
+    it("carries the project's markers beside the name, without opening the list", () => {
+        renderPicker(undefined, selected);
+
+        // Sourced from the decorator, not an option row: the listbox is
+        // shut, so nothing else can be rendering this. And the host team
+        // only exists on the `teamProjects` record, never on the stub.
+        expect(screen.getByTitle("Shared with your team by Partner Co")).toBeInTheDocument();
+    });
+
+    it("renders no marker while nothing is selected", () => {
+        renderPicker();
+
+        expect(screen.queryByTitle(/Shared with your team/)).not.toBeInTheDocument();
     });
 });
 

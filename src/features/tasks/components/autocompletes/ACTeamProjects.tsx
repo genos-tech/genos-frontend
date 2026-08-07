@@ -5,7 +5,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskProps } from "../../../../types/tasks";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
-import { ProjectIdentityRow } from "../ProjectIdentityRow";
+import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
 
 type ACTeamProjectsProps = {
     taskContent: TaskProps;
@@ -46,19 +46,33 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         disabled = false,
     } = props;
 
+    const selectedProject = taskContent.project?.projectId ? taskContent.project : undefined;
+    // `taskContent.project` is a stub — `onChange` below writes only the
+    // id and name onto the task, so reading the labels, lock or share
+    // mark off it would blank them the instant a project is picked. The
+    // team list is where the full record lives, and it's the same array
+    // the options come from, so the closed field can't disagree with the
+    // row the user just clicked.
+    const selectedIdentity = selectedProject
+        ? (usePM.teamProjects.find((p) => p.projectId === selectedProject.projectId) ??
+          selectedProject)
+        : undefined;
+
     return (
         <Autocomplete
             key={taskContent.id}
             disabled={disabled}
             // Still the plain name: this is what type-to-filter matches
-            // on and what the closed input displays. The richer content
-            // below is presentation only.
+            // on, and — the field being a text input — all the closed
+            // state can display. The richer content below is presentation
+            // only; `startDecorator` puts as much of it as fits back
+            // beside the name once a project is picked.
             getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             options={usePM.teamProjects}
             size="sm"
             sx={{ width: "100%" }}
-            value={taskContent.project?.projectId ? taskContent.project : undefined}
+            value={selectedProject}
             renderOption={(optionProps, option) => (
                 // Joy's own option component, NOT a bespoke <li>: it
                 // brings the padding, hover, focus and selected states
@@ -79,6 +93,19 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     />
                 </AutocompleteOption>
             )}
+            startDecorator={
+                // Only the option LABEL — a bare name — can live inside
+                // the closed field's <input>, so the avatar and markers
+                // ride alongside it here. Omitted entirely while empty,
+                // rather than rendered blank: Joy still lays out the
+                // decorator slot's gap around an empty child.
+                selectedIdentity ? (
+                    <ProjectIdentityDecorator
+                        avatarSrc={projectAvatarSrc(selectedIdentity.projectId, useCM?.allChats)}
+                        project={selectedIdentity}
+                    />
+                ) : undefined
+            }
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
