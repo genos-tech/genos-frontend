@@ -16,7 +16,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
-import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersistence";
+import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersistenceRegistry";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
