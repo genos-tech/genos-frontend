@@ -22,6 +22,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -37,6 +38,8 @@ type Props = {
     myself: UserProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    /** Forwarded to the picker's project dropdown for its avatars. */
+    useCM?: ChatManagementState;
     /** Which subsection to surface first when the modal opens. */
     focus?: "blocking" | "blockedBy";
     /** Stacking level of the hosting surface. The preview this modal is
@@ -154,6 +157,7 @@ export const ModalManageDependencies = ({
     myself,
     usePM,
     useTM,
+    useCM,
     focus,
     hostZIndex,
 }: Props) => {
@@ -393,6 +397,7 @@ export const ModalManageDependencies = ({
                                     removeTooltip={depsT.modal.removeTooltip}
                                     resetKey={resetKey}
                                     title={title}
+                                    useCM={useCM}
                                     usePM={usePM}
                                     onAdd={(p) => handleAdd(k, p)}
                                     onRemove={handleRemove}
@@ -424,6 +429,7 @@ type SectionProps = {
     isDark: boolean;
     myself: UserProps;
     usePM: ProjectManagementState;
+    useCM?: ChatManagementState;
     defaultProjectId: number | null;
     resetKey: number;
     busy: boolean;
@@ -444,6 +450,7 @@ const DependencySection = ({
     isDark,
     myself,
     usePM,
+    useCM,
     defaultProjectId,
     resetKey,
     busy,
@@ -525,6 +532,7 @@ const DependencySection = ({
                     myself={myself}
                     popupZIndex={popupZIndex}
                     resetKey={resetKey}
+                    useCM={useCM}
                     usePM={usePM}
                     onPick={onAdd}
                 />

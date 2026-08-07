@@ -6,6 +6,7 @@ import { Box, Chip, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -33,6 +34,9 @@ type Props = {
     taskContent: TaskProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    /** Only reaches the manage modal's project dropdown, which resolves
+     *  each option's avatar from its PM chat. */
+    useCM?: ChatManagementState;
     myself: UserProps;
     isPreviewMode: boolean;
     // Set when rendering inside the UrlLinkModal — dependency chips
@@ -50,6 +54,7 @@ export const TaskDependenciesBlock = ({
     taskContent,
     usePM,
     useTM,
+    useCM,
     myself,
     isPreviewMode,
     hostZIndex,
@@ -211,6 +216,7 @@ export const TaskDependenciesBlock = ({
                 myself={myself}
                 open={modalOpen}
                 taskContent={taskContent}
+                useCM={useCM}
                 usePM={usePM}
                 useTM={useTM}
                 onClose={() => setModalOpen(false)}

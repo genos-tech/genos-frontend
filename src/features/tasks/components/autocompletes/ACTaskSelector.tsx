@@ -2,18 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Autocomplete, Box, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
+import {
+    Autocomplete,
+    AutocompleteOption,
+    Box,
+    Chip,
+    CircularProgress,
+    ListItemContent,
+    Stack,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
-import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
+import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { statuses } from "../../utils/taskMeta";
+import { ProjectIdentityRow } from "../ProjectIdentityRow";
+import { TaskIdentityRow } from "../TaskIdentityRow";
 
 // Resolve a status string ("Open" / "WIP" / …) into the canonical
 // {color, textColor} pair owned by `taskMeta.statuses`, so every status
@@ -30,37 +42,25 @@ const statusMeta = (label: string | null | undefined): TaskStatusProps => {
     );
 };
 
-// Lifted from SprintMilestonePicker so both pickers feel like part of
-// the same design system: padded rows, breathing room, hover & selected
-// states tied to the Joy palette tokens so dark/light mode both look
-// right without duplicate sx values.
-const LISTBOX_SLOT_SX = {
-    py: 0.5,
-    maxHeight: 320,
-    "& > li[role='option']": {
-        px: 1,
-        py: 0.7,
-        mx: 0.5,
-        my: 0.25,
-        borderRadius: "8px",
-        cursor: "pointer",
-        transition: "background-color 0.15s ease, color 0.15s ease, transform 0.15s ease",
-        "&:hover": {
-            backgroundColor: "var(--joy-palette-neutral-plainHoverBg)",
-            transform: "translateX(1px)",
+// The popup surface, lifted from the sidebar's task search so this
+// dialog's dropdowns read as the same control the user already knows.
+// Deliberately styles the popup only — the ROWS get their padding,
+// hover, focus and selected states from Joy's `AutocompleteOption`,
+// which is what keeps them identical to the sidebar search and to the
+// preview's project picker instead of drifting behind local overrides.
+const listboxSlotSx = (isDark: boolean) =>
+    ({
+        maxHeight: 320,
+        borderRadius: "12px",
+        boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.12)",
+        border: "1px solid",
+        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+        "& .MuiAutocomplete-option": {
+            borderRadius: "8px",
+            mx: 0.5,
+            my: 0.25,
         },
-        "&.Mui-focused, &.Mui-focusVisible": {
-            backgroundColor: "var(--joy-palette-neutral-plainHoverBg)",
-        },
-        "&[aria-selected='true']": {
-            backgroundColor: "var(--joy-palette-primary-softBg)",
-            color: "var(--joy-palette-primary-softColor)",
-            "&:hover": {
-                backgroundColor: "var(--joy-palette-primary-softHoverBg)",
-            },
-        },
-    },
-} as const;
+    }) as const;
 
 type Props = {
     myself: UserProps;
@@ -82,6 +82,11 @@ type Props = {
      * on purpose — a `& ~ [role="listbox"]` sibling rule would claim
      * popups this surface doesn't own (the fe #122 cascade race). */
     popupZIndex?: number;
+    /** Chat list, used to resolve each project's avatar from its PM
+     *  chat — same role it plays in `ACTeamProjects`. Optional: without
+     *  it the options still render, just with the generic project icon
+     *  instead of the uploaded image. */
+    useCM?: ChatManagementState;
 };
 
 // Cross-project task picker. Two stacked autocompletes — Project on the
@@ -98,6 +103,7 @@ export const ACTaskSelector = ({
     resetKey,
     size = "md",
     popupZIndex,
+    useCM,
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -162,6 +168,15 @@ export const ACTaskSelector = ({
     }, [selectedProject, tasksByProject, excludeTaskIds]);
 
     const scrollbarClass = `custom-scrollbar-${isDark ? "dark" : "light"}`;
+    const listboxSlotProps = {
+        listbox: {
+            className: scrollbarClass,
+            sx: {
+                ...listboxSlotSx(isDark),
+                ...(popupZIndex != null ? { zIndex: popupZIndex } : {}),
+            },
+        },
+    };
 
     return (
         <Box
@@ -188,61 +203,31 @@ export const ACTaskSelector = ({
                         options={projects}
                         placeholder={pickerT.projectPlaceholder}
                         size={size}
+                        slotProps={listboxSlotProps}
                         startDecorator={<FolderRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
                         sx={INPUT_SX}
                         value={selectedProject}
-                        renderOption={(props, opt) => (
-                            // stripOwnerState: bespoke <li> rows (not Joy's
-                            // AutocompleteOption) must not forward Joy's
-                            // internal ownerState to the DOM — React warns
-                            // on every rendered option otherwise.
-                            <Box component="li" {...stripOwnerState(props)} key={opt.projectId}>
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    spacing={1}
-                                    sx={{ width: "100%", minWidth: 0 }}
-                                >
-                                    <FolderRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.6)"
-                                                : "rgba(0,0,0,0.55)",
-                                        }}
-                                    />
-                                    <Typography
-                                        level="body-md"
-                                        sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}
-                                        noWrap
-                                    >
-                                        {opt.projectName}
-                                    </Typography>
-                                    {opt.projectCode && (
-                                        <Chip
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontFamily: "monospace",
-                                                fontWeight: 600,
-                                                borderRadius: "5px",
-                                            }}
-                                        >
-                                            {opt.projectCode}
-                                        </Chip>
-                                    )}
-                                </Stack>
-                            </Box>
+                        renderOption={(optionProps, opt) => (
+                            // Joy's own option component and the shared
+                            // identity row, exactly as `ACTeamProjects`
+                            // renders the preview's Project field: a project
+                            // has to look the same wherever it's picked, and
+                            // a bare name is genuinely ambiguous once a team
+                            // runs "Website" under two labels. Joy's option
+                            // also consumes the internal `ownerState`, so no
+                            // `stripOwnerState` is needed here.
+                            <AutocompleteOption
+                                {...optionProps}
+                                key={opt.projectId}
+                                sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+                            >
+                                <ProjectIdentityRow
+                                    avatarSrc={projectAvatarSrc(opt.projectId, useCM?.allChats)}
+                                    maxLabels={2}
+                                    project={opt}
+                                />
+                            </AutocompleteOption>
                         )}
-                        slotProps={{
-                            listbox: {
-                                className: scrollbarClass,
-                                sx: {
-                                    ...LISTBOX_SLOT_SX,
-                                    ...(popupZIndex != null ? { zIndex: popupZIndex } : {}),
-                                },
-                            },
-                        }}
                         onChange={(_e, value) => setSelectedProject(value)}
                     />
                 </Box>
@@ -261,6 +246,7 @@ export const ACTaskSelector = ({
                         loading={loading}
                         options={taskOptions}
                         size={size}
+                        slotProps={listboxSlotProps}
                         startDecorator={<SearchRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
                         sx={INPUT_SX}
                         value={selectedTask}
@@ -280,52 +266,20 @@ export const ACTaskSelector = ({
                                 ? pickerT.taskPlaceholder
                                 : pickerT.taskPlaceholderDisabled
                         }
-                        renderOption={(props, opt) => {
-                            const meta = statusMeta(opt.status);
-                            return (
-                                <Box component="li" {...stripOwnerState(props)} key={opt.id}>
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        spacing={1}
-                                        sx={{ width: "100%", minWidth: 0 }}
-                                    >
-                                        <Chip
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontWeight: 600,
-                                                fontFamily: "monospace",
-                                                borderRadius: "5px",
-                                            }}
-                                        >
-                                            {opt.displayId ?? `#${opt.id}`}
-                                        </Chip>
-                                        <StatusChip isDark={isDark} meta={meta} />
-                                        <Typography
-                                            level="body-md"
-                                            sx={{
-                                                flex: 1,
-                                                minWidth: 0,
-                                                fontWeight: 500,
-                                            }}
-                                            noWrap
-                                        >
-                                            {opt.title}
-                                        </Typography>
-                                    </Stack>
-                                </Box>
-                            );
-                        }}
-                        slotProps={{
-                            listbox: {
-                                className: scrollbarClass,
-                                sx: {
-                                    ...LISTBOX_SLOT_SX,
-                                    ...(popupZIndex != null ? { zIndex: popupZIndex } : {}),
-                                },
-                            },
-                        }}
+                        renderOption={(optionProps, opt) => (
+                            // The sidebar task search's row, verbatim — same
+                            // control, same options, so the same presentation.
+                            <AutocompleteOption {...optionProps} key={opt.id}>
+                                <ListItemContent sx={{ fontSize: "sm" }}>
+                                    <TaskIdentityRow
+                                        isMilestone={opt.isMilestone}
+                                        status={statusMeta(opt.status)}
+                                        task={opt}
+                                        title={opt.title}
+                                    />
+                                </ListItemContent>
+                            </AutocompleteOption>
+                        )}
                         onChange={(_e, value) => {
                             if (value && value.id != null && selectedProject) {
                                 onPick({

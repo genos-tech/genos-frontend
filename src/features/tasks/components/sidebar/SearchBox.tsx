@@ -1,14 +1,10 @@
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
     AutocompleteOption,
-    Box,
     Chip,
     CircularProgress,
     ListItemContent,
-    Stack,
-    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -16,7 +12,7 @@ import { alpha } from "@mui/system";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
-import { CopyableTaskIdChip } from "../CopyableTaskId";
+import { TaskIdentityRow } from "../TaskIdentityRow";
 
 type TaskSidebarSearchBoxProps = {
     openSearch: boolean;
@@ -75,71 +71,12 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            {/* Milestone rows get the flag glyph on the far
-                                left — same orange as the header's "New
-                                Milestone" menu item. */}
-                            {option.isMilestone === true && (
-                                <FlagRoundedIcon
-                                    sx={{ color: "#f97316", flexShrink: 0, fontSize: 16 }}
-                                />
-                            )}
-                            <CopyableTaskIdChip
-                                key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                                size="sm"
-                                task={option}
-                                variant="soft"
-                                sx={{
-                                    fontSize: "0.65rem",
-                                    fontWeight: 600,
-                                    height: 20,
-                                    minHeight: 20,
-                                    borderRadius: "6px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.06)",
-                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                                }}
-                            />
-                            <Chip
-                                key={`ac-taskhome-search-task-chip-${option.taskId}`}
-                                size="sm"
-                                variant="soft"
-                                sx={{
-                                    fontSize: "0.65rem",
-                                    fontWeight: 600,
-                                    height: 20,
-                                    minHeight: 20,
-                                    borderRadius: "6px",
-                                    backgroundColor: alpha(
-                                        option.status.color || "#0044c2",
-                                        isDark ? 0.35 : 0.6
-                                    ),
-                                    color: option.status.textColor || "#ffffff",
-                                    border: "1px solid",
-                                    borderColor: alpha(
-                                        option.status.color || "#0044c2",
-                                        isDark ? 0.4 : 0.25
-                                    ),
-                                }}
-                            >
-                                {option.status.status}
-                            </Chip>
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(0,0,0,0.85)",
-                                    }}
-                                    noWrap
-                                >
-                                    {option.title}
-                                </Typography>
-                            </Box>
-                        </Stack>
+                        <TaskIdentityRow
+                            isMilestone={option.isMilestone}
+                            status={option.status}
+                            task={option}
+                            title={option.title}
+                        />
                     </ListItemContent>
                 </AutocompleteOption>
             )}

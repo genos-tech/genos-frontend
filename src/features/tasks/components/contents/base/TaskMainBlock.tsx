@@ -1125,6 +1125,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     isPreviewMode={isPreviewMode}
                     myself={myself}
                     taskContent={taskContent}
+                    // Reaches the manage modal's project dropdown, which
+                    // resolves each option's avatar from its PM chat.
+                    useCM={useCM}
                     usePM={usePM}
                     useTM={useTM}
                 />
