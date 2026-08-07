@@ -6,13 +6,27 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
-// How long the socket has to stay down before the banner says anything.
-// Socket.io drops and re-handshakes on its own for plenty of ordinary
-// reasons — a wifi roam, a laptop waking, a server redeploy — and nearly
-// all of those are back inside a second or two. Announcing them turns
-// the banner into noise, and a banner that cries wolf is one people stop
-// reading. Anything still down after this is worth interrupting for.
+// How long a socket we've already seen working has to stay down before
+// the banner says anything. Socket.io drops and re-handshakes on its own
+// for plenty of ordinary reasons — a wifi roam, a laptop waking, a
+// server redeploy — and nearly all of those are back inside a second or
+// two. Announcing them turns the banner into noise, and a banner that
+// cries wolf is one people stop reading. Anything still down after this
+// is worth interrupting for.
 const WS_DOWN_GRACE_MS = 5000;
+
+// How long a socket that has never yet connected gets instead. Opening
+// the app cold tripped the five-second window every single time, because
+// `socket.connected` doesn't flip when the transport is up — it flips
+// when the server's connect handler returns, and that handler resolves
+// the token, the caller's team list and their project list against
+// Django before it acks. Those three round-trips land while the app's
+// own boot fetches are queued at the same backend, so several seconds of
+// legitimate handshake is the normal case, not an outage. Until we've
+// seen the socket up we have nothing to distinguish a slow handshake
+// from a real failure, so we wait long enough to cover the slow one.
+const WS_FIRST_CONNECT_GRACE_MS = 20000;
+
 const WS_POLL_INTERVAL_MS = 1000;
 
 const createSocket = (accessToken: string | null): Socket => {
@@ -68,18 +82,35 @@ export const useWebSocket = (
         }
     }, [socketInstance, myself]);
 
-    // Initialize WebSocket connection
+    // Initialize WebSocket connection.
+    //
+    // Keyed on the three things a socket actually carries — the token in
+    // its header, and the identity behind its query. Depending on the
+    // whole `myself` object meant every unrelated field on it rebuilt the
+    // connection: a regenerated `tsLastSeen`, an avatar reconciled
+    // against the team-members store, a custom status. None of those
+    // change what the server does with the socket, but each one dropped a
+    // working connection and paid for a fresh handshake — three blocking
+    // Django calls in the connect handler — to arrive back where it
+    // started. Waiting for `myself.userId` also skips the throwaway
+    // socket that used to open in the ~50ms before identity hydrates, and
+    // whose handshake competed with the real one for the same backend.
+    //
+    // `currentTeamId` stays the team authority rather than
+    // `myself.teamId`: `useAppInitialization` advances it only once the
+    // team-switch IndexedDB wipe has finished, and the socket is one of
+    // the consumers that must not run ahead of that.
     useEffect(() => {
-        if (accessToken) {
-            const _socket = createSocket(accessToken);
-            setSocketInstance((prev) => {
-                if (prev) {
-                    prev.disconnect();
-                }
-                return _socket;
-            });
-        }
-    }, [myself, accessToken, currentTeamId]);
+        if (!accessToken || !myself.userId) return;
+
+        const _socket = createSocket(accessToken);
+        setSocketInstance((prev) => {
+            if (prev) {
+                prev.disconnect();
+            }
+            return _socket;
+        });
+    }, [accessToken, myself.userId, currentTeamId]);
 
     // Poll socket.connected status instead of relying on event listeners,
     // because cleanupWebSocketHandlers removes all listeners for shared events.
@@ -97,10 +128,19 @@ export const useWebSocket = (
         // Null while connected; the timestamp we first saw it down otherwise.
         // Local to the effect, so a replaced socket always starts a fresh window.
         let downSince: number | null = null;
+        // Whether this socket has ever been observed up, which is what
+        // picks between the two windows above.
+        let proven = false;
 
         const pollId = setInterval(() => {
+            // Nothing we'd say is being read, and the browser may have
+            // suspended the socket behind our back. Neither the outage
+            // nor the recovery is ours to judge until the tab is back.
+            if (document.hidden) return;
+
             if (socketInstance.connected) {
                 downSince = null;
+                proven = true;
                 setShowDisconnected(false);
                 return;
             }
@@ -108,13 +148,30 @@ export const useWebSocket = (
                 downSince = Date.now();
                 return;
             }
-            if (Date.now() - downSince >= WS_DOWN_GRACE_MS) {
+            const grace = proven ? WS_DOWN_GRACE_MS : WS_FIRST_CONNECT_GRACE_MS;
+            if (Date.now() - downSince >= grace) {
                 setShowDisconnected(true);
             }
         }, WS_POLL_INTERVAL_MS);
 
+        // Coming back to a backgrounded tab, the socket has to re-handshake
+        // from scratch and is as slow to answer as it was on the first
+        // open — and the hour it spent hidden isn't an hour the user spent
+        // waiting. Restart the window from the moment they're actually
+        // looking, and ask the connection to prove itself again before we
+        // go back to trusting the short one. Measuring against the wall
+        // clock made this necessary: the old poll-counting version was
+        // accidentally shielded from it by the browser's own throttling.
+        const onVisibilityChange = () => {
+            if (document.hidden) return;
+            downSince = null;
+            proven = socketInstance.connected;
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
+
         return () => {
             clearInterval(pollId);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
         };
         // `showDisconnected` is deliberately not a dependency: reading it
         // here would tear down and restart the interval every time the

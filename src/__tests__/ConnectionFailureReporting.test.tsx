@@ -8,7 +8,10 @@
  *      refused the call — not that Genos is down — and must not reach the
  *      shared "Server error" toast.
  *   3. The socket has to stay down for a real five seconds before the
- *      banner appears; ordinary socket.io reconnects are shorter.
+ *      banner appears; ordinary socket.io reconnects are shorter. A
+ *      socket that has never connected yet gets much longer, because a
+ *      cold handshake legitimately takes seconds, and time the tab spent
+ *      in the background doesn't count at all.
  *
  * `../services/api` is mocked wholesale here so the GitHub service's
  * request config can be inspected. The other half of that seam — that
@@ -139,8 +142,19 @@ describe("GitHub proxy requests", () => {
 const MYSELF = { userId: 1 } as unknown as UserProps;
 
 describe("WebSocket disconnect grace window", () => {
+    // jsdom derives `document.hidden` from `visibilityState` and offers no
+    // setter, so the tab has to be faked by shadowing the property.
+    const setTabHidden = (hidden: boolean) => {
+        Object.defineProperty(document, "hidden", {
+            configurable: true,
+            get: () => hidden,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+    };
+
     beforeEach(() => {
         vi.useFakeTimers();
+        setTabHidden(false);
     });
     afterEach(() => {
         vi.useRealTimers();
@@ -171,7 +185,7 @@ describe("WebSocket disconnect grace window", () => {
         expect(result.current.showDisconnected).toBe(false);
     });
 
-    it("speaks up once the socket has been down for the full window", () => {
+    it("speaks up once a socket it has seen working stays down for the window", () => {
         const { result } = mountSocket();
         tick(1000);
 
@@ -182,6 +196,8 @@ describe("WebSocket disconnect grace window", () => {
 
     it("clears the banner as soon as the socket is back", () => {
         const { result } = mountSocket();
+        tick(1000);
+
         currentSocket.connected = false;
         tick(7000);
         expect(result.current.showDisconnected).toBe(true);
@@ -191,12 +207,51 @@ describe("WebSocket disconnect grace window", () => {
         expect(result.current.showDisconnected).toBe(false);
     });
 
+    it("waits far longer on a socket that has never connected", () => {
+        // Opening the app cold, `connected` stays false until the server's
+        // connect handler has resolved the token, the team list and the
+        // project list against Django. Several seconds of that is normal,
+        // and the five-second window called it an outage every launch.
+        const { result } = mountSocket();
+        currentSocket.connected = false;
+
+        // Six seconds is where a socket we'd already seen working would
+        // have tripped the banner, per the test above.
+        tick(6000);
+        expect(result.current.showDisconnected).toBe(false);
+        tick(16000);
+        expect(result.current.showDisconnected).toBe(true);
+    });
+
+    it("doesn't hold the tab's time in the background against the socket", () => {
+        // Backgrounded, the browser both throttles this poll and may
+        // suspend the socket outright. Measuring the outage against the
+        // wall clock means an hour hidden would otherwise be an hour of
+        // "downtime" waiting to fire the moment the user looks back.
+        const { result } = mountSocket();
+        tick(1000);
+
+        setTabHidden(true);
+        currentSocket.connected = false;
+        tick(3_600_000);
+        expect(result.current.showDisconnected).toBe(false);
+
+        setTabHidden(false);
+        tick(6000);
+        // Still down, but the returning tab is owed a fresh handshake, so
+        // it gets the long window rather than the banner.
+        expect(result.current.showDisconnected).toBe(false);
+        tick(16000);
+        expect(result.current.showDisconnected).toBe(true);
+    });
+
     it("restarts the window when the socket is replaced", () => {
         // Switching team tears down the socket and opens a new one. The
         // old poll-counting version kept its tally across that swap, so a
         // fresh socket could inherit an almost-expired count and flash the
         // banner on its very first poll.
         const { result, rerender } = mountSocket();
+        tick(1000);
         currentSocket.connected = false;
         tick(4000);
         expect(result.current.showDisconnected).toBe(false);
