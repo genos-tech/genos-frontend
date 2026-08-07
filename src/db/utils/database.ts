@@ -1,7 +1,7 @@
 import { openDB } from "idb";
 
 import { DB_NAME, initDB, STORES } from "../config";
-import { isYjsDocumentOpen } from "./yjsPersistence";
+import { isYjsDocumentOpen } from "./yjsPersistenceRegistry";
 
 // Stores that hold team-scoped data and must be wiped when the user switches teams.
 // USER_INFO is intentionally excluded: it is indexed by teamId and shared across teams

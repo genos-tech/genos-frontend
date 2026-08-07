@@ -30,7 +30,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
-import { consumeYjsPersistenceFailure } from "../../../../db/utils/yjsPersistence";
+import { consumeYjsPersistenceFailure } from "../../../../db/utils/yjsPersistenceRegistry";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

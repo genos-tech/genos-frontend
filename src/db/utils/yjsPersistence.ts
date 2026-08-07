@@ -23,54 +23,29 @@
  *    an open IndexedDB fires `versionchange`, `lib0` responds by closing
  *    the connection, and every keystroke after that throws
  *    `InvalidStateError: … The database connection is closing.` — which
- *    is failure mode 1 on a loop. The registry here is the allow-list
- *    the sweep consults.
+ *    is failure mode 1 on a loop. Providers register themselves in
+ *    `yjsPersistenceRegistry`, which is the allow-list the sweep reads.
  *
  * The sweep and the create-task form both hit this in one reproducible
  * flow: the sweep's allow-list comes from the cached `taskMeta` rows,
  * and the create form's scaffold task isn't cached until AFTER a
  * successful submit — so a task drafted within the sweep's window had
  * its body database deleted mid-edit and saved empty.
+ *
+ * `y-indexeddb` and `yjs` belong to the lazy `vendor-editor` chunk, so
+ * only code already on the editor's path may import this module. The
+ * registry state lives in `yjsPersistenceRegistry` precisely so eager
+ * readers (the sweep, the submit guards) can reach it without dragging
+ * the editor stack into the entry chunk; see that file.
  */
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 
-// Document name → number of live providers. A count, not a flag: the
-// editor rebuilds its provider on an access-token refresh, and during
-// the handoff (and whenever two panes show the same document) the old
-// and new providers are open at once.
-const openDocuments = new Map<string, number>();
-
-// Documents whose local cache threw at least once this session. Never
-// cleared on its own — a caller that gates on it decides when the user
-// has been told (see `consumeYjsPersistenceFailure`).
-const failedDocuments = new Set<string>();
-
-/** Is any editor currently holding this document's IndexedDB open? */
-export const isYjsDocumentOpen = (documentName: string): boolean =>
-    (openDocuments.get(documentName) ?? 0) > 0;
-
-/**
- * Has this document's local cache failed since it was opened? Read by
- * submit paths that would otherwise persist a body the editor may not
- * have been able to assemble.
- */
-export const hasYjsPersistenceFailed = (documentName: string): boolean =>
-    failedDocuments.has(documentName);
-
-/**
- * Same as `hasYjsPersistenceFailed`, but clears the flag.
- *
- * Callers that block an action on the failure use this so the block
- * fires ONCE. The guarded observer has already detached by then, so the
- * user's retry runs against an editor that is no longer throwing —
- * leaving the flag set would wedge the form instead of protecting it.
- */
-export const consumeYjsPersistenceFailure = (documentName: string): boolean => {
-    if (!failedDocuments.has(documentName)) return false;
-    failedDocuments.delete(documentName);
-    return true;
-};
+import {
+    deregisterYjsDocument,
+    markYjsPersistenceFailed,
+    registerYjsDocument,
+} from "./yjsPersistenceRegistry";
 
 /**
  * Open `documentName`'s local Yjs cache for `doc`, registered as live
@@ -79,7 +54,7 @@ export const consumeYjsPersistenceFailure = (documentName: string): boolean => {
  */
 export function createYjsPersistence(documentName: string, doc: Y.Doc): IndexeddbPersistence {
     const persistence = new IndexeddbPersistence(documentName, doc);
-    openDocuments.set(documentName, (openDocuments.get(documentName) ?? 0) + 1);
+    registerYjsDocument(documentName);
 
     // Replace the library's `update` observer with one that can't throw
     // into Yjs. On failure we detach for good: every documented cause
@@ -92,7 +67,7 @@ export function createYjsPersistence(documentName: string, doc: Y.Doc): Indexedd
         try {
             store(update, origin);
         } catch (err) {
-            failedDocuments.add(documentName);
+            markYjsPersistenceFailed(documentName);
             doc.off("update", guarded);
             console.error(
                 `[Yjs] local cache for "${documentName}" failed and was detached; ` +
@@ -125,9 +100,7 @@ export function destroyYjsPersistence(
 ): Promise<void> {
     if (!persistence) return Promise.resolve();
     const documentName = persistence.name;
-    const remaining = (openDocuments.get(documentName) ?? 1) - 1;
-    if (remaining > 0) openDocuments.set(documentName, remaining);
-    else openDocuments.delete(documentName);
+    deregisterYjsDocument(documentName);
     const onError = (err: unknown) => {
         console.error(`[Yjs] closing local cache for "${documentName}" failed:`, err);
     };

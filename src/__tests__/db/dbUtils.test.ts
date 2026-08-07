@@ -11,12 +11,11 @@ import { DB_NAME, DB_VERSION, initDB, STORES } from "../../db/config";
 import { DatabaseUtils } from "../../db/utils/database";
 import { HelperUtils } from "../../db/utils/helpers";
 import { ValidationUtils } from "../../db/utils/validation";
+import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import {
     consumeYjsPersistenceFailure,
-    createYjsPersistence,
-    destroyYjsPersistence,
     hasYjsPersistenceFailed,
-} from "../../db/utils/yjsPersistence";
+} from "../../db/utils/yjsPersistenceRegistry";
 
 // ---------------------------------------------------------------------------
 // HelperUtils — pure helpers

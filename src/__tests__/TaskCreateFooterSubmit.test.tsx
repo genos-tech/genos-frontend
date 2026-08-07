@@ -12,7 +12,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { consumeYjsPersistenceFailure } from "../db/utils/yjsPersistence";
+import { consumeYjsPersistenceFailure } from "../db/utils/yjsPersistenceRegistry";
 import { TaskCreateFooter } from "../features/tasks/components/contents/base/TaskCreateFooter";
 import { uploadNewTask, type UploadNewTaskResult } from "../features/tasks/services/uploadNewTask";
 
@@ -20,7 +20,7 @@ vi.mock("../features/tasks/services/uploadNewTask", () => ({
     uploadNewTask: vi.fn(),
 }));
 
-vi.mock("../db/utils/yjsPersistence", () => ({
+vi.mock("../db/utils/yjsPersistenceRegistry", () => ({
     consumeYjsPersistenceFailure: vi.fn(() => false),
 }));
 
