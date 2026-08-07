@@ -18,6 +18,7 @@ import { UserProfileLocation } from "../features/admin/components/modals/sub/Use
 import { UserProfilePhone } from "../features/admin/components/modals/sub/UserProfilePhone";
 import { updateUserProfile } from "../features/admin/services/updateUserProfile";
 import { UserProps } from "../types/admin";
+import { zoneLabel } from "../utils/userTimezone";
 
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
@@ -159,27 +160,87 @@ describe("UserProfileLocation", () => {
     });
 
     it("renders nothing for someone else who hasn't set one", () => {
+        // The browser fallback is the VIEWER's zone, so applying it here
+        // would claim a colleague sits in the reader's timezone.
         const { container } = wrap(
             <UserProfileLocation myself={me} setMyself={vi.fn()} user={other} />
         );
         expect(container).toBeEmptyDOMElement();
     });
 
-    it("stores the zone id when I pick a city", async () => {
+    it("shows a colleague's browser-reported zone without them picking one", () => {
+        wrap(
+            <UserProfileLocation
+                myself={me}
+                setMyself={vi.fn()}
+                user={makeUser({ userId: "user-2", timezone: "Europe/Lisbon" })}
+            />
+        );
+        expect(screen.getByText("Lisbon")).toBeInTheDocument();
+        // The auto marker is for your own card only — whether a colleague
+        // typed their location or their laptop did is not the reader's
+        // business.
+        expect(screen.queryByText("auto")).not.toBeInTheDocument();
+    });
+
+    it("fills my own row from this browser, marked as detected", () => {
+        // The point of the field: correct with nobody configuring
+        // anything. `me` has neither column set.
+        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        wrap(<UserProfileLocation myself={me} setMyself={vi.fn()} user={me} />);
+
+        expect(screen.getByText(zoneLabel(detected))).toBeInTheDocument();
+        expect(screen.getByText("auto")).toBeInTheDocument();
+        expect(screen.queryByText("Add your location")).not.toBeInTheDocument();
+    });
+
+    it("stores the zone id when I pick a city, and drops the auto marker", async () => {
         const user = userEvent.setup();
         const setMyself = vi.fn();
+        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
         wrap(<UserProfileLocation myself={me} setMyself={setMyself} user={me} />);
 
-        await user.click(screen.getByText("Add your location"));
+        await user.click(screen.getByText(zoneLabel(detected)));
         const input = screen.getByRole("combobox");
-        await user.type(input, "Tokyo");
-        await user.click(await screen.findByText("Asia · Asia/Tokyo"));
+        await user.type(input, "Lisbon");
+        await user.click(await screen.findByText("Europe · Europe/Lisbon"));
 
         await waitFor(() => expect(updateUserProfile).toHaveBeenCalledTimes(1));
         expect(updateUserProfile).toHaveBeenCalledWith(
-            expect.objectContaining({ currentLocation: "Asia/Tokyo" })
+            expect.objectContaining({ currentLocation: "Europe/Lisbon" })
         );
-        expect(localStorage.getItem("currentLocation")).toBe("Asia/Tokyo");
+        expect(localStorage.getItem("currentLocation")).toBe("Europe/Lisbon");
+        expect(setMyself).toHaveBeenCalledWith(
+            expect.objectContaining({ currentLocation: "Europe/Lisbon" })
+        );
+    });
+
+    it("clears the override back to detection when I ask for it", async () => {
+        const user = userEvent.setup();
+        const setMyself = vi.fn();
+        const overridden = makeUser({ currentLocation: "Europe/Lisbon" });
+        wrap(<UserProfileLocation myself={overridden} setMyself={setMyself} user={overridden} />);
+
+        await user.click(screen.getByText("Lisbon"));
+        await user.click(screen.getByRole("button", { name: "Use detected" }));
+
+        // Empty string, not null: it clears the manual column and lets
+        // the browser-reported zone show through again.
+        await waitFor(() => expect(updateUserProfile).toHaveBeenCalledTimes(1));
+        expect(updateUserProfile).toHaveBeenCalledWith(
+            expect.objectContaining({ currentLocation: "" })
+        );
+        expect(localStorage.getItem("currentLocation")).toBe("");
+    });
+
+    it("offers no reset when there is no override to reset", async () => {
+        const user = userEvent.setup();
+        wrap(<UserProfileLocation myself={me} setMyself={vi.fn()} user={me} />);
+
+        await user.click(
+            screen.getByText(zoneLabel(Intl.DateTimeFormat().resolvedOptions().timeZone))
+        );
+        expect(screen.queryByText("Use detected")).not.toBeInTheDocument();
     });
 });
 
@@ -194,6 +255,13 @@ describe("UserProfileLocalTime", () => {
     it("uses the browser-detected zone when no location was picked", () => {
         wrap(<UserProfileLocalTime user={makeUser({ timezone: "Asia/Tokyo" })} />);
         expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+    });
+
+    it("shows my own clock from this browser before anything has synced", () => {
+        // `me` has neither column; `isSelf` is what makes the row appear.
+        wrap(<UserProfileLocalTime user={me} isSelf />);
+        expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+        expect(screen.getByText("same time as you")).toBeInTheDocument();
     });
 
     it("prefers the picked location over the detected zone", () => {

@@ -1858,6 +1858,10 @@ export const hi: DeepPartial<Messages> = {
             phoneNotSet: "फ़ोन नंबर जोड़ें",
             locationPlaceholder: "शहर खोजें",
             locationNotSet: "अपना स्थान जोड़ें",
+            locationAuto: "स्वतः",
+            locationUseDetected: "स्वतः पहचाना गया उपयोग करें",
+            locationDetectedHint:
+                "आपके ब्राउज़र से पहचाना गया ({zone})। स्वयं सेट करने के लिए क्लिक करें।",
             aboutPlaceholder:
                 "अपने बारे में कुछ शब्द। **बोल्ड**, _इटैलिक_, लिंक और लिस्ट काम करते हैं।",
             aboutNotSet: "छोटा परिचय जोड़ें",

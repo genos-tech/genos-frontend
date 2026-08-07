@@ -1842,6 +1842,9 @@ export const ar: DeepPartial<Messages> = {
             phoneNotSet: "أضف رقم هاتف",
             locationPlaceholder: "ابحث عن مدينة",
             locationNotSet: "أضف موقعك",
+            locationAuto: "تلقائي",
+            locationUseDetected: "استخدام المكتشف تلقائيًا",
+            locationDetectedHint: "تم اكتشافه من متصفحك ({zone}). انقر لتعيينه بنفسك.",
             aboutPlaceholder:
                 "بضع كلمات عنك. يمكنك استخدام **الغامق** و_المائل_ والروابط والقوائم.",
             aboutNotSet: "أضف نبذة قصيرة",

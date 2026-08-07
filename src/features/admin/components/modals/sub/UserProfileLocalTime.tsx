@@ -20,6 +20,12 @@ const TICK_MS = 30_000;
 
 type Props = {
     user?: UserProps;
+    /**
+     * Whether `user` is the person reading. Lets the row fall back to this
+     * browser's zone, which is only sound for your own card — see
+     * `resolveZone`.
+     */
+    isSelf?: boolean;
 };
 
 /**
@@ -31,18 +37,22 @@ type Props = {
  * this person", and a card that quietly assumed UTC would state a guess
  * in the same voice as a fact.
  *
+ * On your own card this reads back the time you can already see, which
+ * sounds useless and isn't: your card is what colleagues are looking at,
+ * so it's the one place you can check that what they see is right.
+ *
  * The offset beside the time is the point of the row. "15:04" is only
  * useful once you know it's four hours behind you, and the alternative —
  * making every reader do that subtraction — is the reason people send
  * meeting invites into other people's evenings.
  */
-export const UserProfileLocalTime = ({ user }: Props) => {
+export const UserProfileLocalTime = ({ user, isSelf = false }: Props) => {
     const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
-    const zoneId = user ? resolveDisplayZone(user) : null;
+    const zoneId = user ? resolveDisplayZone(user, isSelf) : null;
     const [now, setNow] = useState(() => new Date());
 
     useEffect(() => {

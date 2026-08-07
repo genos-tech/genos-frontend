@@ -8,7 +8,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { ProfileMarkdown } from "../components/ui/misc/ProfileMarkdown";
 
@@ -34,6 +34,58 @@ describe("ProfileMarkdown — the sentence-level grammar it keeps", () => {
     it("renders GFM strikethrough, so remark-gfm is actually wired up", () => {
         const { container } = renderMd("~~manager~~ engineer");
         expect(container.querySelector("del")?.textContent).toBe("manager");
+    });
+});
+
+describe("ProfileMarkdown — formatting that survives the app's resets", () => {
+    // The bug these exist for: Tailwind's Preflight sets
+    // `ol, ul, menu { list-style: none; margin: 0; padding: 0 }` on every
+    // list in the app. That is right for the nav and menu markup which is
+    // almost all of them, and it silently turned a bulleted blurb into
+    // unindented plain lines. Nothing here can be left to a browser
+    // default, because a global reset is exactly what took the defaults
+    // away.
+    let reset: HTMLStyleElement | null = null;
+
+    const renderUnderReset = (text: string) => {
+        reset = document.createElement("style");
+        reset.textContent = `ol, ul, menu { list-style: none; margin: 0; padding: 0; }`;
+        document.head.appendChild(reset);
+        return render(<ProfileMarkdown isDark={false} text={text} />);
+    };
+
+    afterEach(() => {
+        reset?.remove();
+        reset = null;
+    });
+
+    it("keeps list markers when a global reset has removed them", () => {
+        const { container } = renderUnderReset("- one\n- two");
+        const ul = container.querySelector("ul") as HTMLElement;
+        expect(getComputedStyle(ul).listStyleType).toBe("disc");
+    });
+
+    // The hanging indent is asserted without the reset in place, because
+    // jsdom resolves the reset's `padding` shorthand against our
+    // `padding-left` longhand the wrong way round. Real browsers don't:
+    // Preflight lives in `@layer base` and unlayered styles beat layered
+    // ones outright, before specificity is even consulted.
+    it("keeps a hanging indent so nested items read as nested", () => {
+        const { container } = render(<ProfileMarkdown isDark={false} text={"- one\n    - two"} />);
+        const outer = container.querySelector("ul") as HTMLElement;
+        expect(getComputedStyle(outer).paddingLeft).not.toBe("0px");
+    });
+
+    it("states bold and italic outright rather than inheriting them", () => {
+        // `strong` resolves `bolder` against its inherited weight, so a
+        // semibold ancestor is enough to make bold text look ordinary.
+        const { container } = renderUnderReset("**bold** and _italic_");
+        expect(getComputedStyle(container.querySelector("strong") as HTMLElement).fontWeight).toBe(
+            "700"
+        );
+        expect(getComputedStyle(container.querySelector("em") as HTMLElement).fontStyle).toBe(
+            "italic"
+        );
     });
 });
 

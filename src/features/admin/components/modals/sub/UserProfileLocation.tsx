@@ -13,9 +13,14 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
-import { useTranslation } from "../../../../../i18n";
+import { fmt, useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
-import { listZoneOptions, type ZoneOption } from "../../../../../utils/userTimezone";
+import {
+    listZoneOptions,
+    resolveZone,
+    zoneLabel,
+    type ZoneOption,
+} from "../../../../../utils/userTimezone";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
 type Props = {
@@ -25,16 +30,24 @@ type Props = {
 };
 
 /**
- * The location row: a city picker whose options are the IANA zone
- * database, so picking a city is also how someone sets their timezone.
+ * The location row: detected by default, overridable by hand.
+ *
+ * Nobody should have to set this. The browser already knows the zone and
+ * reports it on every boot (`useReportBrowserTimezone`), so the row
+ * arrives filled in and correct for the overwhelming majority of people,
+ * and the picker exists for the two cases detection can't cover: someone
+ * whose machine is set to the wrong zone, and someone travelling who
+ * wants their card to keep saying where they actually live.
+ *
+ * The unit is a zone, not a city — someone in Osaka shows as Tokyo. That
+ * is the trade the whole field is built on and the correct one: what a
+ * colleague needs before pinging you is "don't call me at 3am", which is
+ * a question about zones. See `utils/userTimezone`.
  *
  * Replaces the old country picker, which asked for less (a country tells
- * you nothing about the time in Vancouver vs Toronto) and answered wrong
+ * you nothing about the time in Vancouver vs Toronto), answered wrong
  * (its `value` was pinned to a constant, so the field always displayed
- * Japan regardless of what was stored).
- *
- * The stored value is the zone id; the label is its city. See
- * `utils/userTimezone` for why the zone list is the city list.
+ * Japan regardless of what was stored), and had to be filled in by hand.
  */
 export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
@@ -44,7 +57,10 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const isSelfView = myself.userId === user?.userId;
-    const zoneId = (isSelfView ? myself.currentLocation : user?.currentLocation) ?? "";
+    const source = isSelfView ? myself : user;
+    const resolved = source ? resolveZone(source, isSelfView) : null;
+    const zoneId = resolved?.id ?? "";
+    const isDetected = resolved?.source === "detected";
 
     const [editing, setEditing] = useState(false);
     const [listOpen, setListOpen] = useState(true);
@@ -53,6 +69,9 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
     // re-renders on every parent state change and the modal has a lot of
     // them, so it isn't free either.
     const options = useMemo(() => listZoneOptions(), []);
+    // Seeded with the detected zone as well as a picked one, so opening
+    // the picker starts from what the row is currently showing rather
+    // than from blank.
     const selected = useMemo(
         () => options.find((option) => option.id === zoneId) ?? null,
         [options, zoneId]
@@ -62,6 +81,8 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
         if (!editing) setListOpen(true);
     }, [editing]);
 
+    // `""` is not "no location" but "stop overriding" — it clears the
+    // manual column and lets the detected zone show through again.
     const persist = (nextZoneId: string) => {
         updateUserProfile({
             accessToken: accessToken,
@@ -110,12 +131,23 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                     onClose={() => setListOpen(false)}
                     onOpen={() => setListOpen(true)}
                     onChange={(_event, value) => {
-                        // `null` is the clear button — a legitimate way to
-                        // say "I'd rather not", and the server accepts ""
-                        // for it.
+                        // `null` is the clear button, which means the same
+                        // thing as the "use detected" chip below.
                         persist(value ? value.id : "");
                     }}
                 />
+                {/* Only worth offering once there's an override to undo;
+                    otherwise it's a button that changes nothing. */}
+                {!isDetected && (
+                    <Chip
+                        size="sm"
+                        sx={{ borderRadius: "sm" }}
+                        variant="outlined"
+                        onClick={() => persist("")}
+                    >
+                        {t.admin.userProfile.locationUseDetected}
+                    </Chip>
+                )}
                 <Chip
                     color="danger"
                     size="sm"
@@ -129,16 +161,11 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
         );
     }
 
+    // Nothing detected and nothing picked. On your own card that's the
+    // prompt to pick; on someone else's there is simply nothing to say.
     if (!zoneId && !isSelfView) return null;
 
-    const label = selected
-        ? selected.city
-        : zoneId
-          ? // A stored zone this runtime's tzdata no longer lists. Show
-            // the raw id rather than "not set" — it's still the truest
-            // thing we know about where they are.
-            zoneId
-          : t.admin.userProfile.locationNotSet;
+    const label = zoneId ? zoneLabel(zoneId) : t.admin.userProfile.locationNotSet;
 
     return (
         <Box
@@ -164,6 +191,11 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                       }
                     : undefined,
             }}
+            title={
+                isSelfView && isDetected && zoneId
+                    ? fmt(t.admin.userProfile.locationDetectedHint, { zone: zoneId })
+                    : undefined
+            }
             onClick={isSelfView ? () => setEditing(true) : undefined}
         >
             <PlaceRoundedIcon sx={{ fontSize: 16, color: styles.accentColor }} />
@@ -177,6 +209,15 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
             >
                 {label}
             </Typography>
+            {/* Only on your own card. A colleague doesn't need to know
+                whether you typed your location or your laptop did — but
+                you do, because it's the difference between a value that
+                follows you when you travel and one that doesn't. */}
+            {isSelfView && isDetected && zoneId && (
+                <Typography sx={{ color: styles.labelColor, fontSize: "11px" }}>
+                    {t.admin.userProfile.locationAuto}
+                </Typography>
+            )}
         </Box>
     );
 };

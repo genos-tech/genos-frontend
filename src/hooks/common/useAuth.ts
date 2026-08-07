@@ -76,13 +76,12 @@ export const useMyself = (accessToken: string | null) => {
                 baseCountry: localStorage.getItem("baseCountry") || "",
                 phoneNumber: localStorage.getItem("phoneNumber") || "",
                 currentLocation: localStorage.getItem("currentLocation") || "",
-                // `timezone` is deliberately absent. It exists so one
-                // person's card can show ANOTHER person's clock; on your
-                // own profile the fallback it powers would just tell you
-                // the time you can already see. So your own card shows a
-                // clock only once you've picked a location — which is the
-                // case where it's worth something, because it's showing
-                // you what your colleagues see.
+                // `timezone` is deliberately absent, and not because your
+                // own card doesn't need one — it does, and gets it from
+                // `resolveZone`, which reads this browser directly when
+                // the subject is the viewer. Mirroring the server's copy
+                // into localStorage as well would add a second, staler
+                // answer to a question the browser can answer exactly.
                 aboutMe: localStorage.getItem("aboutMe") || "",
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",

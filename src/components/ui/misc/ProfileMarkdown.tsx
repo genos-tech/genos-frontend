@@ -72,14 +72,39 @@ export const ProfileMarkdown = ({ text, isDark }: Props) => (
         sx={{
             fontSize: "14px",
             lineHeight: 1.6,
+            // Tailwind's Preflight sets `font-weight` on nothing but leaves
+            // `strong` at the relative `bolder`, so the contrast a bold run
+            // gets depends entirely on what it inherits. Pin the base to
+            // 400 rather than trusting the ancestor: this renders inside a
+            // profile card whose wrapper has carried a 500 before, and
+            // 500-against-700 reads as "not bold".
+            fontWeight: 400,
             color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
             // Someone will paste a URL with no spaces in it, and without
             // this the card grows a horizontal scrollbar on every viewport.
             overflowWrap: "anywhere",
             "& p": { m: 0, mb: 0.75 },
             "& p:last-child": { mb: 0 },
+            // Preflight zeroes `list-style`, `margin` and `padding` on every
+            // `ul`/`ol` in the app, which is the right default for the nav
+            // and menu markup that makes up almost all of them and fatal
+            // here: it is the whole reason a bulleted blurb rendered as
+            // unindented plain lines. Markers have to be asked for back.
+            "& ul": { listStyle: "disc" },
+            "& ul ul": { listStyle: "circle" },
+            "& ol": { listStyle: "decimal" },
             "& ul, & ol": { m: 0, mb: 0.75, pl: 2.5 },
-            "& li": { mb: 0.25 },
+            "& li": { display: "list-item", mb: 0.25 },
+            // A nested list is part of its parent item, so it shouldn't
+            // inherit the gap that separates one top-level block from the
+            // next.
+            "& li > ul, & li > ol": { mt: 0.25, mb: 0 },
+            // Both are browser defaults, and both are one Preflight release
+            // or one inherited `font-style` away from silently not applying
+            // to the one surface where they carry the author's meaning.
+            "& strong, & b": { fontWeight: 700 },
+            "& em, & i": { fontStyle: "italic" },
+            "& del, & s": { textDecoration: "line-through" },
             "& code": {
                 fontSize: "0.85em",
                 px: 0.5,

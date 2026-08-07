@@ -1856,6 +1856,10 @@ export const es: DeepPartial<Messages> = {
             phoneNotSet: "Añade un teléfono",
             locationPlaceholder: "Busca una ciudad",
             locationNotSet: "Añade tu ubicación",
+            locationAuto: "auto",
+            locationUseDetected: "Usar la detectada",
+            locationDetectedHint:
+                "Detectada desde tu navegador ({zone}). Haz clic para configurarla tú.",
             aboutPlaceholder:
                 "Unas palabras sobre ti. Puedes usar **negrita**, _cursiva_, enlaces y listas.",
             aboutNotSet: "Añade una breve presentación",

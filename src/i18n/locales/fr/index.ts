@@ -1872,6 +1872,10 @@ export const fr: DeepPartial<Messages> = {
             phoneNotSet: "Ajouter un téléphone",
             locationPlaceholder: "Rechercher une ville",
             locationNotSet: "Ajouter votre localisation",
+            locationAuto: "auto",
+            locationUseDetected: "Utiliser la détection",
+            locationDetectedHint:
+                "Détectée depuis votre navigateur ({zone}). Cliquez pour la définir vous-même.",
             aboutPlaceholder:
                 "Quelques mots sur vous. **Gras**, _italique_, liens et listes fonctionnent.",
             aboutNotSet: "Ajouter une courte présentation",

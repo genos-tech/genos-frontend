@@ -2048,6 +2048,10 @@ export const ja: DeepPartial<Messages> = {
             phoneNotSet: "電話番号を追加",
             locationPlaceholder: "都市を検索",
             locationNotSet: "所在地を追加",
+            locationAuto: "自動",
+            locationUseDetected: "自動検出を使う",
+            locationDetectedHint:
+                "ブラウザから自動検出しました（{zone}）。クリックすると手動で設定できます。",
             aboutPlaceholder: "自己紹介を少し。**太字**、_斜体_、リンク、リストが使えます。",
             aboutNotSet: "自己紹介を追加",
             aboutCounter: "{count} / {max}",

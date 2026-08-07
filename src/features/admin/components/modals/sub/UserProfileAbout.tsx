@@ -132,18 +132,34 @@ export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
 
     if (!about && !isSelfView) return null;
 
+    // A `div` rather than the `button` the sibling rows use, because this
+    // is the one row whose content is block-level. `<button>` only admits
+    // phrasing content, so paragraphs and lists inside one render at the
+    // browser's discretion, and they inherit the app-wide
+    // `button { font-weight: 500 }` — which flattens the gap between a
+    // bold run and the text around it. `role`/`tabIndex`/`onKeyDown` keep
+    // the affordance a button would have given for free.
     return (
         <Box
-            component={isSelfView ? "button" : "div"}
+            component="div"
+            role={isSelfView ? "button" : undefined}
+            tabIndex={isSelfView ? 0 : undefined}
             sx={{
                 width: "100%",
                 textAlign: "left",
-                background: "none",
-                border: "none",
-                p: 0,
                 cursor: isSelfView ? "pointer" : "default",
             }}
             onClick={isSelfView ? () => setEditing(true) : undefined}
+            onKeyDown={
+                isSelfView
+                    ? (event: React.KeyboardEvent) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setEditing(true);
+                          }
+                      }
+                    : undefined
+            }
         >
             {about ? (
                 <ProfileMarkdown isDark={isDark} text={about} />

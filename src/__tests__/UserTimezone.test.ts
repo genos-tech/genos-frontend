@@ -6,7 +6,42 @@ import {
     isValidZone,
     listZoneOptions,
     resolveDisplayZone,
+    resolveZone,
+    zoneLabel,
 } from "../utils/userTimezone";
+
+describe("resolveZone", () => {
+    it("reports a picked zone as manual and a reported one as detected", () => {
+        // The UI branches on this: only a manual value is worth offering
+        // a "back to automatic" reset for, and only a detected one is
+        // worth labelling as such.
+        expect(resolveZone({ currentLocation: "Asia/Tokyo" })?.source).toBe("manual");
+        expect(resolveZone({ timezone: "Asia/Tokyo" })?.source).toBe("detected");
+    });
+
+    it("falls back to this browser only for the viewer's own row", () => {
+        const browser = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        expect(resolveZone({}, true)).toEqual({ id: browser, source: "detected" });
+        // Applying the same fallback to a colleague would assert they sit
+        // in the reader's timezone, which is a guess wearing a fact's face.
+        expect(resolveZone({}, false)).toBeNull();
+    });
+
+    it("does not let the browser override what the server knows", () => {
+        expect(resolveZone({ timezone: "Europe/Paris" }, true)?.id).toBe("Europe/Paris");
+    });
+});
+
+describe("zoneLabel", () => {
+    it("humanises the city out of a zone id", () => {
+        expect(zoneLabel("Asia/Tokyo")).toBe("Tokyo");
+        expect(zoneLabel("America/New_York")).toBe("New York");
+    });
+
+    it("falls back to the raw id when there is no city part", () => {
+        expect(zoneLabel("UTC")).toBe("UTC");
+    });
+});
 
 describe("resolveDisplayZone", () => {
     it("prefers the zone the user picked over the one their browser reported", () => {

@@ -491,12 +491,11 @@ export const UserProfile = (props: UserProfileProps) => {
 
                                         {/* Where they are and what time it is
                                             there — one question, so one row.
-                                            Local time is derived from the
-                                            location when they've set one and
-                                            from their browser's zone
-                                            otherwise, which is why it can
-                                            appear without a location beside
-                                            it. */}
+                                            Both read the same zone, so they
+                                            agree by construction; neither is
+                                            configured by hand in the normal
+                                            case, because the browser reports
+                                            the zone on every boot. */}
                                         <Stack
                                             direction={{ xs: "column", sm: "row" }}
                                             spacing={{ xs: 1, sm: 2 }}
@@ -507,7 +506,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 setMyself={setMyself}
                                                 user={profileUser}
                                             />
-                                            <UserProfileLocalTime user={profileUser} />
+                                            <UserProfileLocalTime
+                                                isSelf={myself.userId === profileUser?.userId}
+                                                user={profileUser}
+                                            />
                                         </Stack>
 
                                         {/* Rendered by the child only when

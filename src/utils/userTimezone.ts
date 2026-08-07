@@ -68,23 +68,86 @@ export const listZoneOptions = (): ZoneOption[] => {
 };
 
 /**
- * Which zone speaks for this person.
+ * The browser's IANA timezone name, or `null` if it can't be determined.
  *
- * An explicit choice beats a detected one. `currentLocation` is what they
- * picked; `timezone` is whatever their browser last reported, which
- * `useReportBrowserTimezone` overwrites on every boot — so if a manual
- * pick didn't win here it would survive only until the user next opened
- * the app from somewhere else, which is precisely when they'd most want
- * it to hold.
+ * `resolvedOptions().timeZone` is the only way to get this; it is
+ * universally supported in the browsers this app targets, but it can
+ * legitimately return `undefined` in odd embeddings, so the caller must
+ * handle `null` rather than assume a string.
  *
- * `null` when we know neither, which is the signal to render nothing:
- * there is no sensible default for "where is this person", and guessing
- * UTC would state something false with the same confidence as a fact.
+ * Lives here rather than beside `useReportBrowserTimezone`, which is
+ * where it started, so that the display path can reach it without
+ * dragging in that hook's auth and axios imports.
  */
-export const resolveDisplayZone = (user: {
-    currentLocation?: string;
-    timezone?: string;
-}): string | null => user.currentLocation || user.timezone || null;
+export const detectBrowserTimezone = (): string | null => {
+    try {
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return zone && typeof zone === "string" ? zone : null;
+    } catch {
+        return null;
+    }
+};
+
+/** Where a resolved zone came from, which is what the UI labels. */
+export type ZoneSource = "manual" | "detected";
+
+export type ResolvedZone = {
+    id: string;
+    source: ZoneSource;
+};
+
+/**
+ * Which zone speaks for this person, and whether they said so themselves.
+ *
+ * Three sources in falling order of authority:
+ *
+ * 1. `currentLocation` — what they picked. An explicit choice has to beat
+ *    a detected one, because `timezone` is overwritten on every boot; if
+ *    a manual pick didn't win here it would survive only until the user
+ *    next opened the app from somewhere else, which is precisely when
+ *    they'd most want it to hold.
+ * 2. `timezone` — what their browser last reported to the server. This is
+ *    the one that makes the field work with nobody configuring anything,
+ *    and it is why the common case needs no interaction at all.
+ * 3. This browser, but ONLY when the person being displayed is the viewer
+ *    (`isSelf`). Your own row would otherwise sit empty until the boot-
+ *    time report round-trips. Applying it to anyone else would be a lie
+ *    with a confident face: it would claim every colleague whose zone
+ *    hasn't synced yet is sitting in the reader's own timezone.
+ *
+ * `null` when none of them answer, which is the signal to render nothing.
+ * Guessing UTC would state something false as though it were a fact.
+ */
+export const resolveZone = (
+    user: { currentLocation?: string; timezone?: string },
+    isSelf = false
+): ResolvedZone | null => {
+    if (user.currentLocation) return { id: user.currentLocation, source: "manual" };
+    if (user.timezone) return { id: user.timezone, source: "detected" };
+    if (isSelf) {
+        const browser = detectBrowserTimezone();
+        if (browser) return { id: browser, source: "detected" };
+    }
+    return null;
+};
+
+/** `resolveZone` when only the id is wanted. */
+export const resolveDisplayZone = (
+    user: { currentLocation?: string; timezone?: string },
+    isSelf = false
+): string | null => resolveZone(user, isSelf)?.id ?? null;
+
+/**
+ * How to label a zone: its city, humanised.
+ *
+ * Falls back to the raw id in two cases. A zone with no city part ("UTC")
+ * has nothing else to show. A zone this runtime's tzdata doesn't know is
+ * left intact rather than split for a city, because a name that outlived
+ * the data that knew it is not reliably `Region/City` at all — and the
+ * stored string is still the truest thing we have about where they are.
+ */
+export const zoneLabel = (zoneId: string): string =>
+    isValidZone(zoneId) ? cityOf(zoneId) || zoneId : zoneId;
 
 /** Is this a zone name the runtime can actually format with? */
 export const isValidZone = (zoneId: string): boolean => {
