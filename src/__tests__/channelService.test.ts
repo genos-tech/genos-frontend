@@ -503,6 +503,12 @@ describe("channelService reactive store", () => {
         await expect(svc.markRead("ch-1", "m-1")).resolves.toBeUndefined();
     });
 
+    // `markRead` forwards the id to Django's `Message.id` UUIDField, so it
+    // only emits for real UUIDs — hence the shaped ids here rather than the
+    // "m-1" placeholders the rest of this suite uses.
+    const MSG_UUID = "11111111-2222-4333-8444-555555555555";
+    const ROOT_UUID = "99999999-8888-4777-8666-555555555555";
+
     it("markRead() emits read.advance when the socket is connected", async () => {
         const emit = vi.fn(
             (_event: string, _payload: Record<string, unknown>, ack: (a: unknown) => void) => {
@@ -512,7 +518,7 @@ describe("channelService reactive store", () => {
                         id: "cur-1",
                         channelId: "ch-1",
                         threadRootId: null,
-                        lastReadMessageId: "m-1",
+                        lastReadMessageId: MSG_UUID,
                         lastReadAt: "2026-01-01T00:00:05Z",
                     } satisfies ReadCursor,
                 });
@@ -520,16 +526,16 @@ describe("channelService reactive store", () => {
         );
         svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
 
-        const cursor = await svc.markRead("ch-1", "m-1");
+        const cursor = await svc.markRead("ch-1", MSG_UUID);
 
         expect(emit).toHaveBeenCalledTimes(1);
         expect(emit.mock.calls[0]?.[0]).toBe("read.advance");
         expect(emit.mock.calls[0]?.[1]).toMatchObject({
             channel_id: "ch-1",
-            last_read_message_id: "m-1",
+            last_read_message_id: MSG_UUID,
             thread_root_id: null,
         });
-        expect(cursor?.lastReadMessageId).toBe("m-1");
+        expect(cursor?.lastReadMessageId).toBe(MSG_UUID);
     });
 
     it("markRead() resolves to undefined (does not reject) when the server rejects the emit", async () => {
@@ -545,8 +551,39 @@ describe("channelService reactive store", () => {
         );
         svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
 
-        await expect(svc.markRead("ch-1", "m-1")).resolves.toBeUndefined();
+        await expect(svc.markRead("ch-1", MSG_UUID)).resolves.toBeUndefined();
         expect(emit).toHaveBeenCalledTimes(1);
+    });
+
+    it("markRead() does not emit an optimistic echo's correlation id", async () => {
+        // An unacked message renders from an echo whose `id` IS its
+        // `corr-<random>` correlation id, and callers pick the cursor by
+        // "newest bubble" — so this is what they hand us right after a
+        // send. Django looks the id up against a UUIDField, so forwarding
+        // it was a 500 per send.
+        const emit = vi.fn();
+        svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
+
+        await expect(svc.markRead("ch-1", "corr-iuxb112kesbmsiu9ms3")).resolves.toBeUndefined();
+        expect(emit).not.toHaveBeenCalled();
+    });
+
+    it("markRead() does not emit a non-UUID thread root id", async () => {
+        const emit = vi.fn();
+        svc.setSocket({ connected: true, emit } as unknown as Parameters<typeof svc.setSocket>[0]);
+
+        await expect(
+            svc.markRead("ch-1", MSG_UUID, "corr-iuxb112kesbmsiu9ms3")
+        ).resolves.toBeUndefined();
+        expect(emit).not.toHaveBeenCalled();
+
+        // …but a well-formed one still goes through.
+        emit.mockImplementation(
+            (_event: string, _payload: Record<string, unknown>, ack: (a: unknown) => void) =>
+                ack({ ok: true, data: null })
+        );
+        await svc.markRead("ch-1", MSG_UUID, ROOT_UUID);
+        expect(emit.mock.calls[0]?.[1]).toMatchObject({ thread_root_id: ROOT_UUID });
     });
 });
 

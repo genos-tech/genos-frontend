@@ -1,6 +1,7 @@
 import { openDB } from "idb";
 
 import { DB_NAME, initDB, STORES } from "../config";
+import { isYjsDocumentOpen } from "./yjsPersistence";
 
 // Stores that hold team-scoped data and must be wiped when the user switches teams.
 // USER_INFO is intentionally excluded: it is indexed by teamId and shared across teams
@@ -130,6 +131,13 @@ export class DatabaseUtils {
     // and deletes any whose ID is NOT in the supplied `activeIds` sets.
     // Returns the number of databases deleted.
     //
+    // Documents an editor currently has open are skipped regardless of the
+    // allow-list. `activeIds` is built from the cached rows in genosData,
+    // which lag reality — the create-task form's scaffold task, notably,
+    // isn't cached until its first successful save — and deleting an open
+    // IndexedDB makes the browser close that connection out from under the
+    // editor, after which every keystroke throws. See `yjsPersistence`.
+    //
     // `indexedDB.databases()` is supported in Chrome/Edge/Safari + Firefox
     // 126+. On older Firefox the call throws or returns undefined; we
     // degrade to a no-op rather than hand-rolling a separate enumeration.
@@ -165,6 +173,7 @@ export class DatabaseUtils {
         let deleted = 0;
         for (const { name } of dbs) {
             if (!name) continue;
+            if (isYjsDocumentOpen(name)) continue;
             for (const [prefix, alive] of prefixes) {
                 if (!name.startsWith(prefix)) continue;
                 const idStr = name.slice(prefix.length);

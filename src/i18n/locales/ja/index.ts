@@ -828,6 +828,8 @@ export const ja: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "タスクの作成に失敗しました",
+            bodyEditorUnavailable:
+                "タスクの作成に失敗しました。説明エディタのローカル保存が失われ、最新の内容が反映されていない可能性があります。もう一度お試しください。",
             threadAlreadyHasTask:
                 "このスレッドには既にタスクがあります。1つのスレッドに紐づけられるタスクは1件のみです。",
             taskLimitReached:
@@ -969,7 +971,7 @@ export const ja: DeepPartial<Messages> = {
                 requestMessagePrefix: "がプロジェクトへの参加リクエストを送信しました：",
                 requestMessageSuffix: "。",
                 sendMessageFailed: "受信箱メッセージの送信に失敗しました",
-                joinFailed: "作成したプロジェクトへの参加に失敗しました",
+                joinFailed: "プロジェクトへの参加に失敗しました",
             },
             createTag: {
                 heading: "新規タグを作成",

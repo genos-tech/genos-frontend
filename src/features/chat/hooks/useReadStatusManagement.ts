@@ -23,6 +23,7 @@ import { useRef } from "react";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, ThreadProps } from "../../../types/chat";
+import { isV3Uuid } from "../../../utils/legacyId";
 
 interface UseReadStatusManagementProps {
     currentChat: ChatProps | ThreadProps;
@@ -53,22 +54,37 @@ export const useReadStatusManagement = ({
     const tsLastReadStatusUpdatedRef = useRef<number>(Date.now());
     const indexLastReadStatusUpdatedRef = useRef<number>(-1);
 
-    const updateReadStatus = (indexForLastReadMessageId: number) => {
-        const message = currentChat.messages[indexForLastReadMessageId];
-        if (!message) return;
-        // v3 markRead takes the v3 message UUID. The legacy → v3
-        // adapters store the UUID under different field names by
-        // chat kind:
-        //   - top-level: `messageIdWithChatId` (`v3MessageToLegacy`)
-        //   - thread reply: `messageIdWithChatIdAndThreadId`
-        //     (`v3ThreadMessageToLegacy`)
-        const messageUuid = isThread
-            ? (
-                  message as {
-                      messageIdWithChatIdAndThreadId?: string;
-                  }
-              ).messageIdWithChatIdAndThreadId
+    // v3 markRead takes the v3 message UUID. The legacy → v3 adapters
+    // store the UUID under different field names by chat kind:
+    //   - top-level: `messageIdWithChatId` (`v3MessageToLegacy`)
+    //   - thread reply: `messageIdWithChatIdAndThreadId`
+    //     (`v3ThreadMessageToLegacy`)
+    const messageUuidAt = (index: number): string | undefined => {
+        const message = currentChat.messages[index];
+        if (!message) return undefined;
+        return isThread
+            ? (message as { messageIdWithChatIdAndThreadId?: string })
+                  .messageIdWithChatIdAndThreadId
             : (message as { messageIdWithChatId?: string }).messageIdWithChatId;
+    };
+
+    const updateReadStatus = (indexForLastReadMessageId: number) => {
+        // A message we've sent but the server hasn't acked is rendered
+        // from its optimistic echo, whose id slot holds the client's
+        // `corr-<random>` correlation id. That's the bubble at the tail
+        // right after you hit send — i.e. precisely what the callers
+        // below hand us — and it isn't a cursor the backend can resolve.
+        // Walk back to the newest bubble that has a real UUID so the
+        // cursor still advances instead of stalling until the next tick.
+        let messageUuid: string | undefined;
+        const startIndex = Math.min(indexForLastReadMessageId, currentChat.messages.length - 1);
+        for (let i = startIndex; i >= 0; i--) {
+            const candidate = messageUuidAt(i);
+            if (candidate && isV3Uuid(candidate)) {
+                messageUuid = candidate;
+                break;
+            }
+        }
         // `chatId` slot carries the v3 channel UUID via the migration
         // cast (`ChatProps.chatId: string`; `ThreadProps.chatId: number`
         // but stringifies idempotently for UUIDs).

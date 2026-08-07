@@ -16,9 +16,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersistence";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { getMessages } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { isMac } from "../../../../../utils/platform";
@@ -102,6 +104,19 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
             // Guard against a double-click sending two creates in parallel
             // (the button is also visually locked via `isDisabled`).
             if (isCreatingTask) return;
+
+            // The description lives in a collaborative Yjs document. If its
+            // local cache threw, edits made while it was broken never
+            // reached the document, so submitting now would persist a body
+            // missing whatever the user typed — the silent "task created,
+            // description empty" outcome. Stop and say so. `consume` clears
+            // the flag: the cache has detached by now, so the retry this
+            // message asks for runs against a healthy editor.
+            if (consumeYjsPersistenceFailure(`task-body:${taskContent.id}`)) {
+                setTitleError(getMessages().tasks.errors.bodyEditorUnavailable);
+                setTitleErrorOpen(true);
+                return;
+            }
 
             setIsCreatingTask?.(true);
             try {

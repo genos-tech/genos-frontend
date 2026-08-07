@@ -42,6 +42,8 @@ export const tasks = {
     // Error strings thrown from service / hook modules.
     errors: {
         createTaskFailed: "Failed to create a task",
+        bodyEditorUnavailable:
+            "Failed to create a task — the description editor lost its local storage and may not have your latest text. Please try again.",
         threadAlreadyHasTask:
             "This thread already has a task — a thread can only be linked to one task.",
         taskLimitReached:
@@ -226,7 +228,7 @@ export const tasks = {
             requestMessagePrefix: "Has sent a request to join the project: ",
             requestMessageSuffix: ".",
             sendMessageFailed: "Failed to send a inbox message",
-            joinFailed: "Failed to join the created project",
+            joinFailed: "Failed to join the project",
         },
         createTag: {
             heading: "Create New Tag",

@@ -147,8 +147,15 @@ export const ModalJoinProject: React.FC<Props> = ({
 
                     if (!joinProjectResponse.ok) {
                         console.error(joinProjectData);
+                        // `error` alongside `hint`: the authorization
+                        // refusals ("Project not found.", "Only members
+                        // of this team can…") only populate `error`, so
+                        // without it every refusal collapsed into the
+                        // generic line and gave no clue which gate hit.
                         throw new Error(
-                            joinProjectData.hint || t.tasks.modals.joinProject.joinFailed
+                            joinProjectData.hint ||
+                                joinProjectData.error ||
+                                t.tasks.modals.joinProject.joinFailed
                         );
                     } else {
                         if (openJoinProject.projectId) {

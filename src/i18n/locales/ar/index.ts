@@ -738,6 +738,8 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             createTaskFailed: "تعذّر إنشاء المهمة",
+            bodyEditorUnavailable:
+                "تعذّر إنشاء المهمة — فقد محرّر الوصف تخزينه المحلي وقد لا يتضمّن أحدث ما كتبته. يُرجى المحاولة مرة أخرى.",
             threadAlreadyHasTask:
                 "هذا الموضوع مرتبط بمهمة بالفعل — لا يمكن ربط الموضوع إلا بمهمة واحدة.",
             taskLimitReached:
@@ -872,7 +874,7 @@ export const ar: DeepPartial<Messages> = {
                 requestMessagePrefix: "أرسل طلبًا للانضمام إلى المشروع: ",
                 requestMessageSuffix: ".",
                 sendMessageFailed: "تعذّر إرسال رسالة إلى صندوق الوارد",
-                joinFailed: "تعذّر الانضمام إلى المشروع الذي تم إنشاؤه",
+                joinFailed: "تعذّر الانضمام إلى المشروع",
             },
             createTag: {
                 heading: "إنشاء وسم جديد",
