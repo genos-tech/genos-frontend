@@ -2,25 +2,14 @@ import { useEffect } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 import { authApi } from "../../services/api";
+import { detectBrowserTimezone } from "../../utils/userTimezone";
 
 const PREF_URL = "/user/preferences/timezone/";
 
-/**
- * The browser's IANA timezone name, or `null` if it can't be determined.
- *
- * `resolvedOptions().timeZone` is the only way to get this; it is
- * universally supported in the browsers this app targets, but it can
- * legitimately return `undefined` in odd embeddings, so the caller must
- * handle `null` rather than assume a string.
- */
-export const detectBrowserTimezone = (): string | null => {
-    try {
-        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        return zone && typeof zone === "string" ? zone : null;
-    } catch {
-        return null;
-    }
-};
+// Moved to `utils/userTimezone` so the profile card can detect a zone
+// without importing this hook's auth and axios dependencies. Re-exported
+// because this is where the rest of the app already imports it from.
+export { detectBrowserTimezone };
 
 /**
  * Should the client write `browser` to the server?
@@ -51,12 +40,16 @@ export const shouldReportTimezone = ({
  * keeps falling back to `settings.TIME_ZONE`, which is exactly the old
  * behaviour, so a failure degrades rather than breaks.
  *
- * KNOWN BEHAVIOUR, and it becomes wrong the day a manual timezone setting
- * exists: this overwrites on travel. Someone in Tokyo who opens the app
- * from a laptop in Paris is recorded as being in Paris. That is the right
- * default while the value is browser-derived — it beats a stale zone — but
- * a user-chosen setting would have to win over this, and this hook would
- * then need to only fill in a NULL.
+ * This also supplies the profile card's location when the user hasn't
+ * picked one, which is the usual case: the browser reports the zone, not
+ * the city, so someone in Osaka is recorded — correctly — as Asia/Tokyo.
+ *
+ * KNOWN BEHAVIOUR: this overwrites on travel. Someone in Tokyo who opens
+ * the app from a laptop in Paris is recorded as being in Paris. That is
+ * the right default for a value nobody chose, and it is why a manual pick
+ * is stored in a SEPARATE column (`current_location`) instead of here —
+ * readers resolve `current_location or timezone`, so the explicit answer
+ * wins without this hook having to know that manual answers exist.
  */
 export const useReportBrowserTimezone = (): void => {
     const { accessToken } = useAuth();

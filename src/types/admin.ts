@@ -26,6 +26,24 @@ export type UserProps = {
     // `resolveDisplayRole` (utils/memberRoles.ts), never raw.
     memberRole?: string;
     baseCountry?: string;
+    /** Absent — not empty — on rows the server built for someone outside
+     *  the team. A guest reaches a roster through the one project they
+     *  were invited to and a cross-team collaborator through the one
+     *  object shared with them; neither is a colleague, so the server
+     *  omits the key entirely rather than blanking it. Treat "missing"
+     *  and "not set" the same: both mean don't render the row. */
+    phoneNumber?: string;
+    /** IANA zone the user PICKED as their location ("Asia/Tokyo"). Its
+     *  city component is the location label, and it wins over `timezone`
+     *  for local time — see `resolveDisplayZone` in utils/userTimezone. */
+    currentLocation?: string;
+    /** IANA zone their BROWSER last reported. Written on every boot by
+     *  `useReportBrowserTimezone`, so it tracks where someone actually
+     *  is; used for local time only when they haven't picked a location. */
+    timezone?: string;
+    /** Free-text self-introduction, rendered as restricted markdown by
+     *  `ProfileMarkdown`. Capped at 500 characters server-side. */
+    aboutMe?: string;
     isSystemUser?: boolean;
     /** This person belongs to ANOTHER team and is in this roster only
      *  because a cross-team share put the two of you on the same object.
@@ -70,6 +88,9 @@ export type SignInResponse = {
     custom_status: string;
     role: string;
     base_country: string;
+    phone_number: string;
+    current_location: string;
+    about_me: string;
     ts_joined_at: string;
 };
 

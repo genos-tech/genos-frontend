@@ -17,6 +17,9 @@ const WATCHED_STORAGE_KEYS = new Set<string>([
     "isOfflineForced",
     "role",
     "baseCountry",
+    "phoneNumber",
+    "currentLocation",
+    "aboutMe",
     "customStatus",
     "avatarImgPath",
 ]);
@@ -71,6 +74,15 @@ export const useMyself = (accessToken: string | null) => {
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
                 baseCountry: localStorage.getItem("baseCountry") || "",
+                phoneNumber: localStorage.getItem("phoneNumber") || "",
+                currentLocation: localStorage.getItem("currentLocation") || "",
+                // `timezone` is deliberately absent, and not because your
+                // own card doesn't need one — it does, and gets it from
+                // `resolveZone`, which reads this browser directly when
+                // the subject is the viewer. Mirroring the server's copy
+                // into localStorage as well would add a second, staler
+                // answer to a question the browser can answer exactly.
+                aboutMe: localStorage.getItem("aboutMe") || "",
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             };

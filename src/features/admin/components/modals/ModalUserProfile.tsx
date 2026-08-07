@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
-import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
     Avatar,
@@ -39,7 +38,10 @@ import { ChannelKind, type Channel } from "../../../../types/channel";
 import type { ChatProps } from "../../../../types/chat";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
+import { UserProfileAbout } from "./sub/UserProfileAbout";
+import { UserProfileLocalTime } from "./sub/UserProfileLocalTime";
+import { UserProfileLocation } from "./sub/UserProfileLocation";
+import { UserProfilePhone } from "./sub/UserProfilePhone";
 import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 
@@ -480,24 +482,64 @@ export const UserProfile = (props: UserProfileProps) => {
                                             >
                                                 {profileUser?.userEmail}
                                             </Typography>
-                                            {/* <Typography
-                                                sx={{
-                                                    userSelect: "text",
-                                                    color: styles.valueColor,
-                                                    fontSize: "14px",
-                                                }}
-                                                startDecorator={
-                                                    <LocalPhoneIcon
-                                                        fontSize="small"
-                                                        sx={{
-                                                            color: isDark ? "#fbbf24" : "#d97706",
-                                                        }}
-                                                    />
-                                                }
-                                            >
-                                                +81 999-888-777
-                                            </Typography> */}
+                                            <UserProfilePhone
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                user={profileUser}
+                                            />
                                         </Stack>
+
+                                        {/* Where they are and what time it is
+                                            there — one question, so one row.
+                                            Both read the same zone, so they
+                                            agree by construction; neither is
+                                            configured by hand in the normal
+                                            case, because the browser reports
+                                            the zone on every boot. */}
+                                        <Stack
+                                            direction={{ xs: "column", sm: "row" }}
+                                            spacing={{ xs: 1, sm: 2 }}
+                                            sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
+                                        >
+                                            <UserProfileLocation
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                user={profileUser}
+                                            />
+                                            <UserProfileLocalTime
+                                                isSelf={myself.userId === profileUser?.userId}
+                                                user={profileUser}
+                                            />
+                                        </Stack>
+
+                                        {/* Rendered by the child only when
+                                            there's something to show, so the
+                                            label has to be gated the same way
+                                            or an empty "ABOUT" heading floats
+                                            above nothing on other people's
+                                            profiles. */}
+                                        {(profileUser?.aboutMe ||
+                                            myself.userId === profileUser?.userId) && (
+                                            <FormControl>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    {t.admin.userProfile.about}
+                                                </FormLabel>
+                                                <UserProfileAbout
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    user={profileUser}
+                                                />
+                                            </FormControl>
+                                        )}
 
                                         {/* Team Name */}
                                         <FormControl>
@@ -659,7 +701,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             </FormControl>
                                         </Stack>
 
-                                        {/* Role & Country Row */}
+                                        {/* Role & Joined Row. Country used to
+                                            sit between them; it is now the
+                                            Location row above, which answers
+                                            the same question more precisely
+                                            and carries the timezone with it. */}
                                         <Stack direction="column" spacing={2}>
                                             <FormControl sx={{ flex: 1 }}>
                                                 <FormLabel
@@ -675,25 +721,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     {t.admin.userProfile.role}
                                                 </FormLabel>
                                                 <UserProfileRole
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    user={profileUser}
-                                                />
-                                            </FormControl>
-                                            <FormControl sx={{ flex: 1 }}>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.country}
-                                                </FormLabel>
-                                                <UserProfileBaseCountry
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     user={profileUser}

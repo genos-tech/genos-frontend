@@ -103,6 +103,9 @@ export const SignInForm = () => {
             localStorage.setItem("isOfflineForced", signInRes.is_offline_forced || "");
             localStorage.setItem("role", signInRes.role || "");
             localStorage.setItem("baseCountry", signInRes.base_country || "");
+            localStorage.setItem("phoneNumber", signInRes.phone_number || "");
+            localStorage.setItem("currentLocation", signInRes.current_location || "");
+            localStorage.setItem("aboutMe", signInRes.about_me || "");
             localStorage.setItem("customStatus", signInRes.custom_status || "");
             localStorage.setItem("userEmail", signInRes.email || "");
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
@@ -148,6 +151,9 @@ export const SignInForm = () => {
             localStorage.setItem("isOfflineForced", res.is_offline_forced || "");
             localStorage.setItem("role", res.role || "");
             localStorage.setItem("baseCountry", res.base_country || "");
+            localStorage.setItem("phoneNumber", res.phone_number || "");
+            localStorage.setItem("currentLocation", res.current_location || "");
+            localStorage.setItem("aboutMe", res.about_me || "");
             localStorage.setItem("customStatus", res.custom_status || "");
             localStorage.setItem("userEmail", res.email || "");
             localStorage.setItem("avatarImgPath", res.profile_image_file_name || "");

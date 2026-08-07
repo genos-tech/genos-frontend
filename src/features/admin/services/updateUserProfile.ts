@@ -11,6 +11,11 @@ type updateUserProfileProps = {
     isOfflineForced?: string;
     role?: string;
     baseCountry?: string;
+    phoneNumber?: string;
+    /** An IANA zone name, or `""` to clear it. The server rejects
+     *  anything `zoneinfo` doesn't recognise. */
+    currentLocation?: string;
+    aboutMe?: string;
     setErrorMessage?: (value: string) => void;
 };
 export const updateUserProfile = async (props: updateUserProfileProps) => {
@@ -22,6 +27,9 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
         isOfflineForced,
         role,
         baseCountry,
+        phoneNumber,
+        currentLocation,
+        aboutMe,
         setErrorMessage,
     } = props;
 
@@ -42,6 +50,9 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             }
             if (role !== undefined) payload.role = role;
             if (baseCountry !== undefined) payload.base_country = baseCountry;
+            if (phoneNumber !== undefined) payload.phone_number = phoneNumber;
+            if (currentLocation !== undefined) payload.current_location = currentLocation;
+            if (aboutMe !== undefined) payload.about_me = aboutMe;
 
             const res = await api.put("/user/profile/", payload);
             return res.data;

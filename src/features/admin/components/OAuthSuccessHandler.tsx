@@ -20,6 +20,9 @@ interface MeResponse {
     custom_status: string | null;
     role: string | null;
     base_country: string | null;
+    phone_number: string | null;
+    current_location: string | null;
+    about_me: string | null;
     ts_created_at: string;
 }
 
@@ -132,6 +135,9 @@ export const OAuthSuccessHandler = () => {
                 localStorage.setItem("isOfflineForced", me.is_offline_forced ? "true" : "false");
                 localStorage.setItem("role", me.role || "");
                 localStorage.setItem("baseCountry", me.base_country || "");
+                localStorage.setItem("phoneNumber", me.phone_number || "");
+                localStorage.setItem("currentLocation", me.current_location || "");
+                localStorage.setItem("aboutMe", me.about_me || "");
                 localStorage.setItem("customStatus", me.custom_status || "");
                 localStorage.setItem("userEmail", me.email || "");
                 localStorage.setItem("avatarImgPath", me.profile_image_file_name || "");
