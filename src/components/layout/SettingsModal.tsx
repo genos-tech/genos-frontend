@@ -1068,9 +1068,10 @@ const LanguageSection = () => {
                     <Option value="zh">
                         <Typography level="body-sm">{t.settings.language.chinese}</Typography>
                     </Option>
-                    <Option value="ar">
-                        <Typography level="body-sm">{t.settings.language.arabic}</Typography>
-                    </Option>
+                    {/* "ar" (Arabic) intentionally omitted for now — disabled
+                        pending RTL layout support. The locale + its strings
+                        remain in the i18n bundle so re-adding it is a one-line
+                        change here. */}
                     <Option value="hi">
                         <Typography level="body-sm">{t.settings.language.hindi}</Typography>
                     </Option>
