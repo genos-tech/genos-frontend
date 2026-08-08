@@ -403,7 +403,12 @@ const SidebarSection = () => {
                 {t.settings.sidebar.description}
             </Typography>
 
-            <Stack spacing={1.5}>
+            {/* useFlexGap: Joy's `spacing` compiles to margins on a content-
+                hashed emotion class shared by every column/spacing=1.5 Stack,
+                and a stray global rule in App.css overrides that class with a
+                10px margin-left on each non-first child — indenting all rows
+                but the first. `useFlexGap` uses real `gap`, sidestepping both. */}
+            <Stack spacing={1.5} useFlexGap>
                 {HIDEABLE_SIDEBAR_ITEMS.map((key: SidebarItemKey) => (
                     <Stack
                         key={key}
