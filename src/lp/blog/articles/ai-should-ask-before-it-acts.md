@@ -88,9 +88,9 @@ This is not a compromise between autonomy and control. It is a division of labor
 
 ### Trust also requires evidence
 
-Approval handles the future: *what is about to change?*
+Approval handles the future: _what is about to change?_
 
-Citations handle the past: *why is the agent proposing this?*
+Citations handle the past: _why is the agent proposing this?_
 
 If an agent recommends moving a deadline because another task blocks it, I should
 be able to open that dependency. If it creates a plan from a chat thread, I should

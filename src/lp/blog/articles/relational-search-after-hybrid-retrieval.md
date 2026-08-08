@@ -1,6 +1,5 @@
 <!-- Generated from genos-docs/marketing/HN_GRAPHRAG_TECHNICAL_SUBMISSION.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-
 I ran into a retrieval failure that no amount of embedding tuning could solve.
 
 The workspace contained three tasks:

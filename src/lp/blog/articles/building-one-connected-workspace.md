@@ -8,13 +8,13 @@ in Jira. Three subscriptions, and somehow the answer to "why are we even doing
 this task?" lived in none of them. It lived in whoever remembered the thread.
 
 The thing that finally broke me: I'd scroll Slack search results for 20
-minutes looking for a decision I *knew* existed, find half of it, and realize
+minutes looking for a decision I _knew_ existed, find half of it, and realize
 the other half was in a doc that had been out of date for a month.
 
 And here's the part that surprised me — connecting AI to these tools doesn't
 really fix it. I tried. The AI can fetch your messages, your docs, your
-tickets. But it can't know *which discussion created which task*, or *which
-decision made which doc obsolete*. Those links only exist in people's heads.
+tickets. But it can't know _which discussion created which task_, or _which
+decision made which doc obsolete_. Those links only exist in people's heads.
 Retrieval isn't understanding.
 
 So I built Genos: chat, docs, and tasks in one workspace, where everything
