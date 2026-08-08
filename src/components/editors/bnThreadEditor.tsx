@@ -318,8 +318,15 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             : null;
     const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
+    // Hold send while a dropped/pasted image or file is still uploading —
+    // BlockNote inserts the block before its `url` resolves, so sending now
+    // ships an empty attachment. `editorUploadCount` covers BlockNote's own
+    // drop/paste/slash inserts; `pendingUpload` covers the thread-pane drop
+    // loop. See `bnChatEditor` for the fuller rationale.
+    const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
+
     const sendingThreadMessage = async () => {
-        if (editor.document.length <= 1) return;
+        if (editor.document.length <= 1 || uploadInProgress) return;
         // v3 cutover. The legacy `socket.emit("thread_message", POST,
         // ...)` + manual optimistic append + addThreadMessage IDB
         // write is replaced by `channelService.send(channelUuid,
@@ -459,7 +466,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2}
+                        disabled={editorDocLength < 2 || uploadInProgress}
                         onSend={sendingThreadMessage}
                     />
 

@@ -331,8 +331,17 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             : null;
     const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
+    // While a dropped/pasted image or file is still uploading, BlockNote
+    // has already inserted its block (so the composer looks non-empty and
+    // the Send button would light up) but the block's `url` is still empty
+    // — sending now ships an empty/broken attachment. Hold send until every
+    // in-flight upload settles: `editorUploadCount` covers BlockNote's own
+    // drop/paste/slash inserts (they call the wrapped `uploadFile`), and
+    // `pendingUpload` covers the chat-pane drop loop.
+    const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
+
     const sendingMessage = async () => {
-        if (editor.document.length > 1 && socket !== null) {
+        if (editor.document.length > 1 && socket !== null && !uploadInProgress) {
             // Capture the message, then clear the composer IMMEDIATELY —
             // don't freeze it on the server round-trip. The previous
             // `await sendChatMessage(...)` BEFORE clearing held the editor
@@ -442,7 +451,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2}
+                        disabled={editorDocLength < 2 || uploadInProgress}
                         onSend={() => {
                             void sendingMessage();
                         }}
