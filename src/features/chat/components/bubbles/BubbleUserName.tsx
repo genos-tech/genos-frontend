@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
@@ -35,7 +36,6 @@ type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
     sender: UserProps;
     chatType: number;
-    userName: string;
     isSent: boolean;
     dtSent: string;
     tsSent: string;
@@ -53,7 +53,6 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
         isSimpleBubble,
         sender,
         chatType,
-        userName,
         isSent,
         dtSent,
         tsSent,
@@ -189,7 +188,17 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     letterSpacing: "-0.01em",
                                 }}
                             >
-                                {userName}
+                                {/* Live-resolve the sender's current name in
+                                    this leaf so the AvatarContext
+                                    subscription is isolated here — the
+                                    memoized parent bubble no longer
+                                    re-renders on `teamMemberProfiles` churn.
+                                    Falls back to the name frozen on the
+                                    message when the sender is in no roster. */}
+                                <ResolvedUserName
+                                    fallbackName={sender.userName}
+                                    userId={sender.userId}
+                                />
                             </Typography>
                         )}
 

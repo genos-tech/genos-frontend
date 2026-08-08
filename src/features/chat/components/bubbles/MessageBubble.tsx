@@ -6,7 +6,6 @@ import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
@@ -41,6 +40,15 @@ import {
 } from "./bubbleStyleTokens";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
+
+// Chat type → URL path segment. Module constant so it isn't rebuilt on
+// every bubble render.
+const CHAT_TYPE_PATH: Record<number, string> = {
+    1: "dm",
+    2: "gm",
+    3: "pm",
+    4: "mdm",
+};
 
 type MessageBubbleProps = {
     useTEM: TeamManagementState;
@@ -94,11 +102,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSystemUser = message.sender.isSystemUser === true;
-    // Resolve the sender's CURRENT name (self via `myself`, others via the
-    // team map), falling back to the name cached on the message. Without
-    // this a profile rename never shows on already-sent messages, whose
-    // `sender.userName` was frozen at send time.
-    const senderName = useResolvedUserName(message.sender.userId, message.sender.userName);
+    // The sender's CURRENT name is live-resolved inside `BubbleUserName`
+    // (via the `<ResolvedUserName>` leaf) so its AvatarContext
+    // subscription is isolated there — this memoized bubble no longer
+    // re-renders on the periodic `teamMemberProfiles` churn.
     // PM bubbles are task cards — they should NEVER show a user
     // avatar regardless of `sender.userId`. The legacy task-creation
     // path stamped `sender_id` to whoever created the task (not the
@@ -119,14 +126,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         ? BUBBLE_COLORS.threadActive.dark
         : BUBBLE_COLORS.threadActive.light;
     const highlightColors = isFocused === "threadActive" ? threadActiveColors : focusedColors;
-
-    // Chat type to URL path mapping
-    const CHAT_TYPE_PATH: Record<number, string> = {
-        1: "dm",
-        2: "gm",
-        3: "pm",
-        4: "mdm",
-    };
 
     const handleOpenTaskClick = () => {
         if (message.taskId !== null) {
@@ -671,7 +670,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 taskStatus={message.taskStatus}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
-                                userName={senderName}
                             />
                         )}
 
@@ -768,7 +766,11 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 position: "relative",
                                 overflow: "hidden",
                                 cursor: "pointer",
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                // Animate only paint properties — `all` also
+                                // animated layout props (border-radius etc.),
+                                // forcing non-composited work on every hover.
+                                transition:
+                                    "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 // Variant-specific border radius
                                 ...(isSent
                                     ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
@@ -850,7 +852,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             taskStatus={message.taskStatus}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
-                                            userName={senderName}
                                         />
                                         {BubbleActions()}
                                     </Stack>
@@ -883,7 +884,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                                     taskStatus={message.taskStatus}
                                                     tsSent={message.tsSent}
                                                     tsUpdated={message.tsUpdated}
-                                                    userName={senderName}
                                                 />
                                                 {showUnderBarOption === true && BubbleActions()}
                                             </Stack>
