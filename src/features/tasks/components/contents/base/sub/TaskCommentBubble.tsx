@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -10,7 +10,7 @@ import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
-import { useResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
+import { ResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
@@ -60,10 +60,13 @@ type TaskCommentBubbleProps = {
      * `TaskCommentList`, which derives it from the URL's `commentId`. */
     isFocused?: boolean;
     /** Click handler that updates the URL with this comment's deep
-     * link. Optional so callers that don't wire routing (none today,
-     * but keeps the bubble reusable) get the original non-clickable
-     * behaviour. */
-    onCommentClick?: () => void;
+     * link, receiving the clicked comment's id. Optional so callers
+     * that don't wire routing (none today, but keeps the bubble
+     * reusable) get the original non-clickable behaviour. Taking the id
+     * lets the list pass ONE stable callback to every row instead of a
+     * fresh per-row closure — which is what lets `memo` skip untouched
+     * bubbles during scroll. */
+    onCommentClick?: (commentId: number) => void;
     /** App-relative deep-link path for this comment (same URL
      * `onCommentClick` navigates to), threaded from `TaskCommentList`.
      * Drives the more-menu's "Copy comment link" item; when absent the
@@ -80,7 +83,25 @@ type TaskCommentBubbleProps = {
     hostZIndex?: number;
 };
 
-export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
+// Static bubble shadows hoisted out of render so they aren't
+// re-serialized on every re-render (emotion re-serializes inline `sx`
+// objects each pass). Keyed by dark-mode / focused / hover state.
+const BUBBLE_SHADOW = {
+    focused: {
+        dark: `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`,
+        light: `0 4px 20px rgba(22,163,74,0.15)`,
+    },
+    rest: {
+        dark: "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)",
+        light: "0 2px 8px rgba(0,0,0,0.06)",
+    },
+    hover: {
+        dark: "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+        light: "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
+    },
+} as const;
+
+const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const {
         socket,
         myself,
@@ -108,9 +129,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSent = comment.senderId === myself.userId;
-    // Live-resolve the commenter's name so a rename shows on existing
-    // comments instead of the `senderName` cached when they were posted.
-    const senderName = useResolvedUserName(comment.senderId, comment.senderName);
+    // The commenter's name is live-resolved by the `<ResolvedUserName>`
+    // leaf in the name slot (so a rename shows on existing comments) —
+    // isolating that AvatarContext subscription to the leaf lets this
+    // memoized bubble skip the periodic `teamMemberProfiles` churn.
 
     // Palette harmonised with MessageBubble: sent → purple, received →
     // neutral, focused → green deep-link tint.
@@ -125,7 +147,13 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const colors = isFocused ? focusedColors : variantColors;
     const secondaryText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)";
 
-    const isEdited = extractMMDDHHMMSSs(comment.tsSent) !== extractMMDDHHMMSSs(comment.tsUpdated);
+    // Two date-parses; memoize so they don't run on every re-render.
+    const isEdited = useMemo(
+        () => extractMMDDHHMMSSs(comment.tsSent) !== extractMMDDHHMMSSs(comment.tsUpdated),
+        [comment.tsSent, comment.tsUpdated]
+    );
+    // Rendered date label, also memoized (parses `tsSent`).
+    const sentLabel = useMemo(() => extractYYYYMMDDHHMM(comment.tsSent), [comment.tsSent]);
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
@@ -145,9 +173,21 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     // and unmounting the toolbar would tear the open menu down with it
     // (same pattern as MessageBubble's isMoreMenuOpen).
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
-    const previewWrapClassName = [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
-        .filter(Boolean)
-        .join(" ");
+    const previewWrapClassName = useMemo(
+        () =>
+            [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
+                .filter(Boolean)
+                .join(" "),
+        [unwrapAll, unwrapCode]
+    );
+
+    // Bind this comment's id onto the stable list-level handler. Kept
+    // undefined when no handler is wired so the non-clickable visual
+    // behaviour (default cursor, no onClick) is preserved.
+    const handleCommentClick = useMemo(
+        () => (onCommentClick ? () => onCommentClick(comment.commentId) : undefined),
+        [onCommentClick, comment.commentId]
+    );
 
     useEffect(() => {
         if (comment.reactions) {
@@ -444,7 +484,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                           : "transparent",
                     transition: "background-color 0.15s ease",
                 }}
-                onClick={onCommentClick}
+                onClick={handleCommentClick}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
                 onDoubleClick={
@@ -518,7 +558,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                     letterSpacing: "-0.01em",
                                 }}
                             >
-                                {senderName}
+                                <ResolvedUserName
+                                    fallbackName={comment.senderName}
+                                    userId={comment.senderId}
+                                />
                             </Typography>
                             <Typography
                                 level="body-xs"
@@ -529,9 +572,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                     letterSpacing: "0.02em",
                                 }}
                             >
-                                {isEdited
-                                    ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
-                                    : extractYYYYMMDDHHMM(comment.tsSent)}
+                                {isEdited ? `${sentLabel} Edited` : sentLabel}
                             </Typography>
                         </Stack>
 
@@ -565,7 +606,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
             <Box
                 key={`${comment.commentId}-${comment.tsUpdated}`}
                 sx={{ cursor: onCommentClick ? "pointer" : "default" }}
-                onClick={onCommentClick}
+                onClick={handleCommentClick}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
                 onDoubleClick={
@@ -587,7 +628,11 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         borderRadius: "16px",
                         position: "relative",
                         overflow: "hidden",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        // Animate only paint properties — `transition: all`
+                        // also animated layout props (border-radius etc.),
+                        // which forced non-composited work on every hover.
+                        transition:
+                            "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                         ...(isSent
                             ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
                             : { borderTopRightRadius: "16px", borderTopLeftRadius: "4px" }),
@@ -596,16 +641,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         border: "1px solid",
                         borderColor: colors.border,
                         boxShadow: isFocused
-                            ? isDark
-                                ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                : `0 4px 20px rgba(22,163,74,0.15)`
-                            : isDark
-                              ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
-                              : "0 2px 8px rgba(0,0,0,0.06)",
+                            ? BUBBLE_SHADOW.focused[isDark ? "dark" : "light"]
+                            : BUBBLE_SHADOW.rest[isDark ? "dark" : "light"],
                         "&:hover": {
-                            boxShadow: isDark
-                                ? "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
-                                : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
+                            boxShadow: BUBBLE_SHADOW.hover[isDark ? "dark" : "light"],
                         },
                     }}
                 >
@@ -641,7 +680,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                         letterSpacing: "-0.01em",
                                     }}
                                 >
-                                    {senderName}
+                                    <ResolvedUserName
+                                        fallbackName={comment.senderName}
+                                        userId={comment.senderId}
+                                    />
                                 </Typography>
                                 <Typography
                                     level="body-xs"
@@ -656,9 +698,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                         letterSpacing: "0.02em",
                                     }}
                                 >
-                                    {isEdited
-                                        ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
-                                        : extractYYYYMMDDHHMM(comment.tsSent)}
+                                    {isEdited ? `${sentLabel} Edited` : sentLabel}
                                 </Typography>
                             </Stack>
 
@@ -695,3 +735,23 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         </Box>
     );
 };
+
+// Custom comparator mirroring `MessageBubble` — comments arrive as fresh
+// objects only when their content/flags actually change (the list keys
+// each row on `commentId + tsUpdated`), so a reference compare on
+// `comment` is exact. The remaining props are primitives / stable
+// setters. This lets the bubble skip re-render on parent-render churn
+// and on the periodic `teamMemberProfiles` context flip (the sender name
+// now subscribes in its own `<ResolvedUserName>` leaf).
+const areEqual = (prev: TaskCommentBubbleProps, next: TaskCommentBubbleProps): boolean =>
+    prev.comment === next.comment &&
+    prev.isFocused === next.isFocused &&
+    prev.commentLink === next.commentLink &&
+    prev.onCommentClick === next.onCommentClick &&
+    prev.hostZIndex === next.hostZIndex &&
+    prev.currentProjectId === next.currentProjectId &&
+    prev.currentProjectName === next.currentProjectName &&
+    prev.currentTaskDisplayId === next.currentTaskDisplayId &&
+    prev.myself.userId === next.myself.userId;
+
+export const TaskCommentBubble = memo(TaskCommentBubbleImpl, areEqual);

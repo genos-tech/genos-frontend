@@ -33,6 +33,15 @@ import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
+// Chat type → URL path segment. Module constant so it isn't rebuilt on
+// every bubble render.
+const CHAT_TYPE_PATH: Record<number, string> = {
+    1: "dm",
+    2: "gm",
+    3: "pm",
+    4: "mdm",
+};
+
 type threadMessageBubbleProps = {
     useTEM: TeamManagementState;
     myself: UserProps;
@@ -89,14 +98,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
-
-    // Chat type to URL path mapping
-    const CHAT_TYPE_PATH: Record<number, string> = {
-        1: "dm",
-        2: "gm",
-        3: "pm",
-        4: "mdm",
-    };
 
     // Handle thread message click to update URL and focus
     const handleMessageClick = () => {
@@ -450,7 +451,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                 taskStatus={null}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
-                                userName={message.sender.userName}
                             />
                         )}
 
@@ -525,7 +525,11 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                             position: "relative",
                             overflow: "hidden",
                             cursor: "pointer",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            // Animate only paint properties — `all` also
+                            // animated layout props (border-radius etc.),
+                            // forcing non-composited work on every hover.
+                            transition:
+                                "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             // Variant-specific border radius
                             ...(isSent
                                 ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
@@ -600,7 +604,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                         taskStatus={null}
                                         tsSent={message.tsSent}
                                         tsUpdated={message.tsUpdated}
-                                        userName={message.sender.userName}
                                     />
                                     {BubbleActions()}
                                 </Stack>
@@ -631,7 +634,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                                                 taskStatus={null}
                                                 tsSent={message.tsSent}
                                                 tsUpdated={message.tsUpdated}
-                                                userName={message.sender.userName}
                                             />
                                             {showUnderBarOption === true && BubbleActions()}
                                         </Stack>

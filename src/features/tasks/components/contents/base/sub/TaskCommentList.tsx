@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -16,6 +16,11 @@ import { TaskCommentProps } from "../../../../../../types/tasks";
 import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput";
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
+
+/** Per-list context Virtuoso threads into `itemContent` so each row can
+ * suppress hit-testing during active scroll without re-creating the
+ * callback. Mirrors `MessageListRenderer`'s `ListContext`. */
+type CommentListContext = { isScrolling: boolean };
 
 type TaskCommentListProps = {
     socket: Socket | null;
@@ -100,6 +105,14 @@ export const TaskCommentList = ({
     const isDark = mode === "dark";
     const navigate = useNavigate();
 
+    // Scroll-activity flag, LOCAL to this list (mirrors
+    // `MessageListRenderer`). Rows opt out of hit-testing while the list
+    // is actively scrolling so bubbles sliding under a stationary cursor
+    // don't fire hover handlers (toolbar mounts, style recomputes)
+    // mid-scroll. Threaded to rows via Virtuoso's `context`.
+    const [isScrolling, setIsScrolling] = useState(false);
+    const listContext = useMemo<CommentListContext>(() => ({ isScrolling }), [isScrolling]);
+
     // Virtuoso reports its rendered content size; we cap it at
     // `maxHeight`. This lets the list grow naturally with new comments
     // (no precomputed heuristic) up to the parent's height budget.
@@ -139,12 +152,76 @@ export const TaskCommentList = ({
         rows: taskComments,
     });
 
-    // Hoisted out of `itemContent` so both Virtuoso branches reuse
-    // the same wiring without duplicating the click closure.
-    const buildCommentClickHandler = (commentId: number) => {
-        if (!commentLinkBuilder) return undefined;
-        return () => navigate(commentLinkBuilder(commentId));
-    };
+    // ONE stable click handler shared by every row (bound to the row's
+    // id inside the bubble). A fresh per-row closure here would defeat
+    // `TaskCommentBubble`'s `memo` and re-render every visible row on any
+    // parent render. Undefined when no link builder is wired so the
+    // bubble keeps its non-clickable behaviour.
+    const handleCommentClick = useCallback(
+        (commentId: number) => {
+            if (!commentLinkBuilder) return;
+            navigate(commentLinkBuilder(commentId));
+        },
+        [commentLinkBuilder, navigate]
+    );
+    const onCommentClick = commentLinkBuilder ? handleCommentClick : undefined;
+
+    // Hoisted out of the Virtuoso element into a stable `useCallback`
+    // shared by both layout branches — Virtuoso re-renders every visible
+    // row whenever `itemContent` changes identity, so an inline arrow
+    // re-rendered the whole window on every list render. `isScrolling`
+    // arrives per-render via Virtuoso's `context` (3rd arg), so it isn't
+    // a dependency here.
+    const itemContent = useCallback(
+        (index: number, _data: unknown, { isScrolling }: CommentListContext) => {
+            const comment = taskComments[index];
+            return (
+                // Rows opt out of hit-testing during active scroll (see
+                // `listContext`); wheel events still reach the scroller.
+                <div style={{ pointerEvents: isScrolling ? "none" : undefined }}>
+                    <TaskCommentBubble
+                        key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
+                        comment={comment}
+                        commentLink={commentLinkBuilder?.(comment.commentId)}
+                        currentProjectId={currentProjectId ?? undefined}
+                        currentProjectName={currentProjectName ?? undefined}
+                        currentTaskDisplayId={currentTaskDisplayId ?? undefined}
+                        hostZIndex={hostZIndex}
+                        isFocused={comment.commentId === focusedCommentId}
+                        myself={myself}
+                        setEditTargetComment={setEditTargetComment}
+                        setIsInEdit={setIsInEdit}
+                        setMyself={setMyself}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
+                        socket={socket}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        onCommentClick={onCommentClick}
+                    />
+                </div>
+            );
+        },
+        [
+            taskComments,
+            commentLinkBuilder,
+            currentProjectId,
+            currentProjectName,
+            currentTaskDisplayId,
+            hostZIndex,
+            focusedCommentId,
+            myself,
+            setEditTargetComment,
+            setIsInEdit,
+            setMyself,
+            setTodoFromMessageBubble,
+            socket,
+            useCM,
+            useTEM,
+            useUISM,
+            onCommentClick,
+        ]
+    );
 
     if (taskComments.length === 0) {
         return (
@@ -205,35 +282,13 @@ export const TaskCommentList = ({
                     atBottomThreshold={128}
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    context={listContext}
                     followOutput={followOutput}
                     initialTopMostItemIndex={taskComments.length - 1}
+                    isScrolling={setIsScrolling}
+                    itemContent={itemContent}
                     style={{ flex: 1, minHeight: 0 }}
                     totalCount={taskComments.length}
-                    itemContent={(index) => {
-                        const comment = taskComments[index];
-                        return (
-                            <TaskCommentBubble
-                                key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                comment={comment}
-                                commentLink={commentLinkBuilder?.(comment.commentId)}
-                                currentProjectId={currentProjectId ?? undefined}
-                                currentProjectName={currentProjectName ?? undefined}
-                                currentTaskDisplayId={currentTaskDisplayId ?? undefined}
-                                hostZIndex={hostZIndex}
-                                isFocused={comment.commentId === focusedCommentId}
-                                myself={myself}
-                                setEditTargetComment={setEditTargetComment}
-                                setIsInEdit={setIsInEdit}
-                                setMyself={setMyself}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                socket={socket}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                                onCommentClick={buildCommentClickHandler(comment.commentId)}
-                            />
-                        );
-                    }}
                 />
             </Box>
         );
@@ -246,36 +301,14 @@ export const TaskCommentList = ({
                 atBottomThreshold={128}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                context={listContext}
                 followOutput={followOutput}
                 initialTopMostItemIndex={taskComments.length - 1}
+                isScrolling={setIsScrolling}
+                itemContent={itemContent}
                 style={{ height: Math.min(contentHeight, maxHeight) }}
                 totalCount={taskComments.length}
                 totalListHeightChanged={setContentHeight}
-                itemContent={(index) => {
-                    const comment = taskComments[index];
-                    return (
-                        <TaskCommentBubble
-                            key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                            comment={comment}
-                            commentLink={commentLinkBuilder?.(comment.commentId)}
-                            currentProjectId={currentProjectId ?? undefined}
-                            currentProjectName={currentProjectName ?? undefined}
-                            currentTaskDisplayId={currentTaskDisplayId ?? undefined}
-                            hostZIndex={hostZIndex}
-                            isFocused={comment.commentId === focusedCommentId}
-                            myself={myself}
-                            setEditTargetComment={setEditTargetComment}
-                            setIsInEdit={setIsInEdit}
-                            setMyself={setMyself}
-                            setTodoFromMessageBubble={setTodoFromMessageBubble}
-                            socket={socket}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            onCommentClick={buildCommentClickHandler(comment.commentId)}
-                        />
-                    );
-                }}
             />
         </Box>
     );
