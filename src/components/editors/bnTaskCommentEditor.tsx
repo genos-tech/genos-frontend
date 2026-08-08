@@ -398,10 +398,18 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     //      effect) refetch and replace the optimistic row with server
     //      truth — covering reconciled timestamps / commentId /
     //      mentions etc.
+    // Hold send while a dropped/pasted image or file is still uploading —
+    // BlockNote inserts the block before its `url` resolves, so sending now
+    // would persist a comment with an empty attachment. `editorUploadCount`
+    // covers BlockNote's own drop/paste/slash inserts; `pendingUpload`
+    // covers the comment-tab drop loop.
+    const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
+
     const sendComment = async () => {
         if (!socket) return;
         if (editor.document.length <= 1) return;
         if (!task.id) return;
+        if (uploadInProgress) return;
 
         const commentBodySnapshot = editor.document;
 
@@ -544,7 +552,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         }
                     }}
                 >
-                    <EditorSendButton disabled={editorDocLength < 2} onSend={sendComment} />
+                    <EditorSendButton
+                        disabled={editorDocLength < 2 || uploadInProgress}
+                        onSend={sendComment}
+                    />
 
                     <Box
                         className="bn-editor-toolbar"
