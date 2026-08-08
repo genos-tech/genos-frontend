@@ -29,6 +29,12 @@ vi.mock("../../features/chat/components/todo/services/todoCategories", () => ({
     updateTodoCategory: vi.fn(),
     deleteTodoCategory: vi.fn(),
 }));
+vi.mock("../../features/chat/components/todo/services/todoSchedules", () => ({
+    loadTodoSchedules: vi.fn().mockResolvedValue([]),
+    createTodoSchedule: vi.fn(),
+    updateTodoSchedule: vi.fn(),
+    deleteTodoSchedule: vi.fn(),
+}));
 vi.mock("../../db/services/todo.service", () => ({
     TodoService: class {
         async getGroupsByUser() {

@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
+import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
 import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { ModalScheduledTodos } from "./components/todo/ModalScheduledTodos";
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
 import {
     countCompletedToday,
@@ -102,8 +104,22 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
     const focusTarget = focusTargetProp ?? routedFocusTarget ?? undefined;
 
-    const { groups, categories, incompleteCount, addItem, patchItem, removeItem, addCategory } =
-        useTG;
+    const {
+        groups,
+        categories,
+        schedules,
+        incompleteCount,
+        addItem,
+        patchItem,
+        removeItem,
+        addCategory,
+        addSchedule,
+        updateSchedule,
+        removeSchedule,
+    } = useTG;
+
+    // Scheduled-todos modal (recurring rules that auto-populate today).
+    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
     // "Completed Today" is a LOCAL third mode rather than a third value on
     // `useCM.showOnlyInCompleteTodos`. That flag is shared state which
@@ -267,35 +283,62 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         </Stack>
                     </Stack>
 
-                    {/* "New Todo" button — only when today's group is empty/absent. */}
-                    {!todayExists && (
-                        <AppTooltip title="Create today's todo list">
+                    {/* Right-hand action cluster: repeat (always visible) +
+                        Start today (only when today's group is empty/absent). */}
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <AppTooltip title={t.chat.todoPane.schedule.tooltip}>
                             <IconButton
                                 size="sm"
                                 sx={{
                                     borderRadius: "10px",
-                                    px: 1.5,
-                                    py: 0.75,
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    gap: 0.5,
+                                    color: isDark
+                                        ? "var(--gp-brandalt-400)"
+                                        : "var(--gp-brand-700)",
                                     background: isDark
-                                        ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
-                                        : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
-                                    color: "#fff",
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                     "&:hover": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
-                                            : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.25)"
+                                            : "rgba(var(--gp-brand-700-rgb), 0.18)",
                                     },
                                 }}
-                                onClick={handleCreateTodayGroup}
+                                onClick={() => setScheduleModalOpen(true)}
                             >
-                                <AddIcon sx={{ fontSize: "18px" }} />
-                                Start today
+                                <RepeatRoundedIcon sx={{ fontSize: "18px" }} />
                             </IconButton>
                         </AppTooltip>
-                    )}
+
+                        {/* "New Todo" button — only when today's group is empty/absent. */}
+                        {!todayExists && (
+                            <AppTooltip title="Create today's todo list">
+                                <IconButton
+                                    size="sm"
+                                    sx={{
+                                        borderRadius: "10px",
+                                        px: 1.5,
+                                        py: 0.75,
+                                        fontSize: "13px",
+                                        fontWeight: 600,
+                                        gap: 0.5,
+                                        background: isDark
+                                            ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
+                                            : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
+                                        color: "#fff",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
+                                                : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
+                                        },
+                                    }}
+                                    onClick={handleCreateTodayGroup}
+                                >
+                                    <AddIcon sx={{ fontSize: "18px" }} />
+                                    Start today
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                    </Stack>
                 </Stack>
 
                 {/* Filter row */}
@@ -473,6 +516,16 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     </Stack>
                 </Box>
             )}
+
+            <ModalScheduledTodos
+                categories={categories}
+                open={scheduleModalOpen}
+                schedules={schedules}
+                onAdd={addSchedule}
+                onClose={() => setScheduleModalOpen(false)}
+                onRemove={removeSchedule}
+                onUpdate={updateSchedule}
+            />
         </Box>
     );
 };

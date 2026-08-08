@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TodoService } from "../db/services/todo.service";
+import { parseRecurrence } from "../features/calendar/utils/rrule";
 import { loadTodoGroups } from "../features/chat/components/todo/services/loadTodoGroups";
 import {
     createTodoCategory,
@@ -16,8 +17,22 @@ import {
     updateTodoItem,
     UpdateTodoItemPatch,
 } from "../features/chat/components/todo/services/todoItems";
+import {
+    createTodoSchedule,
+    CreateTodoScheduleInput,
+    deleteTodoSchedule,
+    loadTodoSchedules,
+    updateTodoSchedule,
+    UpdateTodoSchedulePatch,
+} from "../features/chat/components/todo/services/todoSchedules";
+import { occursOn } from "../features/chat/utils/todoSchedule";
 import { UserProps } from "../types/admin";
-import { TodoCategoryProps, TodoGroupProps, TodoItemProps } from "../types/chat";
+import {
+    TodoCategoryProps,
+    TodoGroupProps,
+    TodoItemProps,
+    TodoScheduleProps,
+} from "../types/chat";
 import { getLocalCurrentDate } from "../utils/dateUtils";
 
 const todoService = new TodoService();
@@ -36,11 +51,16 @@ export type UseTodoGroupsState = ReturnType<typeof useTodoGroups>;
 export const useTodoGroups = (myself: UserProps, accessToken: string | null) => {
     const [groups, setGroups] = useState<TodoGroupProps[]>([]);
     const [categories, setCategories] = useState<TodoCategoryProps[]>([]);
+    const [schedules, setSchedules] = useState<TodoScheduleProps[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Ref so handlers always see the latest groups without re-binding.
     const groupsRef = useRef<TodoGroupProps[]>([]);
     groupsRef.current = groups;
+    // Same for schedules — the materializer reads them from a ref so the
+    // effects that call it don't need `schedules` in their dep arrays.
+    const schedulesRef = useRef<TodoScheduleProps[]>([]);
+    schedulesRef.current = schedules;
 
     // Load: IDB fast path, then authoritative fetch.
     //
@@ -57,9 +77,10 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             if (!cancelled && cached.length > 0) {
                 setGroups(cached);
             }
-            const [fresh, cats] = await Promise.all([
+            const [fresh, cats, scheds] = await Promise.all([
                 loadTodoGroups(myself, accessToken),
                 loadTodoCategories(accessToken, myself),
+                loadTodoSchedules(accessToken, myself),
             ]);
             if (!cancelled && fresh) {
                 setGroups(fresh);
@@ -67,11 +88,22 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             if (!cancelled && cats) {
                 setCategories(cats);
             }
+            if (!cancelled && scheds) {
+                setSchedules(scheds);
+            }
             if (!cancelled) setIsLoading(false);
+            // Materialize any schedules due today now that both groups and
+            // schedules are loaded. Deliberately after `setIsLoading(false)`
+            // — it's a background top-up, not part of the initial render's
+            // critical path, and it reads the freshly-fetched data via refs.
+            if (!cancelled && fresh && scheds) {
+                void materializeDueSchedules(fresh, scheds);
+            }
         })();
         return () => {
             cancelled = true;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myself.userId, myself.teamId, accessToken]);
 
     // Persist any non-empty state to IDB.
@@ -302,8 +334,105 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         [accessToken, myself]
     );
 
+    // Schedules (recurring todos) --------------------------------------
+
+    // Create a todo item for every active schedule that is due today and
+    // hasn't fired yet. Idempotent on two levels: the authoritative
+    // `lastMaterializedDate` cursor (skip if it already equals today) and
+    // a title-match guard against today's group (covers a prior run that
+    // created the item but failed to advance the cursor). The cursor is
+    // advanced even when the item was already present so a delete-then-
+    // reopen the same day doesn't resurrect it.
+    const materializeDueSchedules = useCallback(
+        async (
+            currentGroups: TodoGroupProps[] = groupsRef.current,
+            currentSchedules: TodoScheduleProps[] = schedulesRef.current
+        ) => {
+            const today = getLocalCurrentDate();
+            const todayGroup = currentGroups.find((g) => g.localDate === today);
+            const existingTitles = new Set((todayGroup?.items ?? []).map((i) => i.title));
+
+            for (const sched of currentSchedules) {
+                if (!sched.isActive) continue;
+                if (sched.lastMaterializedDate === today) continue;
+                const spec = parseRecurrence([sched.rrule]);
+                if (!occursOn(spec, sched.startDate, today)) continue;
+
+                if (!existingTitles.has(sched.title)) {
+                    await addItem({
+                        localDate: today,
+                        title: sched.title,
+                        categoryId: sched.categoryId,
+                    });
+                    existingTitles.add(sched.title);
+                }
+                // Advance the cursor (and reflect it locally) whether or
+                // not we just created the item.
+                const updated = await updateTodoSchedule(accessToken, sched.scheduleId, {
+                    lastMaterializedDate: today,
+                });
+                if (updated) {
+                    setSchedules((prev) =>
+                        prev.map((s) => (s.scheduleId === sched.scheduleId ? updated : s))
+                    );
+                }
+            }
+        },
+        [accessToken, addItem]
+    );
+
+    // Latest materializer in a ref so the once-mounted midnight timer can
+    // call the current one without being torn down and rebuilt each time
+    // the callback's identity changes.
+    const materializeRef = useRef(materializeDueSchedules);
+    materializeRef.current = materializeDueSchedules;
+
+    const addSchedule = useCallback(
+        async (input: CreateTodoScheduleInput): Promise<TodoScheduleProps | undefined> => {
+            const created = await createTodoSchedule(accessToken, myself, input);
+            if (created) {
+                setSchedules((prev) => [created, ...prev]);
+                // A schedule due today populates immediately rather than
+                // waiting for the next app-open / midnight tick.
+                void materializeDueSchedules(groupsRef.current, [created]);
+            }
+            return created;
+        },
+        [accessToken, myself, materializeDueSchedules]
+    );
+
+    const updateSchedule = useCallback(
+        async (
+            scheduleId: number,
+            patch: UpdateTodoSchedulePatch
+        ): Promise<TodoScheduleProps | undefined> => {
+            const updated = await updateTodoSchedule(accessToken, scheduleId, patch);
+            if (updated) {
+                setSchedules((prev) =>
+                    prev.map((s) => (s.scheduleId === scheduleId ? updated : s))
+                );
+                // Re-enabling or re-timing a rule may make it due today.
+                void materializeDueSchedules(groupsRef.current, [updated]);
+            }
+            return updated;
+        },
+        [accessToken, materializeDueSchedules]
+    );
+
+    const removeSchedule = useCallback(
+        async (scheduleId: number): Promise<boolean> => {
+            const ok = await deleteTodoSchedule(accessToken, scheduleId);
+            if (ok) {
+                setSchedules((prev) => prev.filter((s) => s.scheduleId !== scheduleId));
+            }
+            return ok;
+        },
+        [accessToken]
+    );
+
     // Re-evaluate "today" at midnight so a multi-day session keeps
-    // `todayGroup` correct without manual refresh.
+    // `todayGroup` correct without manual refresh — and materialize any
+    // schedules that just became due for the new day.
     useEffect(() => {
         let timerId: ReturnType<typeof setTimeout>;
         const scheduleNextMidnight = () => {
@@ -312,6 +441,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             timerId = setTimeout(() => {
                 // Force a memo recomputation by writing a new array ref.
                 setGroups((prev) => prev.slice());
+                void materializeRef.current();
                 scheduleNextMidnight();
             }, tomorrow.getTime() - now.getTime());
         };
@@ -342,6 +472,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         groups,
         setGroups,
         categories,
+        schedules,
         todayGroup,
         incompleteCount,
         isLoading,
@@ -351,6 +482,9 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         addCategory,
         renameCategory,
         removeCategory,
+        addSchedule,
+        updateSchedule,
+        removeSchedule,
         refresh,
     };
 };
