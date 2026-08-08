@@ -36,6 +36,7 @@ const copy = {
         nav: {
             features: "機能",
             demoGuide: "デモ",
+            blog: "ブログ",
             value: "価値",
             ai: "AI活用",
             contact: "お問い合わせ",
@@ -229,6 +230,7 @@ const copy = {
             legal: "特定商取引法に基づく表記",
             privacy: "プライバシーポリシー",
             developers: "開発者向け API",
+            blog: "ブログ",
         },
     },
 
@@ -236,6 +238,7 @@ const copy = {
         nav: {
             features: "Features",
             demoGuide: "Demo",
+            blog: "Blog",
             value: "Value",
             ai: "AI",
             contact: "Contact",
@@ -429,6 +432,7 @@ const copy = {
             legal: "Legal Notice",
             privacy: "Privacy Policy",
             developers: "Developers",
+            blog: "Blog",
         },
     },
 };
@@ -702,6 +706,12 @@ export default function GenosLandingPage() {
                                 to="/demo-guide"
                             >
                                 {t.nav.demoGuide}
+                            </Link>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/blog"
+                            >
+                                {t.nav.blog}
                             </Link>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
@@ -1305,6 +1315,12 @@ export default function GenosLandingPage() {
                                 to="/plans"
                             >
                                 {t.nav.plans}
+                            </Link>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/blog"
+                            >
+                                {t.footer.blog}
                             </Link>
                             <Link
                                 className="transition hover:text-violet-700 dark:hover:text-white"

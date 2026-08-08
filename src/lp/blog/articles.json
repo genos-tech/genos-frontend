@@ -1,0 +1,99 @@
+[
+    {
+        "slug": "ai-can-search-your-tools",
+        "source": "MEDIUM_RETRIEVAL_ISNT_UNDERSTANDING.md",
+        "bodyHeading": "## Article body",
+        "title": "AI Can Search Your Tools. It Still Can't Understand Your Work.",
+        "excerpt": "Retrieval finds fragments. Understanding requires the relationships between discussions, decisions, documents, and tasks.",
+        "language": "en",
+        "category": "Product thinking",
+        "publishedAt": "2026-08-08",
+        "featured": true
+    },
+    {
+        "slug": "ai-should-ask-before-it-acts",
+        "source": "MEDIUM_AI_SHOULD_ASK_BEFORE_IT_ACTS.md",
+        "bodyHeading": "## Article body",
+        "title": "The Best AI Coworker Knows When to Stop and Ask",
+        "excerpt": "An agent that changes shared work should make its interpretation inspectable before it acts.",
+        "language": "en",
+        "category": "AI product design",
+        "publishedAt": "2026-08-08",
+        "featured": true
+    },
+    {
+        "slug": "ai-answers-need-receipts",
+        "source": "MEDIUM_AI_ANSWERS_NEED_RECEIPTS.md",
+        "bodyHeading": "## Article body",
+        "title": "An AI Answer Without Sources Is Just Another Thing to Verify",
+        "excerpt": "Knowledge workers need a short path from an AI answer back to the evidence behind it.",
+        "language": "en",
+        "category": "AI trust",
+        "publishedAt": "2026-08-08",
+        "featured": true
+    },
+    {
+        "slug": "building-one-connected-workspace",
+        "source": "REDDIT_SIDEPROJECT.md",
+        "bodyHeading": "## Post body",
+        "title": "Why I Built One Workspace for Chat, Docs, and Tasks",
+        "excerpt": "Three subscriptions still could not answer a simple question: why are we doing this task?",
+        "language": "en",
+        "category": "Founder story",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "make-chat-messages-come-back",
+        "source": "REDDIT_PRODUCTIVITY_MESSAGES_COME_BACK.md",
+        "bodyHeading": "## Post body",
+        "stopHeading": "## Optional creator disclosure comment",
+        "title": "Make a Chat Message Come Back at the Right Time",
+        "excerpt": "Saved lists are passive. A message that matters later needs a time, its original context, and a clean completion rule.",
+        "language": "en",
+        "category": "Productivity",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "ai-yjs-collaborative-document",
+        "source": "REDDIT_WEBDEV_AI_YJS_APPROVAL.md",
+        "bodyHeading": "## Post body",
+        "title": "The Subtle Bug in Letting AI Rewrite a Live Yjs Document",
+        "excerpt": "Updating a database row is not enough when a collaborative CRDT document is already open.",
+        "language": "en",
+        "category": "Engineering",
+        "publishedAt": "2026-08-08",
+        "featured": true
+    },
+    {
+        "slug": "building-genos-technical-overview",
+        "source": "SHOW_HN.md",
+        "bodyHeading": "## First comment (post immediately after submitting)",
+        "title": "Building Genos: A Connected Workspace for AI-Readable Context",
+        "excerpt": "The product bet, architecture, stack, and honest limitations behind a solo-built connected workspace.",
+        "language": "en",
+        "category": "Engineering",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "work-agent-approved-task-plan",
+        "source": "SHOW_HN_WORK_AGENT_UPDATE.md",
+        "bodyHeading": "## First comment",
+        "title": "Building a Work Agent That Previews Every Write Before It Runs",
+        "excerpt": "How Genos turns threads into plans, proposes bulk task changes, and updates collaborative notes with explicit approval.",
+        "language": "en",
+        "category": "Engineering",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "relational-search-after-hybrid-retrieval",
+        "source": "HN_GRAPHRAG_TECHNICAL_SUBMISSION.md",
+        "bodyHeading": "## Article body",
+        "stopHeading": "## Suggested first comment",
+        "title": "Why Embeddings Could Not Find the Task Downstream of a Decision",
+        "excerpt": "Adding bounded dependency-graph traversal after hybrid retrieval for questions text similarity cannot answer.",
+        "language": "en",
+        "category": "Search engineering",
+        "publishedAt": "2026-08-08",
+        "featured": true
+    }
+]

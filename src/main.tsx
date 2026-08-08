@@ -35,6 +35,8 @@ import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 // an acceptable price here because app sessions vastly outnumber
 // marketing hits — but the real fix for /home is a separate Vite entry
 // so it stops downloading the app shell at all. See the PR for that.
+const GenosBlogArticlePage = lazy(() => import("./lp/BlogArticlePage"));
+const GenosBlogPage = lazy(() => import("./lp/BlogPage"));
 const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
 const GenosDevelopersPage = lazy(() => import("./lp/DevelopersPage"));
 const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
@@ -110,6 +112,12 @@ const tree = (
                 page without signing in: renders its own I18nProvider and reads
                 the public billing/plans endpoint (no auth stack, no guards). */}
             <Route element={publicPage(GenosPlansPage)} path="/plans" />
+
+            {/* English marketing / engineering blog. Snapshots live under
+                src/lp/blog/; sync from genos-docs/marketing via blog:sync.
+                Japanese platform drafts are intentionally not published here. */}
+            <Route element={publicPage(GenosBlogPage)} path="/blog" />
+            <Route element={publicPage(GenosBlogArticlePage)} path="/blog/:slug" />
 
             {/* 特定商取引法に基づく表記 — the legal disclosure Japanese law
                 requires of paid online services, incl. the cancellation /
