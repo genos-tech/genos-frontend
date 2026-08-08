@@ -334,6 +334,18 @@ export const settings = {
         styleBubble: "Bubble",
         styleCompact: "Compact",
     },
+    sidebar: {
+        heading: "Sidebar",
+        description:
+            "Choose which entries appear in the left sidebar. Genos is always shown. Syncs across your devices.",
+        items: {
+            inbox: "Inbox",
+            chats: "Chats",
+            tasks: "Tasks",
+            notes: "Notes",
+            todo: "To-Do",
+        },
+    },
     quickReactions: {
         heading: "Quick reactions",
         description:
@@ -461,6 +473,7 @@ export const settings = {
                 meetClipboard: "Copy a fresh Meet link to clipboard",
                 openHistory: "Open history",
                 openTaskDiagram: "Open task graph for the previewed task",
+                openTodo: "Open the To-Do list",
                 cycle: "Cycle through services",
             },
             cycleCombo: {

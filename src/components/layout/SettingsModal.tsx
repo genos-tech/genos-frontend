@@ -21,6 +21,7 @@ import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import TerminalRoundedIcon from "@mui/icons-material/TerminalRounded";
+import ViewSidebarRoundedIcon from "@mui/icons-material/ViewSidebarRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import {
@@ -67,6 +68,11 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
 import { useQuickAddRequiredFieldsPreference } from "../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { useQuickReactionsPreference } from "../../hooks/common/useQuickReactionsPreference";
+import {
+    HIDEABLE_SIDEBAR_ITEMS,
+    SidebarItemKey,
+    useSidebarVisibility,
+} from "../../hooks/common/useSidebarVisibility";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
@@ -372,6 +378,52 @@ const MessageLayoutSection = () => {
                         </Stack>
                     </Option>
                 </Select>
+            </Stack>
+        </Sheet>
+    );
+};
+
+/**
+ * Settings → General → Sidebar: toggle which entries appear in the left
+ * sidebar. Genos is deliberately absent — it's the AI entry point and is
+ * always shown, so there's no switch that could hide it. Backed by the
+ * cross-device `ui_settings` store (see `useSidebarVisibility`), so the
+ * choice follows the user to another device.
+ */
+const SidebarSection = () => {
+    const { loading, isVisible, setVisible } = useSidebarVisibility();
+    const { t } = useTranslation();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <ViewSidebarRoundedIcon />
+                <Typography level="title-md">{t.settings.sidebar.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.sidebar.description}
+            </Typography>
+
+            <Stack spacing={1.5}>
+                {HIDEABLE_SIDEBAR_ITEMS.map((key: SidebarItemKey) => (
+                    <Stack
+                        key={key}
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={2}
+                    >
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography level="title-sm">
+                                {t.settings.sidebar.items[key]}
+                            </Typography>
+                        </Box>
+                        <Switch
+                            checked={isVisible(key)}
+                            disabled={loading}
+                            onChange={(e) => setVisible(key, e.target.checked)}
+                        />
+                    </Stack>
+                ))}
             </Stack>
         </Sheet>
     );
@@ -1428,6 +1480,10 @@ const KeyboardShortcutsSection = () => {
                     combo: [...modifierKeys, "G"],
                 },
                 {
+                    label: t.settings.shortcuts.global.rows.openTodo,
+                    combo: [...modifierKeys, "O"],
+                },
+                {
                     label: t.settings.shortcuts.global.rows.cycle,
                     combo: [
                         t.settings.shortcuts.global.cycleCombo.hold,
@@ -1751,6 +1807,7 @@ export const SettingsModal = ({
                         <Stack spacing={2}>
                             <AppearanceSection />
                             <LanguageSection />
+                            <SidebarSection />
                             <PrivacySection />
                         </Stack>
                     </TabPanel>

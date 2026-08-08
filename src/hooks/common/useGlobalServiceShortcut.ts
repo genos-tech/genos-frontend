@@ -96,6 +96,13 @@ export type GlobalServiceShortcutOptions = {
      * just dispatches the keypress.
      */
     onOpenTaskDiagram?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+O` (mac) / `Ctrl+Alt+O` (other). Opens the user's
+     * ToDo pane (a sub-pane of the self-DM chat). The handler owns
+     * resolving the self-DM, navigating to it and revealing the pane; this
+     * hook just dispatches the keypress.
+     */
+    onOpenTodo?: () => void;
 };
 
 /**
@@ -123,6 +130,7 @@ export type GlobalServiceShortcutOptions = {
  *   - `M` -> generate a Meet link and copy to clipboard (via `onQuickMeetClipboard`).
  *   - `H` -> toggle the global History modal (via `onOpenHistory`).
  *   - `G` -> open the task graph for the current preview task (via `onOpenTaskDiagram`).
+ *   - `O` -> open the ToDo pane (via `onOpenTodo`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  *   - Each letter is wired through a callback so this hook stays free of
@@ -241,6 +249,12 @@ export const useGlobalServiceShortcut = (
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
                     optionsRef.current.onOpenTaskDiagram();
+                    return;
+                }
+                if (key === "o" && optionsRef.current?.onOpenTodo) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onOpenTodo();
                     return;
                 }
             }
