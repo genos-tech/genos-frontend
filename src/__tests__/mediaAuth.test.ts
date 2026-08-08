@@ -34,6 +34,11 @@ const mockFetchOk = (bytes = 4) =>
     })) as unknown as typeof fetch;
 
 beforeEach(() => {
+    // `isProtectedMediaUrl` gates on our own media origin, read from this
+    // env at call time (production bakes it in). Point it at the same API
+    // host the fixtures use so an `${API}/media/...` URL reads as ours and a
+    // third-party CDN URL does not. `vi.unstubAllEnvs` in afterEach clears it.
+    vi.stubEnv("VITE_MEDIA_ROOT_DJANGO", `${API}/media`);
     setMediaAccessToken(null);
     clearMediaCache();
     vi.stubGlobal(
@@ -47,6 +52,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
 });
 
@@ -77,6 +83,26 @@ describe("isProtectedMediaUrl", () => {
         expect(isProtectedMediaUrl(`${API}/api/v3/channels/`)).toBe(false);
         expect(isProtectedMediaUrl(`${API}/media/`)).toBe(false);
         expect(isProtectedMediaUrl("")).toBe(false);
+    });
+
+    it("leaves third-party CDN URLs under /media/ alone", () => {
+        // A Giphy insert is a public CDN URL that happens to sit under
+        // `/media/`: `https://media4.giphy.com/media/<id>/giphy.gif`.
+        // Path-only matching mistook it for ours and fetched it with the
+        // session token, which leaks the credential and trips the page CSP
+        // `connect-src` (throwing a console error on every GIF render). Only
+        // our own media origin is protected — anything else falls through to
+        // the browser's own load.
+        //
+        // Holds only when `VITE_MEDIA_ROOT_DJANGO` (or `VITE_DJANGO_URL`) is
+        // set to our origin — stubbed to `${API}/media` in beforeEach,
+        // matching how production bakes it in.
+        expect(
+            isProtectedMediaUrl(
+                "https://media4.giphy.com/media/v1.abc/WoYwgrfZP4yw8/giphy.gif?cid=x&ct=g"
+            )
+        ).toBe(false);
+        expect(isProtectedMediaUrl("https://media.tenor.com/media/xyz/anim.gif")).toBe(false);
     });
 });
 
