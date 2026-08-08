@@ -64,6 +64,7 @@ import {
     useGMProfileImageVersion,
 } from "../../../../utils/gmProfileImageVersion";
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
+import { withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { setGMMemberRole } from "../../services/setGMMemberRole";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 import { ExternalSharesPanel } from "./ExternalSharesPanel";
@@ -242,9 +243,17 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         return true;
     };
 
+    // Deleted accounts are anonymised, not removed, so they still ride in
+    // on the member snapshot — drop them before anything renders or lists
+    // them.
+    const visibleMembers = useMemo(
+        () => withoutDeletedUsers(gmProfile?.gmMembers ?? []),
+        [gmProfile?.gmMembers]
+    );
+
     const transferCandidates = useMemo(
         () =>
-            (gmProfile?.gmMembers ?? [])
+            visibleMembers
                 .filter((m) => m.userId !== myself.userId)
                 .map((m) => ({
                     userId: m.userId,
@@ -252,7 +261,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                     userEmail: m.userEmail,
                     avatarImgPath: m.avatarImgPath,
                 })),
-        [gmProfile?.gmMembers, myself.userId]
+        [visibleMembers, myself.userId]
     );
 
     // Add-teammates flow. Open to ANY GM member, not just the owner
@@ -298,17 +307,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
     // Filter members based on search query
     const filteredMembers = useMemo(() => {
-        if (!gmProfile?.gmMembers) return [];
         if (!memberSearchQuery.trim()) {
-            return gmProfile.gmMembers;
+            return visibleMembers;
         }
         const query = memberSearchQuery.toLowerCase();
-        return gmProfile.gmMembers.filter(
+        return visibleMembers.filter(
             (member) =>
                 member.userName.toLowerCase().includes(query) ||
                 member.userEmail.toLowerCase().includes(query)
         );
-    }, [gmProfile?.gmMembers, memberSearchQuery]);
+    }, [visibleMembers, memberSearchQuery]);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -947,9 +955,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                     {
                                                                         filtered:
                                                                             filteredMembers.length,
-                                                                        total:
-                                                                            gmProfile?.gmMembers
-                                                                                ?.length || 0,
+                                                                        total: visibleMembers.length,
                                                                     }
                                                                 )}
                                                             </FormLabel>

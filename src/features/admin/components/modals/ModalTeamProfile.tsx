@@ -48,6 +48,7 @@ import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
+import { withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { leaveTeam } from "../../services/leaveTeam";
 import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
@@ -202,11 +203,18 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
         return ok;
     };
 
+    // Deleted accounts are anonymised, not removed, so they still ride in
+    // on the roster — drop them before anything renders or lists them.
+    const visibleMembers = useMemo(
+        () => withoutDeletedUsers(teamProfile.teamMembers),
+        [teamProfile.teamMembers]
+    );
+
     // Members the owner can transfer ownership to: everyone except
     // themselves. Empty when the team has only the owner.
     const transferCandidates = useMemo(
         () =>
-            teamProfile.teamMembers
+            visibleMembers
                 .filter((m) => m.userId !== myself.userId)
                 .map((m) => ({
                     userId: m.userId,
@@ -214,7 +222,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                     userEmail: m.userEmail,
                     avatarImgPath: m.avatarImgPath,
                 })),
-        [teamProfile.teamMembers, myself.userId]
+        [visibleMembers, myself.userId]
     );
 
     const handleLeaveTeam = async () => {
@@ -233,15 +241,15 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // Filter members based on search query
     const filteredMembers = useMemo(() => {
         if (!memberSearchQuery.trim()) {
-            return teamProfile.teamMembers;
+            return visibleMembers;
         }
         const query = memberSearchQuery.toLowerCase();
-        return teamProfile.teamMembers.filter(
+        return visibleMembers.filter(
             (member) =>
                 member.userName.toLowerCase().includes(query) ||
                 member.userEmail.toLowerCase().includes(query)
         );
-    }, [teamProfile.teamMembers, memberSearchQuery]);
+    }, [visibleMembers, memberSearchQuery]);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -903,7 +911,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 />
                                             </FormControl>
 
-                                            {teamProfile.teamMembers.length > 0 && (
+                                            {visibleMembers.length > 0 && (
                                                 // The member list is a SIBLING of the
                                                 // FormControl, not a child. Joy allows only one
                                                 // control component per FormControl, and the
@@ -941,8 +949,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 {fmt(t.admin.teamProfile.members, {
                                                                     filtered:
                                                                         filteredMembers.length,
-                                                                    total: teamProfile.teamMembers
-                                                                        .length,
+                                                                    total: visibleMembers.length,
                                                                 })}
                                                             </FormLabel>
                                                             <Input

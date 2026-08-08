@@ -61,6 +61,7 @@ import { ProjectLabelProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
+import { withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
@@ -275,9 +276,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         return ok;
     };
 
+    // Deleted accounts are anonymised, not removed, so they still ride in
+    // on the roster — drop them before anything renders or lists them.
+    const visibleMembers = useMemo(
+        () => withoutDeletedUsers(projectProfile?.projectMembers ?? []),
+        [projectProfile?.projectMembers]
+    );
+
     const transferCandidates = useMemo(
         () =>
-            (projectProfile?.projectMembers ?? [])
+            visibleMembers
                 .filter((m) => m.userId !== myself.userId)
                 .map((m) => ({
                     userId: m.userId,
@@ -285,7 +293,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     userEmail: m.userEmail,
                     avatarImgPath: m.avatarImgPath,
                 })),
-        [projectProfile?.projectMembers, myself.userId]
+        [visibleMembers, myself.userId]
     );
 
     const handleLeaveProject = async () => {
@@ -354,17 +362,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     // Filter members based on search query
     const filteredMembers = useMemo(() => {
-        if (!projectProfile?.projectMembers) return [];
         if (!memberSearchQuery.trim()) {
-            return projectProfile.projectMembers;
+            return visibleMembers;
         }
         const query = memberSearchQuery.toLowerCase();
-        return projectProfile.projectMembers.filter(
+        return visibleMembers.filter(
             (member) =>
                 member.userName.toLowerCase().includes(query) ||
                 member.userEmail.toLowerCase().includes(query)
         );
-    }, [projectProfile?.projectMembers, memberSearchQuery]);
+    }, [visibleMembers, memberSearchQuery]);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -1012,10 +1019,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     {
                                                                         filtered:
                                                                             filteredMembers.length,
-                                                                        total:
-                                                                            projectProfile
-                                                                                ?.projectMembers
-                                                                                ?.length || 0,
+                                                                        total: visibleMembers.length,
                                                                     }
                                                                 )}
                                                             </FormLabel>

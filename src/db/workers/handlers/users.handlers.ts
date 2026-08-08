@@ -4,6 +4,7 @@
 import { loadTeamMembers } from "../../../features/admin/services/loadTeamMembers";
 import type { UserProps } from "../../../types/admin";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { isDeletedUser } from "../../../utils/teamRoster";
 import { UserRepository } from "../../repositories";
 import { UserService } from "../../services";
 import type { UsersRequests } from "../contracts";
@@ -86,7 +87,11 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
                 // behavior.
                 const toUpsert: UserProps[] = [];
                 for (const m of members) {
-                    if (m.isDeleted) {
+                    // Evict on the incremental tombstone, and also when a
+                    // row arrives already anonymised (`Deleted user` /
+                    // `@deleted.invalid`) — a dead account should never
+                    // reach the cache regardless of which signal carries it.
+                    if (m.isDeleted || isDeletedUser(m)) {
                         await userRepo.delete(m.userId);
                     } else {
                         const { isDeleted: _ignored, ...rest } = m;
@@ -96,7 +101,21 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
                 for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
                     await userRepo.batchInsert(toUpsert.slice(i, i + BATCH_SIZE));
                 }
-                void hadCheckpoint;
+                // A full load is an authoritative live snapshot — the
+                // server omits deleted users from it entirely, so a row
+                // anonymised AFTER it was last cached never gets an
+                // eviction tombstone and would otherwise linger forever.
+                // Sweep those ghosts here. Only anonymised (dead) rows are
+                // dropped, so the cross-team live entries the store is kept
+                // un-wiped to preserve are untouched.
+                if (!hadCheckpoint) {
+                    const cached = await userRepo.getAllUsers();
+                    for (const u of cached) {
+                        if (isDeletedUser(u)) {
+                            await userRepo.delete(u.userId);
+                        }
+                    }
+                }
             },
         });
         return await userService.getTeamMembers(myself.teamId);

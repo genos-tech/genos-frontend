@@ -62,6 +62,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { isDeletedUser } from "../../../../utils/teamRoster";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
@@ -803,6 +804,10 @@ export const TaskHomeContent = ({
         >();
         for (const t of effectiveTasks) {
             if (!t.assigneeId || String(t.assigneeId) === String(myself.userId)) continue;
+            // A deleted assignee is anonymised, not unassigned — it arrives
+            // named "Deleted user" with a `@deleted.invalid` email. Skip it
+            // so gone people don't populate the member picker.
+            if (isDeletedUser({ name: t.assigneeName, email: t.assigneeEmail })) continue;
             const key = String(t.assigneeId);
             const entry = map.get(key) ?? {
                 id: key,
