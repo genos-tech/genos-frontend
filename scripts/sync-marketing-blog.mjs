@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as prettier from "prettier";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = join(root, "src/lp/blog/articles.json");
@@ -58,13 +59,19 @@ for (const article of manifest) {
 }
 
 await mkdir(outputDir, { recursive: true });
+const prettierConfig =
+    (await prettier.resolveConfig(join(outputDir, "_generated-article.md"))) ?? {};
 const expectedFiles = new Set();
 let changed = 0;
 
 for (const article of manifest) {
     const sourcePath = join(marketingDir, article.source);
     const outputPath = join(outputDir, `${article.slug}.md`);
-    const generated = extractBody(await readFile(sourcePath, "utf8"), article);
+    const extracted = extractBody(await readFile(sourcePath, "utf8"), article);
+    const generated = await prettier.format(extracted, {
+        ...prettierConfig,
+        filepath: outputPath,
+    });
     expectedFiles.add(`${article.slug}.md`);
 
     let current = "";

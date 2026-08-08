@@ -1,6 +1,5 @@
 <!-- Generated from genos-docs/marketing/HN_CROSS_TEAM_AUTHORIZATION.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-
 The feature sounds like a join table: let team B into one object owned by team A.
 
 The constraints make it less simple:

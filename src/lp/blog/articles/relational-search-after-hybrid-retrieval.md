@@ -1,6 +1,5 @@
 <!-- Generated from genos-docs/marketing/HN_GRAPHRAG_TECHNICAL_SUBMISSION.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-
 Scope first: this is a two-hop walk over explicit task-dependency rows after
 hybrid search. It is not an LLM-generated knowledge graph, and the evaluation
 below is one seeded relational case, not a benchmark.

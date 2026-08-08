@@ -19,7 +19,7 @@ much longer to collect. Yet an unsupported answer creates a second task: verify
 what the assistant just said.
 
 That task is often harder than the original search. Now the reader must locate
-the underlying material *and* work out which pieces the model used, which ones it
+the underlying material _and_ work out which pieces the model used, which ones it
 ignored, and whether its summary blended an old plan with a current one.
 
 The search did not disappear. It moved to the end, where the answer's fluency can

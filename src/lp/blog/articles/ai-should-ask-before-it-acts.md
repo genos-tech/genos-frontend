@@ -109,7 +109,7 @@ reasons to pretend there is no boundary.
 
 ### Evidence belongs inside the preview
 
-A proposal should show not only *what* will change, but enough of *why* to
+A proposal should show not only _what_ will change, but enough of _why_ to
 inspect the decision.
 
 If a deadline moves because another task blocks it, the dependency should be

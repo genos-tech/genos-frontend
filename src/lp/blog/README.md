@@ -25,5 +25,7 @@ npm run blog:sync
 4. Commit `articles.json` and the new `articles/<slug>.md`.
 
 `npm run blog:check` fails if generated snapshots are stale.
+The sync script formats generated Markdown with the frontend's Prettier config,
+so `blog:sync` and the repository-wide `prettier --check .` stay compatible.
 
 Deploy never reads `genos-docs`; only the snapshots in this folder ship.
