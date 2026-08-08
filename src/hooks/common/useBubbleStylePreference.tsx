@@ -1,4 +1,6 @@
-import { createContext, ReactNode, useCallback, useContext, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+
+import { useUiSettings } from "./useUiSettings";
 
 /**
  * Bubble layout preference: chooses between the WhatsApp/Teams-style
@@ -36,12 +38,20 @@ const DEFAULT_STYLE: BubbleStyle = "compact";
 // context/AuthContext.tsx (a PRESERVE list — an unlisted key is wiped
 // when a different user signs in on the same device).
 const STORAGE_KEY = "genos-bubble-style-preference-v2";
+// Key inside the cross-device `ui_settings` store. As with theme,
+// localStorage stays the synchronous first-paint source; the server value
+// is adopted once loaded so the choice follows the user across devices.
+const UI_SETTINGS_KEY = "bubbleStyle";
 
-const readPreference = (): BubbleStyle => {
-    if (typeof window === "undefined") return DEFAULT_STYLE;
+const isBubbleStyle = (v: unknown): v is BubbleStyle => v === "bubble" || v === "compact";
+
+const readStored = (): BubbleStyle | null => {
+    if (typeof window === "undefined") return null;
     const v = window.localStorage.getItem(STORAGE_KEY);
-    return v === "bubble" || v === "compact" ? v : DEFAULT_STYLE;
+    return isBubbleStyle(v) ? v : null;
 };
+
+const readPreference = (): BubbleStyle => readStored() ?? DEFAULT_STYLE;
 
 interface BubbleStylePreferenceContextValue {
     style: BubbleStyle;
@@ -51,22 +61,53 @@ interface BubbleStylePreferenceContextValue {
 const BubbleStylePreferenceContext = createContext<BubbleStylePreferenceContextValue | null>(null);
 
 export const BubbleStylePreferenceProvider = ({ children }: { children: ReactNode }) => {
+    const { loaded, get, set } = useUiSettings();
     const [style, setStyleState] = useState<BubbleStyle>(readPreference);
+
+    // Reconcile with the cross-device store once loaded. Same one-shot
+    // adopt-on-load as theme, but preserving this hook's "never persist
+    // the default" invariant: we only migrate a value UP to the server
+    // when this device has an EXPLICIT stored pick (readStored non-null),
+    // never the bare default.
+    useEffect(() => {
+        if (!loaded) return;
+        const synced = get<BubbleStyle | null>(UI_SETTINGS_KEY, null);
+        if (isBubbleStyle(synced)) {
+            setStyleState((prev) => (prev === synced ? prev : synced));
+            if (typeof window !== "undefined") {
+                try {
+                    window.localStorage.setItem(STORAGE_KEY, synced);
+                } catch {
+                    /* private mode / quota — ignore */
+                }
+            }
+        } else {
+            const stored = readStored();
+            if (stored) set(UI_SETTINGS_KEY, stored);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loaded]);
 
     // Write on the explicit pick only — NOT in an effect keyed on
     // `style`. An effect fires on mount too, which would persist the
     // default and pin every user to whatever the default was on their
     // first load (exactly how the v1 key became un-defaultable).
-    const setStyle = useCallback((s: BubbleStyle) => {
-        setStyleState(s);
-        if (typeof window === "undefined") return;
-        try {
-            window.localStorage.setItem(STORAGE_KEY, s);
-        } catch {
-            // Private mode / quota — ignore. The choice still applies
-            // for this session; it just won't survive a reload.
-        }
-    }, []);
+    const setStyle = useCallback(
+        (s: BubbleStyle) => {
+            setStyleState(s);
+            if (typeof window !== "undefined") {
+                try {
+                    window.localStorage.setItem(STORAGE_KEY, s);
+                } catch {
+                    // Private mode / quota — ignore. The choice still applies
+                    // for this session; it just won't survive a reload.
+                }
+            }
+            // Durable per-account copy so the choice syncs across devices.
+            set(UI_SETTINGS_KEY, s);
+        },
+        [set]
+    );
 
     return (
         <BubbleStylePreferenceContext.Provider value={{ style, setStyle }}>
