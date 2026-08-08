@@ -129,6 +129,15 @@ export const InstallBanner = () => {
                     py: 1,
                     borderRadius: "lg",
                     boxShadow: "md",
+                    // The banner floats over page content, so it must be
+                    // opaque. The `soft` primary `softBg` is a translucent rgba
+                    // (0.18 alpha in dark mode), which lets content behind show
+                    // through. Layer that tint over an opaque surface so the
+                    // banner stays fully opaque in both light and dark themes
+                    // while keeping its look.
+                    backgroundColor: "background.surface",
+                    backgroundImage:
+                        "linear-gradient(var(--joy-palette-primary-softBg), var(--joy-palette-primary-softBg))",
                 }}
             >
                 <Stack alignItems="center" direction="row" spacing={1.5}>
