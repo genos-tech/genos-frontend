@@ -1,59 +1,46 @@
 <!-- Generated from genos-docs/marketing/REDDIT_WEBDEV_AI_YJS_APPROVAL.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-I'm building a solo project with collaborative notes (BlockNote +
-Yjs/Hocuspocus) and recently added an AI action that can refine an existing note.
-The obvious implementation was wrong in a way that is easy to miss.
+Disclosure: this comes from Genos, the web-only MVP I am building. The editor uses
+BlockNote with Yjs/Hocuspocus; Django stores the application-side note data.
 
-The simplified flow looked like this:
+I added an AI action that proposes a replacement note body and waits for explicit
+approval. The first write path looked reasonable:
 
-1. Agent fetches the saved note.
-2. Agent proposes a rewritten body.
-3. User reviews it and clicks Approve.
-4. Backend updates the note row.
+1. Read the persisted note.
+2. Generate a proposed body.
+3. Show the complete body for review.
+4. On approval, update the database.
 
-That works perfectly if nobody has the note open.
+The bug is that an open Yjs document is live state, not just another view of that
+row. A database-only success can leave connected clients on the old document. A
+later collaborative save can then win over the approved rewrite.
 
-If a collaborator has the Yjs document open, though, the live collaborative state
-is another source of truth. Updating only the REST/database representation can show
-success while the open Yjs document still contains the old body. A later
-collaborative update can then overwrite the AI change, or different clients can
-temporarily see different documents.
+The implemented path now uses approval as the mutation boundary:
 
-So the write path now treats approval as a coordinated update:
+- generation is read-only;
+- the full proposed body is visible before approval;
+- approval updates the persisted representation and sends the body into the live
+  collaborative document;
+- connected clients receive the Yjs update;
+- the rewrite gets a version-history entry.
 
-- The AI is read-only while preparing the rewrite.
-- The UI renders the entire proposed note body in an approval card.
-- Nothing changes until the user approves.
-- On approval, the saved representation is updated **and** the new body is pushed
-  into the live collaborative document.
-- Open clients receive the Yjs update, so two tabs converge without reload.
-- A version-history entry is created so the rewrite can be restored.
+This fixes the obvious split-brain case, but it does not make a database write and a
+collaboration-service write one atomic transaction. It also treats a whole-note AI
+rewrite as a replacement, which is a poor merge primitive if a person is editing
+the same region concurrently.
 
-The part I like is that the safety model and synchronization model meet at the same
-boundary. The approval step isn't just UX. It's the point where an AI proposal
-becomes a real collaborative mutation.
+Stack: React 19, BlockNote, Yjs/Hocuspocus, Django/DRF, and streamed agent events
+over NDJSON.
 
-Stack, for context:
+For anyone running server-originated writes into a CRDT:
 
-- React 19 + BlockNote on the client
-- Yjs/Hocuspocus collaboration service
-- Django/DRF for persisted app data and the agent endpoint
-- streamed agent events over NDJSON
+**Where is your authoritative commit point, and what exact failure behavior do you
+choose when persistence succeeds but the collaboration service is unavailable?**
 
-Current compromise: if the collaboration service is unavailable, the REST body can
-still be saved, but an already-open editor won't receive the live update until it
-reloads. I'm still deciding whether the safer behavior is to fail the whole action
-instead. Atomicity across the database and the collaboration service would require
-more machinery than the MVP currently has.
+Would you reject before either write, compensate after a partial write, make the
+Yjs document authoritative and derive the stored body, or model the AI proposal as
+smaller CRDT operations? I would especially value examples where concurrent human
+edits changed the answer.
 
-For people who have combined server-side AI writes with CRDT editors:
-
-- Do you reject the write when the collaboration service is down?
-- Do you model the CRDT as the only source of truth and derive the stored body?
-- How do you represent an AI rewrite so it merges predictably with concurrent human
-  edits rather than looking like one giant replacement?
-
-Disclosure: this is from my product Genos, a web-only MVP that combines chat,
-tasks, notes, and an approval-gated work agent. The no-signup demo is at
-https://genosai.dev, but I'm mainly posting because I'd like criticism of the
-consistency trade-off.
+If subreddit rules permit one project link, the no-login demo is
+<https://genosai.dev>. The consistency design is what I am looking to have challenged.

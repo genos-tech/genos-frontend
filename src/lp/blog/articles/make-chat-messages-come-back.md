@@ -1,42 +1,37 @@
 <!-- Generated from genos-docs/marketing/REDDIT_PRODUCTIVITY_MESSAGES_COME_BACK.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-I keep running into a small productivity problem that feels more important than it
-looks.
+Disclosure: I am building a workspace called Genos, and I recently shipped this
+workflow in it. I am asking because I am not convinced I chose the right
+abstraction.
 
-Someone sends a message I can't act on now:
+The case is simple: a message needs action later. Saving or flagging it preserves
+the message, but the list is passive. Turning it into a task gives it a due date,
+but now there are two objects and the task may lose the surrounding conversation.
 
-- check this after the release;
-- reply when the numbers arrive;
-- revisit this before Monday's meeting;
-- follow up in three hours.
+I treated the reminder as part of the message flag:
 
-Most chat apps let me save or flag it. But a saved list is passive. It only works if
-I remember to go looking at it—which is the exact thing I was trying not to keep in
-my head.
+1. Add a time to the original message.
+2. Keep it visible as a flagged item before the time arrives.
+3. At that time, send Web Push and create an Inbox activity that links back to the
+   message.
+4. If the flag is completed or removed first, cancel the pending reminder.
 
-Copying the message into a task manager works, but then I have two objects to
-maintain. The task often loses the surrounding conversation, and after I finish I
-still have an old saved message sitting around.
+That behavior is shipped. The broader product is still a web-only MVP.
 
-The workflow that makes sense to me is:
+The trade-off I want criticism on: should "remind me about this message" stay a
+message-level action, or should every reminder create a real task with ownership,
+status, and a due date?
 
-1. Put a time directly on the message.
-2. Treat that as a saved/flagged item too, so it has a home before it fires.
-3. Bring the original message back as a notification and inbox item at that time.
-4. If I mark the saved item done early, cancel the reminder automatically.
-5. If I change “tomorrow” to “next week,” replace the old reminder instead of
-   creating two.
+For people who have a system that survives a busy week: what do you use, and where
+does it fail? Also, should a reminder fire while you already have that conversation
+open, or should presence suppress it?
 
-The important part is that the reminder points back to the conversation rather than
-creating an orphaned sentence in another app.
+---
 
-I'm curious how other people handle this today. Do you:
+## Optional reply if someone asks for the product
 
-- trust Slack/Teams saved items;
-- turn messages into tasks;
-- use a bot/reminder command;
-- forward messages to yourself;
-- have a completely different habit?
+Use only if links are allowed:
 
-And do you want reminders to arrive even while the chat app is open, or would that
-feel noisy?
+> I built the workflow in Genos. There is a no-login demo at
+> <https://genosai.dev>. It is a web-only MVP. The relevant behavior is the
+> message flag/reminder flow; no signup is needed to inspect the product.

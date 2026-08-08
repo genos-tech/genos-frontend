@@ -95,5 +95,36 @@
         "category": "Search engineering",
         "publishedAt": "2026-08-08",
         "featured": true
+    },
+    {
+        "slug": "notifications-are-for-what-you-missed",
+        "source": "MEDIUM_NOTIFICATIONS_ARE_FOR_WHAT_YOU_MISSED.md",
+        "bodyHeading": "## Article body",
+        "title": "Notifications Are for What You Missed",
+        "excerpt": "An activity feed should recover what escaped your attention, not repeat events you already watched happen.",
+        "language": "en",
+        "category": "Product design",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "webhooks-built-around-failure",
+        "source": "REDDIT_WEBDEV_WEBHOOK_FAILURES.md",
+        "bodyHeading": "## Post body",
+        "title": "Building Webhooks Around Failure, Not the Happy Path",
+        "excerpt": "Signed payloads are the beginning. Reliable webhooks also need bounded retries, SSRF defenses, contract tests, and an honest outbox boundary.",
+        "language": "en",
+        "category": "Engineering",
+        "publishedAt": "2026-08-08"
+    },
+    {
+        "slug": "cross-team-sharing-authorization",
+        "source": "HN_CROSS_TEAM_AUTHORIZATION.md",
+        "bodyHeading": "## Article body",
+        "stopHeading": "## Suggested first comment",
+        "title": "Cross-Team Sharing Is Authorization Plus Distributed State",
+        "excerpt": "Sharing one object across tenants requires consent, materialized ACLs, discovery, client replicas, and revocation to stay aligned.",
+        "language": "en",
+        "category": "Security engineering",
+        "publishedAt": "2026-08-08"
     }
 ]

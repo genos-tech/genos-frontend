@@ -1,148 +1,145 @@
 <!-- Generated from genos-docs/marketing/MEDIUM_AI_SHOULD_ASK_BEFORE_IT_ACTS.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-Most AI demos are designed around the same moment.
+The instruction looks harmless:
 
-You type one sentence. The cursor moves by itself. Tasks appear, calendars change,
-documents rewrite themselves. Nobody clicks a button. The absence of friction is
-the point.
+> Move the blocked work into next sprint.
 
-It is impressive for thirty seconds.
+An agent finds the matching tasks and acts. A moment later, fourteen cards have
+moved. One belonged to a different project. Two were blocked by a launch that
+cannot slip. Several inherited a due date the agent interpreted from “next
+Friday.”
 
-Then I imagine using it on a real project.
+The interface may call this autonomy. The team experiences it as cleanup.
 
-Did the agent choose the right project? Did it understand that “next Friday” meant
-the launch date, not the internal review? Did it preserve the caveat in the old
-document? Is it about to assign ten tasks to the same person? If I notice a mistake
-after the animation finishes, how much work will it take to undo?
+AI agents are often demonstrated by removing every visible pause. The cursor
+moves, the plan reorganizes itself, and the user watches work happen. That
+fluidity is impressive. It also hides the most important question in the
+interaction:
 
-The problem is not that AI agents can act. Acting is exactly what makes them useful.
-The problem is that most interfaces treat **autonomy as an all-or-nothing setting**:
-either the AI is a chatbot that can do nothing, or it has permission to do
-everything before you can inspect its interpretation.
+**When did the user's request become the system's decision?**
 
-That is the wrong boundary.
+### Interpretation and execution need a boundary
 
-### Reading and writing are different kinds of risk
+Every useful agent interprets. “The blocked work” requires a scope. “Next
+sprint” requires dates. “Move” may imply changing status, milestone, assignee,
+or all three.
 
-If I ask an AI, “What is blocking the launch?”, it should search immediately. It
-should read the relevant tasks, discussions, and notes, then show me what it found.
-Adding a confirmation dialog before every read would be security theater and a
-terrible experience.
+Interpretation is unavoidable. Silent execution is not.
 
-But “Move every blocked task to next sprint” is different. So is:
+There is a meaningful risk difference between asking, “What is blocking the
+launch?” and saying, “Move every blocker into next sprint.” The first request
+can search and synthesize without changing shared state. The second turns the
+agent's interpretation into the team's plan.
 
-- create a milestone from this discussion;
-- reprioritize these tasks based on their dependencies;
-- add this conclusion to the project note;
-- schedule a meeting with these people.
+That suggests a practical default:
 
-Those requests mutate a shared system. A plausible but wrong answer becomes a
-plausible but wrong project plan.
+> Let reads run. Put a pause between interpretation and writes.
 
-The distinction sounds obvious, yet it has a major product consequence: an agent
-needs a **pause point between interpretation and execution**.
+This is not a claim that reads have no security or privacy risk. Access control
+still matters. It is a product rule about user intent: inspecting authorized
+information should not require a parade of confirmation boxes, while mutating
+the workspace should create an opportunity to catch a mistaken interpretation.
 
-It should be allowed to think, search, and prepare. Then it should stop and show the
-proposed change in the shape a human can judge.
+### A confirmation dialog is not the same as informed approval
 
-### “Are you sure?” is not enough
-
-A generic confirmation dialog does not solve this.
+Consider this prompt:
 
 > The AI wants to update 14 tasks. Allow?
 
-That is consent without comprehension. The user knows that something will happen,
-but not whether it is the right thing.
+It reports quantity, not meaning. The user knows that something will happen but
+cannot tell whether the agent selected the right tasks, chose the right fields,
+or preserved important exceptions.
 
-The preview has to match the work:
+A useful preview must resemble the decision being made:
 
-- A proposed project plan should look like a milestone and an indented task tree.
-- A bulk reprioritization should show old values beside new ones, with a reason for
-  each change.
-- A document update should render the proposed document, not expose a JSON payload.
-- A calendar action should show the actual time, attendees, and meeting details.
+- A project plan should appear as a milestone, tasks, subtasks, and
+  dependencies.
+- A bulk update should show old values beside proposed values.
+- A note edit should render the proposed body, not a serialized tool payload.
+- A meeting should show its actual time, timezone, attendees, and title.
 
-The difficult design work is not adding an Approve button. It is making the pending
-action legible enough that approval means something.
+The rule is broader than AI: **review should happen at the level of the user's
+intent, not the level of the API call.**
 
-### The agent should do the tedious part before asking
+An “Approve” button attached to an opaque operation merely transfers
+responsibility to the person clicking it. It does not give them control.
 
-There is an opposite failure mode: requiring one confirmation for every tiny step.
+### Ask once, at the right level
 
-Suppose a discussion needs to become one milestone, six tasks, four subtasks, and
-three dependency links. Eleven separate approval dialogs technically keep the human
-in control. They also make it increasingly likely that the human will stop reading
-after the first few clicks.
+Approval can fail in the opposite direction too.
 
-A better pattern is:
+Suppose a conversation needs to become one milestone, six tasks, four subtasks,
+and three dependency links. Asking for permission after every object is safer
+only on paper. By the seventh dialog, the interface has trained the user to
+click without reading.
 
-1. Read the discussion.
-2. Build the complete proposal without changing anything.
-3. Present the proposal as one coherent plan.
-4. Let the user approve or reject the whole transaction.
+The agent should do the tedious work before it asks:
 
-The agent does the synthesis. The human makes the decision. One approval can still
-be safe when the preview exposes the entire change.
+1. Inspect the relevant material.
+2. Assemble a complete proposal without writing it.
+3. Present the result as one coherent change.
+4. Let the user approve or reject that change.
 
-This is not a compromise between autonomy and control. It is a division of labor.
+This preserves the useful part of automation—the synthesis—while keeping the
+commit point visible. One approval can govern many writes when the preview
+makes the full transaction legible.
 
-### Trust also requires evidence
+The transaction should also be stable. If the proposed plan changes after the
+preview, approval no longer refers to what the user saw. If only half the batch
+succeeds, the product should not imply that the approved outcome was applied
+cleanly. Approval design eventually becomes execution design.
 
-Approval handles the future: _what is about to change?_
+### Reversibility is not permission
 
-Citations handle the past: _why is the agent proposing this?_
+A common response is that the agent can act first because the user can undo the
+result.
 
-If an agent recommends moving a deadline because another task blocks it, I should
-be able to open that dependency. If it creates a plan from a chat thread, I should
-be able to return to the original discussion. If it rewrites a note, I should see
-the current note it read.
+Undo is valuable, but it solves a different problem. It helps after a wrong
+change has entered the system. By then it may have triggered notifications,
+changed another person's queue, or influenced a second automation. Some writes
+are not fully reversible at all.
 
-Without sources, the user reviews polished output. With sources, the user can
-review the agent's reasoning against the actual work.
+The right question is not “Can we repair this?” It is “Was this interpretation
+safe enough to make real without review?”
 
-That makes citations more than an answer-quality feature. They are part of the
-control surface for action.
+The threshold can vary. Renaming a private draft is not the same as deleting a
+shared project. A mature product may allow policies, trusted scopes, or
+pre-approved low-risk actions. But those are refinements of the boundary, not
+reasons to pretend there is no boundary.
 
-### This became a core rule in the product I built
+### Evidence belongs inside the preview
 
-Full disclosure: I am building **Genos**, a workspace that combines chat, tasks,
-and collaborative notes with an AI agent.
+A proposal should show not only *what* will change, but enough of *why* to
+inspect the decision.
 
-While building its action layer, I settled on a simple rule:
+If a deadline moves because another task blocks it, the dependency should be
+openable. If a plan came from a discussion, the preview should identify that
+discussion. Evidence does not guarantee correct reasoning, but it shortens the
+path to finding a bad assumption before it becomes shared state.
 
-> Reads can run. Writes must pause.
+This need not turn the approval screen into a research report. The most
+important evidence can remain close to the proposed change, with deeper detail
+available on demand.
 
-The agent can search the workspace, inspect a task, summarize a thread, or calculate
-project status without interruption. When it wants to create or update something,
-the stream pauses. Genos displays the proposed action, and nothing is written until
-the user approves it.
+### How I applied the rule
 
-For larger jobs, the agent prepares a structured batch. It can turn a discussion
-into a milestone, tasks, subtasks, and dependencies, then present the whole tree for
-one approval. It can suggest a bulk reprioritization as an old-versus-new diff. It
-can draft or refine a collaborative note and show the full proposed body first.
+Full disclosure: I built **Genos**, a browser-based MVP for chat, tasks,
+collaborative notes, and AI-assisted work.
 
-The implementation is not perfectly autonomous. That is deliberate.
+Its action layer follows the rule above. Read tools can run immediately. Write
+tools pause the response and wait for explicit approval. The pending action is
+rendered for review, and the write does not run until the user accepts it.
 
-Genos is still an MVP, and the AI still gets things wrong. A system that admits
-those facts in its interaction model is more useful to me than one that performs
-certainty.
+For compound work, Genos can preview a task plan, a bulk task diff, or a full
+note body as one proposal. The user approves the coherent result rather than
+clicking through every underlying operation.
 
-### Good agents will not feel frictionless
+That does not make the agent infallible. It makes the product acknowledge where
+fallibility becomes consequential.
 
-There will always be pressure to remove one more click. Sometimes that is right.
-Confirmation fatigue is real, and poor previews deserve to be redesigned.
+Genos is solo-built and still an MVP. The demo is available without an account
+at **[genosai.dev](https://genosai.dev)**, with a free plan and no credit card.
 
-But a click is not automatically friction. At the moment a machine is about to
-change shared work, a well-designed pause is information.
-
-The goal should not be an AI that never asks permission. It should be an AI that
-knows exactly when permission matters—and gives you enough context to make the
-decision quickly.
-
-If you want to see the propose–preview–approve pattern in a working MVP, the Genos
-demo is available without signup at **https://genosai.dev**. There is a free plan
-and no credit card is required.
-
-I would also love to hear how other teams draw this boundary. Which actions would
-you let an agent take silently, and which ones should always stop at your desk?
+The best agent is not the one that asks permission least often. It is the one
+that asks at the exact moment a human judgment is more valuable than another
+second of automation—and shows enough for that judgment to be real.

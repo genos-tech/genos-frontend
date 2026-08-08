@@ -1,35 +1,35 @@
 <!-- Generated from genos-docs/marketing/SHOW_HN.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-Solo developer here — I built this over the past year and would love honest
-feedback.
+I built Genos, a web workspace that keeps chat, tasks, and collaborative notes
+together and stores links between them.
 
-The problem: every team I've worked on kept its discussions in Slack, docs in
-Notion, and tasks in Jira. Answering "why are we doing this task?" meant
-archaeology across all three. I tried connecting AI to the tools (MCP makes
-that easy now), and it retrieved plenty but understood little — because the
-relationships (this thread produced that task; this decision obsoleted that
-doc) aren't stored anywhere. They only exist in people's heads. You can't
-retrieve what was never written down.
+Constraints first: it is a solo-built MVP, web-only, and adopting it means moving
+work into another system. It does not reconstruct a complete project graph from
+Slack, Notion, and Jira. The demo is useful for testing the interaction model,
+not evidence that it has been validated across large organizations.
 
-So Genos inverts it: chat, tasks, and collaborative notes live in one
-workspace and link to each other at creation time. The built-in AI answers
-questions across them with links to its sources — it references the stored
-relationships instead of inferring them from embeddings.
+The retrieval problem I wanted to test was this: embeddings can find text about a
+task, but not necessarily the discussion that created it or the task two
+dependency edges downstream. Those facts may exist only as application
+relationships.
 
-Stack: Django 5 + DRF, React 19 + Vite, Flask + Socket.IO for realtime,
-Yjs/Hocuspocus for collaborative notes, OpenSearch hybrid search (BM25 +
-vectors) with graph-based relational recall layered on top. The graph part
-turned out to matter more than tuning the hybrid search — one or two hops of
-explicit links beat similarity search for "why"-shaped questions.
+In Genos, a thread can be linked to a task, tasks carry explicit dependency
+edges, and notes live beside the work they describe. Genos AI searches across
+those objects and streams an answer with clickable citations. The current
+graph-expansion layer is deliberately narrow: it walks task-to-task dependency
+edges, at most two hops by default. It does not yet traverse a general graph of
+chats, notes, projects, and decisions.
 
-Honest limitations: it's an MVP built by one person. The AI is decent but
-still improving. Web-only. And it asks teams to move their chat/tasks/docs
-into one tool, which is a big ask — that's the bet, and I understand the
-skepticism.
+The other boundary is writes. Read tools run immediately. A write pauses the
+agent and renders the proposed task tree, bulk diff, or note body; approve or
+reject happens in a separate request. Approval is currently all-or-nothing, and
+there is no general transaction-level undo across every entity.
 
-The demo needs no signup: https://genosai.dev. Free plan, no credit card.
+Stack: Django 5 + DRF, React 19 + Vite, Flask + Socket.IO, Yjs/Hocuspocus, and
+OpenSearch hybrid retrieval (BM25 + vectors) with bounded dependency expansion.
 
-I'd especially value feedback on (1) whether the connected-context idea holds
-up when you poke at the demo, and (2) what would realistically block a team
-from adopting something like this. Happy to answer anything about the
-architecture too.
+No-login demo: https://genosai.dev. There is a free plan and no card is required.
+
+I would value criticism on two points: is storing relationships at write time
+worth the migration cost, and is a complete preview plus one approval an
+adequate boundary for batch writes?

@@ -1,32 +1,26 @@
 <!-- Generated from genos-docs/marketing/REDDIT_SIDEPROJECT.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-Solo dev here. This started as a personal itch that got completely out of hand.
+Disclosure up front: I built this. I'm the solo developer behind Genos.
 
-Every project I worked on looked the same: the discussion happened in Slack,
-the decision got written down in Notion (sometimes), and the work got tracked
-in Jira. Three subscriptions, and somehow the answer to "why are we even doing
-this task?" lived in none of them. It lived in whoever remembered the thread.
+The problem I am trying to solve is not "search is bad." Search can retrieve a
+message, a note, or a task. It cannot reliably recover a relationship that the
+software never stored: which discussion created this task, or which source
+explains why a decision was made.
 
-The thing that finally broke me: I'd scroll Slack search results for 20
-minutes looking for a decision I _knew_ existed, find half of it, and realize
-the other half was in a doc that had been out of date for a month.
+Genos puts chat, notes, and tasks in one workspace and lets them link to each
+other. Its built-in AI can answer across those three types and return clickable
+links to the sources it used. It can also summarize a thread or note. That is
+the current scope; it is not claiming to reconstruct every relationship
+automatically.
 
-And here's the part that surprised me — connecting AI to these tools doesn't
-really fix it. I tried. The AI can fetch your messages, your docs, your
-tickets. But it can't know _which discussion created which task_, or _which
-decision made which doc obsolete_. Those links only exist in people's heads.
-Retrieval isn't understanding.
+Honest status: it is an MVP, web-only, and the AI still has limitations. There
+is a no-login demo and a free plan without a card:
+<https://genosai.dev>
 
-So I built Genos: chat, docs, and tasks in one workspace, where everything
-belongs to the same project and links to each other. Because the connections
-actually exist in the data, the built-in AI can answer stuff like "why are we
-building this feature?" with links to the original discussion, the spec, and
-the task — instead of guessing.
+The product decision I am least sure about is the big one: is storing the links
+between work objects enough to justify a new workspace, or will most teams
+always prefer separate tools plus integrations?
 
-Honest status: it's an MVP. I built it alone, the AI is still improving, and
-it's web-only for now. There's a demo you can poke at without signing up, and
-a free plan with no credit card: https://genosai.dev
-
-I'd genuinely love brutal feedback — especially from anyone whose team also
-plays "where was that discussed again?" every week. What would make something
-like this actually replace your current stack, and what would stop you?
+If you use separate chat/docs/task tools, what evidence would you need before
+moving any workflow into one product? Please be specific about the deal-breaker;
+"I would never switch" is also useful if you can say why.

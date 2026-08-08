@@ -1,6 +1,11 @@
 <!-- Generated from genos-docs/marketing/HN_GRAPHRAG_TECHNICAL_SUBMISSION.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-I ran into a retrieval failure that no amount of embedding tuning could solve.
+
+Scope first: this is a two-hop walk over explicit task-dependency rows after
+hybrid search. It is not an LLM-generated knowledge graph, and the evaluation
+below is one seeded relational case, not a benchmark.
+
+The failure was simple:
 
 The workspace contained three tasks:
 
@@ -14,12 +19,11 @@ The user asked:
 
 > What is downstream of the framer-motion spike?
 
-Keyword search found the spike. Vector search found the spike. Neither found the
-Accessibility audit.
+BM25 found the spike. Dense retrieval found the spike. Neither had a textual
+reason to return the Accessibility audit.
 
-That was not a search-quality bug. The target task did not mention framer-motion,
-animation, or the spike anywhere in its text. Its relevance existed only in a
-`TaskDependency` table.
+The target task did not mention framer-motion, animation, or the spike. The fact
+that made it relevant existed only in a `TaskDependency` row.
 
 The retrieval index had flattened the workspace into chunks and embeddings. The
 relationship had disappeared.
@@ -43,8 +47,9 @@ But relational questions have a different shape:
 - What is downstream of this decision?
 - Which work depends on the spike?
 
-The answer may be connected without being textually similar. Better embeddings
-cannot recover an edge that was never embedded.
+The answer may be connected without being textually similar. Changing the
+embedding model does not expose a relation the retrieval document does not
+contain.
 
 ## The small GraphRAG layer
 
@@ -59,16 +64,16 @@ BM25 + kNN
   → final result limit
 ```
 
-The implementation is deliberately narrower than systems often described as
-GraphRAG. There is no global community detection or LLM-extracted knowledge graph.
-The graph is the application's existing, explicit task-dependency data.
+The name “GraphRAG” overstates this implementation if read broadly. There is no
+global community detection and no LLM-extracted graph. The graph is the
+application's existing task-dependency table.
 
 For each search:
 
 1. Take a small number of top task results as graph seeds.
 2. Walk `TaskDependency` edges in both directions for at most two hops.
 3. Decay score by hop distance.
-4. Fetch reachable tasks through the same ACL filter as normal search.
+4. Fetch reachable tasks through an ACL-scoped path.
 5. Inject unseen neighbors into the ranked result set with graph provenance.
 
 With source score `s`, per-hop weight `w`, and hop number `h`, a neighbor receives:
@@ -78,7 +83,8 @@ graph_score = s × w^h
 ```
 
 The current default weight is `0.9`: a direct neighbor gets `0.9s`; a two-hop
-neighbor gets `0.81s`. If multiple paths reach the same task, the best score wins.
+neighbor gets `0.81s`. If multiple paths reach the same task, the implementation
+keeps the best score. This is a ranking heuristic, not a calibrated probability.
 
 ## Why the walk starts from lexical anchors
 
@@ -88,9 +94,9 @@ Dense search always returns something. For a vague or nonsense query, its top hi
 may be weak noise. Graph expansion can turn that one accidental match into five
 confident-looking, mutually related results.
 
-So a task currently seeds traversal only when it appeared in the BM25 lane. This is
-a gibberish guard: a real query such as `framer-motion spike` has a lexical anchor;
-random text does not.
+So a task currently seeds traversal only when it appeared in the BM25 lane. This
+is a noise guard: `framer-motion spike` has a lexical anchor; arbitrary text does
+not.
 
 This has a known cost. A strong cross-lingual or purely semantic match cannot seed
 the graph. I added a vector-score threshold as an experiment, but reciprocal-rank
@@ -98,7 +104,8 @@ fusion had flattened the score scale: rank-one noise and a genuine rank-one
 cross-lingual hit looked identical after fusion. The threshold remains off until
 raw vector similarity is carried through the pipeline.
 
-Sometimes leaving a feature disabled is the correct search result.
+The vector-only entry path remains disabled rather than turning every dense
+nearest neighbor into a graph seed.
 
 ## Bounded cost and failure behavior
 
@@ -110,9 +117,9 @@ The walk is a frontier traversal with hard caps:
 - one dependency query per hop;
 - one OpenSearch fetch for all selected neighbors.
 
-The work is bounded regardless of total graph size. The whole expansion is
-best-effort: if graph access fails, search returns the unexpanded results rather
-than failing the request.
+The caps bound expansion work independently of total graph size. They do not prove
+that the added queries are latency-free. Expansion is best-effort: if graph access
+fails, search returns the hybrid results rather than failing the request.
 
 It is also skipped for typeahead. A per-keystroke UI has a tighter latency budget
 than an agent answering a relational question, so graph expansion runs only on the
@@ -139,9 +146,10 @@ The one-hop case required the task directly blocked by the spike. The two-hop ca
 required the downstream Accessibility audit.
 
 At a one-hop maximum, the two-hop target had recall `0.0`. With two hops, it reached
-`1.0` in that case with no regressions in the comparison and one additional bounded
-dependency query. That evidence—not a general belief that deeper graphs are
-better—is why two became the default.
+`1.0` in that case, with no regressions among the cases in that comparison and one
+additional bounded dependency query. This says that the configured traversal
+reached that target. It does not estimate production answer quality or establish
+that two hops is generally optimal.
 
 There is also a deliberately failing cross-lingual graph-entry case. Keeping the
 unsolved case visible is more useful than weakening it until the dashboard turns
@@ -163,13 +171,13 @@ through fusion so a vector-only seed can be admitted without also admitting nois
 
 ## The broader lesson
 
-RAG failures are often treated as ranking problems. Some are data-model problems.
+Some apparent ranking failures are representation failures.
 
 If the answer depends on `A blocks B`, `document X supersedes document Y`, or
 `discussion Z created task A`, flattening everything to text discards the exact
 fact the user is asking about.
 
-Before tuning another embedding model, ask a simpler question:
+Before tuning another embedding model, ask:
 
 > Does the relationship exist anywhere the retriever can see?
 

@@ -1,144 +1,157 @@
 <!-- Generated from genos-docs/marketing/MEDIUM_AI_ANSWERS_NEED_RECEIPTS.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-AI was supposed to save us from searching.
+The answer arrives in seconds:
 
-Instead, it often gives us a new job: verifying the answer.
+> The launch moved because the authentication work is blocked by the mobile
+> redesign.
 
-Ask a workplace assistant why a deadline moved and it may produce a beautifully
-written paragraph. It mentions a dependency, a customer request, and a decision
-from last month. It sounds right.
+It is concise. It is plausible. It may even be correct.
 
-Now what?
+But the next decision depends on it. Do you move the launch again? Reassign the
+authentication work? Tell someone outside the team?
 
-If the answer matters, I still need to open chat, search for the discussion, find
-the current project document, and confirm that the assistant did not combine an old
-plan with a new decision. The search work did not disappear. It moved to the end,
-where it is harder because I am now checking the AI's interpretation too.
+At that moment, polished prose is not enough. You need a receipt.
 
-This is why “chat with all your company knowledge” is not enough. The useful unit
-is not an answer. It is an **answer with a short, inspectable path back to reality**.
+### AI can move the search burden to the wrong side of the answer
+
+A workplace assistant can save time by reading material that would take a person
+much longer to collect. Yet an unsupported answer creates a second task: verify
+what the assistant just said.
+
+That task is often harder than the original search. Now the reader must locate
+the underlying material *and* work out which pieces the model used, which ones it
+ignored, and whether its summary blended an old plan with a current one.
+
+The search did not disappear. It moved to the end, where the answer's fluency can
+make checking feel optional.
+
+The useful unit is therefore not merely an answer. It is an **answer with a short,
+inspectable path back to the evidence**.
 
 ### Confidence is not provenance
 
-Language models are optimized to produce coherent language. Coherence is valuable,
-but it is not evidence.
+Language models produce coherent language. Coherence is useful, but it does not
+establish where a claim came from.
 
-In ordinary knowledge work, many questions are cheap to get approximately right:
+Compare two questions:
 
-- What are the main themes in this project?
-- What did we discuss about onboarding?
 - What might be blocking the release?
+- Is the release still blocked today?
 
-The dangerous questions differ by only a few words:
+The first invites synthesis. The second asks for a current fact. A response can
+sound equally assured in both cases while requiring very different evidence.
 
-- Which onboarding decision is current?
-- Did we actually approve this scope?
-- Is the release blocked, or was that issue resolved yesterday?
+This is where generic confidence scores are of limited help. “High confidence”
+does not tell the reader whether the assistant found yesterday's resolution or
+stopped at last week's blocker. Provenance does.
 
-For these, a fluent answer can be worse than no answer because it removes the
-healthy discomfort that normally makes us check.
+### A bibliography is not an audit trail
 
-A list of “sources” at the bottom helps, but only partially. If an answer cites six
-long documents and three chat channels, the user has received a bibliography, not
-an audit trail.
+Adding a “Sources” heading at the bottom is a start, but it can still leave most
+of the work to the reader.
 
-The citation should sit next to the claim. It should name the real task, thread, or
-note. And clicking it should open the exact object, not a generic search page.
+If three paragraphs cite six documents and two chat channels, which source
+supports the sentence about the deadline? Which one supports the dependency?
+Opening everything recreates the search session the assistant was meant to
+shorten.
 
-### Sources change the way people read
+Useful citations have three properties:
 
-An uncited AI answer asks the reader to decide one thing:
+1. **They are close to the claim.** The reader can see which evidence belongs
+   to which statement.
+2. **They identify a real object.** “Project results” is vague; a named task,
+   thread, note, or project is inspectable.
+3. **They take the reader to the object.** A citation should not end at another
+   search page.
 
-> Do I trust this system?
+This changes verification from a scavenger hunt into a small set of concrete
+checks.
 
-That is an impossibly broad question. No system is equally reliable for every
-workspace, date range, and type of request.
+### Sources replace one impossible trust decision with several easy ones
 
-A cited answer lets the reader ask smaller questions:
+An uncited answer asks:
 
-> Is this the discussion I remember?
+> Do I trust this AI?
 
-> Is this task still open?
+That question is too broad to be useful. Reliability varies by topic, date,
+available context, and the exact claim being made.
 
-> Does this note actually support the sentence beside it?
+A cited answer permits narrower questions:
 
-Those questions are quick and concrete. The user does not need blind trust in the
-model. They only need to inspect the evidence that matters for the current
-decision.
+- Is this the task the sentence refers to?
+- Does the linked thread contain the decision?
+- Is this note current?
+- Did the cited blocker close yesterday?
 
-This also improves disagreement. If a teammate thinks an AI summary is wrong, the
-conversation can start from the cited thread or task instead of becoming a debate
-about whether “the AI is good.”
+The reader does not need a universal judgment about the model. They can inspect
+the evidence that matters for the decision in front of them.
 
-### A source link is a product feature, not decoration
+This also gives disagreement somewhere productive to go. If two people read a
+summary differently, they can open the cited source and discuss the underlying
+work. The conversation is no longer trapped at “I trust the AI” versus “I
+don't.”
 
-Getting this right requires more than asking the model to add footnotes.
+### Citations are an application feature, not a formatting trick
 
-The system needs stable identities for the things being cited. It needs permission
-checks at retrieval time and again when the source opens. It needs to distinguish a
-task from a note with the same title. It needs to preserve citations in answer
-history. It needs to handle the case where access to a source changes later.
+Reliable source links require more than prompting a model to emit footnotes.
 
-There is also a user-interface question: how much evidence should be visible before
-the answer becomes unreadable?
+The application needs stable identities for the objects it cites. It must
+distinguish a task from a note that happens to share its title. The user must be
+authorized to retrieve the source and still authorized when opening it. The
+interface must keep evidence visible without making the answer unreadable.
 
-My preference is two layers:
+A practical design uses two layers:
 
-1. Inline links on the claims that matter.
-2. A compact row of source objects for scanning and navigation.
+- clickable references beside the claims that need support;
+- a compact set of source objects for scanning the evidence as a whole.
 
-The prose stays readable, but verification is always one click away.
+The prose remains readable. The path to verification remains short.
 
-### Search should sometimes return an old answer
+There is an important negative requirement too: the citation must not imply more
+than it proves. A link beside a paragraph can create a false sense that every
+sentence in the paragraph came from that source. Citation placement is part of
+the claim the product makes about its own answer.
 
-There is another useful consequence of treating answers as evidence-backed
-objects.
+### Reusing an answer raises the permission bar
 
-Teams ask the same questions repeatedly. A second person asks why a framework was
-rejected, and the AI performs the same searches and spends the same tokens to
-derive the same result.
+Evidence-backed answers can become useful objects themselves. When the same
+question returns, search can surface an earlier answer rather than paying the
+cost—in time and computation—of deriving it again.
 
-If a previous answer has clear provenance, it can be reused. A search can surface
-“Someone already asked this” along with the original cited answer.
+But a saved answer may contain material from several restricted sources. Being
+allowed to see one source is not enough. A safe reuse rule is that the viewer
+must be able to read **all** of the answer's sources. If that cannot be
+established, the answer should not be surfaced.
 
-That reuse needs a strict privacy rule. An answer may quote private material in its
-body, so it should only be visible to people who can access **all** of its sources.
-If the system cannot determine that safely, it should not share the answer.
+The answer should also remain separate from primary evidence. Feeding old AI
+answers back into the assistant's own grounding can create a loop in which a
+summary is treated as a source, then cited by another summary, gradually
+detaching the result from the underlying work.
 
-This is the less glamorous side of workplace AI: the quality of the permission
-model matters as much as the quality of the prose.
+The durable hierarchy is simple: source material first, derived answer second.
 
-### What I built around this idea
+### What I built
 
-Full disclosure: I am the creator of **Genos**, an MVP workspace for chat, tasks,
-and collaborative notes.
+Full disclosure: I built **Genos**, a browser-based MVP for chat, tasks,
+collaborative notes, and AI-assisted work.
 
-Its AI answers questions across those surfaces and renders workspace references as
-clickable citations. A citation opens the actual chat, task, note, or project, and
-the source list remains available in saved answer history.
+Genos AI streams answers with clickable inline citations and source chips. The
+references point back to workspace objects so the reader can move from a claim
+to the material behind it.
 
-Genos also indexes eligible past answers so a teammate can find an existing answer
-through normal search. Those answers are excluded from the AI's own grounding to
-avoid an answer-citing-an-answer feedback loop, and sharing is restricted to the
-intersection of the original sources' audiences.
+Eligible past AI answers can also appear in typeahead, but only for a person who
+can read all of their sources. Those past answers are excluded from the agent's
+own grounding, so the system does not treat its previous prose as new primary
+evidence.
 
-That does not make every answer correct. It makes errors easier to detect and good
-answers easier to reuse.
+None of this guarantees that an answer is correct. It makes a specific answer
+cheaper to challenge, confirm, and reuse. That is a smaller promise than
+infallibility and a more useful one.
 
-For an AI product used in real work, I think that is a more honest promise.
+Genos is solo-built, web-only, and still an MVP. The demo works without an
+account at **[genosai.dev](https://genosai.dev)**; there is a free plan and no
+credit card.
 
-### The standard should be inspectability
-
-We will keep improving retrieval, models, and reasoning. Answers will get better.
-But “better on average” does not remove the need to inspect a specific answer
-before acting on it.
-
-The workplace AI I want is not one that sounds certain enough to stop me checking.
-It is one that makes checking so cheap that certainty is unnecessary.
-
-You can try the Genos demo without creating an account at
-**https://genosai.dev**. It is web-only and still an MVP; a free plan is available
-without a credit card.
-
-When your AI answers a question about work, what would you need to see before you
-acted on it?
+Workplace AI will keep getting better at answering. The standard should also be
+that no important answer becomes harder to verify merely because it was written
+beautifully.
