@@ -1,6 +1,8 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useUiSettings } from "./useUiSettings";
+
 /**
  * Theme preference layer that wraps `useColorScheme` from MUI Joy.
  *
@@ -25,11 +27,18 @@ import { useColorScheme } from "@mui/joy/styles";
 export type ThemePreference = "light" | "dark" | "system";
 
 const STORAGE_KEY = "genos-theme-preference";
+// Key inside the cross-device `ui_settings` store. localStorage stays the
+// synchronous source for first paint (theme is read pre-auth, before any
+// token exists — see AuthShell); the server value is adopted once loaded.
+const UI_SETTINGS_KEY = "theme";
+
+const isThemePreference = (v: unknown): v is ThemePreference =>
+    v === "light" || v === "dark" || v === "system";
 
 const readPreference = (): ThemePreference => {
     if (typeof window === "undefined") return "system";
     const v = window.localStorage.getItem(STORAGE_KEY);
-    return v === "light" || v === "dark" || v === "system" ? v : "system";
+    return isThemePreference(v) ? v : "system";
 };
 
 const systemPrefersDark = (): boolean =>
@@ -46,7 +55,31 @@ const ThemePreferenceContext = createContext<ThemePreferenceContextValue | null>
 
 export const ThemePreferenceProvider = ({ children }: { children: ReactNode }) => {
     const { setMode } = useColorScheme();
+    const { loaded, get, set } = useUiSettings();
     const [preference, setPreferenceState] = useState<ThemePreference>(readPreference);
+
+    // Reconcile with the cross-device store once the account's settings
+    // load. Two cases:
+    //   - the account HAS a synced theme → adopt it (this is what makes
+    //     the choice follow the user to another device);
+    //   - the account has NONE but this device made an explicit local
+    //     pick (a stored value that isn't the "system" default) → migrate
+    //     that pick up to the server so it starts syncing.
+    // Runs on `loaded` only, so it doesn't fight the user's own setPreference.
+    useEffect(() => {
+        if (!loaded) return;
+        const synced = get<ThemePreference | null>(UI_SETTINGS_KEY, null);
+        if (isThemePreference(synced)) {
+            setPreferenceState((prev) => (prev === synced ? prev : synced));
+            if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, synced);
+        } else if (typeof window !== "undefined") {
+            const stored = window.localStorage.getItem(STORAGE_KEY);
+            if (isThemePreference(stored)) set(UI_SETTINGS_KEY, stored);
+        }
+        // `get`/`set` are stable per store value; keying on `loaded` alone
+        // keeps this a one-shot adopt-on-load.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loaded]);
 
     // Resolve preference -> concrete Joy mode whenever preference changes.
     useEffect(() => {
@@ -69,12 +102,18 @@ export const ThemePreferenceProvider = ({ children }: { children: ReactNode }) =
         return () => mql.removeEventListener("change", onChange);
     }, [preference, setMode]);
 
-    const setPreference = useCallback((p: ThemePreference) => {
-        setPreferenceState(p);
-        if (typeof window !== "undefined") {
-            window.localStorage.setItem(STORAGE_KEY, p);
-        }
-    }, []);
+    const setPreference = useCallback(
+        (p: ThemePreference) => {
+            setPreferenceState(p);
+            if (typeof window !== "undefined") {
+                window.localStorage.setItem(STORAGE_KEY, p);
+            }
+            // Sync across devices. localStorage above stays the fast-path
+            // for first paint / offline; this is the durable per-account copy.
+            set(UI_SETTINGS_KEY, p);
+        },
+        [set]
+    );
 
     return (
         <ThemePreferenceContext.Provider value={{ preference, setPreference }}>
