@@ -63,7 +63,11 @@ export type InboxRequests = {
 export type ActivityRequests = {
     addActivityMessage: { req: { activityMessage: ActivityMessageProps }; res: void };
     loadActivityHistory: {
-        req: { myself: UserProps; accessToken: string };
+        // `forceFull` forces a full reload instead of the default
+        // incremental delta — the wake refresh sets it so a cross-device
+        // `is_read` flip (which the `ts_created_at`-keyed delta can't see)
+        // gets re-fetched. Optional; defaults to incremental.
+        req: { myself: UserProps; accessToken: string; forceFull?: boolean };
         res: void;
     };
     popActivityMessages: {
