@@ -428,3 +428,21 @@ export type TodoGroupProps = {
     tsCreatedAt: string;
     tsUpdatedAt: string;
 };
+
+// A recurring rule that auto-creates a todo item into today's group.
+// `rrule` is a calendar-style RRULE string (see features/calendar/utils/
+// rrule.ts); the client expands it locally, creates the day's item, then
+// advances `lastMaterializedDate`. `lastMaterializedDate` is the last
+// local date an item was created for — the idempotency cursor that stops
+// a re-open the same day from duplicating.
+export type TodoScheduleProps = {
+    scheduleId: number;
+    categoryId: number | null;
+    title: string;
+    rrule: string;
+    startDate: string;
+    isActive: boolean;
+    lastMaterializedDate: string | null;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+};
