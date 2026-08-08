@@ -29,8 +29,13 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
         const all = await activityService.getAllActivityMessages();
     },
 
-    loadActivityHistory: async ({ myself, accessToken }) => {
+    loadActivityHistory: async ({ myself, accessToken, forceFull }) => {
         await syncWithCheckpoint({
+            // Caller-forced full reload (wake refresh) — re-fetches rows
+            // whose `is_read` flipped on another device, which the
+            // `ts_created_at`-keyed incremental delta never sees because
+            // `Activity` has no `ts_updated_at`.
+            forceFull,
             // Bumped to "activity-v7": rows now carry `teamId`, which the
             // feed filters on. Rows already in IDB don't have it and an
             // incremental sync never re-fetches them, so without the bump

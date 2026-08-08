@@ -819,6 +819,46 @@ export class ChannelService {
     }
 
     /**
+     * Pull the authoritative channel list and land it in the store —
+     * the ingest half of `loadV3Chats`, minus the legacy adaptation.
+     *
+     * Why this exists separately from `loadV3Chats`: the WS reconnect
+     * handler (`useChannelServiceBootstrap`) needs to re-sync read state
+     * but has no access to the React `useChatManagement` layer. It runs
+     * `triggerResync()`, which replays missed MESSAGES — but a read cursor
+     * that advanced on ANOTHER device while this one was disconnected is
+     * NOT in the resync envelope (read.advanced is a per-user broadcast the
+     * server doesn't buffer). So the chat-list unread badge stayed stale
+     * after a reconnect until a full page reload re-ran `funcSetAllChats`.
+     *
+     * `listChannels()`'s `ChannelListView` recomputes `unreadCount` from the
+     * server's `ReadCursor` on every call, so a plain re-fetch + `ingestChannels`
+     * full-replace is all it takes to reconcile cross-device reads. The store
+     * `_notify` bumps `channelsVersion`, which the sidebar subscription in
+     * `useChatManagement` reads to re-derive `unReadChatCounts` — no extra
+     * wiring on the React side.
+     *
+     * Best-effort: on a failed fetch we neither ingest nor reconcile (a
+     * partial/failed list must never evict real channels — same contract as
+     * `loadV3Chats`).
+     */
+    async refreshChannels(): Promise<void> {
+        if (!this.hasAccessToken()) return;
+        try {
+            const fresh = await this.listChannels();
+            this.ingestChannels(fresh);
+            this.reconcileChannelList(fresh);
+            this.ingestListMembers(fresh);
+        } catch (e) {
+            console.error(
+                "[ChannelService] refreshChannels failed — unread badges may be stale " +
+                    "until the next successful list refresh:",
+                e
+            );
+        }
+    }
+
+    /**
      * Drop channels the server no longer lists.
      *
      * `listChannels` only ever ADDS: callers push each row through

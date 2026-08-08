@@ -54,6 +54,9 @@ vi.mock("../../services/channel/channelService", () => {
             getSnapshot: vi.fn(() => snapshot),
             subscribe: vi.fn(() => () => {}),
             syncChannel: vi.fn().mockResolvedValue(undefined),
+            // `refreshAllData` re-pulls the channel list on wake so a
+            // cross-device read syncs the unread badge.
+            refreshChannels: vi.fn().mockResolvedValue(undefined),
         },
     };
 });
@@ -176,11 +179,17 @@ describe("refreshAllData", () => {
         });
 
         expect(inboxReq).toHaveBeenCalledWith("loadInbox", { myself, accessToken: "tok" });
+        // `forceFull: true` — the wake refresh forces a full activity reload so
+        // an `is_read` flip on another device (invisible to the incremental,
+        // `ts_created_at`-keyed delta) re-syncs the unread badge.
         expect(activityReq).toHaveBeenCalledWith("loadActivityHistory", {
             myself,
             accessToken: "tok",
+            forceFull: true,
         });
         expect(usersReq).toHaveBeenCalledWith("loadTeamMembers", { myself, accessToken: "tok" });
+        // Wake also re-pulls the channel list for cross-device chat unread.
+        expect(channelService.refreshChannels).toHaveBeenCalled();
         // null project id => no tasks load
         expect(tasksReq).not.toHaveBeenCalled();
         expect(onIDBRefreshed).toHaveBeenCalledTimes(1);

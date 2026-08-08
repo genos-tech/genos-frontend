@@ -1,6 +1,7 @@
 import { activityChannel, inboxChannel, usersChannel } from "../db/workers/channels";
 import { loadProjectTasks } from "../features/tasks/services/loadProjectTasks";
 import { UserProps } from "../types/admin";
+import { channelService } from "./channel/channelService";
 
 // Re-runs the same set of API→IndexedDB loaders that `loadInitialData`
 // performs at boot, then signals the in-React hooks to repull from IDB
@@ -58,15 +59,31 @@ export const refreshAllData = async ({
         return;
     }
 
-    // Chat history hydration is owned by `channelService` (subscribed
-    // in `useChannelServiceBootstrap`). The wake refresh doesn't need
-    // to re-pull it explicitly — the WS reconnect that fires after a
-    // network resume triggers `flushPendingQueue` + a `listChannels` +
-    // delta sync inside channelService.
+    // Chat history (messages) is owned by `channelService` and caught up
+    // by the WS reconnect resync. But the chat-list `unreadCount` is NOT:
+    // it's recomputed server-side from the `ReadCursor` and only lands via
+    // `listChannels()`. A wake can fire from `visibilitychange` WITHOUT a
+    // socket reconnect (the WS often survives a short background stretch),
+    // so we can't lean on the reconnect handler to refresh it. Re-pull the
+    // channel list here so a read that happened on another device shows up
+    // when the user returns to this one. `refreshChannels` is best-effort
+    // and swallows its own errors, so it doesn't need the `withTimeout`
+    // wrapper the worker-channel calls use.
+    void channelService.refreshChannels();
     const tasks: Array<Promise<unknown>> = [
         withTimeout(inboxChannel.request("loadInbox", { myself, accessToken }), "loadInbox"),
         withTimeout(
-            activityChannel.request("loadActivityHistory", { myself, accessToken }),
+            // `forceFull: true` — a bare `loadActivityHistory` runs an
+            // INCREMENTAL delta keyed on `ts_created_at`, but `Activity` has
+            // no `ts_updated_at`, so an `is_read` flip on another device is
+            // never in the delta window. Only a full reload re-fetches the
+            // now-read rows and clears their unread badge here. See the
+            // worker handler for the checkpoint mechanics.
+            activityChannel.request("loadActivityHistory", {
+                myself,
+                accessToken,
+                forceFull: true,
+            }),
             "loadActivityHistory"
         ),
         withTimeout(

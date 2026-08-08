@@ -148,11 +148,32 @@ export function useChannelServiceBootstrap(
                 /* per-message failures already recorded as `failed`
                  * pending entries — caller / dev panel surfaces them */
             });
-            void channelService.triggerResync().catch(() => {
-                // Resync failure is non-fatal — the next channel select
-                // will trigger `syncChannel` which fetches the same
-                // window via REST.
-            });
+            // `triggerResync` replays missed MESSAGES, but a read cursor
+            // that advanced on ANOTHER device while this one was
+            // disconnected is not in the resync envelope — `read.advanced`
+            // is a per-user broadcast the server doesn't buffer. So the
+            // chat-list unread badge stayed stale after a reconnect (e.g.
+            // read a DM on your phone while the laptop was asleep) until a
+            // full page reload. Re-pull the channel list, whose server
+            // `unreadCount` is recomputed from the `ReadCursor` — the store
+            // notify propagates to the sidebar badge via the existing
+            // `channelsVersion` subscription in `useChatManagement`.
+            //
+            // Chained AFTER the resync (not fired concurrently) so the
+            // authoritative server `unreadCount` lands LAST: resync's
+            // per-message `_bumpUnread` is optimistic, and letting the exact
+            // server count win removes any transient over-count instead of
+            // waiting for the next refresh to self-heal it.
+            void channelService
+                .triggerResync()
+                .catch(() => {
+                    // Resync failure is non-fatal — the next channel select
+                    // will trigger `syncChannel` which fetches the same
+                    // window via REST.
+                })
+                .finally(() => {
+                    void channelService.refreshChannels();
+                });
         };
         next.on("connect", onConnect);
 
