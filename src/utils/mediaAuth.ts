@@ -53,6 +53,34 @@ const PUBLIC_MEDIA_PREFIXES = [
 ];
 
 /**
+ * The origin our own protected media lives on. A `/media/` PATH is not
+ * enough to prove a URL is ours: third-party CDNs shovel user content under
+ * `/media/` too — a Giphy insert is `https://media4.giphy.com/media/<id>/
+ * giphy.gif`. Fetching one of those with our `Authorization` header both
+ * offers the session token to a site that has no business seeing it AND
+ * trips the page CSP `connect-src` (giphy isn't listed), which throws a
+ * console error on every GIF render. So gate on the host as well as the path.
+ *
+ * Derived from `VITE_MEDIA_ROOT_DJANGO` (…/media) with the Django root as a
+ * fallback — both point at the same API origin the upload path bakes into
+ * message bodies. `null` when neither is set (a misconfigured build): we then
+ * fall back to the path-only test rather than refuse to authenticate media we
+ * can't prove is foreign. Read per call (the value is a Vite build-time
+ * constant, so this is effectively free) so it stays stubbable in tests.
+ */
+const getOwnMediaOrigin = (): string | null => {
+    const root =
+        (import.meta.env.VITE_MEDIA_ROOT_DJANGO as string | undefined) ||
+        (import.meta.env.VITE_DJANGO_URL as string | undefined);
+    if (!root) return null;
+    try {
+        return new URL(root).origin;
+    } catch {
+        return null;
+    }
+};
+
+/**
  * Blobs are held so a re-render doesn't re-download, and bounded by BYTES
  * rather than count because one screenshot can outweigh fifty icons.
  *
@@ -107,12 +135,28 @@ export const clearMediaCache = (): void => {
 export const isProtectedMediaUrl = (url: string): boolean => {
     if (typeof url !== "string" || url.startsWith("blob:") || url.startsWith("data:"))
         return false;
-    let path: string;
+    let parsed: URL;
     try {
-        path = new URL(url, "http://placeholder.invalid").pathname;
+        parsed = new URL(url, "http://placeholder.invalid");
     } catch {
         return false;
     }
+    // Only OUR media origin is protected. A third-party CDN URL that also
+    // sits under `/media/` (Giphy, `media4.giphy.com/media/<id>/giphy.gif`)
+    // is public and must never be fetched with our token — doing so leaks
+    // the credential and trips CSP `connect-src`. When our origin is unknown
+    // (no env, e.g. tests) fall through to the path-only test — an absolute
+    // URL that resolved against the placeholder base has no real host to
+    // compare anyway.
+    const ownMediaOrigin = getOwnMediaOrigin();
+    if (
+        ownMediaOrigin &&
+        parsed.origin !== "http://placeholder.invalid" &&
+        parsed.origin !== ownMediaOrigin
+    ) {
+        return false;
+    }
+    const path = parsed.pathname;
     const marker = "/media/";
     const at = path.indexOf(marker);
     if (at === -1) return false;
