@@ -8,14 +8,14 @@ synced here.
 
 1. Write the English draft under `genos-docs/marketing/`.
 2. Append one object to [`articles.json`](./articles.json):
-   - `slug` — URL segment (`/blog/<slug>`)
-   - `source` — filename in genos-docs/marketing
-   - `bodyHeading` — markdown heading that starts the publishable body
-     (e.g. `## Article body`)
-   - optional `stopHeading` — cut the body before this heading
-   - `title`, `excerpt`, `category`, `publishedAt` (`YYYY-MM-DD`)
-   - `language` must be `"en"`
-   - optional `featured: true` for the index highlight grid
+    - `slug` — URL segment (`/blog/<slug>`)
+    - `source` — filename in genos-docs/marketing
+    - `bodyHeading` — markdown heading that starts the publishable body
+      (e.g. `## Article body`)
+    - optional `stopHeading` — cut the body before this heading
+    - `title`, `excerpt`, `category`, `publishedAt` (`YYYY-MM-DD`)
+    - `language` must be `"en"`
+    - optional `featured: true` for the index highlight grid
 3. From `genos-frontend/` (with sibling `genos-docs` present):
 
 ```bash

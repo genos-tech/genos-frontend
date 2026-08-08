@@ -3,7 +3,7 @@
 There's a question I must have asked a hundred times in my career, and I bet
 you've asked it too:
 
-*"Wait — where was that discussed?"*
+_"Wait — where was that discussed?"_
 
 Sometimes it took thirty seconds to answer. Sometimes it took an afternoon.
 Once, memorably, three of us reconstructed a six-month-old decision from
@@ -20,7 +20,7 @@ actual work is tracked in a third tool. Files live in a fourth.
 
 Each tool is genuinely good at its job. Slack is great chat. Notion is a great
 editor. Jira tracks tickets just fine. The problem isn't any single tool — it's
-that a project's *story* gets shredded across all of them.
+that a project's _story_ gets shredded across all of them.
 
 You feel it whenever you have to answer a simple question:
 
@@ -38,15 +38,15 @@ Connect an AI assistant to everything! Let it search Slack, Notion, Jira, and
 Drive at once. Protocols like MCP made this genuinely easy, and I was excited
 about it too — for about two weeks.
 
-Because here's what I found: the AI could *retrieve* almost anything, and
-*understand* almost nothing.
+Because here's what I found: the AI could _retrieve_ almost anything, and
+_understand_ almost nothing.
 
 Ask it "why are we building this feature?" and it does what it can: pulls some
 matching Slack messages, a doc with similar keywords, a ticket or two. Then it
 writes a confident summary of fragments.
 
-What it can't tell you is that the ticket exists *because of* a decision made
-in a thread three weeks earlier. That the doc it found was *superseded* by
+What it can't tell you is that the ticket exists _because of_ a decision made
+in a thread three weeks earlier. That the doc it found was _superseded_ by
 that same decision. That the requirement changed on a Tuesday and half the
 plan silently became fiction.
 
@@ -54,8 +54,8 @@ plan silently became fiction.
 > picture on the box — and the picture only exists in someone's head.
 
 That's the uncomfortable truth about bolting AI onto a fragmented stack. The
-relationships between the pieces — *this discussion produced that task, this
-decision obsoleted that document* — were never written down anywhere. They're
+relationships between the pieces — _this discussion produced that task, this
+decision obsoleted that document_ — were never written down anywhere. They're
 tribal knowledge. And an AI can't retrieve what was never stored.
 
 ### The fix isn't a better search. It's a different structure.
@@ -69,14 +69,14 @@ The alternative is almost embarrassingly simple: **stop connecting the tools
 and start connecting the work.**
 
 If the conversation, the decision, the document, and the task all live in one
-place — and are *linked to each other* the moment they're created — then the
+place — and are _linked to each other_ the moment they're created — then the
 context everyone keeps reconstructing doesn't need to be reconstructed. It
 just… exists. A task knows which discussion created it. A spec knows which
 decisions shaped it. The story of the project is a structure in the data, not
 a memory in someone's head.
 
-Humans benefit immediately: new teammates can follow the *why*, not just the
-*what*. And AI benefits enormously, because for the first time it can answer
+Humans benefit immediately: new teammates can follow the _why_, not just the
+_what_. And AI benefits enormously, because for the first time it can answer
 from relationships that are actually stored, instead of inferring them from
 crumbs.
 
@@ -93,7 +93,7 @@ building it, alone.
 
 It's called **Genos** — one workspace where chat, docs, and tasks belong to
 the same project and link to each other, with an AI that answers questions
-across all of them *with links to its sources*. Ask "why are we building
+across all of them _with links to its sources_. Ask "why are we building
 this?" and it points at the original thread, the spec, and the tasks — because
 they're connected in the data, not inferred.
 
