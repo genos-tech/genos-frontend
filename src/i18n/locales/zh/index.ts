@@ -1239,6 +1239,7 @@ export const zh: DeepPartial<Messages> = {
             showComments: "显示评论",
             hideComments: "隐藏评论",
             emoji: "表情",
+            attachFile: "附加图片或文件",
             gif: "动图",
             gifSlashDescription: "搜索 GIPHY 并插入 GIF",
             gifSlashGroup: "媒体",

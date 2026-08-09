@@ -251,6 +251,7 @@ export const common = {
         showComments: "Show comments",
         hideComments: "Hide comments",
         emoji: "Emoji",
+        attachFile: "Attach image or file",
         gif: "GIF",
         gifSlashDescription: "Search GIPHY and insert a GIF",
         gifSlashGroup: "Media",

@@ -1280,6 +1280,7 @@ export const ja: DeepPartial<Messages> = {
             showComments: "コメントを表示",
             hideComments: "コメントを隠す",
             emoji: "絵文字",
+            attachFile: "画像またはファイルを添付",
             gif: "GIF",
             gifSlashDescription: "GIPHY を検索して GIF を挿入します",
             gifSlashGroup: "メディア",

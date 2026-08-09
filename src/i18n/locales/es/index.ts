@@ -130,6 +130,7 @@ export const es: DeepPartial<Messages> = {
             removeBlock: "Quitar bloque",
             resetType: "Restablecer tipo",
             emoji: "Emoji",
+            attachFile: "Adjuntar imagen o archivo",
             emojiTypingHint: ":+escritura",
             emojiGroup: "Emoji",
             loadingComments: "Cargando comentarios…",
