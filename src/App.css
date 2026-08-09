@@ -557,6 +557,44 @@ input[type="checkbox"] {
     min-height: 0;
 }
 
+/* Row-wrapper treatment shared by the two react-virtuoso message lists:
+   the chat message list (`itemContent` child in MessageListRenderer,
+   `.chat-msg-row` on each row + `.chat-msg-scrolling` on the scroller)
+   and the task-comment list (`itemContent` child in TaskCommentList,
+   `.comment-row` on each row + `.comment-scrolling` on the scroller).
+   Both carry the identical two device-agnostic scroll-smoothness aids
+   for the phone-only momentum-scroll jank (transient duplicate/ghost
+   rows on a low-CPU device); one rule keeps that treatment in a single
+   place so the two lists can't drift:
+
+   1. `contain: layout` bounds each row's layout scope, so Virtuoso's
+      per-frame paddingTop/marginTop rewrite on the item-list (how it
+      repositions its window on the main thread) doesn't force a
+      full-subtree reflow of every visible row's bubble internals each
+      momentum frame. `layout` ONLY — NOT `paint`/`content` (those clip
+      the bubble's outset box-shadow) and NOT `content-visibility` (it
+      adds a second virtualization layer that fights Virtuoso's own
+      ResizeObserver re-measure, skewing the land-at-newest estimate).
+      Layout containment adds no size containment, so the measured row
+      height Virtuoso reads is unchanged.
+
+   2. The `-scrolling` class is toggled imperatively on the SCROLLER
+      while the list is actively scrolling (no React re-render — see
+      each renderer's `handleIsScrolling`). While set, rows opt out of
+      hit-testing so bubbles sliding under a stationary cursor can't fire
+      hover handlers (toolbar mounts, emotion style recomputes)
+      mid-scroll. Touch/wheel still reach the scroller itself (the rows'
+      ancestor), so scrolling is unaffected. */
+.chat-msg-row,
+.comment-row {
+    contain: layout;
+}
+
+.chat-msg-scrolling .chat-msg-row,
+.comment-scrolling .comment-row {
+    pointer-events: none;
+}
+
 .bn-editor code {
     padding: 1px 4px;
     border-radius: 4px;
