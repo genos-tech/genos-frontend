@@ -1,7 +1,7 @@
 import "@blocknote/mantine/style.css";
 
 import { useComponentsContext } from "@blocknote/react";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
+import AddIcon from "@mui/icons-material/Add";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../i18n";
@@ -27,9 +27,7 @@ export const AttachFileToolbarButton = (props: AttachFileToolbarButtonProps) => 
             mainTooltip={t.common.editor.attachFile}
             onClick={onClick}
         >
-            <AttachFileIcon
-                sx={{ fontSize: "17px", color: mode === "dark" ? "white" : "black" }}
-            />
+            <AddIcon sx={{ fontSize: "17px", color: mode === "dark" ? "white" : "black" }} />
         </Components.FormattingToolbar.Button>
     );
 };

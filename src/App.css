@@ -1010,6 +1010,22 @@ input[type="checkbox"] {
     margin-inline: auto;
 }
 
+/* Emoji / GIF / attach buttons render as full mantine <Button>s
+   (size="xs" = 14px horizontal padding per side) because they pass an
+   icon as children, whereas Bold/Italic/etc. are compact square
+   <ActionIcon>s. That per-button padding widened the mobile toolbar and
+   left too much space on the left of Emoji and right of the attach
+   button. Collapse those <Button>s down to the ActionIcon footprint so
+   the icons sit close together and the bar stays short. Scoped to the
+   mobile width (< MUI `md`, 900px) so the desktop block-type picker
+   ("Paragraph ▾") keeps its normal padding. */
+@media (max-width: 899.95px) {
+    .bn-editor-toolbar .bn-toolbar .mantine-Button-root {
+        padding-inline: 5px;
+        min-width: 0;
+    }
+}
+
 .bn-box::-webkit-scrollbar {
     width: var(--scrollbar-width);
 }
