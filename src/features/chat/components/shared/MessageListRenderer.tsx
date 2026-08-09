@@ -56,33 +56,25 @@ interface MessageListRendererProps {
     ) => void;
 }
 
-// Extra pixels of rows Virtuoso keeps mounted above/below the viewport —
-// its always-on sliding window, applied at MOUNT. Each extra row renders a
-// message body (mostly plain-DOM light bodies now that images/files/
-// hashtags render without a BlockNote editor; only code/table bodies still
-// mount one), so pre-mounting rows while they're still off-screen — instead
-// of the frame they scroll into view — is what keeps a normal short scroll
-// smooth: it stays inside already-mounted+measured rows with no per-frame
-// remeasure/reposition.
+// Render this many extra pixels of rows above/below the viewport. Each
+// row mounts a message body (mostly plain-DOM light bodies now that
+// images/files/hashtags render without a BlockNote editor; only code/table
+// bodies still mount one), so mounting it while it's still off-screen —
+// instead of the frame it scrolls into view — is what keeps wheel scrolling
+// smooth.
+// It is ALSO what anchors the initial paint: `initialTopMostItemIndex`
+// resolves "the bottom" against estimated row heights, and rows measure
+// taller once they mount. The overscan gives Virtuoso enough real rows
+// above LAST to correct against. Ramping it up from 0 after mount (tried,
+// reverted) saved mount work but left switches landing part-way up the
+// history instead of at the newest message — don't reintroduce it without
+// checking the landing position in a real browser.
 //
-// Asymmetric on purpose. `TOP` is the load-bearing one: the reader lands on
-// the newest message and scrolls UP into history, and a wider top window
-// pre-mounts the recent ~20 messages so that reading-scroll doesn't trip
-// Virtuoso's measure/reposition. `TOP` also anchors the initial landing —
-// `initialTopMostItemIndex` resolves "the bottom" against estimated row
-// heights, and rows measure taller once they mount, so Virtuoso needs real
-// rows above LAST to correct against (this is why it is applied at mount,
-// not grown afterwards: growing top overscan while stationary-at-bottom
-// mounts taller-than-estimated rows above the viewport that Virtuoso does
-// NOT compensate — its only correction is gated to upward scrolling — so
-// the newest message would visibly slide down. Mounting large up front
-// measures those rows while they're still hidden and lands correctly).
-// `BOTTOM` stays modest: at landing there are zero rows below the newest
-// message, so a large bottom value pre-mounts nothing there; it only
-// covers the "scrolled up, now heading back down" case.
-// TUNE ON A REAL PHONE: a resized desktop can't reproduce the jank.
-const TOP_OVERSCAN_PX = 1200;
-const BOTTOM_OVERSCAN_PX = 600;
+// Widening this into a large asymmetric "pre-render window" (top 1200 /
+// bottom 600, PR #432) was tried to smooth phone scrolling and reverted:
+// it didn't help the phone and only added mount cost, so this is back to
+// the modest symmetric value that predates it.
+const OVERSCAN_PX = 600;
 
 // Upper bound on how long the cold-load skeleton may stay up. The normal
 // exit is messages arriving; this only catches a sync that fails, or one
@@ -426,7 +418,7 @@ export const MessageListRenderer = ({
     // (meaningless for the new one) instead of correcting against it.
     // Same-chat updates (arrivals, edits, reactions) don't change the
     // key, so the reader's scroll position is preserved for those.
-    // (`chatIdentityKey` is computed above, next to the overscan ramp.)
+    // (`chatIdentityKey` is computed near the top of this component.)
 
     if (showSkeleton) {
         return (
@@ -446,7 +438,7 @@ export const MessageListRenderer = ({
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 followOutput={followOutput}
-                increaseViewportBy={{ bottom: BOTTOM_OVERSCAN_PX, top: TOP_OVERSCAN_PX }}
+                increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}

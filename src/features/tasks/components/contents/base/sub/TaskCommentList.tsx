@@ -17,20 +17,16 @@ import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
-// Extra pixels of rows Virtuoso keeps mounted above/below the viewport —
-// its always-on sliding window, applied at MOUNT. Mirrors
-// `MessageListRenderer`: comment bodies render the same message bodies
-// (mostly plain-DOM now; only code/table bodies mount a BlockNote editor),
-// so pre-mounting rows off-screen keeps a normal short scroll smooth (it
-// stays inside already-mounted+measured rows). Asymmetric for the same
-// reason as chat — the reader lands on the newest comment and scrolls UP,
-// so `TOP` (the recent ~20 comments) is the load-bearing value while
-// `BOTTOM` only covers scrolling back down. Applied at mount rather than
-// grown afterwards because growing top overscan on a list that is
-// stationary-at-bottom shifts the view uncompensated (see the chat note).
-// TUNE ON A REAL PHONE.
-const TOP_OVERSCAN_PX = 1200;
-const BOTTOM_OVERSCAN_PX = 600;
+// Render this many extra pixels of rows above/below the viewport —
+// Virtuoso's always-on sliding window. Mirrors `MessageListRenderer`:
+// comment bodies render the same message bodies (mostly plain-DOM now;
+// only code/table bodies mount a BlockNote editor), so mounting rows
+// off-screen keeps a normal short scroll smooth (it stays inside
+// already-mounted+measured rows). Widening this into a large asymmetric
+// pre-render window (top 1200 / bottom 600, PR #432) was tried and
+// reverted for parity with chat — it didn't help the phone and only added
+// mount cost — so this is back to the modest symmetric value.
+const OVERSCAN_PX = 600;
 
 type TaskCommentListProps = {
     socket: Socket | null;
@@ -304,7 +300,7 @@ export const TaskCommentList = ({
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     followOutput={followOutput}
-                    increaseViewportBy={{ top: TOP_OVERSCAN_PX, bottom: BOTTOM_OVERSCAN_PX }}
+                    increaseViewportBy={{ top: OVERSCAN_PX, bottom: OVERSCAN_PX }}
                     initialTopMostItemIndex={taskComments.length - 1}
                     isScrolling={handleIsScrolling}
                     itemContent={itemContent}
@@ -329,7 +325,7 @@ export const TaskCommentList = ({
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 followOutput={followOutput}
-                increaseViewportBy={{ top: TOP_OVERSCAN_PX, bottom: BOTTOM_OVERSCAN_PX }}
+                increaseViewportBy={{ top: OVERSCAN_PX, bottom: OVERSCAN_PX }}
                 initialTopMostItemIndex={taskComments.length - 1}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
