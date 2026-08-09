@@ -76,6 +76,33 @@ interface MessageListRendererProps {
 // the modest symmetric value that predates it.
 const OVERSCAN_PX = 600;
 
+// Seed Virtuoso's size estimate for rows it hasn't measured yet. Without a
+// default, Virtuoso "probes" the FIRST rendered row and extrapolates that
+// height onto all unmeasured rows — and because we land at `LAST`, that probe
+// is a RECENT message, usually a short one-liner. Older history (multi-line,
+// images, date separators) then measures far taller than the estimate. When an
+// iOS momentum fling drags those never-measured rows into view above the
+// overscan, react-virtuoso's upward scroll-position correction accumulates the
+// per-row (measured - estimate) error into a hidden `marginTop` and flushes it
+// after the finger lifts (iOS-only) — a large accumulated error snaps the list
+// to the top (the "scroll up a bit and it jumps to the top on its own" bug).
+// A realistic MEDIAN estimate shrinks that per-row error to near zero, so the
+// correction stays imperceptible (as it already is on desktop). This only
+// seeds UNMEASURED rows; measured rows keep their real heights, so landing at
+// the newest message is unchanged, and it skips Virtuoso's probe pass so it
+// adds no open-time cost. Split by bubble style because compact rows are much
+// shorter (an over-large estimate would drift compact flings the other way);
+// the Virtuoso key already includes `bubbleStyle`, so a toggle remounts with
+// the right value.
+//
+// TUNING: these are starting values, deliberately erring HIGH — under-
+// estimation reproduces the jump-to-top, over-estimation only causes a mild,
+// self-correcting downward settle. Measure a few older multi-line/image/date-
+// separator bubbles per style on a real iPhone and set each to the median; a
+// media-heavy chat's true median likely runs higher than the full value here.
+const ESTIMATED_ITEM_HEIGHT_COMPACT_PX = 48;
+const ESTIMATED_ITEM_HEIGHT_FULL_PX = 80;
+
 // Upper bound on how long the cold-load skeleton may stay up. The normal
 // exit is messages arriving; this only catches a sync that fails, or one
 // that resolves for a genuinely empty channel (which writes nothing, so
@@ -437,6 +464,9 @@ export const MessageListRenderer = ({
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                defaultItemHeight={
+                    isCompact ? ESTIMATED_ITEM_HEIGHT_COMPACT_PX : ESTIMATED_ITEM_HEIGHT_FULL_PX
+                }
                 followOutput={followOutput}
                 increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
