@@ -2,6 +2,7 @@ import { useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
@@ -32,6 +33,7 @@ import { UserProfile } from "../../features/admin/components/modals/ModalUserPro
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { useSidebarVisibility } from "../../hooks/common/useSidebarVisibility";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -110,6 +112,9 @@ type SidebarProps = {
     // overlay stays reachable from anywhere via the keyboard shortcut.
     onOpenGenos: () => void;
     onOpenHistory: () => void;
+    // Opens the ToDo pane (self-DM sub-pane). Same flow as the global
+    // Ctrl+Cmd/Alt+O shortcut — see App.tsx `openTodo`.
+    onOpenTodo: () => void;
 };
 
 export const Sidebar = (props: SidebarProps) => {
@@ -123,11 +128,13 @@ export const Sidebar = (props: SidebarProps) => {
         useUISM,
         onOpenGenos,
         onOpenHistory,
+        onOpenTodo,
     } = props;
     const handleLogout = useSignOut();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isMobile = useIsMobile();
+    const sidebarVisibility = useSidebarVisibility();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     // Solid bg color used to "cut out" badges and avatar borders against
@@ -355,145 +362,148 @@ export const Sidebar = (props: SidebarProps) => {
                         </AppTooltip>
                     </ListItem>
 
-                    {NAV_ITEMS.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = location.pathname.includes(item.path);
-                        const badgeCount = getBadgeCount(item.id);
-                        const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
-                        const colorRgb = isDark
-                            ? item.colorScheme.darkRgb
-                            : item.colorScheme.lightRgb;
-                        // Items with a dedicated letter shortcut show
-                        // it directly; the rest fall back to the cycle
-                        // gesture (which IS their only global way in).
-                        let tooltipText: string;
-                        if (item.labelKey === "tasks") {
-                            tooltipText = isMac()
-                                ? t.sidebar.tooltips.tasksShortcut.mac
-                                : t.sidebar.tooltips.tasksShortcut.windows;
-                        } else if (item.labelKey === "notes") {
-                            tooltipText = isMac()
-                                ? t.sidebar.tooltips.notesShortcut.mac
-                                : t.sidebar.tooltips.notesShortcut.windows;
-                        } else {
-                            tooltipText = isMac()
-                                ? t.sidebar.tooltips.switchServiceMac
-                                : t.sidebar.tooltips.switchServiceOther;
-                        }
+                    {NAV_ITEMS.filter((item) => sidebarVisibility.isVisible(item.labelKey)).map(
+                        (item) => {
+                            const Icon = item.icon;
+                            const isActive = location.pathname.includes(item.path);
+                            const badgeCount = getBadgeCount(item.id);
+                            const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
+                            const colorRgb = isDark
+                                ? item.colorScheme.darkRgb
+                                : item.colorScheme.lightRgb;
+                            // Items with a dedicated letter shortcut show
+                            // it directly; the rest fall back to the cycle
+                            // gesture (which IS their only global way in).
+                            let tooltipText: string;
+                            if (item.labelKey === "tasks") {
+                                tooltipText = isMac()
+                                    ? t.sidebar.tooltips.tasksShortcut.mac
+                                    : t.sidebar.tooltips.tasksShortcut.windows;
+                            } else if (item.labelKey === "notes") {
+                                tooltipText = isMac()
+                                    ? t.sidebar.tooltips.notesShortcut.mac
+                                    : t.sidebar.tooltips.notesShortcut.windows;
+                            } else {
+                                tooltipText = isMac()
+                                    ? t.sidebar.tooltips.switchServiceMac
+                                    : t.sidebar.tooltips.switchServiceOther;
+                            }
 
-                        return (
-                            <ListItem key={item.id}>
-                                <AppTooltip placement="right" size="sm" title={tooltipText}>
-                                    <ListItemButton
-                                        sx={{
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            py: 1,
-                                            px: 1.25,
-                                            borderRadius: "12px",
-                                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            background: isActive
-                                                ? isDark
-                                                    ? `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.063) 100%)`
-                                                    : `linear-gradient(135deg, rgba(${colorRgb}, 0.082) 0%, rgba(${colorRgb}, 0.031) 100%)`
-                                                : "transparent",
-                                            border: "1px solid",
-                                            borderColor: isActive
-                                                ? isDark
-                                                    ? `rgba(${colorRgb}, 0.208)`
-                                                    : `rgba(${colorRgb}, 0.145)`
-                                                : "transparent",
-                                            "&:hover": {
+                            return (
+                                <ListItem key={item.id}>
+                                    <AppTooltip placement="right" size="sm" title={tooltipText}>
+                                        <ListItemButton
+                                            sx={{
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                py: 1,
+                                                px: 1.25,
+                                                borderRadius: "12px",
+                                                transition:
+                                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                                 background: isActive
                                                     ? isDark
-                                                        ? `linear-gradient(135deg, rgba(${colorRgb}, 0.145) 0%, rgba(${colorRgb}, 0.082) 100%)`
-                                                        : `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.071) 100%)`
-                                                    : isDark
-                                                      ? "rgba(255,255,255,0.04)"
-                                                      : "rgba(0,0,0,0.03)",
-                                                transform: "translateY(-1px)",
-                                            },
-                                            "&:active": {
-                                                transform: "translateY(0)",
-                                            },
-                                        }}
-                                        onClick={() => handleNavClick(item.path)}
-                                    >
-                                        <Badge
-                                            badgeContent={badgeCount > 0 ? badgeCount : 0}
-                                            invisible={badgeCount === 0}
-                                            size="sm"
-                                            sx={{
-                                                "& .MuiBadge-badge": {
-                                                    background: isDark
-                                                        ? `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`
-                                                        : `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`,
-                                                    color: "#fff",
-                                                    fontWeight: 700,
-                                                    fontSize: "0.6rem",
-                                                    minWidth: 20,
-                                                    height: 20,
-                                                    pt: 0.25,
-                                                    boxShadow: `0 2px 6px rgba(${colorRgb}, 0.251)`,
-                                                    border: "2px solid",
-                                                    borderColor: isDark
-                                                        ? "rgba(18,18,22,1)"
-                                                        : "rgba(252,252,255,1)",
-                                                },
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    width: 32,
-                                                    height: 32,
-                                                    borderRadius: "10px",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
+                                                        ? `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.063) 100%)`
+                                                        : `linear-gradient(135deg, rgba(${colorRgb}, 0.082) 0%, rgba(${colorRgb}, 0.031) 100%)`
+                                                    : "transparent",
+                                                border: "1px solid",
+                                                borderColor: isActive
+                                                    ? isDark
+                                                        ? `rgba(${colorRgb}, 0.208)`
+                                                        : `rgba(${colorRgb}, 0.145)`
+                                                    : "transparent",
+                                                "&:hover": {
                                                     background: isActive
                                                         ? isDark
                                                             ? `linear-gradient(135deg, rgba(${colorRgb}, 0.145) 0%, rgba(${colorRgb}, 0.082) 100%)`
-                                                            : `linear-gradient(135deg, rgba(${colorRgb}, 0.094) 0%, rgba(${colorRgb}, 0.063) 100%)`
+                                                            : `linear-gradient(135deg, rgba(${colorRgb}, 0.125) 0%, rgba(${colorRgb}, 0.071) 100%)`
                                                         : isDark
                                                           ? "rgba(255,255,255,0.04)"
                                                           : "rgba(0,0,0,0.03)",
+                                                    transform: "translateY(-1px)",
+                                                },
+                                                "&:active": {
+                                                    transform: "translateY(0)",
+                                                },
+                                            }}
+                                            onClick={() => handleNavClick(item.path)}
+                                        >
+                                            <Badge
+                                                badgeContent={badgeCount > 0 ? badgeCount : 0}
+                                                invisible={badgeCount === 0}
+                                                size="sm"
+                                                sx={{
+                                                    "& .MuiBadge-badge": {
+                                                        background: isDark
+                                                            ? `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`
+                                                            : `linear-gradient(135deg, ${color} 0%, rgba(${colorRgb}, 0.8) 100%)`,
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                        fontSize: "0.6rem",
+                                                        minWidth: 20,
+                                                        height: 20,
+                                                        pt: 0.25,
+                                                        boxShadow: `0 2px 6px rgba(${colorRgb}, 0.251)`,
+                                                        border: "2px solid",
+                                                        borderColor: isDark
+                                                            ? "rgba(18,18,22,1)"
+                                                            : "rgba(252,252,255,1)",
+                                                    },
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        width: 32,
+                                                        height: 32,
+                                                        borderRadius: "10px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        background: isActive
+                                                            ? isDark
+                                                                ? `linear-gradient(135deg, rgba(${colorRgb}, 0.145) 0%, rgba(${colorRgb}, 0.082) 100%)`
+                                                                : `linear-gradient(135deg, rgba(${colorRgb}, 0.094) 0%, rgba(${colorRgb}, 0.063) 100%)`
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.04)"
+                                                              : "rgba(0,0,0,0.03)",
+                                                        transition: "all 0.2s ease",
+                                                    }}
+                                                >
+                                                    <Icon
+                                                        sx={{
+                                                            fontSize: 20,
+                                                            color: isActive
+                                                                ? color
+                                                                : isDark
+                                                                  ? "rgba(255,255,255,0.45)"
+                                                                  : "rgba(0,0,0,0.4)",
+                                                            transition: "color 0.2s ease",
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </Badge>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    mt: 0.5,
+                                                    fontSize: "0.65rem",
+                                                    fontWeight: isActive ? 600 : 500,
+                                                    color: isActive
+                                                        ? color
+                                                        : isDark
+                                                          ? "rgba(255,255,255,0.55)"
+                                                          : "rgba(0,0,0,0.5)",
                                                     transition: "all 0.2s ease",
                                                 }}
                                             >
-                                                <Icon
-                                                    sx={{
-                                                        fontSize: 20,
-                                                        color: isActive
-                                                            ? color
-                                                            : isDark
-                                                              ? "rgba(255,255,255,0.45)"
-                                                              : "rgba(0,0,0,0.4)",
-                                                        transition: "color 0.2s ease",
-                                                    }}
-                                                />
-                                            </Box>
-                                        </Badge>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{
-                                                mt: 0.5,
-                                                fontSize: "0.65rem",
-                                                fontWeight: isActive ? 600 : 500,
-                                                color: isActive
-                                                    ? color
-                                                    : isDark
-                                                      ? "rgba(255,255,255,0.55)"
-                                                      : "rgba(0,0,0,0.5)",
-                                                transition: "all 0.2s ease",
-                                            }}
-                                        >
-                                            {t.sidebar.nav[item.labelKey]}
-                                        </Typography>
-                                    </ListItemButton>
-                                </AppTooltip>
-                            </ListItem>
-                        );
-                    })}
+                                                {t.sidebar.nav[item.labelKey]}
+                                            </Typography>
+                                        </ListItemButton>
+                                    </AppTooltip>
+                                </ListItem>
+                            );
+                        }
+                    )}
                 </List>
 
                 {/* Bottom Actions */}
@@ -506,6 +516,71 @@ export const Sidebar = (props: SidebarProps) => {
                         px: 1,
                     }}
                 >
+                    {/* ToDo — opens the self-DM ToDo pane. A chat sub-pane
+                        (like Genos/History), not a /workspace/* service, so
+                        it's a dedicated button rather than a NAV_ITEMS entry.
+                        Hideable via Settings → General → Sidebar. */}
+                    {sidebarVisibility.isVisible("todo") && (
+                        <ListItem>
+                            <AppTooltip
+                                placement="right"
+                                size="sm"
+                                title={
+                                    isMac()
+                                        ? t.sidebar.tooltips.todoShortcut.mac
+                                        : t.sidebar.tooltips.todoShortcut.windows
+                                }
+                            >
+                                <ListItemButton
+                                    sx={{
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        py: 1,
+                                        px: 1.25,
+                                        borderRadius: "12px",
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(255,255,255,0.06)"
+                                                : "rgba(0,0,0,0.04)",
+                                            "& .todo-icon": {
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.85)"
+                                                    : "rgba(0,0,0,0.75)",
+                                            },
+                                        },
+                                    }}
+                                    onClick={onOpenTodo}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: "10px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            background: isDark
+                                                ? "rgba(255,255,255,0.04)"
+                                                : "rgba(0,0,0,0.03)",
+                                            transition: "all 0.2s ease",
+                                        }}
+                                    >
+                                        <ChecklistRoundedIcon
+                                            className="todo-icon"
+                                            sx={{
+                                                fontSize: 18,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.45)"
+                                                    : "rgba(0,0,0,0.4)",
+                                                transition: "color 0.2s ease",
+                                            }}
+                                        />
+                                    </Box>
+                                </ListItemButton>
+                            </AppTooltip>
+                        </ListItem>
+                    )}
                     <ListItem>
                         <AppTooltip
                             placement="right"

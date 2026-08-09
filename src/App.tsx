@@ -691,6 +691,40 @@ export const App = () => {
         useSM.projectMilestones,
     ]);
 
+    // Open the user's ToDo pane. The ToDo list has no dedicated route — it
+    // lives inside the self-DM chat — so we route to that DM, flip the pane
+    // visible in localStorage, and dispatch `openTodoPane` for a ChatHome
+    // that's already mounted (chatHome listens for it). Shared by the global
+    // shortcut (Ctrl+Cmd/Alt+O) and the sidebar ToDo button; mirrors the
+    // `entity_type === "todo"` branch in handleSpotlightPreview but with no
+    // specific item to focus.
+    const openTodo = useCallback(() => {
+        const selfDm = useCM.allChats.find(
+            (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
+        );
+        localStorage.setItem("isToDoVisible", "true");
+        window.dispatchEvent(new CustomEvent("openTodoPane", { detail: null }));
+        if (selfDm) {
+            // PUNCH LIST (v3 chatId migration): same legacy `number` cast at
+            // the moveToSpecificChat boundary as the other self-DM callers.
+            useCM.moveToSpecificChat(
+                1,
+                selfDm.chatId as unknown as number,
+                0,
+                false,
+                false,
+                useTM.setCurrentPreviewTaskId,
+                usePM.setCurrentProject,
+                undefined
+            );
+        } else {
+            // No self-DM cached yet — drop on the workspace root; the pane
+            // opens once the chat list populates and the self-DM resolves.
+            navigate("/workspace");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useCM, useTM, usePM, navigate]);
+
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
             onOpenCalendarModal: calendarModal.open,
@@ -707,6 +741,7 @@ export const App = () => {
                 navigate("/workspace/tasks");
                 useTM.handleCreateTask();
             },
+            onOpenTodo: openTodo,
             onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
         });
 
@@ -1658,6 +1693,9 @@ export const App = () => {
                                                                                                         }
                                                                                                         onOpenGenos={
                                                                                                             openGenosPage
+                                                                                                        }
+                                                                                                        onOpenTodo={
+                                                                                                            openTodo
                                                                                                         }
                                                                                                     />
                                                                                                     <Routes>

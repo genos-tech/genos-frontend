@@ -42,7 +42,10 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
-import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
+import {
+    MuteMenuItem,
+    MuteToggleButton,
+} from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
@@ -392,14 +395,52 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 </Stack>
 
                 <Stack direction="row" sx={{ alignItems: "center", gap: 0.25, flexShrink: 0 }}>
-                    {/* Per-chat mute toggle stays surfaced — it's the
-                        most-used header action and mobile users will
-                        otherwise need an extra tap. */}
-                    <MuteToggleButton
-                        chatType={chat.chatType}
-                        chatId={chat.chatId}
-                        chatName={chat.chatName}
-                    />
+                    {/* Self-DM: the ToDo toggle is the primary action, so it
+                        takes the visible icon slot and mute moves into the
+                        overflow menu below. Every other chat keeps mute
+                        surfaced here (it has no ToDo pane). */}
+                    {isYou === true ? (
+                        isToDoVisible === true ? (
+                            <AppTooltip size="sm" title={t.chat.headers.backToChat}>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => setIsToDoVisible(false)}
+                                    aria-label={t.chat.headers.backToChat}
+                                >
+                                    <QuestionAnswerRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                </IconButton>
+                            </AppTooltip>
+                        ) : (
+                            <AppTooltip size="sm" title={t.chat.headers.todoTooltip}>
+                                <Badge
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    badgeContent={incompleteTodoCount}
+                                    color="primary"
+                                    size="sm"
+                                >
+                                    <IconButton
+                                        size="sm"
+                                        variant="plain"
+                                        onClick={() => setIsToDoVisible(true)}
+                                        aria-label={t.chat.headers.todoTooltip}
+                                    >
+                                        <ChecklistRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    </IconButton>
+                                </Badge>
+                            </AppTooltip>
+                        )
+                    ) : (
+                        <MuteToggleButton
+                            chatType={chat.chatType}
+                            chatId={chat.chatId}
+                            chatName={chat.chatName}
+                        />
+                    )}
 
                     <Dropdown>
                         <MenuButton
@@ -456,27 +497,16 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuItem>
                             )}
 
+                            {/* Self-DM only: ToDo lives in the visible icon
+                                slot above, so mute is surfaced here in the
+                                overflow instead. Other chats keep mute as
+                                their visible icon and don't need this. */}
                             {isYou === true && (
-                                <MenuItem onClick={() => setIsToDoVisible(!isToDoVisible)}>
-                                    {isToDoVisible ? (
-                                        <QuestionAnswerRoundedIcon
-                                            sx={{ fontSize: 18, color: styles.accentColor }}
-                                        />
-                                    ) : (
-                                        <Badge
-                                            badgeContent={incompleteTodoCount}
-                                            color="primary"
-                                            size="sm"
-                                        >
-                                            <ChecklistRoundedIcon
-                                                sx={{ fontSize: 18, color: styles.accentColor }}
-                                            />
-                                        </Badge>
-                                    )}
-                                    {isToDoVisible
-                                        ? t.chat.headers.backToChat
-                                        : t.chat.headers.todoTooltip}
-                                </MenuItem>
+                                <MuteMenuItem
+                                    chatType={chat.chatType}
+                                    chatId={chat.chatId}
+                                    chatName={chat.chatName}
+                                />
                             )}
 
                             {isYou === true && calendarModal && (

@@ -9,6 +9,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import {
+    HIDEABLE_SIDEBAR_ITEMS,
+    SidebarItemKey,
+    useSidebarVisibility,
+} from "../../hooks/common/useSidebarVisibility";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
@@ -66,8 +71,16 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+    const { isVisible } = useSidebarVisibility();
 
     if (!isMobile) return null;
+
+    // Hide tabs the user turned off in Settings → Sidebar. Account has no
+    // toggle (like Genos on desktop), so it's kept via the labelKey guard.
+    const hideable = new Set<string>(HIDEABLE_SIDEBAR_ITEMS);
+    const visibleTabs = TAB_ITEMS.filter(
+        (item) => !hideable.has(item.labelKey) || isVisible(item.labelKey as SidebarItemKey)
+    );
 
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
@@ -108,7 +121,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 paddingBottom: "env(safe-area-inset-bottom, 0)",
             }}
         >
-            {TAB_ITEMS.map((item) => {
+            {visibleTabs.map((item) => {
                 const Icon = item.icon;
                 // Guard on empty `path` — `includes("")` is true for every
                 // route, which would light up the Account tab everywhere.

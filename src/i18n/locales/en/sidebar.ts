@@ -32,6 +32,7 @@ export const sidebar = {
         tasksShortcut: { mac: "Ctrl+⌘+T", windows: "Ctrl+Alt+T" },
         notesShortcut: { mac: "Ctrl+⌘+N", windows: "Ctrl+Alt+N" },
         historyShortcut: { mac: "History · Ctrl+⌘+H", windows: "History · Ctrl+Alt+H" },
+        todoShortcut: { mac: "To-Do · Ctrl+⌘+O", windows: "To-Do · Ctrl+Alt+O" },
     },
     signOutConfirm: {
         title: "Sign out of this workspace?",

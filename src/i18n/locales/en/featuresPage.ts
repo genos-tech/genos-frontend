@@ -170,6 +170,7 @@ export const featuresPage = {
             { keys: "Ctrl + ⌘ + M", label: "Generate a Google Meet link and copy it" },
             { keys: "Ctrl + ⌘ + H", label: "Toggle History of recently opened items" },
             { keys: "Ctrl + ⌘ + G", label: "Open the task diagram for the current task" },
+            { keys: "Ctrl + ⌘ + O", label: "Open the To-Do list" },
             {
                 keys: "↑ / ↓, Enter",
                 label: "In Spotlight: move through results, then open or ask",
