@@ -28,22 +28,24 @@ import { MentionPalette, MentionSuggestionMenu } from "./Mention";
 // Sibling palettes to the `@` user/group chips (see `mentionChipSx`). One
 // per entity type so a `#` reference reads at a glance as task vs note vs
 // chat vs project.
-const TASK_PALETTE: MentionPalette = {
+// Exported so the plain-DOM light path (`LightMessageBody`) renders `#`
+// chips with the identical per-entity colors instead of duplicating them.
+export const TASK_PALETTE: MentionPalette = {
     bg: "rgba(59, 130, 246, 0.15)",
     bgHover: "rgba(59, 130, 246, 0.28)",
     text: "#2563eb",
 };
-const NOTE_PALETTE: MentionPalette = {
+export const NOTE_PALETTE: MentionPalette = {
     bg: "rgba(var(--gp-brandalt-500-rgb), 0.15)",
     bgHover: "rgba(var(--gp-brandalt-500-rgb), 0.28)",
     text: "var(--gp-brand-700)",
 };
-const CHAT_PALETTE: MentionPalette = {
+export const CHAT_PALETTE: MentionPalette = {
     bg: "rgba(20, 184, 166, 0.15)",
     bgHover: "rgba(20, 184, 166, 0.28)",
     text: "#0d9488",
 };
-const PROJECT_PALETTE: MentionPalette = {
+export const PROJECT_PALETTE: MentionPalette = {
     bg: "rgba(245, 158, 11, 0.15)",
     bgHover: "rgba(245, 158, 11, 0.28)",
     text: "#d97706",
@@ -61,7 +63,9 @@ const PROJECT_PALETTE: MentionPalette = {
 // plain <span>, not on this component directly — Joy's Tooltip clones its
 // child and injects props (incl. a stray `component`) that clobber the
 // styled Box.
-const hashMentionTextSx = (palette: MentionPalette) =>
+// Exported so the light path shares this exact style (see the palette
+// comment above).
+export const hashMentionTextSx = (palette: MentionPalette) =>
     ({
         display: "inline",
         color: palette.text,

@@ -539,6 +539,24 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+/* Reserve vertical space for a light-path image until it decodes, so the
+   row doesn't grow on first scroll and force react-virtuoso to re-measure
+   (the "first scroll janky, second smooth" report). Scoped to
+   `data-media-loaded="false"` — an attribute ONLY `LightImageBlock` emits;
+   the read-only editor path (BnChatPreview) emits the same
+   `.bn-visual-media-wrapper` class but never this attribute, so it keeps
+   its intrinsic sizing. `min-height` (not a fixed height) means a real
+   image is never distorted — once `onLoad` flips the attribute to "true"
+   the reservation drops to 0 and the ResizeObserver remeasures with a
+   near-zero delta. */
+.bn-visual-media-wrapper[data-media-loaded="false"] {
+    min-height: 200px;
+}
+
+.bn-visual-media-wrapper[data-media-loaded="true"] {
+    min-height: 0;
+}
+
 .bn-editor code {
     padding: 1px 4px;
     border-radius: 4px;

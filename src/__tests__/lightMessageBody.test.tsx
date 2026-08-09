@@ -20,7 +20,7 @@ import {
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import { CssVarsProvider } from "@mui/joy";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +42,26 @@ vi.mock("../context/AuthContext", async (importOriginal) => ({
 // the card's own behaviour.
 vi.mock("../features/integrations/components/LinkedPrCard", () => ({
     LinkedPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
+}));
+
+// Media download / URL-resolution seams. `downloadFile` is asserted on
+// (file/image-preview clicks call it); `resolveInsecureFileUrl` backs
+// `useProtectedMediaSrc`, so returning the URL synchronously lets a
+// protected `<img>` render in the test without a real fetch.
+const downloadFile = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("../utils/downloadUtils", async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
+    downloadFile,
+    resolveInsecureFileUrl: (url: string) => Promise.resolve(url),
+}));
+
+// Toggle whether a URL is treated as protected `/media/`. Default false
+// (public, resolves synchronously); the protected-URL test flips it on to
+// assert the `<img>` waits for resolution.
+const mediaAuthState = vi.hoisted(() => ({ protected: false }));
+vi.mock("../utils/mediaAuth", async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
+    isProtectedMediaUrl: () => mediaAuthState.protected,
 }));
 
 const ctx = {
@@ -455,6 +475,233 @@ describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
     });
 });
 
+describe("media blocks render as BlockNote-shaped plain DOM", () => {
+    const wrap = (block: any) => [block, { type: "paragraph", content: [] }];
+
+    afterEach(() => {
+        downloadFile.mockClear();
+        mediaAuthState.protected = false;
+    });
+
+    it("renders an image with the BlockNote wrapper structure", () => {
+        const content = wrap({
+            type: "image",
+            props: { url: "https://cdn.example.com/pic.png", name: "pic.png" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+
+        const blockContent = container.querySelector(
+            '.bn-block-content[data-content-type="image"]'
+        );
+        expect(blockContent).not.toBeNull();
+        // BlockNote stamps a bare `data-file-block` on every media block.
+        expect(blockContent?.hasAttribute("data-file-block")).toBe(true);
+
+        const img = container.querySelector(
+            ".bn-file-block-content-wrapper > .bn-visual-media-wrapper > img.bn-visual-media"
+        ) as HTMLImageElement | null;
+        expect(img).not.toBeNull();
+        expect(img?.getAttribute("src")).toBe("https://cdn.example.com/pic.png");
+        expect(img?.getAttribute("alt")).toBe("pic.png");
+        expect(img?.getAttribute("draggable")).toBe("false");
+    });
+
+    it("opens the zoom modal when an image is clicked", async () => {
+        const user = userEvent.setup();
+        const content = wrap({
+            type: "image",
+            props: { url: "https://cdn.example.com/pic.png", name: "pic.png" },
+        });
+        render(
+            <CssVarsProvider>
+                <LightMessageBody content={content} {...ctx} />
+            </CssVarsProvider>
+        );
+
+        // No dialog until the image is clicked.
+        expect(screen.queryByRole("dialog")).toBeNull();
+        const img = document.querySelector("img.bn-visual-media") as HTMLImageElement;
+        await user.click(img);
+        expect(screen.getByRole("dialog")).not.toBeNull();
+    });
+
+    it("reserves vertical space until the image decodes", () => {
+        const content = wrap({
+            type: "image",
+            props: { url: "https://cdn.example.com/pic.png", name: "pic.png" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+
+        const wrapper = container.querySelector(".bn-visual-media-wrapper");
+        // The reservation CSS keys off `data-media-loaded="false"`; the
+        // attribute flips to "true" only after the image fires `load`.
+        expect(wrapper?.getAttribute("data-media-loaded")).toBe("false");
+
+        const img = container.querySelector("img.bn-visual-media") as HTMLImageElement;
+        fireEvent.load(img);
+        expect(wrapper?.getAttribute("data-media-loaded")).toBe("true");
+    });
+
+    it("renders an image caption inside the content wrapper", () => {
+        const content = wrap({
+            type: "image",
+            props: { url: "https://cdn.example.com/pic.png", name: "pic.png", caption: "a cat" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        // BlockNote appends the caption to `.bn-file-block-content-wrapper`
+        // (not as a sibling) — the `[data-file-block] .bn-file-caption` rule
+        // depends on that nesting.
+        const caption = container.querySelector(
+            ".bn-file-block-content-wrapper > p.bn-file-caption"
+        );
+        expect(caption?.textContent).toBe("a cat");
+    });
+
+    it("renders an image with preview disabled as a file chip", () => {
+        const content = wrap({
+            type: "image",
+            props: {
+                url: "https://cdn.example.com/pic.png",
+                name: "pic.png",
+                showPreview: false,
+            },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.querySelector("img.bn-visual-media")).toBeNull();
+        expect(
+            container.querySelector(".bn-file-name-with-icon p.bn-file-name")?.textContent
+        ).toBe("pic.png");
+    });
+
+    it("does not render a protected image until its URL resolves", async () => {
+        mediaAuthState.protected = true;
+        const content = wrap({
+            type: "image",
+            props: { url: "http://localhost:8890/media/chat/secret.png", name: "secret.png" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+
+        // The mocked `resolveInsecureFileUrl` resolves on a microtask, so the
+        // very first render has no `<img>` (this is what stops the browser
+        // firing a 401'ing request); it appears once resolution completes.
+        expect(container.querySelector("img.bn-visual-media")).toBeNull();
+        await waitFor(() => {
+            expect(container.querySelector("img.bn-visual-media")).not.toBeNull();
+        });
+    });
+
+    it("renders a file block with icon + name and downloads on click", async () => {
+        const user = userEvent.setup();
+        const content = wrap({
+            type: "file",
+            props: { url: "https://cdn.example.com/report.pdf", name: "report.pdf" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+
+        const blockContent = container.querySelector(
+            '.bn-block-content[data-content-type="file"]'
+        );
+        expect(blockContent?.hasAttribute("data-file-block")).toBe(true);
+        expect(
+            container.querySelector(".bn-file-name-with-icon .bn-file-icon svg")
+        ).not.toBeNull();
+        expect(container.querySelector("p.bn-file-name")?.textContent).toBe("report.pdf");
+
+        await user.click(container.querySelector(".bn-file-name-with-icon") as HTMLElement);
+        expect(downloadFile).toHaveBeenCalledWith(
+            "https://cdn.example.com/report.pdf",
+            "report.pdf"
+        );
+    });
+});
+
+describe("hash mentions render as inline styled text", () => {
+    // Every hash chip lives inside the block's `<p class="bn-inline-content">`
+    // and must be inline-valid there, same as the `@` mention chips.
+    const BLOCK_LEVEL = "p, div, h1, h2, h3, ul, ol, li, section, article, blockquote";
+    const expectNoBlockLevelInside = (container: HTMLElement) => {
+        const offenders: string[] = [];
+        container.querySelectorAll("p.bn-inline-content").forEach((p) => {
+            p.querySelectorAll(BLOCK_LEVEL).forEach((el) => {
+                offenders.push(`${el.tagName.toLowerCase()}.${el.className || "(no class)"}`);
+            });
+        });
+        expect(offenders).toEqual([]);
+    };
+
+    const para = (inline: any) => [
+        { type: "paragraph", content: [inline] },
+        { type: "paragraph", content: [] },
+    ];
+
+    const clickHashAndExpectHref = async (
+        inline: any,
+        expectedText: string,
+        expectedHref: string
+    ) => {
+        const openModalByHref = vi.fn(() => "opened" as const);
+        const user = userEvent.setup();
+        const { container } = render(
+            <UrlLinkModalProvider value={{ openModalByHref }}>
+                <LightMessageBody content={para(inline)} {...ctx} />
+            </UrlLinkModalProvider>
+        );
+        expect(container.textContent).toContain(expectedText);
+        expectNoBlockLevelInside(container);
+        await user.click(screen.getByText(expectedText));
+        expect(openModalByHref).toHaveBeenCalledWith(expectedHref);
+    };
+
+    it("renders a #task chip, inline-valid, that opens the task href", async () => {
+        await clickHashAndExpectHref(
+            {
+                type: "hashTask",
+                props: { projectId: "7", taskId: "12", displayId: "PRJ-12", title: "Ship it" },
+            },
+            "#PRJ-12 · Ship it",
+            "/workspace/tasks/project/7/task/12"
+        );
+    });
+
+    it("wraps the #task chip in a bare <span> tooltip anchor", () => {
+        const content = para({
+            type: "hashTask",
+            props: { projectId: "7", taskId: "12", displayId: "PRJ-12", title: "Ship it" },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        // Joy's Tooltip clones its child, so the chip is anchored on a plain
+        // <span> (never on the styled Box directly). The hovercard itself
+        // mounts lazily on hover, so it never renders here.
+        const span = container.querySelector("p.bn-inline-content > span");
+        expect(span).not.toBeNull();
+        expect(span?.textContent).toBe("#PRJ-12 · Ship it");
+    });
+
+    it("renders a #note chip that opens the note href", async () => {
+        await clickHashAndExpectHref(
+            { type: "hashNote", props: { noteKind: "my", noteId: "9", title: "Ideas" } },
+            "#Ideas",
+            "/workspace/notes/my/9"
+        );
+    });
+
+    it("renders a #chat chip that opens the gm-chat href", async () => {
+        await clickHashAndExpectHref(
+            { type: "hashChat", props: { chatId: "3", chatName: "General" } },
+            "#General",
+            "/workspace/chat/gm/3"
+        );
+    });
+
+    it("renders a #project chip that opens the project href", async () => {
+        await clickHashAndExpectHref(
+            { type: "hashProject", props: { projectId: "5", projectName: "Apollo" } },
+            "#Apollo",
+            "/workspace/tasks/project/5"
+        );
+    });
+});
+
 describe("canRenderLight routing", () => {
     const wrap = (blocks: any[]) => [...blocks, { type: "paragraph", content: [] }];
 
@@ -479,16 +726,39 @@ describe("canRenderLight routing", () => {
         }
     });
 
-    it("rejects media, code and tables", () => {
-        for (const type of ["image", "file", "video", "audio", "codeBlock", "table"]) {
+    it("accepts image and file blocks", () => {
+        for (const type of ["image", "file"]) {
+            expect(canRenderLight(wrap([{ type, props: {} }]))).toBe(true);
+        }
+    });
+
+    it("rejects video, audio, code and tables", () => {
+        // `video`/`audio` are stripped from the schema so never reach a
+        // saved body; `codeBlock` (Shiki-highlighted) and `table` stay on
+        // the editor path deliberately.
+        for (const type of ["video", "audio", "codeBlock", "table"]) {
             expect(canRenderLight(wrap([{ type, props: {} }]))).toBe(false);
         }
     });
 
-    it("rejects hash mentions (not yet painted by the light path)", () => {
+    it("accepts all four hash-mention types", () => {
+        for (const type of ["hashTask", "hashNote", "hashChat", "hashProject"]) {
+            expect(
+                canRenderLight(wrap([{ type: "paragraph", content: [{ type, props: {} }] }]))
+            ).toBe(true);
+        }
+    });
+
+    it("falls back when media is mixed with an unsupported block", () => {
+        // A body mixing a (supported) image with a (still editor-only) code
+        // block must route to the editor whole — the light path can't paint
+        // the code block, so painting only the image would drop content.
         expect(
             canRenderLight(
-                wrap([{ type: "paragraph", content: [{ type: "hashTask", props: {} }] }])
+                wrap([
+                    { type: "image", props: {} },
+                    { type: "codeBlock", props: {} },
+                ])
             )
         ).toBe(false);
     });
@@ -526,7 +796,7 @@ describe("canRenderLight routing", () => {
                     {
                         type: "bulletListItem",
                         content: [],
-                        children: [{ type: "image", props: {} }],
+                        children: [{ type: "codeBlock", props: {} }],
                     },
                 ])
             )

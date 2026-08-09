@@ -25,10 +25,28 @@ const SUPPORTED_BLOCK_TYPES = new Set([
     "numberedListItem",
     "checkListItem",
     "quote",
+    // Media. `video`/`audio` are stripped from the editor schema, so they
+    // never reach a saved message; `codeBlock` (Shiki-highlighted) and
+    // `table` deliberately stay OFF this list so they keep routing to the
+    // full editor.
+    "image",
+    "file",
 ]);
 
 /** Inline content types `LightMessageBody` knows how to paint. */
-const SUPPORTED_INLINE_TYPES = new Set(["text", "link", "mention", "mentionGroup", "customEmoji"]);
+const SUPPORTED_INLINE_TYPES = new Set([
+    "text",
+    "link",
+    "mention",
+    "mentionGroup",
+    "customEmoji",
+    // `#` entity mentions — rendered as plain styled text (see
+    // `LightMessageBody`'s `LightHashChip`).
+    "hashTask",
+    "hashNote",
+    "hashChat",
+    "hashProject",
+]);
 
 /**
  * Text style keys with a known mapping to markup. A style present but
