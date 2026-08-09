@@ -37,21 +37,35 @@ import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
+import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useProtectedMediaSrc } from "../../hooks/common/useProtectedMediaSrc";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
+import { downloadFile } from "../../utils/downloadUtils";
+import { entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
+import {
+    CHAT_PALETTE,
+    hashMentionTextSx,
+    NOTE_PALETTE,
+    PROJECT_PALETTE,
+    TASK_PALETTE,
+} from "../editors/HashMention";
 import {
     GROUP_PALETTE,
     mentionChipSx,
+    MentionPalette,
     USER_OTHER_PALETTE,
     USER_SELF_PALETTE,
 } from "../editors/Mention";
+import { AppTooltip } from "../ui/AppTooltip";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { isJumboEmojiBody } from "./emojiOnlyBody";
+import { ImageZoomModal } from "./ImageZoomModal";
 
 type AnyBlock = Record<string, any>;
 
@@ -142,6 +156,36 @@ const MentionChip = ({
                 />
             )}
         </>
+    );
+};
+
+/**
+ * `#` entity chip — styled inline TEXT (not a pill), mirroring
+ * `HashMention`'s `HashChip`. Uses the SAME exported palettes and
+ * `hashMentionTextSx` so it reads identically to the editor path.
+ *
+ * `component="span"` (not the Box default `<div>`) because this lives
+ * inside `<p class="bn-inline-content">` — see the `MentionChip` note.
+ */
+const LightHashChip = ({
+    href,
+    label,
+    palette,
+}: {
+    href: string;
+    label: string;
+    palette: MentionPalette;
+}) => {
+    const urlLinkModal = useUrlLinkModal();
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        urlLinkModal?.openModalByHref(href);
+    };
+    return (
+        <Box component="span" sx={hashMentionTextSx(palette)} onClick={handleClick}>
+            #{label}
+        </Box>
     );
 };
 
@@ -263,11 +307,225 @@ const InlineContent = ({
             if (type === "customEmoji") {
                 return <CustomEmojiImg key={i} name={item.props?.name} url={item.props?.url} />;
             }
+            if (type === "hashTask") {
+                const p = item.props ?? {};
+                const idText = p.displayId || p.taskId || "";
+                const label = p.title ? `${idText} · ${p.title}` : idText;
+                const href = entityRefToHref({
+                    entityType: "task",
+                    projectId: p.projectId ?? "",
+                    taskId: p.taskId ?? "",
+                });
+                // Hovercard parity with the editor path. `AppTooltip`
+                // renders `title` lazily on hover, so `TaskMentionHoverCard`
+                // (which fetches task status) never mounts until hovered —
+                // no per-bubble cost at rest. Bare <span> anchor: Joy's
+                // Tooltip clones its child and injects props that would
+                // clobber the styled chip.
+                return (
+                    <AppTooltip
+                        key={i}
+                        enterDelay={250}
+                        placement="top-start"
+                        surface="none"
+                        title={
+                            <TaskMentionHoverCard
+                                displayId={idText}
+                                projectId={p.projectId ?? ""}
+                                taskId={p.taskId ?? ""}
+                                title={p.title ?? ""}
+                            />
+                        }
+                    >
+                        <span>
+                            <LightHashChip href={href} label={label} palette={TASK_PALETTE} />
+                        </span>
+                    </AppTooltip>
+                );
+            }
+            if (type === "hashNote") {
+                const p = item.props ?? {};
+                const noteId = p.noteId ?? "";
+                let ref: HashEntityRef;
+                if (p.noteKind === "task") {
+                    ref = {
+                        entityType: "note",
+                        noteKind: "task",
+                        projectId: p.projectId ?? "",
+                        taskId: p.taskId ?? "",
+                        noteId,
+                    };
+                } else if (p.noteKind === "chat") {
+                    ref = {
+                        entityType: "note",
+                        noteKind: "chat",
+                        chatType: p.chatType || "gm",
+                        chatId: p.chatId ?? "",
+                        threadId: p.threadId || "0",
+                        noteId,
+                    };
+                } else if (p.noteKind === "shared") {
+                    ref = { entityType: "note", noteKind: "shared", noteId };
+                } else if (p.noteKind === "team") {
+                    ref = { entityType: "note", noteKind: "team", noteId };
+                } else {
+                    ref = { entityType: "note", noteKind: "my", noteId };
+                }
+                return (
+                    <LightHashChip
+                        key={i}
+                        href={entityRefToHref(ref)}
+                        label={p.title || "note"}
+                        palette={NOTE_PALETTE}
+                    />
+                );
+            }
+            if (type === "hashChat") {
+                const p = item.props ?? {};
+                const href = entityRefToHref({
+                    entityType: "chat",
+                    chatType: "gm",
+                    chatId: p.chatId ?? "",
+                });
+                return (
+                    <LightHashChip
+                        key={i}
+                        href={href}
+                        label={p.chatName || "chat"}
+                        palette={CHAT_PALETTE}
+                    />
+                );
+            }
+            if (type === "hashProject") {
+                const p = item.props ?? {};
+                const href = entityRefToHref({
+                    entityType: "project",
+                    projectId: p.projectId ?? "",
+                });
+                return (
+                    <LightHashChip
+                        key={i}
+                        href={href}
+                        label={p.projectName || "project"}
+                        palette={PROJECT_PALETTE}
+                    />
+                );
+            }
             // Unreachable — `canRenderLight` gates these out.
             return null;
         })}
     </>
 );
+
+/* ------------------------------------------------------------------ */
+/* Media blocks                                                        */
+/* ------------------------------------------------------------------ */
+
+// Verbatim copy of BlockNote's file-block icon (`createFileNameWithIcon`'s
+// `rn`). Copied so `.bn-file-icon` renders the same glyph the editor path
+// does; keep byte-identical if it's ever refreshed.
+const FILE_ICON_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 8L9.00319 2H19.9978C20.5513 2 21 2.45531 21 2.9918V21.0082C21 21.556 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.5501 3 20.9932V8ZM10 4V9H5V20H19V4H10Z"></path></svg>';
+
+/**
+ * File-name-with-icon markup shared by `LightFileBlock` and the
+ * `showPreview: false` image case. Mirrors BlockNote's `an`:
+ * `.bn-file-name-with-icon > (.bn-file-icon > svg) + p.bn-file-name`.
+ * Clicking downloads, exactly as `BnChatPreview`'s delegated file handler
+ * does — but wired directly here since the light path emits no `data-id`.
+ */
+const FileNameWithIcon = ({ url, name }: { url?: string; name?: string }) => (
+    <div
+        className="bn-file-name-with-icon"
+        style={{ cursor: "pointer" }}
+        onClick={() => {
+            if (url) downloadFile(url, name || undefined);
+        }}
+    >
+        <div className="bn-file-icon" dangerouslySetInnerHTML={{ __html: FILE_ICON_SVG }} />
+        <p className="bn-file-name">{name}</p>
+    </div>
+);
+
+/**
+ * Image block, plain DOM. Mirrors BlockNote's read-only image markup so
+ * the `@blocknote/core` + App.css rules keyed on these classes apply:
+ * `.bn-file-block-content-wrapper > .bn-visual-media-wrapper >
+ * img.bn-visual-media`.
+ *
+ * Two things a hand-written `<img>` needs that the editor got for free:
+ *  - protected `/media/` URLs must be resolved to a blob first, else the
+ *    browser fires a request that 401s and shows a broken image —
+ *    `useProtectedMediaSrc` is exactly that seam (public URLs like Giphy
+ *    resolve synchronously, so they never flicker).
+ *  - reserved vertical space until decode, so the row doesn't grow on
+ *    first scroll and make Virtuoso re-measure (the "first scroll janky,
+ *    second smooth" report). `data-media-loaded` drops the reservation on
+ *    load — see the `.bn-visual-media-wrapper` rule in App.css.
+ */
+const LightImageBlock = ({
+    block,
+    onImageZoom,
+}: {
+    block: AnyBlock;
+    onImageZoom: (src: string) => void;
+}) => {
+    const props = block.props ?? {};
+    const src = useProtectedMediaSrc(props.url);
+    const [loaded, setLoaded] = useState(false);
+    const showPreview = props.showPreview !== false;
+
+    // A resized image stores its width; height stays unknown, so the CSS
+    // reservation carries the height. `fit-content` matches the editor's
+    // default so an un-resized image is sized by its intrinsic width
+    // (clamped by `.bn-editor img`).
+    const wrapperWidth =
+        typeof props.previewWidth === "number" ? `${props.previewWidth}px` : "fit-content";
+
+    if (!showPreview) {
+        // BlockNote renders an image with preview disabled as a file chip.
+        // The caption sits INSIDE the content wrapper (BlockNote appends it
+        // to the same div, not as a sibling) — matters for the
+        // `[data-file-block] .bn-file-caption` rule to apply.
+        return (
+            <div className="bn-file-block-content-wrapper">
+                <FileNameWithIcon name={props.name} url={props.url} />
+                {props.caption && <p className="bn-file-caption">{props.caption}</p>}
+            </div>
+        );
+    }
+
+    return (
+        <div className="bn-file-block-content-wrapper" style={{ width: wrapperWidth }}>
+            <div className="bn-visual-media-wrapper" data-media-loaded={loaded ? "true" : "false"}>
+                {src && (
+                    <img
+                        className="bn-visual-media"
+                        alt={props.name || props.caption || "BlockNote image"}
+                        contentEditable={false}
+                        draggable={false}
+                        src={src}
+                        onClick={() => onImageZoom(src)}
+                        onLoad={() => setLoaded(true)}
+                    />
+                )}
+            </div>
+            {props.caption && <p className="bn-file-caption">{props.caption}</p>}
+        </div>
+    );
+};
+
+/** File block, plain DOM. Mirrors BlockNote's `render` → file-name path.
+ *  Caption is a CHILD of the content wrapper, matching BlockNote. */
+const LightFileBlock = ({ block }: { block: AnyBlock }) => {
+    const props = block.props ?? {};
+    return (
+        <div className="bn-file-block-content-wrapper">
+            <FileNameWithIcon name={props.name} url={props.url} />
+            {props.caption && <p className="bn-file-caption">{props.caption}</p>}
+        </div>
+    );
+};
 
 /* ------------------------------------------------------------------ */
 /* Blocks                                                              */
@@ -313,13 +571,16 @@ function InlineWrapper({
 const BlockNode = ({
     block,
     ctx,
+    onImageZoom,
 }: {
     block: AnyBlock;
     ctx: Omit<LightMessageBodyProps, "content">;
+    onImageZoom: (src: string) => void;
 }) => {
     const children: AnyBlock[] = Array.isArray(block.children) ? block.children : [];
     const isCheck = block.type === "checkListItem";
     const checked = block.props?.checked === true || block.props?.checked === "true";
+    const isMedia = block.type === "image" || block.type === "file";
 
     return (
         <div className="bn-block-outer" data-node-type="blockOuter">
@@ -337,24 +598,39 @@ const BlockNode = ({
                             : {})
                     }
                     {...(isCheck ? { "data-checked": String(checked) } : {})}
+                    {
+                        // BlockNote stamps a bare `data-file-block` on every
+                        // media block-content (image/file/video/audio). CSS in
+                        // Block.css keys the wrapper's cursor/layout off it.
+                        ...(isMedia ? { "data-file-block": "" } : {})
+                    }
                     {...(block.props?.textAlignment
                         ? { "data-text-alignment": block.props.textAlignment }
                         : {})}
                 >
-                    {isCheck && (
-                        <div>
-                            {/* `defaultChecked`, not `checked`: this is display-
-                                only markup with no change handler, and React
-                                warns about a controlled checkbox without one. */}
-                            <input defaultChecked={checked} type="checkbox" disabled />
-                        </div>
+                    {block.type === "image" ? (
+                        <LightImageBlock block={block} onImageZoom={onImageZoom} />
+                    ) : block.type === "file" ? (
+                        <LightFileBlock block={block} />
+                    ) : (
+                        <>
+                            {isCheck && (
+                                <div>
+                                    {/* `defaultChecked`, not `checked`: this is
+                                        display-only markup with no change handler,
+                                        and React warns about a controlled checkbox
+                                        without one. */}
+                                    <input defaultChecked={checked} type="checkbox" disabled />
+                                </div>
+                            )}
+                            <InlineWrapper block={block} ctx={ctx} />
+                        </>
                     )}
-                    <InlineWrapper block={block} ctx={ctx} />
                 </div>
                 {children.length > 0 && (
                     <div className="bn-block-group" data-node-type="blockGroup">
                         {children.map((child, i) => (
-                            <BlockNode key={i} block={child} ctx={ctx} />
+                            <BlockNode key={i} block={child} ctx={ctx} onImageZoom={onImageZoom} />
                         ))}
                     </div>
                 )}
@@ -403,12 +679,18 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
     // grow from the one rule.
     const isJumboEmoji = useMemo(() => isJumboEmojiBody(blocks), [blocks]);
 
+    // Click-to-zoom lightbox for an image block. `null` = closed. Owned here
+    // (not per-block) so a single modal serves every image in the body,
+    // matching `BnChatPreview`. Threaded down to `LightImageBlock` via
+    // `onImageZoom`; the resolved (blob/public) src is what gets stored.
+    const [zoomSrc, setZoomSrc] = useState<string | null>(null);
+
     return (
         <div ref={editorBoxRef} className={isJumboEmoji ? "bn-emoji-only-body" : undefined}>
             <div className="bn-editor bn-default-styles">
                 <div className="bn-block-group" data-node-type="blockGroup">
                     {blocks.map((block, i) => (
-                        <BlockNode key={i} block={block} ctx={ctx} />
+                        <BlockNode key={i} block={block} ctx={ctx} onImageZoom={setZoomSrc} />
                     ))}
                 </div>
             </div>
@@ -425,6 +707,8 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
                     ))}
                 </Stack>
             )}
+
+            <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />
         </div>
     );
 };
