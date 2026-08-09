@@ -181,9 +181,7 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                 }}
             >
                 {isLoading && (
-                    <li style={{ padding: 12, opacity: 0.5 }}>
-                        {t.chat.channel.list.loading}
-                    </li>
+                    <li style={{ padding: 12, opacity: 0.5 }}>{t.chat.channel.list.loading}</li>
                 )}
                 {!isLoading && channels.length === 0 && (
                     <li style={{ padding: 12, opacity: 0.5 }}>{t.chat.channel.list.empty}</li>

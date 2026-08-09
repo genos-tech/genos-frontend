@@ -278,6 +278,7 @@ export const common = {
         alertSuccess: "Success",
         mentionYou: "You",
         mentionMemberCount: "{count, plural, one {# member} other {# members}}",
+        mentionGroupFallback: "group",
         hashTask: "Task · {id}",
         hashTaskProject: "Task · {id} · {project}",
         hashNote: "Note",

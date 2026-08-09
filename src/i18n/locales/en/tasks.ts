@@ -813,6 +813,8 @@ export const tasks = {
     // Table-row interactions.
     table: {
         searchMembersPlaceholder: "Search members...",
+        addTagsPlaceholder: "Add tags…",
+        addTagsMenuItem: "+ Add tags",
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         dropToNest: "↳ Drop to nest",
@@ -869,6 +871,7 @@ export const tasks = {
 
     // Dashboard table headers / labels.
     dashboard: {
+        sectionsAriaLabel: "Dashboard sections",
         // Sprint-board empty state (was hardcoded English in
         // TaskHomeContent until the onboarding CTA pass).
         emptySprintTitle: "No tasks in this sprint yet",

@@ -1,5 +1,5 @@
-import { PreviewMediaKind } from "../../../types/chat";
 import { getMessages } from "../../../i18n";
+import { PreviewMediaKind } from "../../../types/chat";
 
 // `t.chat.sidebar` key per media kind — shared so the chat list and the
 // activity feed label a text-less row identically.

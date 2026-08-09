@@ -129,9 +129,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     padding: "8px 12px",
                 }}
             >
-                {isLoading && (
-                    <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.loading}</div>
-                )}
+                {isLoading && <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.loading}</div>}
                 {!isLoading && root && (
                     <>
                         <div
@@ -266,9 +264,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 </li>
                             ))}
                             {replies.length === 0 && (
-                                <li style={{ opacity: 0.5 }}>
-                                    {t.chat.channel.thread.noReplies}
-                                </li>
+                                <li style={{ opacity: 0.5 }}>{t.chat.channel.thread.noReplies}</li>
                             )}
                         </ul>
                     </>

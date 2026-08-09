@@ -4127,7 +4127,8 @@ export const TaskHomeContent = ({
                                                     {(
                                                         [
                                                             {
-                                                                label: t.tasks.dashboard.tags.inUse,
+                                                                label: t.tasks.dashboard.tags
+                                                                    .inUse,
                                                                 value: String(
                                                                     tagStats.rows.length
                                                                 ),
@@ -4139,7 +4140,8 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: t.tasks.dashboard.tags.taggedItems,
+                                                                label: t.tasks.dashboard.tags
+                                                                    .taggedItems,
                                                                 value: String(
                                                                     tagStats.taggedCount
                                                                 ),
@@ -4151,7 +4153,8 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: t.tasks.dashboard.tags.coverage,
+                                                                label: t.tasks.dashboard.tags
+                                                                    .coverage,
                                                                 value: `${tagStats.coveragePct}%`,
                                                                 color: "#22c55e",
                                                                 icon: (
@@ -4161,7 +4164,8 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: t.tasks.dashboard.tags.mostUsed,
+                                                                label: t.tasks.dashboard.tags
+                                                                    .mostUsed,
                                                                 value:
                                                                     tagStats.rows[0]?.tagName ??
                                                                     "—",
