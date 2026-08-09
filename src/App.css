@@ -279,6 +279,38 @@ input[type="checkbox"] {
     border-radius: var(--scrollbar-border-radius);
 }
 
+/* Custom chat scroll-position indicator (see `useScrollIndicator`). iOS hides
+   the native scrollbar between gestures and ignores `::-webkit-scrollbar`, so
+   the message pane got no visible scrollbar on a phone. This is a plain DOM
+   thumb the hook positions imperatively; it reuses `--scrollbar-thumb-bg`
+   (which flips with `data-joy-color-scheme`) so it is theme-aware for free.
+   `pointer-events: none` keeps it a pure indicator — touch/taps pass through.
+   Height + transform + opacity are written by the hook; opacity starts at 0. */
+.chat-scroll-indicator {
+    position: absolute;
+    top: 0;
+    right: 2px;
+    width: 4px;
+    height: 0;
+    border-radius: 2px;
+    background: var(--scrollbar-thumb-bg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    /* Only fade opacity — never transition `transform`/`height`, or the thumb
+       would lag the finger during a scroll. */
+    transition: opacity 0.2s ease;
+    will-change: transform;
+}
+
+/* Brighten while actively scrolling — reuses the `chat-msg-scrolling` class
+   the scroller already toggles imperatively (no extra JS state). The scroller
+   is a descendant of the wrapper and the indicator is its sibling, so key off
+   the wrapper having a currently-scrolling scroller within it. */
+.chat-msg-scrolling ~ .chat-scroll-indicator {
+    background: var(--scrollbar-thumb-bg-hover);
+}
+
 /* ==========================================================================
    DataGrid Styles
    ========================================================================== */

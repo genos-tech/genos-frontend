@@ -15,6 +15,7 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { TaskCommentProps } from "../../../../types/tasks";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { useFollowOwnOutput } from "../../hooks/useFollowOwnOutput";
+import { useScrollIndicator } from "../../hooks/useScrollIndicator";
 import { VisibleRange } from "../../hooks/useScrollManagement";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
@@ -171,6 +172,13 @@ export const MessageListRenderer = ({
     const handleIsScrolling = useCallback((scrolling: boolean) => {
         scrollerElRef.current?.classList.toggle("chat-msg-scrolling", scrolling);
     }, []);
+
+    // Custom right-edge scroll-position indicator for touch devices, where
+    // iOS hides the native scrollbar between gestures (desktop keeps its
+    // `.custom-scrollbar-*` bar). Updates imperatively (refs + rAF, no React
+    // state) and only reads geometry, so it never re-renders the list or
+    // perturbs Virtuoso's scrolling. See the hook for detail.
+    const { scrollerRefCallback, thumbRef } = useScrollIndicator();
 
     // Identity of the chat (or thread) currently rendered. Drives the
     // Virtuoso remount key below.
@@ -421,6 +429,8 @@ export const MessageListRenderer = ({
     // need to coexist because the same renderer is used for the main
     // chat (fixed-height calc, header + editor below) and for the
     // editor-less PM activities thread (full flex).
+    // `position: relative` anchors the absolutely-positioned scroll indicator
+    // (rendered as a sibling of Virtuoso below) to the pane in both modes.
     const wrapperSx = fillContainer
         ? ({
               px: 0.3,
@@ -429,8 +439,9 @@ export const MessageListRenderer = ({
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
+              position: "relative",
           } as const)
-        : ({ px: 0.3, my: 0.2 } as const);
+        : ({ px: 0.3, my: 0.2, position: "relative" } as const);
     const virtuosoStyle: React.CSSProperties = fillContainer
         ? { flex: 1, minHeight: 0 }
         : { height };
@@ -477,10 +488,19 @@ export const MessageListRenderer = ({
                     // `el` is the scroll container (HTMLElement); it's only
                     // `Window` when `useWindowScroll` is set, which we don't.
                     scrollerElRef.current = el as HTMLElement | null;
+                    // Feed the same element to the scroll-indicator hook so it
+                    // can attach its (passive, read-only) scroll listener.
+                    scrollerRefCallback(el as HTMLElement | null);
                 }}
                 style={virtuosoStyle}
                 totalCount={messages.length}
             />
+            {/* Custom scroll-position indicator (touch devices only — the
+                hook no-ops on fine-pointer desktop). Absolutely positioned
+                against the `position: relative` wrapper; `pointer-events:
+                none` so it never intercepts touch/taps. Driven imperatively
+                via `thumbRef` — starts at opacity 0 until the hook measures. */}
+            <div className="chat-scroll-indicator" ref={thumbRef} />
         </Box>
     );
 };
