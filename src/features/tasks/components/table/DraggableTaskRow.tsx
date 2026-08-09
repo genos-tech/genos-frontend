@@ -1336,7 +1336,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         {...params}
                                         autoFocus
                                         placeholder={
-                                            tags.length === 0 ? t.tasks.table.addTagsPlaceholder : ""
+                                            tags.length === 0
+                                                ? t.tasks.table.addTagsPlaceholder
+                                                : ""
                                         }
                                         sx={{
                                             "& .MuiOutlinedInput-root": {
