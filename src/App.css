@@ -1018,9 +1018,16 @@ input[type="checkbox"] {
    Collapse every icon <Button> down to the ActionIcon footprint so all
    toolbar icons are spaced consistently at every width. The block-type
    picker ("Paragraph ▾") is a text-labelled dropdown, not an icon, so
-   it's excluded (identified by aria-controls) and keeps its padding. */
-.bn-editor-toolbar .bn-toolbar .mantine-Button-root:not([aria-controls*="dropdown"]) {
-    padding-inline: 5px;
+   it's excluded (identified by aria-controls) and keeps its padding.
+
+   Scoped to `.bn-formatting-toolbar` — the class BlockNote puts on every
+   FormattingToolbar — rather than our own `.bn-editor-toolbar` wrapper,
+   so the rule reaches ALL BlockNote editors: the chat/thread/task-comment
+   composers (which wrap the toolbar in `.bn-editor-toolbar`) AND the
+   collab editors (task body, chat/task/my notes) that mount the toolbar
+   via FormattingToolbarController with no wrapper. */
+.bn-formatting-toolbar .mantine-Button-root:not([aria-controls*="dropdown"]) {
+    padding-inline: 6px;
     min-width: 0;
 }
 
