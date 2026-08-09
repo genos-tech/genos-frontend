@@ -65,6 +65,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
     variant = "soft",
     copyText,
 }) => {
+    const { t } = useTranslation();
     const color = isDark ? colorScheme.dark : colorScheme.light;
 
     const getStyles = () => {
@@ -136,7 +137,11 @@ const ModernChip: React.FC<ModernChipProps> = ({
 
     if (!copyText) return chip;
     return (
-        <AppTooltip placement="top" title={copied ? "Copied!" : "Click to copy"} arrow>
+        <AppTooltip
+            placement="top"
+            title={copied ? t.chat.activity.copied : t.chat.activity.copyTooltip}
+            arrow
+        >
             {chip}
         </AppTooltip>
     );

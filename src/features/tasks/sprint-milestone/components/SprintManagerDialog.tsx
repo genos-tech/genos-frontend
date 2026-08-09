@@ -23,6 +23,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { Sprint } from "../types";
 import { DeleteSprintModal } from "./DeleteSprintModal";
 
@@ -232,7 +233,7 @@ const SprintRow = ({
                                         backgroundColor: `${STATUS_COLOR[m.status as string] ?? "#94a3b8"}1A`,
                                     }}
                                 >
-                                    {m.status}
+                                    {taskMetaLabel(m.status, t.tasks.filters)}
                                 </Chip>
                                 <Select
                                     placeholder={t.tasks.sprintManager.moveToPlaceholder}

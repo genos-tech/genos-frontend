@@ -99,7 +99,7 @@ import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonic
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 
-import { I18nProvider } from "./i18n";
+import { fmt, getMessages, I18nProvider } from "./i18n";
 import { ColorThemeProvider } from "./theme/ColorThemeProvider";
 
 // Feature roots are code-split: BlockNote/Yjs (notes), the rich-text editor
@@ -156,6 +156,9 @@ export const App = () => {
     useWindowSize();
     const navigate = useNavigate();
     const location = useLocation();
+    // App owns the provider below, so use the synchronous catalog accessor
+    // for shell-level labels needed before that provider boundary.
+    const t = getMessages();
 
     // Initialize app with authentication and basic setup
     const {
@@ -678,7 +681,9 @@ export const App = () => {
                 // Match the label used by the in-pane button in
                 // MilestonePreviewInner so the shortcut and click paths
                 // open visually identical diagrams.
-                rootLabel: `${milestone.title || "Milestone"} · diagram`,
+                rootLabel: fmt(t.app.diagram.label, {
+                    title: milestone.title || t.app.diagram.milestoneFallback,
+                }),
                 rootTaskId: milestone.taskId,
             };
         }
@@ -689,6 +694,8 @@ export const App = () => {
         useTM.currentPreviewMilestoneId,
         usePM.currentProject?.projectId,
         useSM.projectMilestones,
+        t.app.diagram.label,
+        t.app.diagram.milestoneFallback,
     ]);
 
     // Open the user's ToDo pane. The ToDo list has no dedicated route — it
@@ -1737,7 +1744,14 @@ export const App = () => {
                                                                                                             <Route
                                                                                                                 path="integrations"
                                                                                                                 element={
-                                                                                                                    <FeatureErrorBoundary feature="Integrations">
+                                                                                                                    <FeatureErrorBoundary
+                                                                                                                        feature={
+                                                                                                                            t
+                                                                                                                                .app
+                                                                                                                                .features
+                                                                                                                                .integrations
+                                                                                                                        }
+                                                                                                                    >
                                                                                                                         <Suspense
                                                                                                                             fallback={
                                                                                                                                 <RouteLoadingFallback />
@@ -1752,7 +1766,14 @@ export const App = () => {
                                                                                                         <Route
                                                                                                             path="plans"
                                                                                                             element={
-                                                                                                                <FeatureErrorBoundary feature="Plans">
+                                                                                                                <FeatureErrorBoundary
+                                                                                                                    feature={
+                                                                                                                        t
+                                                                                                                            .app
+                                                                                                                            .features
+                                                                                                                            .plans
+                                                                                                                    }
+                                                                                                                >
                                                                                                                     <Suspense
                                                                                                                         fallback={
                                                                                                                             <RouteLoadingFallback />
@@ -1816,7 +1837,14 @@ export const App = () => {
                                                                                                         <Route
                                                                                                             path="genos"
                                                                                                             element={
-                                                                                                                <FeatureErrorBoundary feature="Genos">
+                                                                                                                <FeatureErrorBoundary
+                                                                                                                    feature={
+                                                                                                                        t
+                                                                                                                            .app
+                                                                                                                            .features
+                                                                                                                            .genos
+                                                                                                                    }
+                                                                                                                >
                                                                                                                     <Suspense
                                                                                                                         fallback={
                                                                                                                             <RouteLoadingFallback />
@@ -1894,7 +1922,14 @@ export const App = () => {
                                                                                                                         : "none",
                                                                                                             }}
                                                                                                         >
-                                                                                                            <FeatureErrorBoundary feature="Chat">
+                                                                                                            <FeatureErrorBoundary
+                                                                                                                feature={
+                                                                                                                    t
+                                                                                                                        .app
+                                                                                                                        .features
+                                                                                                                        .chat
+                                                                                                                }
+                                                                                                            >
                                                                                                                 <Suspense
                                                                                                                     fallback={
                                                                                                                         <RouteLoadingFallback />
@@ -1926,7 +1961,14 @@ export const App = () => {
                                                                                                                         : "none",
                                                                                                             }}
                                                                                                         >
-                                                                                                            <FeatureErrorBoundary feature="Tasks">
+                                                                                                            <FeatureErrorBoundary
+                                                                                                                feature={
+                                                                                                                    t
+                                                                                                                        .app
+                                                                                                                        .features
+                                                                                                                        .tasks
+                                                                                                                }
+                                                                                                            >
                                                                                                                 <Suspense
                                                                                                                     fallback={
                                                                                                                         <RouteLoadingFallback />
@@ -1955,7 +1997,14 @@ export const App = () => {
                                                                                                                         : "none",
                                                                                                             }}
                                                                                                         >
-                                                                                                            <FeatureErrorBoundary feature="Notes">
+                                                                                                            <FeatureErrorBoundary
+                                                                                                                feature={
+                                                                                                                    t
+                                                                                                                        .app
+                                                                                                                        .features
+                                                                                                                        .notes
+                                                                                                                }
+                                                                                                            >
                                                                                                                 <Suspense
                                                                                                                     fallback={
                                                                                                                         <RouteLoadingFallback />

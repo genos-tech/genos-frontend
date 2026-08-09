@@ -1,6 +1,8 @@
 import { memo } from "react";
 import { BaseEdge, EdgeProps, getSmoothStepPath } from "@xyflow/react";
 
+import { fmt, useTranslation } from "../../../../i18n";
+
 type ParentChildEdgeData = {
     sourceTitle?: string | null;
     targetTitle?: string | null;
@@ -24,6 +26,7 @@ export const ParentChildEdge = memo(
         style,
         data,
     }: EdgeProps) => {
+        const { t } = useTranslation();
         const [path] = getSmoothStepPath({
             sourceX,
             sourceY,
@@ -37,8 +40,11 @@ export const ParentChildEdge = memo(
         const d = (data as ParentChildEdgeData | undefined) ?? {};
         const tooltipText =
             d.sourceTitle && d.targetTitle
-                ? `${d.sourceTitle} → ${d.targetTitle}`
-                : "Parent → Child";
+                ? fmt(t.tasks.diagram.tooltips.parentChild, {
+                      parent: d.sourceTitle,
+                      child: d.targetTitle,
+                  })
+                : t.tasks.diagram.legend.parentChild;
 
         return (
             <g>

@@ -1,15 +1,18 @@
-import { Avatar, Box, Divider, Stack, Typography } from "@mui/joy";
+import { Avatar, Divider, Stack, Typography } from "@mui/joy";
 
+import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { PrDetailResponse } from "../services/prTypes";
 
 // "5 minutes ago" / "2 hours ago" / "3 days ago" — no extra dep,
 // good enough for a tooltip subtitle.
-const relativeAgo = (iso: string): string => {
+type RelativeUnit = "second" | "minute" | "hour" | "day" | "week" | "month" | "year";
+
+const relativeAgo = (iso: string, t: ReturnType<typeof useTranslation>["t"]): string => {
     const then = new Date(iso).getTime();
     if (Number.isNaN(then)) return iso;
     const secs = Math.max(1, Math.floor((Date.now() - then) / 1000));
-    const units: [number, string][] = [
+    const units: [number, RelativeUnit][] = [
         [60, "second"],
         [60, "minute"],
         [24, "hour"],
@@ -19,7 +22,7 @@ const relativeAgo = (iso: string): string => {
         [Number.POSITIVE_INFINITY, "year"],
     ];
     let value = secs;
-    let label = "second";
+    let label: RelativeUnit = "second";
     for (const [factor, unit] of units) {
         if (value < factor) {
             label = unit;
@@ -29,7 +32,12 @@ const relativeAgo = (iso: string): string => {
         label = unit;
     }
     const rounded = Math.max(1, Math.floor(value));
-    return `${rounded} ${label}${rounded === 1 ? "" : "s"} ago`;
+    const unitKey =
+        `${label}${rounded === 1 ? "" : "s"}` as keyof typeof t.integrations.pullRequest.hover.units;
+    return fmt(t.integrations.pullRequest.hover.ago, {
+        count: rounded,
+        unit: t.integrations.pullRequest.hover.units[unitKey],
+    });
 };
 
 interface Props {
@@ -48,6 +56,7 @@ interface Props {
 // `purplePalette` so the panel matches menus/popovers elsewhere instead
 // of Joy's stock white-on-black solid tooltip.
 export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props) => {
+    const { t } = useTranslation();
     const { pull } = payload;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -101,7 +110,10 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
                         />
                     )}
                     <Typography level="body-xs" sx={{ color: palette.text }}>
-                        Opened by <strong>{author}</strong> · {relativeAgo(pull.created_at)}
+                        {fmt(t.integrations.pullRequest.hover.openedBy, {
+                            author,
+                            when: relativeAgo(pull.created_at, t),
+                        })}
                     </Typography>
                 </Stack>
             )}
@@ -125,7 +137,7 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
             <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
                 {commits != null && (
                     <Typography level="body-xs" sx={{ color: palette.text }}>
-                        {commits} commit{commits === 1 ? "" : "s"}
+                        {fmt(t.integrations.pullRequest.hover.commits, { count: commits })}
                     </Typography>
                 )}
                 {(adds != null || dels != null) && (
@@ -135,18 +147,24 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
                             the shade that's readable on each theme. */}
                         <span style={{ color: isDark ? "#7ee787" : "#1a7f37" }}>+{adds ?? 0}</span>{" "}
                         <span style={{ color: isDark ? "#ffa198" : "#cf222e" }}>−{dels ?? 0}</span>
-                        {changed != null ? ` · ${changed} file${changed === 1 ? "" : "s"}` : ""}
+                        {changed != null
+                            ? ` · ${fmt(t.integrations.pullRequest.hover.files, {
+                                  count: changed,
+                              })}`
+                            : ""}
                     </Typography>
                 )}
                 {comments > 0 && (
                     <Typography level="body-xs" sx={{ color: palette.text }}>
-                        {comments} comment{comments === 1 ? "" : "s"}
+                        {fmt(t.integrations.pullRequest.hover.comments, { count: comments })}
                     </Typography>
                 )}
             </Stack>
 
             <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                Updated {relativeAgo(pull.updated_at)}
+                {fmt(t.integrations.pullRequest.hover.updated, {
+                    when: relativeAgo(pull.updated_at, t),
+                })}
             </Typography>
         </Stack>
     );

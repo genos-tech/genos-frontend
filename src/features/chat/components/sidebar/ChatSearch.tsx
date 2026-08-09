@@ -244,7 +244,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? option.email === myself.userEmail
-                            ? `${option.name} (You) - ${option.email}`
+                            ? `${option.name} ${t.common.personPicker.youSuffix} - ${option.email}`
                             : `${option.name} - ${option.email}`
                         : option.isPrivate
                           ? `🔒 ${option.name}`
@@ -314,7 +314,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                         >
                                             {option.type === "People"
                                                 ? option.email === myself.userEmail
-                                                    ? `${option.name} (You)`
+                                                    ? `${option.name} ${t.common.personPicker.youSuffix}`
                                                     : option.name
                                                 : option.isPrivate
                                                   ? `🔒 ${option.name}`

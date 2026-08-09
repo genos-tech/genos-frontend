@@ -72,6 +72,7 @@ import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
 import { PRIORITY_COLORS } from "../../utils/dashboardRowFormat";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { CopyableTaskIdText } from "../CopyableTaskId";
@@ -174,7 +175,10 @@ type CapacityEntry = {
     count: number;
 };
 
-const buildCapacityMap = (tasks: EffectiveTask[]): Map<string, CapacityEntry> => {
+const buildCapacityMap = (
+    tasks: EffectiveTask[],
+    unassignedLabel: string
+): Map<string, CapacityEntry> => {
     const map = new Map<string, CapacityEntry>();
     for (const t of tasks) {
         if (t.effectiveStatus === "Closed") continue;
@@ -182,7 +186,7 @@ const buildCapacityMap = (tasks: EffectiveTask[]): Map<string, CapacityEntry> =>
         const id = t.assigneeId || "__unassigned__";
         const entry = map.get(id) || {
             id,
-            name: t.assigneeName || "Unassigned",
+            name: t.assigneeName || unassignedLabel,
             imgPath: t.assigneeImgPath || null,
             buckets: { overdue: 0, today: 0, week: 0, later: 0, none: 0 } as Record<
                 DueBucket,
@@ -493,6 +497,8 @@ export const TaskHomeContent = ({
         };
     }, [sprintMilestones]);
 
+    const unassignedLabel = t.tasks.board.unassigned;
+
     // ── Assignee workload ──
     const assigneeWorkload = useMemo(() => {
         const map = new Map<
@@ -512,7 +518,7 @@ export const TaskHomeContent = ({
         for (const t of effectiveTasks) {
             const id = t.assigneeId || "__unassigned__";
             const entry = map.get(id) || {
-                name: t.assigneeName || "Unassigned",
+                name: t.assigneeName || unassignedLabel,
                 imgPath: t.assigneeImgPath || null,
                 open: 0,
                 wip: 0,
@@ -537,7 +543,7 @@ export const TaskHomeContent = ({
         return Array.from(map.entries())
             .map(([id, v]) => ({ id, ...v }))
             .sort((a, b) => b.total - a.total);
-    }, [effectiveTasks, sprintStart, now]);
+    }, [effectiveTasks, sprintStart, now, unassignedLabel]);
 
     // ── Tag insights (project-wide) ──
     // Aggregates every tagged item by tag name. Milestones are rows inside
@@ -705,9 +711,9 @@ export const TaskHomeContent = ({
         // Roster = members with active work in THIS project (unchanged): the
         // dashboard is project-scoped, so we don't surface people who only
         // have tasks on other projects.
-        const projectMap = buildCapacityMap(effectiveTasks);
+        const projectMap = buildCapacityMap(effectiveTasks, unassignedLabel);
         // Cross-project load per member, from the team-wide task set.
-        const teamMap = buildCapacityMap(teamEffectiveTasks);
+        const teamMap = buildCapacityMap(teamEffectiveTasks, unassignedLabel);
 
         // For each roster member, swap in their WHOLE-TEAM numbers so a bar
         // reflects their real load across every project — the point of the
@@ -729,7 +735,7 @@ export const TaskHomeContent = ({
         return Array.from(projectMap.values()).sort(
             (a, b) => b.nearTerm - a.nearTerm || b.total - a.total
         );
-    }, [effectiveTasks, teamEffectiveTasks]);
+    }, [effectiveTasks, teamEffectiveTasks, unassignedLabel]);
 
     // Largest single-member near-term load, so every capacity bar can be
     // drawn to a shared scale (a bar's fill = this member's load vs. the
@@ -1064,7 +1070,9 @@ export const TaskHomeContent = ({
                                         }}
                                     />
                                     <Typography level="body-xs" sx={{ color: textSecondary }}>
-                                        {label}
+                                        {label === "None"
+                                            ? t.tasks.meta.none
+                                            : taskMetaLabel(label, t.tasks.filters)}
                                     </Typography>
                                 </Stack>
                                 <Typography
@@ -1479,10 +1487,13 @@ export const TaskHomeContent = ({
                                                             disabled
                                                         >
                                                             {bucket === "current"
-                                                                ? "Current"
+                                                                ? t.tasks.dashboard.sprintBuckets
+                                                                      .current
                                                                 : bucket === "upcoming"
-                                                                  ? "Upcoming"
-                                                                  : "Past"}
+                                                                  ? t.tasks.dashboard.sprintBuckets
+                                                                        .upcoming
+                                                                  : t.tasks.dashboard.sprintBuckets
+                                                                        .past}
                                                         </Option>,
                                                         ...list.map((s) => (
                                                             <Option
@@ -1589,7 +1600,7 @@ export const TaskHomeContent = ({
                                 sx={{ mt: 1 }}
                             >
                                 <Tabs
-                                    aria-label="Dashboard sections"
+                                    aria-label={t.tasks.dashboard.sectionsAriaLabel}
                                     value={activeTab}
                                     sx={{
                                         flex: 1,
@@ -1999,7 +2010,7 @@ export const TaskHomeContent = ({
                                                 }}
                                             >
                                                 <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
-                                                Recently Updated
+                                                {t.tasks.dashboard.recentlyUpdated}
                                                 <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
                                                     {recentTasks.length}
                                                 </Chip>
@@ -2083,7 +2094,10 @@ export const TaskHomeContent = ({
                                                                                 color: sc.text,
                                                                             }}
                                                                         >
-                                                                            {task.effectiveStatus}
+                                                                            {taskMetaLabel(
+                                                                                task.effectiveStatus,
+                                                                                t.tasks.filters
+                                                                            )}
                                                                         </Chip>
                                                                     </Stack>
                                                                     <Typography
@@ -2135,9 +2149,11 @@ export const TaskHomeContent = ({
                                                                                             color,
                                                                                         }}
                                                                                     >
-                                                                                        {
-                                                                                            task.priority
-                                                                                        }
+                                                                                        {taskMetaLabel(
+                                                                                            task.priority,
+                                                                                            t.tasks
+                                                                                                .filters
+                                                                                        )}
                                                                                     </Chip>
                                                                                 );
                                                                             })()}
@@ -2899,7 +2915,7 @@ export const TaskHomeContent = ({
                                             }}
                                         >
                                             <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                                            Status Distribution
+                                            {t.tasks.dashboard.statusDistribution}
                                         </Typography>
 
                                         {/* Stacked bar */}
@@ -3113,7 +3129,7 @@ export const TaskHomeContent = ({
                                                                     color: "#ef4444",
                                                                 }}
                                                             >
-                                                                Overdue
+                                                                {t.tasks.dashboard.kpiOverdue}
                                                             </Typography>
                                                         </Stack>
                                                         <Chip
@@ -3192,10 +3208,11 @@ export const TaskHomeContent = ({
                                                                 level="body-xs"
                                                                 sx={{ color: textMuted, pl: 1 }}
                                                             >
-                                                                +
-                                                                {overdueAndUpcoming.overdue
-                                                                    .length - 5}{" "}
-                                                                more
+                                                                {fmt(t.tasks.dashboard.moreCount, {
+                                                                    count:
+                                                                        overdueAndUpcoming.overdue
+                                                                            .length - 5,
+                                                                })}
                                                             </Typography>
                                                         )}
                                                         {overdueAndUpcoming.overdue.length ===
@@ -3204,7 +3221,7 @@ export const TaskHomeContent = ({
                                                                 level="body-xs"
                                                                 sx={{ color: textMuted }}
                                                             >
-                                                                No overdue tasks
+                                                                {t.tasks.dashboard.noOverdueTasks}
                                                             </Typography>
                                                         )}
                                                     </Stack>
@@ -3249,7 +3266,7 @@ export const TaskHomeContent = ({
                                                                     color: "#3b82f6",
                                                                 }}
                                                             >
-                                                                Due This Week
+                                                                {t.tasks.dashboard.kpiDueThisWeek}
                                                             </Typography>
                                                         </Stack>
                                                         <Chip
@@ -3329,10 +3346,11 @@ export const TaskHomeContent = ({
                                                                 level="body-xs"
                                                                 sx={{ color: textMuted, pl: 1 }}
                                                             >
-                                                                +
-                                                                {overdueAndUpcoming.upcoming
-                                                                    .length - 5}{" "}
-                                                                more
+                                                                {fmt(t.tasks.dashboard.moreCount, {
+                                                                    count:
+                                                                        overdueAndUpcoming.upcoming
+                                                                            .length - 5,
+                                                                })}
                                                             </Typography>
                                                         )}
                                                         {overdueAndUpcoming.upcoming.length ===
@@ -3341,7 +3359,10 @@ export const TaskHomeContent = ({
                                                                 level="body-xs"
                                                                 sx={{ color: textMuted }}
                                                             >
-                                                                No tasks due this week
+                                                                {
+                                                                    t.tasks.dashboard
+                                                                        .noTasksDueThisWeek
+                                                                }
                                                             </Typography>
                                                         )}
                                                     </Stack>
@@ -4089,14 +4110,13 @@ export const TaskHomeContent = ({
                                                             color: textPrimary,
                                                         }}
                                                     >
-                                                        No tags yet
+                                                        {t.tasks.dashboard.tags.emptyTitle}
                                                     </Typography>
                                                     <Typography
                                                         level="body-sm"
                                                         sx={{ color: textMuted }}
                                                     >
-                                                        Add tags to tasks or milestones to see
-                                                        tag-based insights here.
+                                                        {t.tasks.dashboard.tags.emptyBody}
                                                     </Typography>
                                                 </Stack>
                                             </Card>
@@ -4107,7 +4127,7 @@ export const TaskHomeContent = ({
                                                     {(
                                                         [
                                                             {
-                                                                label: "Tags in use",
+                                                                label: t.tasks.dashboard.tags.inUse,
                                                                 value: String(
                                                                     tagStats.rows.length
                                                                 ),
@@ -4119,7 +4139,7 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: "Tagged items",
+                                                                label: t.tasks.dashboard.tags.taggedItems,
                                                                 value: String(
                                                                     tagStats.taggedCount
                                                                 ),
@@ -4131,7 +4151,7 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: "Tag coverage",
+                                                                label: t.tasks.dashboard.tags.coverage,
                                                                 value: `${tagStats.coveragePct}%`,
                                                                 color: "#22c55e",
                                                                 icon: (
@@ -4141,7 +4161,7 @@ export const TaskHomeContent = ({
                                                                 ),
                                                             },
                                                             {
-                                                                label: "Most used",
+                                                                label: t.tasks.dashboard.tags.mostUsed,
                                                                 value:
                                                                     tagStats.rows[0]?.tagName ??
                                                                     "—",
@@ -4245,7 +4265,7 @@ export const TaskHomeContent = ({
                                                         level="body-xs"
                                                         sx={{ color: textMuted, fontWeight: 600 }}
                                                     >
-                                                        Status
+                                                        {t.tasks.dashboard.tags.status}
                                                     </Typography>
                                                     {(
                                                         [
@@ -4352,7 +4372,7 @@ export const TaskHomeContent = ({
                                                                         textAlign: "center",
                                                                     }}
                                                                 >
-                                                                    Overdue
+                                                                    {t.tasks.dashboard.kpiOverdue}
                                                                 </th>
                                                             </tr>
                                                         </thead>

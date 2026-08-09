@@ -1,5 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 
+import { getMessages } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TodoItemProps } from "../../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../../utils/dateUtils";
@@ -21,47 +22,48 @@ const buildSourceLink = ({
     messageId,
     isThread,
 }: MessageSource): { href: string; fromText: string } | null => {
+    const strings = getMessages().chat.todoPane;
     const origin = window.location.origin;
     if (chatType === 1) {
         if (isThread && threadId) {
             return {
                 href: `${origin}/workspace/chat/dm/${chatId}/thread/${threadId}/message/${messageId}`,
-                fromText: "From DM thread",
+                fromText: strings.sourceDmThread,
             };
         }
         return {
             href: `${origin}/workspace/chat/dm/${chatId}/message/${messageId}`,
-            fromText: "From DM",
+            fromText: strings.sourceDm,
         };
     }
     if (chatType === 2) {
         if (isThread && threadId) {
             return {
                 href: `${origin}/workspace/chat/gm/${chatId}/thread/${threadId}/message/${messageId}`,
-                fromText: "From GM thread",
+                fromText: strings.sourceGmThread,
             };
         }
         return {
             href: `${origin}/workspace/chat/gm/${chatId}/message/${messageId}`,
-            fromText: "From GM",
+            fromText: strings.sourceGm,
         };
     }
     if (chatType === 3 && threadId) {
         return {
             href: `${origin}/workspace/chat/pm/${chatId}/thread/${threadId}/comment/${messageId}`,
-            fromText: "From task comment",
+            fromText: strings.sourceTaskComment,
         };
     }
     if (chatType === 4) {
         if (isThread && threadId) {
             return {
                 href: `${origin}/workspace/chat/mdm/${chatId}/thread/${threadId}/message/${messageId}`,
-                fromText: "From MDM thread",
+                fromText: strings.sourceMdmThread,
             };
         }
         return {
             href: `${origin}/workspace/chat/mdm/${chatId}/message/${messageId}`,
-            fromText: "From MDM",
+            fromText: strings.sourceMdm,
         };
     }
     return null;
@@ -91,7 +93,8 @@ export const appendTodoFromMessage = async (
     const link = buildSourceLink(source);
     if (!link) return;
 
-    const title = (source.messageText || "").trim().slice(0, 200) || "Untitled todo";
+    const title =
+        (source.messageText || "").trim().slice(0, 200) || getMessages().chat.todoPane.untitled;
     const notes = buildNotesDoc(link.fromText, link.href);
 
     return createTodoItem(accessToken, myself, {

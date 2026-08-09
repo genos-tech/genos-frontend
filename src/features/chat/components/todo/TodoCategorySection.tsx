@@ -12,6 +12,7 @@ import { UpdateTodoItemPatch } from "./services/todoItems";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { useLinkifyPaste } from "./titleLinks";
@@ -41,6 +42,7 @@ interface TodoCategorySectionProps {
 }
 
 export const TodoCategorySection = (props: TodoCategorySectionProps) => {
+    const { t } = useTranslation();
     const {
         title,
         categoryId,
@@ -182,7 +184,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
                     <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 0.5, px: 1 }}>
                         <Input
-                            placeholder="+ Add item"
+                            placeholder={t.chat.todoPane.addItemPlaceholder}
                             size="sm"
                             slotProps={{ input: { ref: addInputRef } }}
                             sx={{ flex: 1, fontSize: "0.85rem", "& input": { px: 0 } }}

@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { fmt, getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 /**
@@ -14,10 +15,11 @@ export const updateTeamProfile = async (
     updates: { teamName?: string; ownerId?: string },
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (!api) {
-            setErrorMessage?.("Authorization token is missing.");
+            setErrorMessage?.(messages.admin.auth.errors.tokenMissing);
             return false;
         }
         const body: Record<string, unknown> = { team_id: teamId };
@@ -28,9 +30,14 @@ export const updateTeamProfile = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             const msg = (error.response?.data as { error?: string })?.error;
-            setErrorMessage?.(msg || `Failed to update team (${error.response?.status}).`);
+            setErrorMessage?.(
+                msg ||
+                    fmt(messages.admin.serviceErrors.requestFailedStatus, {
+                        status: error.response?.status ?? "unknown",
+                    })
+            );
         } else {
-            setErrorMessage?.("Unexpected error while updating the team.");
+            setErrorMessage?.(messages.admin.serviceErrors.unexpected);
         }
         return false;
     }

@@ -28,7 +28,7 @@ export const loadMyTeams = async (
             const res = await api.get(`/team/getMyTeams/?${query}`);
             return res.data;
         } else {
-            console.error("Unauthorized. Auth toke is not found.");
+            console.error("Unauthorized. Authentication token was not found.");
             if (setErrorMessage) {
                 setErrorMessage(getMessages().admin.auth.errors.tokenMissing);
             }

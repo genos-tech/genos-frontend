@@ -63,13 +63,6 @@ const CHAT_TYPES = {
     PM: 3,
 } as const;
 
-const CHAT_TYPE_LABELS = {
-    [CHAT_TYPES.DM]: "DM",
-    [CHAT_TYPES.GM]: "GM",
-    [CHAT_TYPES.MDM]: "MDM",
-    [CHAT_TYPES.PM]: "PM",
-} as const;
-
 // Flagged message color scheme for visual distinction
 const FLAGGED_COLOR_SCHEME = {
     dark: "#f87171",
@@ -667,24 +660,31 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         </Chip>
     );
 
-    const renderChatTypeChip = () => (
-        <Chip
-            color="neutral"
-            size="sm"
-            variant="soft"
-            sx={{
-                borderRadius: "6px",
-                fontSize: "10px",
-                fontWeight: 600,
-                height: "20px",
-                opacity: 0.8,
-                px: 0.75,
-            }}
-        >
-            {CHAT_TYPE_LABELS[flaggedMessage.chatType as keyof typeof CHAT_TYPE_LABELS] ||
-                t.chat.listItem.unknown}
-        </Chip>
-    );
+    const renderChatTypeChip = () => {
+        const labels: Record<number, string> = {
+            [CHAT_TYPES.DM]: t.chat.sidebar.chipDM,
+            [CHAT_TYPES.GM]: t.chat.sidebar.chipGM,
+            [CHAT_TYPES.MDM]: t.chat.sidebar.chipMDM,
+            [CHAT_TYPES.PM]: t.chat.sidebar.chipPM,
+        };
+        return (
+            <Chip
+                color="neutral"
+                size="sm"
+                variant="soft"
+                sx={{
+                    borderRadius: "6px",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    height: "20px",
+                    opacity: 0.8,
+                    px: 0.75,
+                }}
+            >
+                {labels[flaggedMessage.chatType] || t.chat.listItem.unknown}
+            </Chip>
+        );
+    };
 
     // "A nudge is coming, and when." Without it the flagged list can't tell
     // a bookmark apart from a bookmark that will come back on its own, and

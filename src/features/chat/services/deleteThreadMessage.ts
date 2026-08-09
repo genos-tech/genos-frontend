@@ -1,3 +1,4 @@
+import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind } from "../../../types/channel";
 
@@ -27,14 +28,15 @@ export const deleteThreadMessage = async (
     messageUuid: string,
     setErrorMessage?: (value: string) => void
 ): Promise<void> => {
+    const messages = getMessages().chat.errors;
     if (!messageUuid) {
-        setErrorMessage?.("Could not delete: message id unavailable.");
+        setErrorMessage?.(messages.deleteMessageIdUnavailable);
         return;
     }
     try {
         await channelService.deleteMessage(messageUuid, channelId, chatType as ChannelKind);
     } catch (e) {
         console.error("[deleteThreadMessage] channelService.deleteMessage failed:", e);
-        setErrorMessage?.("Failed to delete message.");
+        setErrorMessage?.(messages.deleteMessageFailed);
     }
 };

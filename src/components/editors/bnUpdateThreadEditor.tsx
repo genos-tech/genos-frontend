@@ -10,7 +10,6 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
 } from "@blocknote/core";
-import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -55,6 +54,7 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
@@ -179,8 +179,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         })
     );
 
-    // We use the English, default dictionary
-    const locale = en;
+    const dictionary = useBlockNoteDictionary();
     const initialContent: any[] = message.content;
     const editor = useCreateBlockNote({
         schema,
@@ -190,19 +189,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
-        // We override the `placeholders` in our dictionary
-        dictionary: {
-            ...locale,
-            placeholders: {
-                ...locale.placeholders,
-                // We override the empty document placeholder
-                emptyDocument: "Start typing...",
-                // We override the default placeholder
-                default: "Type something...",
-                // We override the heading placeholder
-                heading: "Custom heading placeholder",
-            },
-        },
+        dictionary,
         initialContent: initialContent,
     });
 

@@ -9,6 +9,10 @@ export const layout = {
         lightMode: "Light mode",
         signOut: "Sign out",
     },
+    mobile: {
+        close: "Close",
+        openGenos: "Open Genos",
+    },
     pageNotFound: {
         title: "Page Not Found",
         body: "The page you're looking for doesn't exist or has been moved to a new location.",

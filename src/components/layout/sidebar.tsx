@@ -577,6 +577,12 @@ export const Sidebar = (props: SidebarProps) => {
                                             }}
                                         />
                                     </Box>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ mt: 0.5, fontSize: "0.65rem" }}
+                                    >
+                                        {t.sidebar.actions.todo}
+                                    </Typography>
                                 </ListItemButton>
                             </AppTooltip>
                         </ListItem>
@@ -637,6 +643,9 @@ export const Sidebar = (props: SidebarProps) => {
                                         }}
                                     />
                                 </Box>
+                                <Typography level="body-xs" sx={{ mt: 0.5, fontSize: "0.65rem" }}>
+                                    {t.sidebar.actions.history}
+                                </Typography>
                             </ListItemButton>
                         </AppTooltip>
                     </ListItem>
@@ -692,6 +701,9 @@ export const Sidebar = (props: SidebarProps) => {
                                         }}
                                     />
                                 </Box>
+                                <Typography level="body-xs" sx={{ mt: 0.5, fontSize: "0.65rem" }}>
+                                    {t.sidebar.actions.settings}
+                                </Typography>
                             </ListItemButton>
                         </AppTooltip>
                     </ListItem>
@@ -739,6 +751,9 @@ export const Sidebar = (props: SidebarProps) => {
                                         }}
                                     />
                                 </Box>
+                                <Typography level="body-xs" sx={{ mt: 0.5, fontSize: "0.65rem" }}>
+                                    {t.sidebar.actions.signOut}
+                                </Typography>
                             </ListItemButton>
                         </AppTooltip>
                     </ListItem>

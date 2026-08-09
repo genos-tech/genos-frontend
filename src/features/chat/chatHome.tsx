@@ -37,6 +37,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
@@ -88,6 +89,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     // Common
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const isMobile = useIsMobile();
 
     // Chat Related
@@ -321,7 +323,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         }
                     }}
                 >
-                    Todo added from the message.
+                    {t.chat.feedback.todoAddedFromMessage}
                 </Snackbar>
 
                 <Sheet sx={ls.serviceSurface}>

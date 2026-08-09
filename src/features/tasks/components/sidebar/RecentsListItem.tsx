@@ -13,6 +13,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdChip } from "../CopyableTaskId";
 import { Toggler } from "./common";
 
@@ -293,7 +294,10 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                         px: 0.5,
                                                     }}
                                                 >
-                                                    {task.status.status}
+                                                    {taskMetaLabel(
+                                                        task.status.status,
+                                                        t.tasks.filters
+                                                    )}
                                                 </Chip>
                                                 <Typography
                                                     level="body-sm"

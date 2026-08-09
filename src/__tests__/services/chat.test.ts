@@ -46,7 +46,7 @@ describe("deleteMessage (v3)", () => {
         await deleteMessage("token123", 1, "channel-uuid", "", setError);
 
         expect(spy).not.toHaveBeenCalled();
-        expect(setError).toHaveBeenCalledWith("Could not delete: message id unavailable.");
+        expect(setError).toHaveBeenCalledWith("Could not delete: message ID unavailable.");
         spy.mockRestore();
     });
 

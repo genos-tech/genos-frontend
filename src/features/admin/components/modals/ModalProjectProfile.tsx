@@ -329,7 +329,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         if (!projectProfile?.projectId) return;
         const next = codeDraft.trim().toUpperCase();
         if (!/^[A-Z][A-Z0-9]{1,5}$/.test(next)) {
-            setCodeError("2-6 chars, letters & digits, start with a letter.");
+            setCodeError(t.admin.projectProfile.codeInvalid);
             return;
         }
         setCodeSaving(true);
@@ -348,13 +348,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                setCodeError(body.error || `Save failed (${res.status})`);
+                setCodeError(
+                    body.error ||
+                        fmt(t.admin.projectProfile.codeSaveFailed, {
+                            status: res.status,
+                        })
+                );
                 return;
             }
             setProjectProfile({ ...projectProfile, code: next });
             setCodeEditMode(false);
         } catch {
-            setCodeError("Network error.");
+            setCodeError(t.admin.projectProfile.codeNetworkError);
         } finally {
             setCodeSaving(false);
         }
@@ -1458,7 +1463,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 matching the backend. */}
                                                             {canManage && (
                                                                 <AppTooltip
-                                                                    title="Edit code"
+                                                                    title={
+                                                                        t.admin.projectProfile
+                                                                            .editCode
+                                                                    }
                                                                     size="sm"
                                                                 >
                                                                     <IconButton

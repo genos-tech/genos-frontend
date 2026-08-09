@@ -3,6 +3,24 @@ export const notes = {
         empty: "No notes yet",
         newNote: "New note",
     },
+    create: {
+        templates: {
+            newChatNote: "New Chat Note ({count})",
+            childChatNote: "Child Chat Note ({count})",
+            newTaskNote: "New Task Note ({count})",
+            childTaskNote: "Child Task Note ({count})",
+            newMyNote: "New My Note ({count})",
+            childMyNote: "Child My Note ({count})",
+            newTeamNote: "New Team Note ({count})",
+            childTeamNote: "Child Team Note ({count})",
+        },
+    },
+    labels: {
+        backToNotesList: "Back to notes list",
+        close: "Close",
+        teamNotes: "Team Notes",
+        source: "Source",
+    },
     editor: {
         deleteTooltip: "Delete",
         colorsTooltip: "Colors",

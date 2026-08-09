@@ -3,6 +3,7 @@ import { Box, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { loadLinkedPullsBatched, type LinkedPull } from "../services/github";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
@@ -82,31 +83,31 @@ const CiBadge = ({ state, size = 10 }: { state: CiState; size?: number }) => {
     }
 };
 
-const prStateLabel = (state: PrState): string => {
+const prStateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string => {
     switch (state) {
         case "merged":
-            return "Merged";
+            return t.integrations.pullRequest.state.merged;
         case "draft":
-            return "Draft";
+            return t.integrations.pullRequest.state.draft;
         case "closed":
-            return "Closed";
+            return t.integrations.pullRequest.state.closed;
         case "open":
         default:
-            return "Open";
+            return t.integrations.pullRequest.state.open;
     }
 };
 
-const ciStateLabel = (state: CiState): string => {
+const ciStateLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"]): string => {
     switch (state) {
         case "passing":
-            return "CI passing";
+            return t.integrations.pullRequest.ci.passing;
         case "failing":
-            return "CI failing";
+            return t.integrations.pullRequest.ci.failing;
         case "pending":
-            return "CI pending";
+            return t.integrations.pullRequest.ci.pending;
         case "none":
         default:
-            return "No CI";
+            return t.integrations.pullRequest.ci.none;
     }
 };
 
@@ -125,6 +126,7 @@ const SinglePrBadge = ({
     accessToken: string | null;
     isDark: boolean;
 }) => {
+    const { t } = useTranslation();
     const [detail, setDetail] = useState<PrStatusResult | null>(null);
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -183,7 +185,7 @@ const SinglePrBadge = ({
             </Box>
             <Box sx={{ fontSize: 11, color: palette.textMuted }}>{title}</Box>
             <Box sx={{ fontSize: 11 }}>
-                {prStateLabel(prState)} · {ciStateLabel(ci)}
+                {prStateLabel(prState, t)} · {ciStateLabel(ci, t)}
             </Box>
         </Stack>
     );

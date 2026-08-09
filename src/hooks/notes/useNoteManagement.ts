@@ -62,6 +62,7 @@ import { loadTeamNoteFolders } from "../../features/notes/team-notes/services/lo
 import { loadTeamNotesMeta } from "../../features/notes/team-notes/services/loadTeamNotesMeta";
 import { updateTeamNoteFolder as updateTeamNoteFolderApi } from "../../features/notes/team-notes/services/updateTeamNoteFolder";
 import { onTaskTouched } from "../../features/tasks/services/taskEvents";
+import { fmt, getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -566,11 +567,12 @@ export const useNoteManagement = (
         if (!accessToken) return null;
 
         try {
+            const templates = getMessages().notes.create.templates;
             const title =
                 opts?.title ??
-                `${parentNoteId ? "Child" : "New"} Chat Note (${
-                    newlyCreatedChatNotes.length + 1
-                })`;
+                fmt(parentNoteId ? templates.childChatNote : templates.newChatNote, {
+                    count: newlyCreatedChatNotes.length + 1,
+                });
             const newNote = await createEmptyChatNote(
                 myself,
                 parentNoteId,
@@ -686,11 +688,12 @@ export const useNoteManagement = (
         if (!accessToken) return null;
 
         try {
+            const templates = getMessages().notes.create.templates;
             const noteTitle =
                 opts?.title ??
-                `${parentNoteId ? "Child" : "New"} Task Note (${
-                    newlyCreatedTaskNotes.length + 1
-                })`;
+                fmt(parentNoteId ? templates.childTaskNote : templates.newTaskNote, {
+                    count: newlyCreatedTaskNotes.length + 1,
+                });
             const newNote = await createEmptyTaskNote(
                 myself,
                 parentNoteId,
@@ -793,11 +796,19 @@ export const useNoteManagement = (
         const bucket: NoteBucket = isTeam ? "team" : "my";
 
         try {
+            const templates = getMessages().notes.create.templates;
+            const defaultTitleTemplate = isTeam
+                ? parentNoteId
+                    ? templates.childTeamNote
+                    : templates.newTeamNote
+                : parentNoteId
+                  ? templates.childMyNote
+                  : templates.newMyNote;
             const noteTitle =
                 opts?.title ??
-                `${parentNoteId ? "Child" : "New"} ${isTeam ? "Team" : "My"} Note (${
-                    newlyCreatedMyNotes.length + 1
-                })`;
+                fmt(defaultTitleTemplate, {
+                    count: newlyCreatedMyNotes.length + 1,
+                });
             const newNote = await createEmptyMyNote(
                 myself,
                 parentNoteId,

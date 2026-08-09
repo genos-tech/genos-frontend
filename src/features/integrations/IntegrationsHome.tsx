@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CallMergeRoundedIcon from "@mui/icons-material/CallMergeRounded";
@@ -49,6 +49,7 @@ import { redirectToOAuthConnect } from "./services/oauth";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useAuth } from "../../context/AuthContext";
+import { fmt, useTranslation } from "../../i18n";
 import { fetchAgentFeatures } from "../../services/agentApi";
 import { useCalendarSources } from "../calendar/hooks/useCalendarSources";
 
@@ -71,12 +72,12 @@ interface ModalInitial {
     summary?: string;
 }
 
-const eventStartLabel = (e: CalendarEvent): string => {
+const eventStartLabel = (e: CalendarEvent, locale: string): string => {
     const v = e.start?.dateTime || e.start?.date || "";
     if (!v) return "";
     const d = new Date(v);
     if (isNaN(d.getTime())) return v;
-    return d.toLocaleString();
+    return d.toLocaleString(locale);
 };
 
 const CalendarTab = ({
@@ -91,6 +92,7 @@ const CalendarTab = ({
      *  still needs to grant Calendar access. */
     calendarAuthorized: boolean;
 }) => {
+    const { t, locale } = useTranslation();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -194,7 +196,14 @@ const CalendarTab = ({
     };
 
     const handleDelete = async (event: CalendarEvent) => {
-        if (!confirm(`Delete event "${event.summary || event.id}"?`)) return;
+        if (
+            !confirm(
+                fmt(t.integrations.calendar.deleteConfirm, {
+                    title: event.summary || event.id,
+                })
+            )
+        )
+            return;
         const ok = await deleteEvent(
             accessToken,
             event.id,
@@ -210,9 +219,7 @@ const CalendarTab = ({
     if (!googleConnected) {
         return (
             <Stack spacing={2}>
-                <Alert color="primary">
-                    Connect Google to read and manage your calendar events here.
-                </Alert>
+                <Alert color="primary">{t.integrations.calendar.connectPrompt}</Alert>
                 <Button
                     startDecorator={<LinkRoundedIcon />}
                     sx={{ alignSelf: "flex-start" }}
@@ -220,7 +227,7 @@ const CalendarTab = ({
                         void redirectToOAuthConnect("google", accessToken, undefined, setError);
                     }}
                 >
-                    Connect Google
+                    {t.integrations.calendar.connectButton}
                 </Button>
             </Stack>
         );
@@ -233,11 +240,7 @@ const CalendarTab = ({
     if (!calendarAuthorized) {
         return (
             <Stack spacing={2}>
-                <Alert color="warning">
-                    Calendar access hasn't been granted yet. Grant it to read and manage events
-                    here. The chat header's Quick Meet, the task auto-sync, and the Calendar tab
-                    all need this permission.
-                </Alert>
+                <Alert color="warning">{t.integrations.calendar.grantPrompt}</Alert>
                 <Button
                     startDecorator={<LinkRoundedIcon />}
                     sx={{ alignSelf: "flex-start" }}
@@ -245,7 +248,7 @@ const CalendarTab = ({
                         void redirectToOAuthConnect("google", accessToken, undefined, setError);
                     }}
                 >
-                    Grant Calendar access
+                    {t.integrations.calendar.grantButton}
                 </Button>
             </Stack>
         );
@@ -258,11 +261,7 @@ const CalendarTab = ({
     if (needsReconnect) {
         return (
             <Stack spacing={2}>
-                <Alert color="warning">
-                    Your Google Calendar connection has expired — the stored authorization was
-                    revoked or timed out. Reconnect to restore Quick Meet, task auto-sync, and the
-                    Calendar tab.
-                </Alert>
+                <Alert color="warning">{t.integrations.calendar.reconnectPrompt}</Alert>
                 <ReconnectGoogleCalendarButton accessToken={accessToken} onError={setError} />
                 {error && <Alert color="danger">{error}</Alert>}
             </Stack>
@@ -272,9 +271,9 @@ const CalendarTab = ({
     return (
         <Stack spacing={2}>
             <Stack alignItems="center" direction="row" justifyContent="space-between">
-                <Typography level="title-md">Upcoming events</Typography>
+                <Typography level="title-md">{t.integrations.calendar.upcoming}</Typography>
                 <Button startDecorator={<AddRoundedIcon />} onClick={openCreate}>
-                    New event
+                    {t.integrations.calendar.newEvent}
                 </Button>
             </Stack>
 
@@ -287,7 +286,7 @@ const CalendarTab = ({
             ) : events.length === 0 ? (
                 <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
                     <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                        No events in the next 30 days. Click "New event" to create one.
+                        {t.integrations.calendar.empty}
                     </Typography>
                 </Sheet>
             ) : (
@@ -297,16 +296,16 @@ const CalendarTab = ({
                             <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography level="title-sm">
-                                        {e.summary || "(no title)"}
+                                        {e.summary || t.integrations.calendar.untitled}
                                     </Typography>
                                     <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                                        {eventStartLabel(e)}
+                                        {eventStartLabel(e, locale)}
                                     </Typography>
                                 </Box>
                                 {e.hangoutLink && (
-                                    <AppTooltip size="sm" title="Join Google Meet">
+                                    <AppTooltip size="sm" title={t.integrations.calendar.joinMeet}>
                                         <IconButton
-                                            aria-label="Join Google Meet"
+                                            aria-label={t.integrations.calendar.joinMeet}
                                             color="success"
                                             component="a"
                                             href={e.hangoutLink}
@@ -320,7 +319,7 @@ const CalendarTab = ({
                                     </AppTooltip>
                                 )}
                                 <IconButton
-                                    aria-label="Edit"
+                                    aria-label={t.common.actions.edit}
                                     size="sm"
                                     variant="plain"
                                     onClick={() => openEdit(e)}
@@ -328,7 +327,7 @@ const CalendarTab = ({
                                     <EditRoundedIcon />
                                 </IconButton>
                                 <IconButton
-                                    aria-label="Delete"
+                                    aria-label={t.common.actions.delete}
                                     color="danger"
                                     size="sm"
                                     variant="plain"
@@ -338,7 +337,7 @@ const CalendarTab = ({
                                 </IconButton>
                                 {e.htmlLink && (
                                     <IconButton
-                                        aria-label="Open in Google Calendar"
+                                        aria-label={t.integrations.calendar.openInCalendar}
                                         component="a"
                                         href={e.htmlLink}
                                         rel="noreferrer"
@@ -384,6 +383,7 @@ const CalendarTab = ({
 // We deliberately do NOT expose `GITHUB_WEBHOOK_SECRET` over the API
 // — the operator who sets it in env vars already knows the value.
 const WebhookSetup = () => {
+    const { t } = useTranslation();
     const djangoUrl =
         (import.meta.env.VITE_DJANGO_URL as string | undefined) ||
         window.location.origin.replace(/\/+$/, "");
@@ -406,20 +406,16 @@ const WebhookSetup = () => {
             <Stack spacing={1.5}>
                 <Stack alignItems="center" direction="row" spacing={1}>
                     <BoltRoundedIcon sx={{ color: "primary.500" }} />
-                    <Typography level="title-sm">
-                        Auto-close tasks when their PR is merged
-                    </Typography>
+                    <Typography level="title-sm">{t.integrations.github.webhook.title}</Typography>
                 </Stack>
 
                 <Alert color="success" startDecorator={<CheckRoundedIcon />}>
                     <Box>
                         <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                            No setup needed
+                            {t.integrations.github.webhook.noSetupTitle}
                         </Typography>
                         <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                            Paste any GitHub PR URL into a task's Links and Genos registers our
-                            webhook on that repo for you, using your connected GitHub account. When
-                            the PR merges, the task auto-transitions to <strong>Closed</strong>.
+                            {t.integrations.github.webhook.noSetupBody}
                         </Typography>
                     </Box>
                 </Alert>
@@ -432,28 +428,35 @@ const WebhookSetup = () => {
                         variant="plain"
                         onClick={() => setShowManual((v) => !v)}
                     >
-                        {showManual ? "Hide" : "Show"} manual setup
-                        {showManual ? "" : " (only needed if you lack repo admin)"}
+                        {showManual
+                            ? t.integrations.github.webhook.hideManual
+                            : t.integrations.github.webhook.showManual}
+                        {showManual ? "" : t.integrations.github.webhook.showManualHint}
                     </Button>
                 </Box>
 
                 {showManual && (
                     <>
                         <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                            If auto-registration didn&apos;t happen (typically because your GitHub
-                            user lacks admin on that repo), a repo admin can paste the URL below
-                            into the repo&apos;s webhook settings manually.
+                            {t.integrations.github.webhook.manualIntro}
                         </Typography>
 
                         <FormControl>
-                            <FormLabel>Webhook URL</FormLabel>
+                            <FormLabel>{t.integrations.github.webhook.urlLabel}</FormLabel>
                             <Input
                                 size="sm"
                                 value={webhookUrl}
                                 endDecorator={
-                                    <AppTooltip size="sm" title={copied ? "Copied" : "Copy"}>
+                                    <AppTooltip
+                                        size="sm"
+                                        title={
+                                            copied
+                                                ? t.common.ui.copy.copied
+                                                : t.common.actions.copy
+                                        }
+                                    >
                                         <IconButton
-                                            aria-label="Copy webhook URL"
+                                            aria-label={t.integrations.github.webhook.copyUrl}
                                             size="sm"
                                             variant="plain"
                                             onClick={handleCopy}
@@ -478,34 +481,45 @@ const WebhookSetup = () => {
                                 level="body-xs"
                                 sx={{ fontWeight: 600, mb: 0.5, color: "text.primary" }}
                             >
-                                Manual steps (one-time per repo)
+                                {t.integrations.github.webhook.stepsTitle}
                             </Typography>
                             <Stack component="ol" spacing={0.25} sx={{ pl: 2.5, my: 0 }}>
                                 <li>
                                     <Typography level="body-xs">
-                                        On the GitHub repo:{" "}
-                                        <strong>Settings → Webhooks → Add webhook</strong>.
-                                    </Typography>
-                                </li>
-                                <li>
-                                    <Typography level="body-xs">
-                                        Payload URL: paste the URL above. Content type:{" "}
-                                        <code>application/json</code>.
-                                    </Typography>
-                                </li>
-                                <li>
-                                    <Typography level="body-xs">
-                                        Secret: paste the same value the operator set in the
-                                        backend env var <code>GITHUB_WEBHOOK_SECRET</code>.
-                                    </Typography>
-                                </li>
-                                <li>
-                                    <Typography level="body-xs">
-                                        Events: select{" "}
+                                        {t.integrations.github.webhook.stepSettings}{" "}
                                         <strong>
-                                            &quot;Let me select individual events&quot;
+                                            {t.integrations.github.webhook.settingsPath}
+                                        </strong>
+                                        .
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        {t.integrations.github.webhook.stepPayload}{" "}
+                                        <code>
+                                            {t.integrations.github.webhook.contentTypeLabel}
+                                        </code>
+                                        .
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        {t.integrations.github.webhook.stepSecret}{" "}
+                                        <code>{t.integrations.github.webhook.secretEnvLabel}</code>
+                                        .
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        {t.integrations.github.webhook.stepEventsPrefix}{" "}
+                                        <strong>
+                                            {t.integrations.github.webhook.eventSelectionLabel}
                                         </strong>{" "}
-                                        → check only <strong>Pull requests</strong>. Save.
+                                        {t.integrations.github.webhook.stepEventsSuffix}{" "}
+                                        <strong>
+                                            {t.integrations.github.webhook.pullRequestsLabel}
+                                        </strong>
+                                        . {t.integrations.github.webhook.saveSuffix}
                                     </Typography>
                                 </li>
                             </Stack>
@@ -524,6 +538,7 @@ const GithubTab = ({
     accessToken: string;
     githubConnected: boolean;
 }) => {
+    const { t, locale } = useTranslation();
     const [pulls, setPulls] = useState<GithubPullSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -552,7 +567,7 @@ const GithubTab = ({
     if (!githubConnected) {
         return (
             <Stack spacing={2}>
-                <Alert color="primary">Connect GitHub to see your pull requests here.</Alert>
+                <Alert color="primary">{t.integrations.github.connectPrompt}</Alert>
                 <Button
                     startDecorator={<LinkRoundedIcon />}
                     sx={{ alignSelf: "flex-start" }}
@@ -560,7 +575,7 @@ const GithubTab = ({
                         void redirectToOAuthConnect("github", accessToken, undefined, setError);
                     }}
                 >
-                    Connect GitHub
+                    {t.integrations.github.connectButton}
                 </Button>
             </Stack>
         );
@@ -569,7 +584,7 @@ const GithubTab = ({
     return (
         <Stack spacing={2}>
             <Stack alignItems="center" direction="row" justifyContent="space-between">
-                <Typography level="title-md">Your open pull requests</Typography>
+                <Typography level="title-md">{t.integrations.github.openPulls}</Typography>
             </Stack>
             {error && <Alert color="danger">{error}</Alert>}
             {loading ? (
@@ -579,7 +594,7 @@ const GithubTab = ({
             ) : pulls.length === 0 ? (
                 <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
                     <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                        No open pull requests authored by you.
+                        {t.integrations.github.noOpenPulls}
                     </Typography>
                 </Sheet>
             ) : (
@@ -599,13 +614,18 @@ const GithubTab = ({
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography level="title-sm">{pr.title}</Typography>
                                     <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                                        {pr.repo} #{pr.number} · updated{" "}
-                                        {new Date(pr.updated_at).toLocaleDateString()}
+                                        {fmt(t.integrations.github.updated, {
+                                            repo: pr.repo,
+                                            number: pr.number,
+                                            date: new Date(pr.updated_at).toLocaleDateString(
+                                                locale
+                                            ),
+                                        })}
                                     </Typography>
                                 </Box>
-                                {pr.draft && <Chip size="sm">Draft</Chip>}
+                                {pr.draft && <Chip size="sm">{t.integrations.github.draft}</Chip>}
                                 <IconButton
-                                    aria-label="Open on GitHub"
+                                    aria-label={t.integrations.github.openOnGithub}
                                     component="a"
                                     href={pr.html_url}
                                     rel="noreferrer"
@@ -637,27 +657,32 @@ const LockedIntegrationPanel = ({
 }: {
     label: string;
     onUpgrade: () => void;
-}) => (
-    <Card sx={{ alignItems: "flex-start", gap: 1 }} variant="soft">
-        <Stack alignItems="center" direction="row" spacing={1}>
-            <LockRoundedIcon fontSize="small" />
-            <Typography level="title-sm">{label} isn&apos;t included in your plan</Typography>
-        </Stack>
-        <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-            Upgrade to connect {label} and let Genos use it when answering.
-        </Typography>
-        <Button size="sm" variant="solid" onClick={onUpgrade}>
-            Compare plans
-        </Button>
-    </Card>
-);
+}) => {
+    const { t } = useTranslation();
+    return (
+        <Card sx={{ alignItems: "flex-start", gap: 1 }} variant="soft">
+            <Stack alignItems="center" direction="row" spacing={1}>
+                <LockRoundedIcon fontSize="small" />
+                <Typography level="title-sm">
+                    {fmt(t.integrations.locked.title, { name: label })}
+                </Typography>
+            </Stack>
+            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
+                {fmt(t.integrations.locked.description, { name: label })}
+            </Typography>
+            <Button size="sm" variant="solid" onClick={onUpgrade}>
+                {t.integrations.locked.comparePlans}
+            </Button>
+        </Card>
+    );
+};
 
 export const IntegrationsHome = () => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [tab, setTab] = useState<TabKey>("connections");
     const [data, setData] = useState<ConnectionsResponse | null>(null);
-    const [loadingConnections, setLoadingConnections] = useState(true);
     // The tier's integrations allowlist (/agent/features/). null =
     // unknown (older backend, or the fetch failed) and renders
     // PERMISSIVE — a fetch hiccup must never padlock a paying user.
@@ -675,9 +700,7 @@ export const IntegrationsHome = () => {
 
     const reload = useCallback(async () => {
         if (!accessToken) return;
-        setLoadingConnections(true);
         const res = await listConnections(accessToken);
-        setLoadingConnections(false);
         if (res) setData(res);
     }, [accessToken]);
 
@@ -699,7 +722,7 @@ export const IntegrationsHome = () => {
     if (!accessToken) {
         return (
             <Box sx={{ p: 4 }}>
-                <Alert color="danger">Not signed in.</Alert>
+                <Alert color="danger">{t.integrations.errors.notSignedIn}</Alert>
             </Box>
         );
     }
@@ -719,7 +742,7 @@ export const IntegrationsHome = () => {
                 <Stack alignItems="center" direction="row" spacing={1.5} sx={{ mb: 3 }}>
                     <HubRoundedIcon sx={{ fontSize: 32 }} />
                     <Typography level="h2" sx={{ fontWeight: 700 }}>
-                        Integrations
+                        {t.integrations.title}
                     </Typography>
                 </Stack>
 
@@ -729,9 +752,9 @@ export const IntegrationsHome = () => {
                     onChange={(_e, v) => v && setTab(v as TabKey)}
                 >
                     <TabList sx={{ mb: 2 }}>
-                        <Tab value="connections">Connections</Tab>
-                        <Tab value="calendar">Calendar</Tab>
-                        <Tab value="github">GitHub</Tab>
+                        <Tab value="connections">{t.integrations.tabs.connections}</Tab>
+                        <Tab value="calendar">{t.integrations.tabs.calendar}</Tab>
+                        <Tab value="github">{t.integrations.tabs.github}</Tab>
                     </TabList>
 
                     <TabPanel sx={{ px: 0 }} value="connections">
@@ -753,7 +776,7 @@ export const IntegrationsHome = () => {
                             />
                         ) : (
                             <LockedIntegrationPanel
-                                label="Google Calendar"
+                                label={t.integrations.providers.googleCalendar}
                                 onUpgrade={() => navigate("/workspace/plans")}
                             />
                         )}
@@ -767,7 +790,7 @@ export const IntegrationsHome = () => {
                             />
                         ) : (
                             <LockedIntegrationPanel
-                                label="GitHub"
+                                label={t.integrations.providers.github}
                                 onUpgrade={() => navigate("/workspace/plans")}
                             />
                         )}

@@ -113,4 +113,21 @@ export const calendar = {
         helperText:
             "Invitees see this event on their Google Calendar. We don't send Google email invites — the chat handles notifications.",
     },
+    event: {
+        editTitle: "Edit event",
+        newTitle: "New event",
+        titleLabel: "Title",
+        allDay: "All day",
+        startLabel: "Start",
+        endLabel: "End",
+        inclusiveEndHelper: "Ends on this day (inclusive).",
+        descriptionLabel: "Description (optional)",
+        addMeet: "Add Google Meet link",
+        deleting: "Deleting…",
+        confirmDelete: "Confirm delete?",
+        deleteAll: "Delete all events?",
+        saving: "Saving…",
+        requiredError: "Title, start, and end are required.",
+        invalidEndError: "End date can't be before the start date.",
+    },
 } as const;

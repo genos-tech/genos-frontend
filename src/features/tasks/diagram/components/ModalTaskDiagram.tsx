@@ -140,6 +140,13 @@ export const ModalTaskDiagram = ({
             : null;
     const showOverview =
         overview != null && (spanLabel != null || overview.total > 0 || overview.sprint != null);
+    const healthLabel = overview?.health
+        ? overview.health.tone === "on-track"
+            ? t.tasks.diagram.schedule.onTrack
+            : overview.health.tone === "at-risk"
+              ? t.tasks.diagram.schedule.atRisk
+              : t.tasks.diagram.schedule.behind
+        : null;
 
     return (
         <Modal
@@ -258,7 +265,7 @@ export const ModalTaskDiagram = ({
                         </Box>
                         <Stack spacing={0} sx={{ minWidth: 0, flex: 1 }}>
                             <Typography level="title-md" sx={{ fontWeight: 700, color: P.text }}>
-                                Task graph
+                                {t.tasks.diagram.title}
                             </Typography>
                             <Typography
                                 level="body-xs"
@@ -296,7 +303,7 @@ export const ModalTaskDiagram = ({
                                         "--Chip-minHeight": "28px",
                                     }}
                                 >
-                                    {overview.health.label}
+                                    {healthLabel}
                                 </Chip>
                             </AppTooltip>
                         )}
@@ -367,7 +374,9 @@ export const ModalTaskDiagram = ({
                                                     color: P.textMuted,
                                                 }}
                                             >
-                                                {overview.spanDays}d
+                                                {fmt(t.tasks.diagram.durationDays, {
+                                                    count: overview.spanDays,
+                                                })}
                                             </Chip>
                                         )}
                                     </Stack>
@@ -398,7 +407,9 @@ export const ModalTaskDiagram = ({
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {overview.overdueCount} overdue
+                                                    {fmt(t.tasks.diagram.overdueCount, {
+                                                        count: overview.overdueCount,
+                                                    })}
                                                 </Chip>
                                             )}
                                             {overview.dueSoonCount > 0 && (
@@ -417,7 +428,9 @@ export const ModalTaskDiagram = ({
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {overview.dueSoonCount} due soon
+                                                    {fmt(t.tasks.diagram.dueSoonCount, {
+                                                        count: overview.dueSoonCount,
+                                                    })}
                                                 </Chip>
                                             )}
                                             {overview.blockedCount > 0 && (
@@ -434,7 +447,9 @@ export const ModalTaskDiagram = ({
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {overview.blockedCount} blocked
+                                                    {fmt(t.tasks.diagram.blockedCount, {
+                                                        count: overview.blockedCount,
+                                                    })}
                                                 </Chip>
                                             )}
                                         </Stack>

@@ -29,7 +29,7 @@ import {
     getQuickAddBlockingFields,
     TaskFieldRules,
 } from "../../utils/taskFieldRules";
-import { effortLevels, priorities } from "../../utils/taskMeta";
+import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { ProjectTagChip } from "../ProjectTagChip";
 import {
     DEPTH_BORDER_COLORS,
@@ -353,7 +353,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                             return opt ? (
                                 <Chip
                                     icon={opt.icon}
-                                    label={opt.label}
+                                    label={taskMetaLabel(opt.value, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color, 0.75),
@@ -371,7 +371,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                             <MenuItem key={opt.value} sx={menuItemSx} value={opt.value}>
                                 <Chip
                                     icon={opt.icon}
-                                    label={opt.label}
+                                    label={taskMetaLabel(opt.value, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color, 0.75),
@@ -546,7 +546,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                             const opt = priorities.find((p) => p.priority === selected);
                             return opt ? (
                                 <Chip
-                                    label={opt.priority}
+                                    label={taskMetaLabel(opt.priority, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -575,7 +575,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                 value={opt.priority || ""}
                             >
                                 <Chip
-                                    label={opt.priority}
+                                    label={taskMetaLabel(opt.priority, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -602,7 +602,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                             const opt = effortLevels.find((e) => e.level === selected);
                             return opt ? (
                                 <Chip
-                                    label={opt.level}
+                                    label={taskMetaLabel(opt.level, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -631,7 +631,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                                 value={opt.level || ""}
                             >
                                 <Chip
-                                    label={opt.level}
+                                    label={taskMetaLabel(opt.level, t.tasks.filters)}
                                     size="small"
                                     sx={{
                                         backgroundColor: alpha(opt.color || "#888", 0.75),

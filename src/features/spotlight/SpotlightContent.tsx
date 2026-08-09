@@ -2225,9 +2225,8 @@ function _chipLabel(
         const id = s.task_display_id || s.task_id;
         return fmt(template, { subtitle, id, sep });
     }
-    // Plain string (no new i18n key) — mirrors the todo branch below.
     if (s.entity_type === "milestone") {
-        return title ? `Milestone${sep}${title}` : "Milestone";
+        return fmt(ts.chip.milestone, { subtitle, sep });
     }
     if (s.entity_type === "chat" && s.chat_id) {
         const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
@@ -2244,8 +2243,10 @@ function _chipLabel(
         // Parse the date out of entity_id (`todo:YYYY-MM-DD:item:<id>` or
         // `todo:YYYY-MM-DD`) for a short subtitle.
         const datePart = s.entity_id.match(/^todo:(\d{4}-\d{2}-\d{2})/)?.[1];
-        const base = datePart ? `Todo · ${datePart}` : "Todo";
-        return title ? `${base}${sep}${title}` : base;
+        const todoSubtitle = datePart
+            ? fmt(ts.entitySubtitle.todoWithDate, { date: datePart })
+            : ts.entitySubtitle.todo;
+        return fmt(ts.chip.todo, { subtitle: todoSubtitle, sep });
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;

@@ -56,6 +56,7 @@ import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
+import { taskMetaLabel } from "../../../utils/taskMeta";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
@@ -477,7 +478,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 ),
                             }}
                         >
-                            {taskContent.status.status || "Open"}
+                            {taskMetaLabel(taskContent.status.status || "Open", t.tasks.filters)}
                         </Chip>
                     </Box>
                 ) : (
@@ -982,7 +983,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // node. The stored `rootTaskId` is deliberately not
                     // used — it can still hold the root from before an
                     // ancestor changed milestone.
-                    rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${taskContent.title || "Untitled"}`}
+                    rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${
+                        taskContent.title || t.tasks.diagram.untitled
+                    }`}
                     rootTaskId={Number(taskContent.id)}
                     usePM={usePM}
                     useSM={useSM}

@@ -546,6 +546,8 @@ const QuickReactionsSection = () => {
                     pickerLeftPosition={pickerPos.left}
                     pickerRightPosition="auto"
                     pickerTopPosition={pickerPos.top}
+                    showEmojiPicker={true}
+                    useFixedPosition={true}
                     setSelectedEmoji={(emoji: string | null) => {
                         // The picker also fires `null` on click-outside —
                         // only a real pick should overwrite the slot.
@@ -554,8 +556,6 @@ const QuickReactionsSection = () => {
                     setShowEmojiPicker={(open: boolean) => {
                         if (!open) setEditingSlot(null);
                     }}
-                    showEmojiPicker={true}
-                    useFixedPosition={true}
                 />
             )}
         </Sheet>
@@ -659,7 +659,7 @@ export const LlmModelSection = () => {
         return (
             <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    Loading…
+                    {t.common.actions.loading}
                 </Typography>
             </Sheet>
         );
@@ -1707,7 +1707,11 @@ export const SettingsModal = ({
                     <SettingsRoundedIcon />
                     <Typography level="title-lg">{t.settings.title}</Typography>
                     <Box sx={{ flex: 1 }} />
-                    <IconButton variant="plain" onClick={onClose}>
+                    <IconButton
+                        aria-label={t.common.actions.close}
+                        variant="plain"
+                        onClick={onClose}
+                    >
                         <CloseRoundedIcon />
                     </IconButton>
                 </Stack>
@@ -1884,7 +1888,7 @@ export const SettingsModal = ({
                                 />
                             ) : (
                                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                                    Loading…
+                                    {t.common.actions.loading}
                                 </Typography>
                             )}
                         </Stack>
@@ -1901,7 +1905,7 @@ export const SettingsModal = ({
                                 />
                             ) : (
                                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                                    Loading…
+                                    {t.common.actions.loading}
                                 </Typography>
                             )}
                         </Stack>

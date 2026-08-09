@@ -31,6 +31,7 @@ import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
+import { taskMetaLabel } from "../../../utils/taskMeta";
 
 type TaskSubTasksBlockProps = {
     SectionHeader: React.ComponentType<{ children: React.ReactNode; isDark: boolean }>;
@@ -412,7 +413,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {`${status.status}`}
+                                                    {taskMetaLabel(status.status, t.tasks.filters)}
                                                 </Chip>
                                                 <Typography
                                                     sx={{

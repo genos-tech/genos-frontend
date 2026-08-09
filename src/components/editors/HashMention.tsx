@@ -18,6 +18,7 @@ import {
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { TaskStatusChip } from "../../features/tasks/components/TaskStatusChip";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { fmt, getMessages } from "../../i18n";
 import { AllChatProps } from "../../types/chat";
 import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../types/tasks";
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
@@ -176,6 +177,7 @@ export const CreateHashNoteSpec = () =>
         },
         {
             render: (props) => {
+                const copy = getMessages().common.editor;
                 const { noteKind, noteId, title, projectId, taskId, chatType, chatId, threadId } =
                     props.inlineContent.props;
                 let ref: HashEntityRef;
@@ -200,7 +202,7 @@ export const CreateHashNoteSpec = () =>
                 return (
                     <HashChip
                         href={entityRefToHref(ref)}
-                        label={title || "note"}
+                        label={title || copy.hashNoteFallback}
                         palette={NOTE_PALETTE}
                     />
                 );
@@ -221,9 +223,16 @@ export const CreateHashChatSpec = () =>
         },
         {
             render: (props) => {
+                const copy = getMessages().common.editor;
                 const { chatId, chatName } = props.inlineContent.props;
                 const href = entityRefToHref({ entityType: "chat", chatType: "gm", chatId });
-                return <HashChip href={href} label={chatName || "chat"} palette={CHAT_PALETTE} />;
+                return (
+                    <HashChip
+                        href={href}
+                        label={chatName || copy.hashChatFallback}
+                        palette={CHAT_PALETTE}
+                    />
+                );
             },
         }
     );
@@ -241,12 +250,13 @@ export const CreateHashProjectSpec = () =>
         },
         {
             render: (props) => {
+                const copy = getMessages().common.editor;
                 const { projectId, projectName } = props.inlineContent.props;
                 const href = entityRefToHref({ entityType: "project", projectId });
                 return (
                     <HashChip
                         href={href}
-                        label={projectName || "project"}
+                        label={projectName || copy.hashProjectFallback}
                         palette={PROJECT_PALETTE}
                     />
                 );
@@ -341,6 +351,7 @@ interface HashMenuCacheEntry {
     notes: HashNoteEntry[];
     chats: AllChatProps[];
     projects: ProjectProps[];
+    copy: ReturnType<typeof getMessages>["common"]["editor"];
     items: DefaultReactSuggestionItem[];
 }
 const _hashMenuCache = new WeakMap<object, HashMenuCacheEntry>();
@@ -353,6 +364,7 @@ export const HashMentionMenuItems = (
     editor: any,
     data: HashMentionData
 ): DefaultReactSuggestionItem[] => {
+    const copy = getMessages().common.editor;
     const cached = _hashMenuCache.get(editor);
     if (
         cached &&
@@ -360,7 +372,8 @@ export const HashMentionMenuItems = (
         cached.teamTasks === data.teamTasks &&
         cached.notes === data.notes &&
         cached.chats === data.chats &&
-        cached.projects === data.projects
+        cached.projects === data.projects &&
+        cached.copy === copy
     ) {
         return cached.items;
     }
@@ -431,8 +444,11 @@ export const HashMentionMenuItems = (
                     TASK_PALETTE,
                     title || displayId,
                     t.projectName
-                        ? `Task · ${displayId} · ${t.projectName}`
-                        : `Task · ${displayId}`,
+                        ? fmt(copy.hashTaskProject, {
+                              id: displayId,
+                              project: t.projectName,
+                          })
+                        : fmt(copy.hashTask, { id: displayId }),
                     // The canonical dashboard status chip, so a status
                     // reads identically here and in the task surfaces.
                     t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
@@ -456,29 +472,34 @@ export const HashMentionMenuItems = (
                 chatId: "",
                 threadId: "0",
             };
-            let subtitle = "Note";
+            let subtitle: string = copy.hashNote;
             if (n.kind === "task") {
                 props.projectId = String(n.projectId ?? "");
                 props.taskId = String(n.taskId ?? "");
-                subtitle = "Task note";
+                subtitle = copy.hashTaskNote;
             } else if (n.kind === "chat") {
                 props.chatType = chatTypeCodeToSlug(n.chatType);
                 props.chatId = String(n.chatId ?? "");
                 props.threadId = String(n.threadId ?? "0");
-                subtitle = "Chat note";
+                subtitle = copy.hashChatNote;
             } else if (n.kind === "shared") {
-                subtitle = "Shared note";
+                subtitle = copy.hashSharedNote;
             } else if (n.kind === "team") {
-                subtitle = "Team note";
+                subtitle = copy.hashTeamNote;
             } else {
-                subtitle = "My note";
+                subtitle = copy.hashMyNote;
             }
             return {
-                title: title || "note",
+                title: title || copy.hashNoteFallback,
                 onItemClick: () => {
                     editor.insertInlineContent([{ type: "hashNote", props }, " "]);
                 },
-                icon: menuRow(StickyNote2RoundedIcon, NOTE_PALETTE, title || "note", subtitle),
+                icon: menuRow(
+                    StickyNote2RoundedIcon,
+                    NOTE_PALETTE,
+                    title || copy.hashNoteFallback,
+                    subtitle
+                ),
             };
         });
 
@@ -488,14 +509,19 @@ export const HashMentionMenuItems = (
             const chatId = String(c.chatId);
             const chatName = c.chatName || "";
             return {
-                title: chatName || "chat",
+                title: chatName || copy.hashChatFallback,
                 onItemClick: () => {
                     editor.insertInlineContent([
                         { type: "hashChat", props: { chatId, chatName } },
                         " ",
                     ]);
                 },
-                icon: menuRow(ForumRoundedIcon, CHAT_PALETTE, chatName || "chat", "Group chat"),
+                icon: menuRow(
+                    ForumRoundedIcon,
+                    CHAT_PALETTE,
+                    chatName || copy.hashChatFallback,
+                    copy.hashGroupChat
+                ),
             };
         });
 
@@ -505,7 +531,7 @@ export const HashMentionMenuItems = (
             const projectId = String(p.projectId);
             const projectName = p.projectName || "";
             return {
-                title: projectName || "project",
+                title: projectName || copy.hashProjectFallback,
                 onItemClick: () => {
                     editor.insertInlineContent([
                         { type: "hashProject", props: { projectId, projectName } },
@@ -515,8 +541,8 @@ export const HashMentionMenuItems = (
                 icon: menuRow(
                     FolderRoundedIcon,
                     PROJECT_PALETTE,
-                    projectName || "project",
-                    "Project"
+                    projectName || copy.hashProjectFallback,
+                    copy.hashProject
                 ),
             };
         });
@@ -528,6 +554,7 @@ export const HashMentionMenuItems = (
         notes: data.notes,
         chats: data.chats,
         projects: data.projects,
+        copy,
         items,
     });
     return items;

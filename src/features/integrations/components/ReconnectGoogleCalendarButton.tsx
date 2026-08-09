@@ -2,6 +2,7 @@ import { useState } from "react";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import { Button, type ButtonProps } from "@mui/joy";
 
+import { useTranslation } from "../../../i18n";
 import { redirectToOAuthConnect } from "../services/oauth";
 
 interface ReconnectGoogleCalendarButtonProps {
@@ -39,11 +40,12 @@ export const ReconnectGoogleCalendarButton = ({
     accessToken,
     next,
     onError,
-    label = "Reconnect Google Calendar",
+    label,
     size,
     variant,
     color,
 }: ReconnectGoogleCalendarButtonProps) => {
+    const { t } = useTranslation();
     const [redirecting, setRedirecting] = useState(false);
 
     return (
@@ -65,7 +67,7 @@ export const ReconnectGoogleCalendarButton = ({
                 });
             }}
         >
-            {label}
+            {label ?? t.calendar.reconnectButton}
         </Button>
     );
 };

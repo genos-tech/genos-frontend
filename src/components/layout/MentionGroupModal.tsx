@@ -8,6 +8,7 @@ import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MentionGroupEditor } from "./MentionGroupEditor";
 
@@ -35,6 +36,7 @@ export const MentionGroupModal = ({
     useUISM,
 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const { openGroupId, closeGroupModal } = useMentionGroupModal();
     const open = openGroupId != null;
@@ -53,9 +55,16 @@ export const MentionGroupModal = ({
             >
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                     <GroupRoundedIcon sx={{ color: "#16a34a" }} />
-                    <Typography level="title-md">Mention group</Typography>
+                    <Typography level="title-md">
+                        {t.settings.mentionGroups.modalHeading}
+                    </Typography>
                     <Stack sx={{ flex: 1 }} />
-                    <IconButton size="sm" variant="plain" onClick={closeGroupModal}>
+                    <IconButton
+                        aria-label={t.common.actions.close}
+                        size="sm"
+                        variant="plain"
+                        onClick={closeGroupModal}
+                    >
                         <CloseRoundedIcon />
                     </IconButton>
                 </Stack>

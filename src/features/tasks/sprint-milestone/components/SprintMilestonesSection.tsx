@@ -11,6 +11,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { Milestone, Sprint } from "../types";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -164,7 +165,7 @@ export const SprintMilestonesSection = ({
                                                 backgroundColor: `${statusColor}1A`,
                                             }}
                                         >
-                                            {m.status}
+                                            {taskMetaLabel(m.status, t.tasks.filters)}
                                         </Chip>
                                     </Stack>
                                     <Stack alignItems="center" direction="row" spacing={1.5}>

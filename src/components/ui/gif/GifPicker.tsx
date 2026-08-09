@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "../../../i18n";
 import { GifResult, searchGifs } from "../../../services/gifApi";
 
 // GIF search popup (GIPHY via the api proxy). Positioning contract is
@@ -39,6 +40,7 @@ export const GifPicker = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const pickerRef = useRef<HTMLDivElement>(null);
 
     const [query, setQuery] = useState("");
@@ -125,7 +127,7 @@ export const GifPicker = ({
             <Box sx={{ p: 1 }}>
                 <Input
                     autoFocus
-                    placeholder="Search GIFs…"
+                    placeholder={t.common.editor.gifSearchPlaceholder}
                     size="sm"
                     startDecorator={<SearchRoundedIcon />}
                     value={query}
@@ -136,11 +138,11 @@ export const GifPicker = ({
             <Box sx={{ flex: 1, overflowY: "auto", px: 1 }}>
                 {notConfigured ? (
                     <Typography level="body-sm" sx={{ p: 2, textAlign: "center", opacity: 0.7 }}>
-                        GIF search isn't configured on this server (missing GIPHY key).
+                        {t.common.editor.gifNotConfigured}
                     </Typography>
                 ) : results.length === 0 && !loading ? (
                     <Typography level="body-sm" sx={{ p: 2, textAlign: "center", opacity: 0.7 }}>
-                        No GIFs found.
+                        {t.common.editor.gifNoResults}
                     </Typography>
                 ) : (
                     <Box
@@ -175,12 +177,12 @@ export const GifPicker = ({
                 )}
                 {next && !loading && !notConfigured && (
                     <Button fullWidth size="sm" sx={{ my: 1 }} variant="plain" onClick={loadMore}>
-                        Load more
+                        {t.common.editor.gifLoadMore}
                     </Button>
                 )}
                 {loading && (
                     <Typography level="body-xs" sx={{ p: 1, textAlign: "center", opacity: 0.6 }}>
-                        Loading…
+                        {t.common.editor.gifLoading}
                     </Typography>
                 )}
             </Box>
@@ -190,7 +192,7 @@ export const GifPicker = ({
                 level="body-xs"
                 sx={{ p: 0.75, textAlign: "center", opacity: 0.6, fontWeight: 600 }}
             >
-                Powered by GIPHY
+                {t.common.editor.gifAttribution}
             </Typography>
         </div>
     );

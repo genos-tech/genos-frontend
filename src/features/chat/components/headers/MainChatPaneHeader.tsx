@@ -372,7 +372,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     size="sm"
                     variant="plain"
                     onClick={handleMobileBack}
-                    aria-label="Back"
+                    aria-label={t.chat.headers.backToChat}
                     sx={{ flexShrink: 0 }}
                 >
                     <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />

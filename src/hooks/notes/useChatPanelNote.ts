@@ -14,6 +14,7 @@ import { createEmptyChatNote } from "../../features/notes/chat-notes/services/cr
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { addNote } from "../../features/notes/common/services/addNote";
+import { fmt, getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatNoteMetaProps, ChatNoteProps } from "../../types/notes";
 
@@ -137,7 +138,7 @@ export const useChatPanelNote = ({
                     return;
                 }
 
-                const title = "New Chat Note (1)";
+                const title = fmt(getMessages().notes.create.templates.newChatNote, { count: 1 });
                 const created = await createEmptyChatNote(
                     myself,
                     null,

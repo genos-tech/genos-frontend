@@ -13,6 +13,7 @@ import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { fmt, getMessages, useTranslation } from "../../i18n";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
@@ -148,7 +149,7 @@ export const CreateMentionGroupSpec = () =>
         {
             type: "mentionGroup",
             propSchema: {
-                groupName: { default: "group" },
+                groupName: { default: getMessages().common.editor.mentionGroupFallback },
                 groupId: { default: "0" },
                 memberCount: { default: "0" },
             },
@@ -234,6 +235,7 @@ interface MenuCacheEntry {
     users: UserProps[];
     myselfId: string;
     groups: MentionGroup[];
+    copy: ReturnType<typeof getMessages>["common"]["editor"];
     items: DefaultReactSuggestionItem[];
 }
 
@@ -248,13 +250,15 @@ export const MentionMenuItems = (
     myselfUserId: string,
     mentionGroups: MentionGroup[] = []
 ): DefaultReactSuggestionItem[] => {
+    const copy = getMessages().common.editor;
     const cached = _menuItemsCache.get(editor);
     if (
         cached &&
         cached.profiles === teamMemberProfiles &&
         cached.users === users &&
         cached.myselfId === myselfUserId &&
-        cached.groups === mentionGroups
+        cached.groups === mentionGroups &&
+        cached.copy === copy
     ) {
         return cached.items;
     }
@@ -268,7 +272,7 @@ export const MentionMenuItems = (
         // doesn't startsWith). Use the bare name here; the icon below
         // still shows the `@` prefix for visual identity.
         title: g.groupName,
-        badge: `${g.memberCount} member${g.memberCount === 1 ? "" : "s"}`,
+        badge: fmt(copy.mentionMemberCount, { count: g.memberCount }),
         onItemClick: () => {
             editor.insertInlineContent([
                 {
@@ -401,7 +405,7 @@ export const MentionMenuItems = (
                                         flexShrink: 0,
                                     }}
                                 >
-                                    You
+                                    {copy.mentionYou}
                                 </Chip>
                             )}
                         </Box>
@@ -453,6 +457,7 @@ export const MentionMenuItems = (
         users,
         myselfId: myselfUserId,
         groups: mentionGroups,
+        copy,
         items,
     });
     return items;
@@ -481,6 +486,7 @@ export const MentionMenuItems = (
 export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
     props: SuggestionMenuProps<T>
 ) => {
+    const { t } = useTranslation();
     const Components = useComponentsContext()!;
     const { items, loadingState, selectedIndex, onItemClick } = props;
 
@@ -523,7 +529,7 @@ export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
             ))}
             {items.length === 0 && (loadingState === "loading" || loadingState === "loaded") && (
                 <Components.SuggestionMenu.EmptyItem className="bn-suggestion-menu-item">
-                    No matches
+                    {t.common.personPicker.noMatches}
                 </Components.SuggestionMenu.EmptyItem>
             )}
             {(loadingState === "loading-initial" || loadingState === "loading") && (

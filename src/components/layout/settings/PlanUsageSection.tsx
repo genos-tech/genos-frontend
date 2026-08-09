@@ -116,10 +116,10 @@ const UsageRow = ({
             {!unlimited && (
                 <LinearProgress
                     color={atCap ? "warning" : "primary"}
-                    determinate
                     sx={{ mt: 0.5 }}
                     thickness={4}
                     value={remaining * 100}
+                    determinate
                 />
             )}
         </Box>
@@ -232,7 +232,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                     is priced into the request's credits, so a separate
                     allowance would charge for it twice. */}
                 {data.credits ? (
-                    <CreditBalance credits={data.credits} hideUpgradeNote tier={data.tier} />
+                    <CreditBalance credits={data.credits} tier={data.tier} hideUpgradeNote />
                 ) : (
                     <>
                         <UsageRow
@@ -434,7 +434,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
             ) : (
                 <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
                     {/* Stripe not configured server-side (or old backend). */}
-                    <Button disabled size="sm" variant="solid">
+                    <Button size="sm" variant="solid" disabled>
                         {p.upgradeCta}
                     </Button>
                     <Button

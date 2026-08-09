@@ -1,4 +1,5 @@
 import { PreviewMediaKind } from "../../../types/chat";
+import { getMessages } from "../../../i18n";
 
 // `t.chat.sidebar` key per media kind — shared so the chat list and the
 // activity feed label a text-less row identically.
@@ -66,16 +67,18 @@ export function getFirstLine(first_line: any): string {
 
     if (blockType === "image") {
         const name = first_line?.props?.name;
-        return name ? `Image: ${name}` : "Image";
+        const label = getMessages().chat.sidebar.previewImage;
+        return name ? `${label}: ${name}` : label;
     }
 
     if (blockType === "file") {
         const name = first_line?.props?.name;
-        return name ? `File: ${name}` : "File";
+        const label = getMessages().chat.sidebar.previewFile;
+        return name ? `${label}: ${name}` : label;
     }
 
     if (blockType === "table") {
-        return "Table";
+        return getMessages().chat.sidebar.previewTable;
     }
 
     if (blockType === "divider") {

@@ -5,6 +5,9 @@ import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineR
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import { Chip } from "@mui/joy";
 
+import { useTranslation } from "../../../i18n";
+import { taskMetaLabel } from "../utils/taskMeta";
+
 // Soft status swatch shared by every dashboard status chip. Moved here from
 // TaskHomeContent so the dashboard rows and the Assigned Milestones card
 // render the exact same chip.
@@ -46,6 +49,7 @@ type TaskStatusChipProps = {
  * (milestone statuses — Open/WIP/Pending/Closed — share the same vocabulary).
  */
 export const TaskStatusChip = ({ status, iconSize = 12 }: TaskStatusChipProps) => {
+    const { t } = useTranslation();
     const sc = STATUS_COLORS[status] || STATUS_COLORS.Open;
     return (
         <Chip
@@ -59,7 +63,7 @@ export const TaskStatusChip = ({ status, iconSize = 12 }: TaskStatusChipProps) =
                 flexShrink: 0,
             }}
         >
-            {status}
+            {taskMetaLabel(status, t.tasks.filters)}
         </Chip>
     );
 };

@@ -32,7 +32,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
-import { statuses } from "../../utils/taskMeta";
+import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { useDiagramZIndex } from "../diagramZIndex";
 import { HANDLE, TaskNodeData } from "../types";
 import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
@@ -136,6 +136,22 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const toneColor = TONE_COLOR[schedule.tone];
+    const scheduleLabel =
+        schedule.daysUntilDue == null
+            ? null
+            : task.status?.toLowerCase() === "closed"
+              ? t.tasks.diagram.schedule.closed
+              : schedule.daysUntilDue < 0
+                ? fmt(t.tasks.diagram.schedule.overdueDays, {
+                      count: -schedule.daysUntilDue,
+                  })
+                : schedule.daysUntilDue === 0
+                  ? t.tasks.diagram.schedule.dueToday
+                  : schedule.daysUntilDue === 1
+                    ? t.tasks.diagram.schedule.dueTomorrow
+                    : fmt(t.tasks.diagram.schedule.dueInDays, {
+                          count: schedule.daysUntilDue,
+                      });
 
     const commitTitle = () => {
         const next = draftTitle.trim();
@@ -408,7 +424,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                                 mr: 1,
                                             }}
                                         />
-                                        {s.status}
+                                        {taskMetaLabel(s.status, t.tasks.filters)}
                                     </MenuItem>
                                 );
                             })}
@@ -522,7 +538,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             setEditing(true);
                         }}
                     >
-                        {task.title || "Untitled"}
+                        {task.title || t.tasks.diagram.untitled}
                     </Typography>
                 </AppTooltip>
             )}
@@ -547,7 +563,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         schedule.startLabel && schedule.dueLabel
                             ? `${schedule.startLabel} – ${schedule.dueLabel}`
                             : (schedule.startLabel ?? schedule.dueLabel ?? null);
-                    const placeholder = "+ Set dates";
+                    const placeholder = t.tasks.diagram.setDates;
                     const isEmpty = dateText == null;
                     const labelText = isEmpty ? placeholder : dateText;
                     const editable = !isExternal;
@@ -594,10 +610,12 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             color: P.textMuted,
                         }}
                     >
-                        {schedule.durationDays}d
+                        {fmt(t.tasks.diagram.durationDays, {
+                            count: schedule.durationDays,
+                        })}
                     </Chip>
                 )}
-                {schedule.relativeLabel && (
+                {scheduleLabel && (
                     <Chip
                         size="sm"
                         startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
@@ -611,7 +629,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             color: toneColor,
                         }}
                     >
-                        {schedule.relativeLabel}
+                        {scheduleLabel}
                     </Chip>
                 )}
             </Stack>
@@ -659,7 +677,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             color: P.textMuted,
                         }}
                     >
-                        External
+                        {t.tasks.diagram.external}
                     </Chip>
                 ) : (
                     task.priority && (
@@ -673,7 +691,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 color: P.textMuted,
                             }}
                         >
-                            {task.priority}
+                            {taskMetaLabel(task.priority, t.tasks.filters)}
                         </Chip>
                     )
                 )}

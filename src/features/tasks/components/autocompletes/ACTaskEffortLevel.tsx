@@ -6,7 +6,7 @@ import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
-import { effortLevels } from "../../utils/taskMeta";
+import { effortLevels, taskMetaLabel } from "../../utils/taskMeta";
 
 type ACTaskEffortLevelProps = {
     taskContent: TaskProps;
@@ -22,7 +22,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
     return (
         <Autocomplete
             key={`ac-project-effort-level-${taskContent.id}`}
-            getOptionLabel={(option) => option.level || ""}
+            getOptionLabel={(option) => taskMetaLabel(option.level, t.tasks.filters)}
             isOptionEqualToValue={(option, value) => option.level === value.level}
             openOnFocus={true}
             options={effortLevels}
@@ -45,7 +45,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {option.level}
+                            {taskMetaLabel(option.level, t.tasks.filters)}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
@@ -67,7 +67,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {item.level}
+                            {taskMetaLabel(item.level, t.tasks.filters)}
                         </Chip>
                     );
                 })

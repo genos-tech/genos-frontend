@@ -23,7 +23,7 @@ import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
-import { statuses } from "../../utils/taskMeta";
+import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 
@@ -328,20 +328,25 @@ export const ACTaskSelector = ({
 // the label sits flush within the chip's padding instead of being
 // left-aligned inside a wider box. Exported so the modal + the compact
 // chip block render identical chips end-to-end.
-export const StatusChip = ({ meta, isDark }: { meta: TaskStatusProps; isDark: boolean }) => (
-    <Chip
-        size="sm"
-        variant="soft"
-        sx={{
-            backgroundColor: meta.color ? alpha(meta.color, isDark ? 0.5 : 0.75) : "transparent",
-            color: meta.textColor ?? undefined,
-            fontWeight: "bold",
-            borderRadius: "5px",
-        }}
-    >
-        {meta.status ?? "—"}
-    </Chip>
-);
+export const StatusChip = ({ meta, isDark }: { meta: TaskStatusProps; isDark: boolean }) => {
+    const { t } = useTranslation();
+    return (
+        <Chip
+            size="sm"
+            variant="soft"
+            sx={{
+                backgroundColor: meta.color
+                    ? alpha(meta.color, isDark ? 0.5 : 0.75)
+                    : "transparent",
+                color: meta.textColor ?? undefined,
+                fontWeight: "bold",
+                borderRadius: "5px",
+            }}
+        >
+            {taskMetaLabel(meta.status, t.tasks.filters) || "—"}
+        </Chip>
+    );
+};
 
 const CAPTION_ICON_SX = { fontSize: 13, opacity: 0.6 } as const;
 

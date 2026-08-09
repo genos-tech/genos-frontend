@@ -74,9 +74,9 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
 
     return (
         <Dropdown>
-            <AppTooltip title="More options">
+            <AppTooltip title={t.chat.todoPane.moreOptions}>
                 <MenuButton
-                    aria-label="More options"
+                    aria-label={t.chat.todoPane.moreOptions}
                     slots={{ root: IconButton }}
                     slotProps={{
                         root: {
@@ -115,7 +115,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                             startDecorator={<LocalOfferRoundedIcon sx={{ fontSize: 12 }} />}
                             sx={{ opacity: 0.6, px: 1, py: 0.25 }}
                         >
-                            Tag
+                            {t.chat.todoPane.tag}
                         </Typography>
                         <MenuItem onClick={() => onSelectCategory(null)}>
                             <Box sx={{ width: 18 }}>
@@ -123,7 +123,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                                     <CheckIcon sx={{ fontSize: 16 }} />
                                 ) : null}
                             </Box>
-                            <Typography level="body-sm">General</Typography>
+                            <Typography level="body-sm">{t.chat.todoPane.general}</Typography>
                         </MenuItem>
                         {categories.map((c) => (
                             <MenuItem
@@ -140,7 +140,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                         ))}
                         <Box sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
                             <Input
-                                placeholder="New tag"
+                                placeholder={t.chat.todoPane.newTagPlaceholder}
                                 size="sm"
                                 sx={{ flex: 1, fontSize: "0.8rem" }}
                                 value={newName}
@@ -168,7 +168,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                 <MenuItem color="danger" onClick={onDelete}>
                     <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
                     <Typography color="danger" level="body-sm">
-                        Delete
+                        {t.chat.todoPane.delete}
                     </Typography>
                 </MenuItem>
             </Menu>

@@ -3,7 +3,9 @@ import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { useTranslation } from "../../../i18n";
 import { TaskStatusProps } from "../../../types/tasks";
+import { taskMetaLabel } from "../utils/taskMeta";
 import { CopyableTaskIdChip } from "./CopyableTaskId";
 
 /**
@@ -45,6 +47,7 @@ const FALLBACK_STATUS_COLOR = "#0044c2";
 
 export const TaskIdentityRow = ({ task, title, status, isMilestone }: TaskIdentityRowProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const statusColor = status.color || FALLBACK_STATUS_COLOR;
 
@@ -84,7 +87,7 @@ export const TaskIdentityRow = ({ task, title, status, isMilestone }: TaskIdenti
                     borderColor: alpha(statusColor, isDark ? 0.4 : 0.25),
                 }}
             >
-                {status.status}
+                {taskMetaLabel(status.status, t.tasks.filters)}
             </Chip>
             <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography

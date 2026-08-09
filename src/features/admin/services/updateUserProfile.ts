@@ -57,7 +57,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             const res = await api.put("/user/profile/", payload);
             return res.data;
         } else {
-            console.error("Unauthorized. Auth toke is not found.");
+            console.error("Unauthorized. Authentication token was not found.");
             if (setErrorMessage) {
                 setErrorMessage(getMessages().admin.auth.errors.tokenMissing);
             }

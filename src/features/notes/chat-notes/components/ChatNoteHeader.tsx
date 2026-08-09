@@ -288,7 +288,7 @@ export const ChatNoteHeader = ({
         >
             {isMobile && onMobileBack && (
                 <IconButton
-                    aria-label="Back to notes list"
+                    aria-label={t.notes.labels.backToNotesList}
                     size="sm"
                     sx={{ flexShrink: 0 }}
                     variant="plain"

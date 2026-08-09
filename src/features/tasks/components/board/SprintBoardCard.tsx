@@ -16,6 +16,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { deriveDaysLeft } from "../../utils/daysLeft";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { ProjectTagChip } from "../ProjectTagChip";
 
@@ -209,7 +210,7 @@ const SprintBoardCardImpl = ({
                                         textTransform: "uppercase",
                                     }}
                                 >
-                                    {task.priority}
+                                    {taskMetaLabel(task.priority, t.tasks.filters)}
                                 </span>
                             )}
                             {/* Open the task graph anchored on this card.

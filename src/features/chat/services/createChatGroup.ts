@@ -17,6 +17,7 @@
  */
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { Channel, ChannelKind } from "../../../types/channel";
@@ -60,9 +61,10 @@ export const createChatGroup = async (
      *  does not get to choose the other organization's participants. */
     external?: { guestTeamIds: string[] }
 ): Promise<Channel | undefined> => {
+    const messages = getMessages().chat.errors;
     const trimmedName = chatName.trim();
     if (!trimmedName) {
-        setCreateCGErrorMessage("Group name is required.");
+        setCreateCGErrorMessage(messages.groupNameRequired);
         return undefined;
     }
 
@@ -78,7 +80,7 @@ export const createChatGroup = async (
         });
 
         if (!channel) {
-            setCreateCGErrorMessage("Failed to create group. Please try again.");
+            setCreateCGErrorMessage(messages.createGroupFailed);
             return undefined;
         }
 
@@ -89,7 +91,7 @@ export const createChatGroup = async (
         return channel;
     } catch (error) {
         console.error("Failed to create GM:", error);
-        setCreateCGErrorMessage("Failed to create group. Please try again.");
+        setCreateCGErrorMessage(messages.createGroupFailed);
         return undefined;
     }
 };

@@ -39,6 +39,7 @@ import { resendVerificationEmail } from "../services/emailVerification";
 import { requestPasswordReset } from "../services/passwordReset";
 import { signIn } from "../services/signin";
 import { GoogleIcon } from "./icons/GoogleIcon";
+import { LanguageSwitchButton } from "./LanguageSwitchButton";
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -211,8 +212,12 @@ export const SignInForm = () => {
                         boxShadow: styles.cardShadow,
                         p: 4,
                         backdropFilter: "blur(12px)",
+                        position: "relative",
                     }}
                 >
+                    <Box sx={{ position: "absolute", top: 14, right: 14 }}>
+                        <LanguageSwitchButton color={styles.subtitleColor} />
+                    </Box>
                     <Stack sx={{ gap: 3, mb: 3 }}>
                         <Stack sx={{ gap: 1 }}>
                             <Typography

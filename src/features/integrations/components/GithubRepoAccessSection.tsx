@@ -20,6 +20,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { fmt, useTranslation } from "../../../i18n";
 import {
     GithubAccessibleReposResponse,
     GithubRepoOwner,
@@ -50,6 +51,7 @@ import { redirectToOAuthConnect } from "../services/oauth";
  * refreshes the token's grants.
  */
 export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<GithubAccessibleReposResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -80,9 +82,11 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
             <Stack spacing={1.5}>
                 <Stack alignItems="center" direction="row" spacing={1}>
                     <FolderRoundedIcon sx={{ color: "primary.500" }} />
-                    <Typography level="title-sm">Repository access</Typography>
+                    <Typography level="title-sm">
+                        {t.integrations.github.repoAccess.title}
+                    </Typography>
                     <Box sx={{ flex: 1 }} />
-                    <AppTooltip size="sm" title="Refresh">
+                    <AppTooltip size="sm" title={t.integrations.actions.refresh}>
                         <Button
                             disabled={loading}
                             size="sm"
@@ -90,16 +94,13 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                             variant="plain"
                             onClick={() => void load()}
                         >
-                            Refresh
+                            {t.integrations.actions.refresh}
                         </Button>
                     </AppTooltip>
                 </Stack>
 
                 <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                    Genos reaches GitHub with your account&apos;s permissions, so a repo you create
-                    in your own account works straight away. An <strong>organization</strong> has
-                    to grant access once — if one is missing below, add it from the buttons at the
-                    bottom.
+                    {t.integrations.github.repoAccess.description}
                 </Typography>
 
                 {error && <Alert color="danger">{error}</Alert>}
@@ -109,9 +110,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                         <CircularProgress size="sm" />
                     </Stack>
                 ) : !data || data.owners.length === 0 ? (
-                    <Alert color="neutral">
-                        No repositories are visible yet. If you expect some, re-authorize below.
-                    </Alert>
+                    <Alert color="neutral">{t.integrations.github.repoAccess.empty}</Alert>
                 ) : (
                     <Stack spacing={0.5}>
                         {data.owners.map((owner) => {
@@ -140,7 +139,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                         </Typography>
                                         {owner.type === "Organization" && (
                                             <Chip color="primary" size="sm" variant="soft">
-                                                Org
+                                                {t.integrations.github.repoAccess.org}
                                             </Chip>
                                         )}
                                         <Box sx={{ flex: 1 }} />
@@ -148,8 +147,9 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                             level="body-xs"
                                             sx={{ color: "text.tertiary" }}
                                         >
-                                            {owner.repo_count}{" "}
-                                            {owner.repo_count === 1 ? "repo" : "repos"}
+                                            {fmt(t.integrations.github.repoAccess.repoCount, {
+                                                count: owner.repo_count,
+                                            })}
                                         </Typography>
                                         {isOpen ? (
                                             <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
@@ -202,7 +202,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                 level="body-xs"
                                 sx={{ color: "text.tertiary", pt: 0.5, px: 1 }}
                             >
-                                Showing the 100 most recently updated repositories.
+                                {t.integrations.github.repoAccess.truncated}
                             </Typography>
                         )}
                     </Stack>
@@ -212,9 +212,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
 
                 <Box>
                     <Typography level="body-xs" sx={{ color: "text.secondary", mb: 1 }}>
-                        Missing an organization? Grant it on GitHub — for orgs that restrict
-                        third-party apps an owner has to approve the request — then re-authorize
-                        here so the new access takes effect.
+                        {t.integrations.github.repoAccess.missingOrg}
                     </Typography>
                     <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
                         {data?.manage_url && (
@@ -227,7 +225,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                 target="_blank"
                                 variant="outlined"
                             >
-                                Manage access on GitHub
+                                {t.integrations.github.repoAccess.manage}
                             </Button>
                         )}
                         <Button
@@ -242,7 +240,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                 );
                             }}
                         >
-                            Re-authorize GitHub
+                            {t.integrations.github.repoAccess.reauthorize}
                         </Button>
                     </Stack>
                 </Box>

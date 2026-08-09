@@ -64,7 +64,7 @@ export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
         return (
             <Stack alignItems="center" direction="row" spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
                 <Typography level="title-sm" sx={{ flex: 1, minWidth: 0, fontWeight: 700 }} noWrap>
-                    {currentMyNote?.title || t.notes.sidebar.teamNotes}
+                    {currentMyNote?.title || t.notes.labels.teamNotes}
                 </Typography>
                 {visibility && (
                     <AppTooltip size="sm" title={visibilityLabel}>
@@ -92,7 +92,7 @@ export const TeamNoteHeader = ({ useNM }: TeamNoteHeaderProps) => {
                 color="primary"
                 contextCrumbs={folderCrumbs}
                 icon={<GroupsRoundedIcon />}
-                label={t.notes.sidebar.teamNotes}
+                label={t.notes.labels.teamNotes}
                 noteChain={currentMyNote ? [currentMyNote] : []}
                 onNodeClick={(noteId) => useNM.loadNote(8, noteId, -1)}
             />

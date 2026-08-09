@@ -13,6 +13,7 @@
  *     backend returns the consent URL as JSON, and then we navigate.
  */
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 const apiBase = (): string => (import.meta.env.VITE_API_BASE_URL as string).replace(/\/$/, "");
@@ -43,9 +44,10 @@ export const redirectToOAuthConnect = async (
     next = "/workspace/integrations",
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages().integrations.errors;
     const api = authApi(accessToken);
     if (!api) {
-        setErrorMessage?.("Not signed in.");
+        setErrorMessage?.(messages.notSignedIn);
         return false;
     }
     try {
@@ -54,14 +56,14 @@ export const redirectToOAuthConnect = async (
             next,
         });
         if (!res.data?.url) {
-            setErrorMessage?.("Backend returned no consent URL.");
+            setErrorMessage?.(messages.missingConsentUrl);
             return false;
         }
         window.location.href = res.data.url;
         return true;
     } catch (err) {
         console.error("OAuth connect initiate failed:", err);
-        setErrorMessage?.("Could not start the connect flow. Please try again.");
+        setErrorMessage?.(messages.connectFlowFailed);
         return false;
     }
 };

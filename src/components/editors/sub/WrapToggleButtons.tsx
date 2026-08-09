@@ -2,6 +2,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { IconButton, Stack } from "@mui/joy";
 
+import { useTranslation } from "../../../i18n";
 import { AppTooltip } from "../../ui/AppTooltip";
 
 type WrapToggleButtonsProps = {
@@ -26,13 +27,14 @@ type WrapToggleButtonsProps = {
 // so it resets when the editor unmounts (no persistence by design).
 export const WrapToggleButtons = (props: WrapToggleButtonsProps) => {
     const { unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode } = props;
+    const { t } = useTranslation();
 
     return (
         <Stack direction="row" spacing={0.5}>
             <AppTooltip
                 placement="top"
                 size="sm"
-                title={unwrapAll ? "Wrap all content" : "Unwrap all content"}
+                title={unwrapAll ? t.common.editor.wrapAll : t.common.editor.unwrapAll}
             >
                 <IconButton
                     color="neutral"
@@ -46,7 +48,7 @@ export const WrapToggleButtons = (props: WrapToggleButtonsProps) => {
             <AppTooltip
                 placement="top"
                 size="sm"
-                title={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks only"}
+                title={unwrapCode ? t.common.editor.wrapCode : t.common.editor.unwrapCode}
             >
                 <IconButton
                     color="neutral"

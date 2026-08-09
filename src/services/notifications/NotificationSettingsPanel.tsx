@@ -104,6 +104,7 @@ export const NotificationSettingsPanel = () => {
 
     const masterDisabled = !preferences.masterEnabled;
     const settingsMessages = t.services.notifications.settings;
+    const permissionLabel = settingsMessages.permissionStates[permission];
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
@@ -145,7 +146,7 @@ export const NotificationSettingsPanel = () => {
                                 : "warning"
                     }
                 >
-                    {permission}
+                    {permissionLabel}
                 </Chip>
                 {permission === "default" && (
                     <Button size="sm" onClick={requestPermission}>

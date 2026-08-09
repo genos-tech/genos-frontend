@@ -14,7 +14,7 @@ import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { useTranslation, type Messages } from "../../i18n";
+import { fmt, useTranslation, type Messages } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import type { ProjectProps } from "../../types/tasks";
 import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
@@ -126,18 +126,14 @@ export const entitySubtitle = (
         }
     }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
-    // Plain string (like the todo / spotlight_answer branches) so we don't
-    // have to thread a new key through every locale's message bundle.
-    if (r.entity_type === "milestone") return "Milestone";
+    if (r.entity_type === "milestone") return ts.entitySubtitle.milestone;
     if (r.entity_type === "project") return ts.entitySubtitle.project;
-    // Plain string (like the todo branch) so we don't have to thread a new
-    // key through every locale's message bundle.
-    if (r.entity_type === "spotlight_answer") return "Previous answer";
+    if (r.entity_type === "spotlight_answer") return ts.entitySubtitle.previousAnswer;
     if (r.entity_type === "todo") {
         // Pull the local_date out of `entity_id` for a date-flavored
         // subtitle ("Todo · 2026-05-28"). Falls back to plain "Todo".
         const m = r.entity_id.match(/^todo:(\d{4}-\d{2}-\d{2})/);
-        return m ? `Todo · ${m[1]}` : "Todo";
+        return m ? fmt(ts.entitySubtitle.todoWithDate, { date: m[1] }) : ts.entitySubtitle.todo;
     }
     if (r.entity_type === "note") {
         switch (r.note_type) {

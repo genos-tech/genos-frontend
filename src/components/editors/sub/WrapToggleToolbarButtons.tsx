@@ -5,6 +5,8 @@ import CodeIcon from "@mui/icons-material/Code";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../i18n";
+
 type WrapToggleToolbarButtonsProps = {
     unwrapAll: boolean;
     setUnwrapAll: (value: boolean) => void;
@@ -21,6 +23,7 @@ type WrapToggleToolbarButtonsProps = {
 export const WrapToggleToolbarButtons = (props: WrapToggleToolbarButtonsProps) => {
     const { unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const Components = useComponentsContext()!;
     const iconColor = mode === "dark" ? "white" : "black";
 
@@ -28,14 +31,14 @@ export const WrapToggleToolbarButtons = (props: WrapToggleToolbarButtonsProps) =
         <>
             <Components.FormattingToolbar.Button
                 isSelected={unwrapAll}
-                mainTooltip={unwrapAll ? "Wrap all content" : "Unwrap all content"}
+                mainTooltip={unwrapAll ? t.common.editor.wrapAll : t.common.editor.unwrapAll}
                 onClick={() => setUnwrapAll(!unwrapAll)}
             >
                 <WrapTextIcon sx={{ fontSize: "17px", color: iconColor }} />
             </Components.FormattingToolbar.Button>
             <Components.FormattingToolbar.Button
                 isSelected={unwrapCode}
-                mainTooltip={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks only"}
+                mainTooltip={unwrapCode ? t.common.editor.wrapCode : t.common.editor.unwrapCode}
                 onClick={() => setUnwrapCode(!unwrapCode)}
             >
                 <CodeIcon sx={{ fontSize: "17px", color: iconColor }} />

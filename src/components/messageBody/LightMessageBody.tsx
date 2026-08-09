@@ -44,6 +44,7 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useProtectedMediaSrc } from "../../hooks/common/useProtectedMediaSrc";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { getMessages, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { downloadFile } from "../../utils/downloadUtils";
 import { entityRefToHref, HashEntityRef } from "../../utils/entityHref";
@@ -299,7 +300,10 @@ const InlineContent = ({
                     <MentionGroupChip
                         key={i}
                         groupId={item.props?.groupId ?? "0"}
-                        groupName={item.props?.groupName ?? "group"}
+                        groupName={
+                            item.props?.groupName ??
+                            getMessages().common.editor.mentionGroupFallback
+                        }
                         memberCount={item.props?.memberCount ?? "0"}
                     />
                 );
@@ -375,7 +379,7 @@ const InlineContent = ({
                     <LightHashChip
                         key={i}
                         href={entityRefToHref(ref)}
-                        label={p.title || "note"}
+                        label={p.title || getMessages().common.editor.hashNoteFallback}
                         palette={NOTE_PALETTE}
                     />
                 );
@@ -391,7 +395,7 @@ const InlineContent = ({
                     <LightHashChip
                         key={i}
                         href={href}
-                        label={p.chatName || "chat"}
+                        label={p.chatName || getMessages().common.editor.hashChatFallback}
                         palette={CHAT_PALETTE}
                     />
                 );
@@ -406,7 +410,7 @@ const InlineContent = ({
                     <LightHashChip
                         key={i}
                         href={href}
-                        label={p.projectName || "project"}
+                        label={p.projectName || getMessages().common.editor.hashProjectFallback}
                         palette={PROJECT_PALETTE}
                     />
                 );
@@ -472,6 +476,7 @@ const LightImageBlock = ({
 }) => {
     const props = block.props ?? {};
     const src = useProtectedMediaSrc(props.url);
+    const { t } = useTranslation();
     const [loaded, setLoaded] = useState(false);
     const showPreview = props.showPreview !== false;
 
@@ -500,8 +505,8 @@ const LightImageBlock = ({
             <div className="bn-visual-media-wrapper" data-media-loaded={loaded ? "true" : "false"}>
                 {src && (
                     <img
+                        alt={props.name || props.caption || t.common.editor.blockNoteImage}
                         className="bn-visual-media"
-                        alt={props.name || props.caption || "BlockNote image"}
                         contentEditable={false}
                         draggable={false}
                         src={src}

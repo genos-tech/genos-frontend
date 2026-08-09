@@ -28,7 +28,7 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-const fab = () => screen.getByRole("button", { name: "Search" });
+const fab = () => screen.getByRole("button", { name: "Open Genos" });
 
 // Joy compiles `sx` to an emotion class, so the anchor never reaches
 // `element.style`. Resolve it the way the browser would.
@@ -64,7 +64,7 @@ describe("MobileSpotlightFab", () => {
     it("renders nothing on desktop", () => {
         isMobileViewport = false;
         renderFab();
-        expect(screen.queryByRole("button", { name: "Search" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Open Genos" })).toBeNull();
     });
 
     it("uses Spotlight's sparkle icon, matching the sidebar entry", () => {

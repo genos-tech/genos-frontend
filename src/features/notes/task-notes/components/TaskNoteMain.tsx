@@ -11,6 +11,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
@@ -54,6 +55,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         onMobileBack,
     } = props;
     const isMobile = useIsMobile();
+    const { t } = useTranslation();
 
     const { accessToken } = useAuth();
 
@@ -217,7 +219,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 >
                     {isMobile && onMobileBack && isInTaskPage === false && (
                         <IconButton
-                            aria-label="Back to notes list"
+                            aria-label={t.notes.labels.backToNotesList}
                             size="sm"
                             sx={{ flexShrink: 0 }}
                             variant="plain"

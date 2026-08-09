@@ -37,6 +37,7 @@ import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
 import { acceptInvite } from "../services/teamInvite";
+import { LanguageSwitchButton } from "./LanguageSwitchButton";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
@@ -270,8 +271,12 @@ export const JoinTeam = () => {
                 width: { xs: "100%", md: 480 },
                 maxWidth: "100%",
                 mx: "auto",
+                position: "relative",
             }}
         >
+            <Box sx={{ position: "absolute", top: 0, right: 0 }}>
+                <LanguageSwitchButton color={styles.subtitleColor} />
+            </Box>
             {/* Main Title */}
             <Typography
                 component="h1"

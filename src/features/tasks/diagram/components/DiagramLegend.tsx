@@ -61,7 +61,7 @@ export const DiagramLegend = () => {
                             flex: 1,
                         }}
                     >
-                        Legend
+                        {t.tasks.diagram.legend.title}
                     </Typography>
                     <AppTooltip
                         placement="right"
@@ -109,7 +109,7 @@ export const DiagramLegend = () => {
                                 level="body-xs"
                                 sx={{ color: P.text, fontWeight: 500, fontSize: "0.7rem" }}
                             >
-                                Parent → Child
+                                {t.tasks.diagram.legend.parentChild}
                             </Typography>
                         </Stack>
                         <Stack alignItems="center" direction="row" spacing={0.75}>
@@ -132,7 +132,7 @@ export const DiagramLegend = () => {
                                 level="body-xs"
                                 sx={{ color: P.text, fontWeight: 500, fontSize: "0.7rem" }}
                             >
-                                Blocks
+                                {t.tasks.diagram.legend.blocks}
                             </Typography>
                         </Stack>
                         <Stack alignItems="center" direction="row" spacing={0.75}>
@@ -151,7 +151,7 @@ export const DiagramLegend = () => {
                                 level="body-xs"
                                 sx={{ color: P.text, fontWeight: 500, fontSize: "0.7rem" }}
                             >
-                                External task
+                                {t.tasks.diagram.legend.externalTask}
                             </Typography>
                         </Stack>
                     </Stack>

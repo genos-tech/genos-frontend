@@ -12,7 +12,6 @@ import {
     filterSuggestionItems,
     PartialBlock,
 } from "@blocknote/core";
-import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -48,10 +47,12 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
@@ -104,6 +105,7 @@ const EMPTY_DOC: PartialBlock[] = [{ type: "paragraph", content: [] }];
 export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const { useTEM, myself, setMyself, socket, useUISM, useCM, initialBody, onChange } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -140,6 +142,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     }, []);
 
     const [showGifPicker, setShowGifPicker] = useState(false);
+    const dictionary = useBlockNoteDictionary();
 
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
@@ -151,15 +154,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
         resolveFileUrl: resolveInsecureFileUrl,
         initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
         extensions: [codeBlockEnterShortcut],
-        dictionary: {
-            ...en,
-            placeholders: {
-                ...en.placeholders,
-                emptyDocument: "Start typing...",
-                default: "Type something...",
-                heading: "Custom heading placeholder",
-            },
-        },
+        dictionary,
     });
 
     const insertGif = (gif: { url: string; title: string }) => {
@@ -222,7 +217,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                                 items={[
                                     ...getBlockTypeSelectItemsWithCodeBlock(editor.dictionary),
                                     {
-                                        name: "Alert",
+                                        name: t.common.editor.alertBlock,
                                         type: "alert",
                                         icon: RiAlertFill,
                                     } satisfies BlockTypeSelectItem,

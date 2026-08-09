@@ -36,6 +36,7 @@ import {
     selectOutdatedMilestones,
     selectVisibleMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
+import { taskMetaLabel } from "../../../utils/taskMeta";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -206,7 +207,7 @@ export const MilestonesListItem = ({
                                             fontWeight: 600,
                                         }}
                                     >
-                                        {m.status}
+                                        {taskMetaLabel(m.status, t.tasks.filters)}
                                     </Chip>
                                 );
                             })()}

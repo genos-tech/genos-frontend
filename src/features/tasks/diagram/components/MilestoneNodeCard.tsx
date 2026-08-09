@@ -96,6 +96,22 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const toneColor = TONE_COLOR[schedule.tone];
+    const scheduleLabel =
+        schedule.daysUntilDue == null
+            ? null
+            : task.status?.toLowerCase() === "closed"
+              ? t.tasks.diagram.schedule.closed
+              : schedule.daysUntilDue < 0
+                ? fmt(t.tasks.diagram.schedule.overdueDays, {
+                      count: -schedule.daysUntilDue,
+                  })
+                : schedule.daysUntilDue === 0
+                  ? t.tasks.diagram.schedule.dueToday
+                  : schedule.daysUntilDue === 1
+                    ? t.tasks.diagram.schedule.dueTomorrow
+                    : fmt(t.tasks.diagram.schedule.dueInDays, {
+                          count: schedule.daysUntilDue,
+                      });
 
     const total = totalDescendantCount ?? 0;
     const closed = closedDescendantCount ?? 0;
@@ -115,6 +131,13 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
         total,
         closed
     );
+    const healthLabel = health
+        ? health.tone === "on-track"
+            ? t.tasks.diagram.schedule.onTrack
+            : health.tone === "at-risk"
+              ? t.tasks.diagram.schedule.atRisk
+              : t.tasks.diagram.schedule.behind
+        : null;
 
     const flagColor = "#f97316";
 
@@ -228,7 +251,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                                 "--Chip-paddingInline": "6px",
                             }}
                         >
-                            {health.label}
+                            {healthLabel}
                         </Chip>
                     </AppTooltip>
                 )}
@@ -265,7 +288,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     minHeight: "2.6em",
                 }}
             >
-                {task.title || "Untitled milestone"}
+                {task.title || t.tasks.milestones.untitled}
             </Typography>
 
             {/* Schedule row */}
@@ -288,7 +311,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     </Typography>
                 ) : (
                     <Typography level="body-xs" sx={{ color: P.textMuted, opacity: 0.6 }}>
-                        No dates
+                        {t.tasks.diagram.noDates}
                     </Typography>
                 )}
                 {schedule.durationDays != null && (
@@ -303,10 +326,12 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                             color: P.textMuted,
                         }}
                     >
-                        {schedule.durationDays}d
+                        {fmt(t.tasks.diagram.durationDays, {
+                            count: schedule.durationDays,
+                        })}
                     </Chip>
                 )}
-                {schedule.relativeLabel && (
+                {scheduleLabel && (
                     <Chip
                         size="sm"
                         startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
@@ -320,7 +345,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                             color: toneColor,
                         }}
                     >
-                        {schedule.relativeLabel}
+                        {scheduleLabel}
                     </Chip>
                 )}
             </Stack>

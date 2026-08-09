@@ -1,4 +1,23 @@
 export const app = {
+    features: {
+        integrations: "Integrations",
+        plans: "Plans",
+        genos: "Genos",
+        chat: "Chat",
+        tasks: "Tasks",
+        notes: "Notes",
+    },
+    diagram: {
+        milestoneFallback: "Milestone",
+        label: "{title} · diagram",
+    },
+    dates: {
+        today: "Today",
+        yesterday: "Yesterday",
+    },
+    collaboration: {
+        unknownUser: "Unknown user",
+    },
     tooSmall: {
         title: "Window Size Too Small",
         body: "This application is designed for desktop use. Please resize your browser window or switch to a larger screen.",

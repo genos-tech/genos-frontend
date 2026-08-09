@@ -23,7 +23,7 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { TodoGroupProps } from "../../types/chat";
 import { getLocalCurrentDate } from "../../utils/dateUtils";
@@ -151,7 +151,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         // pane for editing. Matches the "+ New Todo" affordance.
         await addItem({
             localDate: getLocalCurrentDate(),
-            title: "Untitled todo",
+            title: t.chat.todoPane.untitled,
         });
     };
 
@@ -278,7 +278,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     fontSize: "0.75rem",
                                 }}
                             >
-                                {completedItems} of {totalItems} items completed
+                                {fmt(t.chat.todoPane.completedOfTotal, {
+                                    completed: completedItems,
+                                    total: totalItems,
+                                })}
                             </Typography>
                         </Stack>
                     </Stack>
@@ -311,7 +314,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
                         {/* "New Todo" button — only when today's group is empty/absent. */}
                         {!todayExists && (
-                            <AppTooltip title="Create today's todo list">
+                            <AppTooltip title={t.chat.todoPane.createTodayTooltip}>
                                 <IconButton
                                     size="sm"
                                     sx={{
@@ -334,7 +337,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     onClick={handleCreateTodayGroup}
                                 >
                                     <AddIcon sx={{ fontSize: "18px" }} />
-                                    Start today
+                                    {t.chat.todoPane.startToday}
                                 </IconButton>
                             </AppTooltip>
                         )}
@@ -357,7 +360,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 useCM.setShowOnlyInCompleteTodos(false);
                             }}
                         >
-                            All ({totalItems})
+                            {fmt(t.chat.todoPane.allFilter, { count: totalItems })}
                         </Chip>
                         <Chip
                             color="warning"
@@ -374,7 +377,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 useCM.setShowOnlyInCompleteTodos(true);
                             }}
                         >
-                            Incomplete ({incompleteCount})
+                            {fmt(t.chat.todoPane.incompleteFilter, { count: incompleteCount })}
                         </Chip>
                         <Chip
                             color="success"
@@ -384,7 +387,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             variant={showCompletedToday ? "solid" : "soft"}
                             onClick={() => setShowCompletedToday(true)}
                         >
-                            Completed Today ({completedTodayCount})
+                            {fmt(t.chat.todoPane.completedTodayFilter, {
+                                count: completedTodayCount,
+                            })}
                         </Chip>
                     </Stack>
                 </Stack>
@@ -509,8 +514,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
                                 }}
                             >
-                                Ask the agent: "what's left today?" or "create a todo: …" — the
-                                Spotlight palette can read, add, and toggle your items directly.
+                                {t.chat.todoPane.spotlightTip}
                             </Typography>
                         </Box>
                     </Stack>
@@ -543,6 +547,7 @@ const EmptyState = ({
     onAddTodayClick,
     isDark,
 }: EmptyStateProps) => {
+    const { t } = useTranslation();
     return (
         <Stack
             alignItems="center"
@@ -577,10 +582,10 @@ const EmptyState = ({
                     }}
                 >
                     {showCompletedToday
-                        ? "Nothing finished yet today"
+                        ? t.chat.todoPane.completedTodayEmptyTitle
                         : showIncompleteOnly
-                          ? "All caught up!"
-                          : "No todos yet"}
+                          ? t.chat.todoPane.allCaughtUp
+                          : t.chat.todoPane.noTodosYet}
                 </Typography>
                 <Typography
                     level="body-xs"
@@ -591,10 +596,10 @@ const EmptyState = ({
                     }}
                 >
                     {showCompletedToday
-                        ? "Items you tick off today will show up here."
+                        ? t.chat.todoPane.completedTodayEmptySubtitle
                         : showIncompleteOnly
-                          ? "No incomplete items in your visible groups."
-                          : "Create today's group to get started."}
+                          ? t.chat.todoPane.incompleteEmptySubtitle
+                          : t.chat.todoPane.emptySubtitle}
                 </Typography>
                 {!showIncompleteOnly && !showCompletedToday && (
                     <IconButton
@@ -604,7 +609,7 @@ const EmptyState = ({
                         onClick={onAddTodayClick}
                     >
                         <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        Start today
+                        {t.chat.todoPane.startToday}
                     </IconButton>
                 )}
             </Stack>

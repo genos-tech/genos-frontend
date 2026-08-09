@@ -110,14 +110,14 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     alignItems: "center",
                 }}
             >
-                <span>Thread</span>
+                <span>{t.chat.channel.thread.title}</span>
                 <button
                     data-testid="thread-panel-v3-close"
                     style={{ fontSize: 12 }}
                     type="button"
                     onClick={onClose}
                 >
-                    Close
+                    {t.chat.channel.thread.close}
                 </button>
             </header>
 
@@ -129,7 +129,9 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     padding: "8px 12px",
                 }}
             >
-                {isLoading && <div style={{ opacity: 0.5 }}>Loading thread…</div>}
+                {isLoading && (
+                    <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.loading}</div>
+                )}
                 {!isLoading && root && (
                     <>
                         <div
@@ -142,7 +144,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                         >
                             <strong>{root.sender?.userName ?? "system"}:</strong>{" "}
                             {root.deletedAt ? (
-                                "(deleted)"
+                                t.chat.channel.thread.deleted
                             ) : (
                                 <MessageBody
                                     body={root.body}
@@ -204,7 +206,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 >
                                     <strong>{r.sender?.userName ?? "system"}:</strong>{" "}
                                     {r.deletedAt ? (
-                                        "(deleted)"
+                                        t.chat.channel.thread.deleted
                                     ) : (
                                         <MessageBody
                                             body={r.body}
@@ -220,7 +222,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                                 fontSize: 12,
                                             }}
                                         >
-                                            (edited)
+                                            {t.chat.channel.thread.edited}
                                         </span>
                                     )}
                                     {!r.deletedAt && (
@@ -264,13 +266,15 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 </li>
                             ))}
                             {replies.length === 0 && (
-                                <li style={{ opacity: 0.5 }}>No replies yet.</li>
+                                <li style={{ opacity: 0.5 }}>
+                                    {t.chat.channel.thread.noReplies}
+                                </li>
                             )}
                         </ul>
                     </>
                 )}
                 {!isLoading && !root && (
-                    <div style={{ opacity: 0.5 }}>Thread root not loaded.</div>
+                    <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.rootMissing}</div>
                 )}
             </div>
 
@@ -284,7 +288,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                     }}
                     onClick={() => setError(null)}
                 >
-                    {error} (click to dismiss)
+                    {error} ({t.chat.channel.thread.dismissError})
                 </div>
             )}
 
@@ -372,7 +376,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                 <input
                     data-testid="thread-panel-v3-input"
                     disabled={busy || !root}
-                    placeholder="Reply…  (type @ to mention)"
+                    placeholder={t.chat.channel.thread.replyPlaceholder}
                     style={{ flex: 1, padding: "4px 8px" }}
                     type="text"
                     value={mention.draft}
@@ -402,7 +406,9 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                             !attachments.pending.some((p) => p.error === null))
                     }
                 >
-                    {attachments.isUploading ? "Uploading…" : "Reply"}
+                    {attachments.isUploading
+                        ? t.chat.channel.thread.uploading
+                        : t.chat.channel.thread.reply}
                 </button>
             </form>
         </div>

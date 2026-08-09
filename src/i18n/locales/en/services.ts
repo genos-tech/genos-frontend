@@ -83,6 +83,12 @@ export const services = {
                 "Show desktop notifications when the tab is in the background, or an in-app toast when it's foreground but you're on a different screen.",
             browserPermissionLabel: "Browser permission:",
             allow: "Allow",
+            permissionStates: {
+                granted: "Granted",
+                denied: "Denied",
+                default: "Not yet allowed",
+                unsupported: "Unsupported",
+            },
             // Proactive digest (UX tier model §8) — server-backed
             // opt-out; whether/how often it fires comes from the plan.
             digestHeading: "Genos digest",

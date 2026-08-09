@@ -26,3 +26,30 @@ export const effortLevels: TaskEffortLevelProps[] = [
     { code: 0, level: "High", color: "#F59E0B", textColor: "white" },
     { code: 0, level: "Extensive", color: "#EF4444", textColor: "white" },
 ];
+
+type TaskMetaLabels = Record<
+    | "open"
+    | "wip"
+    | "blocked"
+    | "pending"
+    | "closed"
+    | "deleted"
+    | "minimal"
+    | "low"
+    | "normal"
+    | "moderate"
+    | "high"
+    | "critical"
+    | "extensive",
+    string
+>;
+
+/** Translate API task metadata for display without changing its stored value. */
+export const taskMetaLabel = (
+    value: string | null | undefined,
+    labels: TaskMetaLabels
+): string => {
+    if (!value) return "";
+    const key = value.toLowerCase().replace(/\s+/g, "") as keyof TaskMetaLabels;
+    return labels[key] ?? value;
+};

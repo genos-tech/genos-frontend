@@ -11,7 +11,6 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
 } from "@blocknote/core";
-import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -57,6 +56,7 @@ import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUpl
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
@@ -192,8 +192,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     ): DefaultReactSuggestionItem[] =>
         withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
-    // We use the English, default dictionary
-    const locale = en;
+    const dictionary = useBlockNoteDictionary();
 
     // Upload pipeline — mirrors BnChatEditor: the counter drives the
     // "Uploading n files…" pill for BlockNote-initiated uploads
@@ -221,19 +220,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
-        // We override the `placeholders` in our dictionary
-        dictionary: {
-            ...locale,
-            placeholders: {
-                ...locale.placeholders,
-                // We override the empty document placeholder
-                emptyDocument: "Start typing...",
-                // We override the default placeholder
-                default: "Type something...",
-                // We override the heading placeholder
-                heading: "Custom heading placeholder",
-            },
-        },
+        dictionary,
     });
 
     // Per-task draft cache: see `useEditorDraft` for the

@@ -11,6 +11,7 @@ import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
+import { getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 
@@ -258,7 +259,7 @@ export function useCollaborativeBlockNote({
                     avatarUrl: buildAvatarUrl(profile.avatarImgPath),
                 };
             }
-            return { id, username: "Unknown User", avatarUrl: "" };
+            return { id, username: getMessages().app.collaboration.unknownUser, avatarUrl: "" };
         });
     }, []);
 

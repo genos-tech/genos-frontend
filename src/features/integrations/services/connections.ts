@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export interface Connection {
@@ -72,9 +73,12 @@ export const disconnectAccount = async (
         await api.delete(`/integrations/account/${accountId}/`);
         return true;
     } catch (error: unknown) {
+        const fallback = getMessages().integrations.errors.disconnectFailed;
         if (axios.isAxiosError(error)) {
             const detail = (error.response?.data as { detail?: string })?.detail;
-            setErrorMessage?.(detail || "Disconnect failed.");
+            setErrorMessage?.(detail || fallback);
+        } else {
+            setErrorMessage?.(fallback);
         }
         return false;
     }
@@ -93,7 +97,7 @@ export const listConnections = async (
         if (axios.isAxiosError(error)) {
             console.error("listConnections error:", error.response?.status, error.response?.data);
         }
-        setErrorMessage?.("Failed to load connected accounts.");
+        setErrorMessage?.(getMessages().integrations.errors.connectionsLoadFailed);
         return null;
     }
 };
@@ -109,9 +113,12 @@ export const disconnectProvider = async (
         await api.delete(`/integrations/${provider}/`);
         return true;
     } catch (error: unknown) {
+        const fallback = getMessages().integrations.errors.disconnectFailed;
         if (axios.isAxiosError(error)) {
             const detail = (error.response?.data as { detail?: string })?.detail;
-            setErrorMessage?.(detail || "Disconnect failed.");
+            setErrorMessage?.(detail || fallback);
+        } else {
+            setErrorMessage?.(fallback);
         }
         return false;
     }

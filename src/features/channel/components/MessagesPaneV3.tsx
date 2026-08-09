@@ -157,7 +157,9 @@ export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPane
                         onOpenThread={onOpenThread}
                     />
                 ))}
-                {messages.length === 0 && <li style={{ opacity: 0.5 }}>No messages yet.</li>}
+                {messages.length === 0 && (
+                    <li style={{ opacity: 0.5 }}>{t.chat.channel.pane.noMessages}</li>
+                )}
             </ul>
 
             {error && (
@@ -170,7 +172,7 @@ export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPane
                     }}
                     onClick={() => setError(null)}
                 >
-                    {error} (click to dismiss)
+                    {error} ({t.chat.channel.pane.dismissError})
                 </div>
             )}
 
@@ -263,13 +265,13 @@ function MessageRow({
     }, [message.bodyText]);
 
     const handleDelete = useCallback(async () => {
-        if (!window.confirm("Delete this message?")) return;
+        if (!window.confirm(t.chat.channel.pane.deleteConfirm)) return;
         try {
             await channelService.deleteMessage(message.id, channelId, channelKind);
         } catch (e) {
             reportError(e);
         }
-    }, [channelId, channelKind, message.id, reportError]);
+    }, [channelId, channelKind, message.id, reportError, t.chat.channel.pane.deleteConfirm]);
 
     const handleToggleFlag = useCallback(async () => {
         try {
@@ -376,7 +378,7 @@ function MessageRow({
                 ) : (
                     <>
                         {message.deletedAt ? (
-                            "(deleted)"
+                            t.chat.channel.pane.deleted
                         ) : (
                             <MessageBody
                                 body={message.body}
@@ -409,7 +411,7 @@ function MessageRow({
                         )}
                         {message.editedAt && !message.deletedAt && (
                             <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
-                                (edited)
+                                {t.chat.channel.pane.edited}
                             </span>
                         )}
                     </>

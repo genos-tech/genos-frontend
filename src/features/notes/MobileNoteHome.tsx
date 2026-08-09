@@ -11,6 +11,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
@@ -39,6 +40,7 @@ const MobileOverlay = ({
     onClose: () => void;
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     return (
         <Box
@@ -55,7 +57,7 @@ const MobileOverlay = ({
             }}
         >
             <IconButton
-                aria-label="Close"
+                aria-label={t.notes.labels.close}
                 size="sm"
                 variant="plain"
                 sx={{

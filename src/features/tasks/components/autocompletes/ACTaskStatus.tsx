@@ -7,7 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
-import { statuses } from "../../utils/taskMeta";
+import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
@@ -25,7 +25,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
     return (
         <Autocomplete
             key={taskContent.id}
-            getOptionLabel={(option) => option.status || ""}
+            getOptionLabel={(option) => taskMetaLabel(option.status, t.tasks.filters)}
             isOptionEqualToValue={(option, value) => option.status === value.status}
             options={statuses}
             placeholder={t.tasks.autocomplete.statusPlaceholder}
@@ -48,7 +48,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {option.status}
+                            {taskMetaLabel(option.status, t.tasks.filters)}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
@@ -70,7 +70,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {item ? item.status : ""}
+                            {item ? taskMetaLabel(item.status, t.tasks.filters) : ""}
                         </Chip>
                     );
                 })

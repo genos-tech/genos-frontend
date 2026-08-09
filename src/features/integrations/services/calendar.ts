@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export interface CalendarSummary {
@@ -178,16 +179,17 @@ const surfaceError = (
     error: unknown,
     setErrorMessage?: (value: string) => void
 ): CalendarErrorKind => {
+    const messages = getMessages().integrations.errors;
     if (axios.isAxiosError(error)) {
         const detail = (error.response?.data as ErrorResponse | undefined)?.detail;
         if (detail === "google_not_connected") {
-            setErrorMessage?.("Google account is not connected.");
+            setErrorMessage?.(messages.googleNotConnected);
             return "google_not_connected";
         }
         if (detail === "calendar_scope_missing") {
             // Frontend can present a "Grant Calendar access" button
             // that re-runs the connect-intent OAuth flow.
-            setErrorMessage?.("Calendar access not granted yet.");
+            setErrorMessage?.(messages.calendarScopeMissing);
             return "calendar_scope_missing";
         }
         if (detail === "google_reauth_required") {
@@ -196,12 +198,12 @@ const surfaceError = (
             // expired. Callers present a "Reconnect Google Calendar"
             // button that re-runs the connect-intent OAuth flow, which
             // mints a fresh refresh token.
-            setErrorMessage?.("Google Calendar connection expired. Please reconnect.");
+            setErrorMessage?.(messages.calendarReconnectRequired);
             return "google_reauth_required";
         }
-        setErrorMessage?.(detail || "Calendar request failed.");
+        setErrorMessage?.(detail || messages.calendarRequestFailed);
     } else {
-        setErrorMessage?.("Calendar request failed.");
+        setErrorMessage?.(messages.calendarRequestFailed);
     }
     return "other";
 };

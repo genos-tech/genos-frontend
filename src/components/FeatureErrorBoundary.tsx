@@ -1,10 +1,19 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
+import { fmt, useTranslation } from "../i18n";
+
 type Props = {
     /** Short label used in the fallback message and the console log so we
      * can distinguish which feature crashed when triaging. */
     feature: string;
     children: ReactNode;
+};
+
+type InnerProps = Props & {
+    copy: {
+        title: string;
+        recovery: string;
+    };
 };
 
 type State = { hasError: boolean; error: Error | null };
@@ -17,7 +26,7 @@ type State = { hasError: boolean; error: Error | null };
 // to the console (kept visible for the dev / oncall path) and render a
 // minimal fallback so the surrounding chrome (sidebars, theme, auth) still
 // works. The user can switch to another feature without a full reload.
-export class FeatureErrorBoundary extends Component<Props, State> {
+class FeatureErrorBoundaryInner extends Component<InnerProps, State> {
     state: State = { hasError: false, error: null };
 
     static getDerivedStateFromError(error: Error): State {
@@ -44,12 +53,21 @@ export class FeatureErrorBoundary extends Component<Props, State> {
                     }}
                 >
                     <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
-                        Something went wrong in {this.props.feature}.
+                        {fmt(this.props.copy.title, { feature: this.props.feature })}
                     </div>
-                    <div>Switch to another tab to keep working, or refresh the page.</div>
+                    <div>{this.props.copy.recovery}</div>
                 </div>
             );
         }
         return this.props.children;
     }
 }
+
+export const FeatureErrorBoundary = ({ feature, children }: Props) => {
+    const { t } = useTranslation();
+    return (
+        <FeatureErrorBoundaryInner copy={t.common.featureError} feature={feature}>
+            {children}
+        </FeatureErrorBoundaryInner>
+    );
+};

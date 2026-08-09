@@ -22,10 +22,13 @@ import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatar
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../../../i18n";
 import { UserProps } from "../../../../../../types/admin";
 import { TaskActivityProps, TaskTableProps } from "../../../../../../types/tasks";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
-import { effortLevels, priorities, statuses } from "../../../../utils/taskMeta";
+import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
+
+type ActivityMessages = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
 
 type TaskActivityFeedProps = {
     /** Pre-loaded audit rows. Owned + fetched by `TaskPreview` so this
@@ -165,9 +168,12 @@ const PrCommentActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
+    const { t } = useTranslation();
     const metadata = activity.metadata ?? {};
     const githubUsername =
-        typeof metadata.github_username === "string" ? metadata.github_username : "GitHub user";
+        typeof metadata.github_username === "string"
+            ? metadata.github_username
+            : t.tasks.activity.githubUser;
     const githubAvatarUrl =
         typeof metadata.github_avatar_url === "string"
             ? (metadata.github_avatar_url as string)
@@ -234,7 +240,7 @@ const PrCommentActivityRow = ({
                             color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
                         }}
                     >
-                        commented on
+                        {t.tasks.activity.commentedOn}
                     </Typography>
                     {prRef && (
                         <Typography
@@ -256,7 +262,7 @@ const PrCommentActivityRow = ({
                                 color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
                             }}
                         >
-                            on {filePath}
+                            {fmt(t.tasks.activity.onFile, { file: filePath })}
                             {line != null ? `:${line}` : ""}
                         </Typography>
                     )}
@@ -268,7 +274,7 @@ const PrCommentActivityRow = ({
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {formatRelative(activity.tsCreatedAt)}
+                        {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
                     </Typography>
                 </Stack>
                 {commentExcerpt && (
@@ -315,6 +321,7 @@ const PrMergeCloseActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
+    const { t } = useTranslation();
     const metadata = activity.metadata ?? {};
     const prUrl = typeof metadata.prUrl === "string" ? (metadata.prUrl as string) : undefined;
     const prRef = formatPrRefFromUrl(prUrl);
@@ -359,7 +366,7 @@ const PrMergeCloseActivityRow = ({
                     <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
                 </Box>
                 <Typography level="body-sm" sx={{ color: mutedColor }}>
-                    Auto-closed when
+                    {t.tasks.activity.autoClosedWhen}
                 </Typography>
                 {prRef ? (
                     <Typography
@@ -379,11 +386,11 @@ const PrMergeCloseActivityRow = ({
                     </Typography>
                 ) : (
                     <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        a pull request
+                        {t.tasks.activity.pullRequest}
                     </Typography>
                 )}
                 <Typography level="body-sm" sx={{ color: mutedColor }}>
-                    was merged
+                    {t.tasks.activity.wasMerged}
                 </Typography>
                 {oldStatus && <ValueChip fieldName="status" isDark={isDark} label={oldStatus} />}
                 {oldStatus && newStatus && (
@@ -403,7 +410,7 @@ const PrMergeCloseActivityRow = ({
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {formatRelative(activity.tsCreatedAt)}
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
                 </Typography>
             </Box>
         </Stack>
@@ -422,6 +429,7 @@ const PrLinkActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
+    const { t } = useTranslation();
     const metadata = activity.metadata ?? {};
     const prUrl = typeof metadata.pr_url === "string" ? (metadata.pr_url as string) : undefined;
     const prRef = formatPrRefFromUrl(prUrl);
@@ -465,7 +473,7 @@ const PrLinkActivityRow = ({
                     <CallSplitRoundedIcon sx={{ fontSize: 18 }} />
                 </Box>
                 <Typography level="body-sm" sx={{ color: mutedColor }}>
-                    Linked pull request
+                    {t.tasks.activity.linkedPullRequest}
                 </Typography>
                 {prRef ? (
                     <Typography
@@ -485,7 +493,7 @@ const PrLinkActivityRow = ({
                     </Typography>
                 ) : (
                     <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        a pull request
+                        {t.tasks.activity.pullRequest}
                     </Typography>
                 )}
                 {branch && (
@@ -506,7 +514,7 @@ const PrLinkActivityRow = ({
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {formatRelative(activity.tsCreatedAt)}
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
                 </Typography>
             </Box>
         </Stack>
@@ -516,17 +524,23 @@ const PrLinkActivityRow = ({
 // Smaller-than-Intl.RelativeTimeFormat formatter so we don't pull in a
 // new dep. Returns "just now" / "5 minutes ago" / "2 hours ago" /
 // "May 1, 2026".
-const formatRelative = (iso: string): string => {
+const formatRelative = (iso: string, messages: ActivityMessages): string => {
     const ts = new Date(iso).getTime();
     if (Number.isNaN(ts)) return "";
     const diff = Date.now() - ts;
     const minutes = Math.floor(diff / 60_000);
-    if (minutes < 1) return "just now";
-    if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    if (minutes < 1) return messages.justNow;
+    if (minutes < 60) {
+        return fmt(minutes === 1 ? messages.minuteAgo : messages.minutesAgo, { count: minutes });
+    }
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    if (hours < 24) {
+        return fmt(hours === 1 ? messages.hourAgo : messages.hoursAgo, { count: hours });
+    }
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+    if (days < 7) {
+        return fmt(days === 1 ? messages.dayAgo : messages.daysAgo, { count: days });
+    }
     return new Date(iso).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -549,9 +563,10 @@ const formatValue = (
     teamMemberProfiles: Record<string, any>,
     metadata: Record<string, unknown> | null | undefined,
     side: "old" | "new",
-    resolveTaskDisplayId: (id: unknown) => string | null
+    resolveTaskDisplayId: (id: unknown) => string | null,
+    noneLabel: string
 ): { label: string; isUser: boolean } => {
-    if (value == null || value === "") return { label: "None", isUser: false };
+    if (value == null || value === "") return { label: noneLabel, isUser: false };
     const looksLikeUserId =
         fieldName === "assignee_id" ||
         fieldName === "reporter_id" ||
@@ -628,54 +643,54 @@ const DIFF_ACTIONS = new Set([
 
 // Per-action sentence skeleton. The actor / chips are rendered
 // outside; this returns the verb phrase only ("changed status from").
-const verbFor = (action: string): string => {
+const verbFor = (action: string, messages: ActivityMessages): string => {
     switch (action) {
         case "created":
-            return "created this";
+            return messages.verbs.created;
         case "title_changed":
-            return "renamed this from";
+            return messages.verbs.titleChanged;
         case "status_changed":
-            return "changed status from";
+            return messages.verbs.statusChanged;
         case "priority_changed":
-            return "changed priority from";
+            return messages.verbs.priorityChanged;
         case "effort_changed":
-            return "changed effort from";
+            return messages.verbs.effortChanged;
         case "assignee_changed":
-            return "reassigned from";
+            return messages.verbs.assigneeChanged;
         case "reporter_changed":
-            return "changed reporter from";
+            return messages.verbs.reporterChanged;
         case "due_date_changed":
-            return "changed due date from";
+            return messages.verbs.dueDateChanged;
         case "description_edited":
-            return "edited the description";
+            return messages.verbs.descriptionEdited;
         case "tags_changed":
-            return "updated the tags";
+            return messages.verbs.tagsChanged;
         case "parent_changed":
-            return "changed parent task from";
+            return messages.verbs.parentChanged;
         case "milestone_changed":
-            return "changed milestone from";
+            return messages.verbs.milestoneChanged;
         case "sprint_changed":
-            return "changed sprint from";
+            return messages.verbs.sprintChanged;
         case "closed":
-            return "closed this";
+            return messages.verbs.closed;
         case "reopened":
-            return "reopened this";
+            return messages.verbs.reopened;
         case "deleted":
-            return "deleted this";
+            return messages.verbs.deleted;
         case "attachment_added":
-            return "attached";
+            return messages.verbs.attachmentAdded;
         case "attachment_removed":
-            return "removed attachment";
+            return messages.verbs.attachmentRemoved;
         case "comment_added":
-            return "posted a comment";
+            return messages.verbs.commentAdded;
         case "comment_edited":
-            return "edited a comment";
+            return messages.verbs.commentEdited;
         case "comment_deleted":
-            return "deleted a comment";
+            return messages.verbs.commentDeleted;
         case "milestone_assignee_added":
-            return "added";
+            return messages.verbs.milestoneAssigneeAdded;
         case "milestone_assignee_removed":
-            return "removed";
+            return messages.verbs.milestoneAssigneeRemoved;
         default:
             return action.replace(/_/g, " ");
     }
@@ -693,7 +708,12 @@ const ValueChip = ({
     fieldName?: string | null;
     isDark: boolean;
 }) => {
+    const { t } = useTranslation();
     const palette = paletteFor(fieldName, label);
+    const displayLabel =
+        fieldName === "status" || fieldName === "priority" || fieldName === "effort_level"
+            ? taskMetaLabel(label, t.tasks.filters)
+            : label;
     return (
         <Chip
             size="sm"
@@ -709,7 +729,7 @@ const ValueChip = ({
                       }),
             }}
         >
-            {label}
+            {displayLabel}
         </Chip>
     );
 };
@@ -738,6 +758,7 @@ export const TaskActivityFeed = ({
     useCM,
     useUISM,
 }: TaskActivityFeedProps) => {
+    const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -803,7 +824,7 @@ export const TaskActivityFeed = ({
                             color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                         }}
                     >
-                        No activity yet
+                        {t.tasks.activity.empty}
                     </Typography>
                 </Box>
             )}
@@ -843,14 +864,15 @@ export const TaskActivityFeed = ({
                         />
                     );
                 }
-                const actorName = row.actor?.userName ?? "Someone";
+                const actorName = row.actor?.userName ?? t.tasks.activity.someone;
                 const oldFmt = formatValue(
                     row.oldValue,
                     row.fieldName,
                     teamMemberProfiles,
                     row.metadata,
                     "old",
-                    resolveTaskDisplayId
+                    resolveTaskDisplayId,
+                    t.tasks.meta.none
                 );
                 const newFmt = formatValue(
                     row.newValue,
@@ -858,7 +880,8 @@ export const TaskActivityFeed = ({
                     teamMemberProfiles,
                     row.metadata,
                     "new",
-                    resolveTaskDisplayId
+                    resolveTaskDisplayId,
+                    t.tasks.meta.none
                 );
                 // Diff-style verbs ("changed X from … →") always need
                 // both sides so the sentence stays coherent even when
@@ -932,7 +955,7 @@ export const TaskActivityFeed = ({
                                     color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
                                 }}
                             >
-                                {verbFor(row.actionType)}
+                                {verbFor(row.actionType, t.tasks.activity)}
                             </Typography>
                             {showOldChip && (
                                 <ValueChip
@@ -968,7 +991,7 @@ export const TaskActivityFeed = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {formatRelative(row.tsCreatedAt)}
+                                {formatRelative(row.tsCreatedAt, t.tasks.activity)}
                             </Typography>
                         </Box>
                     </Stack>

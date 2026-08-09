@@ -347,14 +347,14 @@ export const CalendarEventModal = ({
 
     const submitForm = async () => {
         if (!form.summary || !form.startISO || !form.endISO) {
-            reportError("Title, start, and end are required.");
+            reportError(t.calendar.event.requiredError);
             return;
         }
         // All-day end is inclusive, so equal dates are a valid 1-day event;
         // only a truly earlier end is invalid (string compare is safe for
         // "YYYY-MM-DD"). Google rejects end-before-start with a 400.
         if (form.allDay && form.endISO < form.startISO) {
-            reportError("End date can't be before the start date.");
+            reportError(t.calendar.event.invalidEndError);
             return;
         }
         setSubmitting(true);
@@ -472,7 +472,7 @@ export const CalendarEventModal = ({
         <Modal open={open} onClose={onClose}>
             <ModalDialog sx={{ minWidth: 480, maxWidth: 560, p: 3 }}>
                 <Typography level="title-lg" sx={{ mb: 2 }}>
-                    {editingEventId ? "Edit event" : "New event"}
+                    {editingEventId ? t.calendar.event.editTitle : t.calendar.event.newTitle}
                 </Typography>
                 <Stack spacing={2}>
                     {localError && (
@@ -484,7 +484,7 @@ export const CalendarEventModal = ({
                         <ReconnectGoogleCalendarButton accessToken={accessToken} size="sm" />
                     )}
                     <FormControl required>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t.calendar.event.titleLabel}</FormLabel>
                         <Input
                             value={form.summary}
                             onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
@@ -537,11 +537,11 @@ export const CalendarEventModal = ({
                     )}
                     <Checkbox
                         checked={form.allDay}
-                        label={<Typography level="body-sm">All day</Typography>}
+                        label={<Typography level="body-sm">{t.calendar.event.allDay}</Typography>}
                         onChange={(e) => setAllDay(e.target.checked)}
                     />
                     <FormControl required>
-                        <FormLabel>Start</FormLabel>
+                        <FormLabel>{t.calendar.event.startLabel}</FormLabel>
                         <Input
                             type={form.allDay ? "date" : "datetime-local"}
                             value={form.startISO}
@@ -549,7 +549,7 @@ export const CalendarEventModal = ({
                         />
                     </FormControl>
                     <FormControl required>
-                        <FormLabel>End</FormLabel>
+                        <FormLabel>{t.calendar.event.endLabel}</FormLabel>
                         <Input
                             // For all-day, `min` keeps the (inclusive) end on
                             // or after the start day.
@@ -559,11 +559,11 @@ export const CalendarEventModal = ({
                             onChange={(e) => setForm((f) => setEnd(f, e.target.value))}
                         />
                         {form.allDay && (
-                            <FormHelperText>Ends on this day (inclusive).</FormHelperText>
+                            <FormHelperText>{t.calendar.event.inclusiveEndHelper}</FormHelperText>
                         )}
                     </FormControl>
                     <FormControl>
-                        <FormLabel>Description (optional)</FormLabel>
+                        <FormLabel>{t.calendar.event.descriptionLabel}</FormLabel>
                         <Textarea
                             minRows={2}
                             value={form.description}
@@ -575,15 +575,15 @@ export const CalendarEventModal = ({
                     <FormControl>
                         <FormLabel>{t.calendar.attendees.label}</FormLabel>
                         <Autocomplete
+                            getOptionLabel={(o) => o.displayName}
                             isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
                             noOptionsText={t.calendar.attendees.noResults}
+                            options={teamOptions}
                             value={form.attendees}
                             // Equality by email so options the user
                             // already picked render with the "selected"
                             // indicator and don't appear duplicated in
                             // the dropdown.
-                            options={teamOptions}
-                            getOptionLabel={(o) => o.displayName}
                             // Filter manually so "alice" matches both
                             // name AND email — Joy's default only
                             // searches the label string.
@@ -676,7 +676,7 @@ export const CalendarEventModal = ({
                         label={
                             <Stack alignItems="center" direction="row" spacing={0.75}>
                                 <VideoCameraFrontRoundedIcon sx={{ fontSize: 18 }} />
-                                <Typography level="body-sm">Add Google Meet link</Typography>
+                                <Typography level="body-sm">{t.calendar.event.addMeet}</Typography>
                             </Stack>
                         }
                         onChange={(e) => setForm((f) => ({ ...f, addMeet: e.target.checked }))}
@@ -699,20 +699,24 @@ export const CalendarEventModal = ({
                                 onClick={handleDelete}
                             >
                                 {deleting
-                                    ? "Deleting…"
+                                    ? t.calendar.event.deleting
                                     : deleteConfirm
                                       ? isRecurring && scope === "all"
-                                          ? "Delete all events?"
-                                          : "Confirm delete?"
-                                      : "Delete"}
+                                          ? t.calendar.event.deleteAll
+                                          : t.calendar.event.confirmDelete
+                                      : t.common.actions.delete}
                             </Button>
                         )}
                         <Box sx={{ flex: 1 }} />
                         <Button disabled={deleting} variant="plain" onClick={onClose}>
-                            Cancel
+                            {t.common.actions.cancel}
                         </Button>
                         <Button disabled={submitting || deleting} onClick={submitForm}>
-                            {submitting ? "Saving…" : editingEventId ? "Save" : "Create"}
+                            {submitting
+                                ? t.calendar.event.saving
+                                : editingEventId
+                                  ? t.common.actions.save
+                                  : t.common.actions.create}
                         </Button>
                     </Stack>
                 </Stack>

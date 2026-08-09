@@ -142,7 +142,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             chips so the header stays just the date. */}
                         {isThread === false && taskId !== null && (
                             <ModernChip>
-                                {formatTaskDisplayId({ taskId, displayId }) || "N/A"}
+                                {formatTaskDisplayId({ taskId, displayId }) ||
+                                    t.chat.modals.gmProfile.na}
                             </ModernChip>
                         )}
 
@@ -151,7 +152,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 customStyles={getStatusChipStyles(taskStatusDetails, isDark)}
                                 variant="status"
                             >
-                                {taskStatus || "N/A"}
+                                {taskStatus || t.chat.modals.gmProfile.na}
                             </ModernChip>
                         )}
 

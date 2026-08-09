@@ -19,6 +19,7 @@
  */
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export type OwnershipClaim = {
@@ -82,16 +83,17 @@ export const requestOwnershipClaim = async (
     teamId: string,
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (!api) {
-            setErrorMessage?.("Authorization token is missing.");
+            setErrorMessage?.(messages.admin.auth.errors.tokenMissing);
             return false;
         }
         await api.post("/team/ownership-claim/request/", { team_id: teamId });
         return true;
     } catch (error: unknown) {
-        setErrorMessage?.(errorText(error, "Couldn't request ownership. Please try again."));
+        setErrorMessage?.(errorText(error, messages.admin.serviceErrors.requestFailed));
         return false;
     }
 };
@@ -108,16 +110,17 @@ export const respondToOwnershipClaim = async (
     decision: "approve" | "reject",
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (!api) {
-            setErrorMessage?.("Authorization token is missing.");
+            setErrorMessage?.(messages.admin.auth.errors.tokenMissing);
             return false;
         }
         await api.post("/team/ownership-claim/respond/", { item_id: itemId, decision });
         return true;
     } catch (error: unknown) {
-        setErrorMessage?.(errorText(error, "Couldn't respond to the request. Please try again."));
+        setErrorMessage?.(errorText(error, messages.admin.serviceErrors.requestFailed));
         return false;
     }
 };
@@ -128,16 +131,17 @@ export const finalizeOwnershipClaim = async (
     itemId: number,
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (!api) {
-            setErrorMessage?.("Authorization token is missing.");
+            setErrorMessage?.(messages.admin.auth.errors.tokenMissing);
             return false;
         }
         await api.post("/team/ownership-claim/finalize/", { item_id: itemId });
         return true;
     } catch (error: unknown) {
-        setErrorMessage?.(errorText(error, "Couldn't take ownership. Please try again."));
+        setErrorMessage?.(errorText(error, messages.admin.serviceErrors.requestFailed));
         return false;
     }
 };

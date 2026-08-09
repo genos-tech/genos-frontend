@@ -108,7 +108,7 @@ export const DependencyEdge = memo(
                             onMouseEnter={() => setHovered(true)}
                             onMouseLeave={() => setHovered(false)}
                         >
-                            blocks
+                            {t.tasks.diagram.legend.blocks}
                         </div>
                     </AppTooltip>
                 </EdgeLabelRenderer>

@@ -8,6 +8,7 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TagListProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { ProjectTagChip } from "../ProjectTagChip";
 import { SprintChip } from "../SprintChip";
 import { TaskStatusChip } from "../TaskStatusChip";
@@ -278,7 +279,7 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                                     flexShrink: 0,
                                 }}
                             >
-                                {milestone.priority}
+                                {taskMetaLabel(milestone.priority, t.tasks.filters)}
                             </span>
                         )}
                         {/* Always show a due indicator; "No due date" when the

@@ -2,6 +2,8 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../i18n";
+
 type MobileOverlayProps = {
     children: React.ReactNode;
     onClose: () => void;
@@ -35,6 +37,7 @@ type MobileOverlayProps = {
  */
 export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     return (
         <Box
@@ -63,7 +66,7 @@ export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
                 }}
             >
                 <IconButton
-                    aria-label="Close"
+                    aria-label={t.layout.mobile.close}
                     size="sm"
                     variant="plain"
                     sx={{

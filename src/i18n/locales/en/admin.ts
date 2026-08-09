@@ -122,10 +122,42 @@ export const admin = {
             duplicateName: "Please try with a different name.",
             demoRateLimited: "Too many demo sign-ins from this network. Please try again later.",
             demoFailed: "Could not create demo session. Please try again later.",
-            tokenMissing: "Unauthorized. Auth toke is not found.",
+            tokenMissing: "Unauthorized. Authentication token was not found.",
             teamNotFound: "Team not found. Please check the Team ID and try again.",
             teamNotFoundShort: "Team not found.",
             duplicateTeamName: "Please try with different team name.",
+        },
+        oauth: {
+            failureReasons: {
+                email_in_use: "An account already exists for this email address.",
+                consent_denied: "OAuth consent was denied. You can try again any time.",
+                bad_callback: "OAuth callback was malformed. Please try again.",
+                invalid_state:
+                    "OAuth state token was invalid or expired. Please start the sign-in flow again.",
+                provider_error: "The OAuth provider returned an error. Please try again.",
+                not_authenticated: "You need to be signed in to connect a third-party account.",
+                already_connected_to_other_user:
+                    "This account is already connected to a different user.",
+                not_a_login_account:
+                    "That account was only connected for calendar access, so it can't sign you in.",
+                provider_already_connected:
+                    "You already have an account connected for this provider. Disconnect it first.",
+                unknown_provider: "Unknown OAuth provider.",
+                fallback: "OAuth flow failed.",
+            },
+            methods: {
+                email: "your email and password",
+                google: "Google",
+                github: "GitHub",
+                fallback: "the method you originally signed up with",
+            },
+            useAnotherMethod:
+                "Sign in with {method} instead, or pick a different account on the provider’s screen.",
+            apiClientFailed: "Could not initialize the API client.",
+            profileFailed: "Could not load your user profile.",
+            title: "Sign-in failed",
+            backToSignIn: "Back to sign in",
+            finishing: "Finishing sign-in…",
         },
     },
     joinTeam: {
@@ -145,7 +177,7 @@ export const admin = {
         requestToJoin: "Request to Join",
         searchTeam: "Search Team",
         createTeam: "Create Team",
-        joinRequestSent: "Has sent a request to join the team!",
+        joinRequestSent: "Request to join the team sent.",
         alreadyJoined: "Already joined",
         hasJoined: "Has joined",
         signOut: "Sign Out",
@@ -308,6 +340,19 @@ export const admin = {
         createdDate: "Created Date",
         uploadFailed: "Failed to upload user profile image.",
         notAvailable: "N/A",
+        projectName: "Project name",
+        code: "Code",
+        editCode: "Edit code",
+        save: "Save",
+        cancel: "Cancel",
+        codeInvalid: "Use 2–6 letters or digits, starting with a letter.",
+        codeSaveFailed: "Could not save the code ({status}).",
+        codeNetworkError: "Network error. Please try again.",
+    },
+    serviceErrors: {
+        requestFailed: "Couldn't complete the request. Please try again.",
+        requestFailedStatus: "Request failed ({status}).",
+        unexpected: "An unexpected error occurred. Please try again.",
     },
     // Team-scoped tags applied to whole PROJECTS, to organize the
     // project list. Distinct from `tasks.*.tags`, which are the

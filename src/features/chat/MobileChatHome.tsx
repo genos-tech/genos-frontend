@@ -14,6 +14,7 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
@@ -68,6 +69,7 @@ const MobileOverlay = ({
     onClose: () => void;
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     return (
         <Box
@@ -84,7 +86,7 @@ const MobileOverlay = ({
             }}
         >
             <IconButton
-                aria-label="Close"
+                aria-label={t.chat.headers.close}
                 size="sm"
                 variant="plain"
                 sx={{

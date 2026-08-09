@@ -3,12 +3,15 @@ import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftR
 import { Box, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
+import { useTranslation } from "../../../../i18n";
+
 interface SelectChatPanelProps {
     setMainChatPanelSize: (size: number) => void;
 }
 
 export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     return (
@@ -114,7 +117,7 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                                 letterSpacing: "-0.02em",
                             }}
                         >
-                            No conversation selected
+                            {t.chat.emptyPane.title}
                         </Typography>
                         <Typography
                             level="body-sm"
@@ -124,7 +127,7 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                                 lineHeight: 1.5,
                             }}
                         >
-                            Choose a chat from the sidebar to start messaging
+                            {t.chat.emptyPane.subtitle}
                         </Typography>
                     </Stack>
 
@@ -155,7 +158,7 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                                 fontSize: "0.75rem",
                             }}
                         >
-                            Select from sidebar
+                            {t.chat.emptyPane.hint}
                         </Typography>
                     </Stack>
                 </Stack>

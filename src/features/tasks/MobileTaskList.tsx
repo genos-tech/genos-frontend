@@ -6,11 +6,12 @@ import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
-import { priorities, statuses } from "./utils/taskMeta";
+import { priorities, statuses, taskMetaLabel } from "./utils/taskMeta";
 
 import { UserAvatar } from "../../components/ui/avatars/UserAvatar";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../i18n";
 import { TaskTableProps } from "../../types/tasks";
 import { extractYYYYMMDD } from "../../utils/dateUtils";
 
@@ -32,6 +33,7 @@ const priorityMetaByName = new Map(priorities.map((p) => [p.priority, p]));
 // preview overlay.
 export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const projectId = usePM.currentProject?.projectId;
 
@@ -61,7 +63,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
         return (
             <Box sx={{ p: 3, textAlign: "center" }}>
                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    Pick a project from the sidebar to see its tasks.
+                    {t.tasks.mobile.pickProject}
                 </Typography>
             </Box>
         );
@@ -72,7 +74,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
             <Box sx={{ p: 3, textAlign: "center" }}>
                 <AssignmentRoundedIcon sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    No open tasks in this project.
+                    {t.tasks.mobile.noOpenTasks}
                 </Typography>
             </Box>
         );
@@ -181,7 +183,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                                         }}
                                         noWrap
                                     >
-                                        {task.title || "(untitled)"}
+                                        {task.title || t.tasks.mobile.untitled}
                                     </Typography>
                                 </Stack>
 
@@ -208,7 +210,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                                                 "--Chip-minHeight": "20px",
                                             }}
                                         >
-                                            {statusMeta.status}
+                                            {taskMetaLabel(statusMeta.status, t.tasks.filters)}
                                         </Chip>
                                     )}
                                     {priorityMeta && (
@@ -230,7 +232,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                                                 "--Chip-minHeight": "20px",
                                             }}
                                         >
-                                            {priorityMeta.priority}
+                                            {taskMetaLabel(priorityMeta.priority, t.tasks.filters)}
                                         </Chip>
                                     )}
                                     {task.dueDate && (

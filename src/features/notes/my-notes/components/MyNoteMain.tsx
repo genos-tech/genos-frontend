@@ -10,6 +10,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { EmptyState } from "../../common/components/EmptyState";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
@@ -63,6 +64,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const { accessToken } = useAuth();
     const isMobile = useIsMobile();
+    const { t } = useTranslation();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     // Which personal-backed space the open note belongs to. Read off the
@@ -196,7 +198,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                 >
                     {isMobile && onMobileBack && (
                         <IconButton
-                            aria-label="Back to notes list"
+                            aria-label={t.notes.labels.backToNotesList}
                             size="sm"
                             sx={{ flexShrink: 0 }}
                             variant="plain"

@@ -31,6 +31,7 @@ import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { useColorTheme } from "../../../../theme/ColorThemeProvider";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
@@ -325,7 +326,8 @@ export const buildNodesAndEdges = (
     // When set, task nodes whose assignee matches get the "assigned to
     // viewer" focus color. Null (the default everywhere but the dashboard's
     // Assigned Milestones section) leaves every node un-highlighted.
-    highlightAssigneeId: number | string | null
+    highlightAssigneeId: number | string | null,
+    untitledLabel = "Untitled"
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
     // The tree's real top, resolved by the loader (see `TaskGraph`).
     // `isRoot` has to agree with the set of tasks actually in the graph,
@@ -340,7 +342,7 @@ export const buildNodesAndEdges = (
     const titleByTaskId = new Map<number, string>();
     for (const t of [...graph.tasks, ...graph.externalTasks]) {
         if (t.id == null) continue;
-        titleByTaskId.set(Number(t.id), t.title || "Untitled");
+        titleByTaskId.set(Number(t.id), t.title || untitledLabel);
     }
 
     const makeNode = (task: TaskTableProps, isExternal: boolean): Node => {
@@ -542,6 +544,7 @@ const CanvasInner = ({
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
     // React Flow's Background and MiniMap write their `color` / `nodeColor`
@@ -587,7 +590,7 @@ const CanvasInner = ({
         setError(null);
         const graph = await loadTaskGraph(myself, projectId, rootTaskId, accessToken);
         if (!graph) {
-            setError("Couldn't load the task graph.");
+            setError(t.tasks.diagram.errors.load);
             setLoading(false);
             return;
         }
@@ -633,7 +636,15 @@ const CanvasInner = ({
             }
         }
         return graph;
-    }, [myself, projectId, rootTaskId, accessToken, onOverviewChange, useSM]);
+    }, [
+        myself,
+        projectId,
+        rootTaskId,
+        accessToken,
+        onOverviewChange,
+        useSM,
+        t.tasks.diagram.errors.load,
+    ]);
 
     // CRUD handlers — defined before `assemble` so the assembly can
     // capture them in node data.
@@ -651,7 +662,7 @@ const CanvasInner = ({
                 accessToken
             );
             if (!res.ok) {
-                setError(res.error ?? "Update failed.");
+                setError(res.error ?? t.tasks.diagram.errors.update);
                 return;
             }
             // Build the merged row once and broadcast it to every cache
@@ -725,7 +736,7 @@ const CanvasInner = ({
                 void useTM.loadUpdatedTask(projectId);
             }
         },
-        [accessToken, projectId, useTM]
+        [accessToken, projectId, useTM, t.tasks.diagram.errors.update]
     );
 
     const handleAddSubtask = useCallback(
@@ -735,7 +746,10 @@ const CanvasInner = ({
             // task's child IS a sub-task. Look up the parent in the
             // last-loaded graph rather than re-querying.
             const parent = graphRef.current?.tasks.find((t) => Number(t.id) === parentTaskId);
-            const defaultTitle = parent?.isMilestone === true ? "New task" : "New sub-task";
+            const defaultTitle =
+                parent?.isMilestone === true
+                    ? t.tasks.diagram.newTask
+                    : t.tasks.diagram.newSubTask;
             const res = await createDiagramSubtask(
                 myself,
                 projectId,
@@ -821,10 +835,10 @@ const CanvasInner = ({
             // Soft prompt — using window.confirm because a full
             // confirmation modal nested inside this modal is overkill
             // for a single-task action.
-            if (!window.confirm("Delete this task and all its sub-tasks?")) return;
+            if (!window.confirm(t.tasks.diagram.confirmDelete)) return;
             const res = await deleteDiagramTask(myself, taskId, accessToken);
             if (!res.ok) {
-                setError(res.error ?? "Delete failed.");
+                setError(res.error ?? t.tasks.diagram.errors.delete);
                 return;
             }
             const graph = await refresh();
@@ -933,7 +947,8 @@ const CanvasInner = ({
                     onOpenPreview: (id) => handlerBagRef.current.onOpenPreview(id),
                 },
                 hideClosed,
-                highlightAssigneeId ?? null
+                highlightAssigneeId ?? null,
+                t.tasks.diagram.untitled
             );
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
@@ -948,7 +963,15 @@ const CanvasInner = ({
                 pendingFitRef.current = true;
             }
         },
-        [dagreLayout, useSM, projectId, usePM.currentProject, hideClosed, highlightAssigneeId]
+        [
+            dagreLayout,
+            useSM,
+            projectId,
+            usePM.currentProject,
+            hideClosed,
+            highlightAssigneeId,
+            t.tasks.diagram.untitled,
+        ]
     );
 
     // Perform a pending fit once React Flow has measured the nodes.
@@ -1078,7 +1101,7 @@ const CanvasInner = ({
                     accessToken
                 );
                 if (!res.ok) {
-                    setError(res.error ?? "Re-parent failed.");
+                    setError(res.error ?? t.tasks.diagram.errors.reparent);
                     return;
                 }
             } else if (
@@ -1095,7 +1118,14 @@ const CanvasInner = ({
             if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
-        [accessToken, refresh, assembleAndLayout, useTM, projectId]
+        [
+            accessToken,
+            refresh,
+            assembleAndLayout,
+            useTM,
+            projectId,
+            t.tasks.diagram.errors.reparent,
+        ]
     );
 
     // Reconnect — user dragged an existing edge's endpoint elsewhere.
@@ -1121,7 +1151,7 @@ const CanvasInner = ({
                     accessToken
                 );
                 if (!res.ok) {
-                    setError(res.error ?? "Re-parent failed.");
+                    setError(res.error ?? t.tasks.diagram.errors.reparent);
                     return;
                 }
             } else {
@@ -1143,7 +1173,14 @@ const CanvasInner = ({
             if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
-        [accessToken, refresh, assembleAndLayout, useTM, projectId]
+        [
+            accessToken,
+            refresh,
+            assembleAndLayout,
+            useTM,
+            projectId,
+            t.tasks.diagram.errors.reparent,
+        ]
     );
 
     const onConnectFresh = useCallback(
@@ -1196,7 +1233,7 @@ const CanvasInner = ({
                 >
                     <CircularProgress size="lg" />
                     <Typography level="body-sm" sx={{ mt: 1, color: P.textMuted }}>
-                        Loading task graph…
+                        {t.tasks.diagram.loading}
                     </Typography>
                 </Stack>
             )}

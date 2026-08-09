@@ -22,6 +22,7 @@ import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../i18n";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -57,6 +58,7 @@ export const MentionGroupEditor = ({
     onDeleted,
 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const { mentionGroups, updateGroup, deleteGroup, addMembers, removeMember } =
@@ -71,8 +73,14 @@ export const MentionGroupEditor = ({
         [mentionGroups, groupId]
     );
 
-    const teamMembers: UserProps[] = useTEM?.teamMembers ?? [];
-    const teamMemberProfiles = useTEM?.teamMemberProfiles ?? {};
+    const teamMembers: UserProps[] = useMemo(
+        () => useTEM?.teamMembers ?? [],
+        [useTEM?.teamMembers]
+    );
+    const teamMemberProfiles = useMemo(
+        () => useTEM?.teamMemberProfiles ?? {},
+        [useTEM?.teamMemberProfiles]
+    );
 
     const candidateMembers = useMemo(() => {
         if (!group) return [];
@@ -99,7 +107,7 @@ export const MentionGroupEditor = ({
     if (!group) {
         return (
             <Typography level="body-md" sx={{ opacity: 0.7 }}>
-                Group not found.
+                {t.settings.mentionGroups.notFound}
             </Typography>
         );
     }
@@ -126,7 +134,9 @@ export const MentionGroupEditor = ({
     };
 
     const handleDelete = async () => {
-        const ok = window.confirm(`Delete @${group.groupName}? This cannot be undone.`);
+        const ok = window.confirm(
+            fmt(t.settings.mentionGroups.deleteConfirm, { name: group.groupName })
+        );
         if (!ok) return;
         await deleteGroup(group.groupId);
         onDeleted?.();
@@ -158,7 +168,7 @@ export const MentionGroupEditor = ({
                         @{group.groupName}
                     </Typography>
                 )}
-                <AppTooltip size="sm" title="Delete group">
+                <AppTooltip size="sm" title={t.settings.mentionGroups.deleteGroup}>
                     <IconButton
                         color="danger"
                         size="sm"
@@ -173,7 +183,7 @@ export const MentionGroupEditor = ({
             {/* Description */}
             {editingDescription != null ? (
                 <Input
-                    placeholder="Description (optional)"
+                    placeholder={t.settings.mentionGroups.descriptionPlaceholder}
                     size="md"
                     value={editingDescription}
                     autoFocus
@@ -194,7 +204,7 @@ export const MentionGroupEditor = ({
                     }}
                     onClick={() => setEditingDescription(group.description || "")}
                 >
-                    {group.description || "Add a description…"}
+                    {group.description || t.settings.mentionGroups.addDescription}
                 </Typography>
             )}
 
@@ -203,11 +213,15 @@ export const MentionGroupEditor = ({
             {/* Members */}
             <Stack alignItems="center" direction="row" spacing={1}>
                 <PersonRoundedIcon sx={{ fontSize: 18, opacity: 0.7 }} />
-                <Typography level="title-md">Members ({group.memberCount})</Typography>
+                <Typography level="title-md">
+                    {fmt(t.settings.mentionGroups.membersCount, {
+                        count: group.memberCount,
+                    })}
+                </Typography>
             </Stack>
             {memberRows.length === 0 ? (
                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    No members yet. Add some below.
+                    {t.settings.mentionGroups.noMembers}
                 </Typography>
             ) : (
                 <List sx={{ "--ListItem-paddingY": "6px" }}>
@@ -234,7 +248,7 @@ export const MentionGroupEditor = ({
                                     {row.user?.userEmail || ""}
                                 </Typography>
                             </Box>
-                            <AppTooltip size="sm" title="Remove member">
+                            <AppTooltip size="sm" title={t.settings.mentionGroups.removeMember}>
                                 <IconButton
                                     color="neutral"
                                     size="sm"
@@ -254,10 +268,10 @@ export const MentionGroupEditor = ({
             {/* Add member picker */}
             <Stack alignItems="center" direction="row" spacing={1}>
                 <PersonAddAltRoundedIcon sx={{ fontSize: 18, opacity: 0.7 }} />
-                <Typography level="title-md">Add members</Typography>
+                <Typography level="title-md">{t.settings.mentionGroups.addMembers}</Typography>
             </Stack>
             <Input
-                placeholder="Search team members…"
+                placeholder={t.settings.mentionGroups.searchMembersPlaceholder}
                 size="md"
                 value={memberPickerQuery}
                 onChange={(e) => setMemberPickerQuery(e.target.value)}
@@ -276,8 +290,8 @@ export const MentionGroupEditor = ({
                     <ListItem>
                         <Typography level="body-sm" sx={{ opacity: 0.7 }}>
                             {memberPickerQuery
-                                ? "No matching team members."
-                                : "Everyone is already a member."}
+                                ? t.settings.mentionGroups.noMatchingMembers
+                                : t.settings.mentionGroups.everyoneAlreadyMember}
                         </Typography>
                     </ListItem>
                 )}

@@ -25,7 +25,7 @@
 import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
-import { useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind, type Channel } from "../../../types/channel";
 import { useChannelList } from "../hooks/useChannelList";
@@ -157,7 +157,7 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
             >
                 <input
                     data-testid="channel-list-v3-search"
-                    placeholder="Search channels…"
+                    placeholder={t.chat.channel.list.searchPlaceholder}
                     type="search"
                     value={query}
                     style={{
@@ -180,16 +180,20 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                     listStyle: "none",
                 }}
             >
-                {isLoading && <li style={{ padding: 12, opacity: 0.5 }}>Loading…</li>}
+                {isLoading && (
+                    <li style={{ padding: 12, opacity: 0.5 }}>
+                        {t.chat.channel.list.loading}
+                    </li>
+                )}
                 {!isLoading && channels.length === 0 && (
-                    <li style={{ padding: 12, opacity: 0.5 }}>No channels yet.</li>
+                    <li style={{ padding: 12, opacity: 0.5 }}>{t.chat.channel.list.empty}</li>
                 )}
                 {!isLoading && channels.length > 0 && !hasResults && (
                     <li
                         data-testid="channel-list-v3-no-results"
                         style={{ padding: 12, opacity: 0.5 }}
                     >
-                        No channels match “{query}”.
+                        {fmt(t.chat.channel.list.noResults, { query })}
                     </li>
                 )}
                 {visibleKinds.map((kind) => {

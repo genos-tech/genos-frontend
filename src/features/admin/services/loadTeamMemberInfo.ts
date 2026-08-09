@@ -15,7 +15,7 @@ export const loadTeamMemberInfo = async (
             const res = await api.get(`/team/getTeamMemberInfo/?${query}`);
             return res.data;
         } else {
-            console.error("Unauthorized. Auth toke is not found.");
+            console.error("Unauthorized. Authentication token was not found.");
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

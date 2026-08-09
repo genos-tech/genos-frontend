@@ -1,3 +1,5 @@
+import { getMessages } from "../i18n";
+
 export const getLocalCurrentTimestamp = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -96,9 +98,9 @@ export const extractYYYYMMDDHHMM = (ts: string) => {
     const tsDay: string = checkTimestampDay(ts);
 
     if (tsDay === "today") {
-        return `Today ${tsLocal.slice(11, 16)}`;
+        return `${getMessages().app.dates.today} ${tsLocal.slice(11, 16)}`;
     } else if (tsDay === "yesterday") {
-        return `Yesterday ${tsLocal.slice(11, 16)}`;
+        return `${getMessages().app.dates.yesterday} ${tsLocal.slice(11, 16)}`;
     } else if (tsDay === "withinAYear") {
         const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
         return `${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(10, 16)}`;
@@ -112,9 +114,9 @@ export const extractMMDD = (ts: string) => {
     const tsDay: string = checkTimestampDay(ts);
 
     if (tsDay === "today") {
-        return `Today`;
+        return getMessages().app.dates.today;
     } else if (tsDay === "yesterday") {
-        return `Yesterday`;
+        return getMessages().app.dates.yesterday;
     } else if (tsDay === "withinAYear") {
         const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
         return `${month}. ${+tsLocal.slice(8, 10)}`;
@@ -128,9 +130,9 @@ export const extractYYYYMMDD = (ts: string) => {
     const tsDay: string = checkTimestampDay(ts);
 
     if (tsDay === "today") {
-        return `Today`;
+        return getMessages().app.dates.today;
     } else if (tsDay === "yesterday") {
-        return `Yesterday`;
+        return getMessages().app.dates.yesterday;
     }
     const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
     return `${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(0, 4)}`;

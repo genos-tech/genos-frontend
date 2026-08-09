@@ -20,6 +20,7 @@
  */
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { Channel, ChannelKind, ChannelMember } from "../../../types/channel";
@@ -78,6 +79,7 @@ export const createMDMChatGroup = async (
     setErrorMessage: (msg: string) => void,
     setOpen: (e: boolean) => void
 ): Promise<Channel | undefined> => {
+    const messages = getMessages().chat.errors;
     // Build the canonical member set (creator included). The v3 backend
     // drops the creator from `member_user_ids` server-side and re-adds
     // them as owner, but the dedup scan compares against the *roster*
@@ -85,7 +87,7 @@ export const createMDMChatGroup = async (
     const targetMemberIds = new Set<string>(memberIds.filter(Boolean));
     targetMemberIds.add(myself.userId);
     if (targetMemberIds.size < 3) {
-        setErrorMessage("MDM requires at least 3 distinct members.");
+        setErrorMessage(messages.mdmMinimumMembers);
         return undefined;
     }
 
@@ -112,7 +114,7 @@ export const createMDMChatGroup = async (
             teamId: myself.teamId,
         });
         if (!channel) {
-            setErrorMessage("Failed to create multi-user DM. Please try again.");
+            setErrorMessage(messages.createMdmFailed);
             return undefined;
         }
 
@@ -124,7 +126,7 @@ export const createMDMChatGroup = async (
         return channel;
     } catch (error) {
         console.error("Failed to create MDM:", error);
-        setErrorMessage("Failed to create multi-user DM. Please try again.");
+        setErrorMessage(messages.createMdmFailed);
         return undefined;
     }
 };

@@ -68,7 +68,7 @@ import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortM
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getTaskKind } from "../../utils/taskKind";
-import { effortLevels, priorities } from "../../utils/taskMeta";
+import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
@@ -2199,7 +2199,7 @@ const MilestonePreviewInner = ({
                                 ),
                             }}
                         >
-                            {milestone.status}
+                            {taskMetaLabel(milestone.status, t.tasks.filters)}
                         </Chip>
                         <Box sx={{ flex: 1 }} />
                         {/* Check thread — only for milestones created from
@@ -2536,7 +2536,7 @@ const MilestonePreviewInner = ({
                                     mr: 0.25,
                                 }}
                             >
-                                Task progress
+                                {t.tasks.preview.taskProgress}
                             </Typography>
                             {(["Open", "WIP", "Pending", "Closed"] as const).map((s) => {
                                 const tone = MILESTONE_STATUS_CHIP_COLORS[s];
@@ -2559,7 +2559,8 @@ const MilestonePreviewInner = ({
                                             px: 1,
                                         }}
                                     >
-                                        {s}: {milestoneTaskCounts.counts[s]}
+                                        {taskMetaLabel(s, t.tasks.filters)}:{" "}
+                                        {milestoneTaskCounts.counts[s]}
                                     </Chip>
                                 );
                             })}

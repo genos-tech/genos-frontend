@@ -15,12 +15,18 @@ export const sidebar = {
         // while Cmd/Ctrl-K still opens the quick-ask overlay.)
         search: "Genos",
     },
+    actions: {
+        todo: "To-Do",
+        history: "History",
+        settings: "Settings",
+        signOut: "Sign out",
+    },
     tooltips: {
         settings: "Settings",
         signOut: "Sign out",
         openProfile: "Open My Profile",
-        switchServiceMac: "Hold ⌘ + tap Ctrl",
-        switchServiceOther: "Hold Ctrl + tap Alt",
+        switchServiceMac: "Switch service · Hold ⌘ + tap Ctrl",
+        switchServiceOther: "Switch service · Hold Ctrl + tap Alt",
         // Per-service letter shortcuts surfaced in sidebar tooltips.
         // Split per platform so the consumer can pick via `isMac()`.
         // Mirrors bindings in `useGlobalServiceShortcut`. Inbox/Chats
@@ -28,9 +34,9 @@ export const sidebar = {
         // On the Genos button: it navigates to the page; the shortcut
         // hint stays because ⌘/Ctrl+K opens the quick-ask overlay from
         // anywhere else.
-        spotlightShortcut: { mac: "Quick ask · ⌘+K", windows: "Quick ask · Ctrl+K" },
-        tasksShortcut: { mac: "Ctrl+⌘+T", windows: "Ctrl+Alt+T" },
-        notesShortcut: { mac: "Ctrl+⌘+N", windows: "Ctrl+Alt+N" },
+        spotlightShortcut: { mac: "Genos quick ask · ⌘+K", windows: "Genos quick ask · Ctrl+K" },
+        tasksShortcut: { mac: "Tasks · Ctrl+⌘+T", windows: "Tasks · Ctrl+Alt+T" },
+        notesShortcut: { mac: "Notes · Ctrl+⌘+N", windows: "Notes · Ctrl+Alt+N" },
         historyShortcut: { mac: "History · Ctrl+⌘+H", windows: "History · Ctrl+Alt+H" },
         todoShortcut: { mac: "To-Do · Ctrl+⌘+O", windows: "To-Do · Ctrl+Alt+O" },
     },

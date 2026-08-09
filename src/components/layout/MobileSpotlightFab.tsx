@@ -4,6 +4,7 @@ import { IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import {
     clampFabTop,
@@ -47,6 +48,7 @@ const readBottomInset = (): number => {
 export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
     const isMobile = useIsMobile();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
 
     // `null` until the user moves it: the default anchor stays expressed
     // in CSS (`bottom: calc(var(--BottomTabBar-height) + 16px)`) so it
@@ -174,7 +176,7 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
 
     return (
         <IconButton
-            aria-label="Search"
+            aria-label={t.layout.mobile.openGenos}
             size="lg"
             sx={{
                 position: "fixed",

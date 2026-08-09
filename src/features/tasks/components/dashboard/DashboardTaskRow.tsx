@@ -7,6 +7,7 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TaskTableProps } from "../../../../types/tasks";
 import { formatDueLabel, PRIORITY_COLORS } from "../../utils/dashboardRowFormat";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { SprintChip } from "../SprintChip";
@@ -215,7 +216,7 @@ export const DashboardTaskRow = ({ task, sprintName, onClick }: DashboardTaskRow
                                 maxWidth: "100%",
                             }}
                         >
-                            {task.priority}
+                            {taskMetaLabel(task.priority, t.tasks.filters)}
                         </Chip>
                     ) : null
                 )}

@@ -10,6 +10,7 @@ import { UpdateTodoItemPatch } from "./services/todoItems";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoGroupProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
@@ -71,6 +72,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         socket,
     } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const isToday = group.localDate === getLocalCurrentDate();
 
@@ -96,13 +98,13 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         // the user always has somewhere to drop a new item that isn't
         // assigned a tag yet.
         result.push({
-            title: "General",
+            title: t.chat.todoPane.general,
             categoryId: null as number | null,
             items: uncategorized,
         });
         result.push(...categoryEntries);
         return result;
-    }, [group.items, categories]);
+    }, [group.items, categories, t.chat.todoPane.general]);
 
     const completedCount = group.items.filter((i) => i.isCompleted).length;
     const totalCount = group.items.length;
@@ -164,7 +166,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         }}
                     >
                         {group.localDate}
-                        {isToday ? "  (Today)" : ""}
+                        {isToday ? t.chat.todoPane.todaySuffix : ""}
                     </Typography>
                     <Box
                         sx={{

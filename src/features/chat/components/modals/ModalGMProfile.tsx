@@ -208,7 +208,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             ok = true;
         } catch (e) {
             console.error("[ModalGMProfile] rename failed:", e);
-            setNameError("Failed to rename the group.");
+            setNameError(t.chat.errors.renameGroupFailed);
         }
         setNameSaving(false);
         if (ok) {

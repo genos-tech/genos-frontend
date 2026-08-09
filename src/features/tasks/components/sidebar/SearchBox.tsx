@@ -12,6 +12,7 @@ import { alpha } from "@mui/system";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 
 type TaskSidebarSearchBoxProps = {
@@ -108,7 +109,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                 ),
                             }}
                         >
-                            {item.status.status}
+                            {taskMetaLabel(item.status.status, t.tasks.filters)}
                         </Chip>
                     );
                 })

@@ -6,7 +6,7 @@ import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
-import { priorities } from "../../utils/taskMeta";
+import { priorities, taskMetaLabel } from "../../utils/taskMeta";
 
 type ACTaskPriorityProps = {
     taskContent: TaskProps;
@@ -22,7 +22,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
     return (
         <Autocomplete
             key={taskContent.id}
-            getOptionLabel={(option) => option.priority || ""}
+            getOptionLabel={(option) => taskMetaLabel(option.priority, t.tasks.filters)}
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
             openOnFocus={true}
             options={priorities}
@@ -45,7 +45,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {option.priority}
+                            {taskMetaLabel(option.priority, t.tasks.filters)}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
@@ -67,7 +67,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                                 borderRadius: "5px",
                             }}
                         >
-                            {item.priority}
+                            {taskMetaLabel(item.priority, t.tasks.filters)}
                         </Chip>
                     );
                 })

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PaletteIcon from "@mui/icons-material/Palette";
 import { IconButton, ListItemDecorator, Menu, MenuItem, useColorScheme } from "@mui/joy";
 
+import { useTranslation } from "../../../../../../i18n";
 import { TagColorOption } from "../../../../../../types/tasks";
 
 const getContrastTextColor = (hex: string): "black" | "white" => {
@@ -13,48 +14,50 @@ const getContrastTextColor = (hex: string): "black" | "white" => {
 };
 
 const BASE_COLORS = [
-    { name: "Red", value: "#ff2323" },
-    { name: "Green", value: "#1dc200" },
-    { name: "Blue", value: "#0044c2" },
-    { name: "Yellow", value: "#ffd93b" },
-    { name: "Orange", value: "#ffa823" },
-    { name: "Purple", value: "#8e23ff" },
-    { name: "Pink", value: "#ff238a" },
-    { name: "Gray", value: "#808080" },
-    { name: "Light Gray", value: "#d3d3d3" },
-    { name: "Teal", value: "#008080" },
-    { name: "Cyan", value: "#00ffff" },
-    { name: "Indigo", value: "#4b0082" },
-    { name: "Lime", value: "#bfff00" },
-    { name: "Magenta", value: "#ff00ff" },
-    { name: "Brown", value: "#8b4513" },
-    { name: "Olive", value: "#808000" },
-    { name: "Navy", value: "#000080" },
-    { name: "Turquoise", value: "#40e0d0" },
-    { name: "Gold", value: "#ffd700" },
-    { name: "Crimson", value: "#dc143c" },
-    { name: "Salmon", value: "#fa8072" },
-    { name: "Tomato", value: "#ff6347" },
-    { name: "Coral", value: "#ff7f50" },
-    { name: "Dark Orange", value: "#ff8c00" },
-    { name: "Khaki", value: "#f0e68c" },
-    { name: "Beige", value: "#f5f5dc" },
-    { name: "Mint", value: "#98ff98" },
-    { name: "Sea Green", value: "#2e8b57" },
-    { name: "Forest Green", value: "#228b22" },
-    { name: "Light Sky Blue", value: "#87cefa" },
-    { name: "Steel Blue", value: "#4682b4" },
-    { name: "Royal Blue", value: "#4169e1" },
-    { name: "Slate Blue", value: "#6a5acd" },
-    { name: "Lavender", value: "#e6e6fa" },
-    { name: "Plum", value: "#dda0dd" },
-    { name: "Orchid", value: "#da70d6" },
-    { name: "Hot Pink", value: "#ff69b4" },
-    { name: "Deep Pink", value: "#ff1493" },
-    { name: "Chocolate", value: "#d2691e" },
-];
+    { key: "red", name: "Red", value: "#ff2323" },
+    { key: "green", name: "Green", value: "#1dc200" },
+    { key: "blue", name: "Blue", value: "#0044c2" },
+    { key: "yellow", name: "Yellow", value: "#ffd93b" },
+    { key: "orange", name: "Orange", value: "#ffa823" },
+    { key: "purple", name: "Purple", value: "#8e23ff" },
+    { key: "pink", name: "Pink", value: "#ff238a" },
+    { key: "gray", name: "Gray", value: "#808080" },
+    { key: "lightGray", name: "Light Gray", value: "#d3d3d3" },
+    { key: "teal", name: "Teal", value: "#008080" },
+    { key: "cyan", name: "Cyan", value: "#00ffff" },
+    { key: "indigo", name: "Indigo", value: "#4b0082" },
+    { key: "lime", name: "Lime", value: "#bfff00" },
+    { key: "magenta", name: "Magenta", value: "#ff00ff" },
+    { key: "brown", name: "Brown", value: "#8b4513" },
+    { key: "olive", name: "Olive", value: "#808000" },
+    { key: "navy", name: "Navy", value: "#000080" },
+    { key: "turquoise", name: "Turquoise", value: "#40e0d0" },
+    { key: "gold", name: "Gold", value: "#ffd700" },
+    { key: "crimson", name: "Crimson", value: "#dc143c" },
+    { key: "salmon", name: "Salmon", value: "#fa8072" },
+    { key: "tomato", name: "Tomato", value: "#ff6347" },
+    { key: "coral", name: "Coral", value: "#ff7f50" },
+    { key: "darkOrange", name: "Dark Orange", value: "#ff8c00" },
+    { key: "khaki", name: "Khaki", value: "#f0e68c" },
+    { key: "beige", name: "Beige", value: "#f5f5dc" },
+    { key: "mint", name: "Mint", value: "#98ff98" },
+    { key: "seaGreen", name: "Sea Green", value: "#2e8b57" },
+    { key: "forestGreen", name: "Forest Green", value: "#228b22" },
+    { key: "lightSkyBlue", name: "Light Sky Blue", value: "#87cefa" },
+    { key: "steelBlue", name: "Steel Blue", value: "#4682b4" },
+    { key: "royalBlue", name: "Royal Blue", value: "#4169e1" },
+    { key: "slateBlue", name: "Slate Blue", value: "#6a5acd" },
+    { key: "lavender", name: "Lavender", value: "#e6e6fa" },
+    { key: "plum", name: "Plum", value: "#dda0dd" },
+    { key: "orchid", name: "Orchid", value: "#da70d6" },
+    { key: "hotPink", name: "Hot Pink", value: "#ff69b4" },
+    { key: "deepPink", name: "Deep Pink", value: "#ff1493" },
+    { key: "chocolate", name: "Chocolate", value: "#d2691e" },
+] as const;
 
-const COLORS: TagColorOption[] = BASE_COLORS.map((color) => ({
+type TagColorKey = (typeof BASE_COLORS)[number]["key"];
+
+const COLORS: (TagColorOption & { key: TagColorKey })[] = BASE_COLORS.map((color) => ({
     ...color,
     textColor: getContrastTextColor(color.value),
 }));
@@ -73,6 +76,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
     zIndex = 10010,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -124,7 +128,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
                                 }}
                             />
                         </ListItemDecorator>
-                        {color.name}
+                        {t.tasks.tagColors[color.key]}
                     </MenuItem>
                 ))}
             </Menu>

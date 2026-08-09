@@ -7,11 +7,12 @@ import { alpha } from "@mui/system";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../context/AuthContext";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { getCachedOrFetchTaskStatus, type TaskStatusResult } from "../services/taskStatusCache";
 import { deriveDaysLeft } from "../utils/daysLeft";
-import { effortLevels, priorities, statuses } from "../utils/taskMeta";
+import { effortLevels, priorities, statuses, taskMetaLabel } from "../utils/taskMeta";
 
 interface Props {
     projectId: string;
@@ -115,7 +116,15 @@ const vmFromFull = (t: TaskProps): CardVM => ({
     })),
 });
 
-const MetaPill = ({ pill, isDark }: { pill?: Pill; isDark: boolean }) =>
+const MetaPill = ({
+    pill,
+    isDark,
+    labels,
+}: {
+    pill?: Pill;
+    isDark: boolean;
+    labels: Parameters<typeof taskMetaLabel>[1];
+}) =>
     pill?.label ? (
         <Chip
             size="sm"
@@ -127,7 +136,7 @@ const MetaPill = ({ pill, isDark }: { pill?: Pill; isDark: boolean }) =>
                 borderRadius: "5px",
             }}
         >
-            {pill.label}
+            {taskMetaLabel(pill.label, labels)}
         </Chip>
     ) : null;
 
@@ -155,6 +164,7 @@ const dueColor = (daysLeft: number | null | undefined, muted: string): string =>
 // popovers. Mirrors `LinkedPrCard` + `PrHoverDetails`.
 export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const { accessToken } = useAuth();
@@ -246,7 +256,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
             )}
             {!vm && result?.kind === "error" && (
                 <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                    Status unavailable
+                    {t.tasks.mentionHover.statusUnavailable}
                 </Typography>
             )}
 
@@ -254,9 +264,9 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                 <>
                     {/* Status / priority / effort badges. */}
                     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
-                        <MetaPill isDark={isDark} pill={vm.status} />
-                        <MetaPill isDark={isDark} pill={vm.priority} />
-                        <MetaPill isDark={isDark} pill={vm.effort} />
+                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.status} />
+                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.priority} />
+                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.effort} />
                     </Stack>
 
                     {/* Assignee + due. */}
@@ -275,8 +285,8 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                             >
                                 <UserAvatar
                                     clickable={false}
-                                    size={20}
                                     showPulseDot={false}
+                                    size={20}
                                     userId={vm.assignee.userId}
                                 />
                                 <Typography
@@ -288,12 +298,12 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                                         whiteSpace: "nowrap",
                                     }}
                                 >
-                                    {vm.assignee.name ?? "Assignee"}
+                                    {vm.assignee.name ?? t.tasks.mentionHover.assignee}
                                 </Typography>
                             </Stack>
                         ) : (
                             <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                                Unassigned
+                                {t.tasks.mentionHover.unassigned}
                             </Typography>
                         )}
 
@@ -304,12 +314,15 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                                     sx={{ color: dueColor(vm.daysLeft, palette.textMuted) }}
                                 >
                                     {vm.daysLeft === -1
-                                        ? "Expired"
-                                        : `Due ${dueStr}${
-                                              vm.daysLeft != null && vm.daysLeft >= 0
-                                                  ? ` · ${vm.daysLeft}d`
-                                                  : ""
-                                          }`}
+                                        ? t.tasks.mentionHover.expired
+                                        : vm.daysLeft != null && vm.daysLeft >= 0
+                                          ? fmt(t.tasks.mentionHover.dueWithDays, {
+                                                date: dueStr ?? "",
+                                                count: vm.daysLeft,
+                                            })
+                                          : fmt(t.tasks.mentionHover.due, {
+                                                date: dueStr ?? "",
+                                            })}
                                 </Typography>
                             </Box>
                         )}
@@ -318,9 +331,11 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                     {/* Reporter + start date. */}
                     {(vm.reporterName || startStr) && (
                         <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                            {vm.reporterName ? `Reported by ${vm.reporterName}` : ""}
+                            {vm.reporterName
+                                ? fmt(t.tasks.mentionHover.reportedBy, { name: vm.reporterName })
+                                : ""}
                             {vm.reporterName && startStr ? " · " : ""}
-                            {startStr ? `Started ${startStr}` : ""}
+                            {startStr ? fmt(t.tasks.mentionHover.started, { date: startStr }) : ""}
                         </Typography>
                     )}
 

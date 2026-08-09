@@ -13,6 +13,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
@@ -185,6 +186,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const isChild = item.parentItemId !== null;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // null outside the app's UrlLinkModalProvider; passed to
@@ -338,7 +340,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         // Select a word, paste a URL → the word becomes
                         // "[word](url)"; the paste is handled by a native paste
                         // listener wired to this ref (see the effect above).
-                        placeholder="Untitled todo"
+                        placeholder={t.chat.todoPane.untitled}
                         size="sm"
                         slotProps={{ input: { ref: titleInputRef } }}
                         value={title}
@@ -399,7 +401,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         }}
                         onClick={() => setIsEditingTitle(true)}
                     >
-                        {title ? renderTitleWithLinks(title, urlLinkModal) : "Untitled todo"}
+                        {title
+                            ? renderTitleWithLinks(title, urlLinkModal)
+                            : t.chat.todoPane.untitled}
                     </Box>
                 )}
                 {/* When this was completed. `tsCompletedAt` was already
@@ -413,7 +417,11 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     nothing to anchor it to. The tooltip carries the full
                     timestamp including the year. */}
                 {item.isCompleted && item.tsCompletedAt && (
-                    <AppTooltip title={`Completed ${extractYYYYMMDDHHMM(item.tsCompletedAt)}`}>
+                    <AppTooltip
+                        title={fmt(t.chat.todoPane.completedTooltip, {
+                            time: extractYYYYMMDDHHMM(item.tsCompletedAt),
+                        })}
+                    >
                         <Box
                             sx={{
                                 flexShrink: 0,
@@ -427,7 +435,11 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         </Box>
                     </AppTooltip>
                 )}
-                <AppTooltip title={notesExpanded ? "Collapse notes" : "Expand notes"}>
+                <AppTooltip
+                    title={
+                        notesExpanded ? t.chat.todoPane.collapseNotes : t.chat.todoPane.expandNotes
+                    }
+                >
                     <IconButton
                         size="sm"
                         sx={{ borderRadius: "6px" }}
@@ -446,7 +458,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                 </AppTooltip>
                 {/* "+ subitem" only on top-level rows. */}
                 {!isChild && onAddSubitem && (
-                    <AppTooltip title="Add subitem">
+                    <AppTooltip title={t.chat.todoPane.addSubitem}>
                         <IconButton
                             size="sm"
                             sx={{ borderRadius: "6px" }}
@@ -562,7 +574,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             sx={{ mt: 0.25, px: 1 }}
                         >
                             <Input
-                                placeholder="+ Add subitem"
+                                placeholder={t.chat.todoPane.addSubitemPlaceholder}
                                 size="sm"
                                 slotProps={{ input: { ref: subitemInputRef } }}
                                 value={newSubitemTitle}

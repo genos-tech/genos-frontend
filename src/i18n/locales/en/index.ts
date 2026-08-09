@@ -9,6 +9,7 @@ import { featuresPage } from "./featuresPage";
 import { genos } from "./genos";
 import { history } from "./history";
 import { inbox } from "./inbox";
+import { integrations } from "./integrations";
 import { layout } from "./layout";
 import { noteAsk } from "./noteAsk";
 import { notes } from "./notes";
@@ -29,6 +30,7 @@ export const en = {
     tasks,
     notes,
     inbox,
+    integrations,
     spotlight,
     genos,
     threadAsk,

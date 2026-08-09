@@ -21,6 +21,7 @@ import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -50,6 +51,7 @@ export const MentionGroupsPanel = ({
     useUISM,
 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const { mentionGroups, createGroup } = useMentionGroupsContext();
@@ -80,11 +82,10 @@ export const MentionGroupsPanel = ({
         <Sheet sx={{ borderRadius: "lg", p: 2 }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <GroupRoundedIcon />
-                <Typography level="title-md">Mention groups</Typography>
+                <Typography level="title-md">{t.settings.mentionGroups.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 2 }}>
-                Team-scoped @groups. Anyone in your team can mention a group in chat, task
-                comments, or task bodies; every member of the group is notified.
+                {t.settings.mentionGroups.description}
             </Typography>
 
             <Stack
@@ -99,9 +100,9 @@ export const MentionGroupsPanel = ({
                 <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", lg: 260 } }}>
                     <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                         <Typography level="title-sm" sx={{ flex: 1 }}>
-                            Groups
+                            {t.settings.mentionGroups.groupsHeading}
                         </Typography>
-                        <AppTooltip size="sm" title="New group">
+                        <AppTooltip size="sm" title={t.settings.mentionGroups.newGroup}>
                             <IconButton
                                 size="sm"
                                 variant="soft"
@@ -123,7 +124,7 @@ export const MentionGroupsPanel = ({
                         >
                             <Stack spacing={0.75}>
                                 <Input
-                                    placeholder="group-name (lowercase)"
+                                    placeholder={t.settings.mentionGroups.namePlaceholder}
                                     size="sm"
                                     value={newName}
                                     autoFocus
@@ -134,7 +135,7 @@ export const MentionGroupsPanel = ({
                                     }}
                                 />
                                 <Input
-                                    placeholder="Description (optional)"
+                                    placeholder={t.settings.mentionGroups.descriptionPlaceholder}
                                     size="sm"
                                     value={newDescription}
                                     onChange={(e) => setNewDescription(e.target.value)}
@@ -146,7 +147,7 @@ export const MentionGroupsPanel = ({
                                         variant="plain"
                                         onClick={() => setCreating(false)}
                                     >
-                                        Cancel
+                                        {t.common.actions.cancel}
                                     </Button>
                                     <Button
                                         disabled={!newName.trim()}
@@ -154,7 +155,7 @@ export const MentionGroupsPanel = ({
                                         variant="solid"
                                         onClick={() => void handleCreate()}
                                     >
-                                        Create
+                                        {t.common.actions.create}
                                     </Button>
                                 </Stack>
                             </Stack>
@@ -181,7 +182,7 @@ export const MentionGroupsPanel = ({
                         {mentionGroups.length === 0 && !creating && (
                             <ListItem>
                                 <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                    No groups yet. Click + to create one.
+                                    {t.settings.mentionGroups.empty}
                                 </Typography>
                             </ListItem>
                         )}
@@ -279,7 +280,7 @@ export const MentionGroupsPanel = ({
                             }}
                         >
                             <Typography level="body-sm">
-                                Select a group on the left to manage its members.
+                                {t.settings.mentionGroups.selectPrompt}
                             </Typography>
                         </Box>
                     ) : (

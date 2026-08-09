@@ -12,7 +12,6 @@ import {
     filterSuggestionItems,
     PartialBlock,
 } from "@blocknote/core";
-import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
@@ -67,6 +66,7 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
@@ -254,19 +254,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         })
     );
 
-    const locale = en;
-    const dictionary = useMemo(
-        () => ({
-            ...locale,
-            placeholders: {
-                ...locale.placeholders,
-                emptyDocument: "Start typing...",
-                default: "Type something...",
-                heading: "Custom heading placeholder",
-            },
-        }),
-        []
-    );
+    const dictionary = useBlockNoteDictionary();
 
     const collabUser = useMemo(
         () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
@@ -535,7 +523,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                         ...getBlockTypeSelectItemsWithCodeBlock(editor.dictionary),
                                         // Adds an item for the Alert block.
                                         {
-                                            name: "Alert",
+                                            name: t.common.editor.alertBlock,
                                             type: "alert",
                                             icon: RiAlertFill,
                                         } satisfies BlockTypeSelectItem,

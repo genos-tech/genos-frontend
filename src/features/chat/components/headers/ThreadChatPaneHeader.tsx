@@ -412,7 +412,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     size="sm"
                     variant="plain"
                     onClick={handleMobileBack}
-                    aria-label="Back"
+                    aria-label={t.chat.headers.backToChat}
                     sx={{ flexShrink: 0 }}
                 >
                     <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
@@ -435,7 +435,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }}
                         noWrap
                     >
-                        {dmDisplayName || "Thread"}
+                        {dmDisplayName || t.chat.headers.thread}
                     </Typography>
                     <ExternalChatChip
                         allChats={useCM.allChats}

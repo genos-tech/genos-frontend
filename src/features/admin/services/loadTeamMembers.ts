@@ -24,7 +24,7 @@ export const loadTeamMembers = async (
     try {
         const api = authApi(accessToken);
         if (!api) {
-            console.error("Unauthorized. Auth toke is not found.");
+            console.error("Unauthorized. Authentication token was not found.");
             return;
         }
         const params: string[] = [

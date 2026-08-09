@@ -31,6 +31,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useOptionalAccessToken } from "../../../context/AuthContext";
+import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { resolveUploadLimitBytes } from "../../../services/uploadLimit";
 import { ABSOLUTE_MAX_UPLOAD_BYTES, formatLimitLabel } from "../../../utils/uploadLimits";
@@ -73,6 +74,7 @@ function _nextLocalId(): string {
 }
 
 export function useAttachmentDraft(): UseAttachmentDraftResult {
+    const { t } = useTranslation();
     const accessToken = useOptionalAccessToken();
     const [pending, setPending] = useState<PendingAttachment[]>([]);
     const [isUploading, setIsUploading] = useState(false);
@@ -103,7 +105,9 @@ export function useAttachmentDraft(): UseAttachmentDraftResult {
             const next = prev.map((p) => {
                 const error =
                     p.file.size > limitBytes
-                        ? `File exceeds the ${formatLimitLabel(limitBytes)} limit for your plan.`
+                        ? fmt(t.chat.channel.attachments.sizeExceeded, {
+                              limit: formatLimitLabel(limitBytes),
+                          })
                         : null;
                 if (error === p.error) return p;
                 changed = true;
@@ -111,7 +115,7 @@ export function useAttachmentDraft(): UseAttachmentDraftResult {
             });
             return changed ? next : prev;
         });
-    }, [limitBytes]);
+    }, [limitBytes, t.chat.channel.attachments.sizeExceeded]);
 
     const addFiles = useCallback(
         (files: FileList | File[] | null | undefined) => {
@@ -126,12 +130,14 @@ export function useAttachmentDraft(): UseAttachmentDraftResult {
                 // verbatim in the composer's pending strip.
                 error:
                     file.size > limitBytes
-                        ? `File exceeds the ${formatLimitLabel(limitBytes)} limit for your plan.`
+                        ? fmt(t.chat.channel.attachments.sizeExceeded, {
+                              limit: formatLimitLabel(limitBytes),
+                          })
                         : null,
             }));
             setPending((prev) => [...prev, ...next]);
         },
-        [limitBytes]
+        [limitBytes, t.chat.channel.attachments.sizeExceeded]
     );
 
     const removeAt = useCallback((localId: string) => {

@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { fmt, getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 /**
@@ -14,10 +15,11 @@ export const leaveProject = async (
     attendeeId: string,
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (!api) {
-            setErrorMessage?.("Authorization token is missing.");
+            setErrorMessage?.(messages.admin.auth.errors.tokenMissing);
             return false;
         }
         await api.post("/project/leave/", {
@@ -29,9 +31,14 @@ export const leaveProject = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             const msg = (error.response?.data as { error?: string })?.error;
-            setErrorMessage?.(msg || `Failed to leave project (${error.response?.status}).`);
+            setErrorMessage?.(
+                msg ||
+                    fmt(messages.admin.serviceErrors.requestFailedStatus, {
+                        status: error.response?.status ?? "unknown",
+                    })
+            );
         } else {
-            setErrorMessage?.("Unexpected error while leaving the project.");
+            setErrorMessage?.(messages.admin.serviceErrors.unexpected);
         }
         return false;
     }

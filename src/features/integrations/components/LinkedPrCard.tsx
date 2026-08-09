@@ -75,28 +75,28 @@ const CiBadge = ({ state, size = 16 }: { state: CiState; size?: number }) => {
 const stateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string => {
     switch (state) {
         case "merged":
-            return t.tasks.linkedPr.stateMerged;
+            return t.integrations.pullRequest.linkedCard.state.merged;
         case "draft":
-            return t.tasks.linkedPr.stateDraft;
+            return t.integrations.pullRequest.linkedCard.state.draft;
         case "closed":
-            return t.tasks.linkedPr.stateClosed;
+            return t.integrations.pullRequest.linkedCard.state.closed;
         case "open":
         default:
-            return t.tasks.linkedPr.stateOpen;
+            return t.integrations.pullRequest.linkedCard.state.open;
     }
 };
 
 const ciTooltipLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"]): string => {
     switch (state) {
         case "passing":
-            return t.tasks.linkedPr.ciPassing;
+            return t.integrations.pullRequest.linkedCard.ci.passing;
         case "failing":
-            return t.tasks.linkedPr.ciFailing;
+            return t.integrations.pullRequest.linkedCard.ci.failing;
         case "pending":
-            return t.tasks.linkedPr.ciPending;
+            return t.integrations.pullRequest.linkedCard.ci.pending;
         case "none":
         default:
-            return t.tasks.linkedPr.ciNone;
+            return t.integrations.pullRequest.linkedCard.ci.none;
     }
 };
 
@@ -139,7 +139,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
             <Card sx={{ p: 1.5 }} variant="outlined">
                 <Stack spacing={1.25}>
                     <Alert color="primary" startDecorator={<GitHubIcon />}>
-                        {t.tasks.linkedPr.connectPrompt}
+                        {t.integrations.pullRequest.linkedCard.connectPrompt}
                     </Alert>
                     <Button
                         size="sm"
@@ -153,7 +153,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                             );
                         }}
                     >
-                        {t.tasks.linkedPr.connectButton}
+                        {t.integrations.pullRequest.linkedCard.connectButton}
                     </Button>
                 </Stack>
             </Card>
@@ -179,7 +179,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     <GitHubIcon sx={{ color: "neutral.500" }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                            {t.tasks.linkedPr.privateOrDeleted}
+                            {t.integrations.pullRequest.linkedCard.privateOrDeleted}
                         </Typography>
                         <Typography
                             level="body-xs"

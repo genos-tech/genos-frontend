@@ -6,6 +6,7 @@ import { Box, Button, IconButton, Input, Sheet, Stack, Typography } from "@mui/j
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTeamEmojiContext } from "../../context/TeamEmojiContext";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -35,6 +36,7 @@ const ALLOWED_EXT = /\.(png|jpe?g|gif|webp|svg)$/i;
 // back to the literal :name: text.
 export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
     const { mode } = useColorScheme();
+    const { t, locale } = useTranslation();
     const isDark = mode === "dark";
     const { teamEmoji, loading, create, remove } = useTeamEmojiContext();
     // The catalog includes the server-seeded global defaults; this
@@ -65,12 +67,12 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
             return;
         }
         if (!ALLOWED_EXT.test(picked.name)) {
-            setError("Use a .png, .jpg, .gif, .webp or .svg file.");
+            setError(t.settings.customEmoji.invalidFileType);
             setFile(null);
             return;
         }
         if (picked.size > MAX_BYTES) {
-            setError("Emoji images must be 512 KB or smaller.");
+            setError(t.settings.customEmoji.fileTooLarge);
             setFile(null);
             return;
         }
@@ -94,7 +96,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
         } else {
             // teamEmojiApi already logged the details; the common causes
             // are a duplicate name (409) or a rejected file (400/413).
-            setError("Upload failed — is the name already taken?");
+            setError(t.settings.customEmoji.uploadFailed);
         }
     };
 
@@ -102,12 +104,10 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
         <Sheet sx={{ borderRadius: "lg", p: 2 }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <EmojiEmotionsRoundedIcon />
-                <Typography level="title-md">Custom emoji</Typography>
+                <Typography level="title-md">{t.settings.customEmoji.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 2 }}>
-                Team-wide emoji, animated GIFs welcome. Type :name: in any editor, pick them from
-                the emoji picker, or use them as reactions. Anyone on the team can add one; only
-                the uploader can remove it.
+                {t.settings.customEmoji.description}
             </Typography>
 
             {/* Upload form */}
@@ -124,7 +124,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                         variant="outlined"
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        {file ? file.name : "Choose image"}
+                        {file ? file.name : t.settings.customEmoji.chooseImage}
                     </Button>
                     <input
                         ref={fileInputRef}
@@ -134,11 +134,11 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                         onChange={(e) => handlePickFile(e.target.files?.[0] ?? null)}
                     />
                     <Input
+                        endDecorator=":"
                         error={nameInvalid}
-                        placeholder="emoji-name (a-z, 0-9, _ + -)"
+                        placeholder={t.settings.customEmoji.namePlaceholder}
                         size="sm"
                         startDecorator=":"
-                        endDecorator=":"
                         sx={{ flex: 1 }}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -153,12 +153,12 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                         variant="solid"
                         onClick={() => void handleUpload()}
                     >
-                        Add emoji
+                        {t.settings.customEmoji.addEmoji}
                     </Button>
                 </Stack>
                 {(error || nameInvalid) && (
                     <Typography color="danger" level="body-xs" sx={{ mt: 0.75 }}>
-                        {error ?? "Names are 1-50 chars of a-z, 0-9, _, + or -."}
+                        {error ?? t.settings.customEmoji.invalidName}
                     </Typography>
                 )}
             </Sheet>
@@ -166,7 +166,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
             {/* Emoji grid */}
             {ownTeamEmoji.length === 0 ? (
                 <Typography level="body-sm" sx={{ opacity: 0.7, textAlign: "center", py: 2 }}>
-                    {loading ? "Loading…" : "No custom emoji yet. Add the first one!"}
+                    {loading ? t.common.actions.loading : t.settings.customEmoji.empty}
                 </Typography>
             ) : (
                 <Box
@@ -202,12 +202,17 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                                     <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
                                         {uploader?.userName ?? "—"}
                                         {e.tsCreatedAt
-                                            ? ` · ${new Date(e.tsCreatedAt).toLocaleDateString()}`
+                                            ? ` · ${new Date(e.tsCreatedAt).toLocaleDateString(
+                                                  locale
+                                              )}`
                                             : ""}
                                     </Typography>
                                 </Box>
                                 {isMine && (
-                                    <AppTooltip size="sm" title="Delete (old messages keep it)">
+                                    <AppTooltip
+                                        size="sm"
+                                        title={t.settings.customEmoji.deleteEmoji}
+                                    >
                                         <IconButton
                                             color="danger"
                                             data-testid={`delete-team-emoji-${e.name}`}

@@ -28,7 +28,7 @@
 import { useCallback } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
-import { useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 
 export interface MessageRowHoverToolbarProps {
     messageId: string;
@@ -193,16 +193,22 @@ export function useCopyMessageLink(
     onCopied?: () => void,
     onError?: (message: string) => void
 ): () => void {
+    const { t } = useTranslation();
     return useCallback(() => {
         const url = messageDeepLinkUrl(channelId, messageId);
         const clip = navigator?.clipboard;
         if (!clip || typeof clip.writeText !== "function") {
-            onError?.("Clipboard API unavailable.");
+            onError?.(t.chat.channel.messageActions.clipboardUnavailable);
             return;
         }
         clip.writeText(url).then(
             () => onCopied?.(),
-            (e) => onError?.(`Copy failed: ${e?.message ?? String(e)}`)
+            (e) =>
+                onError?.(
+                    fmt(t.chat.channel.messageActions.copyFailed, {
+                        error: e?.message ?? String(e),
+                    })
+                )
         );
-    }, [channelId, messageId, onCopied, onError]);
+    }, [channelId, messageId, onCopied, onError, t]);
 }

@@ -1,3 +1,4 @@
+import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind } from "../../../types/channel";
 
@@ -31,17 +32,18 @@ export const deleteMessage = async (
     messageUuid: string,
     setErrorMessage?: (value: string) => void
 ): Promise<void> => {
+    const messages = getMessages().chat.errors;
     if (!messageUuid) {
         // Defensive: a missing v3 UUID means the caller is still
         // sourcing legacy MessageProps without `messageIdWithChatId`.
         // Surface to the user rather than silently swallowing.
-        setErrorMessage?.("Could not delete: message id unavailable.");
+        setErrorMessage?.(messages.deleteMessageIdUnavailable);
         return;
     }
     try {
         await channelService.deleteMessage(messageUuid, channelId, chatType as ChannelKind);
     } catch (e) {
         console.error("[deleteMessage] channelService.deleteMessage failed:", e);
-        setErrorMessage?.("Failed to delete message.");
+        setErrorMessage?.(messages.deleteMessageFailed);
     }
 };

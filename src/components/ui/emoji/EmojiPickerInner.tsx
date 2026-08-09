@@ -2,6 +2,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 
+import { useTranslation } from "../../../i18n";
 import { getTeamEmojiSnapshot, subscribeTeamEmoji } from "../../../services/teamEmojiStore";
 
 // Thin wrapper that pairs the emoji-mart data set with the picker
@@ -25,6 +26,7 @@ type Props = {
 
 export const EmojiPickerInner = ({ theme, onEmojiSelect, includeCustom = true }: Props) => {
     const teamEmoji = useSyncExternalStore(subscribeTeamEmoji, getTeamEmojiSnapshot);
+    const { t } = useTranslation();
 
     // emoji-mart 5.x custom-category shape. The Picker re-runs its init
     // on every mount and re-merges this array, so a picker opened after
@@ -34,7 +36,7 @@ export const EmojiPickerInner = ({ theme, onEmojiSelect, includeCustom = true }:
         return [
             {
                 id: "team",
-                name: "Team Emoji",
+                name: t.common.editor.teamEmojiGroup,
                 emojis: teamEmoji.map((e) => ({
                     id: e.name,
                     name: e.name,
@@ -43,7 +45,7 @@ export const EmojiPickerInner = ({ theme, onEmojiSelect, includeCustom = true }:
                 })),
             },
         ];
-    }, [includeCustom, teamEmoji]);
+    }, [includeCustom, t.common.editor.teamEmojiGroup, teamEmoji]);
 
     return <Picker custom={custom} data={data} theme={theme} onEmojiSelect={onEmojiSelect} />;
 };

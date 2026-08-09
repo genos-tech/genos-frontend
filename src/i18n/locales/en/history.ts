@@ -1,10 +1,30 @@
 export const history = {
     title: "History",
+    close: "Close history",
     tabs: {
         chats: "Chats",
         tasks: "Tasks",
         notes: "Notes",
     },
+    types: {
+        thread: "Thread",
+        milestone: "Milestone",
+        myNote: "My note",
+        taskNote: "Task note",
+        chatNote: "Chat note",
+        sharedNote: "Shared note",
+        teamNote: "Team note",
+    },
+    relative: {
+        justNow: "just now",
+        minutes: "{count}m ago",
+        hours: "{count}h ago",
+        days: "{count}d ago",
+        weeks: "{count}w ago",
+        months: "{count}mo ago",
+        years: "{count}y ago",
+    },
+    messageNumber: "Message #{id}",
     empty: "Nothing here yet.",
     clear: "Clear history",
 } as const;

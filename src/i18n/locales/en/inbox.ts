@@ -91,7 +91,7 @@ export const inbox = {
         tagline: "Keep your inbox tidy",
     },
     notification: {
-        approvalBody: "Request has been approved to join the {target}: ",
+        approvalBody: "Your request to join the {target} was approved: ",
     },
     requestTargets: {
         team: "team",

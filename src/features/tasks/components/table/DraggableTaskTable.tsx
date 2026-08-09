@@ -1839,7 +1839,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${diagramTask.title || "Untitled"}`}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
+                            diagramTask.title || t.tasks.diagram.untitled
+                        }`}
                         rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}

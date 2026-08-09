@@ -47,7 +47,7 @@ describe("loadMyTeams", () => {
         const result = await loadMyTeams(null, "user1", setError);
 
         expect(result).toBeUndefined();
-        expect(setError).toHaveBeenCalledWith("Unauthorized. Auth toke is not found.");
+        expect(setError).toHaveBeenCalledWith("Unauthorized. Authentication token was not found.");
     });
 });
 
@@ -111,7 +111,7 @@ describe("createTeam", () => {
         const result = await createTeam(null, "Team", "user1", setError);
 
         expect(result).toBeUndefined();
-        expect(setError).toHaveBeenCalledWith("Unauthorized. Auth toke is not found.");
+        expect(setError).toHaveBeenCalledWith("Unauthorized. Authentication token was not found.");
     });
 
     it("should call setErrorMessage on 400 error", async () => {

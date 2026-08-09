@@ -6,6 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Alert, Box, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
 import {
     Connection,
     ConnectionsResponse,
@@ -30,6 +31,7 @@ interface ConnectionsSectionProps {
  * the other being mounted.
  */
 export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<ConnectionsResponse | null>(null);
     const [loading, setLoading] = useState(true);
     // Keyed by ACCOUNT id, not provider: a user can hold several
@@ -97,14 +99,15 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                             <Typography level="title-md">{label}</Typography>
                             {isPrimary && (
                                 <Chip color="primary" size="sm">
-                                    Primary login
+                                    {t.integrations.connections.primaryLogin}
                                 </Chip>
                             )}
                         </Stack>
                         <Typography level="body-sm" sx={{ color: "text.secondary" }} noWrap>
                             {connection
-                                ? connection.provider_email || "(no email shared)"
-                                : "Not connected"}
+                                ? connection.provider_email ||
+                                  t.integrations.connections.noEmailShared
+                                : t.integrations.connections.notConnected}
                         </Typography>
                     </Box>
                     {/* A Google account that came in via sign-in only
@@ -119,16 +122,14 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                             variant="solid"
                             onClick={() => startConnect(provider)}
                         >
-                            Grant Calendar access
+                            {t.integrations.connections.grantCalendarAccess}
                         </Button>
                     )}
                     {connection ? (
                         <AppTooltip
                             placement="left"
                             title={
-                                isPrimary
-                                    ? "You can't disconnect the account you signed up with."
-                                    : ""
+                                isPrimary ? t.integrations.connections.primaryDisconnectHint : ""
                             }
                         >
                             <span>
@@ -139,13 +140,15 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                     onClick={() => handleDisconnect(connection.id)}
                                 >
                                     {disconnecting === connection.id
-                                        ? "Disconnecting…"
-                                        : "Disconnect"}
+                                        ? t.integrations.connections.disconnecting
+                                        : t.integrations.connections.disconnect}
                                 </Button>
                             </span>
                         </AppTooltip>
                     ) : (
-                        <Button onClick={() => startConnect(provider)}>Connect</Button>
+                        <Button onClick={() => startConnect(provider)}>
+                            {t.integrations.connections.connect}
+                        </Button>
                     )}
                 </Stack>
             </Card>
@@ -178,18 +181,17 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
             >
                 <Box>
                     <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        First time connecting Google?
+                        {t.integrations.connections.verificationTitle}
                     </Typography>
                     <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.25 }}>
-                        Our Google integration is still going through Google&apos;s verification
-                        process. If you see{" "}
+                        {t.integrations.connections.verificationBeforeError}{" "}
                         <Typography
                             component="span"
                             sx={{ fontFamily: "monospace", fontWeight: 600 }}
                         >
-                            Error 403: access_denied
+                            {t.integrations.connections.verificationError}
                         </Typography>{" "}
-                        when granting access, please email{" "}
+                        {t.integrations.connections.verificationAfterError}{" "}
                         <Typography
                             component="a"
                             href="mailto:genos.support@genosai.dev?subject=Add%20me%20as%20Google%20test%20user"
@@ -197,19 +199,18 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         >
                             genos.support@genosai.dev
                         </Typography>{" "}
-                        with your Gmail address — we&apos;ll add you as a test user. Access works
-                        within a minute of confirmation.
+                        {t.integrations.connections.verificationEnding}
                     </Typography>
                 </Box>
             </Alert>
 
             {googleAccounts.length === 0 ? (
                 <AccountRow
+                    label={t.integrations.providers.google}
+                    provider="google"
                     icon={
                         <CalendarMonthRoundedIcon fontSize="inherit" sx={{ color: "#4285f4" }} />
                     }
-                    label="Google"
-                    provider="google"
                 />
             ) : (
                 <>
@@ -217,14 +218,14 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         <AccountRow
                             key={c.id}
                             connection={c}
+                            label={t.integrations.providers.google}
+                            provider="google"
                             icon={
                                 <CalendarMonthRoundedIcon
                                     fontSize="inherit"
                                     sx={{ color: "#4285f4" }}
                                 />
                             }
-                            label="Google"
-                            provider="google"
                         />
                     ))}
                     {/* Connecting a second Google account is the whole
@@ -239,14 +240,14 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         variant="outlined"
                         onClick={() => startConnect("google")}
                     >
-                        Add another Google account
+                        {t.integrations.connections.addGoogleAccount}
                     </Button>
                 </>
             )}
             <AccountRow
                 connection={githubAccount}
                 icon={<GitHubIcon fontSize="inherit" />}
-                label="GitHub"
+                label={t.integrations.providers.github}
                 provider="github"
             />
         </Stack>

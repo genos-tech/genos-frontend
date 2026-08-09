@@ -30,6 +30,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../notes/my-notes/components/MyNoteMain";
@@ -82,6 +83,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // Pane selection: URL-driven for project, flag-driven for the
@@ -164,7 +166,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     }}
                 >
                     <IconButton
-                        aria-label="Back"
+                        aria-label={t.tasks.mobile.back}
                         size="sm"
                         sx={{ flexShrink: 0 }}
                         variant="plain"
@@ -182,8 +184,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         noWrap
                     >
                         {showDashboard && !hasProject
-                            ? "Home"
-                            : (usePM.currentProject?.projectName ?? "Tasks")}
+                            ? t.tasks.mobile.home
+                            : (usePM.currentProject?.projectName ?? t.tasks.mobile.tasks)}
                     </Typography>
 
                     {/* View toggle + Create — only meaningful when a
@@ -192,7 +194,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     {hasProject && (
                         <>
                             <IconButton
-                                aria-label="List view"
+                                aria-label={t.tasks.mobile.listView}
                                 color={showList ? "primary" : "neutral"}
                                 size="sm"
                                 variant={showList ? "soft" : "plain"}
@@ -208,7 +210,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                                 <ListAltRoundedIcon sx={{ fontSize: 18 }} />
                             </IconButton>
                             <IconButton
-                                aria-label="Dashboard"
+                                aria-label={t.tasks.mobile.dashboard}
                                 color={showDashboard ? "primary" : "neutral"}
                                 size="sm"
                                 variant={showDashboard ? "soft" : "plain"}
@@ -225,7 +227,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             </IconButton>
 
                             <IconButton
-                                aria-label="Create task"
+                                aria-label={t.tasks.mobile.createTask}
                                 color="primary"
                                 size="sm"
                                 sx={{ flexShrink: 0 }}
@@ -254,13 +256,13 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                                     }
                                 }}
                             >
-                                Refresh tasks
+                                {t.tasks.mobile.refreshTasks}
                             </MenuItem>
                             <MenuItem onClick={() => usePM.setOpenCreateProject(true)}>
-                                New project
+                                {t.tasks.mobile.newProject}
                             </MenuItem>
                             <MenuItem onClick={() => useTM.setOpenCreateTag(true)}>
-                                New tag
+                                {t.tasks.mobile.newTag}
                             </MenuItem>
                         </Menu>
                     </Dropdown>

@@ -6,6 +6,7 @@ import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../i18n";
 import { TaskProps } from "../../../types/tasks";
 import { formatTaskDisplayId } from "../utils/taskDisplayId";
+import { taskMetaLabel } from "../utils/taskMeta";
 
 // The 6 style tokens the pill reads. Both `NoteHeaderActionsStyles` and
 // `ThreadChatPaneHeaderStyles` (commonStyle.ts) expose these, so the pill
@@ -178,7 +179,7 @@ export const TaskInfoPill = ({ task, onOpen, styles, isDark }: TaskInfoPillProps
                                     letterSpacing: "0.04em",
                                 }}
                             >
-                                {status?.status}
+                                {taskMetaLabel(status?.status, t.tasks.filters)}
                             </Typography>
                         </Box>
                     </>

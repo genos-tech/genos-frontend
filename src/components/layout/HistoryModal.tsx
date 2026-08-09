@@ -44,7 +44,7 @@ import {
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation, type Messages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 import { useAvatarContext } from "../ui/avatars/AvatarContext";
@@ -73,23 +73,23 @@ type Props = {
 // Small relative-time formatter. Avoids pulling in dayjs's relativeTime
 // plugin just for this surface; values render once per modal open so a
 // passive helper is fine.
-const formatRelative = (ts: number): string => {
+const formatRelative = (ts: number, messages: Messages["history"]["relative"]): string => {
     const diffMs = Date.now() - ts;
-    if (diffMs < 0) return "just now";
+    if (diffMs < 0) return messages.justNow;
     const sec = Math.floor(diffMs / 1000);
-    if (sec < 60) return "just now";
+    if (sec < 60) return messages.justNow;
     const min = Math.floor(sec / 60);
-    if (min < 60) return `${min}m ago`;
+    if (min < 60) return fmt(messages.minutes, { count: min });
     const hr = Math.floor(min / 60);
-    if (hr < 24) return `${hr}h ago`;
+    if (hr < 24) return fmt(messages.hours, { count: hr });
     const days = Math.floor(hr / 24);
-    if (days < 7) return `${days}d ago`;
+    if (days < 7) return fmt(messages.days, { count: days });
     const weeks = Math.floor(days / 7);
-    if (weeks < 5) return `${weeks}w ago`;
+    if (weeks < 5) return fmt(messages.weeks, { count: weeks });
     const months = Math.floor(days / 30);
-    if (months < 12) return `${months}mo ago`;
+    if (months < 12) return fmt(messages.months, { count: months });
     const years = Math.floor(days / 365);
-    return `${years}y ago`;
+    return fmt(messages.years, { count: years });
 };
 
 // Pill-style active state replacing Joy's default left-bar indicator
@@ -237,22 +237,27 @@ const renderProjectAvatar = (
 // Per-note-type icon + color, matching RecentNoteItem.
 const NOTE_TYPE_VISUAL: Record<
     number,
-    { label: string; icon: React.ReactNode; light: string; dark: string }
+    {
+        labelKey: keyof Messages["history"]["types"];
+        icon: React.ReactNode;
+        light: string;
+        dark: string;
+    }
 > = {
     1: {
-        label: "My note",
+        labelKey: "myNote",
         icon: <WindowRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#6366f1",
         dark: "#818cf8",
     },
     2: {
-        label: "Task note",
+        labelKey: "taskNote",
         icon: <AssignmentRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#22c55e",
         dark: "#4ade80",
     },
     3: {
-        label: "Chat note",
+        labelKey: "chatNote",
         icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#f97316",
         dark: "#fb923c",
@@ -260,13 +265,13 @@ const NOTE_TYPE_VISUAL: Record<
     // 4 and 8 are sidebar buckets over note_type 1. They need their own
     // entries or every shared / team note reads as "My note".
     4: {
-        label: "Shared note",
+        labelKey: "sharedNote",
         icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#0ea5e9",
         dark: "#38bdf8",
     },
     8: {
-        label: "Team note",
+        labelKey: "teamNote",
         icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
         light: "#a855f7",
         dark: "#c084fc",
@@ -286,6 +291,7 @@ type RowProps = {
     timestamp: number;
     onClick: () => void;
     isDark: boolean;
+    relativeMessages: Messages["history"]["relative"];
 };
 
 const HistoryRow = ({
@@ -297,6 +303,7 @@ const HistoryRow = ({
     timestamp,
     onClick,
     isDark,
+    relativeMessages,
 }: RowProps) => (
     <Box
         sx={{
@@ -376,7 +383,7 @@ const HistoryRow = ({
                 color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
             }}
         >
-            {formatRelative(timestamp)}
+            {formatRelative(timestamp, relativeMessages)}
         </Typography>
     </Box>
 );
@@ -531,13 +538,15 @@ export const HistoryModal = ({
                 // blocks — they fall back to the "Message #id" stub.)
                 const subtitle =
                     entry.messageId != null
-                        ? entry.messageText || `Message #${entry.messageId}`
+                        ? entry.messageText ||
+                          fmt(t.history.messageNumber, { id: entry.messageId })
                         : chat?.latestMessageText || chatMediaLabel(chat);
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
+                        relativeMessages={t.history.relative}
                         label={entry.label}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
@@ -553,13 +562,15 @@ export const HistoryModal = ({
                 // specific message focus.
                 const subtitle =
                     entry.messageId != null
-                        ? entry.messageText || `Message #${entry.messageId}`
+                        ? entry.messageText ||
+                          fmt(t.history.messageNumber, { id: entry.messageId })
                         : entry.parentMessageText || undefined;
                 return (
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
+                        relativeMessages={t.history.relative}
                         label={entry.label}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
@@ -568,7 +579,7 @@ export const HistoryModal = ({
                                 color={CHIP_COLORS.thread}
                                 icon={<ForumRoundedIcon sx={{ fontSize: 12 }} />}
                                 isDark={isDark}
-                                label="Thread"
+                                label={t.history.types.thread}
                             />
                         }
                         chipsBeforeLabel
@@ -585,6 +596,7 @@ export const HistoryModal = ({
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
                         chips={status ? <TaskStatusChip isDark={isDark} status={status} /> : null}
                         isDark={isDark}
+                        relativeMessages={t.history.relative}
                         label={entry.label}
                         subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
@@ -599,6 +611,7 @@ export const HistoryModal = ({
                         key={`milestone-${entry.milestoneId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
                         isDark={isDark}
+                        relativeMessages={t.history.relative}
                         label={entry.label}
                         subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
@@ -607,7 +620,7 @@ export const HistoryModal = ({
                                 color={CHIP_COLORS.milestone}
                                 icon={<FlagRoundedIcon sx={{ fontSize: 12 }} />}
                                 isDark={isDark}
-                                label="Milestone"
+                                label={t.history.types.milestone}
                             />
                         }
                         chipsBeforeLabel
@@ -678,6 +691,7 @@ export const HistoryModal = ({
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
                         avatar={noteAvatar}
                         isDark={isDark}
+                        relativeMessages={t.history.relative}
                         label={entry.label}
                         subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
@@ -687,7 +701,7 @@ export const HistoryModal = ({
                                     color={{ light: visual.light, dark: visual.dark }}
                                     icon={visual.icon}
                                     isDark={isDark}
-                                    label={visual.label}
+                                    label={t.history.types[visual.labelKey]}
                                 />
                             ) : null
                         }
@@ -717,7 +731,7 @@ export const HistoryModal = ({
                     <HistoryRoundedIcon />
                     <Typography level="title-lg">{t.history.title}</Typography>
                     <Box sx={{ flex: 1 }} />
-                    <IconButton variant="plain" onClick={onClose}>
+                    <IconButton aria-label={t.history.close} variant="plain" onClick={onClose}>
                         <CloseRoundedIcon />
                     </IconButton>
                 </Stack>

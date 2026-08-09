@@ -15,6 +15,7 @@ import {
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { Milestone, Sprint } from "../types";
 import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
 
@@ -234,7 +235,12 @@ export const SprintMilestonePicker = ({
                                                 "neutral"
                                             }
                                         >
-                                            {option.sprint.status}
+                                            {
+                                                t.tasks.sprint.status[
+                                                    option.sprint
+                                                        .status as keyof typeof t.tasks.sprint.status
+                                                ]
+                                            }
                                         </Chip>
                                     )}
                                 </Stack>
@@ -301,7 +307,7 @@ export const SprintMilestonePicker = ({
                                                     "neutral"
                                                 }
                                             >
-                                                {m.status}
+                                                {taskMetaLabel(m.status, t.tasks.filters)}
                                             </Chip>
                                         )}
                                     </Stack>

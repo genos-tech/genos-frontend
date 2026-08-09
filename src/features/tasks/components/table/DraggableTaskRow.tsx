@@ -49,7 +49,7 @@ import {
 } from "../../utils/customFields";
 import { deriveDaysLeft } from "../../utils/daysLeft";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
-import { effortLevels, priorities } from "../../utils/taskMeta";
+import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { ProjectTagChip } from "../ProjectTagChip";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
@@ -1120,7 +1120,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 return opt ? (
                                     <Chip
                                         icon={opt.icon}
-                                        label={opt.label}
+                                        label={taskMetaLabel(opt.value, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color, 0.75),
@@ -1180,7 +1180,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 >
                                     <Chip
                                         icon={opt.icon}
-                                        label={opt.label}
+                                        label={taskMetaLabel(opt.value, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color, 0.75),
@@ -1198,7 +1198,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 return statusOption ? (
                     <Chip
                         icon={statusOption.icon}
-                        label={statusOption.label}
+                        label={taskMetaLabel(statusOption.value, t.tasks.filters)}
                         size="small"
                         sx={{
                             cursor: "pointer",
@@ -1335,7 +1335,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     <TextField
                                         {...params}
                                         autoFocus
-                                        placeholder={tags.length === 0 ? "Add tags…" : ""}
+                                        placeholder={
+                                            tags.length === 0 ? t.tasks.table.addTagsPlaceholder : ""
+                                        }
                                         sx={{
                                             "& .MuiOutlinedInput-root": {
                                                 borderRadius: "6px",
@@ -1387,7 +1389,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     color: mode === "dark" ? "#6b7280" : "#9ca3af",
                                 }}
                             >
-                                + Add tags
+                                {t.tasks.table.addTagsMenuItem}
                             </Typography>
                         ) : (
                             [...tags]
@@ -1808,7 +1810,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 const opt = priorities.find((p) => p.priority === selected);
                                 return opt ? (
                                     <Chip
-                                        label={opt.priority}
+                                        label={taskMetaLabel(opt.priority, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -1867,7 +1869,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     }}
                                 >
                                     <Chip
-                                        label={opt.priority}
+                                        label={taskMetaLabel(opt.priority, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -1884,7 +1886,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 }
                 return priorityOption ? (
                     <Chip
-                        label={priorityOption.priority}
+                        label={taskMetaLabel(priorityOption.priority, t.tasks.filters)}
                         size="small"
                         sx={{
                             cursor: "pointer",
@@ -1937,7 +1939,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 const opt = effortLevels.find((e) => e.level === selected);
                                 return opt ? (
                                     <Chip
-                                        label={opt.level}
+                                        label={taskMetaLabel(opt.level, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -1996,7 +1998,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     }}
                                 >
                                     <Chip
-                                        label={opt.level}
+                                        label={taskMetaLabel(opt.level, t.tasks.filters)}
                                         size="small"
                                         sx={{
                                             backgroundColor: alpha(opt.color || "#888", 0.75),
@@ -2013,7 +2015,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 }
                 return effortOption ? (
                     <Chip
-                        label={effortOption.level}
+                        label={taskMetaLabel(effortOption.level, t.tasks.filters)}
                         size="small"
                         sx={{
                             cursor: "pointer",
@@ -2102,7 +2104,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 }
                 return dl === -1 ? (
                     <Chip
-                        label="Expired"
+                        label={t.tasks.filters.expired}
                         size="small"
                         sx={{
                             backgroundColor: alpha("#ff2323", mode === "dark" ? 0.5 : 0.75),

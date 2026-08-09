@@ -24,7 +24,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
@@ -61,6 +61,7 @@ import {
     StoredTaskFilters,
     writeStoredFilters,
 } from "../../utils/taskFilterStorage";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { SavedFiltersMenu } from "./SavedFiltersMenu";
 
 // Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
@@ -809,8 +810,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                       const tone = getMilestoneStatusChipColor(m.status as string);
                                       return (
                                           <Chip
-                                              label={m.status}
                                               size="small"
+                                              label={taskMetaLabel(
+                                                  m.status as string,
+                                                  t.tasks.filters
+                                              )}
                                               sx={{
                                                   height: 16,
                                                   fontSize: "9px",
@@ -2087,7 +2091,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 )}
                                 onClick={handleClickStatusFilter}
                             >
-                                Status: {selectedStatus[0].label}
+                                {fmt(t.tasks.filterButtons.status, {
+                                    value: filterLabel(selectedStatus[0]),
+                                })}
                                 {selectedStatus.length > 1 && (
                                     <Chip
                                         label={`+${selectedStatus.length - 1}`}
@@ -2222,7 +2228,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 )}
                                 onClick={handleClickTagsFilter}
                             >
-                                Tags: {selectedTags[0].label}
+                                {fmt(t.tasks.filterButtons.tags, {
+                                    value: filterLabel(selectedTags[0]),
+                                })}
                                 {selectedTags.length > 1 && (
                                     <Chip
                                         label={`+${selectedTags.length - 1}`}
@@ -2355,7 +2363,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         )}
                         onClick={handleClickPriorityFilter}
                     >
-                        Priority: {selectedPriorities[0].label}
+                        {fmt(t.tasks.filterButtons.priority, {
+                            value: filterLabel(selectedPriorities[0]),
+                        })}
                         {selectedPriorities.length > 1 && (
                             <Chip
                                 label={`+${selectedPriorities.length - 1}`}
@@ -2486,7 +2496,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         )}
                         onClick={handleClickEffortLevelFilter}
                     >
-                        Effort: {selectedEffortLevels[0].label}
+                        {fmt(t.tasks.filterButtons.effort, {
+                            value: filterLabel(selectedEffortLevels[0]),
+                        })}
                         {selectedEffortLevels.length > 1 && (
                             <Chip
                                 label={`+${selectedEffortLevels.length - 1}`}

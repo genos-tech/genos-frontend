@@ -30,6 +30,7 @@ import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { AppTooltip } from "../ui/AppTooltip";
+import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import {
     CreateHashChatSpec,
@@ -59,6 +60,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    const dictionary = useBlockNoteDictionary();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
         : `bn-message-bubble-box-${mode}`;
@@ -116,6 +118,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const editor = useCreateBlockNote({
         schema,
+        dictionary,
         // Upgrade http:// media URLs baked into saved image/file blocks to
         // https:// so the HTTPS SPA renders them without a Mixed-Content
         // warning (older bodies carry an http scheme; see the helper).

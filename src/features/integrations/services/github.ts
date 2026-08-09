@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { createRequestCache } from "../../../services/requestCache";
 
@@ -39,15 +40,16 @@ const surfaceError = (
     error: unknown,
     setErrorMessage?: (value: string) => void
 ): "github_not_connected" | "other" => {
+    const messages = getMessages().integrations.errors;
     if (axios.isAxiosError(error)) {
         const detail = (error.response?.data as { detail?: string } | undefined)?.detail;
         if (detail === "github_not_connected") {
-            setErrorMessage?.("GitHub account is not connected.");
+            setErrorMessage?.(messages.githubNotConnected);
             return "github_not_connected";
         }
-        setErrorMessage?.(detail || "GitHub request failed.");
+        setErrorMessage?.(detail || messages.githubRequestFailed);
     } else {
-        setErrorMessage?.("GitHub request failed.");
+        setErrorMessage?.(messages.githubRequestFailed);
     }
     return "other";
 };

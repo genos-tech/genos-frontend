@@ -19,6 +19,7 @@
  */
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { Channel, ChannelKind, ChannelMember } from "../../../types/channel";
@@ -98,13 +99,14 @@ export const convertDMToMDM = async (
     setErrorMessage: (msg: string) => void,
     setOpen: (open: boolean) => void
 ): Promise<Channel | null> => {
+    const messages = getMessages().chat.errors;
     const targetMemberIds = new Set<string>([
         myself.userId,
         dmPartnerId,
         ...newMemberIds.filter(Boolean),
     ]);
     if (targetMemberIds.size < 3) {
-        setErrorMessage("MDM requires at least 3 distinct members.");
+        setErrorMessage(messages.mdmMinimumMembers);
         return null;
     }
 
@@ -128,7 +130,7 @@ export const convertDMToMDM = async (
             teamId: myself.teamId,
         });
         if (!channel) {
-            setErrorMessage("Failed to create multi-user DM. Please try again.");
+            setErrorMessage(messages.createMdmFailed);
             return null;
         }
 
@@ -139,7 +141,7 @@ export const convertDMToMDM = async (
         return channel;
     } catch (error) {
         console.error("Failed to convert DM to MDM:", error);
-        setErrorMessage("Failed to add members. Please try again.");
+        setErrorMessage(messages.addMembersFailed);
         return null;
     }
 };
@@ -157,6 +159,7 @@ export const addMembersToChat = async (
     setErrorMessage: (msg: string) => void,
     setOpen: (open: boolean) => void
 ): Promise<boolean> => {
+    const messages = getMessages().chat.errors;
     if (chat.chatType === 1) {
         const dmPartner = chat.dmPartnerUser;
         const result = await convertDMToMDM(
@@ -175,7 +178,7 @@ export const addMembersToChat = async (
             setOpen(false);
             return true;
         }
-        setErrorMessage("Failed to add members. Please try again.");
+        setErrorMessage(messages.addMembersFailed);
         return false;
     }
     return false;

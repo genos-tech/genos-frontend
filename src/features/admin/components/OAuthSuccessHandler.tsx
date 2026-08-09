@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
-import { useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { purplePalette } from "../../../theme/purplePalette";
 
@@ -26,46 +26,10 @@ interface MeResponse {
     ts_created_at: string;
 }
 
-const FAILURE_REASON_MESSAGES: Record<string, string> = {
-    email_in_use: "An account already exists for this email address.",
-    consent_denied: "OAuth consent was denied. You can try again any time.",
-    bad_callback: "OAuth callback was malformed. Please try again.",
-    invalid_state:
-        "OAuth state token was invalid or expired. Please start the sign-in flow again.",
-    provider_error: "The OAuth provider returned an error. Please try again.",
-    not_authenticated: "You need to be signed in to connect a third-party account.",
-    already_connected_to_other_user: "This account is already connected to a different user.",
-    // Returned when someone tries to sign in with a provider account
-    // that belongs to somebody else's Genos account and was attached
-    // there only for API access — a colleague's Google added to see one
-    // more calendar. Signing in with your OWN address is allowed, so
-    // whoever lands here picked the wrong account at the provider's
-    // chooser.
-    not_a_login_account:
-        "That account was only connected for calendar access, so it can't sign you in.",
-    provider_already_connected:
-        "You already have an account connected for this provider. Disconnect it first.",
-    unknown_provider: "Unknown OAuth provider.",
-};
-
 // Reasons whose remedy is "use the method this account actually signs in
 // with". The backend sends `primary` alongside them so we can name it
 // instead of leaving the user to guess.
 const REMEDY_IS_ANOTHER_METHOD = new Set(["email_in_use", "not_a_login_account"]);
-
-const SIGN_IN_METHOD_LABELS: Record<string, string> = {
-    email: "your email and password",
-    google: "Google",
-    github: "GitHub",
-};
-
-const failureMessage = (reason: string, primary: string | null): string => {
-    const base = FAILURE_REASON_MESSAGES[reason] || "OAuth flow failed.";
-    if (!REMEDY_IS_ANOTHER_METHOD.has(reason)) return base;
-    const method =
-        (primary && SIGN_IN_METHOD_LABELS[primary]) || "the method you originally signed up with";
-    return `${base} Sign in with ${method} instead, or pick a different account on the provider's screen.`;
-};
 
 export const OAuthSuccessHandler = () => {
     const navigate = useNavigate();
@@ -76,6 +40,22 @@ export const OAuthSuccessHandler = () => {
     const styles = isDark ? SignInFormStyles.dark : SignInFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [error, setError] = useState<string | null>(null);
+    const oauth = t.admin.auth.oauth;
+
+    const failureMessage = (reason: string, primary: string | null): string => {
+        const reasonKey = reason as keyof typeof oauth.failureReasons;
+        const base = Object.prototype.hasOwnProperty.call(oauth.failureReasons, reasonKey)
+            ? oauth.failureReasons[reasonKey]
+            : oauth.failureReasons.fallback;
+        if (!REMEDY_IS_ANOTHER_METHOD.has(reason)) return base;
+
+        const methodKey = primary as keyof typeof oauth.methods;
+        const method =
+            primary && Object.prototype.hasOwnProperty.call(oauth.methods, methodKey)
+                ? oauth.methods[methodKey]
+                : oauth.methods.fallback;
+        return `${base} ${fmt(oauth.useAnotherMethod, { method })}`;
+    };
 
     useEffect(() => {
         let cancelled = false;
@@ -110,7 +90,7 @@ export const OAuthSuccessHandler = () => {
         const completeSession = async () => {
             const api = authApi(access);
             if (!api) {
-                if (!cancelled) setError("Could not initialise the API client.");
+                if (!cancelled) setError(oauth.apiClientFailed);
                 return;
             }
             try {
@@ -149,7 +129,7 @@ export const OAuthSuccessHandler = () => {
                 navigate(next, { replace: true });
             } catch (err) {
                 console.error("OAuth post-login user fetch failed:", err);
-                if (!cancelled) setError("Could not load your user profile.");
+                if (!cancelled) setError(oauth.profileFailed);
             }
         };
 
@@ -187,7 +167,7 @@ export const OAuthSuccessHandler = () => {
                                 sx={{ color: palette.dangerTintBorder, fontSize: 28 }}
                             />
                             <Typography level="h4" sx={{ fontWeight: 700 }}>
-                                Sign-in failed
+                                {oauth.title}
                             </Typography>
                         </Stack>
                         <Alert
@@ -209,14 +189,14 @@ export const OAuthSuccessHandler = () => {
                             }}
                             onClick={() => navigate("/signin", { replace: true })}
                         >
-                            Back to sign in
+                            {oauth.backToSignIn}
                         </Button>
                     </Stack>
                 ) : (
                     <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
                         <CircularProgress size="lg" />
                         <Typography level="body-md" sx={{ color: styles.subtitleColor }}>
-                            Finishing sign-in…
+                            {oauth.finishing}
                         </Typography>
                     </Stack>
                 )}

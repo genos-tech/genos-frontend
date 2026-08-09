@@ -100,7 +100,11 @@ export const spotlight = {
         pm: "Project chat",
         chatFallback: "Chat",
         task: "Task",
+        milestone: "Milestone",
         project: "Project",
+        previousAnswer: "Previous answer",
+        todo: "Todo",
+        todoWithDate: "Todo · {date}",
         notePersonal: "My note",
         // Same backend type as notePersonal — the space comes from the
         // sidebar, not the note. See `personalNoteScopes`.
@@ -117,10 +121,12 @@ export const spotlight = {
     chip: {
         taskComment: "{subtitle} {id} comment{sep}",
         taskPlain: "{subtitle} {id}{sep}",
+        milestone: "{subtitle}{sep}",
         chatThread: "{subtitle} thread{sep}",
         chatPlain: "{subtitle}{sep}",
         noteThread: "{subtitle} (thread){sep}",
         notePlain: "{subtitle}{sep}",
         projectPlain: "{subtitle}{sep}",
+        todo: "{subtitle}{sep}",
     },
 } as const;

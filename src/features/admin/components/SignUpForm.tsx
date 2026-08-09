@@ -36,6 +36,7 @@ import { resendVerificationEmail } from "../services/emailVerification";
 import { signUp } from "../services/signup";
 import { validatePassword } from "../utils/passwordValidation";
 import { GoogleIcon } from "./icons/GoogleIcon";
+import { LanguageSwitchButton } from "./LanguageSwitchButton";
 
 const maskEmail = (email: string): string => {
     const [local, domain] = email.split("@");
@@ -197,8 +198,12 @@ export const SignUpForm = () => {
                     boxShadow: styles.cardShadow,
                     p: 4,
                     backdropFilter: "blur(12px)",
+                    position: "relative",
                 }}
             >
+                <Box sx={{ position: "absolute", top: 14, right: 14 }}>
+                    <LanguageSwitchButton color={styles.subtitleColor} />
+                </Box>
                 <Stack sx={{ gap: 3, mb: 3 }}>
                     <Stack sx={{ gap: 1 }}>
                         <Typography
