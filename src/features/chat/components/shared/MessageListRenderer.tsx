@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -56,7 +56,57 @@ interface MessageListRendererProps {
     ) => void;
 }
 
-type ListContext = { isScrolling: boolean };
+// Velocity thresholds (px per ~100ms sample — Virtuoso measures scroll
+// speed as delta-scrollTop over a throttled 100ms window) that gate
+// "scroll seek" mode: above `ENTER`, rows render as cheap fixed-height
+// placeholders instead of full bubbles, so each catch-up render finishes
+// inside the frame and Virtuoso's main-thread paddingTop reposition stays
+// in sync with the compositor-driven momentum scroll — this is what stops
+// the transient duplicate/ghost rows on a low-CPU phone. Below `EXIT` the
+// real bubbles paint again. `ENTER` is deliberately high so only genuine
+// fast flings (where the user can't read mid-scroll anyway) swap to
+// placeholders; a gentle reading-scroll keeps rendering real content.
+// TUNE ON A REAL PHONE: iOS/Android flings differ, and this can only be
+// validated on hardware (a resized desktop can't reproduce the jank).
+const SEEK_ENTER_VELOCITY = 700;
+const SEEK_EXIT_VELOCITY = 30;
+
+// Delay after a chat switch before scroll-seek may engage. The initial
+// "land on the newest message" (initialTopMostItemIndex + the 300ms
+// auto-follow / jump timers) writes scrollTop with correction passes that
+// can momentarily spike velocity past `SEEK_ENTER_VELOCITY`. If seek
+// engaged mid-landing, rows would render as unmeasured fixed-size
+// placeholders and suspend the overscan-based height correction the
+// landing depends on (see the OVERSCAN_PX note). Arming seek only after
+// the landing has settled keeps invariant A intact: programmatic landing
+// scrolls never trigger seek, only genuine user flings afterwards.
+const SEEK_ARM_DELAY_MS = 600;
+
+// Cheap stand-in painted for each row while the list is being flung fast
+// (see the velocity thresholds above). It reserves the row's known/
+// estimated height verbatim — matching the height is load-bearing: a
+// mismatch would make Virtuoso re-measure on seek-exit and reintroduce
+// the very offset churn this is meant to remove. No bubble, no editor,
+// no MUI — just a sized block with a barely-there tint so a fast fling
+// reads as motion rather than a jarring blank.
+const ScrollSeekPlaceholder = ({ height }: ScrollSeekPlaceholderProps) => (
+    <div
+        style={{
+            height,
+            boxSizing: "border-box",
+            padding: "0.3rem 0",
+        }}
+    >
+        <div
+            style={{
+                height: "100%",
+                borderRadius: "12px",
+                background: "var(--alt-background)",
+                opacity: 0.5,
+            }}
+        />
+    </div>
+);
 
 // Render this many extra pixels of rows above/below the viewport. Each
 // row mounts a full read-only BlockNote view (see `BnChatPreview`), so
@@ -125,12 +175,33 @@ export const MessageListRenderer = ({
     const { style: bubbleStyle } = useBubbleStylePreference();
     const isCompact = bubbleStyle === "compact";
 
-    // Scroll-activity flag is LOCAL to this component. It used to live in
-    // the pane (`useScrollManagement`), so every scroll start/stop
-    // re-rendered the pane's whole tree — header, input editor, list.
-    // Nothing outside this list ever read it.
-    const [isScrolling, setIsScrolling] = useState(false);
-    const listContext = useMemo<ListContext>(() => ({ isScrolling }), [isScrolling]);
+    // Scroll-time hover suppression (bubbles sliding under a stationary
+    // cursor must not fire hover handlers — toolbar mounts, emotion style
+    // recomputes). This used to thread an `isScrolling` boolean through
+    // Virtuoso's `context` into `itemContent`, which re-rendered the ENTIRE
+    // visible window twice per gesture (on scroll start AND stop) — exactly
+    // at momentum onset, competing with Virtuoso's own repositioning on a
+    // weak phone. Now it's a class toggled IMPERATIVELY on the scroller (no
+    // React state, no re-render); a CSS rule (`.chat-msg-scrolling
+    // .chat-msg-row`) does the suppression. Touch/wheel still reach the
+    // scroller itself, so scrolling is unaffected.
+    const scrollerElRef = useRef<HTMLElement | null>(null);
+    const handleIsScrolling = useCallback((scrolling: boolean) => {
+        scrollerElRef.current?.classList.toggle("chat-msg-scrolling", scrolling);
+    }, []);
+
+    // Scroll-seek is armed only after the initial landing settles — see
+    // `SEEK_ARM_DELAY_MS`. Reset + re-arm on every chat/thread switch (the
+    // effect below keys on `chatIdentityKey`).
+    const seekArmedRef = useRef(false);
+    const scrollSeekConfiguration = useMemo(
+        () => ({
+            enter: (velocity: number) =>
+                seekArmedRef.current && Math.abs(velocity) > SEEK_ENTER_VELOCITY,
+            exit: (velocity: number) => Math.abs(velocity) < SEEK_EXIT_VELOCITY,
+        }),
+        []
+    );
 
     // Identity of the chat (or thread) currently rendered. Drives the
     // Virtuoso remount key below.
@@ -182,6 +253,17 @@ export const MessageListRenderer = ({
     useEffect(() => {
         setSkeletonExpired(false);
         const t = setTimeout(() => setSkeletonExpired(true), SKELETON_MAX_MS);
+        return () => clearTimeout(t);
+    }, [chatIdentityKey]);
+
+    // Disarm scroll-seek across a chat/thread switch and re-arm once the
+    // initial landing has settled, so a landing scrollTop correction can't
+    // trip seek mode mid-landing (invariant A — see `SEEK_ARM_DELAY_MS`).
+    useEffect(() => {
+        seekArmedRef.current = false;
+        const t = setTimeout(() => {
+            seekArmedRef.current = true;
+        }, SEEK_ARM_DELAY_MS);
         return () => clearTimeout(t);
     }, [chatIdentityKey]);
     const showSkeleton =
@@ -256,7 +338,7 @@ export const MessageListRenderer = ({
     // identity, so an inline closure here re-rendered the whole window
     // on every list render.
     const itemContent = useCallback(
-        (index: number, _data: unknown, { isScrolling }: ListContext) => {
+        (index: number) => {
             const message = messages[index];
             // PM bubbles are task cards — always render received-
             // aligned (left), even when `message.sender.userId`
@@ -290,12 +372,15 @@ export const MessageListRenderer = ({
             ) : null;
 
             return (
-                // While the list is actively scrolling, rows opt out of
-                // hit-testing: bubbles sliding under a stationary cursor
-                // would otherwise fire hover handlers (toolbar mounts,
-                // emotion style recomputes) mid-scroll. Wheel events still
-                // reach the scroller — it's the rows' ancestor.
-                <div style={{ pointerEvents: isScrolling ? "none" : undefined }}>
+                // `chat-msg-row` carries two things (see App.css):
+                //  - `contain: layout` bounds each row's reflow so Virtuoso's
+                //    per-frame paddingTop rewrite during momentum scroll
+                //    doesn't reflow every row's internals.
+                //  - under `.chat-msg-scrolling` (toggled imperatively on the
+                //    scroller while scrolling) it gets `pointer-events: none`,
+                //    so bubbles sliding under a stationary cursor can't fire
+                //    hover handlers. Wheel/touch still reach the scroller.
+                <div className="chat-msg-row">
                     {dateSeparator}
                     <Stack
                         direction="row"
@@ -420,13 +505,19 @@ export const MessageListRenderer = ({
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                context={listContext}
+                components={{ ScrollSeekPlaceholder }}
                 followOutput={followOutput}
                 increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
-                isScrolling={setIsScrolling}
+                isScrolling={handleIsScrolling}
                 itemContent={itemContent}
                 rangeChanged={onRangeChanged}
+                scrollerRef={(el) => {
+                    // `el` is the scroll container (HTMLElement); it's only
+                    // `Window` when `useWindowScroll` is set, which we don't.
+                    scrollerElRef.current = el as HTMLElement | null;
+                }}
+                scrollSeekConfiguration={scrollSeekConfiguration}
                 style={virtuosoStyle}
                 totalCount={messages.length}
             />

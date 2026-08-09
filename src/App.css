@@ -557,6 +557,37 @@ input[type="checkbox"] {
     min-height: 0;
 }
 
+/* Chat message-list row wrapper (react-virtuoso `itemContent` child in
+   MessageListRenderer). Two device-agnostic scroll-smoothness aids for the
+   phone-only momentum-scroll jank (transient duplicate/ghost rows on a
+   low-CPU device):
+
+   1. `contain: layout` bounds each row's layout scope, so Virtuoso's
+      per-frame paddingTop/marginTop rewrite on the item-list (how it
+      repositions its window on the main thread) doesn't force a
+      full-subtree reflow of every visible row's bubble internals each
+      momentum frame. `layout` ONLY — NOT `paint`/`content` (those clip
+      the bubble's outset box-shadow) and NOT `content-visibility` (it
+      adds a second virtualization layer that fights Virtuoso's own
+      ResizeObserver re-measure, skewing the land-at-newest estimate).
+      Layout containment adds no size containment, so the measured row
+      height Virtuoso reads is unchanged.
+
+   2. `.chat-msg-scrolling` is toggled imperatively on the SCROLLER while
+      the list is actively scrolling (no React re-render — see
+      MessageListRenderer's `handleIsScrolling`). While set, rows opt out
+      of hit-testing so bubbles sliding under a stationary cursor can't
+      fire hover handlers (toolbar mounts, emotion style recomputes)
+      mid-scroll. Touch/wheel still reach the scroller itself (the rows'
+      ancestor), so scrolling is unaffected. */
+.chat-msg-row {
+    contain: layout;
+}
+
+.chat-msg-scrolling .chat-msg-row {
+    pointer-events: none;
+}
+
 .bn-editor code {
     padding: 1px 4px;
     border-radius: 4px;
