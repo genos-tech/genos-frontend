@@ -508,7 +508,17 @@ const LightImageBlock = ({
                         alt={props.name || props.caption || t.common.editor.blockNoteImage}
                         className="bn-visual-media"
                         contentEditable={false}
+                        // Decode off the main thread and only fetch as the row
+                        // nears the viewport, so flinging past images never
+                        // blocks a scroll frame on decode. The space is already
+                        // reserved by the `.bn-visual-media-wrapper` min-height
+                        // (released on load), so a late-arriving image fills its
+                        // held slot instead of growing the row — no reflow, and
+                        // nothing for the iOS scroll-correction to overshoot on
+                        // (see the defaultItemHeight note in MessageListRenderer).
+                        decoding="async"
                         draggable={false}
+                        loading="lazy"
                         src={src}
                         onClick={() => onImageZoom(src)}
                         onLoad={() => setLoaded(true)}
