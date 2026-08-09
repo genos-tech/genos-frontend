@@ -228,6 +228,7 @@ export const hi: DeepPartial<Messages> = {
             showComments: "टिप्पणियाँ दिखाएँ",
             hideComments: "टिप्पणियाँ छिपाएँ",
             emoji: "इमोजी",
+            attachFile: "छवि या फ़ाइल संलग्न करें",
             gif: "GIF",
             gifSlashDescription: "GIPHY खोजें और एक GIF डालें",
             gifSlashGroup: "मिडिया",

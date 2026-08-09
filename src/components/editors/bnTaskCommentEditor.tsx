@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -56,6 +56,7 @@ import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUpl
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { AttachFileToolbarButton } from "./AttachFileToolbarButton";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
@@ -300,6 +301,53 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         void insertFiles();
     }, [pendingFiles]);
 
+    // Hidden native picker behind the mobile "attach" toolbar button. On
+    // a phone BlockNote's drag-drop / side-menu insert paths aren't
+    // reachable, so this is the only way to send an image/file. Gated the
+    // same way as inline uploads: with no `uploadChannelId` there's no
+    // `uploadFile`, so the button isn't rendered.
+    const attachInputRef = useRef<HTMLInputElement>(null);
+    const onAttachInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files ? Array.from(event.target.files) : [];
+        // Reset so picking the same file twice in a row re-fires change.
+        event.target.value = "";
+        if (files.length === 0 || !uploadFile) return;
+        // Drop oversize files up-front so the dim overlay only counts
+        // files we'll actually try to upload.
+        const acceptedFiles = filterFiles(files);
+        if (acceptedFiles.length === 0) return;
+        const insertFiles = async () => {
+            try {
+                for (let i = 0; i < acceptedFiles.length; i += 1) {
+                    const file = acceptedFiles[i];
+                    setPendingUpload({
+                        index: i + 1,
+                        total: acceptedFiles.length,
+                        name: file.name,
+                    });
+                    try {
+                        const url = await uploadFile(file);
+                        const isImage = file.type.startsWith("image/");
+                        editor.insertBlocks(
+                            [
+                                isImage
+                                    ? { type: "image", props: { url, name: file.name } }
+                                    : { type: "file", props: { url, name: file.name } },
+                            ],
+                            editor.document[editor.document.length - 1],
+                            "after"
+                        );
+                    } catch (err) {
+                        console.error("Failed to insert file:", err);
+                    }
+                }
+            } finally {
+                setPendingUpload(null);
+            }
+        };
+        void insertFiles();
+    };
+
     const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -479,6 +527,17 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     return (
         <Box ref={boxRef}>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            {/* Hidden native picker for the mobile "attach image/file"
+                toolbar button. Rendered unconditionally; only the button
+                that clicks it is mobile-gated (and requires an upload
+                channel). */}
+            <input
+                ref={attachInputRef}
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={onAttachInputChange}
+            />
             <EmojiPicker
                 pickerBottomPosition="auto"
                 pickerLeftPosition={pickerLeftPosition}
@@ -626,6 +685,18 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                                 key={"gifButton"}
                                 setShowGifPicker={setShowGifPicker}
                             />
+                            {/* Mobile-only "attach image/file" button.
+                                On desktop, drag-drop and the side-menu
+                                already cover inserts; a phone has neither,
+                                so this native picker is the only way to
+                                send an attachment there. Needs an upload
+                                channel (same gate as inline uploads). */}
+                            {isMobile && uploadChannelId && (
+                                <AttachFileToolbarButton
+                                    key={"attachFileButton"}
+                                    onClick={() => attachInputRef.current?.click()}
+                                />
+                            )}
                             {/* Session-only wrap toggles — hidden on
                                 mobile because the toolbar already
                                 clips off-screen on narrow viewports. */}

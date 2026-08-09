@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -54,6 +54,7 @@ import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUpl
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { AttachFileToolbarButton } from "./AttachFileToolbarButton";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
@@ -263,47 +264,59 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         name: string;
     } | null>(null);
 
+    // Upload files in series and insert each as an image/file block at
+    // the end of the doc, driving the dim progress overlay. Shared by the
+    // chat-pane drop loop and the mobile "attach image/file" toolbar
+    // picker (both hand off a raw File[] the same way).
+    const uploadAndInsertFiles = async (files: File[]) => {
+        // Drop oversize files up-front so the dim overlay only counts
+        // files we'll actually try to upload.
+        const acceptedFiles = filterFiles(files);
+        if (acceptedFiles.length === 0) return;
+        try {
+            for (let i = 0; i < acceptedFiles.length; i += 1) {
+                const file = acceptedFiles[i];
+                setPendingUpload({
+                    index: i + 1,
+                    total: acceptedFiles.length,
+                    name: file.name,
+                });
+                try {
+                    const url = await uploadFile(file);
+                    const isImage = file.type.startsWith("image/");
+                    editor.insertBlocks(
+                        [
+                            isImage
+                                ? { type: "image", props: { url, name: file.name } }
+                                : { type: "file", props: { url, name: file.name } },
+                        ],
+                        editor.document[editor.document.length - 1],
+                        "after"
+                    );
+                } catch (err) {
+                    console.error("Failed to insert file:", err);
+                }
+            }
+        } finally {
+            setPendingUpload(null);
+        }
+    };
+
+    // Hidden native picker behind the mobile "attach" toolbar button. On
+    // a phone BlockNote's drag-drop / side-menu insert paths aren't
+    // reachable, so this is the only way to send an image/file.
+    const attachInputRef = useRef<HTMLInputElement>(null);
+    const onAttachInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files ? Array.from(event.target.files) : [];
+        // Reset so picking the same file twice in a row re-fires change.
+        event.target.value = "";
+        if (files.length > 0) void uploadAndInsertFiles(files);
+    };
+
     // Process files dropped on the chat pane (outside the editor)
     useEffect(() => {
         if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
-            // Drop oversize files up-front so the dim overlay only counts
-            // files we'll actually try to upload.
-            const acceptedFiles = filterFiles(pendingFiles);
-            if (acceptedFiles.length === 0) {
-                clearPendingFiles();
-                return;
-            }
-            const insertFiles = async () => {
-                try {
-                    for (let i = 0; i < acceptedFiles.length; i += 1) {
-                        const file = acceptedFiles[i];
-                        setPendingUpload({
-                            index: i + 1,
-                            total: acceptedFiles.length,
-                            name: file.name,
-                        });
-                        try {
-                            const url = await uploadFile(file);
-                            const isImage = file.type.startsWith("image/");
-                            editor.insertBlocks(
-                                [
-                                    isImage
-                                        ? { type: "image", props: { url, name: file.name } }
-                                        : { type: "file", props: { url, name: file.name } },
-                                ],
-                                editor.document[editor.document.length - 1],
-                                "after"
-                            );
-                        } catch (err) {
-                            console.error("Failed to insert dropped file:", err);
-                        }
-                    }
-                } finally {
-                    setPendingUpload(null);
-                    clearPendingFiles();
-                }
-            };
-            insertFiles();
+            void uploadAndInsertFiles(pendingFiles).finally(() => clearPendingFiles());
         }
     }, [pendingFiles]);
 
@@ -385,6 +398,16 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     return (
         <Box>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            {/* Hidden native picker for the mobile "attach image/file"
+                toolbar button. Rendered unconditionally; only the button
+                that clicks it is mobile-gated. */}
+            <input
+                ref={attachInputRef}
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={onAttachInputChange}
+            />
             {/* Anchored so the picker's bottom edge sits right on the
                 editor's top edge (the zero-height wrapper renders directly
                 above the editor box) instead of floating over the list. */}
@@ -526,6 +549,17 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 key={"gifButton"}
                                 setShowGifPicker={setShowGifPicker}
                             />
+                            {/* Mobile-only "attach image/file" button.
+                                On desktop, drag-drop and the side-menu
+                                already cover inserts; a phone has neither,
+                                so this native picker is the only way to
+                                send an attachment there. */}
+                            {isMobile && (
+                                <AttachFileToolbarButton
+                                    key={"attachFileButton"}
+                                    onClick={() => attachInputRef.current?.click()}
+                                />
+                            )}
                             {/* Session-only wrap toggles — hidden on
                                 mobile because the toolbar already
                                 clips off-screen on narrow viewports. */}

@@ -1010,6 +1010,27 @@ input[type="checkbox"] {
     margin-inline: auto;
 }
 
+/* Our custom icon buttons (Emoji, GIF, attach, wrap/unwrap toggles)
+   render as full mantine <Button>s — size="xs" = 14px horizontal
+   padding per side — because they pass an icon as children, whereas the
+   built-in Bold/Italic/etc. buttons are compact square <ActionIcon>s.
+   That mismatch left the icon spacing uneven and stretched the bar.
+   Collapse every icon <Button> down to the ActionIcon footprint so all
+   toolbar icons are spaced consistently at every width. The block-type
+   picker ("Paragraph ▾") is a text-labelled dropdown, not an icon, so
+   it's excluded (identified by aria-controls) and keeps its padding.
+
+   Scoped to `.bn-formatting-toolbar` — the class BlockNote puts on every
+   FormattingToolbar — rather than our own `.bn-editor-toolbar` wrapper,
+   so the rule reaches ALL BlockNote editors: the chat/thread/task-comment
+   composers (which wrap the toolbar in `.bn-editor-toolbar`) AND the
+   collab editors (task body, chat/task/my notes) that mount the toolbar
+   via FormattingToolbarController with no wrapper. */
+.bn-formatting-toolbar .mantine-Button-root:not([aria-controls*="dropdown"]) {
+    padding-inline: 6px;
+    min-width: 0;
+}
+
 .bn-box::-webkit-scrollbar {
     width: var(--scrollbar-width);
 }

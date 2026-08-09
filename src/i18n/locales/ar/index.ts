@@ -130,6 +130,7 @@ export const ar: DeepPartial<Messages> = {
             removeBlock: "إزالة الكتلة",
             resetType: "إعادة تعيين النوع",
             emoji: "رمز تعبيري",
+            attachFile: "إرفاق صورة أو ملف",
             emojiTypingHint: ":+typing",
             emojiGroup: "رمز تعبيري",
             loadingComments: "جارٍ تحميل التعليقات...",

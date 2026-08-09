@@ -1301,6 +1301,7 @@ export const fr: DeepPartial<Messages> = {
             showComments: "Afficher les commentaires",
             hideComments: "Masquer les commentaires",
             emoji: "Emoji",
+            attachFile: "Joindre une image ou un fichier",
             gif: "GIF",
             gifSlashDescription: "Recherchez GIPHY et insérez un GIF",
             gifSlashGroup: "Médias",
