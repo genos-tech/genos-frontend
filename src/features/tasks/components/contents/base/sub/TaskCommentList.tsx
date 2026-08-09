@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
-import { ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
@@ -17,58 +17,20 @@ import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
-// Velocity thresholds (px per ~100ms sample — Virtuoso measures scroll
-// speed as delta-scrollTop over a throttled 100ms window) that gate
-// "scroll seek" mode: above `ENTER`, rows render as cheap fixed-height
-// placeholders instead of full comment bubbles, so each catch-up render
-// finishes inside the frame and Virtuoso's main-thread paddingTop
-// reposition stays in sync with the compositor-driven momentum scroll —
-// this is what stops the transient duplicate/ghost rows on a low-CPU
-// phone. Below `EXIT` the real bubbles paint again. Mirrors
-// `MessageListRenderer` (see the note there); comment bodies render the
-// same BlockNote views, so they carry the same catch-up cost.
-// TUNE ON A REAL PHONE: a resized desktop can't reproduce the jank.
-const SEEK_ENTER_VELOCITY = 700;
-const SEEK_EXIT_VELOCITY = 30;
-
-// Delay after the arm key changes before scroll-seek may engage. Unlike
-// the chat list, this Virtuoso is NOT remounted per task (no `key`), so
-// `initialTopMostItemIndex` does NOT re-land on a task switch — the spike
-// this must guard is the deep-link landing: `useScrollToTaskCommentByCommentId`
-// fires `scrollToIndex({ align: "center", behavior: "smooth" })` 300ms after
-// `focusedCommentId`/`taskComments` change. That smooth (animated, multi-row)
-// scroll can exceed `SEEK_ENTER_VELOCITY`; if seek engaged mid-landing the
-// focused comment would fail to land centered (placeholders shift the
-// measured offset). So the arm effect keys on BOTH the tail taskId AND
-// `focusedCommentId`, and the delay is longer than chat's (past the 300ms
-// timer PLUS the smooth-scroll animation and settle).
-const SEEK_ARM_DELAY_MS = 1200;
-
-// Cheap stand-in painted for each row while the list is being flung fast
-// (see the velocity thresholds above). It reserves the row's known/
-// estimated height verbatim — matching the height is load-bearing: a
-// mismatch would make Virtuoso re-measure on seek-exit and reintroduce
-// the very offset churn this is meant to remove. No bubble, no editor,
-// no MUI — just a sized block with a barely-there tint so a fast fling
-// reads as motion rather than a jarring blank.
-const ScrollSeekPlaceholder = ({ height }: ScrollSeekPlaceholderProps) => (
-    <div
-        style={{
-            height,
-            boxSizing: "border-box",
-            padding: "0.3rem 0",
-        }}
-    >
-        <div
-            style={{
-                height: "100%",
-                borderRadius: "12px",
-                background: "var(--alt-background)",
-                opacity: 0.5,
-            }}
-        />
-    </div>
-);
+// Extra pixels of rows Virtuoso keeps mounted above/below the viewport —
+// its always-on sliding window, applied at MOUNT. Mirrors
+// `MessageListRenderer`: comment bodies render the same message bodies
+// (mostly plain-DOM now; only code/table bodies mount a BlockNote editor),
+// so pre-mounting rows off-screen keeps a normal short scroll smooth (it
+// stays inside already-mounted+measured rows). Asymmetric for the same
+// reason as chat — the reader lands on the newest comment and scrolls UP,
+// so `TOP` (the recent ~20 comments) is the load-bearing value while
+// `BOTTOM` only covers scrolling back down. Applied at mount rather than
+// grown afterwards because growing top overscan on a list that is
+// stationary-at-bottom shifts the view uncompensated (see the chat note).
+// TUNE ON A REAL PHONE.
+const TOP_OVERSCAN_PX = 1200;
+const BOTTOM_OVERSCAN_PX = 600;
 
 type TaskCommentListProps = {
     socket: Socket | null;
@@ -167,38 +129,6 @@ export const TaskCommentList = ({
     const handleIsScrolling = useCallback((scrolling: boolean) => {
         scrollerElRef.current?.classList.toggle("comment-scrolling", scrolling);
     }, []);
-
-    // Scroll-seek is armed only after a landing settles — see
-    // `SEEK_ARM_DELAY_MS`. `enter`/`exit` read the ref (not a dep) so the
-    // config is stable across renders (Virtuoso re-subscribes if it changes).
-    const seekArmedRef = useRef(false);
-    const scrollSeekConfiguration = useMemo(
-        () => ({
-            enter: (velocity: number) =>
-                seekArmedRef.current && Math.abs(velocity) > SEEK_ENTER_VELOCITY,
-            exit: (velocity: number) => Math.abs(velocity) < SEEK_EXIT_VELOCITY,
-        }),
-        []
-    );
-
-    // Disarm scroll-seek whenever a programmatic landing may run, and re-arm
-    // once it has settled, so a landing scroll can't trip seek mode and mount
-    // fixed-size placeholders mid-landing. Two triggers, unlike chat:
-    //   - the tail comment's taskId changes → a real task switch (stable
-    //     across same-task reaction/edit/append churn, which keeps the tail);
-    //   - `focusedCommentId` changes → a deep-link jump, whose
-    //     `scrollToIndex(..., behavior: "smooth")` is an animated multi-row
-    //     scroll that would otherwise spike velocity past `SEEK_ENTER`.
-    // Declared BEFORE the `taskComments.length === 0` early return so hook
-    // order stays stable across empty↔non-empty transitions.
-    const tailTaskId = String(taskComments[taskComments.length - 1]?.taskId ?? "");
-    useEffect(() => {
-        seekArmedRef.current = false;
-        const t = setTimeout(() => {
-            seekArmedRef.current = true;
-        }, SEEK_ARM_DELAY_MS);
-        return () => clearTimeout(t);
-    }, [tailTaskId, focusedCommentId]);
 
     // Virtuoso reports its rendered content size; we cap it at
     // `maxHeight`. This lets the list grow naturally with new comments
@@ -373,9 +303,8 @@ export const TaskCommentList = ({
                     atBottomThreshold={128}
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    components={{ ScrollSeekPlaceholder }}
                     followOutput={followOutput}
-                    increaseViewportBy={{ top: 600, bottom: 600 }}
+                    increaseViewportBy={{ top: TOP_OVERSCAN_PX, bottom: BOTTOM_OVERSCAN_PX }}
                     initialTopMostItemIndex={taskComments.length - 1}
                     isScrolling={handleIsScrolling}
                     itemContent={itemContent}
@@ -385,7 +314,6 @@ export const TaskCommentList = ({
                         // we don't.
                         scrollerElRef.current = el as HTMLElement | null;
                     }}
-                    scrollSeekConfiguration={scrollSeekConfiguration}
                     style={{ flex: 1, minHeight: 0 }}
                     totalCount={taskComments.length}
                 />
@@ -400,16 +328,14 @@ export const TaskCommentList = ({
                 atBottomThreshold={128}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                components={{ ScrollSeekPlaceholder }}
                 followOutput={followOutput}
-                increaseViewportBy={{ top: 600, bottom: 600 }}
+                increaseViewportBy={{ top: TOP_OVERSCAN_PX, bottom: BOTTOM_OVERSCAN_PX }}
                 initialTopMostItemIndex={taskComments.length - 1}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
                 scrollerRef={(el) => {
                     scrollerElRef.current = el as HTMLElement | null;
                 }}
-                scrollSeekConfiguration={scrollSeekConfiguration}
                 style={{ height: Math.min(contentHeight, maxHeight) }}
                 totalCount={taskComments.length}
                 totalListHeightChanged={setContentHeight}

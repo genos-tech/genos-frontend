@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
-import { ScrollSeekPlaceholderProps, Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -56,70 +56,33 @@ interface MessageListRendererProps {
     ) => void;
 }
 
-// Velocity thresholds (px per ~100ms sample — Virtuoso measures scroll
-// speed as delta-scrollTop over a throttled 100ms window) that gate
-// "scroll seek" mode: above `ENTER`, rows render as cheap fixed-height
-// placeholders instead of full bubbles, so each catch-up render finishes
-// inside the frame and Virtuoso's main-thread paddingTop reposition stays
-// in sync with the compositor-driven momentum scroll — this is what stops
-// the transient duplicate/ghost rows on a low-CPU phone. Below `EXIT` the
-// real bubbles paint again. `ENTER` is deliberately high so only genuine
-// fast flings (where the user can't read mid-scroll anyway) swap to
-// placeholders; a gentle reading-scroll keeps rendering real content.
-// TUNE ON A REAL PHONE: iOS/Android flings differ, and this can only be
-// validated on hardware (a resized desktop can't reproduce the jank).
-const SEEK_ENTER_VELOCITY = 700;
-const SEEK_EXIT_VELOCITY = 30;
-
-// Delay after a chat switch before scroll-seek may engage. The initial
-// "land on the newest message" (initialTopMostItemIndex + the 300ms
-// auto-follow / jump timers) writes scrollTop with correction passes that
-// can momentarily spike velocity past `SEEK_ENTER_VELOCITY`. If seek
-// engaged mid-landing, rows would render as unmeasured fixed-size
-// placeholders and suspend the overscan-based height correction the
-// landing depends on (see the OVERSCAN_PX note). Arming seek only after
-// the landing has settled keeps invariant A intact: programmatic landing
-// scrolls never trigger seek, only genuine user flings afterwards.
-const SEEK_ARM_DELAY_MS = 600;
-
-// Cheap stand-in painted for each row while the list is being flung fast
-// (see the velocity thresholds above). It reserves the row's known/
-// estimated height verbatim — matching the height is load-bearing: a
-// mismatch would make Virtuoso re-measure on seek-exit and reintroduce
-// the very offset churn this is meant to remove. No bubble, no editor,
-// no MUI — just a sized block with a barely-there tint so a fast fling
-// reads as motion rather than a jarring blank.
-const ScrollSeekPlaceholder = ({ height }: ScrollSeekPlaceholderProps) => (
-    <div
-        style={{
-            height,
-            boxSizing: "border-box",
-            padding: "0.3rem 0",
-        }}
-    >
-        <div
-            style={{
-                height: "100%",
-                borderRadius: "12px",
-                background: "var(--alt-background)",
-                opacity: 0.5,
-            }}
-        />
-    </div>
-);
-
-// Render this many extra pixels of rows above/below the viewport. Each
-// row mounts a full read-only BlockNote view (see `BnChatPreview`), so
-// mounting it while it's still off-screen — instead of the frame it
-// scrolls into view — is what keeps wheel scrolling smooth.
-// It is ALSO what anchors the initial paint: `initialTopMostItemIndex`
-// resolves "the bottom" against estimated row heights, and BlockNote rows
-// measure taller once they mount. The overscan gives Virtuoso enough real
-// rows above LAST to correct against. Ramping it up from 0 after mount
-// (tried, reverted) saved mount work but left switches landing part-way
-// up the history instead of at the newest message — don't reintroduce it
-// without checking the landing position in a real browser.
-const OVERSCAN_PX = 600;
+// Extra pixels of rows Virtuoso keeps mounted above/below the viewport —
+// its always-on sliding window, applied at MOUNT. Each extra row renders a
+// message body (mostly plain-DOM light bodies now that images/files/
+// hashtags render without a BlockNote editor; only code/table bodies still
+// mount one), so pre-mounting rows while they're still off-screen — instead
+// of the frame they scroll into view — is what keeps a normal short scroll
+// smooth: it stays inside already-mounted+measured rows with no per-frame
+// remeasure/reposition.
+//
+// Asymmetric on purpose. `TOP` is the load-bearing one: the reader lands on
+// the newest message and scrolls UP into history, and a wider top window
+// pre-mounts the recent ~20 messages so that reading-scroll doesn't trip
+// Virtuoso's measure/reposition. `TOP` also anchors the initial landing —
+// `initialTopMostItemIndex` resolves "the bottom" against estimated row
+// heights, and rows measure taller once they mount, so Virtuoso needs real
+// rows above LAST to correct against (this is why it is applied at mount,
+// not grown afterwards: growing top overscan while stationary-at-bottom
+// mounts taller-than-estimated rows above the viewport that Virtuoso does
+// NOT compensate — its only correction is gated to upward scrolling — so
+// the newest message would visibly slide down. Mounting large up front
+// measures those rows while they're still hidden and lands correctly).
+// `BOTTOM` stays modest: at landing there are zero rows below the newest
+// message, so a large bottom value pre-mounts nothing there; it only
+// covers the "scrolled up, now heading back down" case.
+// TUNE ON A REAL PHONE: a resized desktop can't reproduce the jank.
+const TOP_OVERSCAN_PX = 1200;
+const BOTTOM_OVERSCAN_PX = 600;
 
 // Upper bound on how long the cold-load skeleton may stay up. The normal
 // exit is messages arriving; this only catches a sync that fails, or one
@@ -190,19 +153,6 @@ export const MessageListRenderer = ({
         scrollerElRef.current?.classList.toggle("chat-msg-scrolling", scrolling);
     }, []);
 
-    // Scroll-seek is armed only after the initial landing settles — see
-    // `SEEK_ARM_DELAY_MS`. Reset + re-arm on every chat/thread switch (the
-    // effect below keys on `chatIdentityKey`).
-    const seekArmedRef = useRef(false);
-    const scrollSeekConfiguration = useMemo(
-        () => ({
-            enter: (velocity: number) =>
-                seekArmedRef.current && Math.abs(velocity) > SEEK_ENTER_VELOCITY,
-            exit: (velocity: number) => Math.abs(velocity) < SEEK_EXIT_VELOCITY,
-        }),
-        []
-    );
-
     // Identity of the chat (or thread) currently rendered. Drives the
     // Virtuoso remount key below.
     const chatIdentityKey = isThread
@@ -256,16 +206,6 @@ export const MessageListRenderer = ({
         return () => clearTimeout(t);
     }, [chatIdentityKey]);
 
-    // Disarm scroll-seek across a chat/thread switch and re-arm once the
-    // initial landing has settled, so a landing scrollTop correction can't
-    // trip seek mode mid-landing (invariant A — see `SEEK_ARM_DELAY_MS`).
-    useEffect(() => {
-        seekArmedRef.current = false;
-        const t = setTimeout(() => {
-            seekArmedRef.current = true;
-        }, SEEK_ARM_DELAY_MS);
-        return () => clearTimeout(t);
-    }, [chatIdentityKey]);
     const showSkeleton =
         messages.length === 0 &&
         !skeletonExpired &&
@@ -505,9 +445,8 @@ export const MessageListRenderer = ({
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                components={{ ScrollSeekPlaceholder }}
                 followOutput={followOutput}
-                increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
+                increaseViewportBy={{ bottom: BOTTOM_OVERSCAN_PX, top: TOP_OVERSCAN_PX }}
                 initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
@@ -517,7 +456,6 @@ export const MessageListRenderer = ({
                     // `Window` when `useWindowScroll` is set, which we don't.
                     scrollerElRef.current = el as HTMLElement | null;
                 }}
-                scrollSeekConfiguration={scrollSeekConfiguration}
                 style={virtuosoStyle}
                 totalCount={messages.length}
             />
