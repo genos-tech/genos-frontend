@@ -10,6 +10,7 @@
 import type { Socket } from "socket.io-client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import { channelService } from "../../services/channel/channelService";
 import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
@@ -21,6 +22,13 @@ import { fakeChannel, fakeMessage, fakeReaction } from "../helpers/factories";
 // forwards its payload.
 vi.mock("../../features/chat/services/handleV3Activity", () => ({
     handleV3Activity: vi.fn(),
+}));
+
+// Same reason: mock the read-cursor → activity-clear bridge so the
+// read.advanced tests can assert it's driven only by a non-empty
+// readActivityIds list.
+vi.mock("../../features/chat/services/handleV3ActivitiesRead", () => ({
+    handleV3ActivitiesRead: vi.fn(),
 }));
 
 /**
@@ -84,6 +92,11 @@ describe("registerSocketRouter", () => {
         vi.spyOn(channelService, "handleFlagUncompleted").mockImplementation(() => {});
         vi.spyOn(channelService, "applyResyncBatch").mockResolvedValue(0);
         vi.spyOn(channelService, "syncChannel").mockResolvedValue(undefined);
+
+        // Module-level mocks aren't reset by restoreAllMocks(), so clear
+        // their call history between cases to keep counts per-test.
+        vi.mocked(handleV3Activity).mockClear();
+        vi.mocked(handleV3ActivitiesRead).mockClear();
 
         env = makeFakeSocket();
         teardown = registerSocketRouter(env.socket);
@@ -209,6 +222,41 @@ describe("registerSocketRouter", () => {
         env.fire("read.advanced", cursor);
         expect(channelService.handleReadAdvanced).toHaveBeenCalledTimes(1);
         expect(channelService.handleReadAdvanced).toHaveBeenCalledWith(cursor);
+        // No readActivityIds ⇒ the sidebar-clear bridge is not driven.
+        expect(handleV3ActivitiesRead).not.toHaveBeenCalled();
+    });
+
+    it("read.advanced strips readActivityIds off the cursor and drives the clear bridge", () => {
+        const payload = {
+            channelId: "c1",
+            lastReadMessageId: "m9",
+            lastReadSeq: 9,
+            unreadCount: 0,
+            readActivityIds: ["a1", "a2"],
+        };
+        env.fire("read.advanced", payload);
+        // The cursor handed to the service must NOT carry readActivityIds
+        // (it's transient and must never persist onto the stored cursor).
+        expect(channelService.handleReadAdvanced).toHaveBeenCalledTimes(1);
+        expect(channelService.handleReadAdvanced).toHaveBeenCalledWith({
+            channelId: "c1",
+            lastReadMessageId: "m9",
+            lastReadSeq: 9,
+            unreadCount: 0,
+        });
+        // The ids are forwarded to the clear bridge.
+        expect(handleV3ActivitiesRead).toHaveBeenCalledTimes(1);
+        expect(handleV3ActivitiesRead).toHaveBeenCalledWith(["a1", "a2"]);
+    });
+
+    it("read.advanced with an empty readActivityIds does not drive the clear bridge", () => {
+        env.fire("read.advanced", {
+            channelId: "c1",
+            lastReadMessageId: "m9",
+            readActivityIds: [],
+        });
+        expect(channelService.handleReadAdvanced).toHaveBeenCalledTimes(1);
+        expect(handleV3ActivitiesRead).not.toHaveBeenCalled();
     });
 
     // ---- channel.* --------------------------------------------------------

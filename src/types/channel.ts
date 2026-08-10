@@ -164,6 +164,21 @@ export interface ReadCursor {
     lastReadAt: string;
 }
 
+/**
+ * Receive-side shape of the `read.advanced` socket broadcast: a
+ * `ReadCursor` plus `readActivityIds`, the sidebar activities the server
+ * auto-cleared as the cursor swept past their backing message (see
+ * genos-api `read_cursor_views`). It rides along on the cursor payload —
+ * broadcast to the user's OWN room — so viewing a message clears its
+ * activity live on every tab without a click. Transient: the socket
+ * router peels it off before the cursor is persisted, so it never lands
+ * on the stored `ReadCursor`. Absent/empty from older backends ⇒ nothing
+ * to clear.
+ */
+export interface ReadAdvancedPayload extends ReadCursor {
+    readActivityIds?: string[];
+}
+
 export interface Pin {
     id: string;
     channelId: string;

@@ -18,6 +18,7 @@
 
 import type { Socket } from "socket.io-client";
 
+import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import type {
     Channel,
@@ -29,7 +30,7 @@ import type {
     MessageReaction,
     MessagesDeltaData,
     Pin,
-    ReadCursor,
+    ReadAdvancedPayload,
 } from "../../types/channel";
 import { channelService } from "./channelService";
 
@@ -89,7 +90,20 @@ export function registerSocketRouter(socket: Socket): () => void {
         emoji: string;
     }>("reaction.removed", (e) => channelService.handleReactionRemoved(e));
 
-    on<ReadCursor>("read.advanced", (c) => channelService.handleReadAdvanced(c));
+    on<ReadAdvancedPayload>("read.advanced", ({ readActivityIds, ...cursor }) => {
+        // Advance the cursor (drives the unread badge). `readActivityIds`
+        // is peeled off first so the transient clear list never lands on
+        // the persisted `ReadCursor`.
+        channelService.handleReadAdvanced(cursor);
+        // Sidebar activity auto-clear: the server marked these activities
+        // read as the cursor swept past their message. Flip them in IDB +
+        // refresh the sidebar. Fire-and-forget — failures are non-fatal
+        // (the next activity history load reconciles). Mirrors the
+        // `message.created` → `v3:message:created` bus above.
+        if (readActivityIds && readActivityIds.length > 0) {
+            void handleV3ActivitiesRead(readActivityIds);
+        }
+    });
 
     on<Channel>("channel.created", (c) => channelService.handleChannelCreated(c));
     on<Channel>("channel.updated", (c) => channelService.handleChannelUpdated(c));
