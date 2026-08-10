@@ -1,13 +1,15 @@
 // Citation handling — canonical home for the citation-token vocabulary
-// shared by every surface that renders agent answers (the thread-Ask
-// modal, future note-Ask modals, the saved-note serialiser).
+// shared by every surface that renders agent answers: the thread-Ask
+// and note-Ask modals (via `AgentQAConversation`), Spotlight (via
+// `SpotlightContent`, which `SpotlightOverlay` renders), and the
+// saved-note serialiser.
 //
-// SpotlightOverlay still has its own inline copy of this logic; both
-// trees emit `[type:id]` tokens with the same shape, and they'll
-// converge once Spotlight migrates onto `useAgentQA` (stretch goal —
-// see the agentQA refactor plan).
+// Spotlight previously kept its own byte-identical inline copy of this
+// logic; it has since converged onto this module (see the note beside
+// the `rewriteCitations` import in `SpotlightContent.tsx`), so the
+// parsing rule can't drift between surfaces (SPOTLIGHT_QUALITY_ARCHITECTURE.md §4.6).
 
-import { todoHrefFromEntityId } from "../../utils/canonicalSpotlightHref";
+import { canonicalSpotlightHref } from "../../utils/canonicalSpotlightHref";
 import { SpotlightResult } from "../spotlight/types";
 
 // Chat entity ids nest under a chat-label segment (`dm|gm|pm|mdm`) and
@@ -24,7 +26,7 @@ const _CHAT_LABEL_TOKEN = "(?:dm|gm|pm|mdm):[0-9a-fA-F]";
 // known entity prefixes so a free-form sentence with literal brackets
 // ("[reminder: ship by Friday]") doesn't trip the pattern. This set
 // must cover every entity type the agent can inline-cite AND the
-// SourceChips row can render (see `_sourceIcon` in SpotlightOverlay):
+// SourceChips row can render (see `_sourceIcon` in SpotlightContent):
 // chat / task / note / project / todo / milestone. A type missing here
 // renders its raw `[todo:...]` token in the prose instead of being
 // stripped into a chip — the exact bug this list guards against.
@@ -47,8 +49,8 @@ export const CITATION_LINK_PATTERN = new RegExp(
 
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
-// standard <a href>. Shared with SpotlightOverlay so a single anchor
-// renderer can handle both.
+// standard <a href>. The same prefix drives the anchor renderers in
+// both `CitationAnchor` (the Ask modals) and `SpotlightContent`.
 export const CITATION_HREF_PREFIX = "spotlight-citation:";
 
 // Build the entity-id → source lookup the rewriter consumes. Chat
@@ -80,6 +82,47 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
 // with gemini-flash).
 const _CITATION_STRIP_PATTERN = new RegExp(
     `[ \\t]?\\[(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\](?!\\()`,
+    "g"
+);
+
+// Safety net for raw citation ids the model dumped into the prose WITHOUT
+// the `[type:id]` / `[prose](type:id)` syntax the two passes handle — the
+// user-reported "response body includes raw gm chat id / task id" leak.
+// Both patterns above require the brackets; a model that emits a bare
+// `gm:8f5e4733-…:msg:9c17…` or `task:42` in a sentence slips past them and
+// the reader sees a decode-failure id. This strips those.
+//
+// The token grammar (the `[\w:-]` id run, stopping at whitespace or
+// sentence punctuation like `.`/`,`/`)`) is anchored so it can only fire
+// on a genuine leaked id, never on prose:
+//   - a UUID anywhere in a `type:…`/`label:…` token — no prose sentence
+//     contains a UUID, so this alternative is zero-false-positive;
+//   - the exact vocabulary (`task|note|project|todo|milestone`) whose id
+//     tail CONTAINS A DIGIT (`task:42`, `note:personal:50`,
+//     `todo:2026-07-03:item:117`) — the digit requirement is what keeps
+//     "note: remember to…" (space, no digit) and "chat:" as a word safe;
+//   - an un-prefixed chat label (`dm|gm|pm|mdm:`) whose id starts with a
+//     hex char, mirroring `_CHAT_LABEL_TOKEN` (so "pm: sync" / "dm:notes"
+//     — space or non-hex first char — stay untouched).
+// The leading `(?<![\w:/.-])` boundary keeps it from biting into a larger
+// token such as a URL path segment (`…/project:18`) or a word. One
+// optional leading space/tab is consumed so stripping mid-sentence leaves
+// no double space (matching `_CITATION_STRIP_PATTERN`); newlines are left
+// alone (paragraph significance).
+const _UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const _RAW_LEAK_STRIP_PATTERN = new RegExp(
+    `[ \\t]?(?<![\\w:/.-])(?:` +
+        // any type/label token that carries a UUID (highest confidence)
+        `(?:chat|task|note|project|todo|milestone|dm|gm|pm|mdm):[\\w:-]*${_UUID}[\\w:-]*` +
+        // OR the exact vocabulary with a digit-bearing id tail. The
+        // pre-digit run allows colons so nested ids resolve — the digit
+        // in `note:personal:50` / `todo:2026-07-03:item:117` lives past a
+        // second colon. A tokens with NO digit at all (`note:mine`,
+        // `chat:hello`, `task:done`) can't match and stays as prose.
+        `|(?:chat|task|note|project|todo|milestone):[\\w:-]*\\d[\\w:-]*` +
+        // OR an un-prefixed chat label with a hex-leading id
+        `|(?:dm|gm|pm|mdm):[0-9a-fA-F][\\w:-]*` +
+        `)`,
     "g"
 );
 
@@ -218,7 +261,14 @@ export const rewriteCitations = (
     // Pass 2: strip any remaining bare `[type:id]` tokens (chips fallback).
     // The sentinel links from pass 1 aren't touched — their id lives in
     // parens, and the `(?!\()` lookahead protects raw-token labels.
-    return withLinks.replace(_CITATION_STRIP_PATTERN, "");
+    const withoutBareTokens = withLinks.replace(_CITATION_STRIP_PATTERN, "");
+    // Pass 3: safety net for UNbracketed raw ids the model dumped straight
+    // into prose (passes 1 & 2 both require the brackets). This is the
+    // "response body includes raw gm chat id / task id" leak. The
+    // `spotlight-citation:` links from pass 1 are safe: their token is
+    // always preceded by a colon, which the pattern's leading boundary
+    // (`(?<![\w:/.-])`) rejects — so a valid citation link is never bitten.
+    return withoutBareTokens.replace(_RAW_LEAK_STRIP_PATTERN, "");
 };
 
 // Extract the set of entity ids the answer renders INLINE as a
@@ -326,48 +376,36 @@ export const citedChipSources = (
     });
 };
 
-// Build a URL that opens the entity. Used by the saved-note serialiser
-// to make citation tokens clickable from outside the modal context
-// (where we can't call `useCM.moveToSpecificChat`). Returns `null` if
-// the source doesn't have enough metadata to deep-link.
+// Build a URL that opens the entity. Used by CitationAnchor / SourceChips
+// (to prefer a UrlLinkModal preview) and by the saved-note serialiser (to
+// make citation tokens clickable outside the modal context). Returns
+// `null` if the source doesn't have enough metadata to deep-link.
 //
-// URL shapes mirror App.tsx `handleSpotlightSelect` so the routes pick
-// up the same way as a Spotlight click.
+// Delegates to the canonical `canonicalSpotlightHref` — the SAME builder
+// the Spotlight surface routes clicks through — so the agentQA surfaces
+// can't drift from it. This is what closes two dead-link bugs the old
+// hand-copied subset had: milestone citations (no `milestone` branch → a
+// clickable link that no-op'd) and main-channel chat notes (the note-chat
+// branch hard-required a truthy `thread_id`, so a threadless note fell
+// through to null). `canonicalSpotlightHref` handles both (milestone deep
+// link + the `thread_id ?? "0"` sentinel).
+//
+// One capability `canonicalSpotlightHref` intentionally omits is a bare
+// `project` link (projects have no modal view yet), but the chip/inline
+// click path still wants to navigate there and the saved-note export
+// still wants a real href — so keep the project branch here as a fallback.
 export const sourceToUrl = (s: SpotlightResult): string | null => {
-    if (s.entity_type === "task" && s.task_id && s.project_id) {
-        return `/workspace/tasks/project/${s.project_id}/task/${s.task_id}`;
-    }
+    const href = canonicalSpotlightHref(s);
+    if (href) return href;
     if (s.entity_type === "project" && s.project_id) {
         return `/workspace/tasks/project/${s.project_id}`;
-    }
-    if (s.entity_type === "chat" && s.chat_type && s.chat_id) {
-        const base = `/workspace/chat/${s.chat_type}/${s.chat_id}`;
-        if (s.thread_id) {
-            const url = `${base}/thread/${s.thread_id}`;
-            return s.message_id ? `${url}/message/${s.message_id}` : url;
-        }
-        return s.message_id ? `${base}/message/${s.message_id}` : base;
-    }
-    if (s.entity_type === "note" && s.note_id) {
-        if (s.note_type === "personal") {
-            return `/workspace/notes/my/${s.note_id}`;
-        }
-        if (s.note_type === "task" && s.project_id && s.task_id) {
-            return `/workspace/notes/task/project/${s.project_id}/task/${s.task_id}/note/${s.note_id}`;
-        }
-        if (s.note_type === "chat" && s.chat_type && s.chat_id && s.thread_id) {
-            return `/workspace/notes/chat/${s.chat_type}/${s.chat_id}/thread/${s.thread_id}/note/${s.note_id}`;
-        }
-    }
-    if (s.entity_type === "todo") {
-        return todoHrefFromEntityId(s.entity_id);
     }
     return null;
 };
 
 // Fallback label when a raw-token link label must be replaced but the
 // source has no title (see `rewriteCitations`' weak-model hardening) —
-// matches SpotlightOverlay's `entitySubtitle` vocabulary for visual
+// matches SpotlightContent's `entitySubtitle` vocabulary for visual
 // consistency. The spotlight version is more elaborate (i18n + per-type
 // subtitles); here a sensible generic label suffices since it only shows
 // for title-less sources.
