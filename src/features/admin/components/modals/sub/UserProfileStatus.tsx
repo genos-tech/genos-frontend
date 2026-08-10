@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import EditIcon from "@mui/icons-material/Edit";
 import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
+import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import {
     Box,
@@ -11,10 +12,12 @@ import {
     IconButton,
     Input,
     ListDivider,
-    ListItemDecorator,
     Menu,
     MenuButton,
     MenuItem,
+    Modal,
+    ModalClose,
+    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
@@ -27,10 +30,26 @@ import { ProfileModalStyles } from "../../../../../components/ui/styles/commonSt
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
-import { useTranslation } from "../../../../../i18n";
-import { NotificationPausePresetItems } from "../../../../../services/notifications/NotificationPausePicker";
+import { fmt, useTranslation } from "../../../../../i18n";
+import {
+    formatPauseStatusText,
+    NotificationPausePresetItems,
+} from "../../../../../services/notifications/NotificationPausePicker";
 import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
+import {
+    formatStatusExpiry,
+    isStatusExpired,
+    msUntilStatusExpiry,
+    STATUS_EXPIRY_1H,
+    STATUS_EXPIRY_4H,
+    STATUS_EXPIRY_30M,
+    statusExpiryEndOfThisWeek,
+    statusExpiryEndOfToday,
+    statusExpiryIn,
+    toLocalInputValue,
+} from "../../../../../services/notifications/statusExpiry";
 import { UserProps } from "../../../../../types/admin";
+import { resolveDisplayZone } from "../../../../../utils/userTimezone";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
 const PRESET_STATUSES = [
@@ -74,6 +93,9 @@ export const UserProfileStatus = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
+    // The status-expiry ("clear after…") i18n subtree, aliased for the editor
+    // dropdown and the custom-datetime modal below.
+    const seT = t.services.notifications.statusExpiry;
 
     // Slack-style pause presets, shown to the owner in their own presence
     // menu. Optional: this modal also renders in harnesses without a
@@ -103,10 +125,74 @@ export const UserProfileStatus = ({
             ? t.admin.status.offlineForced
             : t.admin.status.offline
         : t.admin.status.online;
-    const customStatus = profileUser?.customStatus ?? "";
+
+    // --- Custom-status expiry ("clear status after", Slack) -----------------
+    // The expiry is the single source of truth, evaluated lazily at read time
+    // (same discipline as the notification snooze). A past expiry masks the
+    // status for EVERYONE: it renders as if no status is set. The owner's own
+    // client additionally PUT-clears on expiry so the DB converges (effect
+    // below). Re-checked every 30s so a lapse hides the status without needing
+    // the modal to be re-opened.
+    const [expiryTick, setExpiryTick] = useState(0);
+    useEffect(() => {
+        const id = setInterval(() => setExpiryTick((n) => n + 1), 30_000);
+        return () => clearInterval(id);
+    }, []);
+    const rawStatus = profileUser?.customStatus ?? "";
+    const statusExpiryIso = profileUser?.customStatusExpiry ?? null;
+    // expiryTick is read only to re-derive on the interval; reference it so the
+    // dependency is explicit and lint doesn't flag the effect's tick as unused.
+    void expiryTick;
+    const expired = isStatusExpired(statusExpiryIso);
+    // Masked view: an expired status reads as empty everywhere.
+    const customStatus = expired ? "" : rawStatus;
+    const showExpiryNote = !expired && !!statusExpiryIso && customStatus !== "";
+
+    // The user's resolved zone, for the LOCAL wall-clock presets (Today / This
+    // week). Self only ever sets an expiry, so resolve as self.
+    const zone = useMemo(
+        () => resolveDisplayZone(myself, true) ?? "UTC",
+        [myself.currentLocation, myself.timezone]
+    );
 
     const [openEditor, setOpenEditor] = useState(false);
     const [newStatus, setNewStatus] = useState("");
+    // The expiry chosen in the editor (absolute ISO instant, or null for
+    // "Don't clear"). Seeded from the current value when the editor opens.
+    const [newExpiry, setNewExpiry] = useState<string | null>(null);
+
+    // --- Custom date/time modal for the status expiry (owned here so it
+    // survives the "Clear after…" menu closing) --------------------------
+    const [expiryCustomOpen, setExpiryCustomOpen] = useState(false);
+    const [expiryCustomValue, setExpiryCustomValue] = useState("");
+    const openExpiryCustom = () => {
+        // Seed one hour ahead so the picker opens on a sensible near-future
+        // value rather than "now".
+        setExpiryCustomValue(toLocalInputValue(new Date(Date.now() + STATUS_EXPIRY_1H)));
+        setExpiryCustomOpen(true);
+    };
+    const commitExpiryCustom = () => {
+        if (!expiryCustomValue) return;
+        const parsed = new Date(expiryCustomValue);
+        if (!Number.isNaN(parsed.getTime())) setNewExpiry(parsed.toISOString());
+        setExpiryCustomOpen(false);
+    };
+
+    // --- Custom date/time modal for the notification PAUSE (ask: "pause until
+    // Aug 11, 9 AM"). Owned here so it outlives the pause dropdown closing;
+    // commits via the pause hook's `pauseUntil(iso)`. ---------------------
+    const [pauseCustomOpen, setPauseCustomOpen] = useState(false);
+    const [pauseCustomValue, setPauseCustomValue] = useState("");
+    const openPauseCustom = () => {
+        setPauseCustomValue(toLocalInputValue(new Date(Date.now() + STATUS_EXPIRY_1H)));
+        setPauseCustomOpen(true);
+    };
+    const commitPauseCustom = () => {
+        if (!pauseCustomValue) return;
+        const parsed = new Date(pauseCustomValue);
+        if (!Number.isNaN(parsed.getTime())) notif?.pauseUntil(parsed.toISOString());
+        setPauseCustomOpen(false);
+    };
 
     // Inline display-name rename — self only. The user edits the name
     // shown as the hero heading here. Unlike the sibling status / role /
@@ -188,30 +274,47 @@ export const UserProfileStatus = ({
 
     const handleOpenEditor = () => {
         setNewStatus(myself.customStatus ?? "");
+        // Seed the expiry from the current live value, masking a stale one so
+        // re-opening a lapsed status doesn't re-offer its past expiry.
+        setNewExpiry(
+            isStatusExpired(myself.customStatusExpiry) ? null : (myself.customStatusExpiry ?? null)
+        );
         setOpenEditor(true);
     };
     const handleCloseEditor = () => setOpenEditor(false);
 
-    const persistCustomStatus = (status: string) => {
-        updateUserProfile({
-            accessToken: accessToken,
-            userId: myself.userId,
-            customStatus: status,
-        });
-        setMyself({ ...myself, customStatus: status });
-        localStorage.setItem("customStatus", status);
-        // Beat immediately so the change reaches other users AND the user's own
-        // other devices in <1s (self-echo → useSelfEchoReconcile) rather than
-        // waiting for the next 60s heartbeat.
-        announcePresenceChange();
-    };
+    // PUT status + expiry together. `expiryIso` null clears the expiry (Slack
+    // "Don't clear" / a reset), and the server exempts the field from its
+    // None-strip so the null actually lands. Both localStorage keys are written
+    // so the next heartbeat carries the pair; `announcePresenceChange` beats
+    // immediately so other users + this user's own other devices converge in
+    // <1s rather than on the next 60s tick.
+    const persistCustomStatus = useCallback(
+        (status: string, expiryIso: string | null) => {
+            // Clearing the status clears any expiry with it — an expiry on an
+            // empty status is meaningless and would auto-fire on nothing.
+            const nextExpiry = status === "" ? null : expiryIso;
+            updateUserProfile({
+                accessToken: accessToken,
+                userId: myself.userId,
+                customStatus: status,
+                customStatusExpiry: nextExpiry,
+            });
+            setMyself({ ...myself, customStatus: status, customStatusExpiry: nextExpiry });
+            localStorage.setItem("customStatus", status);
+            localStorage.setItem("customStatusExpiry", nextExpiry ?? "");
+            announcePresenceChange();
+        },
+        [accessToken, myself, setMyself]
+    );
     const handleSet = () => {
-        if (newStatus !== "") persistCustomStatus(newStatus);
+        if (newStatus !== "") persistCustomStatus(newStatus, newExpiry);
         handleCloseEditor();
     };
     const handleReset = () => {
-        persistCustomStatus("");
+        persistCustomStatus("", null);
         setNewStatus("");
+        setNewExpiry(null);
         handleCloseEditor();
     };
 
@@ -227,6 +330,28 @@ export const UserProfileStatus = ({
         // for other users and this user's other devices right away.
         announcePresenceChange();
     };
+
+    // Owner auto-clear: when this is MY profile and my status has a FUTURE
+    // expiry, arm a one-shot timer to the exact instant it lapses and PUT-clear
+    // both fields so the DB converges and every other client gets the beat.
+    // Client-side masking (above) already hides it visually the moment it
+    // passes; this makes the clear durable. Guarded to self, and re-armed
+    // whenever the live expiry changes (edit, reconcile). Mirrors the pause
+    // hook's reactive-expiry setTimeout.
+    const persistRef = useRef(persistCustomStatus);
+    persistRef.current = persistCustomStatus;
+    useEffect(() => {
+        if (!isSelfView) return;
+        const ownExpiry = myself.customStatusExpiry ?? null;
+        const ownStatus = myself.customStatus ?? "";
+        if (!ownExpiry || ownStatus === "") return;
+        const ms = msUntilStatusExpiry(ownExpiry);
+        if (ms === null) return; // already elapsed — masking + next beat handle it
+        // +250ms so it fires strictly after the boundary (see BOUNDARY_BUFFER
+        // in the pause hook).
+        const id = setTimeout(() => persistRef.current("", null), ms + 250);
+        return () => clearTimeout(id);
+    }, [isSelfView, myself.customStatusExpiry, myself.customStatus]);
 
     const chipBase = {
         borderRadius: "sm",
@@ -281,6 +406,10 @@ export const UserProfileStatus = ({
                             </MenuButton>
                             {isSelfView && (
                                 <Menu sx={{ zIndex: 10010 }}>
+                                    {/* Presence only — the pause presets moved
+                                        to their own dedicated button next to
+                                        this chip (they are a separate concern
+                                        from online/offline). */}
                                     <MenuItem onClick={() => persistPresence("false")}>
                                         <PulseDot color={PRESENCE_GREEN} />
                                         {t.admin.status.setOnline}
@@ -289,30 +418,53 @@ export const UserProfileStatus = ({
                                         <PulseDot color={PRESENCE_GREY} />
                                         {t.admin.status.setAlwaysOffline}
                                     </MenuItem>
-                                    {/* Quick pause presets (self only). Absent
-                                        outside a NotificationsProvider. Full
-                                        controls: Settings → notifications. */}
-                                    {notif && (
-                                        <>
-                                            <ListDivider />
-                                            <MenuItem disabled sx={{ fontSize: "xs" }}>
-                                                <ListItemDecorator>
-                                                    <NotificationsPausedRoundedIcon fontSize="small" />
-                                                </ListItemDecorator>
-                                                {t.services.notifications.pause.durationMenuLabel}
-                                            </MenuItem>
-                                            <NotificationPausePresetItems
-                                                isPausedNow={notif.isPausedNow}
-                                                pauseFor={notif.pauseFor}
-                                                pauseUntilTomorrow={notif.pauseUntilTomorrow}
-                                                pauseUntilNextWeek={notif.pauseUntilNextWeek}
-                                                resume={notif.resume}
-                                            />
-                                        </>
-                                    )}
                                 </Menu>
                             )}
                         </Dropdown>
+
+                        {/* Dedicated pause-notifications button (self only).
+                            A separate control from the presence chip above:
+                            it opens ONLY the pause presets, including the
+                            custom date/time picker (ask: "pause until Aug 11,
+                            9 AM"). Absent outside a NotificationsProvider (test
+                            harnesses). Full controls: Settings → notifications. */}
+                        {isSelfView && notif && (
+                            <Dropdown>
+                                <AppTooltip
+                                    size="sm"
+                                    title={
+                                        notif.isPausedNow
+                                            ? t.services.notifications.pause.selfTooltip
+                                            : t.services.notifications.pause.pauseButton
+                                    }
+                                >
+                                    <MenuButton
+                                        slots={{ root: IconButton }}
+                                        slotProps={{
+                                            root: {
+                                                variant: notif.isPausedNow ? "soft" : "outlined",
+                                                color: notif.isPausedNow ? "warning" : "neutral",
+                                                size: "sm",
+                                                "aria-label":
+                                                    t.services.notifications.pause.pauseButton,
+                                            },
+                                        }}
+                                    >
+                                        <NotificationsPausedRoundedIcon />
+                                    </MenuButton>
+                                </AppTooltip>
+                                <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                                    <NotificationPausePresetItems
+                                        isPausedNow={notif.isPausedNow}
+                                        pauseFor={notif.pauseFor}
+                                        pauseUntilTomorrow={notif.pauseUntilTomorrow}
+                                        pauseUntilNextWeek={notif.pauseUntilNextWeek}
+                                        resume={notif.resume}
+                                        onCustom={openPauseCustom}
+                                    />
+                                </Menu>
+                            </Dropdown>
+                        )}
 
                         {/* Self always sees the chip (it doubles as the
                             "Update Status" button when empty). For other
@@ -320,22 +472,44 @@ export const UserProfileStatus = ({
                             status set — never the "Update Status" prompt,
                             which you can't act on for someone else. */}
                         {!openEditor && (isSelfView || customStatus !== "") && (
-                            <Chip
-                                color="neutral"
-                                size="md"
-                                variant="outlined"
-                                sx={{
-                                    ...chipBase,
-                                    cursor: isSelfView ? "pointer" : "default",
-                                    transition: "background-color 0.15s ease",
-                                    "&:hover": isSelfView
-                                        ? { backgroundColor: styles.hoverBg }
-                                        : undefined,
-                                }}
-                                onClick={isSelfView ? handleOpenEditor : undefined}
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={0.5}
+                                sx={{ minWidth: 0, flexWrap: "wrap", gap: 0.5 }}
                             >
-                                {customStatus !== "" ? customStatus : t.admin.status.updateStatus}
-                            </Chip>
+                                <Chip
+                                    color="neutral"
+                                    size="md"
+                                    variant="outlined"
+                                    sx={{
+                                        ...chipBase,
+                                        cursor: isSelfView ? "pointer" : "default",
+                                        transition: "background-color 0.15s ease",
+                                        "&:hover": isSelfView
+                                            ? { backgroundColor: styles.hoverBg }
+                                            : undefined,
+                                    }}
+                                    onClick={isSelfView ? handleOpenEditor : undefined}
+                                >
+                                    {customStatus !== ""
+                                        ? customStatus
+                                        : t.admin.status.updateStatus}
+                                </Chip>
+                                {/* Everyone sees when the status clears, so a
+                                    teammate reads "back Tue 9 AM". Subtle,
+                                    normal-weight, non-interactive. */}
+                                {showExpiryNote && (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ color: "text.tertiary", whiteSpace: "nowrap" }}
+                                    >
+                                        {fmt(t.services.notifications.statusExpiry.until, {
+                                            time: formatStatusExpiry(statusExpiryIso),
+                                        })}
+                                    </Typography>
+                                )}
+                            </Stack>
                         )}
 
                         {openEditor && (
@@ -374,6 +548,66 @@ export const UserProfileStatus = ({
                                     variant="outlined"
                                     onChange={(e) => setNewStatus(e.target.value)}
                                 />
+                                {/* "Clear after…" — the Slack expiry preset set.
+                                    The chosen value shows as the button label so
+                                    the current choice is visible at a glance. */}
+                                <Dropdown>
+                                    <MenuButton
+                                        size="sm"
+                                        variant="outlined"
+                                        color="neutral"
+                                        startDecorator={<ScheduleRoundedIcon fontSize="small" />}
+                                    >
+                                        {newExpiry
+                                            ? formatStatusExpiry(newExpiry)
+                                            : seT.clearAfterLabel}
+                                    </MenuButton>
+                                    <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                                        <MenuItem onClick={() => setNewExpiry(null)}>
+                                            {seT.clearNever}
+                                        </MenuItem>
+                                        <ListDivider />
+                                        <MenuItem
+                                            onClick={() =>
+                                                setNewExpiry(statusExpiryIn(STATUS_EXPIRY_30M))
+                                            }
+                                        >
+                                            {seT.for30m}
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() =>
+                                                setNewExpiry(statusExpiryIn(STATUS_EXPIRY_1H))
+                                            }
+                                        >
+                                            {seT.for1h}
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() =>
+                                                setNewExpiry(statusExpiryIn(STATUS_EXPIRY_4H))
+                                            }
+                                        >
+                                            {seT.for4h}
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() =>
+                                                setNewExpiry(statusExpiryEndOfToday(zone))
+                                            }
+                                        >
+                                            {seT.today}
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() =>
+                                                setNewExpiry(statusExpiryEndOfThisWeek(zone))
+                                            }
+                                        >
+                                            {seT.thisWeek}
+                                        </MenuItem>
+                                        <ListDivider />
+                                        <MenuItem onClick={openExpiryCustom}>
+                                            {seT.custom}
+                                        </MenuItem>
+                                    </Menu>
+                                </Dropdown>
                             </Stack>
                         )}
                     </Stack>
@@ -508,6 +742,27 @@ export const UserProfileStatus = ({
                 </Typography>
             )}
 
+            {/* Self-only pause status line: when MY notifications are paused,
+                show until when (or the schedule window). The pause expiry /
+                schedule are private — only the paused boolean is broadcast — so
+                this is never shown for other members, only for me. Reuses the
+                exact wording from the Settings pause section. */}
+            {isSelfView && notif?.isPausedNow && (
+                <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mt: 0.5 }}>
+                    <NotificationsPausedRoundedIcon sx={{ fontSize: 16, color: "warning.500" }} />
+                    <Typography level="body-xs" sx={{ color: "warning.500", fontWeight: 600 }}>
+                        {formatPauseStatusText(
+                            {
+                                isPausedNow: notif.isPausedNow,
+                                snoozeUntil: notif.snoozeUntil,
+                                snoozeSchedule: notif.snoozeSchedule,
+                            },
+                            t.services.notifications.pause
+                        )}
+                    </Typography>
+                </Stack>
+            )}
+
             {openEditor && (
                 <Stack direction="row" justifyContent="center" spacing={0.5}>
                     <Button
@@ -539,6 +794,65 @@ export const UserProfileStatus = ({
                     </Button>
                 </Stack>
             )}
+
+            {/* Custom date/time for the STATUS expiry ("Clear after → Pick a
+                date & time…"). Owned at this level so it survives the editor's
+                "Clear after…" menu closing on click. Sets the draft `newExpiry`
+                only — the actual PUT happens when the user hits Set. */}
+            <Modal open={expiryCustomOpen} onClose={() => setExpiryCustomOpen(false)}>
+                <ModalDialog sx={{ zIndex: 10020 }}>
+                    <ModalClose />
+                    <Typography level="title-md">{seT.customTitle}</Typography>
+                    <Input
+                        type="datetime-local"
+                        value={expiryCustomValue}
+                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                        onChange={(e) => setExpiryCustomValue(e.target.value)}
+                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                        <Button
+                            color="neutral"
+                            variant="plain"
+                            onClick={() => setExpiryCustomOpen(false)}
+                        >
+                            {seT.customCancel}
+                        </Button>
+                        <Button disabled={!expiryCustomValue} onClick={commitExpiryCustom}>
+                            {seT.customSet}
+                        </Button>
+                    </Stack>
+                </ModalDialog>
+            </Modal>
+
+            {/* Custom date/time for the notification PAUSE ("pause until Aug 11,
+                9 AM"). Commits straight through the pause hook — unlike the
+                status expiry, there is no separate Set step for a pause. */}
+            <Modal open={pauseCustomOpen} onClose={() => setPauseCustomOpen(false)}>
+                <ModalDialog sx={{ zIndex: 10020 }}>
+                    <ModalClose />
+                    <Typography level="title-md">
+                        {t.services.notifications.pause.customTitle}
+                    </Typography>
+                    <Input
+                        type="datetime-local"
+                        value={pauseCustomValue}
+                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                        onChange={(e) => setPauseCustomValue(e.target.value)}
+                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                        <Button
+                            color="neutral"
+                            variant="plain"
+                            onClick={() => setPauseCustomOpen(false)}
+                        >
+                            {t.services.notifications.pause.customCancel}
+                        </Button>
+                        <Button disabled={!pauseCustomValue} onClick={commitPauseCustom}>
+                            {t.services.notifications.pause.customSet}
+                        </Button>
+                    </Stack>
+                </ModalDialog>
+            </Modal>
         </Stack>
     );
 };

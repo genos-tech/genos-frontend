@@ -71,6 +71,28 @@ export const services = {
             scheduleStart: "From",
             scheduleEnd: "To",
         },
+        // Slack-style "clear status after" for the user's CUSTOM STATUS (the
+        // emoji + message like "🌴 On Holiday"), NOT the notification pause
+        // above. The expiry is visible to everyone so teammates read "back Tue
+        // 9 AM"; the status auto-clears for everyone once it passes.
+        statusExpiry: {
+            // Label on the "Clear after…" dropdown in the status editor.
+            clearAfterLabel: "Clear after…",
+            clearNever: "Don't clear",
+            for30m: "30 minutes",
+            for1h: "1 hour",
+            for4h: "4 hours",
+            today: "Today",
+            thisWeek: "This week",
+            custom: "Pick a date & time…",
+            // Title of the custom date/time modal.
+            customTitle: "Clear status after",
+            customSet: "Set",
+            customCancel: "Cancel",
+            // The subtle note shown next to a status with a future expiry, to
+            // everyone. `{time}` is the local moment, e.g. "Tue 9:00 AM".
+            until: "until {time}",
+        },
         categories: {
             chats: "Chats",
             threadReplies: "Thread replies",

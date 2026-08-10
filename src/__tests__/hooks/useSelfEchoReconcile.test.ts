@@ -62,7 +62,11 @@ describe("useSelfEchoReconcile", () => {
         const setMyself = vi.fn();
         const mgr = new NotificationManager({ currentUserId: "u-me" });
         const myself = mkUser({ isOfflineForced: "false", customStatus: "" });
-        mockedGetMyProfile.mockResolvedValue({ isOfflineForced: true, customStatus: "🏝 OOO" });
+        mockedGetMyProfile.mockResolvedValue({
+            isOfflineForced: true,
+            customStatus: "🏝 OOO",
+            customStatusExpiry: null,
+        });
 
         renderHook(() => useSelfEchoReconcile(myself, setMyself, "tok", mgr));
 
@@ -79,12 +83,69 @@ describe("useSelfEchoReconcile", () => {
         expect(localStorage.getItem("customStatus")).toBe("🏝 OOO");
     });
 
+    it("re-fetches and adopts a new expiry when only the expiry diverges", async () => {
+        const setMyself = vi.fn();
+        const mgr = new NotificationManager({ currentUserId: "u-me" });
+        // Same status on both sides, but another device attached an expiry.
+        const myself = mkUser({ customStatus: "🏝 OOO", customStatusExpiry: null });
+        mockedGetMyProfile.mockResolvedValue({
+            isOfflineForced: false,
+            customStatus: "🏝 OOO",
+            customStatusExpiry: "2999-01-01T09:00:00.000Z",
+        });
+
+        renderHook(() => useSelfEchoReconcile(myself, setMyself, "tok", mgr));
+        dispatchSelfEcho({
+            userId: "u-me",
+            customStatus: "🏝 OOO",
+            customStatusExpiry: "2999-01-01T09:00:00.000Z",
+        });
+        await vi.advanceTimersByTimeAsync(900);
+        await flush();
+
+        expect(mockedGetMyProfile).toHaveBeenCalledWith("tok");
+        expect(setMyself).toHaveBeenCalledWith(
+            expect.objectContaining({ customStatusExpiry: "2999-01-01T09:00:00.000Z" })
+        );
+        expect(localStorage.getItem("customStatusExpiry")).toBe("2999-01-01T09:00:00.000Z");
+    });
+
+    it("adopts a cleared expiry (server null) and writes '' to the heartbeat mirror", async () => {
+        const setMyself = vi.fn();
+        const mgr = new NotificationManager({ currentUserId: "u-me" });
+        // Local holds an expiry; another device cleared it (auto-clear / reset).
+        const myself = mkUser({
+            customStatus: "🏝 OOO",
+            customStatusExpiry: "2999-01-01T09:00:00.000Z",
+        });
+        mockedGetMyProfile.mockResolvedValue({
+            isOfflineForced: false,
+            customStatus: "🏝 OOO",
+            customStatusExpiry: null,
+        });
+
+        renderHook(() => useSelfEchoReconcile(myself, setMyself, "tok", mgr));
+        dispatchSelfEcho({ userId: "u-me", customStatus: "🏝 OOO", customStatusExpiry: null });
+        await vi.advanceTimersByTimeAsync(900);
+        await flush();
+
+        expect(setMyself).toHaveBeenCalledWith(
+            expect.objectContaining({ customStatusExpiry: null })
+        );
+        // "" is the heartbeat's "no expiry" sentinel.
+        expect(localStorage.getItem("customStatusExpiry")).toBe("");
+    });
+
     it("does NOT adopt the echoed value directly — it uses the server's (authority wins)", async () => {
         const setMyself = vi.fn();
         const mgr = new NotificationManager({ currentUserId: "u-me" });
         const myself = mkUser({ customStatus: "" });
         // Echo says "stale-beat", but the server is authoritative and says "real".
-        mockedGetMyProfile.mockResolvedValue({ isOfflineForced: false, customStatus: "real" });
+        mockedGetMyProfile.mockResolvedValue({
+            isOfflineForced: false,
+            customStatus: "real",
+            customStatusExpiry: null,
+        });
 
         renderHook(() => useSelfEchoReconcile(myself, setMyself, "tok", mgr));
         dispatchSelfEcho({ userId: "u-me", customStatus: "stale-beat" });
@@ -155,7 +216,11 @@ describe("useSelfEchoReconcile", () => {
     it("coalesces a burst of echoes into a single fetch (debounce)", async () => {
         const setMyself = vi.fn();
         const mgr = new NotificationManager({ currentUserId: "u-me" });
-        mockedGetMyProfile.mockResolvedValue({ isOfflineForced: true, customStatus: "" });
+        mockedGetMyProfile.mockResolvedValue({
+            isOfflineForced: true,
+            customStatus: "",
+            customStatusExpiry: null,
+        });
         const myself = mkUser({ isOfflineForced: "false" });
 
         renderHook(() => useSelfEchoReconcile(myself, setMyself, "tok", mgr));

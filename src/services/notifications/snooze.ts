@@ -31,8 +31,10 @@ export interface SnoozeSchedule {
 /** Local hour a "until tomorrow" / "until next week" preset resumes at. */
 const RESUME_HOUR_LOCAL = 8;
 
-/** A zone the runtime can format with, or "UTC" — never throws downstream. */
-const safeZone = (zone: string): string => (isValidZone(zone) ? zone : "UTC");
+/** A zone the runtime can format with, or "UTC" — never throws downstream.
+ *  Exported for `statusExpiry.ts`, which resolves the same LOCAL wall-clock
+ *  presets (Today / This week) and must sanitise the zone identically. */
+export const safeZone = (zone: string): string => (isValidZone(zone) ? zone : "UTC");
 
 /**
  * "HH:MM" → minutes-since-local-midnight, or `null` if malformed / out of
@@ -162,8 +164,9 @@ export const msUntilNextBoundary = (
 // `new Date(Date.now() + ms).toISOString()`. These two resolve a LOCAL morning
 // hour and so need the user's zone.
 
-/** Local calendar Y/M/D of `date` as read in `zone`. */
-const localDateParts = (
+/** Local calendar Y/M/D of `date` as read in `zone`. Exported for reuse by the
+ *  status-expiry preset builders — same DST-safe wall-clock math. */
+export const localDateParts = (
     zone: string,
     date: Date
 ): { year: number; month: number; day: number } => {
@@ -177,8 +180,9 @@ const localDateParts = (
     return { year: get("year"), month: get("month"), day: get("day") };
 };
 
-/** Local weekday of `date` in `zone`, 0=Sunday … 6=Saturday. */
-const localWeekday = (zone: string, date: Date): number => {
+/** Local weekday of `date` in `zone`, 0=Sunday … 6=Saturday. Exported so the
+ *  status-expiry "This week" builder can find the coming Friday the same way. */
+export const localWeekday = (zone: string, date: Date): number => {
     const short = new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short" }).format(
         date
     );
@@ -203,8 +207,11 @@ const localWeekday = (zone: string, date: Date): number => {
  * one-hour DST gap/overlap twice a year — acceptable for a resume time the
  * user reads to the minute, and the stored value is an absolute instant that
  * self-corrects.
+ *
+ * Exported so the status-expiry Today / This-week builders resolve a LOCAL
+ * wall-clock instant with the exact same (DST-safe) conversion.
  */
-const wallClockToEpoch = (
+export const wallClockToEpoch = (
     zone: string,
     year: number,
     month: number,

@@ -26,6 +26,11 @@ export interface SelfEchoDetail {
     userId: string;
     isOfflineForced?: string;
     customStatus?: string;
+    /** Absolute ISO instant the custom status auto-clears, or `null`/absent
+     *  if it never expires. Rides the echo so a status set-with-expiry (or an
+     *  auto-clear) on another device is detected as a divergence and reconciled
+     *  against server authority, exactly like `customStatus` itself. */
+    customStatusExpiry?: string | null;
     isNotificationsPaused?: boolean;
 }
 

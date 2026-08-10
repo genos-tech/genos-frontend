@@ -18,6 +18,7 @@ describe("dispatchSelfEcho", () => {
             userId: "u-me",
             isOfflineForced: "true",
             customStatus: "🏝 OOO",
+            customStatusExpiry: "2026-08-11T09:00:00Z",
             isNotificationsPaused: true,
         });
 
@@ -27,6 +28,7 @@ describe("dispatchSelfEcho", () => {
             userId: "u-me",
             isOfflineForced: "true",
             customStatus: "🏝 OOO",
+            customStatusExpiry: "2026-08-11T09:00:00Z",
             isNotificationsPaused: true,
         });
     });

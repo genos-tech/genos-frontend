@@ -22,47 +22,55 @@ import {
 
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
 import { fmt, useTranslation } from "../../i18n";
+import { Messages } from "../../i18n/types";
+// The one-shot-instant formatter and the datetime-local (de)serialiser are
+// shared with the custom-status expiry feature, which formats the same kind of
+// absolute instant. Defined in `statusExpiry.ts`; imported here so the pause
+// status line and the status expiry note read identically.
+import { formatStatusExpiry, toLocalInputValue } from "./statusExpiry";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
+
+/**
+ * The single-line "current pause state" summary, e.g. "Paused until 3:30 PM" /
+ * "Scheduled 17:00–09:00" / "Not paused". Extracted so the settings section
+ * AND the profile modal's self-only pause line (ModalUserProfile) read the same
+ * wording from one place rather than each re-deriving the branch order.
+ *
+ * `p` is the `pause` i18n subtree; passing it in (rather than calling
+ * `useTranslation` here) keeps this a pure function usable from any caller.
+ */
+export const formatPauseStatusText = (
+    pause: Pick<NotificationPauseState, "isPausedNow" | "snoozeUntil" | "snoozeSchedule">,
+    p: Messages["services"]["notifications"]["pause"]
+): string => {
+    const { isPausedNow, snoozeUntil, snoozeSchedule } = pause;
+    const untilActive = !!snoozeUntil && Date.parse(snoozeUntil) > Date.now();
+    const scheduleEnabled = snoozeSchedule?.enabled === true;
+    if (untilActive) {
+        return fmt(p.statusPausedUntil, { time: formatStatusExpiry(snoozeUntil as string) });
+    }
+    if (scheduleEnabled && isPausedNow) {
+        return fmt(p.statusPausedSchedule, {
+            start: snoozeSchedule!.start,
+            end: snoozeSchedule!.end,
+        });
+    }
+    if (scheduleEnabled) {
+        return fmt(p.statusScheduledOnly, {
+            start: snoozeSchedule!.start,
+            end: snoozeSchedule!.end,
+        });
+    }
+    return p.statusNotPaused;
+};
 
 // Defaults offered the first time someone enables the daily schedule — a
 // classic "evening to morning" overnight window, so the overnight branch is
 // exercised out of the box and the example in the copy matches what's shown.
 const DEFAULT_SCHEDULE_START = "17:00";
 const DEFAULT_SCHEDULE_END = "09:00";
-
-/**
- * Render a one-shot expiry (`snoozeUntil`, an absolute instant) for the
- * status line, in the viewer's local wall-clock — it IS an instant, so local
- * time is what the user reads off their own clock. The weekday is shown only
- * when the resume moment isn't today, so a 30-minute pause reads "3:30 PM"
- * while "until next week" reads "Mon 8:00 AM".
- */
-const formatUntil = (iso: string): string => {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    const now = new Date();
-    const sameDay =
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate();
-    return d.toLocaleString(
-        undefined,
-        sameDay
-            ? { hour: "numeric", minute: "2-digit" }
-            : { weekday: "short", hour: "numeric", minute: "2-digit" }
-    );
-};
-
-/** `Date` → the `YYYY-MM-DDTHH:MM` string a `datetime-local` input wants,
- *  in local wall-clock (which is exactly how the input interprets it back). */
-const toLocalInputValue = (d: Date): string => {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        d.getHours()
-    )}:${pad(d.getMinutes())}`;
-};
 
 type PresetItemsProps = Pick<
     NotificationPauseState,
@@ -177,24 +185,10 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
     };
 
     // --- Status line --------------------------------------------------------
+    // The "Resume" button is only meaningful for a one-shot pause; the shared
+    // helper owns the wording of the status text itself.
     const untilActive = !!snoozeUntil && Date.parse(snoozeUntil) > Date.now();
-    const scheduleEnabled = snoozeSchedule?.enabled === true;
-    let statusText: string;
-    if (untilActive) {
-        statusText = fmt(p.statusPausedUntil, { time: formatUntil(snoozeUntil as string) });
-    } else if (scheduleEnabled && isPausedNow) {
-        statusText = fmt(p.statusPausedSchedule, {
-            start: snoozeSchedule!.start,
-            end: snoozeSchedule!.end,
-        });
-    } else if (scheduleEnabled) {
-        statusText = fmt(p.statusScheduledOnly, {
-            start: snoozeSchedule!.start,
-            end: snoozeSchedule!.end,
-        });
-    } else {
-        statusText = p.statusNotPaused;
-    }
+    const statusText = formatPauseStatusText({ isPausedNow, snoozeUntil, snoozeSchedule }, p);
 
     return (
         <Box>

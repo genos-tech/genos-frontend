@@ -256,6 +256,7 @@ export const setupWebSocketHandlers = (
                     userId: user.userId,
                     isOfflineForced: user.isOfflineForced,
                     customStatus: user.customStatus,
+                    customStatusExpiry: user.customStatusExpiry,
                     isNotificationsPaused: user.isNotificationsPaused,
                 });
             }
