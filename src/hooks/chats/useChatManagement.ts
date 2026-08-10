@@ -618,6 +618,23 @@ export const useChatManagement = (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myself.userId]);
 
+    // Live sidebar clear on message view. When the read cursor sweeps past
+    // a message, the server also marks that message's unread activities
+    // read and `handleV3ActivitiesRead` flips them in IDB, then dispatches
+    // `v3:activities:read`. Re-derive the React state so the activity list
+    // + unread badge drop the cleared rows without a click — the read-side
+    // complement of the `v3:activity:created` listener above. Same
+    // re-arm-on-userId rationale: `funcSetActivityMessages` closes over
+    // `myself`, so the listener must track the latest closure.
+    useEffect(() => {
+        const onActivitiesRead = () => {
+            void funcSetActivityMessages();
+        };
+        window.addEventListener("v3:activities:read", onActivitiesRead);
+        return () => window.removeEventListener("v3:activities:read", onActivitiesRead);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.userId]);
+
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
     }, [allChats]);
