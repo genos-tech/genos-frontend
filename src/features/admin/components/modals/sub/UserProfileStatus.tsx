@@ -484,6 +484,18 @@ export const UserProfileStatus = ({
                                     variant="outlined"
                                     sx={{
                                         ...chipBase,
+                                        // Match the presence chip's visual size:
+                                        // that chip's box is its md IconButton
+                                        // wrapper (2.25rem tall), while this one
+                                        // is a bare md Chip (1.75rem, 0.75rem
+                                        // inline padding) whose 16px text left it
+                                        // looking short and cramped. Lift the
+                                        // height to line up and widen the inline
+                                        // padding for breathing room. Set on this
+                                        // chip's own sx — NOT chipBase, which the
+                                        // presence chip shares and would inflate.
+                                        "--Chip-minHeight": "2.25rem",
+                                        "--Chip-paddingInline": "0.875rem",
                                         cursor: isSelfView ? "pointer" : "default",
                                         transition: "background-color 0.15s ease",
                                         "&:hover": isSelfView
@@ -799,8 +811,12 @@ export const UserProfileStatus = ({
                 date & time…"). Owned at this level so it survives the editor's
                 "Clear after…" menu closing on click. Sets the draft `newExpiry`
                 only — the actual PUT happens when the user hits Set. */}
-            <Modal open={expiryCustomOpen} onClose={() => setExpiryCustomOpen(false)}>
-                <ModalDialog sx={{ zIndex: 10020 }}>
+            <Modal
+                open={expiryCustomOpen}
+                sx={{ zIndex: 10020 }}
+                onClose={() => setExpiryCustomOpen(false)}
+            >
+                <ModalDialog>
                     <ModalClose />
                     <Typography level="title-md">{seT.customTitle}</Typography>
                     <Input
@@ -827,8 +843,12 @@ export const UserProfileStatus = ({
             {/* Custom date/time for the notification PAUSE ("pause until Aug 11,
                 9 AM"). Commits straight through the pause hook — unlike the
                 status expiry, there is no separate Set step for a pause. */}
-            <Modal open={pauseCustomOpen} onClose={() => setPauseCustomOpen(false)}>
-                <ModalDialog sx={{ zIndex: 10020 }}>
+            <Modal
+                open={pauseCustomOpen}
+                sx={{ zIndex: 10020 }}
+                onClose={() => setPauseCustomOpen(false)}
+            >
+                <ModalDialog>
                     <ModalClose />
                     <Typography level="title-md">
                         {t.services.notifications.pause.customTitle}
