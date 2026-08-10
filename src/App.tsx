@@ -70,6 +70,7 @@ import { QuickReactionsPreferenceProvider } from "./hooks/common/useQuickReactio
 import { useReconcileMyselfAvatar } from "./hooks/common/useReconcileMyselfAvatar";
 import { useReportBrowserTimezone } from "./hooks/common/useReportBrowserTimezone";
 import { useReportUiLanguage } from "./hooks/common/useReportUiLanguage";
+import { useSelfEchoReconcile } from "./hooks/common/useSelfEchoReconcile";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { SpotlightPreferencesProvider } from "./hooks/common/useSpotlightPreferences";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -839,6 +840,13 @@ export const App = () => {
     // Web notifications: hydrates prefs from backend, owns permission state,
     // and exposes the manager that the websocket router pushes intents to.
     const useNotif = useNotifications(myself, accessToken, openIntent);
+
+    // Live cross-device sync of the user's OWN mutable status: when they toggle
+    // appear-offline, edit their custom status, or pause notifications on
+    // another device, that device's heartbeat echoes back here and this hook
+    // re-fetches the authoritative server value so THIS session updates without
+    // a reload. See the hook for why it re-fetches rather than adopting the echo.
+    useSelfEchoReconcile(myself, setMyself, accessToken, useNotif.manager);
 
     // Global Cmd-K / Ctrl-K Spotlight overlay. The hook owns open/close
     // state, the keyboard listener, the debounced query, and an `onAsk`

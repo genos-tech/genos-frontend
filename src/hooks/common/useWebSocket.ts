@@ -6,6 +6,7 @@ import { PAUSE_CHANGED_EVENT, readSnoozeMirror } from "../../services/notificati
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { resolveDisplayZone } from "../../utils/userTimezone";
+import { PRESENCE_CHANGED_EVENT } from "./presenceEvents";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
@@ -99,13 +100,18 @@ export const useWebSocket = (
         }
     }, [socketInstance, myself]);
 
-    // A manual pause/resume must reach other users right away, not on the next
-    // 60s tick — the pause hook fires `PAUSE_CHANGED_EVENT` after mutating the
-    // mirror, and we answer it with an immediate beat carrying the fresh flag.
+    // A manual pause/resume OR a presence edit (appear-offline, custom status)
+    // must reach other users right away, not on the next 60s tick — each edit
+    // site fires its event after mutating localStorage, and we answer with an
+    // immediate beat carrying the fresh state.
     useEffect(() => {
-        const onPauseChanged = () => sendHeartBeat();
-        window.addEventListener(PAUSE_CHANGED_EVENT, onPauseChanged);
-        return () => window.removeEventListener(PAUSE_CHANGED_EVENT, onPauseChanged);
+        const beatNow = () => sendHeartBeat();
+        window.addEventListener(PAUSE_CHANGED_EVENT, beatNow);
+        window.addEventListener(PRESENCE_CHANGED_EVENT, beatNow);
+        return () => {
+            window.removeEventListener(PAUSE_CHANGED_EVENT, beatNow);
+            window.removeEventListener(PRESENCE_CHANGED_EVENT, beatNow);
+        };
     }, [sendHeartBeat]);
 
     // Initialize WebSocket connection.

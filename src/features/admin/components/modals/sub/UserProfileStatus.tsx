@@ -26,6 +26,7 @@ import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
+import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
 import { useTranslation } from "../../../../../i18n";
 import { NotificationPausePresetItems } from "../../../../../services/notifications/NotificationPausePicker";
 import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
@@ -199,6 +200,10 @@ export const UserProfileStatus = ({
         });
         setMyself({ ...myself, customStatus: status });
         localStorage.setItem("customStatus", status);
+        // Beat immediately so the change reaches other users AND the user's own
+        // other devices in <1s (self-echo → useSelfEchoReconcile) rather than
+        // waiting for the next 60s heartbeat.
+        announcePresenceChange();
     };
     const handleSet = () => {
         if (newStatus !== "") persistCustomStatus(newStatus);
@@ -218,6 +223,9 @@ export const UserProfileStatus = ({
         });
         setMyself({ ...myself, isOfflineForced: forced });
         localStorage.setItem("isOfflineForced", forced);
+        // Beat immediately (see persistCustomStatus) so appear-offline flips
+        // for other users and this user's other devices right away.
+        announcePresenceChange();
     };
 
     const chipBase = {

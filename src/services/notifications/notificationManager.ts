@@ -238,6 +238,13 @@ export class NotificationManager {
         );
     }
 
+    /** Public read of the live paused state — the same lazy evaluation the
+     *  `notify()` gate uses. Consumed by the self-echo reconciler to decide
+     *  whether an echoed `isNotificationsPaused` diverges from local truth. */
+    getIsSnoozedNow(): boolean {
+        return this.isSnoozedNow();
+    }
+
     // Replace the full prefs blob (e.g. after the initial backend GET).
     // Does NOT trigger the onPreferencesChange callback.
     hydratePreferences(prefs: NotificationPreference) {
