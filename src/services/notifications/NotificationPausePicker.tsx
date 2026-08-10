@@ -309,8 +309,8 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Stack>
             </Stack>
 
-            <Modal open={customOpen} onClose={() => setCustomOpen(false)}>
-                <ModalDialog sx={{ zIndex: 10020 }}>
+            <Modal open={customOpen} sx={{ zIndex: 10020 }} onClose={() => setCustomOpen(false)}>
+                <ModalDialog>
                     <ModalClose />
                     <Typography level="title-md">{p.customTitle}</Typography>
                     <Input
