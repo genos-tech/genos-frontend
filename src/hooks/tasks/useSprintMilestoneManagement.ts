@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
@@ -187,6 +187,13 @@ export const useSprintMilestoneManagement = (
     );
     const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
 
+    // Tracks the sprintId we last auto-selected as the default
+    // `currentSprint`. Lets a reload re-point that default to the newly
+    // active sprint when the active sprint rotates (a tab left open across
+    // a sprint boundary) WITHOUT overriding a sprint the user explicitly
+    // picked in the dashboard. `null` = nothing auto-selected yet.
+    const autoSelectedSprintIdRef = useRef<number | null>(null);
+
     const [tsLastSprintsLoaded, setTsLastSprintsLoaded] = useState<number | undefined>(undefined);
     const [tsLastMilestonesLoaded, setTsLastMilestonesLoaded] = useState<number | undefined>(
         undefined
@@ -206,6 +213,7 @@ export const useSprintMilestoneManagement = (
         setCurrentSprint(null);
         setProjectMilestonesState({});
         setCurrentMilestone(null);
+        autoSelectedSprintIdRef.current = null;
         setTsLastSprintsLoaded(undefined);
         setTsLastMilestonesLoaded(undefined);
     }, []);
@@ -233,20 +241,50 @@ export const useSprintMilestoneManagement = (
     const loadSprintsForProject = useCallback(
         async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> => {
             const res = await loadProjectSprints(projectId, accessToken, opts);
-            const sprints = res?.sprints ?? [];
+            // A failed request (transient auth gap on a focus/interval
+            // refresh, network blip) resolves to `undefined` — distinct from
+            // a project that genuinely has zero sprints (`{ sprints: [] }`).
+            // Bail WITHOUT touching state so a background refresh can never
+            // blank out the picker/dashboard that already have good data.
+            if (!res) return [];
+            const sprints = res.sprints ?? [];
             setProjectSprintsState((prev) => ({ ...prev, [projectId]: sprints }));
             setTsLastSprintsLoaded(Date.now());
-            // If we don't have a `currentSprint` yet, default to the
-            // active sprint when one exists, otherwise the first
-            // upcoming one. This keeps the dashboard non-empty.
-            if (!currentSprint || currentSprint.projectId !== projectId) {
-                const active = sprints.find((s) => s.status === "active");
-                const upcoming = sprints.find((s) => s.status === "upcoming");
-                setCurrentSprint(active ?? upcoming ?? null);
-            }
+
+            // Sprint `status` is recomputed server-side from *today's date*
+            // on every request (genos-api `_derive_status`), so re-loading is
+            // how the active-sprint rotation reaches the client. Re-resolve
+            // the default selection against the fresh list: the active sprint
+            // when one exists, else the first upcoming one.
+            const active = sprints.find((s) => s.status === "active");
+            const upcoming = sprints.find((s) => s.status === "upcoming");
+            const nextDefault = active ?? upcoming ?? null;
+            setCurrentSprint((prev) => {
+                // No selection yet, or we're now looking at a different
+                // project: adopt the computed default and remember it.
+                if (!prev || prev.projectId !== projectId) {
+                    autoSelectedSprintIdRef.current = nextDefault?.sprintId ?? null;
+                    return nextDefault;
+                }
+                // Still sitting on the sprint we auto-selected: follow the
+                // rotation when the active sprint has moved on, otherwise
+                // just swap in the fresh object so its status/dates (and the
+                // dashboard's derived window) aren't stale.
+                if (prev.sprintId === autoSelectedSprintIdRef.current) {
+                    if (nextDefault && nextDefault.sprintId !== prev.sprintId) {
+                        autoSelectedSprintIdRef.current = nextDefault.sprintId;
+                        return nextDefault;
+                    }
+                    return sprints.find((s) => s.sprintId === prev.sprintId) ?? prev;
+                }
+                // The user explicitly picked a different sprint (e.g. to
+                // inspect a past one) — keep their choice, but refresh the
+                // object so its status/dates stay current.
+                return sprints.find((s) => s.sprintId === prev.sprintId) ?? prev;
+            });
             return sprints;
         },
-        [accessToken, currentSprint]
+        [accessToken]
     );
 
     const loadMilestonesForProject = useCallback(

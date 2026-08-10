@@ -117,11 +117,47 @@ export const useProjectTaskManagement = ({
         const onFocus = () => {
             if (usePM.currentProject) {
                 void usePM.refreshProjectTasks(usePM.currentProject.projectId);
+                // A sprint's `status` (upcoming/active/completed) is derived
+                // server-side from today's date, so the active sprint silently
+                // rotates at a sprint boundary. Sprints are otherwise loaded
+                // only on project change, freezing a stale "active" in memory
+                // — re-fetch on focus so a tab returned to the next day picks
+                // up the new active sprint (and any freshly auto-rolled ones)
+                // without a reload. Both the milestone sprint picker and the
+                // dashboard read this shared state.
+                void useSM.loadSprintsForProject(usePM.currentProject.projectId);
             }
         };
         window.addEventListener("focus", onFocus);
         return () => window.removeEventListener("focus", onFocus);
-    }, [usePM.currentProject]);
+    }, [usePM.currentProject, useSM.loadSprintsForProject]);
+
+    // Sprint rotation for a tab that stays OPEN AND FOCUSED across a day
+    // boundary — the focus refresh above never fires then. Poll cheaply for a
+    // change in the local calendar date and re-fetch sprints when it ticks
+    // over, so the dashboard's active sprint and the milestone picker rotate
+    // on their own. The date compare is a near-free string check; the network
+    // call only happens once per day change. `loadSprintsForProject` reconciles
+    // `currentSprint` (see its self-heal), and the server is the authority on
+    // each sprint's status, so an approximate client-side day boundary is only
+    // a trigger, never the source of truth.
+    useEffect(() => {
+        if (!usePM.currentProject?.projectId) return;
+        const projectId = usePM.currentProject.projectId;
+        const localDate = () => {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        };
+        let lastDate = localDate();
+        const id = setInterval(() => {
+            const today = localDate();
+            if (today !== lastDate) {
+                lastDate = today;
+                void useSM.loadSprintsForProject(projectId);
+            }
+        }, 60_000);
+        return () => clearInterval(id);
+    }, [usePM.currentProject?.projectId, useSM.loadSprintsForProject]);
 
     // Agent bulk-write invalidator. The agent's approved task writes
     // (create_task_plan, update_tasks_bulk, ...) mutate tasks AND
