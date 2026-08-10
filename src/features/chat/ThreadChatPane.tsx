@@ -11,6 +11,7 @@ import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
 import { ThreadCommentsView } from "./components/shared/ThreadCommentsView";
 import { ThreadTabId, ThreadTabStrip } from "./components/shared/ThreadTabStrip";
+import { useFirstUnreadIndex } from "./hooks/useFirstUnreadIndex";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -140,42 +141,24 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         useCM,
         isThread: true,
     });
+    // Threads have no cursor in `cursorsByChannel` (main-timeline only), so
+    // this always returns null → threads keep landing at the bottom. Wired for
+    // parity so the renderer's initial-index path is uniform across panes.
+    const firstUnreadIndex = useFirstUnreadIndex({
+        chat: useCM.currentThreadChat as ThreadProps,
+        isThread: true,
+    });
     const scrollManagement = useScrollManagement({
         currentChat: useCM.currentThreadChat as ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: true,
-        // Fed straight from Virtuoso's `rangeChanged` (throttling lives
-        // inside `handlePeriodicReadStatusUpdate`); replaces the old
-        // per-scroll-tick `visibleRange` state effect.
-        onRangeChange: (range) =>
-            readStatusManagement.handlePeriodicReadStatusUpdate(range.endIndex),
+        firstUnreadIndex,
+        // Only tracks the visible range now; the read cursor advances from
+        // genuinely-seen bubbles via `onMessageSeenIndex` → `handleSeenIndex`,
+        // not from the rendered range (which includes the overscan — see the
+        // note in `useReadStatusManagement`).
+        onRangeChange: undefined,
     });
-
-    // Handle read status updates
-    useEffect(() => {
-        setTimeout(() => {
-            if (useCM.currentThreadChat) {
-                let targetIndex: number;
-                if (useCM.currentThreadChat?.moveToSpecificIndex === undefined) {
-                    targetIndex = useCM.currentThreadChat?.messages.length - 1;
-                } else if (
-                    messageManagement.indexMap &&
-                    messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex] !==
-                        undefined
-                ) {
-                    // v3 `moveToSpecificIndex` is the v3 UUID; the
-                    // `indexMap[uuid]` lookup is enough validation.
-                    targetIndex = Number(
-                        messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex]
-                    );
-                } else {
-                    targetIndex = -1;
-                }
-
-                readStatusManagement.handleReadStatusUpdate(targetIndex);
-            }
-        }, 1000);
-    }, [messageManagement.indexMap]);
 
     return (
         <div
@@ -266,6 +249,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     <MessageListRenderer
                         chat={useCM.currentThreadChat as ThreadProps}
                         currentChatId={currentThreadChatId}
+                        firstUnreadIndex={firstUnreadIndex}
                         height={0}
                         indexMap={messageManagement.indexMap}
                         isThread={true}
@@ -286,6 +270,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                         }
                         fillContainer
+                        onMessageSeenIndex={readStatusManagement.handleSeenIndex}
                         onRangeChanged={scrollManagement.handleRangeChanged}
                     />
                 ) : (
@@ -297,6 +282,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         <MessageListRenderer
                             chat={useCM.currentThreadChat as ThreadProps}
                             currentChatId={currentThreadChatId}
+                            firstUnreadIndex={firstUnreadIndex}
                             height={0}
                             indexMap={messageManagement.indexMap}
                             isThread={true}
@@ -317,6 +303,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                             }
                             fillContainer
+                            onMessageSeenIndex={readStatusManagement.handleSeenIndex}
                             onRangeChanged={scrollManagement.handleRangeChanged}
                         />
 

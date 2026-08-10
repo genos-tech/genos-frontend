@@ -3,7 +3,7 @@
 // (auto-fix loops between the two). Prettier wins per project
 // convention.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -13,6 +13,7 @@ import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
 import { RetentionBanner } from "./components/shared/RetentionBanner";
+import { useFirstUnreadIndex } from "./hooks/useFirstUnreadIndex";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -118,51 +119,23 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         myself,
         useCM,
     });
+    // First-unread landing for the open sub-chat, frozen per chat. Safe on the
+    // EMPTY_CHAT placeholder (chatId ""): no cursor for it → null → bottom.
+    const firstUnreadIndex = useFirstUnreadIndex({
+        chat: chatForHooks,
+        isThread: false,
+    });
     const scrollManagement = useScrollManagement({
         currentChat: chatForHooks,
         indexMap: messageManagement.indexMap,
         isThread: false,
-        // Fed straight from Virtuoso's `rangeChanged` (throttling lives
-        // inside `handlePeriodicReadStatusUpdate`); replaces the old
-        // per-scroll-tick `visibleRange` state effect.
-        onRangeChange: (range) => {
-            if (!useCM.currentSubChat) return;
-            readStatusManagement.handlePeriodicReadStatusUpdate(range.endIndex);
-        },
+        firstUnreadIndex,
+        // Only tracks the visible range now; it no longer advances the read
+        // cursor (the rendered range includes the overscan below the fold —
+        // see the note in `useReadStatusManagement`). The cursor advances from
+        // genuinely-seen bubbles via `onMessageSeenIndex` → `handleSeenIndex`.
+        onRangeChange: undefined,
     });
-
-    // Handle read status updates
-    useEffect(() => {
-        if (!useCM.currentSubChat) return;
-        setTimeout(() => {
-            if (useCM.currentSubChat) {
-                let targetIndex: number;
-                if (useCM.currentSubChat.moveToSpecificIndex === undefined) {
-                    targetIndex = useCM.currentSubChat.messages.length - 1;
-                } else if (
-                    useCM.currentSubChat.moveToSpecificIndex &&
-                    messageManagement.indexMap &&
-                    messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex] !==
-                        undefined
-                ) {
-                    // v3 `moveToSpecificIndex` is the message's v3 UUID
-                    // — `indexMap[uuid]` lookup is enough validation.
-                    targetIndex = Number(
-                        messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex]
-                    );
-                } else {
-                    targetIndex = -1;
-                }
-
-                readStatusManagement.handleReadStatusUpdate(targetIndex);
-            }
-        }, 1000);
-        // Effect fires when `indexMap` changes — that's the resolution event
-        // we care about. Including `readStatusManagement` / `useCM.currentSubChat`
-        // would either rerun on every render (manager rebuilt each render) or
-        // double-update when the chat reference changes.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [messageManagement.indexMap]);
 
     if (!useCM.currentSubChat) {
         return null;
@@ -239,6 +212,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             <MessageListRenderer
                                 chat={useCM.currentSubChat}
                                 currentChatId={currentSubChatId}
+                                firstUnreadIndex={firstUnreadIndex}
                                 height={0}
                                 indexMap={messageManagement.indexMap}
                                 isThread={false}
@@ -259,6 +233,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                                 fillContainer
+                                onMessageSeenIndex={readStatusManagement.handleSeenIndex}
                                 onRangeChanged={scrollManagement.handleRangeChanged}
                             />
                             <ChatEditorSection
