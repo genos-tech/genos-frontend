@@ -1,7 +1,9 @@
 import { memo, useCallback, useMemo, useState } from "react";
+import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
 import { Avatar, Box, Stack, Typography } from "@mui/joy";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
+import { fmt, useTranslation } from "../../../i18n";
 import { AppTooltip } from "../AppTooltip";
 import { PulseDot } from "../misc/PulseDot";
 import { useAvatarContext, useUserProfile } from "./AvatarContext";
@@ -67,6 +69,7 @@ const UserAvatarInner = (props: UserAvatarProps) => {
 
     const ctx = useAvatarContext();
     const profile = useUserProfile(userId);
+    const { t } = useTranslation();
 
     const [openUserProfile, setOpenUserProfile] = useState(false);
 
@@ -82,6 +85,14 @@ const UserAvatarInner = (props: UserAvatarProps) => {
         if (!profile) return false;
         return profile.isOnline === true && profile.isOfflineForced !== "true";
     }, [isYou, ctx.myself.isOfflineForced, profile]);
+
+    // Slack-style "notifications paused" moon badge. Self reads the reactive
+    // hook value off context so it flips instantly on pause/resume; others
+    // read the flag their teammate's heartbeat broadcast into
+    // `teamMemberProfiles` (≤60s, matching `isOnline` freshness).
+    const isPaused = isYou
+        ? ctx.selfNotificationsPaused === true
+        : profile?.isNotificationsPaused === true;
 
     const src = useMemo(
         () => buildSrc(isYou ? ctx.myself.avatarImgPath : profile?.avatarImgPath),
@@ -149,6 +160,17 @@ const UserAvatarInner = (props: UserAvatarProps) => {
     const badgeSrc = buildSrc(homeTeam?.homeTeamImgPath);
     const badgeTitle = homeTeam?.homeTeamName || homeTeam?.userName || "";
 
+    // Paused-notifications badge: top-RIGHT, the only free corner (top-left is
+    // the cross-team badge, bottom-right is the presence dot). Sized off the
+    // same ratio as the team badge so the two corners look balanced.
+    const pauseBadgeSize = Math.max(11, Math.round(_size * 0.42));
+    const displayNameForBadge = isYou ? ctx.myself.userName : profile?.userName;
+    const pauseTitle = isYou
+        ? t.services.notifications.pause.selfTooltip
+        : fmt(t.services.notifications.pause.avatarTooltip, {
+              name: displayNameForBadge || "",
+          });
+
     const avatarJsx = useMemo(
         () => (
             <Stack direction="row" spacing={1}>
@@ -207,6 +229,32 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                             </Avatar>
                         </AppTooltip>
                     )}
+                    {isPaused && (
+                        <AppTooltip title={pauseTitle}>
+                            <Box
+                                aria-label={pauseTitle}
+                                sx={{
+                                    position: "absolute",
+                                    top: -2,
+                                    right: -2,
+                                    height: pauseBadgeSize,
+                                    width: pauseBadgeSize,
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    bgcolor: "background.surface",
+                                    border: "1.5px solid",
+                                    borderColor: "background.surface",
+                                    color: "warning.400",
+                                }}
+                            >
+                                <NotificationsPausedRoundedIcon
+                                    sx={{ fontSize: pauseBadgeSize }}
+                                />
+                            </Box>
+                        </AppTooltip>
+                    )}
                 </Box>
                 {showNameAndEmail === true && (
                     <Typography
@@ -229,6 +277,9 @@ const UserAvatarInner = (props: UserAvatarProps) => {
             src,
             initial,
             isOnline,
+            isPaused,
+            pauseBadgeSize,
+            pauseTitle,
             homeTeam,
             badgeSize,
             badgeSrc,

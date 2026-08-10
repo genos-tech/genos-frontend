@@ -18,6 +18,7 @@ import { Message as V3Message } from "../../../types/channel";
 import { ActivityMessageProps, MessageProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
+import { dispatchSelfEcho } from "../selfEchoEvent";
 import { TeamManagementState } from "../useTeamManagement";
 import { handleActivityMessage } from "./activity-handlers";
 
@@ -243,6 +244,21 @@ export const setupWebSocketHandlers = (
         } else if (message.wsType === "userStatus") {
             const user: UserProps = message.user;
             await addUser(user);
+            // A `userStatus` naming ME is a "self-echo": this beat came from one
+            // of my OWN other devices (the server rebroadcasts every beat to the
+            // team room I'm also in). It's the only live signal that I changed my
+            // appear-offline / custom status / notification pause elsewhere.
+            // `useSelfEchoReconcile` answers it by re-fetching the authoritative
+            // server value — we pass the echoed fields only so it can detect a
+            // divergence, never adopt them directly.
+            if (user.userId && user.userId === myself.userId) {
+                dispatchSelfEcho({
+                    userId: user.userId,
+                    isOfflineForced: user.isOfflineForced,
+                    customStatus: user.customStatus,
+                    isNotificationsPaused: user.isNotificationsPaused,
+                });
+            }
         } else if (message.wsType === "inbox") {
             const inboxItem: InboxItemProps = message.data;
             if (message.alreadyExist === false) {

@@ -60,6 +60,14 @@ export type UserProps = {
     homeTeamId?: string;
     homeTeamName?: string;
     homeTeamImgPath?: string;
+    /** Slack-style "pause notifications" indicator, broadcast on the presence
+     *  heartbeat like `isOnline`/`isOfflineForced`. `true` while the user has
+     *  an active one-shot or scheduled pause; drives the moon badge on their
+     *  avatar. Only the boolean travels — the expiry/schedule stay private to
+     *  the owner + server. Absent (pre-feature / never-paused rows) = not
+     *  paused. Freshness matches presence: updated on the owner's next beat
+     *  (≤60s), instant for self via `AvatarContext.selfNotificationsPaused`. */
+    isNotificationsPaused?: boolean;
 };
 
 export type Team = {

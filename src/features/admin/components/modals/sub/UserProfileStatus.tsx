@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import EditIcon from "@mui/icons-material/Edit";
+import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import {
     Box,
@@ -9,6 +10,8 @@ import {
     Dropdown,
     IconButton,
     Input,
+    ListDivider,
+    ListItemDecorator,
     Menu,
     MenuButton,
     MenuItem,
@@ -23,7 +26,10 @@ import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
+import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
 import { useTranslation } from "../../../../../i18n";
+import { NotificationPausePresetItems } from "../../../../../services/notifications/NotificationPausePicker";
+import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -68,6 +74,12 @@ export const UserProfileStatus = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
+
+    // Slack-style pause presets, shown to the owner in their own presence
+    // menu. Optional: this modal also renders in harnesses without a
+    // NotificationsProvider, so it degrades to "no pause rows" rather than
+    // throwing. Full controls (custom time + schedule) live in Settings.
+    const notif = useNotificationsContext();
 
     // Optional: when this modal is rendered inside the AvatarContextProvider
     // (the authenticated shell), a rename propagates instantly to every other
@@ -188,6 +200,10 @@ export const UserProfileStatus = ({
         });
         setMyself({ ...myself, customStatus: status });
         localStorage.setItem("customStatus", status);
+        // Beat immediately so the change reaches other users AND the user's own
+        // other devices in <1s (self-echo → useSelfEchoReconcile) rather than
+        // waiting for the next 60s heartbeat.
+        announcePresenceChange();
     };
     const handleSet = () => {
         if (newStatus !== "") persistCustomStatus(newStatus);
@@ -207,6 +223,9 @@ export const UserProfileStatus = ({
         });
         setMyself({ ...myself, isOfflineForced: forced });
         localStorage.setItem("isOfflineForced", forced);
+        // Beat immediately (see persistCustomStatus) so appear-offline flips
+        // for other users and this user's other devices right away.
+        announcePresenceChange();
     };
 
     const chipBase = {
@@ -270,6 +289,27 @@ export const UserProfileStatus = ({
                                         <PulseDot color={PRESENCE_GREY} />
                                         {t.admin.status.setAlwaysOffline}
                                     </MenuItem>
+                                    {/* Quick pause presets (self only). Absent
+                                        outside a NotificationsProvider. Full
+                                        controls: Settings → notifications. */}
+                                    {notif && (
+                                        <>
+                                            <ListDivider />
+                                            <MenuItem disabled sx={{ fontSize: "xs" }}>
+                                                <ListItemDecorator>
+                                                    <NotificationsPausedRoundedIcon fontSize="small" />
+                                                </ListItemDecorator>
+                                                {t.services.notifications.pause.durationMenuLabel}
+                                            </MenuItem>
+                                            <NotificationPausePresetItems
+                                                isPausedNow={notif.isPausedNow}
+                                                pauseFor={notif.pauseFor}
+                                                pauseUntilTomorrow={notif.pauseUntilTomorrow}
+                                                pauseUntilNextWeek={notif.pauseUntilNextWeek}
+                                                resume={notif.resume}
+                                            />
+                                        </>
+                                    )}
                                 </Menu>
                             )}
                         </Dropdown>

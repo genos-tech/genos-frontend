@@ -61,6 +61,16 @@ export interface NotificationPreference {
     mutedChats: MutedChatRef[];
     /** Fine per-object mute list (thread/task/note), optionally scoped. */
     mutedTargets: MutedTargetRef[];
+    /** Slack-style "pause notifications" one-shot expiry — an absolute ISO
+     *  instant (UTC). While `now < snoozeUntil` EVERYTHING is paused (in-app
+     *  toasts here, push + email server-side). `null`/absent/past = no active
+     *  one-shot pause. Cleared by PUTting explicit `null` (see `resume`). */
+    snoozeUntil?: string | null;
+    /** Recurring daily quiet window in the user's LOCAL wall-clock,
+     *  overnight-capable (`start > end` spans midnight). `null`/absent or
+     *  `enabled: false` = inactive. Evaluated in the zone `resolveDisplayZone`
+     *  returns (`currentLocation > timezone`). */
+    snoozeSchedule?: { enabled: boolean; start: string; end: string } | null;
 }
 
 // Default in-memory prefs used until the backend GET resolves. Designed so a
@@ -76,6 +86,8 @@ export const DEFAULT_NOTIFICATION_PREFERENCE: NotificationPreference = {
     categorySettings: {},
     mutedChats: [],
     mutedTargets: [],
+    snoozeUntil: null,
+    snoozeSchedule: null,
 };
 
 // What a websocket message becomes after `notificationRouter` decides it is
@@ -126,6 +138,10 @@ export type NotificationDispatch =
     | "ignored-muted"
     | "ignored-duplicate"
     | "ignored-active-surface"
+    // Notifications are paused (Slack-style DND / snooze) — suppresses
+    // everything while a one-shot `snoozeUntil` or a recurring
+    // `snoozeSchedule` window is active.
+    | "ignored-paused"
     | "ignored-permission"
     // Hidden tab, but Web Push is active — the service worker owns the OS
     // notification (driven by a server push), so the page suppresses its

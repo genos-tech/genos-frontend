@@ -17,6 +17,7 @@ import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
 import { EMAIL_CATEGORIES, isEmailCategoryEnabled } from "./emailCategories";
+import { NotificationPauseSection } from "./NotificationPausePicker";
 import { useNotificationsContext } from "./NotificationsContext";
 import { MutedTargetType } from "./types";
 
@@ -125,7 +126,15 @@ export const NotificationSettingsPanel = () => {
                 {settingsMessages.description}
             </Typography>
 
+            {/* Pause notifications (Slack-style DND / snooze). Placed near the
+                master switch — it's the most-reached-for control — and reads
+                the pause API straight off `ctx` (NotificationsState extends
+                NotificationPauseState). */}
+            <Divider sx={{ mb: 1.5 }} />
+            <NotificationPauseSection pause={ctx} />
+
             {/* Permission state */}
+            <Divider sx={{ mt: 1.5 }} />
             <Stack
                 alignItems="center"
                 direction="row"
