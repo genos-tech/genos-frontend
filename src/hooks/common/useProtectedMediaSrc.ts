@@ -16,35 +16,48 @@
 
 import { useEffect, useState } from "react";
 
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { resolveInsecureFileUrl, upgradeInsecureUrl } from "../../utils/downloadUtils";
 import { isProtectedMediaUrl } from "../../utils/mediaAuth";
 
 export function useProtectedMediaSrc(url: string | undefined | null): string | undefined {
+    // Upgrade the scheme BEFORE anything else looks at the URL. Media URLs
+    // baked into message bodies before the API trusted the proxy's
+    // forwarded scheme carry `http://` (see genos-api `channel_views`
+    // inline-upload handler). On an https page that scheme not only trips a
+    // Mixed-Content warning, it makes the URL's origin differ from our own
+    // media origin — so `isProtectedMediaUrl` reads it as a foreign CDN URL,
+    // renders it raw, and skips the session-token fetch that exists to keep
+    // these attachments loading (see `utils/mediaAuth`). Upgrading first
+    // lines classification and rendering up on the https form, matching what
+    // `resolveInsecureFileUrl` already does before it resolves. No-op on
+    // http pages (local dev) and for blob:/relative URLs.
+    const upgraded = url ? upgradeInsecureUrl(url) : url;
+
     // Public media (avatars, custom emoji) resolves synchronously to
     // itself, so those keep hitting the browser's image cache and never
     // flicker through an undefined render.
     const [src, setSrc] = useState<string | undefined>(() =>
-        url && !isProtectedMediaUrl(url) ? url : undefined
+        upgraded && !isProtectedMediaUrl(upgraded) ? upgraded : undefined
     );
 
     useEffect(() => {
-        if (!url) {
+        if (!upgraded) {
             setSrc(undefined);
             return;
         }
-        if (!isProtectedMediaUrl(url)) {
-            setSrc(url);
+        if (!isProtectedMediaUrl(upgraded)) {
+            setSrc(upgraded);
             return;
         }
         let alive = true;
         setSrc(undefined);
-        void resolveInsecureFileUrl(url).then((resolved) => {
+        void resolveInsecureFileUrl(upgraded).then((resolved) => {
             if (alive) setSrc(resolved);
         });
         return () => {
             alive = false;
         };
-    }, [url]);
+    }, [upgraded]);
 
     return src;
 }
