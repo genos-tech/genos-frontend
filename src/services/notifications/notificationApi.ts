@@ -22,6 +22,8 @@ interface NotificationPreferenceWire {
     category_settings?: Record<string, boolean>;
     muted_chats: Array<{ chat_type: number; chat_id: string; chat_name?: string }>;
     muted_targets?: MutedTargetWire[];
+    snooze_until?: string | null;
+    snooze_schedule?: { enabled: boolean; start: string; end: string } | null;
     ts_updated_at?: string;
 }
 
@@ -49,6 +51,9 @@ const fromWire = (wire: NotificationPreferenceWire): NotificationPreference => (
             : {}),
         ...(t.label ? { label: t.label } : {}),
     })),
+    // Optional: an older backend (pre pause feature) simply omits these.
+    snoozeUntil: wire.snooze_until ?? null,
+    snoozeSchedule: wire.snooze_schedule ?? null,
 });
 
 // PATCH-style: only fields that are provided are sent over the wire. The
@@ -87,6 +92,11 @@ export const toWire = (
             ...(t.label ? { label: t.label } : {}),
         }));
     }
+    // `!== undefined`, not truthiness: `resume()` clears the one-shot pause by
+    // PUTting an explicit `null`, which must reach the wire (a dropped key
+    // would leave the old expiry in place under `partial=True`).
+    if (patch.snoozeUntil !== undefined) wire.snooze_until = patch.snoozeUntil;
+    if (patch.snoozeSchedule !== undefined) wire.snooze_schedule = patch.snoozeSchedule;
     return wire;
 };
 

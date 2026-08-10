@@ -1,7 +1,9 @@
+import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import { Avatar, Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
 import { PulseDot } from "../misc/PulseDot";
@@ -29,6 +31,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     avatarSize,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const miniSize = avatarSize ?? (size === "sm" ? 28 : 32);
@@ -81,7 +84,12 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                     : undefined;
                 const profile = teamMemberProfiles?.[member.userId];
                 const isOnline = profile?.isOnline === true && profile?.isOfflineForced !== "true";
+                const isPaused = profile?.isNotificationsPaused === true;
                 const dotSize = Math.max(6, miniSize * 0.28);
+                const pauseIconSize = Math.max(9, Math.round(miniSize * 0.4));
+                const pauseTitle = fmt(t.services.notifications.pause.avatarTooltip, {
+                    name: member.userName || "",
+                });
 
                 return (
                     <Box
@@ -136,6 +144,26 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                                         marginLeft: 0,
                                     }}
                                 />
+                            </Box>
+                        )}
+                        {teamMemberProfiles && isPaused && (
+                            // Paused-notifications moon at the top-right (the
+                            // presence dot owns bottom-right). No tooltip
+                            // wrapper: these mini-avatars overlap, so a hover
+                            // target on each would fight the stack — the
+                            // aria-label carries the accessible name instead.
+                            <Box
+                                aria-label={pauseTitle}
+                                sx={{
+                                    position: "absolute",
+                                    top: -1,
+                                    right: -1,
+                                    zIndex: maxVisible + 1,
+                                    display: "flex",
+                                    color: "var(--joy-palette-warning-400)",
+                                }}
+                            >
+                                <NotificationsPausedRoundedIcon sx={{ fontSize: pauseIconSize }} />
                             </Box>
                         )}
                     </Box>

@@ -115,6 +115,24 @@ describe("notificationApi", () => {
             });
         });
 
+        it("emits snooze_until explicitly, including null (resume clears the pause)", () => {
+            // The one-shot-clear risk: a dropped key would leave the old expiry
+            // in place under partial=True. `resume()` PUTs an explicit null.
+            expect(toWire({ snoozeUntil: null })).toEqual({ snooze_until: null });
+            expect(toWire({ snoozeUntil: "2026-08-10T13:00:00.000Z" })).toEqual({
+                snooze_until: "2026-08-10T13:00:00.000Z",
+            });
+            // Absent from the patch -> absent from the wire (untouched server-side).
+            expect("snooze_until" in toWire({ masterEnabled: true })).toBe(false);
+        });
+
+        it("emits snooze_schedule (object or null) when present in the patch", () => {
+            expect(
+                toWire({ snoozeSchedule: { enabled: true, start: "17:00", end: "09:00" } })
+            ).toEqual({ snooze_schedule: { enabled: true, start: "17:00", end: "09:00" } });
+            expect(toWire({ snoozeSchedule: null })).toEqual({ snooze_schedule: null });
+        });
+
         it("serializes mutedTargets, omitting absent optional fields", () => {
             const out = toWire({
                 mutedTargets: [
@@ -171,6 +189,9 @@ describe("notificationApi", () => {
                     { chatType: 2, chatId: "g-1" },
                 ],
                 mutedTargets: [],
+                // Absent on the wire fixture -> defaulted to null by fromWire.
+                snoozeUntil: null,
+                snoozeSchedule: null,
             });
         });
 
@@ -841,6 +862,86 @@ describe("NotificationManager", () => {
         const toast = vi.fn();
         mgr.subscribeToasts(toast);
         expect(mgr.notify(intent({ senderId: "me" }))).toBe("toast");
+    });
+
+    describe("notify() pause gating (Slack-style snooze)", () => {
+        const future = () => new Date(Date.now() + 60 * 60_000).toISOString();
+        const past = () => new Date(Date.now() - 60_000).toISOString();
+
+        it("returns ignored-paused while a one-shot snoozeUntil is active", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            mgr.setSnoozeUntil(future());
+            expect(mgr.notify(intent())).toBe("ignored-paused");
+            // Nothing dispatched while paused.
+            expect(toast).not.toHaveBeenCalled();
+        });
+
+        it("does NOT pause once the one-shot snoozeUntil has lapsed", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            mgr.setSnoozeUntil(past());
+            // Lazy evaluation at notify() time -> a lapsed snooze is inert.
+            expect(mgr.notify(intent())).toBe("toast");
+        });
+
+        it("resume (setSnoozeUntil null) clears the pause", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            mgr.setSnoozeUntil(future());
+            expect(mgr.notify(intent({ id: "a" }))).toBe("ignored-paused");
+            mgr.setSnoozeUntil(null);
+            expect(mgr.notify(intent({ id: "b" }))).toBe("toast");
+        });
+
+        it("pauses via an active recurring schedule (evaluated in the provided zone)", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            // Force UTC so the window is deterministic regardless of the CI TZ.
+            mgr.setZoneProvider(() => "UTC");
+            // A 00:00–23:59 window is active virtually always in UTC.
+            mgr.setSnoozeSchedule({ enabled: true, start: "00:00", end: "23:59" });
+            expect(mgr.notify(intent())).toBe("ignored-paused");
+        });
+
+        it("a disabled schedule does not pause", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            mgr.setZoneProvider(() => "UTC");
+            mgr.setSnoozeSchedule({ enabled: false, start: "00:00", end: "23:59" });
+            expect(mgr.notify(intent())).toBe("toast");
+        });
+
+        it("pause short-circuits ABOVE dedupe — a re-fire after resume still notifies", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            mgr.setSnoozeUntil(future());
+            // Same id dropped for pause must NOT consume the dedupe slot.
+            expect(mgr.notify(intent({ id: "same" }))).toBe("ignored-paused");
+            mgr.setSnoozeUntil(null);
+            expect(mgr.notify(intent({ id: "same" }))).toBe("toast");
+            expect(toast).toHaveBeenCalledTimes(1);
+        });
+
+        it("self-origin still wins over pause (checked first)", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.setSnoozeUntil(future());
+            expect(mgr.notify(intent({ senderId: "me" }))).toBe("ignored-self");
+        });
+
+        it("hydratePreferences copies snoozeSchedule and drives the gate", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.setZoneProvider(() => "UTC");
+            mgr.hydratePreferences({
+                ...DEFAULT_NOTIFICATION_PREFERENCE,
+                snoozeSchedule: { enabled: true, start: "00:00", end: "23:59" },
+            });
+            expect(mgr.notify(intent())).toBe("ignored-paused");
+        });
     });
 });
 

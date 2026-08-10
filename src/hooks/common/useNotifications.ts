@@ -21,6 +21,7 @@ import {
 } from "../../services/notifications/types";
 import { viewingSurfaceToken } from "../../services/notifications/viewingSurface";
 import { UserProps } from "../../types/admin";
+import { NotificationPauseState, useNotificationPause } from "./useNotificationPause";
 
 export type WebNotificationPermission = NotificationPermission | "unsupported";
 
@@ -36,7 +37,7 @@ const readPermission = (): WebNotificationPermission => {
 
 const PUSH_DEBOUNCE_MS = 300;
 
-export interface NotificationsState {
+export interface NotificationsState extends NotificationPauseState {
     manager: NotificationManager;
     preferences: NotificationPreference;
     permission: WebNotificationPermission;
@@ -332,6 +333,10 @@ export const useNotifications = (
         [manager]
     );
 
+    // Slack-style pause: reactive `isPausedNow`, the duration/schedule
+    // actions, and the localStorage mirror + heartbeat-sync event.
+    const pause = useNotificationPause(manager, myself);
+
     return {
         manager,
         preferences,
@@ -351,5 +356,6 @@ export const useNotifications = (
         isTargetMutedByKey,
         setActiveSurface,
         subscribeToasts,
+        ...pause,
     };
 };

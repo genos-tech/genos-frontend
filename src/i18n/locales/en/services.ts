@@ -32,6 +32,45 @@ export const services = {
         permissionBody: "Enable browser notifications to get pinged when something needs you.",
         permissionEnable: "Enable notifications",
         muteToggleTooltip: "Mute/Unmute notifications",
+        // Slack-style "pause notifications" (Do Not Disturb / snooze). Full
+        // controls live in the settings panel; quick presets in the profile
+        // status dropdown. The avatar badge tooltip is shown to OTHER users
+        // (their view of a paused teammate) as well as to the owner.
+        pause: {
+            // Avatar moon badge. `{name}` filled for other users; the owner's
+            // own badge uses `selfTooltip`.
+            avatarTooltip: "{name}'s notifications are paused",
+            selfTooltip: "Your notifications are paused",
+            heading: "Pause notifications",
+            description:
+                "Silence all notifications — in-app, push, and email — for a while, or on a daily schedule. Others see a moon on your avatar.",
+            // Current-status line.
+            statusNotPaused: "Not paused",
+            statusPausedUntil: "Paused until {time}",
+            statusPausedSchedule: "Paused ({start}–{end})",
+            statusScheduledOnly: "Scheduled {start}–{end}",
+            // Duration menu.
+            pauseButton: "Pause notifications",
+            resume: "Resume notifications",
+            resumeShort: "Resume",
+            durationMenuLabel: "Pause for…",
+            for30m: "For 30 minutes",
+            for1h: "For 1 hour",
+            for2h: "For 2 hours",
+            untilTomorrow: "Until tomorrow",
+            untilNextWeek: "Until next week",
+            custom: "Pick a date & time…",
+            customTitle: "Pause until",
+            customSet: "Set",
+            customCancel: "Cancel",
+            // Recurring daily schedule editor.
+            scheduleHeading: "On a schedule",
+            scheduleDescription:
+                "Automatically pause every day during these hours (in your local time). Spanning midnight is fine — e.g. 17:00 to 09:00.",
+            scheduleEnable: "Enable daily schedule",
+            scheduleStart: "From",
+            scheduleEnd: "To",
+        },
         categories: {
             chats: "Chats",
             threadReplies: "Thread replies",

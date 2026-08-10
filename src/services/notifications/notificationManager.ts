@@ -1,4 +1,5 @@
 import { CATEGORY_BY_KEY, COARSE_FIELD, CoarseGroup, NotificationCategory } from "./categories";
+import { isSnoozedNow, SnoozeSchedule } from "./snooze";
 import {
     ActiveSurface,
     DEFAULT_NOTIFICATION_PREFERENCE,
@@ -173,6 +174,12 @@ export class NotificationManager {
     // pushes), so the page-context `new Notification()` fallback below is
     // suppressed to avoid double-notifying.
     private pushActive = false;
+    // Resolves the current user's IANA zone for the recurring-schedule branch
+    // of the pause predicate. The manager is a context-free singleton, so the
+    // React layer sets this to `resolveDisplayZone(myself, true)`; until then
+    // the default keeps the schedule evaluating in UTC (the one-shot
+    // `snoozeUntil` is zone-independent and works regardless).
+    private zoneProvider: () => string = () => "UTC";
 
     constructor(opts: ManagerOptions) {
         this.currentUserId = opts.currentUserId;
@@ -201,6 +208,36 @@ export class NotificationManager {
         this.pushActive = value;
     }
 
+    /** The React layer supplies the current user's resolved IANA zone (via
+     *  `resolveDisplayZone(myself, true)`) so the recurring-schedule branch
+     *  fires in the same zone the profile card shows. */
+    setZoneProvider(provider: () => string) {
+        this.zoneProvider = provider;
+    }
+
+    /** Set (or clear, with `null`) the one-shot pause expiry — an absolute
+     *  ISO instant. Commits like any other pref (debounced PUT upstream); a
+     *  `null` clears it, which `toWire` sends explicitly. */
+    setSnoozeUntil(value: string | null) {
+        this.commitPatch({ snoozeUntil: value });
+    }
+
+    /** Set (or clear, with `null`) the recurring daily quiet window. */
+    setSnoozeSchedule(value: SnoozeSchedule | null) {
+        this.commitPatch({ snoozeSchedule: value });
+    }
+
+    /** Whether notifications are paused right now — the one-shot expiry OR an
+     *  active recurring window, evaluated in the provided zone. Lazy (read at
+     *  `notify()` time) so a lapsed pause needs no timer to take effect. */
+    private isSnoozedNow(): boolean {
+        return isSnoozedNow(
+            this.prefs.snoozeUntil,
+            this.prefs.snoozeSchedule,
+            this.zoneProvider()
+        );
+    }
+
     // Replace the full prefs blob (e.g. after the initial backend GET).
     // Does NOT trigger the onPreferencesChange callback.
     hydratePreferences(prefs: NotificationPreference) {
@@ -209,6 +246,10 @@ export class NotificationManager {
             categorySettings: { ...prefs.categorySettings },
             mutedChats: [...prefs.mutedChats],
             mutedTargets: [...prefs.mutedTargets],
+            // `snoozeUntil` (string|null) and `snoozeSchedule` (object|null)
+            // ride the spread; the schedule object is copied so a later
+            // in-place edit of `prefs` can't mutate the manager's copy.
+            snoozeSchedule: prefs.snoozeSchedule ? { ...prefs.snoozeSchedule } : null,
         };
         this.notifyPrefListeners();
     }
@@ -407,15 +448,26 @@ export class NotificationManager {
     /**
      * Decide what to do with a translated intent. Order of checks:
      *   1. self-origin       -> ignored-self
-     *   2. master / cat      -> ignored-disabled
-     *   3. muted chat/target -> ignored-muted
-     *   4. dedupe            -> ignored-duplicate
-     *   5. active surface    -> ignored-active-surface (only when foreground)
-     *   6. dispatch          -> browser (hidden tab) or toast (foreground)
+     *   2. paused (snooze)   -> ignored-paused
+     *   3. master / cat      -> ignored-disabled
+     *   4. muted chat/target -> ignored-muted
+     *   5. dedupe            -> ignored-duplicate
+     *   6. active surface    -> ignored-active-surface (only when foreground)
+     *   7. dispatch          -> browser (hidden tab) or toast (foreground)
      */
     notify(intent: NotificationIntent): NotificationDispatch {
         if (intent.senderId && intent.senderId === this.currentUserId) {
             return "ignored-self";
+        }
+
+        // Slack-style pause: a one-shot expiry or an active recurring window
+        // silences EVERYTHING. Placed high — above category/mute/dedupe — so a
+        // pause is a clean top-level short-circuit that never entangles with
+        // per-category logic, and so it can't consume the dedupe slot (a
+        // message dropped for pause must still notify if it re-fires after the
+        // pause lapses). Mirrors the server gates (`should_push`/`should_email`).
+        if (this.isSnoozedNow()) {
+            return "ignored-paused";
         }
 
         // `masterEnabled` is folded into `isCategoryEnabled` (checked once).

@@ -18,6 +18,16 @@ export type AvatarContextValue = {
     socket: Socket | null;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    /** Whether the signed-in user's notifications are paused RIGHT NOW
+     *  (Slack-style DND). Sourced from the reactive pause hook so the user's
+     *  OWN avatar badge is instant — it doesn't wait for their heartbeat to
+     *  round-trip back through `teamMemberProfiles` (others' badges do, ≤60s,
+     *  matching `isOnline` freshness). See `UserAvatar`'s `isPaused`.
+     *
+     *  Optional: the authenticated shell always supplies it, but the many
+     *  isolated test / non-shell providers don't, and a missing value simply
+     *  reads as "not paused". */
+    selfNotificationsPaused?: boolean;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -1482,6 +1482,8 @@ export const App = () => {
                                                                             useTEM.teamMemberProfiles,
                                                                         useCM,
                                                                         useUISM,
+                                                                        selfNotificationsPaused:
+                                                                            useNotif.isPausedNow,
                                                                     }}
                                                                 >
                                                                     <UrlLinkModalProvider

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+import { isSnoozedNow } from "../../services/notifications/snooze";
+import { PAUSE_CHANGED_EVENT, readSnoozeMirror } from "../../services/notifications/snoozeMirror";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { resolveDisplayZone } from "../../utils/userTimezone";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
@@ -66,6 +69,19 @@ export const useWebSocket = (
             const customStatus: string = localStorage.getItem("customStatus") || "";
             const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
 
+            // Slack-style pause, computed FRESH each beat (a schedule window or
+            // one-shot can lapse between beats) off the localStorage mirror the
+            // pause hook keeps — read here rather than subscribing to the
+            // manager, the same way `isOfflineForced` is read. Evaluated in the
+            // user's own resolved zone so the schedule branch agrees with the
+            // manager. Rides the presence broadcast to other users' avatars.
+            const { snoozeUntil, snoozeSchedule } = readSnoozeMirror();
+            const isNotificationsPaused = isSnoozedNow(
+                snoozeUntil,
+                snoozeSchedule,
+                resolveDisplayZone(myself, true) ?? "UTC"
+            );
+
             socketInstance.emit("heartbeat", {
                 message: "alive",
                 is_online: true,
@@ -76,11 +92,21 @@ export const useWebSocket = (
                     role: role,
                     baseCountry: baseCountry,
                     customStatus: customStatus,
+                    isNotificationsPaused: isNotificationsPaused,
                     tsLastSeen: getLocalCurrentTimestamp(),
                 },
             });
         }
     }, [socketInstance, myself]);
+
+    // A manual pause/resume must reach other users right away, not on the next
+    // 60s tick — the pause hook fires `PAUSE_CHANGED_EVENT` after mutating the
+    // mirror, and we answer it with an immediate beat carrying the fresh flag.
+    useEffect(() => {
+        const onPauseChanged = () => sendHeartBeat();
+        window.addEventListener(PAUSE_CHANGED_EVENT, onPauseChanged);
+        return () => window.removeEventListener(PAUSE_CHANGED_EVENT, onPauseChanged);
+    }, [sendHeartBeat]);
 
     // Initialize WebSocket connection.
     //
