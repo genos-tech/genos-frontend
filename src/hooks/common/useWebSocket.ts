@@ -68,6 +68,11 @@ export const useWebSocket = (
             const role: string = localStorage.getItem("role") || "";
             const baseCountry: string = localStorage.getItem("baseCountry") || "";
             const customStatus: string = localStorage.getItem("customStatus") || "";
+            // Absolute ISO instant the custom status auto-clears; "" = none.
+            // Rides the beat so other users' rosters learn the expiry within a
+            // tick and can render "back Tue 9 AM" / mask an elapsed status.
+            const customStatusExpiryRaw: string = localStorage.getItem("customStatusExpiry") || "";
+            const customStatusExpiry: string | null = customStatusExpiryRaw || null;
             const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
 
             // Slack-style pause, computed FRESH each beat (a schedule window or
@@ -93,6 +98,7 @@ export const useWebSocket = (
                     role: role,
                     baseCountry: baseCountry,
                     customStatus: customStatus,
+                    customStatusExpiry: customStatusExpiry,
                     isNotificationsPaused: isNotificationsPaused,
                     tsLastSeen: getLocalCurrentTimestamp(),
                 },

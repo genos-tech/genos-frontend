@@ -60,10 +60,17 @@ export const useSelfEchoReconcile = (
             const echoForced = detail.isOfflineForced === "true";
             const localStatus = me.customStatus ?? "";
             const echoStatus = detail.customStatus ?? "";
+            // Normalise expiry to "" so null/absent/"" all compare equal — only
+            // a real ISO-vs-ISO (or set-vs-cleared) difference counts as drift.
+            const localExpiry = me.customStatusExpiry ?? "";
+            const echoExpiry = detail.customStatusExpiry ?? "";
             const localPaused = manager.getIsSnoozedNow();
             const echoPaused = detail.isNotificationsPaused === true;
 
-            const presenceDiverged = echoForced !== localForced || echoStatus !== localStatus;
+            const presenceDiverged =
+                echoForced !== localForced ||
+                echoStatus !== localStatus ||
+                echoExpiry !== localExpiry;
             const pauseDiverged = echoPaused !== localPaused;
             if (!presenceDiverged && !pauseDiverged) return;
 
@@ -85,15 +92,21 @@ export const useSelfEchoReconcile = (
                         // resolved after the user re-edited locally.
                         const nextForced = profile.isOfflineForced ? "true" : "false";
                         const nextStatus = profile.customStatus ?? "";
+                        const nextExpiry = profile.customStatusExpiry ?? null;
                         const forcedChanged = (cur.isOfflineForced ?? "false") !== nextForced;
                         const statusChanged = (cur.customStatus ?? "") !== nextStatus;
-                        if (!forcedChanged && !statusChanged) return;
+                        const expiryChanged = (cur.customStatusExpiry ?? null) !== nextExpiry;
+                        if (!forcedChanged && !statusChanged && !expiryChanged) return;
                         localStorage.setItem("isOfflineForced", nextForced);
                         localStorage.setItem("customStatus", nextStatus);
+                        // Mirror the expiry key the heartbeat reads. Empty string
+                        // means "no expiry" — `sendHeartBeat` treats "" as absent.
+                        localStorage.setItem("customStatusExpiry", nextExpiry ?? "");
                         setMyself({
                             ...cur,
                             isOfflineForced: nextForced,
                             customStatus: nextStatus,
+                            customStatusExpiry: nextExpiry,
                         });
                     })();
                 }

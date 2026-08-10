@@ -5,6 +5,7 @@ import { authApi } from "../../../services/api";
 interface MyProfileWire {
     is_offline_forced?: boolean;
     custom_status?: string | null;
+    custom_status_expiry?: string | null;
 }
 
 /** The mapped self-profile — the authoritative current values for the fields
@@ -12,6 +13,11 @@ interface MyProfileWire {
 export interface MyProfile {
     isOfflineForced: boolean;
     customStatus: string;
+    /** Absolute ISO instant the custom status auto-clears, or `null` if it
+     *  never expires. Authority for the self-echo reconcile — see
+     *  `useSelfEchoReconcile`. Preserved as null (not "") because a datetime
+     *  and an empty string are not interchangeable downstream. */
+    customStatusExpiry: string | null;
 }
 
 /**
@@ -31,6 +37,7 @@ export const getMyProfile = async (
         return {
             isOfflineForced: res.data.is_offline_forced === true,
             customStatus: res.data.custom_status ?? "",
+            customStatusExpiry: res.data.custom_status_expiry ?? null,
         };
     } catch (err) {
         console.warn("[presence] getMyProfile failed", err);

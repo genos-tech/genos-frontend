@@ -8,6 +8,11 @@ type updateUserProfileProps = {
     userId: string;
     userName?: string;
     customStatus?: string;
+    /** Absolute ISO instant the custom status auto-clears, or `null` to clear
+     *  the expiry (Slack "Don't clear" / auto-clear). `null` is meaningful and
+     *  distinct from omitting the key — the server exempts this field from its
+     *  None-strip so an explicit null actually wipes a stale expiry. */
+    customStatusExpiry?: string | null;
     isOfflineForced?: string;
     role?: string;
     baseCountry?: string;
@@ -24,6 +29,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
         userId,
         userName,
         customStatus,
+        customStatusExpiry,
         isOfflineForced,
         role,
         baseCountry,
@@ -45,6 +51,11 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             const payload: Record<string, unknown> = { user_id: userId };
             if (userName !== undefined) payload.username = userName;
             if (customStatus !== undefined) payload.custom_status = customStatus;
+            // Present-and-null is the "clear the expiry" signal, so gate on
+            // `!== undefined` (not truthiness) — a null must reach the wire.
+            if (customStatusExpiry !== undefined) {
+                payload.custom_status_expiry = customStatusExpiry;
+            }
             if (isOfflineForced !== undefined) {
                 payload.is_offline_forced = isOfflineForced === "true";
             }

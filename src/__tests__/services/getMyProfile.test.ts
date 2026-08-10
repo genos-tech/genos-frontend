@@ -22,23 +22,45 @@ describe("getMyProfile", () => {
         expect(authApi).toHaveBeenCalledWith(null);
     });
 
-    it("GETs /user/me/ and maps is_offline_forced + custom_status", async () => {
+    it("GETs /user/me/ and maps is_offline_forced + custom_status + expiry", async () => {
         const get = vi.fn().mockResolvedValue({
-            data: { is_offline_forced: true, custom_status: "🏝 OOO" },
+            data: {
+                is_offline_forced: true,
+                custom_status: "🏝 OOO",
+                custom_status_expiry: "2026-08-11T09:00:00Z",
+            },
         });
         asMock(authApi).mockReturnValue({ get });
 
         const result = await getMyProfile("tok");
 
         expect(get).toHaveBeenCalledWith("/user/me/");
-        expect(result).toEqual({ isOfflineForced: true, customStatus: "🏝 OOO" });
+        expect(result).toEqual({
+            isOfflineForced: true,
+            customStatus: "🏝 OOO",
+            customStatusExpiry: "2026-08-11T09:00:00Z",
+        });
     });
 
-    it("coerces a missing/null custom_status to empty string and falsy offline to false", async () => {
+    it("coerces missing custom_status to '' and missing expiry to null", async () => {
         const get = vi.fn().mockResolvedValue({ data: { custom_status: null } });
         asMock(authApi).mockReturnValue({ get });
 
-        expect(await getMyProfile("tok")).toEqual({ isOfflineForced: false, customStatus: "" });
+        expect(await getMyProfile("tok")).toEqual({
+            isOfflineForced: false,
+            customStatus: "",
+            customStatusExpiry: null,
+        });
+    });
+
+    it("preserves an explicit null expiry as null (not coerced to '')", async () => {
+        const get = vi.fn().mockResolvedValue({
+            data: { custom_status: "🏝 OOO", custom_status_expiry: null },
+        });
+        asMock(authApi).mockReturnValue({ get });
+
+        const result = await getMyProfile("tok");
+        expect(result?.customStatusExpiry).toBeNull();
     });
 
     it("returns null on request failure (leaves local state untouched)", async () => {

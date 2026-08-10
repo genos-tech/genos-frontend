@@ -12,6 +12,14 @@ export type UserProps = {
     isOnline?: boolean;
     tsJoined: string;
     customStatus?: string;
+    /** Absolute UTC ISO instant at which `customStatus` auto-clears — Slack's
+     *  "clear status after". Unlike the private pause expiry, this rides to
+     *  EVERYONE (heartbeat + all four roster surfaces) so teammates read
+     *  "back Tue 9 AM". `null`/absent = the status never expires. A past value
+     *  means expired: the status is masked at read time (`isStatusExpired`),
+     *  and the owner's own client PUT-clears both fields so the DB converges —
+     *  the same lazy-at-read-time discipline as the snooze/pause fields. */
+    customStatusExpiry?: string | null;
     isOfflineForced?: string;
     // The user's self-declared JOB TITLE ("Engineer"), set via the
     // UserProfileRole picker. NOT a permission — see `memberRole` below.
