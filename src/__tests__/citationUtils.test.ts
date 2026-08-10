@@ -252,6 +252,95 @@ describe("rewriteCitations — un-prefixed dm:/gm: chat tokens", () => {
     });
 });
 
+// Pass 3 — the raw-id leak the user reported: a model that dumps a bare
+// "gm:<uuid>:msg:<uuid>" / "task:42" straight into a sentence, WITHOUT the
+// `[type:id]` or `[prose](type:id)` syntax the first two passes handle. The
+// reader would otherwise see a decode-failure id. The strip must be
+// high-precision: it may never bite prose, times, ratios, URLs, or the
+// `spotlight-citation:` links pass 1 produced.
+describe("rewriteCitations — Pass 3: unbracketed raw-id leaks", () => {
+    it("strips a bare un-prefixed gm:<uuid>:msg:<uuid> id from the prose", () => {
+        const out = rewriteCitations(
+            "Reviewers needed on the nav PR " +
+                "gm:8f5e4733-cee9-4769-8a7f-859b80fa6713:msg:9c17635a-6d4a-4af2-ad56-664070546e56 " +
+                "now.",
+            noSources
+        );
+        expect(out).toBe("Reviewers needed on the nav PR now.");
+    });
+
+    it("strips a bare chat:dm:<uuid> id", () => {
+        const out = rewriteCitations(
+            "Bob chat:dm:0738dbef-1111-2222-3333-444455556666:thread:9 said so.",
+            noSources
+        );
+        expect(out).toBe("Bob said so.");
+    });
+
+    it("strips digit-bearing vocab ids (task:42, note:personal:50, project:18, milestone:7)", () => {
+        expect(rewriteCitations("Per the spike task:42 done.", noSources)).toBe(
+            "Per the spike done."
+        );
+        expect(rewriteCitations("See note:personal:50 here.", noSources)).toBe("See here.");
+        expect(rewriteCitations("In project:18 we shipped.", noSources)).toBe("In we shipped.");
+        expect(rewriteCitations("Target milestone:7 soon.", noSources)).toBe("Target soon.");
+    });
+
+    it("strips a bare structured todo id", () => {
+        expect(rewriteCitations("Deferred todo:2026-07-03:item:117 already.", noSources)).toBe(
+            "Deferred already."
+        );
+    });
+
+    it("strips a bare hex-leading un-prefixed chat label", () => {
+        expect(rewriteCitations("See dm:aa771315:thread:282012f2 now.", noSources)).toBe(
+            "See now."
+        );
+    });
+
+    it("does NOT touch a resolved spotlight-citation link (pass 1 output survives)", () => {
+        // The whole point of the leading boundary: the token in a sentinel
+        // URL is preceded by a colon, so the pattern can't bite it.
+        const sources = buildSourcesById([
+            src(
+                "chat",
+                "dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2",
+                "Bob DM"
+            ),
+        ]);
+        const out = rewriteCitations(
+            "Per [the thread](chat:dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2) we shipped.",
+            sources
+        );
+        expect(out).toBe(
+            `Per [the thread](${CITATION_HREF_PREFIX}chat:dm:aa771315-3b1c-4916-8ed1-d79efe90bc37:thread:282012f2-9157-4512-a5cd-c9841fb44ca2) we shipped.`
+        );
+    });
+
+    it("does NOT touch prose, times, ratios, or non-hex chat labels", () => {
+        // These are the false-positive traps the digit / hex-leading /
+        // boundary guards exist for.
+        for (const prose of [
+            "Meet at 3:30 today.",
+            "A 1:1 meeting later.",
+            "reminder pm: sync with design now.",
+            "The dm:notes convention stays.",
+            "Mark task:done please.",
+            "TODO Task: fix this bug.",
+        ]) {
+            expect(rewriteCitations(prose, noSources)).toBe(prose);
+        }
+    });
+
+    it("does NOT strip an id embedded in a URL path", () => {
+        // The leading `(?<![\\w:/.-])` boundary rejects a `/` before the token.
+        const a = "See https://ex.com/project:18 for details.";
+        expect(rewriteCitations(a, noSources)).toBe(a);
+        const b = "Open [the doc](https://ex.com/task:42) now.";
+        expect(rewriteCitations(b, noSources)).toBe(b);
+    });
+});
+
 describe("citedChipSources — msg-suffixed citations chip the parent source", () => {
     it("resolves the :msg: token to the retrieved thread and shows its chip", () => {
         const thread = src("chat", "dm:0738dbef:thread:8995bd1d", "Bob Martinez");
@@ -352,6 +441,11 @@ describe("citedChipSources — cited sources (inline + bare), uncited dropped", 
     });
 });
 
+// A richer builder for sourceToUrl, which reads the deep-link fields
+// (project_id / task_id / note_id / chat_*) the minimal `src` helper omits.
+const fullSrc = (fields: Partial<SpotlightResult>): SpotlightResult =>
+    ({ entity_type: "task", entity_id: "", title: "", ...fields }) as unknown as SpotlightResult;
+
 describe("sourceToUrl — todo deep links", () => {
     it("builds the item URL from the backend entity_id convention", () => {
         expect(sourceToUrl(src("todo", "todo:2026-07-12:item:88"))).toBe(
@@ -362,5 +456,63 @@ describe("sourceToUrl — todo deep links", () => {
     it("returns null for a mangled todo entity_id (navigate fallback)", () => {
         expect(sourceToUrl(src("todo", "todo::item:88"))).toBeNull();
         expect(sourceToUrl(src("todo", ""))).toBeNull();
+    });
+});
+
+// Delegation to canonicalSpotlightHref closed two dead-link bugs the old
+// hand-copied subset had. These pin that the agentQA surface now builds the
+// SAME deep links the Spotlight surface does.
+describe("sourceToUrl — dead-link fixes via canonicalSpotlightHref delegation", () => {
+    it("builds a milestone deep link (old copy had no milestone branch → dead click)", () => {
+        const url = sourceToUrl(
+            fullSrc({ entity_type: "milestone", entity_id: "milestone:7", project_id: "18" })
+        );
+        expect(url).toBe("/workspace/tasks/project/18/milestone/7");
+    });
+
+    it("links a main-channel chat note with NO thread (old copy hard-required thread_id)", () => {
+        // thread_id null → the `thread_id ?? "0"` sentinel path. The old
+        // subset returned null here, so the citation no-op'd.
+        const url = sourceToUrl(
+            fullSrc({
+                entity_type: "note",
+                entity_id: "note:chat:55",
+                note_id: "55",
+                note_type: "chat",
+                chat_type: "gm",
+                chat_id: "12",
+                thread_id: null,
+            })
+        );
+        expect(url).toBe("/workspace/notes/chat/gm/12/thread/0/note/55");
+    });
+
+    it("still builds the ordinary task / personal-note / chat deep links", () => {
+        expect(sourceToUrl(fullSrc({ entity_type: "task", task_id: "9", project_id: "3" }))).toBe(
+            "/workspace/tasks/project/3/task/9"
+        );
+        expect(
+            sourceToUrl(fullSrc({ entity_type: "note", note_id: "42", note_type: "personal" }))
+        ).toBe("/workspace/notes/my/42");
+        expect(
+            sourceToUrl(
+                fullSrc({ entity_type: "chat", chat_type: "dm", chat_id: "9", thread_id: "4" })
+            )
+        ).toBe("/workspace/chat/dm/9/thread/4");
+    });
+
+    it("keeps the project fallback canonicalSpotlightHref intentionally omits", () => {
+        // Projects have no modal view, so canonicalSpotlightHref returns
+        // null — but chips/saved-note export still want to navigate there.
+        expect(sourceToUrl(fullSrc({ entity_type: "project", project_id: "18" }))).toBe(
+            "/workspace/tasks/project/18"
+        );
+    });
+
+    it("returns null when a source lacks the ids needed to deep-link", () => {
+        expect(
+            sourceToUrl(fullSrc({ entity_type: "task", task_id: null, project_id: null }))
+        ).toBeNull();
+        expect(sourceToUrl(fullSrc({ entity_type: "project", project_id: null }))).toBeNull();
     });
 });
