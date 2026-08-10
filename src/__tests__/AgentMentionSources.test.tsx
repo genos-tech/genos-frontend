@@ -3,8 +3,9 @@
  * the adapter layer the AgentMentions suite mocks out.
  *
  * Focus: the "#" entity pool's coverage rules —
- *   - chats come from `allChats` (every chat type, not the editors'
- *     GM-only `chats` list), with the MDM name-join fallback;
+ *   - chats come from `allChats` (DM / GM / MDM, not the editors'
+ *     GM-only `chats` list), with the MDM name-join fallback, and PM
+ *     chats filtered out (each mirrors a Project one-to-one);
  *   - projects are included, with the project code as subtitle;
  *   - todos flatten from `todoGroups` (open always; completed only
  *     within the recency window);
@@ -23,7 +24,7 @@ import {
 } from "../features/agentQA/mentions/useAgentMentionSources";
 import type { MentionGroup } from "../services/mentionGroupsApi";
 import type { AllChatProps, TodoGroupProps, TodoItemProps } from "../types/chat";
-import type { ProjectProps } from "../types/tasks";
+import type { ProjectProps, TaskTableProps } from "../types/tasks";
 
 const chat = (over: Partial<AllChatProps>): AllChatProps => ({ ...over }) as AllChatProps;
 
@@ -74,23 +75,27 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("useAgentMentionSources # entity coverage", () => {
-    it("serves every chat type from allChats, with the MDM name join", () => {
+    it("serves DM / GM / MDM from allChats (with the MDM name join) but omits PM", () => {
         const { result } = renderHook(() => useAgentMentionSources({ membersOverride: [] }), {
             wrapper,
         });
         const chats = result.current.entities.filter((c) => c.ref.kind === "chat");
-        expect(chats.map((c) => c.key)).toEqual([
-            "chat:1:dm-1",
-            "chat:2:gm-1",
-            "chat:3:pm-1",
-            "chat:4:mdm-1",
-        ]);
+        // chat:3:pm-1 ("Website Redesign") is intentionally absent — the
+        // Project candidate stands in for the PM chat.
+        expect(chats.map((c) => c.key)).toEqual(["chat:1:dm-1", "chat:2:gm-1", "chat:4:mdm-1"]);
         expect(chats.map((c) => c.ref.label)).toEqual([
             "Bob Martinez",
             "backend-team",
-            "Website Redesign",
             "Alice, Carol",
         ]);
+    });
+
+    it("filters out PM chats even when several are present", () => {
+        const { result } = renderHook(() => useAgentMentionSources({ membersOverride: [] }), {
+            wrapper,
+        });
+        const chats = result.current.entities.filter((c) => c.ref.kind === "chat");
+        expect(chats.some((c) => (c.ref as { chatType: number }).chatType === 3)).toBe(false);
     });
 
     it("includes projects with the project code as subtitle", () => {
@@ -164,6 +169,30 @@ describe("useAgentMentionSources todo rows", () => {
     });
 });
 
+describe("useAgentMentionSources milestone flag on task rows", () => {
+    const task = (over: Partial<TaskTableProps>): TaskTableProps =>
+        ({ ...over }) as TaskTableProps;
+    const withTasks = (tasks: TaskTableProps[]) => {
+        const value: HashMentionData = { ...DATA, tasks };
+        const w = ({ children }: { children: React.ReactNode }) => (
+            <HashMentionDataProvider value={value}>{children}</HashMentionDataProvider>
+        );
+        return renderHook(() => useAgentMentionSources({ membersOverride: [] }), { wrapper: w });
+    };
+
+    it("flags a milestone-backed task row but leaves the wire shape as a task", () => {
+        const { result } = withTasks([
+            task({ id: "10", title: "Plain task", displayId: "APL-10" }),
+            task({ id: "11", title: "v1 launch", displayId: "APL-11", isMilestone: true }),
+        ]);
+        const tasks = result.current.entities.filter((c) => c.ref.kind === "task");
+        // Both still resolve as tasks (same key form → same wire payload).
+        expect(tasks.map((c) => c.key)).toEqual(["task:10", "task:11"]);
+        const flags = tasks.map((c) => (c.ref as { isMilestone?: boolean }).isMilestone);
+        expect(flags).toEqual([false, true]);
+    });
+});
+
 describe("toWireMentions new-kind arms", () => {
     it("converts project / group / todo refs to the snake_case wire shape", () => {
         expect(
@@ -177,5 +206,11 @@ describe("toWireMentions new-kind arms", () => {
             { type: "group", group_id: 3, label: "design-crew" },
             { type: "todo", item_id: 55, label: "Ship hero handoff" },
         ]);
+    });
+
+    it("sends a milestone-flagged task ref as a plain task (no isMilestone on the wire)", () => {
+        expect(
+            toWireMentions([{ kind: "task", taskId: 11, label: "v1 launch", isMilestone: true }])
+        ).toEqual([{ type: "task", task_id: 11, label: "v1 launch" }]);
     });
 });

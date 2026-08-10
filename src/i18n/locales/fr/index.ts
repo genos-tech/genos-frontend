@@ -1332,6 +1332,8 @@ export const fr: DeepPartial<Messages> = {
             mentionMemberCount: "{count, plural, one {# membre} other {# membres}}",
             hashTask: "Tâche · {id}",
             hashTaskProject: "Tâche · {id} · {project}",
+            hashMilestone: "Jalon · {id}",
+            hashMilestoneProject: "Jalon · {id} · {project}",
             hashNote: "Remarque",
             hashTaskNote: "Note de tâche",
             hashChatNote: "Note de discussion",

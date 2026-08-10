@@ -173,6 +173,8 @@ export const ar: DeepPartial<Messages> = {
             mentionMemberCount: "{count, plural, one {#عضو} other {#أعضاء}}",
             hashTask: "المهمة · {id}",
             hashTaskProject: "المهمة · {id} · {project}",
+            hashMilestone: "معلم · {id}",
+            hashMilestoneProject: "معلم · {id} · {project}",
             hashNote: "ملحوظة",
             hashTaskNote: "مذكرة المهمة",
             hashChatNote: "ملاحظة الدردشة",

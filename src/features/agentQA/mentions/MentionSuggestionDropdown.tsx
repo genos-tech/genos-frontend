@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -35,13 +36,19 @@ const MAX_MENU_HEIGHT = 280;
 // SpotlightOverlay / `sourceIcon` in SourceChips), so a mention option
 // and the source chip it later becomes read as the same object. `user`
 // has no citation-chip counterpart (people aren't citable) — Person is
-// its consistent extension.
-const kindIcon = (kind: AgentMentionRef["kind"]) => {
-    switch (kind) {
+// its consistent extension. A milestone (a task flagged `isMilestone`)
+// takes the flag icon so it reads as a milestone, matching Spotlight's
+// milestone chip — even though it resolves as a task on the wire.
+const kindIcon = (ref: AgentMentionRef) => {
+    switch (ref.kind) {
         case "user":
             return <PersonRoundedIcon sx={{ fontSize: 13 }} />;
         case "task":
-            return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
+            return ref.isMilestone ? (
+                <FlagRoundedIcon sx={{ fontSize: 13 }} />
+            ) : (
+                <AssignmentRoundedIcon sx={{ fontSize: 13 }} />
+            );
         case "note":
             return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
         case "chat":
@@ -59,9 +66,13 @@ const kindIcon = (kind: AgentMentionRef["kind"]) => {
 
 // Chip text mirrors the citation-chip label shape: tasks lead with the
 // human-readable display id ("Task QRD-4: Title"); everything else is
-// the plain title (the icon already carries the kind).
+// the plain title (the icon already carries the kind). A milestone leads
+// with "Milestone" instead of "Task" so it doesn't read as a plain task.
 const chipLabel = (c: AgentMentionCandidate): string => {
-    if (c.ref.kind === "task" && c.subtitle) return `Task ${c.subtitle}: ${c.ref.label}`;
+    if (c.ref.kind === "task") {
+        const kindWord = c.ref.isMilestone ? "Milestone" : "Task";
+        return c.subtitle ? `${kindWord} ${c.subtitle}: ${c.ref.label}` : c.ref.label;
+    }
     return c.ref.label;
 };
 
@@ -207,7 +218,7 @@ export const MentionSuggestionDropdown = ({
                         <Chip
                             color="primary"
                             size="sm"
-                            startDecorator={kindIcon(c.ref.kind)}
+                            startDecorator={kindIcon(c.ref)}
                             variant={highlighted ? "solid" : "soft"}
                             sx={{
                                 pointerEvents: "none",

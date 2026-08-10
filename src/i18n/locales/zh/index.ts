@@ -1269,6 +1269,8 @@ export const zh: DeepPartial<Messages> = {
             mentionMemberCount: "{count, plural, one {# 名成员} other {# 名成员}}",
             hashTask: "任务·{id}",
             hashTaskProject: "任务·{id}·{project}",
+            hashMilestone: "里程碑·{id}",
+            hashMilestoneProject: "里程碑·{id}·{project}",
             hashNote: "笔记",
             hashTaskNote: "任务笔记",
             hashChatNote: "聊天笔记",

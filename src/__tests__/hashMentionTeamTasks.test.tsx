@@ -201,3 +201,68 @@ describe("HashMentionMenuItems — task status chip", () => {
         expect(statusOf(items[0])).toBe("");
     });
 });
+
+/** The row subtitle prefix ("Task" vs "Milestone") lives in `icon`. */
+const subtitlePrefixOf = (item: { icon?: unknown }): string => {
+    const json = JSON.stringify(item.icon ?? {});
+    const match = json.match(/"(Task|Milestone) · [^"]*"/);
+    return match ? match[1] : "";
+};
+
+/**
+ * A milestone is a task under the hood (it inserts the same `hashTask`
+ * chip), but its suggestion row must READ as a milestone — the subtitle
+ * says "Milestone", not "Task". The flag rides on both task sources.
+ */
+describe("HashMentionMenuItems — milestone rows", () => {
+    it("labels an open-project milestone row 'Milestone', not 'Task'", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({ tasks: [openProjectTask({ isMilestone: true })] })
+        );
+
+        expect(subtitlePrefixOf(items[0])).toBe("Milestone");
+        expect(subtitleOf(items[0])).toBe("");
+    });
+
+    it("labels a team-task milestone row 'Milestone' with the project name", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({
+                teamTasks: [teamTask({ isMilestone: true })],
+                projects: [
+                    {
+                        projectId: 2,
+                        projectName: "Marketing",
+                    } as unknown as HashMentionData["projects"][number],
+                ],
+            })
+        );
+
+        const json = JSON.stringify(items[0].icon ?? {});
+        expect(json).toContain("Milestone · MKT-9 · Marketing");
+        expect(json).not.toContain("Task · MKT-9");
+    });
+
+    it("keeps a non-milestone task row labelled 'Task'", () => {
+        const items = HashMentionMenuItems(
+            newEditor(),
+            dataWith({ tasks: [openProjectTask({ isMilestone: false })] })
+        );
+
+        expect(subtitlePrefixOf(items[0])).toBe("Task");
+    });
+
+    it("still inserts a hashTask chip for a milestone (resolves as a task)", () => {
+        const editor = newEditor();
+        const items = HashMentionMenuItems(
+            editor,
+            dataWith({ tasks: [openProjectTask({ id: "3", projectId: 1, isMilestone: true })] })
+        );
+        items[0].onItemClick?.();
+        expect(editor.insertInlineContent).toHaveBeenCalledWith([
+            expect.objectContaining({ type: "hashTask" }),
+            " ",
+        ]);
+    });
+});

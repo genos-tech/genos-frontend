@@ -258,6 +258,8 @@ export const hi: DeepPartial<Messages> = {
             mentionMemberCount: "{count, plural, one {# सदस्य} other {# सदस्य}}",
             hashTask: "कार्य · {id}",
             hashTaskProject: "कार्य · {id} · {project}",
+            hashMilestone: "माइलस्टोन · {id}",
+            hashMilestoneProject: "माइलस्टोन · {id} · {project}",
             hashNote: "टिप्पणी",
             hashTaskNote: "कार्य नोट",
             hashChatNote: "चैट नोट",
