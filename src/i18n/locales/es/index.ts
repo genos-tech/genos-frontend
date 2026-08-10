@@ -174,6 +174,8 @@ export const es: DeepPartial<Messages> = {
             mentionMemberCount: "{count, plural, one {# miembro} other {# miembros}}",
             hashTask: "Tarea · {id}",
             hashTaskProject: "Tarea · {id} · {project}",
+            hashMilestone: "Hito · {id}",
+            hashMilestoneProject: "Hito · {id} · {project}",
             hashNote: "Nota",
             hashTaskNote: "nota de tarea",
             hashChatNote: "nota de chat",

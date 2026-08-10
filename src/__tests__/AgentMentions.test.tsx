@@ -472,6 +472,15 @@ vi.mock("../features/agentQA/mentions/useAgentMentionSources", () => ({
                 ref: { kind: "task", taskId: 7, label: "Ship v2" },
                 trigger: "#",
                 key: "task:7",
+                subtitle: "APL-7",
+            },
+            {
+                // A milestone-flagged task — resolves as a task, but the
+                // row must read "Milestone".
+                ref: { kind: "task", taskId: 8, label: "v1 launch", isMilestone: true },
+                trigger: "#",
+                key: "task:8",
+                subtitle: "APL-8",
             },
         ],
     }),
@@ -517,6 +526,46 @@ describe("AgentQAInput mention integration", () => {
         fireEvent.keyDown(textarea, { key: "Enter" });
         expect(onAsk).toHaveBeenCalledWith(undefined, [
             { kind: "user", userId: "u-alice", label: "Alice" },
+        ]);
+    });
+
+    it("labels a milestone-flagged task row 'Milestone', a plain task 'Task'", async () => {
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…");
+
+        // The milestone-flagged task reads "Milestone …", not "Task …".
+        fireEvent.change(textarea, { target: { value: "#v1" } });
+        expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
+        expect(screen.getByTestId("agent-mention-option-task:8")).toHaveTextContent(
+            "Milestone APL-8: v1 launch"
+        );
+
+        // A plain task still reads "Task …".
+        fireEvent.change(textarea, { target: { value: "#Ship" } });
+        await waitFor(() => {
+            expect(screen.getByTestId("agent-mention-option-task:7")).toHaveTextContent(
+                "Task APL-7: Ship v2"
+            );
+        });
+    });
+
+    it("submits a milestone-flagged mention as a plain task ref", async () => {
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…");
+
+        fireEvent.change(textarea, { target: { value: "#v1" } });
+        expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
+        fireEvent.keyDown(textarea, { key: "Enter" });
+        await waitFor(() => {
+            expect((textarea as HTMLTextAreaElement).value).toBe("#v1 launch ");
+        });
+        fireEvent.keyDown(textarea, { key: "Enter" });
+        // The ref keeps kind:"task" (+ display-only isMilestone) so the
+        // wire conversion downstream sends a task, not a new milestone kind.
+        expect(onAsk).toHaveBeenCalledWith(undefined, [
+            { kind: "task", taskId: 8, label: "v1 launch", isMilestone: true },
         ]);
     });
 

@@ -366,7 +366,7 @@ export const citedChipSources = (
         const hit = resolveCitationToken(token, byId);
         if (hit) cited.add(hit.key);
     }
-    return sources.filter((s) => {
+    const chips = sources.filter((s) => {
         if (s.operated) return true;
         if (cited.size === 0) return false;
         const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
@@ -374,6 +374,23 @@ export const citedChipSources = (
             : `${s.entity_type}:${s.entity_id}`;
         return cited.has(tokenKey);
     });
+
+    // A milestone IS a task under the hood, so the backend can return
+    // (and the answer can cite) BOTH a `milestone` row and the `task` row
+    // for its backing task — two chips for the same object. A milestone
+    // row carries that backing task's `task_id`, so when a milestone chip
+    // is present, drop any `task` chip that points at the same task: the
+    // milestone chip already represents it, and the milestone is the
+    // meaningful entity (don't treat it as a plain task). Operated task
+    // chips are dropped too — the milestone chip is the clickable ref.
+    const milestoneTaskIds = new Set<string>();
+    for (const s of chips) {
+        if (s.entity_type === "milestone" && s.task_id) milestoneTaskIds.add(s.task_id);
+    }
+    if (milestoneTaskIds.size === 0) return chips;
+    return chips.filter(
+        (s) => !(s.entity_type === "task" && s.task_id != null && milestoneTaskIds.has(s.task_id))
+    );
 };
 
 // Build a URL that opens the entity. Used by CitationAnchor / SourceChips

@@ -14,7 +14,13 @@ import type { AgentMentionPayload } from "../../../services/agentApi";
 
 export type AgentMentionRef =
     | { kind: "user"; userId: string; label: string }
-    | { kind: "task"; taskId: number; label: string }
+    // A milestone is a task under the hood (same `task_id`, same wire
+    // shape — see `toWireMentions`), so it stays `kind: "task"` and
+    // resolves server-side exactly as a task does. `isMilestone` is a
+    // DISPLAY-ONLY flag: it flips the dropdown row's icon and label to
+    // read "Milestone" instead of "Task", and is deliberately absent
+    // from `mentionKey` / the wire payload so nothing downstream forks.
+    | { kind: "task"; taskId: number; label: string; isMilestone?: boolean }
     // 1 = Personal, 2 = Task, 3 = Chat — the same integer codes
     // `NoteContext` uses (the "Shared" UI bucket is normalised to 1).
     | { kind: "note"; noteType: 1 | 2 | 3; noteId: number; label: string }

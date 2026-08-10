@@ -8,10 +8,13 @@
 //                  from the App root). Mention groups join the same
 //                  pool via MentionGroupsContext / `groupsOverride`.
 //   `#` entities — `useHashMentionData()`: the tasks / notes / projects
-//                  that back the BlockNote `#` menu, plus ALL chat
-//                  types (`allChats`, not the editors' GM-only `chats`
-//                  list — agent asks are private to the requester, so
-//                  the DM-title leak rationale doesn't apply here).
+//                  that back the BlockNote `#` menu, plus the DM / GM /
+//                  MDM chats from `allChats` (not the editors' GM-only
+//                  `chats` list — agent asks are private to the
+//                  requester, so the DM-title leak rationale doesn't
+//                  apply here). PM chats are filtered out: each mirrors a
+//                  Project one-to-one, so the Project candidate stands in
+//                  for it (a PM row would just duplicate the project).
 
 import { useMemo } from "react";
 
@@ -121,7 +124,13 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             const taskId = Number(t.id);
             if (!t.title || !Number.isFinite(taskId)) continue;
             out.push(
-                candidate({ kind: "task", taskId, label: t.title }, "#", t.displayId ?? undefined)
+                candidate(
+                    // `isMilestone` is display-only (see AgentMentionRef) —
+                    // the row reads "Milestone" but still resolves as a task.
+                    { kind: "task", taskId, label: t.title, isMilestone: Boolean(t.isMilestone) },
+                    "#",
+                    t.displayId ?? undefined
+                )
             );
         }
         for (const n of hash.notes) {
@@ -129,8 +138,13 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!n.title || !noteType) continue;
             out.push(candidate({ kind: "note", noteType, noteId: n.noteId, label: n.title }, "#"));
         }
-        // All chat types (DM / GM / PM / MDM) — see the module comment.
+        // Chat types DM / GM / MDM (see the module comment). PM chats
+        // (chatType 3) are deliberately EXCLUDED: every PM chat mirrors a
+        // Project one-to-one, so offering both produced two identical rows
+        // for the same thing. Users want to mention the Project, so the PM
+        // row is dropped and only the project candidate below remains.
         for (const c of hash.allChats) {
+            if (c.chatType === 3) continue;
             const label = chatDisplayName(c);
             if (!label || !c.chatId) continue;
             out.push(

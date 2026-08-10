@@ -441,6 +441,57 @@ describe("citedChipSources — cited sources (inline + bare), uncited dropped", 
     });
 });
 
+// A milestone is backed by a task (same task_id), so the backend can
+// return — and the answer can cite — BOTH a `milestone` chip and the
+// `task` chip for its backing task. That's one object shown twice; the
+// milestone chip wins and the redundant backing-task chip is dropped.
+describe("citedChipSources — milestone / backing-task dedup", () => {
+    // task_id lives on the row, not in entity_id — build with the richer helper.
+    const withTaskId = (
+        entity_type: string,
+        entity_id: string,
+        task_id: string,
+        over: Partial<SpotlightResult> = {}
+    ): SpotlightResult =>
+        ({ entity_type, entity_id, task_id, title: "", ...over }) as unknown as SpotlightResult;
+
+    it("drops the backing-task chip when its milestone chip is also cited", () => {
+        const milestone = withTaskId("milestone", "milestone:7", "500", { title: "v1 launch" });
+        const backingTask = withTaskId("task", "task:500", "500", { title: "v1 launch" });
+        const answer = "Targeting [v1 launch](milestone:7) — see [task:500].";
+        const chips = citedChipSources(answer, [milestone, backingTask]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["milestone:7"]);
+    });
+
+    it("keeps a task chip whose id does NOT match any cited milestone", () => {
+        const milestone = withTaskId("milestone", "milestone:7", "500");
+        const otherTask = withTaskId("task", "task:42", "42", { title: "unrelated" });
+        const answer = "Milestone [v1](milestone:7) and task [task:42].";
+        const chips = citedChipSources(answer, [milestone, otherTask]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["milestone:7", "task:42"]);
+    });
+
+    it("drops an OPERATED backing-task chip too (milestone chip is the ref)", () => {
+        // The write tool marks both the milestone and its backing task
+        // `operated`; without dedup the user would see two chips for one
+        // created milestone. The milestone chip is the meaningful one.
+        const milestone = withTaskId("milestone", "milestone:7", "500", { operated: true });
+        const backingTask = withTaskId("task", "task:500", "500", { operated: true });
+        const chips = citedChipSources("Done — I created the milestone.", [
+            milestone,
+            backingTask,
+        ]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["milestone:7"]);
+    });
+
+    it("leaves task chips untouched when no milestone chip is present", () => {
+        const t1 = withTaskId("task", "task:500", "500");
+        const t2 = withTaskId("task", "task:42", "42");
+        const chips = citedChipSources("Both [task:500] and [task:42].", [t1, t2]);
+        expect(chips.map((s) => s.entity_id)).toEqual(["task:500", "task:42"]);
+    });
+});
+
 // A richer builder for sourceToUrl, which reads the deep-link fields
 // (project_id / task_id / note_id / chat_*) the minimal `src` helper omits.
 const fullSrc = (fields: Partial<SpotlightResult>): SpotlightResult =>

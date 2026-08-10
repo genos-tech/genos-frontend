@@ -282,6 +282,8 @@ export const common = {
         mentionGroupFallback: "group",
         hashTask: "Task · {id}",
         hashTaskProject: "Task · {id} · {project}",
+        hashMilestone: "Milestone · {id}",
+        hashMilestoneProject: "Milestone · {id} · {project}",
         hashNote: "Note",
         hashTaskNote: "Task note",
         hashChatNote: "Chat note",

@@ -4,6 +4,7 @@ import {
     DefaultReactSuggestionItem,
     SuggestionMenuController,
 } from "@blocknote/react";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
@@ -35,6 +36,15 @@ export const TASK_PALETTE: MentionPalette = {
     bg: "rgba(59, 130, 246, 0.15)",
     bgHover: "rgba(59, 130, 246, 0.28)",
     text: "#2563eb",
+};
+// Milestone rows read as their own kind, not a task — the orange
+// milestone identity color used across the app (task table flag icon,
+// diagram node, Spotlight milestone chip) so a `#` milestone suggestion
+// matches the milestone's colour everywhere else.
+export const MILESTONE_PALETTE: MentionPalette = {
+    bg: "rgba(249, 115, 22, 0.15)",
+    bgHover: "rgba(249, 115, 22, 0.28)",
+    text: "#ea580c",
 };
 export const NOTE_PALETTE: MentionPalette = {
     bg: "rgba(var(--gp-brandalt-500-rgb), 0.15)",
@@ -343,6 +353,12 @@ type MentionableTask = {
     // here. Empty string when unknown; the row then renders no chip
     // rather than a misleading "Open".
     status: string;
+    // True when this row's backing task IS a milestone. A milestone is
+    // technically a task (same id, same `hashTask` chip on insert), but
+    // the suggestion row must READ as a milestone — its own icon, colour
+    // and subtitle — so the user isn't offered "milestone" mislabelled
+    // as "task". Both sources carry the flag.
+    isMilestone: boolean;
 };
 
 interface HashMenuCacheEntry {
@@ -403,6 +419,7 @@ export const HashMentionMenuItems = (
                 title: t.title || "",
                 projectName: projectNameById.get(String(t.projectId)) || "",
                 status: t.status || "",
+                isMilestone: Boolean(t.isMilestone),
             })),
         ...data.teamTasks
             .filter((t) => t.taskId != null && t.projectId != null)
@@ -413,6 +430,7 @@ export const HashMentionMenuItems = (
                 title: t.title || "",
                 projectName: projectNameById.get(String(t.projectId)) || t.projectName || "",
                 status: t.status?.status || "",
+                isMilestone: Boolean(t.isMilestone),
             })),
     ];
     const seenTaskKeys = new Set<string>();
@@ -427,6 +445,12 @@ export const HashMentionMenuItems = (
             const { projectId, taskId } = t;
             const displayId = t.displayId || taskId;
             const title = t.title;
+            // A milestone is a task under the hood (it inserts the same
+            // `hashTask` chip and deep-links the same way), but its
+            // suggestion row wears the milestone icon, colour and
+            // subtitle so it doesn't read as a plain task.
+            const projectTpl = t.isMilestone ? copy.hashMilestoneProject : copy.hashTaskProject;
+            const plainTpl = t.isMilestone ? copy.hashMilestone : copy.hashTask;
             return {
                 title: displayId,
                 aliases: title ? [title] : [],
@@ -440,15 +464,15 @@ export const HashMentionMenuItems = (
                     ]);
                 },
                 icon: menuRow(
-                    TaskAltRoundedIcon,
-                    TASK_PALETTE,
+                    t.isMilestone ? FlagRoundedIcon : TaskAltRoundedIcon,
+                    t.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE,
                     title || displayId,
                     t.projectName
-                        ? fmt(copy.hashTaskProject, {
+                        ? fmt(projectTpl, {
                               id: displayId,
                               project: t.projectName,
                           })
-                        : fmt(copy.hashTask, { id: displayId }),
+                        : fmt(plainTpl, { id: displayId }),
                     // The canonical dashboard status chip, so a status
                     // reads identically here and in the task surfaces.
                     t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
