@@ -734,6 +734,18 @@ export const SpotlightContent = ({
                             mention.setCaret(e.target.selectionStart ?? e.target.value.length);
                         }}
                         onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                            // IME guard: while an input-method composition
+                            // is active (Japanese / Chinese / Korean, or
+                            // accented input), Enter CONFIRMS the composition
+                            // rather than submitting, and Arrow keys drive
+                            // the candidate window. Bail so the IME owns the
+                            // key. Without this, the confirming Enter both
+                            // fires the ask AND leaves the committed text
+                            // behind: its trailing onChange repopulates the
+                            // input after submitAsk cleared `query`.
+                            // `isComposing` is the modern signal; keyCode 229
+                            // is the legacy sentinel for engines missing it.
+                            if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                             // Mention-picker precedence: while the @/#
                             // dropdown is open it owns Arrow / Enter /
                             // Escape, beating result-row navigation and
