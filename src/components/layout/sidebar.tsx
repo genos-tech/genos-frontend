@@ -231,7 +231,7 @@ export const Sidebar = (props: SidebarProps) => {
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
-                <ColorSchemeToggle />
+                {/* <ColorSchemeToggle /> */}
             </Box>
 
             <Divider sx={{ opacity: isDark ? 0.06 : 0.08, mx: 1.5 }} />
