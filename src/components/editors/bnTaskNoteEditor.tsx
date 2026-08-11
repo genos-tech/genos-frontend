@@ -96,6 +96,7 @@ import {
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -288,6 +289,21 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
+    });
+
+    // Fan @-mentions left in inline comments out to the activity system,
+    // exactly as a task-note body mention does. Host = task note (surface 7),
+    // carrying its task/project so the mention deep-links to the note.
+    useCommentMentionEmitter({
+        threadStore,
+        socket,
+        getHost: () => ({
+            surfaceType: 7,
+            noteId: currentTaskNote.noteId,
+            taskId: currentTaskNote.taskId,
+            projectId: currentTaskNote.projectId,
+            title: currentTaskNote.title,
+        }),
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);

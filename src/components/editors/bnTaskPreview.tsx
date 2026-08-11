@@ -89,6 +89,7 @@ import {
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -295,6 +296,17 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
+    });
+
+    // Fan @-mentions left in inline comments out to the activity system,
+    // exactly as a task-body mention does. Host = task body (surface 5);
+    // `projectId` is unknown in this editor (only `taskId` is a prop), so
+    // Django backfills it from the task FK — the same point it backfills
+    // `displayId`.
+    useCommentMentionEmitter({
+        threadStore,
+        socket,
+        getHost: () => ({ surfaceType: 5, taskId }),
     });
 
     // Forward the editor instance to the parent the first time it becomes
