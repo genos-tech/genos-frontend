@@ -414,12 +414,12 @@ export const PlansHome = () => {
                     {/* Renders nothing until a second currency is configured
                         server-side, so this is invisible today and appears on
                         its own once USD prices exist in Stripe. */}
-                    <CurrencyPicker
+                    {/* <CurrencyPicker
                         ariaLabel={p.currencyLabel}
                         supported={plans?.supported_currencies}
                         value={plans?.currency || currency}
                         onChange={setCurrency}
-                    />
+                    /> */}
                 </Stack>
 
                 {/* Manage-your-subscription banner.
