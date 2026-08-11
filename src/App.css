@@ -1320,6 +1320,16 @@ html,
    normally reach this state — they're listed for symmetry, since the
    correct rule is "an occluded editor paints no floating UI at all".
 
+   `.bn-thread` (the floating comment card) is here for a real case, not
+   just symmetry: a `#`-mention / entity link clicked INSIDE an open
+   comment card opens UrlLinkModal, and the card sits at
+   `--bn-ui-base-z-index + 30` = 13330 — above every UrlLinkModal preview
+   level (10020…13200, capped there so the modal's own 13300 tooltip token
+   stays on top). Raising the modal past the card would break that
+   tooltip, so instead the card — like the side menu — simply stops
+   painting while the modal that now covers it is open, and returns when
+   it closes.
+
    Keyed on DOM order rather than a z-index, because no constant can work:
    an editor BEHIND a modal needs its UI below ~1300, while an editor
    INSIDE a UrlLinkModal-hosted note/task preview needs it above 10020 —
@@ -1349,7 +1359,8 @@ body
         .bn-link-toolbar,
         .bn-floating-toolbar,
         .bn-emoji-picker-popover,
-        .bn-menu-dropdown
+        .bn-menu-dropdown,
+        .bn-thread
     ) {
     display: none !important;
 }

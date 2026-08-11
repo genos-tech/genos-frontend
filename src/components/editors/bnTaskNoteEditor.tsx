@@ -95,6 +95,8 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
+import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
+import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
@@ -159,6 +161,9 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     // CSS classes added to the outer Box when each is on.
     const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
     const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    // Our custom comments sidebar (top-right button → docked list). Frontend
+    // only: a read-only lens over the editor's existing threads.
+    const [showComments, setShowComments] = useState<boolean>(false);
     const bnBoxClassName: string = [
         `bn-note-body-box-${mode}`,
         unwrapAll && "bn-unwrap-all",
@@ -412,15 +417,33 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 {/* Anchored bottom-right because the Comments toggle already
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
+                {/* Comments-sidebar toggle, pinned to the very top-right
+                    corner. When the sidebar is open the cluster below shifts
+                    left to clear the panel; this button stays put as the
+                    open/close affordance. */}
+                {threadStore && (
+                    <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 11 }}>
+                        <CommentsSidebarToggle
+                            open={showComments}
+                            threadStore={threadStore}
+                            onToggle={() => setShowComments((prev) => !prev)}
+                        />
+                    </Box>
+                )}
                 <Box
                     sx={{
                         position: "absolute",
                         top: 8,
-                        right: 52,
+                        // Closed: 52px clears the comment toggle at right:8.
+                        // Open: the toggle sits over the sidebar header instead,
+                        // so the cluster only needs to clear the panel's left
+                        // edge — a snug 12px gap, not another 52.
+                        right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
                         zIndex: 10,
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
+                        transition: "right 0.15s ease",
                     }}
                 >
                     {/* "Saved" chip rides alongside the wrap toggles so
@@ -691,6 +714,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                 )}
                             </BlockNoteViewEditor>
                         </div>
+                        {threadStore && <CommentsSidebar open={showComments} />}
                     </div>
                 </BlockNoteView>
 

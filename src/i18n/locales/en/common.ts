@@ -266,6 +266,23 @@ export const common = {
         teamEmojiGroup: "Team Emoji",
         loadingComments: "Loading comments...",
         couldNotLoadComments: "Could not load comments.",
+        // Our custom "show all comments" sidebar (opened by the top-right
+        // comment button on the note editors). Read-only lens over the
+        // editor's existing threads; clicking a row opens that thread's
+        // floating card.
+        commentsSidebar: {
+            title: "Comments",
+            titleWithCount: "Comments ({count})",
+            empty: "No comments yet. Select text and add a comment to start a thread.",
+            emptyComment: "(no text)",
+            unknownAuthor: "Unknown",
+            resolved: "Resolved",
+            replies: "{count, plural, one {# reply} other {# replies}}",
+            justNow: "just now",
+            minutesAgo: "{count, plural, one {# minute ago} other {# minutes ago}}",
+            hoursAgo: "{count, plural, one {# hour ago} other {# hours ago}}",
+            daysAgo: "{count, plural, one {# day ago} other {# days ago}}",
+        },
         imageAttachment: "Image attachment",
         blockNoteImage: "BlockNote image",
         attachmentUploadFailed: "Attachment Upload Failed",
