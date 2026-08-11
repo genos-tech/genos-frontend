@@ -1,10 +1,11 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import {
     BlockNoteSchema,
     createParagraphBlockSpec,
     defaultInlineContentSpecs,
     defaultStyleSpecs,
 } from "@blocknote/core";
+import { CommentsExtension } from "@blocknote/core/comments";
 import { BlockNoteView, components as mantineComponents } from "@blocknote/mantine";
 import {
     ComponentsContext,
@@ -15,6 +16,8 @@ import {
     getFormattingToolbarItems,
     SuggestionMenuController,
     useBlockNoteContext,
+    useExtension,
+    useThreads,
     type Components,
 } from "@blocknote/react";
 import { Socket } from "socket.io-client";
@@ -238,6 +241,45 @@ const COMMENTS_COMPONENTS_WITH_MENTIONS: Components = {
     },
 };
 
+/**
+ * Warms BlockNote's comment `UserStore` with every user referenced by the
+ * current threads (comment authors + whoever resolved a thread) whenever the
+ * thread set changes. Renders nothing.
+ *
+ * BlockNote's floating card reads these users *synchronously during render* and
+ * THROWS if a `resolvedBy` user isn't cached yet ("their data could not be
+ * found"). Pre-loading here means the users are resolved before any card
+ * renders, so that throw never fires. This is the pre-warm the deleted
+ * `ThreadsSidebarWithPreload` used to do for the docked sidebar; the floating
+ * card needs it just the same. The `ThreadsSidebarErrorBoundary` around the
+ * controller is the backstop for whatever slips through (e.g. a thread that
+ * arrives and is opened in the same tick); this preloader is what keeps that
+ * backstop from being exercised in the first place.
+ */
+const CommentsUserPreloader = () => {
+    const comments = useExtension(CommentsExtension);
+    const threads = useThreads();
+
+    useEffect(() => {
+        const userIds = new Set<string>();
+        threads.forEach((thread) => {
+            if (thread.resolvedBy) {
+                userIds.add(thread.resolvedBy);
+            }
+            thread.comments.forEach((comment) => userIds.add(comment.userId));
+        });
+        if (userIds.size === 0) {
+            return;
+        }
+        // `resolveUsers` never rejects (it falls back to an "unknown user"), so
+        // this settles for every id; guard anyway so a store-level failure
+        // can't surface as an unhandled rejection.
+        void comments.userStore.loadUsers(Array.from(userIds)).catch(() => {});
+    }, [threads, comments]);
+
+    return null;
+};
+
 type CommentsWithMentionsProps = {
     teamMemberProfiles: Record<string, UserProps>;
     teamMembers: UserProps[];
@@ -266,6 +308,7 @@ export const CommentsWithMentions = (props: CommentsWithMentionsProps) => {
     return (
         <CommentMentionDataContext.Provider value={mentionData}>
             <ComponentsContext.Provider value={COMMENTS_COMPONENTS_WITH_MENTIONS}>
+                <CommentsUserPreloader />
                 <FloatingComposerController />
                 <ThreadsSidebarErrorBoundary>
                     <FloatingThreadController />
