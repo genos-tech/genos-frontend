@@ -168,6 +168,14 @@ export type ActivityMessageProps = {
     // bot-thread suppression and to route them to the task-comment
     // categories rather than mention_thread.
     isTaskComment?: boolean;
+    // True when a SURFACE activity (task body / note, chatType 5/6/7/8) was
+    // produced by a BlockNote INLINE COMMENT rather than the body itself —
+    // set from `meta.isComment` by the surface adapter. Distinct from
+    // `isTaskComment` (that flags the legacy task-comment feature on PM
+    // thread mirrors). Drives two things: the notification router routes an
+    // un-mentioned comment activity to the `comments` category, and the
+    // activity feed chip labels the row as a comment.
+    isComment?: boolean;
     // Parent-chat routing for CHAT-NOTE mentions (surface 8). The note's
     // own id rides in `chatId` for surface activities, so the chat the
     // note belongs to is carried separately here so a clicked chat-note

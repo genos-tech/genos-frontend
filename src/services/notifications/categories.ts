@@ -118,6 +118,22 @@ export const NOTIFICATION_CATEGORIES = [
         hideSubToggle: true,
     },
     {
+        // A BlockNote INLINE comment left on a task body or note (surface
+        // 5/6/7/8), fanned out to that surface's owner + stakeholders even
+        // without an @-mention. Grouped under `task_comments` deliberately:
+        // both are "someone commented on your work", so it rides the existing
+        // `enable_task_comments` coarse column instead of adding a sixth
+        // master (which would need a backend migration). `hideSubToggle` keeps
+        // the group a single master switch — a user who turns Task Comments
+        // off silences these too, and there's no per-sub row to confuse them.
+        key: "comments",
+        group: "task_comments",
+        labelKey: "comments",
+        descriptionKey: "comments",
+        defaultEnabled: true,
+        hideSubToggle: true,
+    },
+    {
         key: "inbox",
         group: "inbox",
         labelKey: "inbox",

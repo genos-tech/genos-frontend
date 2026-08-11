@@ -165,8 +165,13 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
             tsSent: a.tsCreated,
             // Seeds the "mentions" notification category (gated on
             // `mentionedUserIds.includes(myself.userId)`), same as the
-            // channel-backed mention path below.
-            mentionedUserIds: [a.recipientUserId] as unknown as [],
+            // channel-backed mention path below. ONLY for real mention rows
+            // (activityType 3): a surface can also carry a THREAD_REPLY row
+            // (activityType 1) from the general-comment participant fan-out,
+            // and seeding its recipient here would make a plain "someone
+            // commented" activity masquerade as a mention. Mirrors the
+            // channel branch's `a.activityType === 3 ? … : []` gate below.
+            mentionedUserIds: a.activityType === 3 ? ([a.recipientUserId] as unknown as []) : [],
             mentionedViaGroups: undefined,
             isRead: a.isRead,
             ...(a.actor?.userName
@@ -177,6 +182,12 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
             noteChatType,
             noteChatId,
             noteThreadId,
+            // Marks an activity produced by an inline COMMENT (mention OR the
+            // general participant fan-out) rather than the body — set by the
+            // Flask emitter via `meta.isComment`. The notification router reads
+            // it to route un-mentioned comment activities to the `comments`
+            // category, and the feed chip reads it to label the row.
+            isComment: !!meta.isComment,
         } as ActivityMessageProps;
     }
 

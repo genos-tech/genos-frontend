@@ -170,3 +170,53 @@ export const emitCommentMention = (socket: Socket | null, evt: CommentMentionEmi
         ...(evt.host.threadId !== undefined ? { thread_id: evt.host.threadId } : {}),
     });
 };
+
+export type CommentActivityEmit = {
+    host: CommentHostContext;
+    /** id of the individual comment — the idempotency key for its rows. */
+    commentId: string;
+    /** The comment's `@user` mention ids, forwarded so the backend can
+     *  EXCLUDE them from the owner+stakeholder fan-out (they receive the
+     *  more-specific mention activity via `emitCommentMention`). */
+    mentionedUserIds: string[];
+    /** `@group` ids — expanded to member ids + excluded server-side too. */
+    mentionedGroupIds: string[];
+    firstLineContent: string;
+    tsMentionedAt: string;
+};
+
+/**
+ * Emit the `comment_activity` socket event — the general-comment fan-out
+ * that tells a surface's OWNER + STAKEHOLDERS a comment was left on it, even
+ * when it @-mentions no one (the note owner / task assignee hears about a
+ * comment the same way they hear about a mention).
+ *
+ * Fires on comment CREATE only (new thread / added comment), NOT on edit — a
+ * comment already announced its author's presence; re-paging everyone on an
+ * edit would be noise. Unlike `emitCommentMention` it is NOT gated on a
+ * mention delta: the whole point is to notify when there is no mention.
+ * Recipients are resolved server-side from the surface's authoritative id;
+ * this only forwards the surface coordinates + the mention set to exclude.
+ */
+export const emitCommentActivity = (socket: Socket | null, evt: CommentActivityEmit): void => {
+    if (!socket) return;
+
+    socket.emit("comment_activity", {
+        surface_type: evt.host.surfaceType,
+        comment_id: evt.commentId,
+        mentioned_user_ids: evt.mentionedUserIds,
+        mentioned_group_ids: evt.mentionedGroupIds,
+        first_line_content: evt.firstLineContent,
+        ts_mentioned_at: evt.tsMentionedAt,
+        // Host routing — packed into the activity `meta` so the FE routes
+        // the comment activity to the note/task it was left on, identically
+        // to a comment mention.
+        ...(evt.host.noteId !== undefined ? { note_id: evt.host.noteId } : {}),
+        ...(evt.host.taskId !== undefined ? { task_id: evt.host.taskId } : {}),
+        ...(evt.host.projectId !== undefined ? { project_id: evt.host.projectId } : {}),
+        ...(evt.host.title !== undefined ? { host_title: evt.host.title } : {}),
+        ...(evt.host.chatType !== undefined ? { chat_type: evt.host.chatType } : {}),
+        ...(evt.host.chatId !== undefined ? { chat_id: evt.host.chatId } : {}),
+        ...(evt.host.threadId !== undefined ? { thread_id: evt.host.threadId } : {}),
+    });
+};

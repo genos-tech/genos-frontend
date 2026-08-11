@@ -358,6 +358,14 @@ export const buildActivityIntent = (
         // is intentionally NOT routed here (it produces no activity-feed
         // notification; its in-app toast comes from the chat-message path).
         category = "task_comments";
+    } else if (activity.isComment) {
+        // A plain (non-mention) BlockNote INLINE comment left on a task body
+        // or note (surface 5/6/7/8), fanned out to that surface's owner +
+        // stakeholders by the participant producer. `mentionsMe` is checked
+        // first so an @-mention in the same comment keeps its more-specific
+        // mention category — this branch only catches recipients who got the
+        // comment purely as a stakeholder.
+        category = "comments";
     }
     if (!category) return null;
 
@@ -373,13 +381,17 @@ export const buildActivityIntent = (
     // function and reused here so the redundant-prefix fix kicks in
     // whether or not the backend payload carries `systemUserId`.
     // All `mention_*` keys live in the "mentions" group and share the
-    // mention/bot title; plain `task_comments` uses the comment title.
+    // mention/bot title; plain `task_comments` uses the task-comment title;
+    // the BlockNote inline-comment fan-out (`comments`) uses its own
+    // "commented" wording (it names no task/thread, just "who commented").
     const isMention = CATEGORY_BY_KEY[category]?.group === "mentions";
     const title = isMention
         ? senderIsBot
             ? fmt(routerMessages.mentionTitleByBot, { subjectLabel })
             : fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
-        : fmt(routerMessages.taskCommentTitle, { senderName });
+        : category === "comments"
+          ? fmt(routerMessages.commentTitle, { senderName })
+          : fmt(routerMessages.taskCommentTitle, { senderName });
 
     // Project-scoped activity (mentions in a PM bubble, task comments) gets
     // the project avatar so the user can see at a glance which project the
