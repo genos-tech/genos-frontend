@@ -105,7 +105,13 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!u?.userId || !u.userName) continue;
             if (seen.has(u.userId)) continue;
             seen.add(u.userId);
-            out.push(candidate({ kind: "user", userId: u.userId, label: u.userName }, "@"));
+            // Carry the profile-image path so the dropdown row shows the
+            // user's real photo (display-only — never reaches the wire;
+            // the Avatar falls back to the name's initial when it's empty).
+            out.push({
+                ...candidate({ kind: "user", userId: u.userId, label: u.userName }, "@"),
+                avatarImgPath: u.avatarImgPath,
+            });
         }
         // Mention groups share the `@` pool. Outside MentionGroupsProvider
         // the context shim serves an empty list, so surfaces mounted above

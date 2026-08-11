@@ -7,10 +7,13 @@
 // icon disc + a bold `@`/`#` name over a muted kind subtitle, with the
 // same keyboard-highlight treatment. The per-type disc colors come from
 // the shared `mentionPalettes` module, so a `#task` reads the same blue
-// here, in the BlockNote `#` menu, and in a message body. (This dropdown
-// can't reuse the BlockNote rows directly: Spotlight mounts outside
-// AvatarContext — so no `UserAvatar` — and importing those files would
-// drag `@blocknote/react` into Spotlight's entry chunk.)
+// here, in the BlockNote `#` menu, and in a message body. The `@` user
+// row shows the person's real profile photo, matching the editor's `@`
+// menu. (This dropdown can't reuse the BlockNote rows directly: Spotlight
+// mounts outside AvatarContext, so it can't use `UserAvatar` — instead
+// the user row renders a bare Joy `<Avatar src>` built context-free from
+// the candidate's `avatarImgPath` via `buildAvatarSrc`. And importing the
+// editor files would drag `@blocknote/react` into Spotlight's entry chunk.)
 //
 // Rendered through a PORTAL to document.body and positioned off the
 // anchor element's viewport rect: the host surfaces clip absolutely-
@@ -28,10 +31,9 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Sheet, Typography } from "@mui/joy";
+import { Avatar, Box, Sheet, Typography } from "@mui/joy";
 import { createPortal } from "react-dom";
 
 import {
@@ -42,10 +44,10 @@ import {
     PROJECT_PALETTE,
     TASK_PALETTE,
     TODO_PALETTE,
-    USER_OTHER_PALETTE,
     type MentionPalette,
 } from "../../../components/editors/mentionPalettes";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
+import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
 
 // Above the Spotlight sheet (13100) and every Joy modal so the portaled
@@ -56,16 +58,14 @@ const MAX_MENU_HEIGHT = 280;
 
 // Same icon vocabulary as the answer's citation chips (`_sourceIcon` in
 // SpotlightOverlay / `sourceIcon` in SourceChips), so a mention option
-// and the source chip it later becomes read as the same object. `user`
-// has no citation-chip counterpart (people aren't citable) — Person is
-// its consistent extension. A milestone (a task flagged `isMilestone`)
-// takes the flag icon so it reads as a milestone, matching Spotlight's
-// milestone chip — even though it resolves as a task on the wire.
-const kindIcon = (ref: AgentMentionRef, color: string) => {
+// and the source chip it later becomes read as the same object. A
+// milestone (a task flagged `isMilestone`) takes the flag icon so it
+// reads as a milestone, matching Spotlight's milestone chip — even
+// though it resolves as a task on the wire. `user` is absent: people
+// render their real profile photo (see `renderIdentity`), not an icon.
+const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>, color: string) => {
     const sx = { fontSize: 18, color };
     switch (ref.kind) {
-        case "user":
-            return <PersonRoundedIcon sx={sx} />;
         case "task":
             return ref.isMilestone ? (
                 <FlagRoundedIcon sx={sx} />
@@ -88,11 +88,10 @@ const kindIcon = (ref: AgentMentionRef, color: string) => {
 };
 
 // The per-type identity color (shared with the message-body `#`/`@`
-// chips), painted as the disc background + icon.
-const kindPalette = (ref: AgentMentionRef): MentionPalette => {
+// chips), painted as the disc background + icon. `user` is absent — a
+// user row is a photo, not a colored disc (see `renderIdentity`).
+const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPalette => {
     switch (ref.kind) {
-        case "user":
-            return USER_OTHER_PALETTE;
         case "group":
             return GROUP_PALETTE;
         case "task":
@@ -108,11 +107,56 @@ const kindPalette = (ref: AgentMentionRef): MentionPalette => {
     }
 };
 
-// People (users, groups) get a circular disc; entities (task/note/…) get
-// a rounded square — mirroring the BlockNote menus, where the `@` row is
-// an avatar / circular group disc and the `#` rows are rounded squares.
-const isPersonKind = (ref: AgentMentionRef): boolean =>
-    ref.kind === "user" || ref.kind === "group";
+// A group gets a circular disc; entities (task/note/…) get a rounded
+// square — mirroring the BlockNote menus, where the `@group` row is a
+// circular disc and the `#` rows are rounded squares. (Users are handled
+// before this — they render a circular avatar photo.)
+const isPersonKind = (ref: Exclude<AgentMentionRef, { kind: "user" }>): boolean =>
+    ref.kind === "group";
+
+// The leading 32px identity visual for a row. A user shows their real
+// profile photo (`avatarImgPath` → absolute src via the context-free
+// `buildAvatarSrc`), falling back to the initial of their name the same
+// way `UserAvatar` does — so a user with no photo still reads as a person
+// disc, not a broken image. Every other kind shows its colored icon disc.
+const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
+    if (c.ref.kind === "user") {
+        return (
+            <Avatar
+                size="sm"
+                src={buildAvatarSrc(c.avatarImgPath)}
+                sx={{ width: 32, height: 32, flexShrink: 0, fontSize: "0.85rem" }}
+            >
+                {(c.ref.label || "?").charAt(0).toUpperCase()}
+            </Avatar>
+        );
+    }
+    const palette = kindPalette(c.ref);
+    // The violet palettes (note, todo) resolve `text` to the brand var,
+    // which blends into the dark sheet — swap up the ramp to the lighter
+    // alt stop, the app-wide dark convention (`isDark ? brandalt-400 :
+    // brand-700`). The hardcoded-hex palettes are legible on both grounds.
+    const iconColor =
+        isDark && palette.text.includes("--gp-brand-700")
+            ? "var(--gp-brandalt-400)"
+            : palette.text;
+    return (
+        <Box
+            sx={{
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+                borderRadius: isPersonKind(c.ref) ? "50%" : "8px",
+                background: palette.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+            }}
+        >
+            {kindIcon(c.ref, iconColor)}
+        </Box>
+    );
+};
 
 // The muted second line — the entity's kind (and id, for tasks). Reuses
 // the BlockNote `#` menu's wording (`common.editor.hash*`) so the two
@@ -279,16 +323,6 @@ export const MentionSuggestionDropdown = ({
         >
             {suggestions.map((c, i) => {
                 const highlighted = i === highlightIndex;
-                const palette = kindPalette(c.ref);
-                // The violet palettes (note, todo) resolve `text` to the
-                // brand var, which blends into the dark sheet — swap up
-                // the ramp to the lighter alt stop, the app-wide dark
-                // convention (`isDark ? brandalt-400 : brand-700`). The
-                // hardcoded-hex palettes are legible on both grounds.
-                const iconColor =
-                    isDark && palette.text.includes("--gp-brand-700")
-                        ? "var(--gp-brandalt-400)"
-                        : palette.text;
                 return (
                     <Box
                         key={c.key}
@@ -316,22 +350,11 @@ export const MentionSuggestionDropdown = ({
                             onSelect(c);
                         }}
                     >
-                        {/* Colored identity disc: circle for people, rounded
-                            square for entities — the BlockNote who/what cue. */}
-                        <Box
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                flexShrink: 0,
-                                borderRadius: isPersonKind(c.ref) ? "50%" : "8px",
-                                background: palette.bg,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {kindIcon(c.ref, iconColor)}
-                        </Box>
+                        {/* Identity visual: the user's real profile photo for
+                            `@` people, else a colored icon disc (circle for a
+                            group, rounded square for entities) — the BlockNote
+                            who/what cue. */}
+                        {renderIdentity(c, isDark)}
                         {/* Two-line block: `@Name` / `#Title` (bold) over the
                             kind subtitle (muted), matching the editor rows. */}
                         <Box

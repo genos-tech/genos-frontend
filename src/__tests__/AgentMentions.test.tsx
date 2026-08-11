@@ -458,6 +458,11 @@ const LABELS: AgentQALabels = {
 // HashMentionData. Mock the sources hook instead of standing up the
 // full provider tree — the sources hook has its own thin adapter logic
 // and the providers are exercised in the real app.
+// Absolute URL so `buildAvatarSrc` passes it through unchanged (the test
+// env has no VITE_MEDIA_ROOT_DJANGO, under which a relative path would
+// resolve to undefined and fall back to the initial).
+const ALICE_AVATAR = "https://cdn.example.com/avatars/alice.png";
+
 vi.mock("../features/agentQA/mentions/useAgentMentionSources", () => ({
     useAgentMentionSources: () => ({
         members: [
@@ -465,6 +470,7 @@ vi.mock("../features/agentQA/mentions/useAgentMentionSources", () => ({
                 ref: { kind: "user", userId: "u-alice", label: "Alice" },
                 trigger: "@",
                 key: "user:u-alice",
+                avatarImgPath: ALICE_AVATAR,
             },
         ],
         entities: [
@@ -550,6 +556,22 @@ describe("AgentQAInput mention integration", () => {
             expect(taskRow).toHaveTextContent("#Ship v2");
             expect(taskRow).toHaveTextContent("Task · APL-7");
         });
+    });
+
+    it("renders the user's profile photo in the @ row, not a generic icon", async () => {
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…");
+
+        fireEvent.change(textarea, { target: { value: "@Al" } });
+        expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
+
+        const userRow = screen.getByTestId("agent-mention-option-user:u-alice");
+        // The row shows an <img> whose src is the user's avatar, so the
+        // dropdown displays the real face instead of a placeholder icon.
+        const img = userRow.querySelector("img");
+        expect(img).not.toBeNull();
+        expect(img).toHaveAttribute("src", ALICE_AVATAR);
     });
 
     it("submits a milestone-flagged mention as a plain task ref", async () => {
