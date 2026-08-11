@@ -832,6 +832,7 @@ export const fr: DeepPartial<Messages> = {
         },
         activity: {
             aggregatedEarlier: "+{count} plus tôt sur ce sujet",
+            aggregatedNew: "+{count} nouveaux depuis votre dernière visite",
             chipTaskComment: "Commentaire de tâche",
             chipReply: "Réponse",
             chipReaction: "Réaction",

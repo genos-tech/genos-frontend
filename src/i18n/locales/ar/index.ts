@@ -1160,6 +1160,7 @@ export const ar: DeepPartial<Messages> = {
             chipTaskNote: "ملاحظة المهمة",
             chipChatNote: "ملاحظة الدردشة",
             aggregatedEarlier: "+{count} سابقا حول هذا الموضوع",
+            aggregatedNew: "+{count} جديدة منذ آخر اطّلاع",
             copied: "منسوخ!",
             copyTooltip: "انقر للنسخ",
         },

@@ -1177,6 +1177,7 @@ export const hi: DeepPartial<Messages> = {
         },
         activity: {
             aggregatedEarlier: "+{count} पहले इस विषय पर",
+            aggregatedNew: "+{count} नई, आपके पिछली बार देखने के बाद",
             chipTaskComment: "टास्क कमेंट",
             chipReply: "जवाब",
             chipReaction: "रिएक्शन",

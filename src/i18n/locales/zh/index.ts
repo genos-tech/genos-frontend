@@ -793,6 +793,7 @@ export const zh: DeepPartial<Messages> = {
         },
         activity: {
             aggregatedEarlier: "+{count} 早些时候讨论过该主题",
+            aggregatedNew: "+{count} 条自上次查看后的新消息",
             chipTaskComment: "任务评论",
             chipReply: "回复",
             chipReaction: "表情回应",

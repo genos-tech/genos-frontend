@@ -252,6 +252,7 @@ export const chat = {
     },
     activity: {
         aggregatedEarlier: "+{count} earlier on this topic",
+        aggregatedNew: "+{count} more new since you looked",
         chipTaskComment: "Task",
         chipReply: "Reply",
         chipReaction: "Reaction",

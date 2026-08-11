@@ -7,10 +7,11 @@
  * activity type + surface (thread / task comments / note / reacted
  * message / channel) — a mention must never hide behind a plain reply.
  *
- * Collapsing is bounded by a TIME WINDOW (buckets anchored at their
- * newest member): a topic active for weeks yields one row per window
- * of activity, never a single "+800 earlier" row for its whole
- * history.
+ * Each topic is split by READ-STATE: all UNREAD members collapse to a
+ * single "while you were away" row regardless of age, while READ history
+ * is bounded by a TIME WINDOW (buckets anchored at their newest member)
+ * so a topic read over weeks yields one row per window, never a single
+ * "+800 earlier" row for its whole history.
  */
 
 import { describe, expect, it } from "vitest";
@@ -47,6 +48,12 @@ const mk = (over: Partial<ActivityMessageProps>): ActivityMessageProps =>
 
 const threadReply = (over: Partial<ActivityMessageProps> = {}) =>
     mk({ isThread: true, threadId: "th-1" as unknown as number, ...over });
+
+// A READ thread reply. The time window governs the READ partition only
+// (unread collapses to one bucket regardless of age), so window tests
+// operate on read members.
+const readReply = (over: Partial<ActivityMessageProps> = {}) =>
+    threadReply({ isRead: true, ...over });
 
 describe("activityTopicKey — topic partitioning", () => {
     it("groups replies in the same thread; separates other threads", () => {
@@ -129,15 +136,39 @@ describe("aggregateActivityMessages", () => {
         expect(rows[0].activityId).toBe(newer.activityId);
     });
 
-    it("effective isRead is false while ANY member is unread", () => {
+    it("splits a topic into a read row and an unread row (never mixed)", () => {
         const latestRead = threadReply({ tsSent: "2026-07-14 12:00:00", isRead: true });
         const olderUnread = threadReply({ tsSent: "2026-07-14 10:00:00", isRead: false });
         const rows = aggregateActivityMessages([latestRead, olderUnread]);
-        expect(rows[0].isRead).toBe(false);
-        expect(rows[0].aggregatedUnreadCount).toBe(1);
+        // Read-state partition: the read member and the unread member land
+        // in separate buckets — a row is never a read/unread mix. Feed
+        // order is newest-rep-first, so the read row (12:00) sorts ahead
+        // of the unread row (10:00).
+        expect(rows).toHaveLength(2);
+        const [readRow, unreadRow] = rows;
+        expect(readRow.activityId).toBe(latestRead.activityId);
+        expect(readRow.isRead).toBe(true);
+        expect(readRow.aggregatedUnreadCount).toBe(0);
+        expect(unreadRow.activityId).toBe(olderUnread.activityId);
+        expect(unreadRow.isRead).toBe(false);
+        expect(unreadRow.aggregatedUnreadCount).toBe(1);
         // The stored rows are untouched — display-only annotation.
         expect(latestRead.isRead).toBe(true);
         expect((latestRead as { aggregatedIds?: string[] }).aggregatedIds).toBeUndefined();
+    });
+
+    it("collapses ALL unread members of a topic into one row, ignoring the window", () => {
+        // The "while you were away" bucket: unread replies spanning days
+        // must NOT fragment by the 24h window the way read history does.
+        const u1 = threadReply({ tsSent: "2026-07-14 12:00:00", isRead: false });
+        const u2 = threadReply({ tsSent: "2026-07-11 12:00:00", isRead: false });
+        const u3 = threadReply({ tsSent: "2026-07-07 12:00:00", isRead: false });
+        const rows = aggregateActivityMessages([u1, u2, u3]);
+        expect(rows).toHaveLength(1);
+        expect(rows[0].activityId).toBe(u1.activityId);
+        expect(rows[0].aggregatedCount).toBe(3);
+        expect(rows[0].isRead).toBe(false);
+        expect(rows[0].aggregatedUnreadCount).toBe(3);
     });
 
     it("keeps distinct topics as distinct rows in feed order", () => {
@@ -151,9 +182,9 @@ describe("aggregateActivityMessages", () => {
         expect(rows.map((r) => r.activityId)).toEqual([t1.activityId, other.activityId]);
     });
 
-    it("does NOT collapse same-topic activity across the time window", () => {
-        const today = threadReply({ tsSent: "2026-07-14 12:00:00" });
-        const lastWeek = threadReply({ tsSent: "2026-07-07 12:00:00" });
+    it("does NOT collapse same-topic READ history across the time window", () => {
+        const today = readReply({ tsSent: "2026-07-14 12:00:00" });
+        const lastWeek = readReply({ tsSent: "2026-07-07 12:00:00" });
         const rows = aggregateActivityMessages([today, lastWeek]);
         expect(rows).toHaveLength(2);
         expect(rows[0].activityId).toBe(today.activityId);
@@ -162,25 +193,25 @@ describe("aggregateActivityMessages", () => {
         expect(rows[1].aggregatedIds).toEqual([lastWeek.activityId]);
     });
 
-    it("anchors each bucket at its newest member (chained, not calendar days)", () => {
+    it("anchors each READ bucket at its newest member (chained, not calendar days)", () => {
         // 23h gap joins the newest bucket; the next 23h-older row is
         // >24h from THAT bucket's anchor, so it starts a second bucket.
-        const newest = threadReply({ tsSent: "2026-07-14 12:00:00" });
-        const within = threadReply({ tsSent: "2026-07-13 13:00:00" });
-        const beyond = threadReply({ tsSent: "2026-07-12 14:00:00" });
+        const newest = readReply({ tsSent: "2026-07-14 12:00:00" });
+        const within = readReply({ tsSent: "2026-07-13 13:00:00" });
+        const beyond = readReply({ tsSent: "2026-07-12 14:00:00" });
         const rows = aggregateActivityMessages([newest, within, beyond]);
         expect(rows).toHaveLength(2);
         expect(rows[0].aggregatedIds).toEqual([newest.activityId, within.activityId]);
         expect(rows[1].aggregatedIds).toEqual([beyond.activityId]);
     });
 
-    it("interleaves an older bucket at its chronological feed position", () => {
-        const t1today = threadReply({ tsSent: "2026-07-14 12:00:00" });
-        const otherTopic = threadReply({
+    it("interleaves an older READ bucket at its chronological feed position", () => {
+        const t1today = readReply({ tsSent: "2026-07-14 12:00:00" });
+        const otherTopic = readReply({
             threadId: "th-2" as unknown as number,
             tsSent: "2026-07-10 12:00:00",
         });
-        const t1lastWeek = threadReply({ tsSent: "2026-07-07 12:00:00" });
+        const t1lastWeek = readReply({ tsSent: "2026-07-07 12:00:00" });
         const rows = aggregateActivityMessages([t1today, otherTopic, t1lastWeek]);
         expect(rows.map((r) => r.activityId)).toEqual([
             t1today.activityId,
@@ -189,9 +220,9 @@ describe("aggregateActivityMessages", () => {
         ]);
     });
 
-    it("respects a custom window size", () => {
-        const a = threadReply({ tsSent: "2026-07-14 12:00:00" });
-        const b = threadReply({ tsSent: "2026-07-14 11:00:00" });
+    it("respects a custom window size (read history)", () => {
+        const a = readReply({ tsSent: "2026-07-14 12:00:00" });
+        const b = readReply({ tsSent: "2026-07-14 11:00:00" });
         const oneHalfHourMs = 90 * 60 * 1000;
         const thirtyMinMs = 30 * 60 * 1000;
         expect(aggregateActivityMessages([a, b], oneHalfHourMs)).toHaveLength(1);
@@ -234,7 +265,11 @@ describe("selectVisibleActivityMessages — aggregation end to end", () => {
         expect(visible[0].aggregatedIds).toEqual([latest.activityId, older.activityId]);
     });
 
-    it("'unread only' keeps a topic whose latest row is read but has unread members", () => {
+    it("'unread only' surfaces the unread bucket of a partially-read topic", () => {
+        // Read-state partition: the read latest and the unread older
+        // member split into two rows. The "unread only" toggle keeps the
+        // unread bucket (repped by its own newest member) and drops the
+        // read history row.
         const latestRead = threadReply({ tsSent: "2026-07-14 12:00:00", isRead: true });
         const olderUnread = threadReply({ tsSent: "2026-07-14 10:00:00", isRead: false });
         const visible = selectVisibleActivityMessages(
@@ -247,7 +282,34 @@ describe("selectVisibleActivityMessages — aggregation end to end", () => {
             true
         );
         expect(visible).toHaveLength(1);
-        expect(visible[0].activityId).toBe(latestRead.activityId);
+        expect(visible[0].activityId).toBe(olderUnread.activityId);
         expect(visible[0].isRead).toBe(false);
+        expect(visible[0].aggregatedUnreadCount).toBe(1);
+    });
+
+    it("full feed keeps read history alongside the unread bucket", () => {
+        // A DM read in waves: some unread scattered through a day of read
+        // messages. The full feed (unread toggle off) shows BOTH the
+        // unread "while you were away" row and the read history row, so a
+        // read topic stays findable.
+        const readA = mk({ tsSent: "2026-07-14 09:00:00", isRead: true });
+        const unread = mk({ tsSent: "2026-07-14 10:00:00", isRead: false });
+        const readB = mk({ tsSent: "2026-07-14 11:00:00", isRead: true });
+        const visible = selectVisibleActivityMessages(
+            [readA, unread, readB],
+            0,
+            EMPTY_CHIP_SET,
+            EMPTY_INSTANCE_SET,
+            EMPTY_GROUP_ID_SET,
+            "me",
+            false
+        );
+        expect(visible).toHaveLength(2);
+        const unreadRow = visible.find((v) => v.isRead === false);
+        const readRow = visible.find((v) => v.isRead === true);
+        expect(unreadRow?.aggregatedIds).toEqual([unread.activityId]);
+        // The two read members (same day, one topic) collapse together.
+        expect(readRow?.aggregatedCount).toBe(2);
+        expect(readRow?.aggregatedIds).toEqual([readB.activityId, readA.activityId]);
     });
 });

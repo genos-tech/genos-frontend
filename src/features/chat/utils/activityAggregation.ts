@@ -31,8 +31,11 @@ export const isTaskCommentActivity = (a: ActivityMessageProps): boolean =>
 /** An activity row that survived aggregation, annotated with the ids of
  *  every member it represents (itself included). `isRead` is the
  *  EFFECTIVE read state — false while ANY member is unread — so the
- *  unread indicator / "Unread" toggle keep working when the latest
- *  member happens to be read but older hidden ones aren't. */
+ *  unread indicator / "Unread" toggle keep working. Since aggregation
+ *  partitions each topic by read-state (see `aggregateActivityMessages`),
+ *  a row is now homogeneous: `aggregatedUnreadCount` is either 0 (a read
+ *  history bucket) or equals `aggregatedCount` (the unread "while you
+ *  were away" bucket). */
 export type AggregatedActivityMessage = ActivityMessageProps & {
     aggregatedIds: string[];
     aggregatedCount: number;
@@ -76,22 +79,30 @@ export const activityTopicKey = (a: ActivityMessageProps): string => {
 };
 
 /**
- * Collapse same-topic runs to one representative row per topic — the
+ * Collapse same-topic runs to representative rows per topic — each the
  * member with the latest `tsSent` (defensive compare; the feed arrives
  * sorted newest-first, in which case the representative is also the
  * first member seen).
  *
- * TIME WINDOW: a topic is not collapsed across its whole history — a
- * thread that's active for weeks must not compress into a single
- * "+800 earlier" row (the IDB store retains 30 days). Members chain
- * into buckets anchored at each bucket's NEWEST member: walking a
- * topic newest→oldest, an activity joins the current bucket while it's
- * within `windowMs` of that bucket's newest member; anything older
- * starts a new bucket anchored at itself. So a burst collapses to one
- * row regardless of clock boundaries, while a continuously-active
- * topic yields roughly one row per window of activity. Rows for older
- * buckets keep their own `aggregatedIds` / unread state, so mark-read
- * stays scoped to the bucket the user actually clicked.
+ * READ-STATE PARTITION (the "while you were away" split): within a
+ * topic, UNREAD members collapse to a SINGLE bucket regardless of age —
+ * a backlog you haven't caught up on is one "N new since you looked" row
+ * whether it spans an hour or a week (mirrors Slack's per-conversation
+ * unreads). READ members are history and keep the TIME WINDOW below, so
+ * a topic you read over many days stays dated and findable rather than
+ * compressing into one "+800 earlier" blob. The two partitions never
+ * share a bucket, so a row's `aggregatedUnreadCount` is now either 0
+ * (read history) or its full `aggregatedCount` (the unread bucket).
+ *
+ * TIME WINDOW (read history only): a topic is not collapsed across its
+ * whole history (the IDB store retains 30 days). Read members chain
+ * into buckets anchored at each bucket's NEWEST member: walking the read
+ * partition newest→oldest, an activity joins the current bucket while
+ * it's within `windowMs` of that bucket's newest member; anything older
+ * starts a new bucket anchored at itself. So a day's reading collapses
+ * to one row regardless of clock boundaries, while a continuously-read
+ * topic yields roughly one row per window. Rows keep their own
+ * `aggregatedIds`, so mark-read stays scoped to the bucket clicked.
  *
  * Output is feed-ordered (newest representative first).
  *
@@ -112,39 +123,46 @@ export const aggregateActivityMessages = (
     }
 
     const out: AggregatedActivityMessage[] = [];
+    const emit = (bucket: ActivityMessageProps[]) => {
+        if (bucket.length === 0) return;
+        const rep = bucket[0];
+        const unread = bucket.reduce((n, a) => (a.isRead === false ? n + 1 : n), 0);
+        out.push({
+            ...rep,
+            aggregatedCount: bucket.length,
+            aggregatedIds: bucket.map((a) => a.activityId),
+            aggregatedUnreadCount: unread,
+            isRead: unread === 0,
+        });
+    };
     for (const members of byKey.values()) {
         // Newest first (defensive — the feed already arrives sorted
         // desc; stable sort keeps input order on ties).
         const sorted = [...members].sort(
             (x, y) => new Date(y.tsSent).getTime() - new Date(x.tsSent).getTime()
         );
+
+        // Unread partition: one bucket, any age. `isRead === false` (not
+        // `!== true`) matches the effective-unread convention used
+        // everywhere else — an undefined `isRead` counts as read.
+        emit(sorted.filter((a) => a.isRead === false));
+
+        // Read partition: the time-window walk, over read members only.
         let bucket: ActivityMessageProps[] = [];
         let anchorTs = 0;
-        const flush = () => {
-            if (bucket.length === 0) return;
-            const rep = bucket[0];
-            const unread = bucket.reduce((n, a) => (a.isRead === false ? n + 1 : n), 0);
-            out.push({
-                ...rep,
-                aggregatedCount: bucket.length,
-                aggregatedIds: bucket.map((a) => a.activityId),
-                aggregatedUnreadCount: unread,
-                isRead: unread === 0,
-            });
-        };
-        for (const a of sorted) {
+        for (const a of sorted.filter((a) => a.isRead !== false)) {
             const ts = new Date(a.tsSent).getTime();
             // NaN timestamps fail the `>` check and fall into the open
             // bucket rather than fragmenting the topic.
             if (bucket.length === 0 || anchorTs - ts > windowMs) {
-                flush();
+                emit(bucket);
                 bucket = [a];
                 anchorTs = ts;
             } else {
                 bucket.push(a);
             }
         }
-        flush();
+        emit(bucket);
     }
 
     // Feed order: newest representative first. Buckets from different
