@@ -18,6 +18,23 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import {
+    GROUP_PALETTE,
+    USER_OTHER_PALETTE,
+    USER_SELF_PALETTE,
+    type MentionPalette,
+} from "./mentionPalettes";
+
+// Palettes now live in the BlockNote-free `mentionPalettes` module (so
+// the Spotlight bundle can read them without importing this file's
+// `@blocknote/react` runtime). Re-exported here for existing consumers
+// (HashMention, LightMessageBody) that import them from `./Mention`.
+export {
+    GROUP_PALETTE,
+    USER_OTHER_PALETTE,
+    USER_SELF_PALETTE,
+    type MentionPalette,
+} from "./mentionPalettes";
 
 // Shared visual treatment for every mention chip (user OR group). The
 // only difference between variants is the colour palette; the pill
@@ -25,12 +42,6 @@ import { UserAvatar } from "../ui/avatars/UserAvatar";
 // the two kinds of mention read as siblings instead of unrelated
 // styles. To change the look of a mention, change `mentionChipSx`
 // here and both chips update together.
-//
-// Exported so the `#` mention chips (HashMention.tsx) render as siblings
-// of the `@` chips — same pill shape / padding / hover, only the palette
-// differs per entity type.
-export type MentionPalette = { bg: string; bgHover: string; text: string };
-
 export const mentionChipSx = (palette: MentionPalette) =>
     ({
         display: "inline-flex",
@@ -46,31 +57,6 @@ export const mentionChipSx = (palette: MentionPalette) =>
         transition: "background-color 0.15s ease",
         "&:hover": { backgroundColor: palette.bgHover },
     }) as const;
-
-// User mention palettes. The "self" variant is kept distinct because
-// it's a useful UX signal — when *you* are the one being mentioned, the
-// chip pops with a different colour so the eye lands on it during a
-// scan of a long message list.
-// Exported so the light message-body renderer (`LightMessageBody`) can
-// paint identical chips without instantiating a BlockNote editor. Both
-// paths must read the SAME palette objects — a mention rendered by the
-// fast path and one rendered by the BlockNote fallback appear in the
-// same message list and any drift would be visible side by side.
-export const USER_SELF_PALETTE: MentionPalette = {
-    bg: "rgba(245, 158, 11, 0.18)",
-    bgHover: "rgba(245, 158, 11, 0.32)",
-    text: "#d97706",
-};
-export const USER_OTHER_PALETTE: MentionPalette = {
-    bg: "rgba(236, 72, 153, 0.15)",
-    bgHover: "rgba(236, 72, 153, 0.28)",
-    text: "#db2777",
-};
-export const GROUP_PALETTE: MentionPalette = {
-    bg: "rgba(34, 197, 94, 0.15)",
-    bgHover: "rgba(34, 197, 94, 0.28)",
-    text: "#16a34a",
-};
 
 // The Mention inline content
 export const CreateMentionSpec = (

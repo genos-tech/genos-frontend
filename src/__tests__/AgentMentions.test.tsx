@@ -534,19 +534,21 @@ describe("AgentQAInput mention integration", () => {
         render(<Harness onAsk={onAsk} />);
         const textarea = screen.getByPlaceholderText("Ask…");
 
-        // The milestone-flagged task reads "Milestone …", not "Task …".
+        // The two-line row shows the title as `#<title>` over a muted
+        // "<kind> · <id>" subtitle. The milestone-flagged task's subtitle
+        // reads "Milestone · …", not "Task · …".
         fireEvent.change(textarea, { target: { value: "#v1" } });
         expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
-        expect(screen.getByTestId("agent-mention-option-task:8")).toHaveTextContent(
-            "Milestone APL-8: v1 launch"
-        );
+        const milestoneRow = screen.getByTestId("agent-mention-option-task:8");
+        expect(milestoneRow).toHaveTextContent("#v1 launch");
+        expect(milestoneRow).toHaveTextContent("Milestone · APL-8");
 
-        // A plain task still reads "Task …".
+        // A plain task's subtitle reads "Task · …".
         fireEvent.change(textarea, { target: { value: "#Ship" } });
         await waitFor(() => {
-            expect(screen.getByTestId("agent-mention-option-task:7")).toHaveTextContent(
-                "Task APL-7: Ship v2"
-            );
+            const taskRow = screen.getByTestId("agent-mention-option-task:7");
+            expect(taskRow).toHaveTextContent("#Ship v2");
+            expect(taskRow).toHaveTextContent("Task · APL-7");
         });
     });
 
