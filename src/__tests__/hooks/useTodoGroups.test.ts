@@ -10,10 +10,18 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { loadTodoGroups } from "../../features/chat/components/todo/services/loadTodoGroups";
-import { updateTodoItem } from "../../features/chat/components/todo/services/todoItems";
+import {
+    createTodoItem,
+    updateTodoItem,
+} from "../../features/chat/components/todo/services/todoItems";
+import {
+    loadTodoSchedules,
+    updateTodoSchedule,
+} from "../../features/chat/components/todo/services/todoSchedules";
 import { useTodoGroups } from "../../hooks/useTodoGroups";
 import { UserProps } from "../../types/admin";
-import { TodoGroupProps, TodoItemProps } from "../../types/chat";
+import { TodoGroupProps, TodoItemProps, TodoScheduleProps } from "../../types/chat";
+import { getLocalCurrentDate } from "../../utils/dateUtils";
 
 vi.mock("../../features/chat/components/todo/services/loadTodoGroups", () => ({
     loadTodoGroups: vi.fn(),
@@ -47,6 +55,9 @@ vi.mock("../../db/services/todo.service", () => ({
 
 const loadTodoGroupsMock = loadTodoGroups as unknown as ReturnType<typeof vi.fn>;
 const updateTodoItemMock = updateTodoItem as unknown as ReturnType<typeof vi.fn>;
+const createTodoItemMock = createTodoItem as unknown as ReturnType<typeof vi.fn>;
+const loadTodoSchedulesMock = loadTodoSchedules as unknown as ReturnType<typeof vi.fn>;
+const updateTodoScheduleMock = updateTodoSchedule as unknown as ReturnType<typeof vi.fn>;
 
 const myself = {
     userId: "u1",
@@ -193,5 +204,75 @@ describe("useTodoGroups — parent completion cascades to children", () => {
         expect(byId[1]).toBe(false); // parent re-opened
         expect(byId[2]).toBe(true); // children untouched
         expect(byId[3]).toBe(true);
+    });
+});
+
+describe("useTodoGroups — scheduled-todo materialization is not duplicated", () => {
+    // Regression: a scheduled todo appeared TWICE in the morning. The
+    // `lastMaterializedDate` cursor and the title-match set are both only
+    // observable after their awaited writes land, so two materialize passes
+    // that start before either commits (the midnight timer firing while a
+    // token-refresh re-runs the load effect) each created the item. A
+    // synchronous in-session claim, taken before any await, closes the gap.
+    const mkSchedule = (over: Partial<TodoScheduleProps> = {}): TodoScheduleProps => ({
+        scheduleId: 1,
+        categoryId: null,
+        title: "Daily standup",
+        rrule: "RRULE:FREQ=DAILY",
+        startDate: "2020-01-01",
+        isActive: true,
+        lastMaterializedDate: null,
+        tsCreatedAt: "2020-01-01T00:00:00Z",
+        tsUpdatedAt: "2020-01-01T00:00:00Z",
+        ...over,
+    });
+
+    it("creates the item once when two materialize passes race", async () => {
+        const today = getLocalCurrentDate();
+        loadTodoGroupsMock.mockResolvedValue([]); // no group for today yet
+        loadTodoSchedulesMock.mockResolvedValue([mkSchedule()]);
+        // Cursor write echoes the row back (what the real service returns),
+        // preserving lastMaterializedDate=null on an isActive-only patch so
+        // the second pass still passes the cursor guard and reaches the claim.
+        updateTodoScheduleMock.mockImplementation(
+            async (_t: unknown, id: number, patch: Partial<TodoScheduleProps>) => ({
+                ...mkSchedule({ scheduleId: id }),
+                ...patch,
+            })
+        );
+
+        // Hold createTodoItem pending so the load-effect's pass is suspended
+        // mid-flight — exactly the window a second pass must not race through.
+        let resolveCreate: ((v: TodoItemProps) => void) | undefined;
+        createTodoItemMock.mockImplementation(
+            () =>
+                new Promise<TodoItemProps>((res) => {
+                    resolveCreate = res;
+                })
+        );
+
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        // Pass A (load effect) is now suspended inside createTodoItem.
+        expect(createTodoItemMock).toHaveBeenCalledTimes(1);
+
+        // Pass B fires while A is still in flight (stands in for the midnight
+        // timer / token-refresh re-run). Without the claim it would create a
+        // second identical item.
+        await act(async () => {
+            await result.current.updateSchedule(1, { isActive: true });
+        });
+        expect(createTodoItemMock).toHaveBeenCalledTimes(1);
+
+        // Let A finish; still exactly one create.
+        await act(async () => {
+            resolveCreate?.({
+                ...mkItem(999, null),
+                groupId: 100,
+                title: "Daily standup",
+            });
+            await flush();
+        });
+        expect(createTodoItemMock).toHaveBeenCalledTimes(1);
     });
 });

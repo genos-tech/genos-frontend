@@ -336,9 +336,22 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
 
     // Schedules (recurring todos) --------------------------------------
 
+    // Schedules this session has already claimed for materialization,
+    // keyed `${scheduleId}:${localDate}`. This is the ONLY guard that
+    // holds against two materialize passes running concurrently — the
+    // `lastMaterializedDate` cursor and the title-match set below are both
+    // only observable AFTER their awaited writes land, so two passes that
+    // start before either commits (e.g. the midnight timer firing while a
+    // token-refresh re-runs the load effect) would each create the item.
+    // The claim is taken SYNCHRONOUSLY, before any await, so the second
+    // pass sees it with no gap to race through. Keyed by date, so it
+    // self-expires across days without a midnight reset.
+    const materializedClaimsRef = useRef<Set<string>>(new Set());
+
     // Create a todo item for every active schedule that is due today and
-    // hasn't fired yet. Idempotent on two levels: the authoritative
-    // `lastMaterializedDate` cursor (skip if it already equals today) and
+    // hasn't fired yet. Idempotent on three levels: the synchronous
+    // in-session claim above (guards concurrent passes), the authoritative
+    // `lastMaterializedDate` cursor (skip if it already equals today), and
     // a title-match guard against today's group (covers a prior run that
     // created the item but failed to advance the cursor). The cursor is
     // advanced even when the item was already present so a delete-then-
@@ -357,6 +370,13 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                 if (sched.lastMaterializedDate === today) continue;
                 const spec = parseRecurrence([sched.rrule]);
                 if (!occursOn(spec, sched.startDate, today)) continue;
+
+                // Claim this schedule for today BEFORE the awaits below. If
+                // a concurrent pass already claimed it, skip entirely — that
+                // pass owns both the create and the cursor advance.
+                const claimKey = `${sched.scheduleId}:${today}`;
+                if (materializedClaimsRef.current.has(claimKey)) continue;
+                materializedClaimsRef.current.add(claimKey);
 
                 if (!existingTitles.has(sched.title)) {
                     await addItem({
