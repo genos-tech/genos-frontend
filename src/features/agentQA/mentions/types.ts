@@ -34,11 +34,17 @@ export type AgentMentionRef =
 // entities) the candidate belongs to; `key` is a stable identity used
 // for dedupe and React list keys; `subtitle` is an optional secondary
 // line (e.g. a task's display id) — locale-free by design.
+// `avatarImgPath` is the mentioned user's profile-image path (media-
+// server-relative or absolute); the `@` row renders their real photo
+// from it instead of a generic icon. Display-only, so — like `subtitle`
+// — it never reaches `mentionKey` or the wire payload, and only user
+// candidates carry it (groups/entities render a colored icon disc).
 export interface AgentMentionCandidate {
     ref: AgentMentionRef;
     trigger: "@" | "#";
     key: string;
     subtitle?: string;
+    avatarImgPath?: string;
 }
 
 export const mentionKey = (ref: AgentMentionRef): string => {
