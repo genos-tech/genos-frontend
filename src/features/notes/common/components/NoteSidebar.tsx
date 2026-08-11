@@ -814,7 +814,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         // `isDraggingOver` is threaded from the DroppableHeader so both
         // buttons highlight together while the row acts as the root drop target.
         const dashedActionSx = (isDraggingOver: boolean) => ({
-            flex: 1,
+            // Size to content and never grow/compress: the pair sits on one
+            // row and uses the free space to its right rather than splitting
+            // the width 50/50 (which squeezed "New folder" onto two lines).
+            // Explicit `0 0 auto` overrides Joy ListItemButton's default grow.
+            flex: "0 0 auto",
+            whiteSpace: "nowrap",
             borderRadius: "8px",
             py: 0.5,
             px: 1,
