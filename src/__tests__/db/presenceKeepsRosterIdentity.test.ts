@@ -52,6 +52,11 @@ const rosterRow: UserProps = {
     homeTeamId: THEIR_TEAM,
     homeTeamName: "Team B",
     homeTeamImgPath: "team-b.png",
+    // Browser-reported zone the roster is the authority on. The profile
+    // card's location and local-time rows resolve from it. A beat never
+    // carries `timezone` (see `useAuth`), so this is the value that has to
+    // survive one.
+    timezone: "Asia/Tokyo",
 };
 
 // What Bob's own client broadcasts: his `myself`, which knows nothing about
@@ -89,6 +94,21 @@ describe("presence updates a person's status, not their team", () => {
         expect(stored?.homeTeamImgPath).toBe("team-b.png");
         // Still on the index the roster is read by — the whole point.
         expect((await repo.getTeamMembers(MY_TEAM)).map((u) => u.userId)).toEqual(["u-bob"]);
+    });
+
+    it("keeps the browser-reported timezone a beat never carries", async () => {
+        // The beat carries the sender's `myself`, which has no `timezone`
+        // key at all. Spreading it straight over the stored row dropped
+        // the field, so the profile card's location and local-time rows
+        // (which resolve `currentLocation or timezone`) went blank within
+        // one beat — ≤60s — of a full roster load. The roster owns it.
+        const repo = new UserRepository();
+        await repo.saveUser(rosterRow);
+
+        await beat(heartbeat);
+
+        const stored = await repo.getUser("u-bob");
+        expect(stored?.timezone).toBe("Asia/Tokyo");
     });
 
     it("still takes everything a heartbeat is for", async () => {

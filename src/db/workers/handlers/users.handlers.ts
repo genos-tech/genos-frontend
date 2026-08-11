@@ -41,6 +41,23 @@ const checkIsOnline = (
 // team, and the row saying so drops them out of mine, along with the
 // `isExternal` / `homeTeam*` fields that told the UI they were a guest at
 // all.
+//
+// `timezone` needs the same protection, for a narrower reason. A beat
+// carries the sender's `myself`, and `myself` has no `timezone` key at
+// all — it is browser-derived and deliberately never mirrored into the
+// identity object (see `useAuth`). So EVERY beat, including the sender's
+// own, arrives with `timezone` undefined; spreading it over the stored
+// row dropped the field, and the profile card's location and local-time
+// rows (which resolve `currentLocation or timezone`) went blank within
+// one beat — ≤60s — of a full roster load. The roster is the authority
+// on it, so carry the stored value through.
+//
+// The OTHER profile fields (`currentLocation`, `aboutMe`, `role`, …) are
+// deliberately NOT pinned here: they DO ride the beat via `...myself`, so
+// the beat is the sender describing themselves with their current values,
+// which is exactly what should win — pinning the stored copy instead would
+// make a user's own profile edit invisible to teammates until the next
+// roster poll.
 const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
     const stored = await userService.getUser(user.userId);
     if (!stored) return user;
@@ -53,6 +70,7 @@ const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
         homeTeamId: stored.homeTeamId,
         homeTeamName: stored.homeTeamName,
         homeTeamImgPath: stored.homeTeamImgPath,
+        timezone: stored.timezone,
     };
 };
 
