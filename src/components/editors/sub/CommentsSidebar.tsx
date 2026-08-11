@@ -123,6 +123,17 @@ const ThreadRow = memo(
                 aria-pressed={selected}
                 onClick={() => onSelect(thread.id)}
                 onMouseEnter={() => onHover(thread.id)}
+                // The floating comment card wires floating-ui `useDismiss` with
+                // its defaults — `outsidePress` on `pointerdown`, bubble phase,
+                // listening on `document`. A pointerdown on this row bubbles up
+                // to that listener, which counts as an outside-press and tears
+                // the card down (`selectThread(undefined)`) — the very card we're
+                // about to pin. Stop the pointerdown here so it never reaches
+                // that document listener: the card the click pins stays up (no
+                // dismiss-then-reopen flicker). The `onClick` still fires. The
+                // reconciliation effect stays correct even without this, but this
+                // removes the visible flicker at the source.
+                onPointerDown={(event) => event.stopPropagation()}
                 sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -277,20 +288,35 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
     // Drive the floating card from the active thread (hover preview falling
     // back to the pinned one). `selectThread(id, true)` opens + scrolls the
     // card, `selectThread(undefined)` closes it — the same seam clicking the
-    // highlighted text uses. The ref tracks what WE last applied so we (a)
-    // don't re-select the same thread on every unrelated re-render, and (b)
-    // only ever close a card we opened, never one the user opened elsewhere.
+    // highlighted text uses.
+    //
+    // The card is NOT ours alone: BlockNote's `FloatingThreadController` closes
+    // it out-of-band on any dismiss (escape, click-outside — and a click on one
+    // of our rows counts as a click-outside) by calling `selectThread(undefined)`
+    // itself. So we must not trust a local "what card is showing" shadow — it
+    // goes stale the instant BlockNote tears the card down behind our back, and
+    // a stale shadow then wedges the guard and blocks every re-open (the odd/
+    // even-click desync). Reconcile against BlockNote's LIVE `selectedThreadId`
+    // (the authority) instead: open the active thread whenever it isn't already
+    // the one showing. Read it through a ref so a bare selection drift doesn't
+    // re-run this effect and fight a genuine dismiss — the effect still runs on
+    // every hover/click, and reads the true current selection when it does.
+    const selectedThreadIdRef = useRef<string | undefined>(selectedThreadId);
+    selectedThreadIdRef.current = selectedThreadId;
+
+    // Tracks the last thread WE drove selection to, so on going inactive we only
+    // retract a card we put up — never one the user opened elsewhere.
     const appliedThreadRef = useRef<string | null>(null);
     useEffect(() => {
         if (!open) {
             return;
         }
         const active = hoveredThreadId ?? pinnedThreadId;
-        if (active === appliedThreadRef.current) {
-            return;
-        }
+        const showing = selectedThreadIdRef.current ?? null;
         if (active) {
-            comments.selectThread(active, true);
+            if (showing !== active) {
+                comments.selectThread(active, true);
+            }
         } else if (appliedThreadRef.current) {
             comments.selectThread(undefined);
         }

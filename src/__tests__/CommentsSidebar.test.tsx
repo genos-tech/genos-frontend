@@ -159,6 +159,53 @@ describe("CommentsSidebar", () => {
         expect(screen.getByText("body of t1")).toBeInTheDocument();
     });
 
+    it("re-opens the card on click even after an out-of-band dismiss", () => {
+        // Regression: BlockNote's FloatingThreadController closes the card
+        // itself on any dismiss — and a click on a row counts as a click-outside,
+        // so `selectedThreadId` drops to undefined mid-interaction. A local
+        // "what's showing" shadow would go stale here and block the re-open (the
+        // odd/even-click desync the user hit). We reconcile against the live
+        // selection instead, so the click must still re-open the card.
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        const { rerender } = render(<CommentsSidebar open={true} />);
+        const row = screen.getByText("body of t1").closest("button")!;
+
+        // Hover opens the card; BlockNote reflects it in selectedThreadId.
+        fireEvent.mouseEnter(row);
+        expect(selectThread).toHaveBeenLastCalledWith("t1", true);
+        selectedThreadId = "t1";
+        rerender(<CommentsSidebar open={true} />);
+
+        // The card dismisses itself out-of-band (floating-ui outside-press).
+        selectedThreadId = undefined;
+        rerender(<CommentsSidebar open={true} />);
+
+        // Now a click must re-open it — not no-op against a stale shadow.
+        selectThread.mockClear();
+        fireEvent.click(row);
+        expect(selectThread).toHaveBeenCalledWith("t1", true);
+    });
+
+    it("stops pointerdown from bubbling (so the card isn't dismissed by the click)", () => {
+        // The row swallows pointerdown so floating-ui's document-level
+        // outside-press listener never fires for a click on a row — otherwise
+        // the click that pins a card would first tear it down.
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        const onOutsidePress = vi.fn();
+        document.addEventListener("pointerdown", onOutsidePress);
+        try {
+            render(<CommentsSidebar open={true} />);
+            fireEvent.pointerDown(screen.getByText("body of t1").closest("button")!);
+            expect(onOutsidePress).not.toHaveBeenCalled();
+        } finally {
+            document.removeEventListener("pointerdown", onOutsidePress);
+        }
+    });
+
     it("unpins on a second click, closing the card once the pointer leaves", () => {
         threads.set("t1", makeThread("t1"));
         threadPositions.set("t1", { from: 5, to: 9 });
