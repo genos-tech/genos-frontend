@@ -809,80 +809,107 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // `data-first-child` prop — a Fragment root triggers React's
     // "Invalid prop supplied to React.Fragment" warning. The grouped
     // task/chat/shared sections are Box-rooted for the same reason.
-    const renderMyNotesSection = () => (
-        <Box>
-            {/* "New folder" affordance — doubles as the always-visible
-                "move to root" drop target (folders below may be the only
-                other rows when every note is filed). */}
-            <ListItem>
-                <DroppableHeader containerId={myRootContainerId()} kind={1}>
-                    {(isDraggingOver) => (
-                        <ListItemButton
-                            sx={{
-                                borderRadius: "8px",
-                                py: 0.5,
-                                px: 1,
-                                my: 0.25,
-                                gap: 0.75,
-                                minHeight: 30,
-                                border: "1px dashed",
-                                borderColor: isDraggingOver
-                                    ? isDark
-                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.8)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.7)"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.15)"
-                                      : "rgba(0,0,0,0.12)",
-                                backgroundColor: isDraggingOver
-                                    ? isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                    : "transparent",
-                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-                                "&:hover": {
-                                    borderColor: isDark
-                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                },
-                            }}
-                            onClick={() =>
-                                setFolderNameModal({ mode: "create", parentFolderId: null })
-                            }
-                        >
-                            <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
-                            <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
-                                {t.notes.folders.newFolder}
-                            </Typography>
-                        </ListItemButton>
-                    )}
-                </DroppableHeader>
-            </ListItem>
-            {useNM.myNoteFolderForest.rootFolders.map((folder) => (
-                <MyNoteFolderTree
-                    key={`folder-${folder.folderId}`}
-                    actions={folderActions}
-                    folder={folder}
-                    renderNote={renderMyNoteTree}
-                    useNM={useNM}
-                />
-            ))}
-            <DroppableNoteList containerId={myRootContainerId()} kind={1}>
-                {useNM.myNoteFolderForest.rootNotes.map((root, index) => (
-                    <DraggableNoteRow
-                        key={`root-note-${root.noteId}`}
-                        index={index}
-                        kind={1}
-                        noteId={root.noteId}
-                    >
-                        {renderMyNoteTree(root)}
-                    </DraggableNoteRow>
+    const renderMyNotesSection = () => {
+        // Shared dashed-button style for the "New folder" / "New note" pair.
+        // `isDraggingOver` is threaded from the DroppableHeader so both
+        // buttons highlight together while the row acts as the root drop target.
+        const dashedActionSx = (isDraggingOver: boolean) => ({
+            flex: 1,
+            borderRadius: "8px",
+            py: 0.5,
+            px: 1,
+            my: 0.25,
+            gap: 0.75,
+            minHeight: 30,
+            border: "1px dashed",
+            borderColor: isDraggingOver
+                ? isDark
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.8)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.7)"
+                : isDark
+                  ? "rgba(255,255,255,0.15)"
+                  : "rgba(0,0,0,0.12)",
+            backgroundColor: isDraggingOver
+                ? isDark
+                    ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.08)"
+                : "transparent",
+            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+            "&:hover": {
+                borderColor: isDark
+                    ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
+                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+            },
+        });
+
+        return (
+            <Box>
+                {/* "New folder" / "New note" affordances — the row also doubles
+                    as the always-visible "move to root" drop target (folders
+                    below may be the only other rows when every note is filed).
+                    "New note" creates a plain root note (no parent, no folder). */}
+                <ListItem>
+                    <DroppableHeader containerId={myRootContainerId()} kind={1}>
+                        {(isDraggingOver) => (
+                            <Box sx={{ display: "flex", gap: 0.5, width: "100%" }}>
+                                <ListItemButton
+                                    sx={dashedActionSx(isDraggingOver)}
+                                    onClick={() =>
+                                        setFolderNameModal({
+                                            mode: "create",
+                                            parentFolderId: null,
+                                        })
+                                    }
+                                >
+                                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ fontWeight: 500, color: "inherit" }}
+                                    >
+                                        {t.notes.folders.newFolder}
+                                    </Typography>
+                                </ListItemButton>
+                                <ListItemButton
+                                    sx={dashedActionSx(isDraggingOver)}
+                                    onClick={() => void useNM.handleCreateNewMyNote(null)}
+                                >
+                                    <NoteAddRoundedIcon sx={{ fontSize: 15 }} />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ fontWeight: 500, color: "inherit" }}
+                                    >
+                                        {t.notes.list.newNote}
+                                    </Typography>
+                                </ListItemButton>
+                            </Box>
+                        )}
+                    </DroppableHeader>
+                </ListItem>
+                {useNM.myNoteFolderForest.rootFolders.map((folder) => (
+                    <MyNoteFolderTree
+                        key={`folder-${folder.folderId}`}
+                        actions={folderActions}
+                        folder={folder}
+                        renderNote={renderMyNoteTree}
+                        useNM={useNM}
+                    />
                 ))}
-            </DroppableNoteList>
-        </Box>
-    );
+                <DroppableNoteList containerId={myRootContainerId()} kind={1}>
+                    {useNM.myNoteFolderForest.rootNotes.map((root, index) => (
+                        <DraggableNoteRow
+                            key={`root-note-${root.noteId}`}
+                            index={index}
+                            kind={1}
+                            noteId={root.noteId}
+                        >
+                            {renderMyNoteTree(root)}
+                        </DraggableNoteRow>
+                    ))}
+                </DroppableNoteList>
+            </Box>
+        );
+    };
 
     const renderTaskNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
