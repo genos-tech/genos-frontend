@@ -280,6 +280,16 @@ export const common = {
         mentionYou: "You",
         mentionMemberCount: "{count, plural, one {# member} other {# members}}",
         mentionGroupFallback: "group",
+        // Kind subtitles for the agent-input mention dropdown, for the
+        // kinds the BlockNote `#` menu has no row for (people, groups as a
+        // bare kind word, todos, and DM/MDM chats). The task/note/project/
+        // GM-chat subtitles reuse the `hash*` keys below so the two menus
+        // read word-for-word alike.
+        mentionPerson: "Person",
+        mentionGroupLabel: "Group",
+        mentionTodo: "Todo",
+        mentionDirectMessage: "Direct message",
+        mentionMultiDm: "Group DM",
         hashTask: "Task · {id}",
         hashTaskProject: "Task · {id} · {project}",
         hashMilestone: "Milestone · {id}",

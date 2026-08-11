@@ -25,42 +25,27 @@ import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../typ
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
-import { MentionPalette, MentionSuggestionMenu } from "./Mention";
+import { MentionSuggestionMenu } from "./Mention";
+import {
+    CHAT_PALETTE,
+    MILESTONE_PALETTE,
+    NOTE_PALETTE,
+    PROJECT_PALETTE,
+    TASK_PALETTE,
+    type MentionPalette,
+} from "./mentionPalettes";
 
-// Sibling palettes to the `@` user/group chips (see `mentionChipSx`). One
-// per entity type so a `#` reference reads at a glance as task vs note vs
-// chat vs project.
-// Exported so the plain-DOM light path (`LightMessageBody`) renders `#`
-// chips with the identical per-entity colors instead of duplicating them.
-export const TASK_PALETTE: MentionPalette = {
-    bg: "rgba(59, 130, 246, 0.15)",
-    bgHover: "rgba(59, 130, 246, 0.28)",
-    text: "#2563eb",
-};
-// Milestone rows read as their own kind, not a task — the orange
-// milestone identity color used across the app (task table flag icon,
-// diagram node, Spotlight milestone chip) so a `#` milestone suggestion
-// matches the milestone's colour everywhere else.
-export const MILESTONE_PALETTE: MentionPalette = {
-    bg: "rgba(249, 115, 22, 0.15)",
-    bgHover: "rgba(249, 115, 22, 0.28)",
-    text: "#ea580c",
-};
-export const NOTE_PALETTE: MentionPalette = {
-    bg: "rgba(var(--gp-brandalt-500-rgb), 0.15)",
-    bgHover: "rgba(var(--gp-brandalt-500-rgb), 0.28)",
-    text: "var(--gp-brand-700)",
-};
-export const CHAT_PALETTE: MentionPalette = {
-    bg: "rgba(20, 184, 166, 0.15)",
-    bgHover: "rgba(20, 184, 166, 0.28)",
-    text: "#0d9488",
-};
-export const PROJECT_PALETTE: MentionPalette = {
-    bg: "rgba(245, 158, 11, 0.15)",
-    bgHover: "rgba(245, 158, 11, 0.28)",
-    text: "#d97706",
-};
+// Per-entity palettes now live in the BlockNote-free `mentionPalettes`
+// module. Re-exported here for existing consumers (LightMessageBody) that
+// import them from `./HashMention`.
+export {
+    CHAT_PALETTE,
+    MILESTONE_PALETTE,
+    NOTE_PALETTE,
+    PROJECT_PALETTE,
+    TASK_PALETTE,
+    type MentionPalette,
+} from "./mentionPalettes";
 
 // `#` mentions render as styled inline TEXT — NOT a chip/pill — so they read
 // as a distinct affordance from the `@` user/group mention chips (which keep
