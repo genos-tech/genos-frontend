@@ -7,6 +7,7 @@ import {
     Chip,
     ListItemContent,
     Stack,
+    Switch,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -94,6 +95,22 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
         setEditing(false);
     };
 
+    // Absent means shared (server default), so only an explicit `false` is off.
+    const isShared = myself.locationShared !== false;
+
+    // Flip the opt-out. Persists to the server (which re-gates every roster
+    // row for this user) and mirrors into localStorage so the toggle keeps
+    // its state across a reload without a round-trip.
+    const persistSharing = (nextShared: boolean) => {
+        updateUserProfile({
+            accessToken: accessToken,
+            userId: myself.userId,
+            locationShared: nextShared,
+        });
+        setMyself({ ...myself, locationShared: nextShared });
+        localStorage.setItem("locationShared", nextShared ? "true" : "false");
+    };
+
     if (editing) {
         return (
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
@@ -167,7 +184,7 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
 
     const label = zoneId ? zoneLabel(zoneId) : t.admin.userProfile.locationNotSet;
 
-    return (
+    const locationBox = (
         <Box
             component={isSelfView ? "button" : "div"}
             sx={{
@@ -219,5 +236,33 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                 </Typography>
             )}
         </Box>
+    );
+
+    // Others just see the location row (or nothing). Only the owner gets the
+    // share toggle — it governs what THEIR row discloses, so it has no meaning
+    // on someone else's card, and the server wouldn't accept the write anyway.
+    if (!isSelfView) return locationBox;
+
+    return (
+        <Stack spacing={0.75} sx={{ alignItems: "flex-start" }}>
+            {locationBox}
+            <Stack
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: "center" }}
+                title={t.admin.userProfile.locationShareHint}
+            >
+                <Switch
+                    checked={isShared}
+                    size="sm"
+                    onChange={(e) => persistSharing(e.target.checked)}
+                />
+                <Typography sx={{ color: styles.labelColor, fontSize: "12px" }}>
+                    {isShared
+                        ? t.admin.userProfile.locationShared
+                        : t.admin.userProfile.locationHidden}
+                </Typography>
+            </Stack>
+        </Stack>
     );
 };

@@ -106,6 +106,12 @@ export const SignInForm = () => {
             localStorage.setItem("baseCountry", signInRes.base_country || "");
             localStorage.setItem("phoneNumber", signInRes.phone_number || "");
             localStorage.setItem("currentLocation", signInRes.current_location || "");
+            // Store the string "false" only on an explicit opt-out; a missing
+            // field (older server) leaves it shared, matching useAuth's read.
+            localStorage.setItem(
+                "locationShared",
+                signInRes.location_shared === false ? "false" : "true"
+            );
             localStorage.setItem("aboutMe", signInRes.about_me || "");
             localStorage.setItem("customStatus", signInRes.custom_status || "");
             localStorage.setItem("userEmail", signInRes.email || "");
@@ -154,6 +160,10 @@ export const SignInForm = () => {
             localStorage.setItem("baseCountry", res.base_country || "");
             localStorage.setItem("phoneNumber", res.phone_number || "");
             localStorage.setItem("currentLocation", res.current_location || "");
+            localStorage.setItem(
+                "locationShared",
+                res.location_shared === false ? "false" : "true"
+            );
             localStorage.setItem("aboutMe", res.about_me || "");
             localStorage.setItem("customStatus", res.custom_status || "");
             localStorage.setItem("userEmail", res.email || "");

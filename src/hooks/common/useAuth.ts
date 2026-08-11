@@ -19,6 +19,7 @@ const WATCHED_STORAGE_KEYS = new Set<string>([
     "baseCountry",
     "phoneNumber",
     "currentLocation",
+    "locationShared",
     "aboutMe",
     "customStatus",
     "avatarImgPath",
@@ -76,6 +77,12 @@ export const useMyself = (accessToken: string | null) => {
                 baseCountry: localStorage.getItem("baseCountry") || "",
                 phoneNumber: localStorage.getItem("phoneNumber") || "",
                 currentLocation: localStorage.getItem("currentLocation") || "",
+                // Stored as the string "false" only when the user opted out;
+                // absent (pre-feature) or "true" both mean shared, matching
+                // the server default. Drives the profile editor's toggle on
+                // the owner's own card — the server has already gated what
+                // OTHER people's rows disclose.
+                locationShared: localStorage.getItem("locationShared") !== "false",
                 // `timezone` is deliberately absent, and not because your
                 // own card doesn't need one — it does, and gets it from
                 // `resolveZone`, which reads this browser directly when

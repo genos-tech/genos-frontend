@@ -309,6 +309,12 @@ export const admin = {
         locationAuto: "auto",
         locationUseDetected: "Use detected",
         locationDetectedHint: "Detected from your browser ({zone}). Click to set it yourself.",
+        // The share toggle, shown only on your own card. `Shared` when your
+        // location and local time are visible to teammates; `Hidden` when
+        // you've opted out and they see no location row at all.
+        locationShared: "Shared with your team",
+        locationHidden: "Hidden from your team",
+        locationShareHint: "Turn off to hide your location and local time from teammates.",
         aboutPlaceholder: "A few words about you. **Bold**, _italic_, links and lists work.",
         aboutNotSet: "Add a short introduction",
         aboutCounter: "{count} / {max}",
