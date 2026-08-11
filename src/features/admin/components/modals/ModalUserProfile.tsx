@@ -38,9 +38,11 @@ import { ChannelKind, type Channel } from "../../../../types/channel";
 import type { ChatProps } from "../../../../types/chat";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { loadTeamMemberInfo } from "../../services/loadTeamMemberInfo";
 import { UserProfileAbout } from "./sub/UserProfileAbout";
 import { UserProfileLocalTime } from "./sub/UserProfileLocalTime";
 import { UserProfileLocation } from "./sub/UserProfileLocation";
+import { UserProfileLocationShare } from "./sub/UserProfileLocationShare";
 import { UserProfilePhone } from "./sub/UserProfilePhone";
 import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
@@ -103,6 +105,45 @@ export const UserProfile = (props: UserProfileProps) => {
             setProfileUser(user);
         }
     }, [user, myself]);
+
+    // The roster row that opened this modal can be minutes-to-hours stale:
+    // it's whatever `popTeamUsersWorker` last cached, so a colleague who
+    // changed their location, status, or share toggle since then would
+    // otherwise not update here until a full page reload. Re-fetch the
+    // authoritative row each time the modal opens for someone else and
+    // overlay it — the server applies the location-share gating, so what
+    // lands here is exactly what this viewer is allowed to see. (Own card
+    // reads live `myself`, so there's nothing to re-fetch.)
+    useEffect(() => {
+        if (!openUserProfile || isYou === true) return;
+        const targetUserId = user?.userId;
+        if (!targetUserId) return;
+
+        let cancelled = false;
+        (async () => {
+            const fresh = (await loadTeamMemberInfo(myself, targetUserId, accessToken)) as
+                | UserProps
+                | undefined;
+            // Guard against a stale response landing after the modal moved
+            // on to a different user.
+            if (cancelled || !fresh || String(fresh.userId) !== String(targetUserId)) return;
+            setProfileUser((prev) => {
+                const base = prev ?? user;
+                return {
+                    ...base,
+                    ...fresh,
+                    // getTeamMemberInfo doesn't carry join / last-seen
+                    // timestamps (it returns ""), so keep whatever the roster
+                    // row already had rather than blanking the joined date.
+                    tsJoined: fresh.tsJoined || base?.tsJoined || "",
+                    tsLastSeen: fresh.tsLastSeen || base?.tsLastSeen || "",
+                };
+            });
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [openUserProfile, isYou, user?.userId, myself.teamId, accessToken]);
 
     // Someone from another team is in this roster because a share put you
     // on the same object, so their row is filed under YOUR team: reading
@@ -489,13 +530,15 @@ export const UserProfile = (props: UserProfileProps) => {
                                             />
                                         </Stack>
 
-                                        {/* Where they are and what time it is
-                                            there — one question, so one row.
-                                            Both read the same zone, so they
-                                            agree by construction; neither is
-                                            configured by hand in the normal
-                                            case, because the browser reports
-                                            the zone on every boot. */}
+                                        {/* Where they are, what time it is
+                                            there, and — on your own card — the
+                                            share toggle: one question, so one
+                                            row ("<Location> <Time> <Toggle>").
+                                            Location and time read the same zone,
+                                            so they agree by construction;
+                                            neither is configured by hand in the
+                                            normal case, because the browser
+                                            reports the zone on every boot. */}
                                         <Stack
                                             direction={{ xs: "column", sm: "row" }}
                                             spacing={{ xs: 1, sm: 2 }}
@@ -508,6 +551,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             />
                                             <UserProfileLocalTime
                                                 isSelf={myself.userId === profileUser?.userId}
+                                                user={profileUser}
+                                            />
+                                            <UserProfileLocationShare
+                                                myself={myself}
+                                                setMyself={setMyself}
                                                 user={profileUser}
                                             />
                                         </Stack>

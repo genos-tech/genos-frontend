@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserProfileAbout } from "../features/admin/components/modals/sub/UserProfileAbout";
 import { UserProfileLocalTime } from "../features/admin/components/modals/sub/UserProfileLocalTime";
 import { UserProfileLocation } from "../features/admin/components/modals/sub/UserProfileLocation";
+import { UserProfileLocationShare } from "../features/admin/components/modals/sub/UserProfileLocationShare";
 import { UserProfilePhone } from "../features/admin/components/modals/sub/UserProfilePhone";
 import { updateUserProfile } from "../features/admin/services/updateUserProfile";
 import { UserProps } from "../types/admin";
@@ -241,6 +242,45 @@ describe("UserProfileLocation", () => {
             screen.getByText(zoneLabel(Intl.DateTimeFormat().resolvedOptions().timeZone))
         );
         expect(screen.queryByText("Use detected")).not.toBeInTheDocument();
+    });
+});
+
+describe("UserProfileLocationShare", () => {
+    it("renders nothing on someone else's card", () => {
+        // The flag governs what YOUR row discloses; the server rejects the
+        // write for anyone else, so there is nothing to offer here.
+        const { container } = wrap(
+            <UserProfileLocationShare myself={me} setMyself={vi.fn()} user={other} />
+        );
+        expect(container).toBeEmptyDOMElement();
+    });
+
+    it("reads as shared by default when the flag is absent", () => {
+        // Absent means shared (server default) — only an explicit false is off.
+        wrap(<UserProfileLocationShare myself={me} setMyself={vi.fn()} user={me} />);
+        const toggle = screen.getByRole("switch");
+        expect(toggle).toBeChecked();
+    });
+
+    it("reads as hidden when I have opted out", () => {
+        const hidden = makeUser({ locationShared: false });
+        wrap(<UserProfileLocationShare myself={hidden} setMyself={vi.fn()} user={hidden} />);
+        expect(screen.getByRole("switch")).not.toBeChecked();
+    });
+
+    it("persists the opt-out and mirrors it locally when I flip it off", async () => {
+        const user = userEvent.setup();
+        const setMyself = vi.fn();
+        wrap(<UserProfileLocationShare myself={me} setMyself={setMyself} user={me} />);
+
+        await user.click(screen.getByRole("switch"));
+
+        await waitFor(() => expect(updateUserProfile).toHaveBeenCalledTimes(1));
+        expect(updateUserProfile).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: "user-1", locationShared: false })
+        );
+        expect(setMyself).toHaveBeenCalledWith(expect.objectContaining({ locationShared: false }));
+        expect(localStorage.getItem("locationShared")).toBe("false");
     });
 });
 
