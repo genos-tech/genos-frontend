@@ -15,6 +15,7 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { TaskCommentProps } from "../../../../types/tasks";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { useFollowOwnOutput } from "../../hooks/useFollowOwnOutput";
+import { useReactionSeenClear } from "../../hooks/useReactionSeenClear";
 import { useScrollIndicator } from "../../hooks/useScrollIndicator";
 import { VisibleRange } from "../../hooks/useScrollManagement";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
@@ -179,6 +180,39 @@ export const MessageListRenderer = ({
     // state) and only reads geometry, so it never re-renders the list or
     // perturbs Virtuoso's scrolling. See the hook for detail.
     const { scrollerRefCallback, thumbRef } = useScrollIndicator();
+
+    // Clear REACTION sidebar activities when the reacted-to bubble is
+    // actually scrolled into view — the read cursor can't (it's forward-only
+    // and reactions point back at old messages). Renderer-level so all three
+    // chat panes (main / sub / thread) get it for free. Both handles are
+    // imperative (IntersectionObserver rooted on the scroller + a ref
+    // callback per row); neither re-renders the list on scroll.
+    const { registerScroller, rowRef } = useReactionSeenClear({
+        isThread,
+        useCM,
+    });
+
+    // Merged callback for Virtuoso's `scrollerRef`. MUST be stable: Virtuoso
+    // republishes every prop on each render and re-runs its scroll-setup
+    // effect whenever the `scrollerRef` value changes identity (cleanup calls
+    // it with `null`, then re-runs with the element). An inline arrow here
+    // would fire that teardown/re-attach on EVERY parent render — which would
+    // rebuild the reaction-seen observer and drop its live rows. All three
+    // targets below are stable (a ref + two stable `useCallback`s), so this
+    // stays a single identity for the pane's life. `el` is the scroll
+    // container; it's only `Window` under `useWindowScroll`, which we don't use.
+    const handleScrollerRef = useCallback(
+        (el: HTMLElement | Window | null) => {
+            const scroller = el as HTMLElement | null;
+            scrollerElRef.current = scroller;
+            // Scroll-indicator hook: attaches its passive, read-only listener.
+            scrollerRefCallback(scroller);
+            // Reaction-seen observer: roots on the chat scroller so overscan
+            // rows (outside its clip box) never count as "seen".
+            registerScroller(scroller);
+        },
+        [scrollerRefCallback, registerScroller]
+    );
 
     // Identity of the chat (or thread) currently rendered. Drives the
     // Virtuoso remount key below.
@@ -347,7 +381,13 @@ export const MessageListRenderer = ({
                 //    scroller while scrolling) it gets `pointer-events: none`,
                 //    so bubbles sliding under a stationary cursor can't fire
                 //    hover handlers. Wheel/touch still reach the scroller.
-                <div className="chat-msg-row">
+                // `ref`/`data-msg-key` feed the reaction-seen observer: the
+                // observer reads `data-msg-key` at INTERSECTION time (not at
+                // observe time), so it stays correct through Virtuoso's node
+                // recycling on scroll/prepend. The key is the bubble's v3
+                // UUID — the same value a reaction activity stores in
+                // `messageUniqueKey`.
+                <div ref={rowRef} className="chat-msg-row" data-msg-key={getMessageKey(message)}>
                     {dateSeparator}
                     <Stack
                         direction="row"
@@ -420,6 +460,8 @@ export const MessageListRenderer = ({
             useTEM,
             useTM,
             useUISM,
+            getMessageKey,
+            rowRef,
         ]
     );
 
@@ -484,14 +526,7 @@ export const MessageListRenderer = ({
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
                 rangeChanged={onRangeChanged}
-                scrollerRef={(el) => {
-                    // `el` is the scroll container (HTMLElement); it's only
-                    // `Window` when `useWindowScroll` is set, which we don't.
-                    scrollerElRef.current = el as HTMLElement | null;
-                    // Feed the same element to the scroll-indicator hook so it
-                    // can attach its (passive, read-only) scroll listener.
-                    scrollerRefCallback(el as HTMLElement | null);
-                }}
+                scrollerRef={handleScrollerRef}
                 style={virtuosoStyle}
                 totalCount={messages.length}
             />
