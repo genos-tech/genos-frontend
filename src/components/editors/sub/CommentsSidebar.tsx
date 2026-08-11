@@ -30,6 +30,8 @@ import { commentFirstLine } from "./commentMentions";
 //   • Leave the list → the preview reverts to the pinned thread, or closes.
 //   • Click a row  → PINS that thread so its card stays open after the mouse
 //     leaves; clicking the pinned row again unpins (closes) it.
+//   • Click outside the card (or press escape) → dismisses AND unpins it, just
+//     like the native card: the sidebar adopts BlockNote's selection as truth.
 // The sidebar itself stays open throughout — it is closed only by its toggle.
 //
 // No new comments, no API, no server work — a read-only lens plus the existing
@@ -233,7 +235,8 @@ ThreadRow.displayName = "ThreadRow";
  * The custom comments sidebar. Reads all threads in the current editor and
  * renders one row each, sorted by document position (like BlockNote's own
  * `sort="position"`). Hovering a row previews its floating card; clicking pins
- * it. The sidebar stays open — it's closed only by its toggle.
+ * it; dismissing the card (click-outside/escape) unpins it. The sidebar stays
+ * open — it's closed only by its toggle.
  *
  * Must be rendered inside `<BlockNoteView>` (it uses the comment hooks). Renders
  * nothing when `open` is false.
@@ -304,8 +307,10 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
     const selectedThreadIdRef = useRef<string | undefined>(selectedThreadId);
     selectedThreadIdRef.current = selectedThreadId;
 
-    // Tracks the last thread WE drove selection to, so on going inactive we only
-    // retract a card we put up — never one the user opened elsewhere.
+    // Tracks the last thread WE drove selection to. Doubles as our record of
+    // "the selection we're in step with": going inactive only retracts a card
+    // whose id still matches this (see below), and the adopt-authority effect
+    // treats any divergence from it as a change the user made outside the panel.
     const appliedThreadRef = useRef<string | null>(null);
     useEffect(() => {
         if (!open) {
@@ -322,6 +327,27 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
         }
         appliedThreadRef.current = active;
     }, [open, hoveredThreadId, pinnedThreadId, comments]);
+
+    // Adopt authority: reflect selection changes the user made OUTSIDE the panel
+    // back into our pin. `selectedThreadId` moving to something other than the
+    // thread we last drove means the user dismissed the card (clicked outside /
+    // pressed escape → undefined) or clicked a different highlight (→ its id).
+    // Either way the pin should follow: a dismiss clears it (so the card doesn't
+    // revive on the next hover), and a new selection re-points it (so the panel
+    // reflects and keeps the card the user opened). Because this only fires when
+    // BlockNote's selection genuinely diverges from what we drove, it can't fight
+    // our own hover/click drive above, and it doesn't loop — once the pin matches
+    // the live selection, the driver leaves it be.
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+        const live = selectedThreadId ?? null;
+        if (live !== appliedThreadRef.current) {
+            appliedThreadRef.current = live;
+            setPinnedThreadId(live);
+        }
+    }, [open, selectedThreadId]);
 
     // Closing the sidebar is a clean slate: drop hover + pin and forget what we
     // applied. We deliberately do NOT force the card closed here — it's

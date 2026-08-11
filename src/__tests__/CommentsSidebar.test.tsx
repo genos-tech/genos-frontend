@@ -221,6 +221,76 @@ describe("CommentsSidebar", () => {
         expect(selectThread).toHaveBeenLastCalledWith(undefined);
     });
 
+    it("unpins when the card is dismissed from outside the sidebar", () => {
+        // Clicking outside the card (or escape) dismisses it in BlockNote —
+        // selectedThreadId drops to undefined. The sidebar must adopt that and
+        // drop the pin, so the card does NOT revive on the next hover. We prove
+        // the pin is gone by showing a fresh hover+leave now CLOSES the card (a
+        // still-pinned thread would survive the leave).
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        const { rerender } = render(<CommentsSidebar open={true} />);
+        const row = screen.getByText("body of t1").closest("button")!;
+
+        // Pin it, then move the mouse off the sidebar — the pin keeps it up.
+        fireEvent.mouseEnter(row);
+        fireEvent.click(row);
+        selectedThreadId = "t1";
+        rerender(<CommentsSidebar open={true} />);
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+
+        // User clicks outside → BlockNote dismisses the card out-of-band.
+        selectedThreadId = undefined;
+        rerender(<CommentsSidebar open={true} />);
+
+        // Pin is dropped: hover previews, but leaving now closes it.
+        selectThread.mockClear();
+        fireEvent.mouseEnter(row);
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+        expect(selectThread).toHaveBeenLastCalledWith(undefined);
+    });
+
+    it("adopts an out-of-band selection of a different thread as the new pin", () => {
+        // The user clicks a different highlight in the doc while a thread is
+        // pinned: BlockNote selects the new thread. The sidebar adopts it as the
+        // pin (so the panel reflects it and doesn't close the card the user just
+        // opened). We prove t2 became the pin by showing that a later hover of t1
+        // reverts, on leave, to t2 — not to t1 and not to closed.
+        //
+        // (The mocked hooks don't echo selectThread() back into selectedThreadId,
+        // so we drive selectedThreadId via rerender to mimic BlockNote reflecting
+        // each selection — exactly what happens in the app.)
+        threads.set("t1", makeThread("t1"));
+        threads.set("t2", makeThread("t2"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+        threadPositions.set("t2", { from: 50, to: 60 });
+
+        const { rerender } = render(<CommentsSidebar open={true} />);
+        const row1 = screen.getByText("body of t1").closest("button")!;
+
+        // Pin t1, mouse away — the pin keeps it up.
+        fireEvent.mouseEnter(row1);
+        fireEvent.click(row1);
+        selectedThreadId = "t1";
+        rerender(<CommentsSidebar open={true} />);
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+
+        // User clicks t2's highlight in the doc → BlockNote selects t2.
+        selectedThreadId = "t2";
+        rerender(<CommentsSidebar open={true} />);
+
+        // Now hover t1 (previewing it, which moves the live selection to t1)...
+        fireEvent.mouseEnter(row1);
+        selectedThreadId = "t1";
+        rerender(<CommentsSidebar open={true} />);
+
+        // ...then leave: the preview must revert to the adopted pin t2.
+        selectThread.mockClear();
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+        expect(selectThread).toHaveBeenLastCalledWith("t2", true);
+    });
+
     it("shows the author name and a resolved badge for resolved threads", () => {
         threads.set("t1", makeThread("t1", { resolved: true, resolvedBy: "u1" }));
         threadPositions.set("t1", { from: 1, to: 2 });
