@@ -96,6 +96,7 @@ import {
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -300,6 +301,23 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
+    });
+
+    // Fan @-mentions left in inline comments out to the activity system,
+    // exactly as a chat-note body mention does. Host = chat note (surface 8),
+    // carrying the parent chat's routing so the mention can deep-link to the
+    // note inside its chat.
+    useCommentMentionEmitter({
+        threadStore,
+        socket,
+        getHost: () => ({
+            surfaceType: 8,
+            noteId: currentChatNote.noteId,
+            title: currentChatNote.title,
+            chatType: currentChatNote.chatType,
+            chatId: currentChatNote.chatId,
+            threadId: currentChatNote.threadId,
+        }),
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
