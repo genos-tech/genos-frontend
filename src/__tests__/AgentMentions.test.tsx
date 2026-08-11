@@ -609,6 +609,28 @@ describe("AgentQAInput mention integration", () => {
         expect(screen.queryByTestId("agent-mention-dropdown")).toBeNull();
     });
 
+    it("does not submit on the Enter that CONFIRMS an IME composition", () => {
+        // Japanese/Chinese/Korean input: the user types phonetics into a
+        // composition buffer and presses Enter to CONFIRM the conversion.
+        // That Enter must not fire the ask (which would send early AND
+        // leave the just-committed text stranded in the box). Both the
+        // modern `isComposing` flag and the legacy keyCode 229 sentinel
+        // must be honored.
+        const onAsk = vi.fn();
+        render(<Harness onAsk={onAsk} />);
+        const textarea = screen.getByPlaceholderText("Ask…") as HTMLTextAreaElement;
+        fireEvent.change(textarea, { target: { value: "日本語の質問" } });
+
+        fireEvent.keyDown(textarea, { key: "Enter", isComposing: true });
+        expect(onAsk).not.toHaveBeenCalled();
+        fireEvent.keyDown(textarea, { key: "Enter", keyCode: 229 });
+        expect(onAsk).not.toHaveBeenCalled();
+
+        // Once the composition ends, a real Enter submits normally.
+        fireEvent.keyDown(textarea, { key: "Enter" });
+        expect(onAsk).toHaveBeenCalledTimes(1);
+    });
+
     it("highlights the picked token in the input and unhighlights when edited away", async () => {
         const onAsk = vi.fn();
         render(<Harness onAsk={onAsk} />);

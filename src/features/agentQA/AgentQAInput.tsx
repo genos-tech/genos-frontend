@@ -108,6 +108,18 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
                     onClick={syncCaret}
                     onKeyUp={syncCaret}
                     onKeyDown={(e) => {
+                        // IME guard: while an input-method composition is
+                        // active (typing Japanese / Chinese / Korean, or
+                        // accented input), Enter CONFIRMS the composition —
+                        // it is not a send, and Arrow/Escape drive the
+                        // candidate window. Bail so the IME owns the key.
+                        // Without this, the confirming Enter both fires the
+                        // ask AND leaves the just-committed text behind: the
+                        // commit's trailing onChange repopulates the box
+                        // after onAsk's setQuery("") already cleared it.
+                        // `isComposing` is the modern signal; keyCode 229 is
+                        // the legacy sentinel for engines that don't set it.
+                        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                         // Picker-open precedence: the dropdown owns
                         // Arrow / Enter / Escape before the send logic.
                         if (mention.pickerOpen) {
