@@ -29,8 +29,6 @@ import {
     FilePreviewButton,
     FileRenameButton,
     FileReplaceButton,
-    FloatingComposerController,
-    FloatingThreadController,
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
@@ -40,7 +38,6 @@ import {
     TableCellMergeButton,
     TextAlignButton,
 } from "@blocknote/react";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, Chip, IconButton, Modal, ModalDialog } from "@mui/joy";
@@ -97,9 +94,8 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
-import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -212,6 +208,23 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         });
     }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
 
+    // Mention-capable schema for the inline body-COMMENT editors (composer,
+    // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
+    // comments. Same deps as the main `schema` — `CreateMentionSpec` closes
+    // over these values.
+    const commentSchema = useMemo(
+        () =>
+            buildCommentSchema({
+                teamMemberProfiles: useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM,
+            }),
+        [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
+    );
+
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
@@ -265,6 +278,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         myself,
         accessToken,
         schema,
+        commentSchema,
         dictionary,
         uploadFile,
         initialBody: body,
@@ -276,7 +290,6 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         extensions: [codeBlockEnterShortcut],
     });
 
-    const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -383,39 +396,15 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 {/* Anchored bottom-right because the Comments toggle already
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
-                <AppTooltip
-                    placement="top"
-                    size="sm"
-                    title={
-                        showThreadsSidebar
-                            ? t.common.editor.hideComments
-                            : t.common.editor.showComments
-                    }
-                >
-                    <IconButton
-                        color="neutral"
-                        size="sm"
-                        sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}
-                        variant={showThreadsSidebar ? "solid" : "outlined"}
-                        onClick={() => setShowThreadsSidebar((prev) => !prev)}
-                    >
-                        <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                </AppTooltip>
                 <Box
                     sx={{
                         position: "absolute",
                         top: 8,
+                        right: 52,
                         zIndex: 10,
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
-                        // When the threads sidebar opens it takes the
-                        // right half of the editor — the toggles would
-                        // float over the comments pane instead of the
-                        // editor. Swap to the comment-pane-left in that case
-                        // so they stay over the content being wrapped.
-                        ...(showThreadsSidebar ? { right: 370 } : { right: 52 }),
                     }}
                 >
                     {/* "Saved" chip rides alongside the wrap toggles so
@@ -677,20 +666,15 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                     />
                                 )}
 
-                                {threadStore && <FloatingComposerController />}
-                                {threadStore && !showThreadsSidebar && (
-                                    <ThreadsSidebarErrorBoundary>
-                                        <FloatingThreadController />
-                                    </ThreadsSidebarErrorBoundary>
+                                {threadStore && (
+                                    <CommentsWithMentions
+                                        myselfUserId={myself.userId}
+                                        teamMemberProfiles={useTEM.teamMemberProfiles}
+                                        teamMembers={useTEM.teamMembers}
+                                    />
                                 )}
                             </BlockNoteViewEditor>
                         </div>
-
-                        {showThreadsSidebar && threadStore && (
-                            <div className="bn-threads-sidebar-panel">
-                                <ThreadsSidebarWithPreload filter="all" sort="position" />
-                            </div>
-                        )}
                     </div>
                 </BlockNoteView>
 
