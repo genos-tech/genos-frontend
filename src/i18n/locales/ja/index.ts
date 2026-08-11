@@ -821,6 +821,7 @@ export const ja: DeepPartial<Messages> = {
         },
         activity: {
             aggregatedEarlier: "+{count} このトピックの前の方で",
+            aggregatedNew: "+{count} 件の未読（前回表示以降）",
             chipTaskComment: "タスクコメント",
             chipReply: "返信",
             chipReaction: "リアクション",

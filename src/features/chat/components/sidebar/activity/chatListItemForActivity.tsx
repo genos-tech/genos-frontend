@@ -875,9 +875,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         : `rgba(${activityColor.lightRgb}, 0.8)`,
                                 }}
                             >
-                                {fmt(t.chat.activity.aggregatedEarlier, {
-                                    count: aggregatedCount - 1,
-                                })}
+                                {/* Aggregation partitions each topic by read-state
+                                    (see `aggregateActivityMessages`), so a row is
+                                    either the unread "while you were away" bucket
+                                    or read history. `isRead === false` on the
+                                    aggregated row means the former — label the
+                                    hidden members as NEW rather than "earlier". */}
+                                {fmt(
+                                    activity.isRead === false
+                                        ? t.chat.activity.aggregatedNew
+                                        : t.chat.activity.aggregatedEarlier,
+                                    { count: aggregatedCount - 1 }
+                                )}
                             </Typography>
                         )}
                     </Stack>

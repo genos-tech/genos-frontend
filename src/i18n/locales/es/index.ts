@@ -1176,6 +1176,7 @@ export const es: DeepPartial<Messages> = {
             chipTaskNote: "Nota de tarea",
             chipChatNote: "Nota de chat",
             aggregatedEarlier: "+{count} anteriormente sobre este tema",
+            aggregatedNew: "+{count} nuevas desde la última vez que miraste",
             copied: "¡Copiado!",
             copyTooltip: "Haz clic para copiar",
         },

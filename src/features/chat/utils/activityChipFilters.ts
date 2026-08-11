@@ -283,11 +283,14 @@ export const EMPTY_GROUP_ID_SET: ReadonlySet<number> = new Set<number>();
 //   2. the primary single-select filter (`ACTIVITY_PRIMARY_FILTERS`),
 //   3. chip / instance-name / mention-group refinements (AND),
 //   4. same-topic aggregation — collapses a run of activities on one
-//      topic (thread / task comments / note / reacted message) to its
-//      latest row, annotated with the member ids (`aggregatedIds`) so
-//      the mark-read paths can expand it back out,
+//      topic (thread / task comments / note / reacted message), split by
+//      read-state: all UNREAD members become a single "while you were
+//      away" row (any age), while READ history keeps the time window.
+//      Each row carries its member ids (`aggregatedIds`) so the mark-read
+//      paths can expand it back out,
 //   5. the "show only unread" toggle (against the aggregated row's
-//      EFFECTIVE isRead — unread while any member is unread).
+//      EFFECTIVE isRead — false while any member is unread; after the
+//      read-state split this leaves exactly the unread rows).
 // Aggregation runs AFTER the filters so each view collapses to the
 // latest row *matching that view* (e.g. under the "Mention" chip a
 // thread's latest mention represents the thread, not its latest plain
