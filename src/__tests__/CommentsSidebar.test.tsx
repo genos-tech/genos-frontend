@@ -2,16 +2,16 @@
  * The custom "show all comments" sidebar.
  *
  * This is a frontend-only lens over the editor's existing comment threads. The
- * behavior that matters — the whole point of the feature — is that clicking a
- * row does exactly what clicking the highlighted text does: it selects the
- * thread (opening its floating card via the always-mounted
- * `FloatingThreadController`) AND closes the sidebar. These tests pin that
- * contract, plus the ordering (by document position, like BlockNote's own
- * `sort="position"`) and the open/empty states.
+ * interaction that matters — the point of the feature — is that hovering a row
+ * previews that thread's floating card (via the always-mounted
+ * `FloatingThreadController`), clicking PINS it so the card survives the mouse
+ * leaving, and the sidebar itself never closes on interaction. These tests pin
+ * that contract, plus the ordering (by document position, like BlockNote's own
+ * `sort="position"`), the last-activity timestamp, and the open/empty states.
  *
  * BlockNote's comment hooks need a live editor + context to run, which a unit
- * test has no cheap way to build, so we mock the four hooks the sidebar reads
- * and assert against the extension's `selectThread` seam directly.
+ * test has no cheap way to build, so we mock the hooks the sidebar reads and
+ * assert against the extension's `selectThread` seam directly.
  */
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -48,6 +48,17 @@ vi.mock("@blocknote/core/comments", () => ({ CommentsExtension: {} }));
 
 const { CommentsSidebar } = await import("../components/editors/sub/CommentsSidebar");
 
+const makeComment = (id: string, text: string, createdAt: Date) => ({
+    type: "comment",
+    id,
+    userId: "u1",
+    createdAt,
+    updatedAt: createdAt,
+    reactions: [],
+    metadata: {},
+    body: [{ type: "paragraph", content: [{ type: "text", text }] }],
+});
+
 const makeThread = (id: string, opts: Partial<any> = {}) => ({
     type: "thread",
     id,
@@ -55,20 +66,14 @@ const makeThread = (id: string, opts: Partial<any> = {}) => ({
     updatedAt: new Date("2026-08-11T00:00:00Z"),
     resolved: false,
     metadata: {},
-    comments: [
-        {
-            type: "comment",
-            id: `${id}-c0`,
-            userId: "u1",
-            createdAt: new Date("2026-08-11T00:00:00Z"),
-            updatedAt: new Date("2026-08-11T00:00:00Z"),
-            reactions: [],
-            metadata: {},
-            body: [{ type: "paragraph", content: [{ type: "text", text: `body of ${id}` }] }],
-        },
-    ],
+    comments: [makeComment(`${id}-c0`, `body of ${id}`, new Date("2026-08-11T00:00:00Z"))],
     ...opts,
 });
+
+// The rows live in a flex container that owns the `onMouseLeave` (leaving the
+// list, not a single row, drops the hover preview). Reach it from a row.
+const rowsContainer = (rowText: string) =>
+    screen.getByText(rowText).closest("button")!.parentElement!;
 
 describe("CommentsSidebar", () => {
     beforeEach(() => {
@@ -83,12 +88,12 @@ describe("CommentsSidebar", () => {
 
     it("renders nothing when closed", () => {
         threads.set("t1", makeThread("t1"));
-        const { container } = render(<CommentsSidebar open={false} onClose={() => {}} />);
+        const { container } = render(<CommentsSidebar open={false} />);
         expect(container).toBeEmptyDOMElement();
     });
 
     it("shows an empty state when there are no threads", () => {
-        render(<CommentsSidebar open={true} onClose={() => {}} />);
+        render(<CommentsSidebar open={true} />);
         expect(screen.getByText(/no comments yet/i)).toBeInTheDocument();
     });
 
@@ -99,7 +104,7 @@ describe("CommentsSidebar", () => {
         threadPositions.set("t1", { from: 100, to: 110 });
         threadPositions.set("t2", { from: 10, to: 20 });
 
-        render(<CommentsSidebar open={true} onClose={() => {}} />);
+        render(<CommentsSidebar open={true} />);
 
         // The reference snippet encodes `from`, so reading them top-to-bottom
         // proves the sort ran (t2@10 before t1@100).
@@ -107,30 +112,106 @@ describe("CommentsSidebar", () => {
         expect(refs).toEqual(["ref@10", "ref@100"]);
     });
 
-    it("opens the thread's card AND closes the sidebar when a row is clicked", () => {
+    it("previews a thread's card on hover (select + scroll)", () => {
         threads.set("t1", makeThread("t1"));
         threadPositions.set("t1", { from: 5, to: 9 });
-        const onClose = vi.fn();
 
-        render(<CommentsSidebar open={true} onClose={onClose} />);
+        render(<CommentsSidebar open={true} />);
+        // Nothing is selected until the user interacts.
+        expect(selectThread).not.toHaveBeenCalled();
 
-        fireEvent.click(screen.getByText("body of t1"));
+        fireEvent.mouseEnter(screen.getByText("body of t1").closest("button")!);
 
-        // Same effect as clicking the highlighted text: select + scroll (true)...
+        // Same effect as clicking the highlighted text: select + scroll (true).
         expect(selectThread).toHaveBeenCalledWith("t1", true);
-        // ...then the sidebar closes.
-        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("closes the preview when the pointer leaves the list and nothing is pinned", () => {
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        render(<CommentsSidebar open={true} />);
+        fireEvent.mouseEnter(screen.getByText("body of t1").closest("button")!);
+        expect(selectThread).toHaveBeenLastCalledWith("t1", true);
+
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+
+        // No pin → the preview is dismissed.
+        expect(selectThread).toHaveBeenLastCalledWith(undefined);
+    });
+
+    it("pins a thread on click so its card survives the pointer leaving; sidebar stays open", () => {
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        render(<CommentsSidebar open={true} />);
+        const row = screen.getByText("body of t1").closest("button")!;
+
+        fireEvent.mouseEnter(row);
+        fireEvent.click(row);
+        expect(selectThread).toHaveBeenCalledWith("t1", true);
+
+        // Leaving the list must NOT close the pinned card...
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+        expect(selectThread).not.toHaveBeenCalledWith(undefined);
+
+        // ...and the sidebar is still mounted (never closes on interaction).
+        expect(screen.getByText("body of t1")).toBeInTheDocument();
+    });
+
+    it("unpins on a second click, closing the card once the pointer leaves", () => {
+        threads.set("t1", makeThread("t1"));
+        threadPositions.set("t1", { from: 5, to: 9 });
+
+        render(<CommentsSidebar open={true} />);
+        const row = screen.getByText("body of t1").closest("button")!;
+
+        fireEvent.mouseEnter(row);
+        fireEvent.click(row); // pin
+        fireEvent.click(row); // unpin
+        fireEvent.mouseLeave(rowsContainer("body of t1"));
+
+        expect(selectThread).toHaveBeenLastCalledWith(undefined);
     });
 
     it("shows the author name and a resolved badge for resolved threads", () => {
         threads.set("t1", makeThread("t1", { resolved: true, resolvedBy: "u1" }));
         threadPositions.set("t1", { from: 1, to: 2 });
 
-        render(<CommentsSidebar open={true} onClose={() => {}} />);
+        render(<CommentsSidebar open={true} />);
 
         const row = screen.getByText("body of t1").closest("button")!;
         expect(within(row).getByText("Alice")).toBeInTheDocument();
         expect(within(row).getByText(/resolved/i)).toBeInTheDocument();
+    });
+
+    it("shows the LAST comment's time, not the first", () => {
+        // now = 2026-08-11T12:00:00Z; first comment 10 days ago, last 5 min ago.
+        const nowSpy = vi
+            .spyOn(Date, "now")
+            .mockReturnValue(new Date("2026-08-11T12:00:00Z").getTime());
+        try {
+            threads.set(
+                "t1",
+                makeThread("t1", {
+                    createdAt: new Date("2026-08-01T12:00:00Z"),
+                    comments: [
+                        makeComment("t1-c0", "body of t1", new Date("2026-08-01T12:00:00Z")),
+                        makeComment("t1-c1", "a reply", new Date("2026-08-11T11:55:00Z")),
+                    ],
+                })
+            );
+            threadPositions.set("t1", { from: 1, to: 2 });
+
+            render(<CommentsSidebar open={true} />);
+
+            const row = screen.getByText("body of t1").closest("button")!;
+            // Last activity (5 min ago) wins over the thread/first-comment age.
+            expect(within(row).getByText("5 minutes ago")).toBeInTheDocument();
+            expect(within(row).queryByText(/day.? ago/)).not.toBeInTheDocument();
+        } finally {
+            nowSpy.mockRestore();
+        }
     });
 
     it("renders no reference snippet for a position-less thread (no English leak)", () => {
@@ -141,7 +222,7 @@ describe("CommentsSidebar", () => {
         threads.set("t1", makeThread("t1"));
         // deliberately no threadPositions entry for t1
 
-        render(<CommentsSidebar open={true} onClose={() => {}} />);
+        render(<CommentsSidebar open={true} />);
 
         expect(screen.getByText("body of t1")).toBeInTheDocument();
         expect(screen.queryByText(/original content deleted/i)).not.toBeInTheDocument();
@@ -159,7 +240,7 @@ describe("CommentsSidebar", () => {
         threadPositions.set("t1", { from: 1, to: 2 });
         threadPositions.set("t2", { from: 3, to: 4 });
 
-        render(<CommentsSidebar open={false} onClose={() => {}} />);
+        render(<CommentsSidebar open={false} />);
 
         expect(getReferenceText).not.toHaveBeenCalled();
     });
@@ -170,7 +251,7 @@ describe("CommentsSidebar", () => {
         threadPositions.set("t1", { from: 1, to: 2 });
         threadPositions.set("t2", { from: 3, to: 4 });
 
-        render(<CommentsSidebar open={true} onClose={() => {}} />);
+        render(<CommentsSidebar open={true} />);
 
         expect(screen.getByText("body of t1")).toBeInTheDocument();
         expect(screen.queryByText("body of t2")).not.toBeInTheDocument();

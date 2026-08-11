@@ -470,7 +470,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     sx={{
                         position: "absolute",
                         top: 8,
-                        right: showComments ? COMMENTS_SIDEBAR_WIDTH + 52 : 52,
+                        // Closed: 52px clears the comment toggle at right:8.
+                        // Open: the toggle sits over the sidebar header instead,
+                        // so the cluster only needs to clear the panel's left
+                        // edge — a snug 12px gap, not another 52.
+                        right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
                         zIndex: 10,
                         display: "flex",
                         alignItems: "center",
@@ -746,12 +750,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 )}
                             </BlockNoteViewEditor>
                         </div>
-                        {threadStore && (
-                            <CommentsSidebar
-                                open={showComments}
-                                onClose={() => setShowComments(false)}
-                            />
-                        )}
+                        {threadStore && <CommentsSidebar open={showComments} />}
                     </div>
                 </BlockNoteView>
 
