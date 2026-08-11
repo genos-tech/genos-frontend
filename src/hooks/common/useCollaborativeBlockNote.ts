@@ -30,6 +30,15 @@ type UseCollaborativeBlockNoteOptions = {
     myself: UserProps;
     accessToken: string | null;
     schema: BlockNoteSchema<any, any, any>;
+    /**
+     * Optional mention-capable schema for comment bodies. Passed to
+     * `CommentsExtension({ schema })`, which BlockNote stores as
+     * `commentEditorSchema` and uses to build EVERY comment editor (composer,
+     * reply, edit) and to render committed comments. Supply one built with
+     * `buildCommentSchema` (see `CommentEditorWithMentions`) so `@`/`#` chips
+     * render inside comments; omit it to keep BlockNote's plain default.
+     */
+    commentSchema?: BlockNoteSchema<any, any, any>;
     dictionary: any;
     uploadFile?: (file: File) => Promise<string>;
     initialBody?: PartialBlock[] | any[];
@@ -62,6 +71,7 @@ export function useCollaborativeBlockNote({
     myself,
     accessToken,
     schema,
+    commentSchema,
     dictionary,
     uploadFile,
     initialBody,
@@ -292,9 +302,25 @@ export function useCollaborativeBlockNote({
         };
     }, [doc]);
 
+    // Snapshot `commentSchema` in a ref for the same reason as
+    // `teamMemberProfiles`/`extensions` above: it's rebuilt whenever the
+    // mention spec's deps change (notably the 60s `teamMemberProfiles`
+    // refresh), and baking its identity into `commentsExtension`'s deps would
+    // tear down and rebuild the WHOLE editor every minute. The comment editors
+    // read it (as `commentEditorSchema`) at their own build time; a stale
+    // capture is fine because the `mention` spec resolves the CURRENT display
+    // name via `useResolvedUserName` at render — exactly how the main editor's
+    // own `schema` (also excluded from the rebuild deps) already behaves.
+    const commentSchemaRef = useRef(commentSchema);
+    commentSchemaRef.current = commentSchema;
+
     const commentsExtension = useMemo(() => {
         if (!threadStore) return null;
-        return CommentsExtension({ threadStore, resolveUsers });
+        return CommentsExtension({
+            threadStore,
+            resolveUsers,
+            schema: commentSchemaRef.current,
+        });
     }, [threadStore, resolveUsers]);
 
     // The caller passes `extensions` as a fresh array literal on every

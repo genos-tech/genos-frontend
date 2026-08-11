@@ -28,8 +28,6 @@ import {
     FilePreviewButton,
     FileRenameButton,
     FileReplaceButton,
-    FloatingComposerController,
-    FloatingThreadController,
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
@@ -89,8 +87,8 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -213,6 +211,23 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         });
     }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
 
+    // Mention-capable schema for the inline body-COMMENT editors (composer,
+    // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
+    // comments. Same deps as the main `schema` — `CreateMentionSpec` closes
+    // over these values.
+    const commentSchema = useMemo(
+        () =>
+            buildCommentSchema({
+                teamMemberProfiles: useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM,
+            }),
+        [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
+    );
+
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
@@ -270,6 +285,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         myself,
         accessToken,
         schema,
+        commentSchema,
         dictionary,
         uploadFile,
         initialBody: body,
@@ -617,11 +633,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         triggerCharacter={":"}
                     />
 
-                    {threadStore && <FloatingComposerController />}
                     {threadStore && (
-                        <ThreadsSidebarErrorBoundary>
-                            <FloatingThreadController />
-                        </ThreadsSidebarErrorBoundary>
+                        <CommentsWithMentions
+                            myselfUserId={myself.userId}
+                            teamMemberProfiles={useTEM.teamMemberProfiles}
+                            teamMembers={useTEM.teamMembers}
+                        />
                     )}
                 </BlockNoteView>
 
