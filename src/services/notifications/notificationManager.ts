@@ -72,6 +72,11 @@ const PUSH_COVERED_CATEGORIES: ReadonlySet<NotificationCategory> = new Set([
     "mention_note_chat",
     "thread_replies",
     "task_comments",
+    // The BlockNote inline-comment participant fan-out. The server pushes it
+    // (`webpush_dispatch` routes THREAD_REPLY+isCommentParticipant to the
+    // `comments` category, gated by `should_push`), so the page must defer to
+    // that push — otherwise an away user gets both a card and an OS popup.
+    "comments",
     "inbox",
     "chats",
 ]);

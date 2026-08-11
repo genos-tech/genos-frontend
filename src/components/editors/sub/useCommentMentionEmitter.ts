@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import {
     commentFirstLine,
     CommentHostContext,
+    emitCommentActivity,
     emitCommentMention,
     extractCommentMentions,
 } from "./commentMentions";
@@ -13,6 +14,17 @@ import {
 // comment (new thread, reply, or edit) fans its `@`/`#` mentions out to the
 // activity system — the comment twin of the body-mention emit in
 // `sendUpdatedSpecificTask` / `emitNoteMention`.
+//
+// TWO emits ride these wrappers:
+//   1. The MENTION emit (`emitCommentMention`) — fires on every write (create
+//      OR edit) whose `@`/`#` mention set changed, one activity per newly-
+//      mentioned user, mirroring the body-mention delta semantics.
+//   2. The PARTICIPANT emit (`emitCommentActivity`) — fires on CREATE only
+//      (new thread / added comment), telling the surface's owner + stake-
+//      holders a comment was left even when it mentions no one. It forwards
+//      the comment's mention set so the server can EXCLUDE those users (they
+//      get the more-specific mention row from #1). Edits never fire it — a
+//      comment already announced its author; re-paging on an edit is noise.
 //
 // Why wrap the store rather than diff the Yjs `threads` map: `createThread` /
 // `addComment` / `updateComment` are instance arrow-fn properties that the
@@ -111,6 +123,29 @@ export const useCommentMentionEmitter = ({ threadStore, socket, getHost }: Emitt
             }
         };
 
+        // The general-comment participant fan-out — CREATE paths only. Unlike
+        // `emit` above it is NOT gated on a mention delta: its whole purpose is
+        // to notify the owner + stakeholders when a comment mentions no one. It
+        // forwards the comment's own mention set (users + groups) so the server
+        // can exclude those recipients (they get the mention row instead).
+        const emitParticipants = (args: { commentId: string; body: unknown }) => {
+            try {
+                const host = getHost();
+                if (!host) return;
+                const { userIds, groupIds } = extractCommentMentions(args.body);
+                emitCommentActivity(socket, {
+                    host,
+                    commentId: args.commentId,
+                    mentionedUserIds: userIds,
+                    mentionedGroupIds: groupIds,
+                    firstLineContent: commentFirstLine(args.body),
+                    tsMentionedAt: new Date().toISOString(),
+                });
+            } catch {
+                // Never surface an activity failure to the comment writer.
+            }
+        };
+
         const origCreateThread = store.createThread;
         const origAddComment = store.addComment;
         const origUpdateComment = store.updateComment;
@@ -125,6 +160,8 @@ export const useCommentMentionEmitter = ({ threadStore, socket, getHost }: Emitt
                 commentThreadId: thread.id,
                 body: options.initialComment?.body,
             });
+            // CREATE — also fan out to the surface's owner + stakeholders.
+            emitParticipants({ commentId, body: options.initialComment?.body });
             return thread;
         };
 
@@ -135,6 +172,8 @@ export const useCommentMentionEmitter = ({ threadStore, socket, getHost }: Emitt
                 commentThreadId: options.threadId,
                 body: options.comment?.body,
             });
+            // CREATE — also fan out to the surface's owner + stakeholders.
+            emitParticipants({ commentId: comment.id, body: options.comment?.body });
             return comment;
         };
 

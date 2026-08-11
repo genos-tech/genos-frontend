@@ -98,6 +98,10 @@ export const services = {
             threadReplies: "Thread replies",
             mentions: "Mentions",
             taskComments: "Task comments",
+            // BlockNote inline-comment participant fan-out. Not shown as its
+            // own toggle (it rides the Task comments master), but the manager
+            // still resolves a label for it, so keep the key.
+            comments: "Comments",
             inbox: "Inbox",
             // Fine-grained mention sub-categories (registry-driven).
             mentionChat: "In a chat message",
@@ -181,6 +185,7 @@ export const services = {
                 threadReplies: "Replies posted under any message you can see.",
                 mentions: "When someone @-mentions you anywhere.",
                 taskComments: "New comments on tasks you participate in.",
+                comments: "New comments on task descriptions and notes you own or have access to.",
                 inbox: "Join requests, approvals, and other inbox items.",
                 // Fine-grained mention sub-category descriptions.
                 mentionChat: "When someone @-mentions you in a chat message.",
@@ -241,6 +246,9 @@ export const services = {
             // in Project • {projectName}" reads as a duplicate.
             mentionTitleByBot: "Mentioned you in {subjectLabel}",
             taskCommentTitle: "{senderName} commented on a task",
+            // BlockNote inline comment left on a task body / note, fanned out
+            // to that surface's owner + stakeholders (no @-mention needed).
+            commentTitle: "{senderName} left a comment",
             activityProjectLabel: "Project • {projectName}",
             inboxFallback: "New inbox item",
             inboxTitleNewActivity: "New activity",

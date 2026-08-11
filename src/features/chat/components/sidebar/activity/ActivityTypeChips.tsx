@@ -23,6 +23,9 @@ const CHIP_COLORS = {
     reply: { dark: "#4ade80", light: "#22c55e" },
     reaction: { dark: "#fbbf24", light: "#f59e0b" },
     mention: { dark: "#f87171", light: "#ef4444" },
+    // BlockNote inline comment left on a task body / note. Distinct violet
+    // so a comment row reads apart from a "Reply" (green) or "Mention" (red).
+    comment: { dark: "#c084fc", light: "#9333ea" },
     project: { dark: "#60a5fa", light: "#3b82f6" },
     task: { dark: "var(--gp-brand-400)", light: "var(--gp-brand-500)" },
     chatType: { dark: "#94a3b8", light: "#64748b" },
@@ -167,6 +170,12 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const isTaskBody = activity.chatType === 5;
     const isTaskNote = activity.chatType === 7;
     const isNote = activity.chatType >= 6 && activity.chatType <= 8;
+    // A BlockNote INLINE comment left on a task body / note (surface adapter
+    // sets `isComment` from `meta.isComment`). Covers both the participant
+    // fan-out (activityType 1, which the "Reply" chip below excludes) and a
+    // mention left inside a comment (activityType 3) — either way the row
+    // gets a "Comment" chip so the feed distinguishes it from a body edit.
+    const isComment = activity.isComment === true;
 
     const chatTypeLabel = isTaskComment
         ? t.chat.activity.chipTaskComment
@@ -261,6 +270,19 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     colorScheme={CHIP_COLORS.mention}
                     isDark={isDark}
                     label={t.chat.activity.chipMention}
+                    variant="filled"
+                />
+            )}
+
+            {/* Inline-comment marker — rendered alongside the mention chip
+                for a mention-in-comment, or as the sole action chip for the
+                participant fan-out row (activityType 1, which the "Reply"
+                chip above skips for surfaces 5-8). */}
+            {isComment && (
+                <ModernChip
+                    colorScheme={CHIP_COLORS.comment}
+                    isDark={isDark}
+                    label={t.chat.activity.chipComment}
                     variant="filled"
                 />
             )}

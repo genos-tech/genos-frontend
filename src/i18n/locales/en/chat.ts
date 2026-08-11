@@ -258,6 +258,9 @@ export const chat = {
         chipReaction: "Reaction",
         chipMention: "Mention",
         chipThread: "Thread",
+        // BlockNote inline comment left on a task body / note — tags both a
+        // mention-in-comment and the general participant fan-out row.
+        chipComment: "Comment",
         chipTaskBody: "Task",
         chipPersonalNote: "Note",
         chipTaskNote: "Task note",
