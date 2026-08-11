@@ -820,6 +820,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             // Explicit `0 0 auto` overrides Joy ListItemButton's default grow.
             flex: "0 0 auto",
             whiteSpace: "nowrap",
+            // Joy's ListItem sets `--ListItemButton-marginInline` to NEGATIVE
+            // padding (calc(-1 * paddingLeft) calc(-1 * paddingRight)) so a
+            // single button bleeds to the row's edges. With two buttons side
+            // by side those negative margins pull the pair into each other,
+            // overrunning the flex `gap` — that's the overlap. Reset to 0 so
+            // the gap is honoured. (This, not the flex tweak in #450, is the
+            // real fix — the negative margin was fighting the gap all along.)
+            mx: 0,
             borderRadius: "8px",
             py: 0.5,
             px: 1,
