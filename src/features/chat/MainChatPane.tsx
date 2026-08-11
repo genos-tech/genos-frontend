@@ -3,7 +3,7 @@
 // `../../`-prefixed groups (auto-fix loops between the two). Prettier
 // wins per project convention.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Box, Sheet, useColorScheme } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -13,6 +13,7 @@ import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
 import { RetentionBanner } from "./components/shared/RetentionBanner";
+import { useFirstUnreadIndex } from "./hooks/useFirstUnreadIndex";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -92,67 +93,26 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         myself,
         useCM,
     });
+    // Where to land when this chat opens: the first unread message, or `null`
+    // (bottom) when nothing's unread / never read. Frozen per chat so it
+    // doesn't recompute and re-scroll as the cursor advances while reading.
+    const firstUnreadIndex = useFirstUnreadIndex({
+        chat: useCM.currentMainChat as ChatProps | ThreadProps,
+        isThread: false,
+    });
     const scrollManagement = useScrollManagement({
         currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: false,
-        // Fed straight from Virtuoso's `rangeChanged` (throttling lives
-        // inside `handlePeriodicReadStatusUpdate`). This used to be an
-        // effect watching a `visibleRange` state value, which re-rendered
-        // this whole pane on every scroll tick.
-        onRangeChange: (range) =>
-            readStatusManagement.handlePeriodicReadStatusUpdate(range.endIndex),
+        firstUnreadIndex,
+        // Only tracks the visible range now (into `visibleRangeRef`); it no
+        // longer advances the read cursor. Virtuoso's `rangeChanged` reports
+        // the RENDERED range — which includes the 600px overscan below the
+        // fold — so driving the cursor from it marked a screenful of unseen
+        // messages read. The cursor now advances only from genuinely-seen
+        // bubbles (`onMessageSeenIndex` → `handleSeenIndex`).
+        onRangeChange: undefined,
     });
-
-    // Handle read status updates
-    useEffect(() => {
-        setTimeout(() => {
-            let targetIndex: number;
-            if (useCM.currentMainChat?.moveToSpecificIndex === undefined) {
-                targetIndex = useCM.currentMainChat?.messages?.length
-                    ? useCM.currentMainChat?.messages?.length - 1
-                    : 0;
-            } else if (
-                messageManagement.indexMap &&
-                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] !==
-                    undefined
-            ) {
-                // v3 `moveToSpecificIndex` is the message's v3 UUID,
-                // matching the bubble's `messageIdWithChatId`. The
-                // legacy `chatId === split("-")[0]` validation was
-                // for the `${chatId}-${seq}` composite key — gone
-                // now. `indexMap[uuid]` lookup is enough: a UUID in
-                // the open chat resolves; one from a different chat
-                // returns `undefined` and we fall through.
-                targetIndex = Number(
-                    messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex]
-                );
-            } else {
-                targetIndex = -1;
-            }
-
-            readStatusManagement.handleReadStatusUpdate(targetIndex);
-        }, 1000);
-        // Effect fires when `indexMap` changes — that's the resolution event
-        // we care about. Including `readStatusManagement` / the chat fields
-        // would either rerun on every render (manager rebuilt each render)
-        // or double-update when the chat reference changes.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [messageManagement.indexMap]);
-
-    useEffect(() => {
-        setTimeout(() => {
-            if (useCM.currentMainChat?.latestMessage) {
-                readStatusManagement.updateReadStatus(
-                    useCM.currentMainChat?.latestMessage.messageId
-                );
-            }
-        }, 300);
-        // Effect is keyed to the chat reference (new chat selected).
-        // `readStatusManagement` is rebuilt every render; including it
-        // would cause the timeout to chain indefinitely.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useCM.currentMainChat]);
 
     // Layout: flex column. The MessageListRenderer fills the available
     // space via `fillContainer` (Virtuoso uses flex: 1, minHeight: 0),
@@ -244,6 +204,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             <MessageListRenderer
                                 chat={useCM.currentMainChat as ChatProps | ThreadProps}
                                 currentChatId={currentMainChatId}
+                                firstUnreadIndex={firstUnreadIndex}
                                 height={0}
                                 indexMap={messageManagement.indexMap}
                                 isThread={false}
@@ -264,6 +225,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                                 fillContainer
+                                onMessageSeenIndex={readStatusManagement.handleSeenIndex}
                                 onRangeChanged={scrollManagement.handleRangeChanged}
                             />
 

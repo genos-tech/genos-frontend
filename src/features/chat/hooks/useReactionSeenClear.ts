@@ -54,6 +54,13 @@ const SEEN_THRESHOLD = 0.01;
 interface UseReactionSeenClearParams {
     useCM: ChatManagementState;
     isThread: boolean;
+    // Optional per-row "this bubble was actually seen" signal. Invoked with the
+    // row's `data-msg-key` (the v3 message UUID) the moment a row crosses into
+    // the scroller viewport — the SAME true-seen event this hook already uses to
+    // clear reaction activities, reused to advance the read cursor precisely
+    // (see `useReadStatusManagement.handleSeenIndex`). Kept optional so the
+    // reaction-clear behaviour stands alone if a host doesn't wire read-status.
+    onMessageSeen?: (messageUuid: string) => void;
 }
 
 interface UseReactionSeenClearResult {
@@ -70,8 +77,14 @@ interface UseReactionSeenClearResult {
 export const useReactionSeenClear = ({
     useCM,
     isThread,
+    onMessageSeen,
 }: UseReactionSeenClearParams): UseReactionSeenClearResult => {
     const { markFilteredAsRead } = useMarkFilteredActivityRead({ useCM });
+
+    // Held in a ref so the stable observer closure always calls the latest
+    // callback without being rebuilt (same pattern as `onSeenRef` below).
+    const onMessageSeenRef = useRef(onMessageSeen);
+    onMessageSeenRef.current = onMessageSeen;
 
     // messageUUID → [unread reaction activityId]. Rebuilt only when the
     // activity store changes, never on scroll.
@@ -188,7 +201,15 @@ export const useReactionSeenClear = ({
                     }
                     visibleRowsRef.current.add(target);
                     const key = target.dataset.msgKey;
-                    if (key) onSeenRef.current(key);
+                    if (key) {
+                        onSeenRef.current(key);
+                        // Advance the read cursor for this genuinely-seen row.
+                        // Only fired here (real viewport entry), never in the
+                        // index-rebuild replay below — that replay exists to
+                        // clear reactions on already-visible bubbles and must
+                        // not re-mark rows the cursor already passed.
+                        onMessageSeenRef.current?.(key);
+                    }
                 }
             },
             { root: el, threshold: SEEN_THRESHOLD }

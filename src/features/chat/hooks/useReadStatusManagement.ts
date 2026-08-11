@@ -1,8 +1,8 @@
 /**
- * Read-status throttling + advance hook.
+ * Read-status advance hook.
  *
- * Forwards "last visible bubble" to the server as the read cursor for
- * the open chat. Replaces the legacy chain
+ * Forwards the newest SEEN bubble to the server as the read cursor for the
+ * open chat. Replaces the legacy chain
  * (`chatChannel.request("updateReadStatus", ...)` → axios PUT
  * `/api/v2/chat/read/` with integer chat_id) with a single
  * `channelService.markRead(channelUuid, messageUuid)` emit on the
@@ -15,10 +15,25 @@
  *      in the snapshot, which the chat-list hook reads to recompute
  *      the unread badge.
  *
- * Throttle is unchanged — fast scrolls debounce so we don't flood the
- * socket with one emit per pixel.
+ * ADVANCE-BY-SEEN, NOT BY-RANGE. The cursor used to be driven by Virtuoso's
+ * `rangeChanged.endIndex`, but that range spans the RENDERED rows — including
+ * the ~600px `increaseViewportBy` overscan below the fold — so it marked a
+ * dozen never-seen messages read. Opening a chat then landing at the first
+ * unread message (see `useFirstUnreadIndex`) would immediately mark the
+ * overscan below it read: the very bug this feature exists to kill, just
+ * smaller. Now `handleSeenIndex` is fed by the per-bubble IntersectionObserver
+ * in `useReactionSeenClear` (rooted on the scroller, overscan excluded), so
+ * only bubbles that actually crossed the viewport advance the cursor.
+ *
+ * THROTTLE (trailing, to the max). The observer fires discrete "row seen"
+ * events, not a continuous stream, so a plain leading-throttle would keep the
+ * first index of a burst and DROP the higher ones (they never re-fire once
+ * entered) — the cursor would stick below the visible screenful until the next
+ * scroll. Instead we track the maximum seen index and flush THAT on the
+ * trailing edge of the window (one `markRead` per burst, mirroring the
+ * `useReactionSeenClear` flush precedent: 500ms main / 1000ms thread).
  */
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
@@ -46,13 +61,40 @@ export const useReadStatusManagement = ({
     currentChat,
     isThread = false,
 }: UseReadStatusManagementProps) => {
-    // Promoted from `useState` to `useRef`: these are throttle bookkeeping
-    // that's read by the next scroll handler and never rendered. Keeping
-    // them in state caused a re-render after every accepted tick — i.e.
-    // every 500 ms while the user scrolls — which cascades through the
-    // bubble list. Refs avoid that without affecting throttle behaviour.
-    const tsLastReadStatusUpdatedRef = useRef<number>(Date.now());
+    // Throttle bookkeeping, kept in refs (never rendered): a state write here
+    // re-rendered after every accepted tick — every 500 ms while scrolling —
+    // cascading through the bubble list. Refs keep it off the hot path.
+    //
+    // `indexLastReadStatusUpdatedRef` is the forward-only high-water mark: the
+    // highest index the cursor has been advanced to. Seen events at or below
+    // it are ignored (the cursor can't go backwards).
     const indexLastReadStatusUpdatedRef = useRef<number>(-1);
+    // Highest index seen but not yet flushed, and the trailing-flush timer.
+    const pendingMaxIndexRef = useRef<number>(-1);
+    const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Reset the forward-only high-water mark when the chat changes. This hook
+    // instance is NOT remounted per chat (the pane persists across switches),
+    // so without this the mark leaks: after reading to index 80 in chat A,
+    // opening chat B would ignore every seen event ≤ 80 and never advance B's
+    // cursor until the reader scrolled past index 80. The removed
+    // mark-to-latest-on-open effects used to reset it as a side effect; this
+    // makes the reset explicit. Done in render (ref compare) so it lands
+    // before the observer's first async "seen" callback for the new chat.
+    const lastChatKeyRef = useRef<string | null>(null);
+    const chatKey =
+        isThread && (currentChat as ThreadProps).threadId != null
+            ? `${currentChat.chatId}:${(currentChat as ThreadProps).threadId}`
+            : String(currentChat.chatId);
+    if (lastChatKeyRef.current !== chatKey) {
+        lastChatKeyRef.current = chatKey;
+        indexLastReadStatusUpdatedRef.current = -1;
+        pendingMaxIndexRef.current = -1;
+        if (flushTimerRef.current != null) {
+            clearTimeout(flushTimerRef.current);
+            flushTimerRef.current = null;
+        }
+    }
 
     // v3 markRead takes the v3 message UUID. The legacy → v3 adapters
     // store the UUID under different field names by chat kind:
@@ -113,31 +155,47 @@ export const useReadStatusManagement = ({
         void channelService.markRead(channelUuidRaw, messageUuid, threadRootId).catch(() => {});
     };
 
-    const handleReadStatusUpdate = (targetIndex: number) => {
-        if (targetIndex !== -1) {
-            updateReadStatus(targetIndex);
-            indexLastReadStatusUpdatedRef.current = targetIndex;
-            tsLastReadStatusUpdatedRef.current = Date.now();
+    const flushSeen = () => {
+        flushTimerRef.current = null;
+        const idx = pendingMaxIndexRef.current;
+        pendingMaxIndexRef.current = -1;
+        // Re-check against the high-water mark in case it advanced between the
+        // last seen event and this flush (it can't regress, so this only
+        // guards a no-op).
+        if (idx > indexLastReadStatusUpdatedRef.current) {
+            updateReadStatus(idx);
+            indexLastReadStatusUpdatedRef.current = idx;
         }
     };
 
-    const handlePeriodicReadStatusUpdate = (visibleRangeEnd: number) => {
-        const intervalMs = isThread ? THREAD_THROTTLE_MS : MAIN_THROTTLE_MS;
-        const now = Date.now();
-        if (
-            now - tsLastReadStatusUpdatedRef.current >= intervalMs &&
-            visibleRangeEnd > indexLastReadStatusUpdatedRef.current
-        ) {
-            updateReadStatus(visibleRangeEnd);
-            tsLastReadStatusUpdatedRef.current = now;
-            indexLastReadStatusUpdatedRef.current = visibleRangeEnd;
+    // Called by the per-bubble seen-observer for each row that crosses the
+    // viewport. Records the highest index seen and flushes it on the trailing
+    // edge of the throttle window. Forward-only: an index at or below the
+    // high-water mark (scrolling back up over already-read messages) is
+    // ignored, so the cursor never regresses.
+    const handleSeenIndex = (index: number) => {
+        if (index <= indexLastReadStatusUpdatedRef.current) return;
+        if (index > pendingMaxIndexRef.current) pendingMaxIndexRef.current = index;
+        if (flushTimerRef.current == null) {
+            const intervalMs = isThread ? THREAD_THROTTLE_MS : MAIN_THROTTLE_MS;
+            flushTimerRef.current = setTimeout(flushSeen, intervalMs);
         }
     };
+
+    // Drop any armed flush on unmount so it can't fire against a torn-down
+    // pane (mirrors the same guard in `useReactionSeenClear`).
+    useEffect(() => {
+        return () => {
+            if (flushTimerRef.current != null) {
+                clearTimeout(flushTimerRef.current);
+                flushTimerRef.current = null;
+            }
+        };
+    }, []);
 
     // Keys sorted alphabetically per `sort-keys`.
     return {
-        handlePeriodicReadStatusUpdate,
-        handleReadStatusUpdate,
+        handleSeenIndex,
         updateReadStatus,
     };
 };

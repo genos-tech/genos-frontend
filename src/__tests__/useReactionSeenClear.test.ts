@@ -532,4 +532,111 @@ describe("useReactionSeenClear", () => {
         act(() => vi.advanceTimersByTime(500));
         expect(markFilteredAsRead).not.toHaveBeenCalled();
     });
+
+    // ---- onMessageSeen: the read-cursor signal ---------------------------
+    // The same true-seen event that clears reactions is also forwarded to
+    // read-status (`onMessageSeen` → the pane's `handleSeenIndex`). These
+    // prove it fires on genuine viewport entry, unconditionally (a plain
+    // message with no reaction still advances the cursor), never for overscan
+    // rows, and never from the reaction-only index-rebuild replay.
+    describe("onMessageSeen", () => {
+        it("fires with the row key when a bubble genuinely enters the viewport", () => {
+            const onMessageSeen = vi.fn();
+            const { result } = renderHook(() =>
+                useReactionSeenClear({ isThread: false, onMessageSeen, useCM: cm([]) })
+            );
+            const scroller = document.createElement("div");
+            const rowEl = row("m1");
+            act(() => {
+                result.current.registerScroller(scroller);
+                result.current.rowRef(rowEl);
+            });
+
+            // A bare message with NO unread reaction: reaction-clear stays
+            // silent, but the cursor signal still fires (it's unconditional —
+            // seeing any bubble advances read status).
+            act(() =>
+                MockIntersectionObserver.latest().fire([{ target: rowEl, isIntersecting: true }])
+            );
+            expect(onMessageSeen).toHaveBeenCalledTimes(1);
+            expect(onMessageSeen).toHaveBeenCalledWith("m1");
+            expect(markFilteredAsRead).not.toHaveBeenCalled();
+        });
+
+        it("does NOT fire for a non-intersecting (overscan-mounted) row", () => {
+            const onMessageSeen = vi.fn();
+            const { result } = renderHook(() =>
+                useReactionSeenClear({ isThread: false, onMessageSeen, useCM: cm([]) })
+            );
+            const scroller = document.createElement("div");
+            const rowEl = row("m1");
+            act(() => {
+                result.current.registerScroller(scroller);
+                result.current.rowRef(rowEl);
+            });
+            act(() =>
+                MockIntersectionObserver.latest().fire([{ target: rowEl, isIntersecting: false }])
+            );
+            expect(onMessageSeen).not.toHaveBeenCalled();
+        });
+
+        it("does NOT fire from the reaction index-rebuild replay", () => {
+            // The store-change replay exists to clear reactions on bubbles that
+            // are ALREADY on screen; it must not re-advance the read cursor
+            // (those rows were seen — and marked read — on their real entry).
+            // Verify the replay path drives reaction clearing but leaves the
+            // cursor signal untouched.
+            const onMessageSeen = vi.fn();
+            const { result, rerender } = renderHook(
+                ({ store }: { store: ActivityMessageProps[] }) =>
+                    useReactionSeenClear({ isThread: false, onMessageSeen, useCM: cm(store) }),
+                { initialProps: { store: [] as ActivityMessageProps[] } }
+            );
+            const scroller = document.createElement("div");
+            const rowEl = row("m1");
+            act(() => {
+                result.current.registerScroller(scroller);
+                result.current.rowRef(rowEl);
+            });
+            // Real entry: cursor signal fires once.
+            act(() =>
+                MockIntersectionObserver.latest().fire([{ target: rowEl, isIntersecting: true }])
+            );
+            expect(onMessageSeen).toHaveBeenCalledTimes(1);
+            onMessageSeen.mockClear();
+
+            // A reaction now lands on the still-visible bubble (store update →
+            // index rebuild + replay). Reaction clears, but the cursor signal
+            // must NOT fire again from the replay.
+            act(() =>
+                rerender({ store: [reaction({ activityId: "r1", messageUniqueKey: "m1" })] })
+            );
+            act(() => vi.advanceTimersByTime(500));
+            expect(markFilteredAsRead).toHaveBeenCalledTimes(1);
+            expect(onMessageSeen).not.toHaveBeenCalled();
+        });
+
+        it("fires once per row across a multi-row burst", () => {
+            const onMessageSeen = vi.fn();
+            const { result } = renderHook(() =>
+                useReactionSeenClear({ isThread: false, onMessageSeen, useCM: cm([]) })
+            );
+            const scroller = document.createElement("div");
+            const a = row("m1");
+            const b = row("m2");
+            act(() => {
+                result.current.registerScroller(scroller);
+                result.current.rowRef(a);
+                result.current.rowRef(b);
+            });
+            act(() => {
+                const io = MockIntersectionObserver.latest();
+                io.fire([
+                    { target: a, isIntersecting: true },
+                    { target: b, isIntersecting: true },
+                ]);
+            });
+            expect(onMessageSeen.mock.calls.map((c) => c[0]).sort()).toEqual(["m1", "m2"]);
+        });
+    });
 });

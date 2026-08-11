@@ -38,9 +38,21 @@ interface MessageListRendererProps {
     setMyself: (value: UserProps) => void;
     useUISM: UIStateManagementState;
     /** Stable `rangeChanged` sink from `useScrollManagement` — writes the
-     * pane's `visibleRangeRef` and forwards to read-status. Deliberately
-     * not React state: see the note in that hook. */
+     * pane's `visibleRangeRef`. Deliberately not React state: see the note in
+     * that hook. No longer advances the read cursor (that's `onMessageSeenIndex`
+     * now — the range spans the overscan, so it marked unseen rows read). */
     onRangeChanged: (range: VisibleRange) => void;
+    /** Index to land on when the pane opens, or `null`/omitted to land at the
+     * bottom (Virtuoso's default). Set to the first unread message so opening a
+     * channel with unread history doesn't shove the cursor to the newest
+     * message. Only read at MOUNT (via `initialTopMostItemIndex`); the Virtuoso
+     * remount key makes each chat switch a fresh mount. See `useFirstUnreadIndex`. */
+    firstUnreadIndex?: number | null;
+    /** Per-row "this bubble was genuinely seen" sink → advances the read cursor
+     * precisely (`useReadStatusManagement.handleSeenIndex`). Fired from the
+     * reaction-seen IntersectionObserver, so overscan rows never count. Receives
+     * the row's array index (resolved from its v3 UUID via `indexMap`). */
+    onMessageSeenIndex?: (index: number) => void;
     socket: Socket | null;
     useTEM: TeamManagementState;
     visibleRangeRef: React.RefObject<VisibleRange>;
@@ -125,6 +137,8 @@ export const MessageListRenderer = ({
     setMyself,
     useUISM,
     onRangeChanged,
+    firstUnreadIndex,
+    onMessageSeenIndex,
     socket,
     useTEM,
     visibleRangeRef,
@@ -151,7 +165,8 @@ export const MessageListRenderer = ({
         messages.length - 1,
         indexMap,
         chat.moveToSpecificIndex,
-        chat.notMove
+        chat.notMove,
+        firstUnreadIndex
     );
 
     const { mode } = useColorScheme();
@@ -181,14 +196,35 @@ export const MessageListRenderer = ({
     // perturbs Virtuoso's scrolling. See the hook for detail.
     const { scrollerRefCallback, thumbRef } = useScrollIndicator();
 
+    // Resolve a genuinely-seen row (`data-msg-key`) to its array index and
+    // forward it to read-status. Held in refs so the callback stays a single
+    // stable identity for the pane's life (it feeds the reaction-seen observer,
+    // which must not be rebuilt on every render). `indexMap` is keyed by the v3
+    // UUID → index; a row without a UUID (optimistic echo, legacy row) carries a
+    // `seq:` key that isn't in the map and resolves to `undefined`, so it's
+    // skipped — it can't be a real cursor position anyway.
+    const indexMapRef = useRef(indexMap);
+    indexMapRef.current = indexMap;
+    const onMessageSeenIndexRef = useRef(onMessageSeenIndex);
+    onMessageSeenIndexRef.current = onMessageSeenIndex;
+    const handleMessageSeen = useCallback((messageKey: string) => {
+        const forward = onMessageSeenIndexRef.current;
+        if (!forward) return;
+        const index = indexMapRef.current?.[messageKey];
+        if (typeof index === "number") forward(index);
+    }, []);
+
     // Clear REACTION sidebar activities when the reacted-to bubble is
     // actually scrolled into view — the read cursor can't (it's forward-only
     // and reactions point back at old messages). Renderer-level so all three
     // chat panes (main / sub / thread) get it for free. Both handles are
     // imperative (IntersectionObserver rooted on the scroller + a ref
-    // callback per row); neither re-renders the list on scroll.
+    // callback per row); neither re-renders the list on scroll. The same
+    // true-seen signal also advances the read cursor precisely (`onMessageSeen`
+    // → `handleMessageSeen` → the pane's `handleSeenIndex`).
     const { registerScroller, rowRef } = useReactionSeenClear({
         isThread,
+        onMessageSeen: handleMessageSeen,
         useCM,
     });
 
@@ -499,6 +535,23 @@ export const MessageListRenderer = ({
     // Same-chat updates (arrivals, edits, reactions) don't change the
     // key, so the reader's scroll position is preserved for those.
     // (`chatIdentityKey` is computed near the top of this component.)
+    //
+    // `hasRows` is folded into the key too, so a Virtuoso that mounted
+    // EMPTY remounts the moment its messages land. This only bites a slow
+    // cold sync: if a channel's history takes longer than `SKELETON_MAX_MS`
+    // to arrive, the skeleton backstop expires and Virtuoso mounts with
+    // `totalCount = 0`. `initialTopMostItemIndex` is mount-only AND
+    // `firstUnreadIndex` isn't knowable until messages exist (it freezes on
+    // the first non-empty render — see `useFirstUnreadIndex`), so that empty
+    // mount bakes in `{ index: "LAST" }`. When the rows then arrive with no
+    // remount, Virtuoso is already parked at the bottom and the seen-observer
+    // marks the whole backlog read — the exact bug this feature fixes, just
+    // triggered by sync latency instead of the range. Keying on `hasRows`
+    // forces the empty→populated transition to remount, re-evaluating
+    // `initialTopMostItemIndex` against the now-frozen first-unread index.
+    // Warm chats have rows on their first render, so they mount populated
+    // once and this never fires for them.
+    const hasRows = messages.length > 0;
 
     if (showSkeleton) {
         return (
@@ -511,31 +564,35 @@ export const MessageListRenderer = ({
     return (
         <Box sx={wrapperSx}>
             <Virtuoso
-                key={`${bubbleStyle}:${chatIdentityKey}`}
+                key={`${bubbleStyle}:${chatIdentityKey}:${hasRows}`}
                 ref={virtuosoRef}
                 atBottomThreshold={128}
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                defaultItemHeight={
-                    isCompact ? ESTIMATED_ITEM_HEIGHT_COMPACT_PX : ESTIMATED_ITEM_HEIGHT_FULL_PX
-                }
                 followOutput={followOutput}
                 increaseViewportBy={{ bottom: OVERSCAN_PX, top: OVERSCAN_PX }}
-                initialTopMostItemIndex={{ align: "end", index: "LAST" }}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
                 rangeChanged={onRangeChanged}
                 scrollerRef={handleScrollerRef}
                 style={virtuosoStyle}
                 totalCount={messages.length}
+                defaultItemHeight={
+                    isCompact ? ESTIMATED_ITEM_HEIGHT_COMPACT_PX : ESTIMATED_ITEM_HEIGHT_FULL_PX
+                }
+                initialTopMostItemIndex={
+                    firstUnreadIndex != null
+                        ? { align: "start", index: firstUnreadIndex }
+                        : { align: "end", index: "LAST" }
+                }
             />
             {/* Custom scroll-position indicator (touch devices only — the
                 hook no-ops on fine-pointer desktop). Absolutely positioned
                 against the `position: relative` wrapper; `pointer-events:
                 none` so it never intercepts touch/taps. Driven imperatively
                 via `thumbRef` — starts at opacity 0 until the hook measures. */}
-            <div className="chat-scroll-indicator" ref={thumbRef} />
+            <div ref={thumbRef} className="chat-scroll-indicator" />
         </Box>
     );
 };
