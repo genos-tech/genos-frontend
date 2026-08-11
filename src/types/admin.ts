@@ -49,6 +49,14 @@ export type UserProps = {
      *  `useReportBrowserTimezone`, so it tracks where someone actually
      *  is; used for local time only when they haven't picked a location. */
     timezone?: string;
+    /** Whether this person shares their location. `false` = they opted out,
+     *  so the server has already blanked `currentLocation`/`timezone` for
+     *  everyone but themselves — the flag only reaches the client so the
+     *  profile editor can show the toggle in the right state on the OWNER's
+     *  own card. Absent on cached/pre-feature rows; treat that as shared
+     *  (the server default), matching how the field is only ever read on the
+     *  self-view. See `CustomUser.location_shared` server-side. */
+    locationShared?: boolean;
     /** Free-text self-introduction, rendered as restricted markdown by
      *  `ProfileMarkdown`. Capped at 500 characters server-side. */
     aboutMe?: string;
@@ -106,6 +114,9 @@ export type SignInResponse = {
     base_country: string;
     phone_number: string;
     current_location: string;
+    // Opt-out for showing location to others; hydrates the profile toggle.
+    // Optional so a server that predates the field doesn't break parsing.
+    location_shared?: boolean;
     about_me: string;
     ts_joined_at: string;
 };

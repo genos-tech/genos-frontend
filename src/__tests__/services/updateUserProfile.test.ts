@@ -68,3 +68,43 @@ describe("updateUserProfile — custom_status_expiry", () => {
         expect(payload.is_offline_forced).toBe(true);
     });
 });
+
+describe("updateUserProfile — location_shared", () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it("sends location_shared:false when the user opts out", async () => {
+        const put = vi.fn().mockResolvedValue({ data: {} });
+        asMock(authApi).mockReturnValue({ put });
+
+        await updateUserProfile({ accessToken: "tok", userId: "u1", locationShared: false });
+
+        const payload = putPayload(put);
+        // Must be present with the boolean — false is the meaningful value.
+        expect("location_shared" in payload).toBe(true);
+        expect(payload.location_shared).toBe(false);
+    });
+
+    it("sends location_shared:true when re-sharing", async () => {
+        const put = vi.fn().mockResolvedValue({ data: {} });
+        asMock(authApi).mockReturnValue({ put });
+
+        await updateUserProfile({ accessToken: "tok", userId: "u1", locationShared: true });
+
+        expect(putPayload(put).location_shared).toBe(true);
+    });
+
+    it("omits location_shared when the field is not supplied", async () => {
+        const put = vi.fn().mockResolvedValue({ data: {} });
+        asMock(authApi).mockReturnValue({ put });
+
+        await updateUserProfile({
+            accessToken: "tok",
+            userId: "u1",
+            currentLocation: "Asia/Tokyo",
+        });
+
+        const payload = putPayload(put);
+        expect("location_shared" in payload).toBe(false);
+        expect(payload.current_location).toBe("Asia/Tokyo");
+    });
+});

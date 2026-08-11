@@ -20,6 +20,9 @@ type updateUserProfileProps = {
     /** An IANA zone name, or `""` to clear it. The server rejects
      *  anything `zoneinfo` doesn't recognise. */
     currentLocation?: string;
+    /** Opt-out for showing location to others. `false` hides `currentLocation`/
+     *  `timezone` from teammates (never from the owner); `true` re-shares. */
+    locationShared?: boolean;
     aboutMe?: string;
     setErrorMessage?: (value: string) => void;
 };
@@ -35,6 +38,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
         baseCountry,
         phoneNumber,
         currentLocation,
+        locationShared,
         aboutMe,
         setErrorMessage,
     } = props;
@@ -63,6 +67,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             if (baseCountry !== undefined) payload.base_country = baseCountry;
             if (phoneNumber !== undefined) payload.phone_number = phoneNumber;
             if (currentLocation !== undefined) payload.current_location = currentLocation;
+            if (locationShared !== undefined) payload.location_shared = locationShared;
             if (aboutMe !== undefined) payload.about_me = aboutMe;
 
             const res = await api.put("/user/profile/", payload);

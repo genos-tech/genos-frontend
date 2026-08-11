@@ -22,6 +22,9 @@ interface MeResponse {
     base_country: string | null;
     phone_number: string | null;
     current_location: string | null;
+    // Opt-out for showing location to others; optional so an older server
+    // that omits it doesn't break parsing (treated as shared).
+    location_shared?: boolean;
     about_me: string | null;
     ts_created_at: string;
 }
@@ -117,6 +120,10 @@ export const OAuthSuccessHandler = () => {
                 localStorage.setItem("baseCountry", me.base_country || "");
                 localStorage.setItem("phoneNumber", me.phone_number || "");
                 localStorage.setItem("currentLocation", me.current_location || "");
+                localStorage.setItem(
+                    "locationShared",
+                    me.location_shared === false ? "false" : "true"
+                );
                 localStorage.setItem("aboutMe", me.about_me || "");
                 localStorage.setItem("customStatus", me.custom_status || "");
                 localStorage.setItem("userEmail", me.email || "");

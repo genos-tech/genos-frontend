@@ -35,6 +35,7 @@ export const AUTH_LOCAL_STORAGE_KEYS = [
     "baseCountry",
     "phoneNumber",
     "currentLocation",
+    "locationShared",
     "aboutMe",
     "customStatus",
     "teamName",
