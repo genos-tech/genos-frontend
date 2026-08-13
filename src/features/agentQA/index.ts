@@ -20,7 +20,8 @@ export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export { sessionTurnToCompleted } from "./sessionTurns";
 export { SourceChips } from "./SourceChips";
-export { formatDurationMs, humanReadableCall, ToolProgressList } from "./ToolProgressList";
+export { formatDurationMs, ToolProgressList } from "./ToolProgressList";
+export { getToolLabel } from "./toolLabels";
 export { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";
 export { MentionSuggestionDropdown } from "./mentions/MentionSuggestionDropdown";
 export {

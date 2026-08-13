@@ -15,9 +15,12 @@
 
 import type { FC } from "react";
 
+import { AddCommentPreview } from "./AddCommentPreview";
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
+import { CreateTaskPreview } from "./CreateTaskPreview";
 import { NoteWritePreview } from "./NoteWritePreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
+import { UpdateTaskPreview } from "./UpdateTaskPreview";
 
 export interface ApprovalPreviewProps {
     args: Record<string, unknown>;
@@ -25,8 +28,11 @@ export interface ApprovalPreviewProps {
 }
 
 const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
+    create_task: CreateTaskPreview,
     create_task_plan: TaskPlanPreview,
+    update_task: UpdateTaskPreview,
     update_tasks_bulk: BulkUpdatePreview,
+    add_comment: AddCommentPreview,
     // One component for both note writes — it branches on the presence
     // of `note_id` in the args (only updates have one).
     create_note: NoteWritePreview,
