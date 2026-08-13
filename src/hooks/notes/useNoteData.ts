@@ -274,26 +274,45 @@ export const upsertNoteCache = (note: ResolvedNote): void => {
     writeCache(`${noteCacheKind(note.noteType)}-${note.noteId}`, note);
 };
 
+// Server-side modification time in ms, for ordering two copies of a note.
+// A missing or unparseable stamp sorts oldest, which makes the comparison
+// below degrade to "the copy already in the cache wins".
+const updatedAtMs = (note: ResolvedNote): number => {
+    const parsed = Date.parse(note.tsUpdated ?? "");
+    return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 // Read-through fill: seed the cache from a note we just READ out of
-// IndexedDB or the backend, WITHOUT displacing an entry that is already
-// there. Returns whichever note now holds the cache, so callers keep
-// using the winner rather than the copy they read.
+// IndexedDB or the backend, without letting that read undo a NEWER copy.
+// Returns whichever note now holds the cache, so callers keep using the
+// winner rather than the copy they read.
 //
 // Reads are stale by the time they resolve — they're async (IDB goes
 // through a worker), so a save that landed while the read was in flight
-// has ALREADY published a newer note here. Overwriting it would push the
+// has ALREADY published its note here. Blindly overwriting would push the
 // pre-save title back into every mounted panel through the subscriber
 // above, and that panel's next autosave would then PUT the old title over
 // the save. This is the "note title reverts to the default" bug: the
 // reader's title input went stale while the tab label and sidebar (which
 // these read paths never touch) kept the correct title.
 //
-// So the in-memory cache is the newest client tier and a read never wins
-// against it; only `upsertNoteCache` may replace an entry.
+// Recency is decided by `tsUpdated`, and a TIE keeps the existing entry.
+// That tie is what protects the rename: `saveNote` publishes the note
+// object it PUT, which still carries the pre-save `tsUpdated`, so a read
+// that started before that save carries the same stamp and loses.
+//
+// Ordering by the stamp rather than by "reads always lose" matters because
+// nothing evicts this cache — `removeFromNoteCache`/`clearNoteCache` have
+// no production callers, and an entry can be seeded from a stale tier
+// (tab rehydrate reads IndexedDB rows that outlive the session). With
+// reads unable to win outright, a rename made in ANOTHER session had no
+// way in: the panel would display the superseded title and its next
+// autosave would PUT it back, destroying that rename. A strictly newer
+// server row is the truth and must be allowed to land.
 export const fillNoteCache = <T extends ResolvedNote>(note: T): T => {
     const key = `${noteCacheKind(note.noteType)}-${note.noteId}`;
     const existing = cache.get(key) as T | undefined;
-    if (existing) return existing;
+    if (existing && updatedAtMs(existing) >= updatedAtMs(note)) return existing;
     writeCache(key, note);
     return note;
 };
@@ -310,9 +329,10 @@ export const fillNoteCache = <T extends ResolvedNote>(note: T): T => {
 // hands back: the same "title reverts to the default" report, one reload
 // later.
 //
-// If the cache already holds a copy, that copy came from a mutation
-// (`upsertNoteCache`), and mutations write IndexedDB themselves — so
-// skipping the mirror here loses nothing.
+// When the cache's copy wins, the mirror is skipped: that copy is either a
+// mutation (and mutations write IndexedDB themselves, see `saveNote`) or a
+// read that already mirrored itself when it landed. Either way the row we
+// just read is the older one and must not overwrite it.
 export const cacheFetchedNote = <T extends ResolvedNote>(note: T): T => {
     const effective = fillNoteCache(note);
     if (effective === note) {

@@ -45,7 +45,7 @@ const mockedLoad = vi.mocked(loadChatNotesByChatId);
 
 const myself = { teamId: "team-1", userId: "u1" } as never;
 
-const chatNote = (title: string): ChatNoteProps =>
+const chatNote = (title: string, tsUpdated?: string): ChatNoteProps =>
     ({
         noteType: 3,
         noteId: 5,
@@ -55,6 +55,7 @@ const chatNote = (title: string): ChatNoteProps =>
         threadId: 0,
         title,
         body: [],
+        ...(tsUpdated ? { tsUpdated } : {}),
     }) as unknown as ChatNoteProps;
 
 const renderPanel = () => renderHook(() => useChatPanelNote({ myself, accessToken: "token" }));
@@ -128,6 +129,29 @@ describe("chat-page note panel title convergence", () => {
         // The stale read must not win, in the panel or in the cache.
         expect(panel.result.current.note?.title).toBe("Renamed While Opening");
         expect(getCachedNote("chat", 5)?.title).toBe("Renamed While Opening");
+    });
+
+    // The panel unconditionally GETs a fresh row on every open, so it is the
+    // one surface that can learn about a rename made in ANOTHER session (there
+    // is no socket event for note renames). Publishing that read through the
+    // cache must not throw it away: a cache entry can be seeded on boot from
+    // an IndexedDB row that outlived the session, and nothing evicts it. If
+    // the stale entry won, this panel would display the superseded title and
+    // its next body autosave would PUT it back over the other session's
+    // rename.
+    it("adopts a rename made in another session over a stale cached entry", async () => {
+        // Boot state: tab rehydrate seeded the cache from an old IndexedDB row.
+        upsertNoteCache(chatNote("Team Sync", "2026-08-13T09:00:00Z") as unknown as ResolvedNote);
+        // Meanwhile someone else renamed it; the GET returns the newer row.
+        mockedLoad.mockResolvedValue([chatNote("Team Sync Q3", "2026-08-13T10:00:00Z")] as never);
+
+        const panel = renderPanel();
+        await act(async () => {
+            await panel.result.current.openOrCreate(1, 2, false, 0);
+        });
+
+        expect(panel.result.current.note?.title).toBe("Team Sync Q3");
+        expect(getCachedNote("chat", 5)?.title).toBe("Team Sync Q3");
     });
 
     it("stops adopting writes once the note is closed", async () => {
