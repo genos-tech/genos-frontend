@@ -246,6 +246,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         return subscribeToNote(key, (updated) => {
             setNote(updated as T);
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab?.id]);
 
     const update = useCallback(

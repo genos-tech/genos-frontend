@@ -2,7 +2,6 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNoteEditorCore } from "../features/notes/common/hooks/useNoteEditorCore";
-// eslint-disable-next-line import/first
 import { saveNote } from "../features/notes/common/services/saveNote";
 import { clearNoteCache, upsertNoteCache, useNoteData } from "../hooks/notes/useNoteData";
 
@@ -60,7 +59,6 @@ describe("useNoteData reactive cache", () => {
         clearNoteCache();
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const taskTab = {
         id: "task-1",
         kind: "task",
