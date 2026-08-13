@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
+import { getCachedNote, noteCacheKind } from "../../../../hooks/notes/useNoteData";
 import { UserProps } from "../../../../types/admin";
 import { EditableNote, saveNote } from "../services/saveNote";
 
@@ -83,7 +84,6 @@ export function useNoteEditorCore<T extends EditableNote>({
     onNoteUpdate,
     resyncSignal,
 }: UseNoteEditorCoreProps<T>): UseNoteEditorCoreReturn {
-    const [title, setTitle] = useState<string>(currentNote?.title ?? "");
     const [body, setBody] = useState<PartialBlock[] | undefined>(
         currentNote?.body as PartialBlock[] | undefined
     );
@@ -91,48 +91,52 @@ export function useNoteEditorCore<T extends EditableNote>({
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
-    // True once the user edits THIS panel's title and until that edit is
-    // persisted. While set, an external title change is NOT allowed to
-    // overwrite the in-progress local rename.
-    const titleDirtyRef = useRef(false);
+    // ## Title: one authority, plus an overlay while renaming
+    //
+    // `currentNote.title` is the authority — it comes from the reactive
+    // `useNoteData` cache, which every persisted edit writes (see
+    // `saveNote`). `pendingTitle` holds the user's in-progress rename in
+    // THIS panel and nothing else, so the displayed title is otherwise
+    // DERIVED and cannot drift from the note.
+    //
+    // This used to be a permanent local copy, reconciled against the
+    // note's title on every render. That reconciliation could get stuck:
+    // it recorded "I have already seen this external title" even on the
+    // renders where it declined to adopt it (while the local title was
+    // dirty), so a title skipped once was never retried. The panel then
+    // displayed the old title indefinitely and its next body autosave PUT
+    // that stale title back over the rename — the "note title reverts to
+    // the default" bug, seen when the same note is open in two mounted
+    // panels at once (the task/chat-page inline editor plus the
+    // notes-home LRU pool panel, which stays mounted because NoteHome is
+    // kept-alive). Deriving the value makes that state unreachable.
+    const [pendingTitle, setPendingTitle] = useState<string | null>(null);
+    const title = pendingTitle ?? currentNote?.title ?? "";
 
     const identityKey = identityOf(currentNote, resyncSignal);
     const [syncedIdentityKey, setSyncedIdentityKey] = useState<string>(identityKey);
 
-    // Tracks the `currentNote.title` we last reconciled against so a title
-    // changed on another surface — another mounted panel, or the isolated
-    // chat-page panel, whose save wrote the now-reactive `useNoteData`
-    // cache — is detected and adopted here without an effect.
-    const externalTitle = currentNote?.title ?? "";
-    const [syncedTitle, setSyncedTitle] = useState<string>(externalTitle);
-
     if (syncedIdentityKey !== identityKey) {
-        // Note identity changed (tab switch / restore): full re-sync of
-        // both title and body from the new note.
+        // Note identity changed (tab switch / restore): abandon any
+        // in-progress rename and re-seed the body from the new note. The
+        // title needs no re-seeding — it is derived from `currentNote`.
         setSyncedIdentityKey(identityKey);
-        setSyncedTitle(externalTitle);
-        titleDirtyRef.current = false;
-        if (currentNote) {
-            setTitle(currentNote.title);
-            setBody(currentNote.body as PartialBlock[]);
-        } else {
-            setTitle("");
-            setBody(undefined);
-        }
+        setPendingTitle(null);
+        setBody(currentNote ? (currentNote.body as PartialBlock[]) : undefined);
         setNoteBodyEdited(false);
         setNoteBodySaved(false);
-    } else if (externalTitle !== syncedTitle) {
-        // Same note, but its persisted title changed on another surface.
-        // Adopt it so a later autosave from this panel can't PUT the stale
-        // title back over the rename — unless the user is mid-rename here
-        // (dirty), in which case the local edit wins. Body is deliberately
-        // untouched: it re-syncs only on an identity change, and the
-        // collaborative (Yjs) path owns body updates.
-        setSyncedTitle(externalTitle);
-        if (!titleDirtyRef.current && externalTitle !== "" && externalTitle !== title) {
-            setTitle(externalTitle);
-        }
     }
+
+    // Kept so the editor hooks can keep exposing a `setCurrentXxxNoteTitle`
+    // setter. Writing the title directly counts as a local rename, exactly
+    // like typing in the input.
+    const titleRef = useRef(title);
+    titleRef.current = title;
+    const setTitle = useCallback<Dispatch<SetStateAction<string>>>((value) => {
+        setPendingTitle((prev) =>
+            typeof value === "function" ? value(prev ?? titleRef.current) : value
+        );
+    }, []);
 
     const updateNote = useCallback(async () => {
         if (!currentNote || !accessToken) return;
@@ -145,11 +149,18 @@ export function useNoteEditorCore<T extends EditableNote>({
             return;
         }
 
-        let newNoteTitle = title;
-        if (title === "") {
-            newNoteTitle = currentNote.title;
-            setTitle(newNoteTitle);
-        }
+        // Resolve the title from the freshest source at SAVE time. A save
+        // triggered by a BODY edit must never carry this panel's snapshot
+        // of the title: the note may have been renamed on another surface
+        // since the snapshot was taken, and re-sending the old value would
+        // revert that rename. The shared cache is written by every
+        // persisted edit, so it outranks `currentNote`; only an
+        // in-progress local rename outranks the cache.
+        //
+        // An empty `pendingTitle` (the user cleared the input) is treated
+        // as "no rename" rather than persisted as a blank title.
+        const persisted = getCachedNote(noteCacheKind(currentNote.noteType), currentNote.noteId);
+        const newNoteTitle = pendingTitle || persisted?.title || currentNote.title;
 
         const newNote = {
             ...currentNote,
@@ -159,18 +170,26 @@ export function useNoteEditorCore<T extends EditableNote>({
 
         try {
             await saveNote(newNote, myself, accessToken, socket);
-            // Title (and body) are now persisted — release the dirty guard
-            // so subsequent external title changes can reconcile again.
-            titleDirtyRef.current = false;
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
             onNoteUpdate?.(newNote);
         } catch (error) {
             console.error("Failed to update note:", error);
+        } finally {
+            // The rename attempt is over either way, so stop overriding the
+            // note's own title. Holding the overlay after a FAILURE is what
+            // made this bug so persistent: the panel went on displaying —
+            // and, on its next body autosave, PUTting — a title the note
+            // did not have, clobbering renames made on other surfaces. On
+            // success the note now carries this title anyway (`saveNote`
+            // published it to the cache), so the derived value is
+            // unchanged; on failure the input snaps back to the note's real
+            // title, which is honest feedback that nothing was saved.
+            setPendingTitle(null);
         }
     }, [
         currentNote,
-        title,
+        pendingTitle,
         body,
         myself,
         accessToken,
@@ -224,11 +243,11 @@ export function useNoteEditorCore<T extends EditableNote>({
     }, [noteBodySaved]);
 
     const handleTitleChange = useCallback((value: string) => {
-        // Mark the local title dirty so a concurrent external title change
-        // (another panel / surface) can't overwrite what the user is
-        // typing. Cleared once `updateNote` persists this edit.
-        titleDirtyRef.current = true;
-        setTitle(value);
+        // The overlay is itself the "the user is renaming in this panel"
+        // signal: while it is set, a title change arriving from another
+        // surface can't overwrite what is being typed. `updateNote` clears
+        // it once the rename is persisted.
+        setPendingTitle(value);
     }, []);
 
     const handleTitleBlur = useCallback(() => {

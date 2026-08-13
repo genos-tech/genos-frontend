@@ -99,7 +99,7 @@ import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
 import { updataTaskNoteChain } from "./taskNote";
 import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
-import { getCachedNote, upsertNoteCache } from "./useNoteData";
+import { fillNoteCache, getCachedNote, upsertNoteCache } from "./useNoteData";
 import { NoteBucket, NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
 /** Optional overrides for the create-note handlers. Used by markdown
@@ -2001,8 +2001,7 @@ export const useNoteManagement = (
             if (noteType === 1) {
                 const cached = await noteService.getPersonalNote(noteId);
                 if (cached) {
-                    const myNote: MyNoteProps = { ...cached, noteType: 1 };
-                    upsertNoteCache(myNote);
+                    const myNote = fillNoteCache<MyNoteProps>({ ...cached, noteType: 1 });
                     tabsApi.openTab(noteToTab(myNote, myself.teamId, bucket));
                     return;
                 }
@@ -2014,7 +2013,7 @@ export const useNoteManagement = (
                 );
                 if (fetched && !fetched.error && fetched.noteType === 1) {
                     addNote(1, fetched);
-                    upsertNoteCache(fetched);
+                    fillNoteCache(fetched);
                     tabsApi.openTab(noteToTab(fetched, myself.teamId, bucket));
                 }
                 return;
@@ -2022,8 +2021,7 @@ export const useNoteManagement = (
             if (noteType === 2) {
                 const cached = await noteService.getTaskNote(noteId);
                 if (cached) {
-                    const taskNote: TaskNoteProps = { ...cached, noteType: 2 };
-                    upsertNoteCache(taskNote);
+                    const taskNote = fillNoteCache<TaskNoteProps>({ ...cached, noteType: 2 });
                     tabsApi.openTab(noteToTab(taskNote, myself.teamId));
                     return;
                 }
@@ -2035,22 +2033,21 @@ export const useNoteManagement = (
                 );
                 if (fetched && !fetched.error && fetched.noteType === 2) {
                     addNote(2, fetched);
-                    upsertNoteCache(fetched);
+                    fillNoteCache(fetched);
                     tabsApi.openTab(noteToTab(fetched, myself.teamId));
                 }
                 return;
             }
             const cached = await noteService.getChatNote(noteId);
             if (cached) {
-                const chatNote: ChatNoteProps = { ...cached, noteType: 3 };
-                upsertNoteCache(chatNote);
+                const chatNote = fillNoteCache<ChatNoteProps>({ ...cached, noteType: 3 });
                 tabsApi.openTab(noteToTab(chatNote, myself.teamId));
                 return;
             }
             const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
             if (fetched && !fetched.error && fetched.noteType === 3) {
                 addNote(3, fetched);
-                upsertNoteCache(fetched);
+                fillNoteCache(fetched);
                 tabsApi.openTab(noteToTab(fetched, myself.teamId));
             }
         } catch (error) {
@@ -2150,8 +2147,7 @@ export const useNoteManagement = (
                     const cached = await noteService.getPersonalNote(active.noteId);
                     if (cancelled) return;
                     if (cached) {
-                        const myNote: MyNoteProps = { ...cached, noteType: 1 };
-                        upsertNoteCache(myNote);
+                        const myNote = fillNoteCache<MyNoteProps>({ ...cached, noteType: 1 });
                         setCurrentMyNote(myNote);
                         setCurrentNoteType(personalBucketType());
                         recordNoteOpen(active.noteId, 1);
@@ -2167,7 +2163,7 @@ export const useNoteManagement = (
                     if (cancelled) return;
                     if (fetched && !fetched.error && fetched.noteType === 1) {
                         addNote(1, fetched);
-                        upsertNoteCache(fetched);
+                        fillNoteCache(fetched);
                         setCurrentMyNote(fetched);
                         setCurrentNoteType(personalBucketType());
                         recordNoteOpen(active.noteId, 1);
@@ -2178,8 +2174,7 @@ export const useNoteManagement = (
                     const cached = await noteService.getTaskNote(active.noteId);
                     if (cancelled) return;
                     if (cached) {
-                        const taskNote: TaskNoteProps = { ...cached, noteType: 2 };
-                        upsertNoteCache(taskNote);
+                        const taskNote = fillNoteCache<TaskNoteProps>({ ...cached, noteType: 2 });
                         setCurrentTaskNote(taskNote);
                         setCurrentNoteType(2);
                         recordNoteOpen(active.noteId, 2);
@@ -2195,7 +2190,7 @@ export const useNoteManagement = (
                     if (cancelled) return;
                     if (fetched && !fetched.error && fetched.noteType === 2) {
                         addNote(2, fetched);
-                        upsertNoteCache(fetched);
+                        fillNoteCache(fetched);
                         setCurrentTaskNote(fetched);
                         setCurrentNoteType(2);
                         recordNoteOpen(active.noteId, 2);
@@ -2205,8 +2200,7 @@ export const useNoteManagement = (
                 const cached = await noteService.getChatNote(active.noteId);
                 if (cancelled) return;
                 if (cached) {
-                    const chatNote: ChatNoteProps = { ...cached, noteType: 3 };
-                    upsertNoteCache(chatNote);
+                    const chatNote = fillNoteCache<ChatNoteProps>({ ...cached, noteType: 3 });
                     setCurrentChatNote(chatNote);
                     setCurrentNoteType(3);
                     recordNoteOpen(active.noteId, 3);
@@ -2222,7 +2216,7 @@ export const useNoteManagement = (
                 if (cancelled) return;
                 if (fetched && !fetched.error && fetched.noteType === 3) {
                     addNote(3, fetched);
-                    upsertNoteCache(fetched);
+                    fillNoteCache(fetched);
                     setCurrentChatNote(fetched);
                     setCurrentNoteType(3);
                     recordNoteOpen(active.noteId, 3);

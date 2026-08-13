@@ -20,7 +20,7 @@ import {
     TabRef,
     toRefs,
 } from "./noteTabsPersistence";
-import { upsertNoteCache } from "./useNoteData";
+import { fillNoteCache } from "./useNoteData";
 
 // Which sidebar space a personal-backed note was opened FROM. All three
 // are `note_type: 1` on the backend and share the editor, Yjs room and
@@ -166,8 +166,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 if (ref.noteType === 1) {
                     const cached = await ns.getPersonalNote(ref.noteId);
                     if (cached) {
-                        const myNote: MyNoteProps = { ...cached, noteType: 1 };
-                        upsertNoteCache(myNote);
+                        const myNote = fillNoteCache<MyNoteProps>({ ...cached, noteType: 1 });
                         return {
                             kind: "my",
                             noteType: 1,
@@ -184,7 +183,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                     if (!accessToken) return null;
                     const fetched = await loadSpecificNote(myself, 1, ref.noteId, accessToken);
                     if (fetched && !fetched.error) {
-                        upsertNoteCache(fetched as MyNoteProps);
+                        fillNoteCache(fetched as MyNoteProps);
                         return {
                             kind: "my",
                             noteType: 1,
@@ -200,8 +199,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 if (ref.noteType === 2) {
                     const cached = await ns.getTaskNote(ref.noteId);
                     if (cached) {
-                        const taskNote: TaskNoteProps = { ...cached, noteType: 2 };
-                        upsertNoteCache(taskNote);
+                        const taskNote = fillNoteCache<TaskNoteProps>({ ...cached, noteType: 2 });
                         return {
                             kind: "task",
                             noteType: 2,
@@ -216,7 +214,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                     if (!accessToken) return null;
                     const fetched = await loadSpecificNote(myself, 2, ref.noteId, accessToken);
                     if (fetched && !fetched.error) {
-                        upsertNoteCache(fetched as TaskNoteProps);
+                        fillNoteCache(fetched as TaskNoteProps);
                         return {
                             kind: "task",
                             noteType: 2,
@@ -232,8 +230,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 }
                 const cached = await ns.getChatNote(ref.noteId);
                 if (cached) {
-                    const chatNote: ChatNoteProps = { ...cached, noteType: 3 };
-                    upsertNoteCache(chatNote);
+                    const chatNote = fillNoteCache<ChatNoteProps>({ ...cached, noteType: 3 });
                     return {
                         kind: "chat",
                         noteType: 3,
@@ -250,7 +247,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 if (!accessToken) return null;
                 const fetched = await loadSpecificNote(myself, 3, ref.noteId, accessToken);
                 if (fetched && !fetched.error) {
-                    upsertNoteCache(fetched as ChatNoteProps);
+                    fillNoteCache(fetched as ChatNoteProps);
                     return {
                         kind: "chat",
                         noteType: 3,

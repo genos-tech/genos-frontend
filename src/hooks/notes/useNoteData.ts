@@ -217,11 +217,14 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
                 // request, the next open refetches and succeeds.
                 setAccessDenied(true);
             } else if (resolved) {
-                writeCache(key, resolved);
-                setNote(resolved as T);
+                // This fetch was started on a cache MISS, but a save may
+                // have published a newer copy of the note while it was in
+                // flight — that copy wins (see `fillNoteCache`).
+                const effective = fillNoteCache(resolved);
+                setNote(effective as T);
                 if (lastFetchedKeyRef.current !== key) {
                     lastFetchedKeyRef.current = key;
-                    onFirstResolveRef.current?.(resolved);
+                    onFirstResolveRef.current?.(effective);
                 }
             } else {
                 setError(new Error("note not found"));
@@ -262,12 +265,40 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
     return { note, isLoading, error, accessDenied, update };
 }
 
-// Imperative cache mutation for code paths that don't render a
-// `useNoteData` consumer but still need the cache to reflect a write
-// (e.g. the chat-panel save path, or note creation).
+export const noteCacheKind = (noteType: number): "my" | "task" | "chat" =>
+    noteType === 1 ? "my" : noteType === 2 ? "task" : "chat";
+
+// Imperative cache write for code paths that don't render a `useNoteData`
+// consumer but still need the cache to reflect a MUTATION (e.g. the
+// chat-panel save path, note creation, a sidebar move, a version
+// restore). Use `fillNoteCache` instead for anything that merely READ the
+// note back from IndexedDB or the backend.
 export const upsertNoteCache = (note: ResolvedNote): void => {
-    const kind = note.noteType === 1 ? "my" : note.noteType === 2 ? "task" : "chat";
-    writeCache(`${kind}-${note.noteId}`, note);
+    writeCache(`${noteCacheKind(note.noteType)}-${note.noteId}`, note);
+};
+
+// Read-through fill: seed the cache from a note we just READ out of
+// IndexedDB or the backend, WITHOUT displacing an entry that is already
+// there. Returns whichever note now holds the cache, so callers keep
+// using the winner rather than the copy they read.
+//
+// Reads are stale by the time they resolve — they're async (IDB goes
+// through a worker), so a save that landed while the read was in flight
+// has ALREADY published a newer note here. Overwriting it would push the
+// pre-save title back into every mounted panel through the subscriber
+// above, and that panel's next autosave would then PUT the old title over
+// the save. This is the "note title reverts to the default" bug: the
+// reader's title input went stale while the tab label and sidebar (which
+// these read paths never touch) kept the correct title.
+//
+// So the in-memory cache is the newest client tier and a read never wins
+// against it; only `upsertNoteCache` may replace an entry.
+export const fillNoteCache = <T extends ResolvedNote>(note: T): T => {
+    const key = `${noteCacheKind(note.noteType)}-${note.noteId}`;
+    const existing = cache.get(key) as T | undefined;
+    if (existing) return existing;
+    writeCache(key, note);
+    return note;
 };
 
 // Synchronous read for callers that need to peek at the in-memory cache
