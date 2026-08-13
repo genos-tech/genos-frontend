@@ -3098,6 +3098,10 @@ export const es: DeepPartial<Messages> = {
                 noMutedChats:
                     "No hay chats silenciados. Usa el icono de campana en el encabezado de cualquier chat para silenciarlo.",
                 unmuteAriaLabel: "Reactivar {name}",
+                fallbackChatName: "Conversación sin nombre",
+                fallbackThreadName: "Hilo sin título",
+                fallbackTaskName: "Tarea n.º {id}",
+                fallbackNoteName: "Nota n.º {id}",
                 categoryDescriptions: {
                     chats: "Mensajes directos, chats de grupo y mensajes de chat de proyecto.",
                     threadReplies: "Respuestas publicadas bajo cualquier mensaje que puedas ver.",

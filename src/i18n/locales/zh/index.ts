@@ -2456,6 +2456,10 @@ export const zh: DeepPartial<Messages> = {
                 mutedTargetsHeading: "静音项目 ({count})",
                 noMutedTargets: "没有静音项目。从标题或 ⋮ 菜单中将特定话题、任务或笔记静音。",
                 unmuteAriaLabel: "取消静音 {name}",
+                fallbackChatName: "未命名会话",
+                fallbackThreadName: "无标题线",
+                fallbackTaskName: "任务 #{id}",
+                fallbackNoteName: "笔记 #{id}",
                 targetTypeLabels: {
                     chat: "聊天",
                     thread: "线",

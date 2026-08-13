@@ -3056,6 +3056,10 @@ export const ar: DeepPartial<Messages> = {
                 noMutedChats:
                     "لا توجد محادثات مكتومة. استخدم أيقونة الجرس في رأس أي محادثة لكتمها.",
                 unmuteAriaLabel: "إلغاء كتم {name}",
+                fallbackChatName: "محادثة بدون اسم",
+                fallbackThreadName: "خيط بدون عنوان",
+                fallbackTaskName: "مهمة رقم {id}",
+                fallbackNoteName: "ملاحظة رقم {id}",
                 categoryDescriptions: {
                     chats: "الرسائل المباشرة والمحادثات الجماعية ورسائل محادثة المشاريع.",
                     threadReplies: "الردود المنشورة تحت أي رسالة يمكنك رؤيتها.",

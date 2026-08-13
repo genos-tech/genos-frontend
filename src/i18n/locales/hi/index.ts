@@ -3421,6 +3421,10 @@ export const hi: DeepPartial<Messages> = {
                 noMutedTargets:
                     "कोई म्यूट आइटम नहीं. किसी विशिष्ट थ्रेड, कार्य या नोट को उसके हेडर या ⋮ मेनू से म्यूट करें।",
                 unmuteAriaLabel: "{name} को अनम्यूट करें",
+                fallbackChatName: "अनामित बातचीत",
+                fallbackThreadName: "अनामांकित धागा",
+                fallbackTaskName: "काम #{id}",
+                fallbackNoteName: "टिप्पणी #{id}",
                 targetTypeLabels: {
                     chat: "बात करना",
                     thread: "धागा",

@@ -53,6 +53,7 @@ import { createEvent, deleteEvent, getEvent } from "../../../integrations/servic
 import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { sendChatMessage } from "../../services/sendChatMessage";
+import { chatDisplayName } from "../../utils/chatDisplayName";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { ModalShareMeetLink } from "../modals/ModalShareMeetLink";
 import { HeaderUserName } from "./HeaderUserName";
@@ -94,6 +95,20 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
+
+    // Name to persist when this chat is muted. `chat.chatName` is empty for a
+    // DM whose partner didn't resolve and ALWAYS empty for an MDM, and an empty
+    // name is dropped by the API — which left Settings → Muted items rendering
+    // the raw chat UUID. Derive the same name the header itself shows instead.
+    // Read off the `allChats` row because `mdmMembers` rides only on that row,
+    // not on `currentMainChat`.
+    const muteLabel =
+        chatDisplayName(
+            useCM.allChats.find((c) => c.chatId === chat.chatId && c.chatType === chat.chatType) ??
+                chat,
+            myself,
+            useTEM.teamMemberProfiles
+        ) || undefined;
 
     // Action button style
     const actionButtonStyle = {
@@ -438,7 +453,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <MuteToggleButton
                             chatType={chat.chatType}
                             chatId={chat.chatId}
-                            chatName={chat.chatName}
+                            chatName={muteLabel}
                         />
                     )}
 
@@ -505,7 +520,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 <MuteMenuItem
                                     chatType={chat.chatType}
                                     chatId={chat.chatId}
-                                    chatName={chat.chatName}
+                                    chatName={muteLabel}
                                 />
                             )}
 
@@ -616,7 +631,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 <MuteToggleButton
                     chatType={chat.chatType}
                     chatId={chat.chatId}
-                    chatName={chat.chatName}
+                    chatName={muteLabel}
                 />
 
                 {/* Mark all activity in this chat as read */}

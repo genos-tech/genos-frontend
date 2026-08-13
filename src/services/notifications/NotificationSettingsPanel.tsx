@@ -13,13 +13,16 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { chatDisplayName } from "../../features/chat/utils/chatDisplayName";
 import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
+import { UserProps } from "../../types/admin";
+import { AllChatProps } from "../../types/chat";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
 import { EMAIL_CATEGORIES, isEmailCategoryEnabled } from "./emailCategories";
 import { NotificationPauseSection } from "./NotificationPausePicker";
 import { useNotificationsContext } from "./NotificationsContext";
-import { MutedTargetType } from "./types";
+import { MutedChatRef, MutedTargetRef, MutedTargetType } from "./types";
 
 // Group heading label — reuse the coarse category labels as the umbrella.
 const groupLabel = (group: CoarseGroup, t: Messages): string => {
@@ -74,14 +77,103 @@ const labelForTargetType = (targetType: MutedTargetType, t: Messages): string =>
     return labels[targetType] ?? targetType;
 };
 
+// ---------------------------------------------------------------------------
+// Naming the muted rows.
+//
+// A mute stores its label as a SNAPSHOT taken when you clicked the bell, so on
+// its own it is both stale-able and — for the two unnamed chat kinds (DM and
+// MDM, see `chatDisplayName`) — often empty. Empty meant the row rendered
+// `chatId` / `targetId`, i.e. a raw UUID, which tells the user nothing about
+// what they muted.
+//
+// So: resolve live off `allChats` where we can, fall back to the stored
+// snapshot for a chat that is no longer in the list (left / deleted), and end
+// on a human-readable generic. The id is never rendered — except a NUMERIC
+// task/note id, which is the same user-facing "#42" handle those objects are
+// referred to by elsewhere in the app.
+// ---------------------------------------------------------------------------
+
+type NameLookup = {
+    allChats?: AllChatProps[];
+    myself?: UserProps;
+    teamMemberProfiles?: Record<string, UserProps>;
+};
+
+/** Live display name for a muted chat, or "" when nothing resolves. */
+const resolveChatName = (
+    chatType: number,
+    chatId: string,
+    storedName: string | undefined,
+    { allChats, myself, teamMemberProfiles }: NameLookup
+): string => {
+    const live = allChats?.find(
+        (c) => c.chatType === chatType && String(c.chatId) === String(chatId)
+    );
+    return chatDisplayName(live, myself, teamMemberProfiles) || storedName || "";
+};
+
+const mutedChatName = (m: MutedChatRef, lookup: NameLookup, t: Messages): string =>
+    resolveChatName(m.chatType, m.chatId, m.chatName, lookup) ||
+    t.services.notifications.settings.fallbackChatName;
+
+/** Readable stand-in for a target whose label we never captured. */
+const targetFallbackName = (target: MutedTargetRef, t: Messages): string => {
+    const s = t.services.notifications.settings;
+    // Tasks and notes are keyed by their integer PK, which IS the "#42" users
+    // see on a task pill — readable, so worth showing. Threads and chats are
+    // keyed by UUID, which is not.
+    const numericId = /^\d+$/.test(target.targetId);
+    switch (target.targetType) {
+        case "task":
+            return numericId
+                ? fmt(s.fallbackTaskName, { id: target.targetId })
+                : labelForTargetType("task", t);
+        case "note":
+            return numericId
+                ? fmt(s.fallbackNoteName, { id: target.targetId })
+                : labelForTargetType("note", t);
+        case "thread":
+            return s.fallbackThreadName;
+        case "chat":
+            return s.fallbackChatName;
+    }
+};
+
+const mutedTargetName = (target: MutedTargetRef, lookup: NameLookup, t: Messages): string => {
+    // A `chat` target names itself the same way the coarse muted-chats list
+    // does — it is the same object, just muted through the finer API.
+    if (target.targetType === "chat") {
+        const live = resolveChatName(target.chatType ?? 0, target.targetId, target.label, lookup);
+        if (live) return live;
+    }
+    return target.label || targetFallbackName(target, t);
+};
+
 /**
  * Self-contained notification settings UI. Drops into any modal/page that
  * lives inside `<NotificationsProvider>`. Renders nothing if no provider is
  * mounted.
+ *
+ * The three optional props exist ONLY to name the muted lists (see
+ * `resolveChatName`) — they are how a muted DM/MDM gets called what the
+ * sidebar calls it instead of showing its UUID. All optional so the panel
+ * still renders standalone; without them it falls back to the label stored at
+ * mute time, and then to a generic.
  */
-export const NotificationSettingsPanel = () => {
+type NotificationSettingsPanelProps = {
+    allChats?: AllChatProps[];
+    myself?: UserProps;
+    teamMemberProfiles?: Record<string, UserProps>;
+};
+
+export const NotificationSettingsPanel = ({
+    allChats,
+    myself,
+    teamMemberProfiles,
+}: NotificationSettingsPanelProps = {}) => {
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
+    const nameLookup: NameLookup = { allChats, myself, teamMemberProfiles };
     // Proactive digest opt-out — server-backed, independent of the
     // browser-push preferences (the digest also lands in the Inbox, so
     // it is NOT gated by masterEnabled). Above the early return: hooks
@@ -319,7 +411,7 @@ export const NotificationSettingsPanel = () => {
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedChats.map((m) => {
-                        const displayName = m.chatName || m.chatId;
+                        const displayName = mutedChatName(m, nameLookup, t);
                         return (
                             <Stack
                                 key={`${m.chatType}:${m.chatId}`}
@@ -383,7 +475,7 @@ export const NotificationSettingsPanel = () => {
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedTargets.map((target) => {
-                        const displayName = target.label || target.targetId;
+                        const displayName = mutedTargetName(target, nameLookup, t);
                         return (
                             <Stack
                                 key={`${target.targetType}:${target.targetId}`}

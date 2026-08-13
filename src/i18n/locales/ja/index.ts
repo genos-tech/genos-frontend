@@ -2530,6 +2530,10 @@ export const ja: DeepPartial<Messages> = {
                 noMutedTargets:
                     "ミュートされたアイテムはありません。ヘッダーまたは ⋮ メニューから特定のスレッド、タスク、またはメモをミュートします。",
                 unmuteAriaLabel: "{name} のミュートを解除",
+                fallbackChatName: "名前のない会話",
+                fallbackThreadName: "無題のスレッド",
+                fallbackTaskName: "タスク #{id}",
+                fallbackNoteName: "ノート #{id}",
                 targetTypeLabels: {
                     chat: "チャット",
                     thread: "スレッド",

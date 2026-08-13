@@ -2569,6 +2569,10 @@ export const fr: DeepPartial<Messages> = {
                 noMutedTargets:
                     "Aucun élément mis en sourdine. Désactivez un fil de discussion, une tâche ou une note spécifique à partir de son en-tête ou de son menu ⋮.",
                 unmuteAriaLabel: "Réactiver le son de {name}",
+                fallbackChatName: "Conversation sans nom",
+                fallbackThreadName: "Sujet sans titre",
+                fallbackTaskName: "Tâche n° {id}",
+                fallbackNoteName: "Remarque n° {id}",
                 targetTypeLabels: {
                     chat: "Chat",
                     thread: "Sujet",
