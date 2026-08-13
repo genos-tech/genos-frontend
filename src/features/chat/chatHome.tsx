@@ -44,6 +44,7 @@ import { TaskCommentProps } from "../../types/tasks";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
+import { hasTaskPreviewContent } from "../tasks/utils/taskPreviewPaneVisibility";
 import { MobileChatHome } from "./MobileChatHome";
 
 type ChatHomeProps = {
@@ -222,6 +223,27 @@ export const ChatHome = (props: ChatHomeProps) => {
         // stable and excluded to avoid re-running.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM.isThreadTaskVisible]);
+
+    // Whether the task-preview pane actually shows on this surface: wanted
+    // here, wanted globally, AND with something selected to render.
+    //
+    // That last arm is the fix for an empty right-hand column on the chat
+    // page. `TaskPreview` returns null when nothing is selected, while the
+    // pane draws its own frame — so the page painted a blank resizable
+    // column whose only close control (the preview header) hadn't rendered.
+    // Reached by opening a task on the TASK page (global flag true), then
+    // opening a thread on a message with no task: `replayHandler` runs
+    // `setCurrentPreviewTaskId(-1)`, deselecting without lowering the flag.
+    // The task page has always carried this check inline (TaskHomeLayout);
+    // `hasTaskPreviewContent` is that same rule, and it stays true through
+    // a task switch so the panel can't flash out mid-load.
+    //
+    // Used for BOTH the pane and the `SelectChatPanel` fallback below, so
+    // the two can't disagree and leave the page with no pane at all.
+    const isTaskPreviewPaneVisible =
+        initialTaskPreviewVisible &&
+        useTM.isTaskPreviewVisible === true &&
+        hasTaskPreviewContent(useTM);
 
     // Add a new todo from a message
     useEffect(() => {
@@ -524,10 +546,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 </>
                             )}
 
-                            {/* Task Preview Pane.
-                        Gate on visibility ONLY — deliberately NOT on an
-                        `currentPreviewTask.id === currentPreviewTaskId`
-                        match. That id-match used to live here, but on a
+                            {/* Task Preview Pane. See `isTaskPreviewPaneVisible`
+                        above for the derivation: it asks whether SOMETHING is
+                        selected — deliberately NOT whether
+                        `currentPreviewTask.id === currentPreviewTaskId`.
+                        That id-match used to live here, but on a
                         PM→PM switch `currentPreviewTaskId` flips to the new
                         id a beat before `loadTask` swaps `currentPreviewTask`,
                         so the match went false mid-switch and UNMOUNTED the
@@ -541,10 +564,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                         working-copy/id mismatch instead of rendering the stale
                         task, keeping the panel frame mounted through the swap.
                         Milestone previews (which leave `currentPreviewTask`
-                        undefined and route via `currentPreviewKind`) also just
-                        need visibility here — the milestone branch inside
-                        TaskPreview handles them. */}
-                            {initialTaskPreviewVisible && useTM.isTaskPreviewVisible === true && (
+                        undefined AND `currentPreviewTaskId` at -1, routing via
+                        `currentPreviewKind`) count as selected through the
+                        predicate's milestone arm — the milestone branch inside
+                        TaskPreview then renders them. */}
+                            {isTaskPreviewPaneVisible && (
                                 <>
                                     <ResizeHandle key="task-preview-resize-handle" />
                                     <TaskPreviewPanel
@@ -586,7 +610,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                             {useCM.isMainChatVisible === false &&
                                 useCM.isThreadVisible === false &&
                                 useTM.isCreatingTask.flag === false &&
-                                useTM.isTaskPreviewVisible === false &&
+                                // The DERIVED pane state, not the raw flag: with
+                                // the flag true but nothing selected the pane
+                                // above stands down, so this fallback has to
+                                // stand up or the page is left blank.
+                                isTaskPreviewPaneVisible === false &&
                                 isChatNotePaneVisible === false && (
                                     <>
                                         <ResizeHandle key="select-chat-resize-handle" />

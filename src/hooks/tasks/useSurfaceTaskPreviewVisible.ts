@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { hasTaskPreviewContent } from "../../features/tasks/utils/taskPreviewPaneVisibility";
 import { TaskManagementState } from "./useTaskManagement";
 
 /**
@@ -46,6 +47,11 @@ export const useSurfaceTaskPreviewVisible = (
         [storageKey]
     );
 
+    // Is anything actually selected to preview? Computed at render time so
+    // the effect below depends on this one boolean instead of on `useTM`
+    // wholesale (which changes identity every render).
+    const hasContent = hasTaskPreviewContent(useTM);
+
     // Previous global state, so we can tell an "open" / "switch task"
     // transition from an unrelated re-render.
     const prevRef = useRef({
@@ -70,12 +76,23 @@ export const useSurfaceTaskPreviewVisible = (
         // Only the foreground page may adopt an open/switch as its own.
         if (!isActiveRoute) return;
 
+        // ...and only when there is something to preview. Opening a thread
+        // on the chat page runs `setCurrentPreviewTaskId(-1)` for a message
+        // with no task (MessageBubble.replayHandler), which reads here as a
+        // task "switch" — from whatever the task page had open to nothing.
+        // Adopting that turned the chat surface visible for a preview the
+        // user never asked for, and since the selection is empty
+        // `TaskPreview` renders null: an empty, unclosable column. A
+        // deselection is not an open.
+        if (!hasContent) return;
+
         const opened = !wasVisible;
         const switched = prevTaskId !== useTM.currentPreviewTaskId;
         if ((opened || switched) && !visible) setVisible(true);
     }, [
         useTM.isTaskPreviewVisible,
         useTM.currentPreviewTaskId,
+        hasContent,
         isActiveRoute,
         visible,
         setVisible,

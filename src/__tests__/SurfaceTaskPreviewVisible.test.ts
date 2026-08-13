@@ -12,8 +12,15 @@ import { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 // The rule under test: only the page the user is actually looking at
 // (`isActiveRoute`) may adopt an open; a close always propagates.
 
-const useTMWith = (visible: boolean, taskId: number): TaskManagementState =>
+const useTMWith = (
+    visible: boolean,
+    taskId: number,
+    // A milestone preview carries its id here and leaves `taskId` at -1.
+    milestone: { kind: "task" | "milestone"; id: number } = { kind: "task", id: -1 }
+): TaskManagementState =>
     ({
+        currentPreviewKind: milestone.kind,
+        currentPreviewMilestoneId: milestone.id,
         currentPreviewTaskId: taskId,
         isTaskPreviewVisible: visible,
     }) as unknown as TaskManagementState;
@@ -77,6 +84,47 @@ describe("useSurfaceTaskPreviewVisible", () => {
         expect(result.current[0]).toBe(false);
 
         rerender({ active: true, taskId: 2 });
+        expect(result.current[0]).toBe(true);
+    });
+
+    it("does NOT adopt a DESELECTION as an open", () => {
+        // THE REPORTED BUG. Open a task on the task page (global flag true,
+        // a real id), switch to chat, then open a thread on a message with
+        // no task: `MessageBubble.replayHandler` runs
+        // `setCurrentPreviewTaskId(-1)`. That id change read as a "switch"
+        // and turned this surface visible — for an empty selection, so
+        // `TaskPreview` rendered null and the chat page painted an empty,
+        // unclosable right-hand column.
+        const { result, rerender } = renderHook(
+            ({ taskId }: { taskId: number }) =>
+                useSurfaceTaskPreviewVisible("chat", true, useTMWith(true, taskId)),
+            { initialProps: { taskId: 5 } }
+        );
+
+        expect(result.current[0]).toBe(false);
+
+        rerender({ taskId: -1 });
+        expect(result.current[0]).toBe(false);
+    });
+
+    it("still adopts a switch to a MILESTONE, which clears the task id", () => {
+        // The guard above must not swallow milestone previews: they set
+        // `currentPreviewTaskId` to -1 on purpose and carry the real
+        // selection in `currentPreviewMilestoneId`.
+        const { result, rerender } = renderHook(
+            ({
+                taskId,
+                milestone,
+            }: {
+                taskId: number;
+                milestone: { kind: "task" | "milestone"; id: number };
+            }) => useSurfaceTaskPreviewVisible("chat", true, useTMWith(true, taskId, milestone)),
+            { initialProps: { milestone: { id: -1, kind: "task" as const }, taskId: 5 } }
+        );
+
+        expect(result.current[0]).toBe(false);
+
+        rerender({ milestone: { id: 9, kind: "milestone" }, taskId: -1 });
         expect(result.current[0]).toBe(true);
     });
 
