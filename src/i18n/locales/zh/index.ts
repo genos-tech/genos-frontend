@@ -2780,7 +2780,7 @@ export const zh: DeepPartial<Messages> = {
             matrixRowAsks: "AI 每天询问",
             matrixRowAgency: "Genos 做什么",
             matrixRowDepth: "想得有多深",
-            matrixRowMemory: "它记得什么",
+            matrixRowMemory: "它参考什么",
             matrixRowGenosHistory: "Genos 对话记录",
             matrixRowPremiumModels: "高级人工智能模型",
             matrixRowDigest: "主动消化",

@@ -312,7 +312,7 @@ export const settings = {
         matrixRowAsks: "AI asks per day",
         matrixRowAgency: "What Genos does",
         matrixRowDepth: "How deeply it thinks",
-        matrixRowMemory: "What it remembers",
+        matrixRowMemory: "What it draws on",
         matrixRowGenosHistory: "Genos conversation history",
         matrixRowPremiumModels: "Premium AI models",
         matrixRowDigest: "Proactive digest",

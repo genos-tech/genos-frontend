@@ -616,7 +616,7 @@ export const es: DeepPartial<Messages> = {
             matrixRowAsks: "La IA pide por día",
             matrixRowAgency: "Qué hace Genos",
             matrixRowDepth: "Que tan profundamente piensa",
-            matrixRowMemory: "lo que recuerda",
+            matrixRowMemory: "en qué se basa",
             matrixRowGenosHistory: "Historial de conversaciones de Genos",
             matrixRowPremiumModels: "Modelos de IA premium",
             matrixRowDigest: "Resumen proactivo",

@@ -686,7 +686,7 @@ export const hi: DeepPartial<Messages> = {
             matrixRowAsks: "एआई प्रतिदिन पूछता है",
             matrixRowAgency: "Genos क्या करता है",
             matrixRowDepth: "यह कितनी गहराई से सोचता है",
-            matrixRowMemory: "यह क्या याद रखता है",
+            matrixRowMemory: "यह किस पर आधारित है",
             matrixRowGenosHistory: "Genos वार्तालाप इतिहास",
             matrixRowPremiumModels: "प्रीमियम एआई मॉडल",
             matrixRowDigest: "प्रोएक्टिव डाइजेस्ट",
