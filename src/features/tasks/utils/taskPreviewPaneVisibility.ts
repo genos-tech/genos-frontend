@@ -13,6 +13,11 @@
  * the chat page gated on visibility alone, which is how the empty pane got
  * out. Hence one predicate both surfaces can share.
  *
+ * On the chat page this answers "may the pane OPEN", not "must it stay
+ * open" — an empty selection is also a normal transient there, mid
+ * thread-switch. `useTaskPreviewPaneVisible` wraps this with the latch that
+ * keeps an already-open pane mounted across it.
+ *
  * The disjunction is deliberate and load-bearing: the pane must stay
  * mounted through a task SWITCH, where `currentPreviewTaskId` flips to the
  * new id a beat before `loadTask` swaps `currentPreviewTask` in. Testing

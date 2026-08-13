@@ -34,6 +34,7 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { useSurfaceTaskPreviewVisible } from "../../hooks/tasks/useSurfaceTaskPreviewVisible";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { useTaskPreviewPaneVisible } from "../../hooks/tasks/useTaskPreviewPaneVisible";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
@@ -44,7 +45,6 @@ import { TaskCommentProps } from "../../types/tasks";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
-import { hasTaskPreviewContent } from "../tasks/utils/taskPreviewPaneVisibility";
 import { MobileChatHome } from "./MobileChatHome";
 
 type ChatHomeProps = {
@@ -225,25 +225,28 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [useCM.isThreadTaskVisible]);
 
     // Whether the task-preview pane actually shows on this surface: wanted
-    // here, wanted globally, AND with something selected to render.
+    // here, wanted globally, and (to OPEN) with something selected to render.
     //
-    // That last arm is the fix for an empty right-hand column on the chat
+    // That last part is the fix for an empty right-hand column on the chat
     // page. `TaskPreview` returns null when nothing is selected, while the
     // pane draws its own frame — so the page painted a blank resizable
     // column whose only close control (the preview header) hadn't rendered.
     // Reached by opening a task on the TASK page (global flag true), then
     // opening a thread on a message with no task: `replayHandler` runs
     // `setCurrentPreviewTaskId(-1)`, deselecting without lowering the flag.
-    // The task page has always carried this check inline (TaskHomeLayout);
-    // `hasTaskPreviewContent` is that same rule, and it stays true through
-    // a task switch so the panel can't flash out mid-load.
+    // The task page has always carried this check inline (TaskHomeLayout).
+    //
+    // It only gates OPENING, because an empty selection is also a normal
+    // transient mid thread-switch — see `useTaskPreviewPaneVisible`, which
+    // holds the pane mounted across it so the switch neither flashes nor
+    // loses the outgoing task's unsaved body.
     //
     // Used for BOTH the pane and the `SelectChatPanel` fallback below, so
     // the two can't disagree and leave the page with no pane at all.
-    const isTaskPreviewPaneVisible =
-        initialTaskPreviewVisible &&
-        useTM.isTaskPreviewVisible === true &&
-        hasTaskPreviewContent(useTM);
+    const isTaskPreviewPaneVisible = useTaskPreviewPaneVisible(
+        initialTaskPreviewVisible && useTM.isTaskPreviewVisible === true,
+        useTM
+    );
 
     // Add a new todo from a message
     useEffect(() => {
@@ -547,8 +550,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                             )}
 
                             {/* Task Preview Pane. See `isTaskPreviewPaneVisible`
-                        above for the derivation: it asks whether SOMETHING is
-                        selected — deliberately NOT whether
+                        above for the derivation: to OPEN, it asks whether
+                        SOMETHING is selected — deliberately NOT whether
                         `currentPreviewTask.id === currentPreviewTaskId`.
                         That id-match used to live here, but on a
                         PM→PM switch `currentPreviewTaskId` flips to the new
@@ -567,7 +570,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                         undefined AND `currentPreviewTaskId` at -1, routing via
                         `currentPreviewKind`) count as selected through the
                         predicate's milestone arm — the milestone branch inside
-                        TaskPreview then renders them. */}
+                        TaskPreview then renders them. And once open, the pane
+                        outlives a transient empty selection: a thread switch
+                        deselects for a whole round trip, and unmounting across
+                        that both flashes and drops the outgoing task's unsaved
+                        body (`useTaskPreviewPaneVisible`). */}
                             {isTaskPreviewPaneVisible && (
                                 <>
                                     <ResizeHandle key="task-preview-resize-handle" />
