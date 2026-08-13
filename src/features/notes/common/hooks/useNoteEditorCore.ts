@@ -91,11 +91,27 @@ export function useNoteEditorCore<T extends EditableNote>({
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
+    // True once the user edits THIS panel's title and until that edit is
+    // persisted. While set, an external title change is NOT allowed to
+    // overwrite the in-progress local rename.
+    const titleDirtyRef = useRef(false);
+
     const identityKey = identityOf(currentNote, resyncSignal);
     const [syncedIdentityKey, setSyncedIdentityKey] = useState<string>(identityKey);
 
+    // Tracks the `currentNote.title` we last reconciled against so a title
+    // changed on another surface — another mounted panel, or the isolated
+    // chat-page panel, whose save wrote the now-reactive `useNoteData`
+    // cache — is detected and adopted here without an effect.
+    const externalTitle = currentNote?.title ?? "";
+    const [syncedTitle, setSyncedTitle] = useState<string>(externalTitle);
+
     if (syncedIdentityKey !== identityKey) {
+        // Note identity changed (tab switch / restore): full re-sync of
+        // both title and body from the new note.
         setSyncedIdentityKey(identityKey);
+        setSyncedTitle(externalTitle);
+        titleDirtyRef.current = false;
         if (currentNote) {
             setTitle(currentNote.title);
             setBody(currentNote.body as PartialBlock[]);
@@ -105,6 +121,17 @@ export function useNoteEditorCore<T extends EditableNote>({
         }
         setNoteBodyEdited(false);
         setNoteBodySaved(false);
+    } else if (externalTitle !== syncedTitle) {
+        // Same note, but its persisted title changed on another surface.
+        // Adopt it so a later autosave from this panel can't PUT the stale
+        // title back over the rename — unless the user is mid-rename here
+        // (dirty), in which case the local edit wins. Body is deliberately
+        // untouched: it re-syncs only on an identity change, and the
+        // collaborative (Yjs) path owns body updates.
+        setSyncedTitle(externalTitle);
+        if (!titleDirtyRef.current && externalTitle !== "" && externalTitle !== title) {
+            setTitle(externalTitle);
+        }
     }
 
     const updateNote = useCallback(async () => {
@@ -132,6 +159,9 @@ export function useNoteEditorCore<T extends EditableNote>({
 
         try {
             await saveNote(newNote, myself, accessToken, socket);
+            // Title (and body) are now persisted — release the dirty guard
+            // so subsequent external title changes can reconcile again.
+            titleDirtyRef.current = false;
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
             onNoteUpdate?.(newNote);
@@ -194,6 +224,10 @@ export function useNoteEditorCore<T extends EditableNote>({
     }, [noteBodySaved]);
 
     const handleTitleChange = useCallback((value: string) => {
+        // Mark the local title dirty so a concurrent external title change
+        // (another panel / surface) can't overwrite what the user is
+        // typing. Cleared once `updateNote` persists this edit.
+        titleDirtyRef.current = true;
         setTitle(value);
     }, []);
 

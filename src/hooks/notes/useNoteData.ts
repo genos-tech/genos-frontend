@@ -48,6 +48,49 @@ interface UseNoteDataOptions {
 
 const cache = new Map<string, ResolvedNote>();
 
+// Reactive layer over the module-level cache.
+//
+// The cache is shared across every mounted `useNoteData` consumer, but a
+// plain `Map` write is invisible to instances that already read it — they
+// keep their stale `note` snapshot. That is the root cause of the
+// task/chat note "title reverts to the default" bug: a note is open in two
+// mounted panels at once (e.g. the task-page inline editor + the
+// notes-home LRU-pool panel, which stays mounted because NoteHome is
+// kept-alive), a rename saved from one panel writes the cache, but the
+// other panel never sees it and its next autosave PUTs the stale title
+// back over the rename.
+//
+// So writes go through `writeCache`, which notifies subscribers keyed by
+// cache key (`${kind}-${noteId}` === the tab id). Keying by note means a
+// write to note A never re-renders a panel showing note B. Notification is
+// synchronous: every caller (`onNoteUpdate` after a save, sidebar moves,
+// note creation, tab rehydrate) runs inside an event handler / effect /
+// post-`await` continuation — never a render body — so the subscriber
+// `setState` is a normal cross-component update, not a render-phase one.
+type CacheSubscriber = (note: ResolvedNote) => void;
+const cacheSubscribers = new Map<string, Set<CacheSubscriber>>();
+
+const subscribeToNote = (key: string, cb: CacheSubscriber): (() => void) => {
+    let set = cacheSubscribers.get(key);
+    if (!set) {
+        set = new Set();
+        cacheSubscribers.set(key, set);
+    }
+    set.add(cb);
+    return () => {
+        const current = cacheSubscribers.get(key);
+        if (!current) return;
+        current.delete(cb);
+        if (current.size === 0) cacheSubscribers.delete(key);
+    };
+};
+
+const writeCache = (key: string, note: ResolvedNote): void => {
+    cache.set(key, note);
+    const subs = cacheSubscribers.get(key);
+    if (subs) subs.forEach((cb) => cb(note));
+};
+
 const noteServiceSingleton: { current: NoteService | null } = { current: null };
 const getNoteService = (): NoteService => {
     if (!noteServiceSingleton.current) {
@@ -174,7 +217,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
                 // request, the next open refetches and succeeds.
                 setAccessDenied(true);
             } else if (resolved) {
-                cache.set(key, resolved);
+                writeCache(key, resolved);
                 setNote(resolved as T);
                 if (lastFetchedKeyRef.current !== key) {
                     lastFetchedKeyRef.current = key;
@@ -192,11 +235,25 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab?.id, accessToken, myself.teamId, myself.userId]);
 
+    // Adopt cross-surface writes to THIS tab's note. When another mounted
+    // panel (or the chat-page panel) saves a rename, `writeCache` fires
+    // this subscriber so our `note` snapshot stays current — otherwise our
+    // next autosave would send the stale title and clobber the rename.
+    // Re-subscribes when the tab changes; `setNote` is a stable setter.
+    useEffect(() => {
+        if (!tab) return;
+        const key = cacheKey(tab);
+        return subscribeToNote(key, (updated) => {
+            setNote(updated as T);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tab?.id]);
+
     const update = useCallback(
         (next: T) => {
             if (!tab) return;
             const key = cacheKey(tab);
-            cache.set(key, next);
+            writeCache(key, next);
             setNote(next);
         },
         [tab]
@@ -210,7 +267,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
 // (e.g. the chat-panel save path, or note creation).
 export const upsertNoteCache = (note: ResolvedNote): void => {
     const kind = note.noteType === 1 ? "my" : note.noteType === 2 ? "task" : "chat";
-    cache.set(`${kind}-${note.noteId}`, note);
+    writeCache(`${kind}-${note.noteId}`, note);
 };
 
 // Synchronous read for callers that need to peek at the in-memory cache
