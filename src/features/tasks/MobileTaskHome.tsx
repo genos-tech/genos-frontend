@@ -371,7 +371,9 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                 </MobileOverlay>
             )}
 
-            {useNM.isTaskNoteVisible && useNM.currentTaskNoteChain && (
+            {/* Derived, not the raw intent flag — an overlay with every
+                note tab closed has nothing to render inside it. */}
+            {useNM.isTaskNotePaneVisible && useNM.currentTaskNoteChain && (
                 <MobileOverlay onClose={() => useNM.setIsTaskNoteVisible(false)}>
                     <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
                         {activeNoteType === 1 && useNM.currentMyNote && (

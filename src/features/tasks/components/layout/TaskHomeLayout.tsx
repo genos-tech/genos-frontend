@@ -435,7 +435,13 @@ export const TaskHomeLayout = ({
                             useTM.currentPreviewKind === "milestone") &&
                         renderTaskPreviewPanel()}
                     {useTM.isCreatingTask.flag && isActiveRoute && renderCreateTaskPanel()}
-                    {useNM.isTaskNoteVisible &&
+                    {/* `isTaskNotePaneVisible`, NOT `isTaskNoteVisible`:
+                        closing every note tab leaves the flag set but each
+                        branch inside `renderTaskNotePanel` gated off, which
+                        painted an empty half-page panel with no way to
+                        close it (the close button lives in the note header
+                        that didn't render). See `isNotePaneVisible`. */}
+                    {useNM.isTaskNotePaneVisible &&
                         useNM.currentTaskNoteChain &&
                         renderTaskNotePanel()}
                 </>

@@ -35,7 +35,7 @@ vi.mock("../features/notes/common/services/addNote", () => ({
 
 const mockedAddNote = vi.mocked(addNote);
 
-const taskNote = (title: string): TaskNoteProps =>
+const taskNote = (title: string, tsUpdated?: string): TaskNoteProps =>
     ({
         noteType: 2,
         noteId: 7,
@@ -43,6 +43,7 @@ const taskNote = (title: string): TaskNoteProps =>
         taskId: 8,
         title,
         body: [],
+        ...(tsUpdated ? { tsUpdated } : {}),
     }) as unknown as TaskNoteProps;
 
 describe("cacheFetchedNote recency", () => {
@@ -74,6 +75,49 @@ describe("cacheFetchedNote recency", () => {
         expect(winner.title).toBe("Renamed While Fetching");
         expect(getCachedNote("task", 7)?.title).toBe("Renamed While Fetching");
         // ...and IndexedDB is not rolled back, so the next page load agrees.
+        expect(mockedAddNote).not.toHaveBeenCalled();
+    });
+
+    // Nothing evicts the in-memory cache (`removeFromNoteCache` and
+    // `clearNoteCache` have no production callers) and an entry can be seeded
+    // from a tier that outlives the session — tab rehydrate reads IndexedDB
+    // rows on boot. So "a read never wins" would permanently pin a superseded
+    // title: a rename made in another session has no other way in (there is no
+    // socket event for it), the panel would display the old title, and its next
+    // autosave would PUT it back — destroying someone else's rename. A
+    // strictly newer server row must be able to land.
+    it("lets a strictly newer server row correct a stale cached entry", () => {
+        upsertNoteCache(taskNote("Stale From IndexedDB", "2026-08-13T09:00:00Z"));
+
+        const fresh = taskNote("Renamed In Another Session", "2026-08-13T10:00:00Z");
+        const winner = cacheFetchedNote(fresh);
+
+        expect(winner).toBe(fresh);
+        expect(getCachedNote("task", 7)?.title).toBe("Renamed In Another Session");
+        // The newer row is the truth, so IndexedDB gets it too.
+        expect(mockedAddNote).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects an older server row even when the cached copy is a read", () => {
+        cacheFetchedNote(taskNote("Current", "2026-08-13T10:00:00Z"));
+        mockedAddNote.mockClear();
+
+        const winner = cacheFetchedNote(taskNote("Superseded", "2026-08-13T09:00:00Z"));
+
+        expect(winner.title).toBe("Current");
+        expect(mockedAddNote).not.toHaveBeenCalled();
+    });
+
+    // The tie is what protects a local rename: `saveNote` publishes the note
+    // object it PUT, which still carries the PRE-save `tsUpdated`, so a read
+    // that started before that save carries the same stamp. Equal stamps must
+    // keep the cached copy or the reported bug comes straight back.
+    it("keeps the cached copy when the stamps are equal", () => {
+        upsertNoteCache(taskNote("Renamed", "2026-08-13T09:00:00Z"));
+
+        const winner = cacheFetchedNote(taskNote("New Task Note (1)", "2026-08-13T09:00:00Z"));
+
+        expect(winner.title).toBe("Renamed");
         expect(mockedAddNote).not.toHaveBeenCalled();
     });
 
