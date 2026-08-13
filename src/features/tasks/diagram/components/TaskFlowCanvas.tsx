@@ -327,6 +327,10 @@ export const buildNodesAndEdges = (
     // viewer" focus color. Null (the default everywhere but the dashboard's
     // Assigned Milestones section) leaves every node un-highlighted.
     highlightAssigneeId: number | string | null,
+    // Ids created in the current diagram session — their nodes get the
+    // "newly created" accent. Defaulted so test callers (and any future
+    // caller that doesn't track creations) can omit it.
+    newlyCreatedTaskIds: Set<number> = new Set(),
     untitledLabel = "Untitled"
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
     // The tree's real top, resolved by the loader (see `TaskGraph`).
@@ -364,6 +368,9 @@ export const buildNodesAndEdges = (
             // accent treatment for them even if the id happens to match.
             isCurrentPreview:
                 !isExternal && currentPreviewTaskId != null && taskId === currentPreviewTaskId,
+            // "Just created here" accent. Ghosts excluded (they can't be
+            // created from this diagram).
+            isNewlyCreated: !isExternal && newlyCreatedTaskIds.has(taskId),
             // Focus color for the viewer's own tasks — ghosts excluded (they
             // live in another tree and can't be "your task here").
             isAssignedToViewer:
@@ -586,6 +593,16 @@ const CanvasInner = ({
     // what prevents the NaN-viewport bug — see that effect.
     const pendingFitRef = useRef(false);
 
+    // Task ids created during THIS diagram session (via a card's
+    // add-subtask button). Their nodes get the "newly created" accent so
+    // the user can spot the card they just added in a tree of many. Kept
+    // in a ref (not state) so reads inside `assembleAndLayout` don't add it
+    // to that callback's deps — which would churn the layout effects. The
+    // set only grows; every re-layout (including server-driven refreshes)
+    // reads the latest value, so the highlight persists until the diagram
+    // is closed and reopened.
+    const newTaskIdsRef = useRef<Set<number>>(new Set());
+
     const refresh = useCallback(async () => {
         setError(null);
         const graph = await loadTaskGraph(myself, projectId, rootTaskId, accessToken);
@@ -691,6 +708,23 @@ const CanvasInner = ({
                 })
             );
 
+            // 1b. Patch the cached graph too. `graphRef.current` is the
+            //     snapshot every re-layout rebuilds from — and crucially the
+            //     one `handleAddSubtask` / `handleDelete` splice into. Without
+            //     this write it kept the PRE-edit row, so creating a subtask
+            //     right after an inline edit re-assembled from the stale graph
+            //     and visually reverted the edit (the change WAS saved to the
+            //     backend — reopening the diagram re-fetched and showed it
+            //     correctly — but the in-memory graph never learned about it).
+            if (graphRef.current) {
+                graphRef.current = {
+                    ...graphRef.current,
+                    tasks: graphRef.current.tasks.map((t) =>
+                        Number(t.id) === taskId ? buildMergedTask(t) : t
+                    ),
+                };
+            }
+
             // 2. Mirror into useTM.allTasks (drives the project table /
             //    sidebar) and the IDB cache (survives page refresh).
             //    Without these writes, closing the modal would surface
@@ -761,6 +795,12 @@ const CanvasInner = ({
                 setError(res.error);
                 return;
             }
+
+            // Flag the new task so its node renders with the "newly
+            // created" accent. Recorded before the layout below so the
+            // first render of the node already carries the highlight, and
+            // held for the diagram's lifetime so later re-layouts keep it.
+            newTaskIdsRef.current.add(res.taskId);
 
             // Optimistic insert. Previously we awaited a full graph reload
             // (getProjectTasks + a dependency batch) before the new node
@@ -948,6 +988,7 @@ const CanvasInner = ({
                 },
                 hideClosed,
                 highlightAssigneeId ?? null,
+                newTaskIdsRef.current,
                 t.tasks.diagram.untitled
             );
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");

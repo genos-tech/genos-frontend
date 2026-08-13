@@ -32,6 +32,17 @@ export type TaskNodeData = {
      */
     isCurrentPreview: boolean;
     /**
+     * True when this node's task was created in THIS diagram session via the
+     * card's "add sub-task / add task under milestone" button. Drives a
+     * distinct (cyan) accent — separate from the purple `isCurrentPreview`
+     * anchor and the amber `isAssignedToViewer` focus — so the user can
+     * instantly spot the card they just added in a tree of many siblings.
+     * Only ever set on freshly-created nodes; a graph reload from the server
+     * keeps the highlight because the canvas tracks the created ids for the
+     * lifetime of the open diagram.
+     */
+    isNewlyCreated?: boolean;
+    /**
      * True when this node's task is assigned to the "viewer" the diagram was
      * opened to highlight (see `ModalTaskDiagram.highlightAssigneeId`). Opt-in:
      * only the dashboard's "Assigned Milestones" section sets it, so every

@@ -62,6 +62,13 @@ const HANDLE_BASE = {
 // viewer's tasks never blurs the two treatments together.
 const ASSIGNED_FOCUS_COLOR = "#f59e0b";
 
+// Accent for a card the user JUST created from the diagram (see
+// `TaskNodeData.isNewlyCreated`). Cyan — a hue distinct from the purple
+// `isCurrentPreview` anchor, the amber `isAssignedToViewer` focus, and
+// every status tint (green/orange/red) — so a freshly-added task pops out
+// of a tree of siblings the moment it appears.
+const NEW_TASK_COLOR = "#06b6d4";
+
 export const TaskNodeCard = memo((props: NodeProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -77,6 +84,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         task,
         isRoot,
         isCurrentPreview,
+        isNewlyCreated,
         isAssignedToViewer,
         isExternal: isGhost,
         isDimmed,
@@ -185,14 +193,18 @@ export const TaskNodeCard = memo((props: NodeProps) => {
             // status mix) so it reads as an unambiguous "you are here"
             // marker regardless of the task's status color.
             P.accent
-          : isAssignedToViewer
-            ? // Viewer's own task — amber-tinted border (takes precedence
-              // over the status tint; status is still legible via the chip
-              // and glow). Paired with the amber ring below.
-              `color-mix(in srgb, ${baseBorder}, ${ASSIGNED_FOCUS_COLOR} 55%)`
-            : statusTintColor
-              ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
-              : baseBorder;
+          : isNewlyCreated
+            ? // Just-created card — pure cyan border (no status mix) so the
+              // "you just added this" cue reads unambiguously.
+              NEW_TASK_COLOR
+            : isAssignedToViewer
+              ? // Viewer's own task — amber-tinted border (takes precedence
+                // over the status tint; status is still legible via the chip
+                // and glow). Paired with the amber ring below.
+                `color-mix(in srgb, ${baseBorder}, ${ASSIGNED_FOCUS_COLOR} 55%)`
+              : statusTintColor
+                ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
+                : baseBorder;
     // Subtle status glow on non-ghost cards so the eye sweeps over
     // closed (green) / WIP (orange) tasks as a group.
     const statusGlow =
@@ -206,12 +218,20 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const currentRing = isCurrentPreview
         ? `0 0 0 2px ${P.accentRingStrong}, 0 0 22px ${P.accentRingSoft}`
         : null;
+    // "Newly created" ring — same additive box-shadow trick as
+    // `currentRing`, but cyan. Suppressed when the card is also the
+    // current-preview anchor so the two rings never double up (the anchor
+    // wins; the border tint still marks the card as new).
+    const newRing =
+        isNewlyCreated && !isExternal && !isCurrentPreview
+            ? `0 0 0 2px ${alpha(NEW_TASK_COLOR, isDark ? 0.9 : 0.75)}, 0 0 20px ${alpha(NEW_TASK_COLOR, isDark ? 0.4 : 0.28)}`
+            : null;
     // "Assigned to viewer" ring — same additive box-shadow trick as
     // `currentRing`, but amber. Skipped when the card is already the
     // current-preview anchor so the two rings don't double up (the anchor
     // treatment wins; the amber border tint still marks it as the viewer's).
     const assignedRing =
-        isAssignedToViewer && !isExternal && !isCurrentPreview
+        isAssignedToViewer && !isExternal && !isCurrentPreview && !isNewlyCreated
             ? `0 0 0 2px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.9 : 0.75)}, 0 0 20px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.4 : 0.28)}`
             : null;
     // "Current preview" surface tint. Contrast by *lightness*, not
@@ -229,7 +249,11 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         ? isDark
             ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
             : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
-        : P.surfaceElevated;
+        : isNewlyCreated && !isExternal
+          ? // Subtle cyan wash tying the surface to the new-task border/ring
+            // (same gradient-overlay technique as the current-preview tint).
+            `linear-gradient(${alpha(NEW_TASK_COLOR, isDark ? 0.22 : 0.1)}, ${alpha(NEW_TASK_COLOR, isDark ? 0.22 : 0.1)}), ${P.surfaceElevated}`
+          : P.surfaceElevated;
     const stripeColor = isExternal
         ? null
         : schedule.tone === "neutral" || schedule.tone === "success"
@@ -256,10 +280,12 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                           // outside any internal glow layers. `filter()`
                           // out nulls so a card with only one applicable
                           // shadow doesn't end up with stray commas.
-                          // `assignedRing` and `currentRing` are mutually
-                          // exclusive (see assignedRing), so at most one fires.
+                          // `assignedRing`, `currentRing` and `newRing` are
+                          // mutually exclusive (guards above), so at most one
+                          // ring fires.
                           assignedRing,
                           currentRing,
+                          newRing,
                           isRoot ? `0 6px 22px ${P.glow}` : null,
                           statusGlow,
                           !isRoot && !statusGlow ? P.shadowSoft : null,
