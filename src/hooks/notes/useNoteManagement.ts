@@ -22,6 +22,7 @@ import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSh
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
+import { isNotePaneVisible } from "../../features/notes/common/utils/notePaneVisibility";
 import {
     bucketFromNoteType,
     noteTypeFromBucket,
@@ -267,6 +268,11 @@ export interface NoteManagementState {
     // Visibility states
     isTaskNoteVisible: boolean;
     setIsTaskNoteVisible: (visible: boolean) => void;
+    // What the task page should ACTUALLY render: the flag above is the
+    // user's intent, this is intent AND a note to show. Every task-page
+    // host must gate its note pane on this one — see `isNotePaneVisible`
+    // for why an empty pane is unclosable.
+    isTaskNotePaneVisible: boolean;
     isTaskVisibleInNote: boolean;
     setIsTaskVisibleInNote: (visible: boolean) => void;
 
@@ -2396,6 +2402,16 @@ export const useNoteManagement = (
         // Visibility states
         isTaskNoteVisible,
         setIsTaskNoteVisible,
+        // The task page's note pane has no close control of its own, so
+        // it must never render without a note in it. `tabsApi.tabs` is
+        // the right signal rather than `currentTaskNote`: tabs move only
+        // on an explicit open/close, so the pane can't unmount and
+        // remount (a visible flash in a PanelGroup) during the async
+        // gap while the active tab's note resolves.
+        isTaskNotePaneVisible: isNotePaneVisible({
+            isVisible: isTaskNoteVisible,
+            hasOpenNote: tabsApi.tabs.length > 0,
+        }),
         isTaskVisibleInNote,
         setIsTaskVisibleInNote,
 

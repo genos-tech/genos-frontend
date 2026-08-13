@@ -41,6 +41,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
+import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { MobileChatHome } from "./MobileChatHome";
@@ -111,6 +112,23 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     // URL-based routing
     const chatRouting = useChatRouting({ myself, useCM, useTM, isActiveRoute });
+
+    // The chat-note pane must not render without a note in it.
+    // `ChatNoteMain` returns null on a null note, so the pane would paint
+    // as an empty bordered column — and the only close button is the one
+    // inside the note header that just didn't render, so the user is
+    // stuck with it. Reachable by closing the last note tab or by an
+    // open that resolves to nothing. Same class of bug as the task
+    // page's note panel; see `isNotePaneVisible`.
+    //
+    // Used for BOTH the pane below and the `SelectChatPanel` fallback, so
+    // the two can't disagree about whether this pane counts as visible
+    // and leave the page with no pane at all.
+    const isChatNotePaneVisible = isNotePaneVisible({
+        isVisible: useCM.isChatNoteVisibleInChat === true,
+        hasOpenNote: useNM.chatPanelApi.note !== null,
+        isOpening: useNM.chatPanelApi.isLoading,
+    });
 
     const [todoFromMessageBubble, setTodoFromMessageBubble] = useState<
         MessageProps | ThreadMessageProps | TaskCommentProps | null
@@ -547,7 +565,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             )}
 
                             {/* Chat Note Pane */}
-                            {useCM.isChatNoteVisibleInChat === true && (
+                            {isChatNotePaneVisible && (
                                 <>
                                     <ResizeHandle key="chat-note-resize-handle" />
                                     <ChatNotePanel
@@ -569,7 +587,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 useCM.isThreadVisible === false &&
                                 useTM.isCreatingTask.flag === false &&
                                 useTM.isTaskPreviewVisible === false &&
-                                useCM.isChatNoteVisibleInChat === false && (
+                                isChatNotePaneVisible === false && (
                                     <>
                                         <ResizeHandle key="select-chat-resize-handle" />
                                         <SelectChatPanel

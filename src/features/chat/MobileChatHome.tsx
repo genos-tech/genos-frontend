@@ -19,6 +19,7 @@ import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
+import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { MessagesPane } from "./MainChatPane";
@@ -273,7 +274,14 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                     </MobileOverlay>
                 )}
 
-            {useCM.isChatNoteVisibleInChat === true && (
+            {/* Derived, not the raw intent flag: `ChatNoteMain` renders
+                nothing without an open note, so the overlay would be an
+                empty sheet. See `isNotePaneVisible`. */}
+            {isNotePaneVisible({
+                isVisible: useCM.isChatNoteVisibleInChat === true,
+                hasOpenNote: useNM.chatPanelApi.note !== null,
+                isOpening: useNM.chatPanelApi.isLoading,
+            }) && (
                 <MobileOverlay onClose={() => useCM.setIsChatNoteVisibleInChat(false)}>
                     <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
                         <ChatNoteMain

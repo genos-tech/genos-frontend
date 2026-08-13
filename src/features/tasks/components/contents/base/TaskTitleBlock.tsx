@@ -220,7 +220,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             // otherwise leave no main panel up. This test used to omit the
             // dashboard, which is why closing a preview alongside an open
             // dashboard closed the dashboard too — see `isNoMainPanelVisible`.
-            if (useTM.isCreatingTask.flag === false && useNM.isTaskNoteVisible === false) {
+            // Ask whether the note pane is actually ON SCREEN, not whether
+            // the intent flag is set: the flag stays true after the last
+            // note tab is closed, and treating that as "the note pane is
+            // still up" would skip this fallback and leave the page with
+            // no main panel at all.
+            if (useTM.isCreatingTask.flag === false && useNM.isTaskNotePaneVisible === false) {
                 if (isNoMainPanelVisible(useTM)) {
                     useTM.setIsTaskTableVisible(true);
                 }
