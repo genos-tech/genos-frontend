@@ -2864,7 +2864,7 @@ export const ja: DeepPartial<Messages> = {
             matrixRowAsks: "AI が 1 日に尋ねる",
             matrixRowAgency: "Genosがやっていること",
             matrixRowDepth: "どれだけ深く考えているのか",
-            matrixRowMemory: "それが覚えていること",
+            matrixRowMemory: "何を参照するか",
             matrixRowGenosHistory: "Genosの会話履歴",
             matrixRowPremiumModels: "プレミアム AI モデル",
             matrixRowDigest: "プロアクティブダイジェスト",

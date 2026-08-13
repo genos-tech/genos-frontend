@@ -603,7 +603,7 @@ export const ar: DeepPartial<Messages> = {
             matrixRowAsks: "أسئلة الذكاء الاصطناعي يوميًا",
             matrixRowAgency: "ما الذي يفعله Genos",
             matrixRowDepth: "مدى عمق تفكيره",
-            matrixRowMemory: "ما يتذكر",
+            matrixRowMemory: "ما يعتمد عليه",
             matrixRowGenosHistory: "سجل محادثات Genos",
             matrixRowPremiumModels: "نماذج ذكاء اصطناعي متقدمة",
             matrixRowDigest: "ملخص استباقي",
