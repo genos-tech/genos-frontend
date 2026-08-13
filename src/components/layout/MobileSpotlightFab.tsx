@@ -192,6 +192,10 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
                 touchAction: "none",
                 background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
                 color: "#fff",
+                // Joy drives descendant icon color through `--Icon-color`,
+                // which defaults to neutral grey in light mode and overrides
+                // the `color: "#fff"` above — so force the icon white too.
+                "--Icon-color": "#fff",
                 boxShadow: isDark
                     ? `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.4)`
                     : `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.15)`,
