@@ -28,7 +28,7 @@
 // gives us token-by-token streaming.
 
 import type { SpotlightResult } from "../features/spotlight/types";
-import { fmt, getMessages } from "../i18n";
+import { fmt, getMessages, resolveInitialLocale } from "../i18n";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -638,6 +638,13 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                 : {}),
             ...(args.newConversation ? { new_conversation: true } : {}),
             ...(args.resume ? { resume: true } : {}),
+            // The active UI locale so the agent answers in the user's
+            // language (GENOS_CAPABILITY_ROADMAP §3.4). Read from the shared
+            // resolver (localStorage → navigator → "en"), which `setLocale`
+            // keeps current, so it always reflects the live language even
+            // after an in-session switch. Sent every time; the backend maps
+            // it to a "reply in {language}" directive and no-ops on "en".
+            locale: resolveInitialLocale(),
         },
         args.accessToken,
         args.signal,

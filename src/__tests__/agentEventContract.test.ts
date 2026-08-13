@@ -14,7 +14,7 @@
 // unknown event type ends the stream "unexpectedly" → onError.
 
 import { readFileSync } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { askAgentStream } from "../services/agentApi";
 import { AGENT_EVENT_NAMES } from "../services/agentEventNames";
@@ -192,5 +192,52 @@ describe("agent NDJSON event contract", () => {
         const source = readFileSync("src/services/agentApi.ts", "utf-8");
         const cases = [...source.matchAll(/case "([a-z_]+)":/g)].map((m) => m[1]);
         expect(new Set(cases)).toEqual(new Set(AGENT_EVENT_NAMES));
+    });
+});
+
+// The /ask/ wire body must carry the active UI locale so the agent
+// answers in the user's language (GENOS_CAPABILITY_ROADMAP §3.4). Before
+// this the locale lived only in localStorage and never left the browser.
+describe("ask request wire body", () => {
+    // Each case owns the stored locale it asserts on — start from a
+    // clean slate so a seeded value can't leak between them (or in from
+    // another test in this file).
+    beforeEach(() => window.localStorage.clear());
+
+    const captureFetch = () => {
+        const fetchMock = vi.fn((_url: string, _init: RequestInit) =>
+            Promise.resolve(ndjsonResponse([DONE]))
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        return fetchMock;
+    };
+    const sentLocale = (fetchMock: ReturnType<typeof captureFetch>) =>
+        JSON.parse(fetchMock.mock.calls[0][1].body as string).locale;
+
+    it("forwards the stored UI locale", async () => {
+        window.localStorage.setItem("genos-locale", "ja");
+        const fetchMock = captureFetch();
+        await askAgentStream({
+            query: "q",
+            teamId: "team-1",
+            accessToken: "token",
+            ...makeHandlers(),
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(sentLocale(fetchMock)).toBe("ja");
+    });
+
+    it("always sends a valid locale even with nothing stored", async () => {
+        // Falls back through the shared resolver (navigator → "en"), so
+        // the field is never absent and the backend always has a signal.
+        window.localStorage.clear();
+        const fetchMock = captureFetch();
+        await askAgentStream({
+            query: "q",
+            teamId: "team-1",
+            accessToken: "token",
+            ...makeHandlers(),
+        });
+        expect(["en", "ja", "es", "fr", "zh", "ar", "hi"]).toContain(sentLocale(fetchMock));
     });
 });

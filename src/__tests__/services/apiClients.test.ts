@@ -728,6 +728,11 @@ describe("agentApi.askAgentStream", () => {
         expect(body).toEqual({
             query: "hi",
             team_id: "team1",
+            // `locale` is always sent so the agent can answer in the user's
+            // language (GENOS_CAPABILITY_ROADMAP §3.4) — it is NOT optional.
+            // With nothing stored the shared resolver falls through to the
+            // jsdom navigator default ("en-US" → "en").
+            locale: "en",
         });
         // Optional fields must be absent — the filter is search-only, so
         // the ask never carries entity_types.
