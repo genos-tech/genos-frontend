@@ -4,33 +4,26 @@
 // report progress identically.
 //
 // Rules:
-//   - Pending step → spinner + the tool name with a short arg preview
+//   - Pending step → spinner + a friendly label for the tool
 //   - Done step    → green ✓ + the backend-produced `summary`
-//   - Errored step → red ✗ + the tool name and the error text
+//   - Errored step → red ✗ + the friendly label and the error text
 //
-// `humanReadableCall` is the fallback label for pending events where
-// the backend hasn't yet sent a summary.
+// The pending / error label comes from `getToolLabel` (the localized
+// tool_name → phrase map) so a non-technical user never sees a raw
+// engineering identifier like `search_knowledge_base` or an arg dump
+// like `create_task(title="…", project_id=3)`.
 
 import { Box, CircularProgress, Typography } from "@mui/joy";
 
+import { useTranslation } from "../../i18n";
 import { DARK_TEXT_STRONG } from "./markdownAnswerSx";
+import { getToolLabel } from "./toolLabels";
 import type { ToolEvent } from "./types";
 
 // Mid-strength dark-mode body color used only here; kept local rather
 // than threading through markdownAnswerSx since it's an intermediate
 // state (pending-tool label) the typography block doesn't cover.
 const DARK_TEXT_MEDIUM = "#cebfeb";
-
-export const humanReadableCall = (e: ToolEvent): string => {
-    const argPreview =
-        Object.keys(e.arguments).length > 0
-            ? Object.entries(e.arguments)
-                  .slice(0, 2)
-                  .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                  .join(", ")
-            : "";
-    return argPreview ? `${e.tool_name}(${argPreview})` : e.tool_name;
-};
 
 // "230ms" below a second, "1.8s" above — SI notation, deliberately not
 // localized (matches how every locale reads durations in tech UIs, so
@@ -65,10 +58,11 @@ export const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
 };
 
 const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
+    const { t } = useTranslation();
     const isPending = event.status === "pending";
     const isError = event.status === "error";
 
-    const label = event.summary || humanReadableCall(event);
+    const label = event.summary || getToolLabel(event.tool_name, t);
 
     return (
         <Box
@@ -123,7 +117,7 @@ const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean 
                           : undefined,
                 }}
             >
-                {isError ? `${event.tool_name}: ${event.error}` : label}
+                {isError ? `${getToolLabel(event.tool_name, t)}: ${event.error}` : label}
             </Typography>
             {/* Server-measured execution time (absent while pending, on
                 cache hits, and against older backends). Dim + tabular so

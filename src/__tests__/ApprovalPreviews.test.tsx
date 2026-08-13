@@ -2,7 +2,9 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { getToolLabel } from "../features/agentQA";
 import { ApprovalCard } from "../features/agentQA/ApprovalCard";
+import { en } from "../i18n/locales/en";
 import type { PendingApprovalPayload } from "../services/agentApi";
 
 const renderCard = (tool_name: string, args: Record<string, unknown>) => {
@@ -207,11 +209,90 @@ describe("NoteWritePreview (create_note / update_note approvals)", () => {
     });
 });
 
+describe("CreateTaskPreview (create_task approval)", () => {
+    it("renders the new-task header, destination + meta chips, and plain-text body", () => {
+        renderCard("create_task", {
+            title: "Ship the perf fix",
+            // Friendly-ized server-side to the project name.
+            project_id: "Website Redesign",
+            content_text: "Batch the DB writes and measure again.",
+            priority: "High",
+            effort_level: "Moderate",
+            due_date: "2026-09-15",
+        });
+        expect(screen.getByText("New task")).toBeTruthy();
+        expect(screen.getByText("Project: Website Redesign")).toBeTruthy();
+        expect(screen.getByText("High")).toBeTruthy();
+        expect(screen.getByText("Moderate")).toBeTruthy();
+        expect(screen.getByText("Due 2026-09-15")).toBeTruthy();
+        expect(screen.getByText("Ship the perf fix")).toBeTruthy();
+        expect(screen.getByText(/Batch the DB writes/)).toBeTruthy();
+        // Structured — the raw key:value fallback must NOT render.
+        expect(screen.queryByText("project_id:")).toBeNull();
+        expect(screen.queryByText("content_text:")).toBeNull();
+    });
+});
+
+describe("UpdateTaskPreview (update_task approval)", () => {
+    it("renders only the proposed fields, with the new title and body", () => {
+        renderCard("update_task", {
+            // Friendly-ized server-side to the task's display id.
+            task_id: "WRD-5",
+            title: "Rename: perf fix",
+            status: "WIP",
+            priority: "High",
+            content_text: "Now batching writes.",
+        });
+        expect(screen.getByText("Update task: WRD-5")).toBeTruthy();
+        expect(screen.getByText("Status: WIP")).toBeTruthy();
+        expect(screen.getByText("Priority: High")).toBeTruthy();
+        expect(screen.getByText("Rename: perf fix")).toBeTruthy();
+        expect(screen.getByText(/Now batching writes/)).toBeTruthy();
+        // Fields the model didn't propose must not appear.
+        expect(screen.queryByText(/Effort:/)).toBeNull();
+        expect(screen.queryByText(/Due:/)).toBeNull();
+    });
+
+    it("shows a due-date clear ('') as a cleared chip", () => {
+        renderCard("update_task", { task_id: "WRD-9", due_date: "" });
+        expect(screen.getByText("Update task: WRD-9")).toBeTruthy();
+        expect(screen.getByText("Due: none")).toBeTruthy();
+    });
+});
+
+describe("AddCommentPreview (add_comment approval)", () => {
+    it("renders the comment header and the plain-text body", () => {
+        renderCard("add_comment", {
+            // Friendly-ized server-side to the task's display id.
+            task_id: "WRD-5",
+            body_text: "Confirmed the fix on staging — closing after PR merges.",
+        });
+        expect(screen.getByText("Comment on WRD-5")).toBeTruthy();
+        expect(screen.getByText(/Confirmed the fix on staging/)).toBeTruthy();
+        // Structured — the raw key:value fallback must NOT render.
+        expect(screen.queryByText("body_text:")).toBeNull();
+    });
+});
+
+describe("getToolLabel", () => {
+    it("maps a known tool_name to its friendly, non-technical label", () => {
+        expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
+        expect(getToolLabel("update_tasks_bulk", en)).toBe("Updating several tasks");
+        expect(getToolLabel("create_task", en)).toBe("Creating a task");
+    });
+
+    it("falls back to the raw tool_name for an unmapped tool", () => {
+        expect(getToolLabel("some_future_tool", en)).toBe("some_future_tool");
+    });
+});
+
 describe("ApprovalCard fallback", () => {
     it("keeps the key:value monospace list for tools without a renderer", () => {
-        renderCard("create_task", { title: "Buy coffee", project_id: "Website Redesign" });
-        expect(screen.getByText("title:")).toBeTruthy();
-        expect(screen.getByText("Buy coffee")).toBeTruthy();
-        expect(screen.getByText("project_id:")).toBeTruthy();
+        // assign_task has no structured preview, so it still falls through
+        // to the generic key:value dump.
+        renderCard("assign_task", { task_id: "WRD-5", assignee_id: "alice" });
+        expect(screen.getByText("task_id:")).toBeTruthy();
+        expect(screen.getByText("WRD-5")).toBeTruthy();
+        expect(screen.getByText("assignee_id:")).toBeTruthy();
     });
 });

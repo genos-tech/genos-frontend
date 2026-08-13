@@ -79,6 +79,7 @@ import {
     DARK_TEXT_STRONG,
     FeedbackThumbs,
     formatDurationMs,
+    getToolLabel,
     markdownAnswerSx,
     MentionHighlightOverlay,
     MentionSuggestionDropdown,
@@ -1793,6 +1794,9 @@ const TurnViewInner = ({
     ts,
     noteScopes,
 }: TurnViewProps) => {
+    // Full catalog (not the `ts` spotlight slice) for the tool_name →
+    // friendly label lookup, which lives in the `agentApproval` namespace.
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const [showAllSources, setShowAllSources] = useState(false);
 
@@ -1968,7 +1972,7 @@ const TurnViewInner = ({
                             pending={pendingApproval}
                             rejectLabel={ts.actions.reject}
                             titleText={fmt(ts.approval.titleWithTool, {
-                                toolName: pendingApproval.tool_name,
+                                toolName: getToolLabel(pendingApproval.tool_name, t),
                             })}
                             onApprove={onApprove}
                             onReject={onReject}

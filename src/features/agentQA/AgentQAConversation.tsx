@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { useTranslation } from "../../i18n";
 import { SpotlightResult } from "../spotlight/types";
 import { ApprovalCard } from "./ApprovalCard";
 import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
@@ -24,6 +25,7 @@ import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
 import { SourceChips } from "./SourceChips";
+import { getToolLabel } from "./toolLabels";
 import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 import type { AgentQALabels, CompletedTurn, UseAgentQAReturn } from "./types";
 
@@ -323,6 +325,7 @@ const InFlightTurn = ({
     sourcesById: Map<string, SpotlightResult>;
     onSelectSource?: (source: SpotlightResult) => void;
 }) => {
+    const { t } = useTranslation();
     const { ask } = state;
     // "Thinking…" placeholder shown when the stream is active but no
     // tool calls or answer text have landed yet — gives the user
@@ -376,7 +379,7 @@ const InFlightTurn = ({
                     rejectLabel={labels.actions.reject}
                     titleText={labels.approval.titleWithTool.replace(
                         "{toolName}",
-                        ask.pendingApproval.tool_name
+                        getToolLabel(ask.pendingApproval.tool_name, t)
                     )}
                     onApprove={state.onApprove}
                     onReject={state.onReject}
