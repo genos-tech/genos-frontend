@@ -99,7 +99,7 @@ import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
 import { updataTaskNoteChain } from "./taskNote";
 import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
-import { fillNoteCache, getCachedNote, upsertNoteCache } from "./useNoteData";
+import { cacheFetchedNote, fillNoteCache, getCachedNote, upsertNoteCache } from "./useNoteData";
 import { NoteBucket, NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
 /** Optional overrides for the create-note handlers. Used by markdown
@@ -2012,9 +2012,10 @@ export const useNoteManagement = (
                     accessToken
                 );
                 if (fetched && !fetched.error && fetched.noteType === 1) {
-                    addNote(1, fetched);
-                    fillNoteCache(fetched);
-                    tabsApi.openTab(noteToTab(fetched, myself.teamId, bucket));
+                    // Use the note the cache kept, not the row we read: if a
+                    // rename landed while this fetch was in flight, `fetched`
+                    // is already stale and would put the old title on the tab.
+                    tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId, bucket));
                 }
                 return;
             }
@@ -2032,9 +2033,7 @@ export const useNoteManagement = (
                     accessToken
                 );
                 if (fetched && !fetched.error && fetched.noteType === 2) {
-                    addNote(2, fetched);
-                    fillNoteCache(fetched);
-                    tabsApi.openTab(noteToTab(fetched, myself.teamId));
+                    tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId));
                 }
                 return;
             }
@@ -2046,9 +2045,7 @@ export const useNoteManagement = (
             }
             const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
             if (fetched && !fetched.error && fetched.noteType === 3) {
-                addNote(3, fetched);
-                fillNoteCache(fetched);
-                tabsApi.openTab(noteToTab(fetched, myself.teamId));
+                tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId));
             }
         } catch (error) {
             console.error("Error loading note:", error);
@@ -2162,9 +2159,10 @@ export const useNoteManagement = (
                     );
                     if (cancelled) return;
                     if (fetched && !fetched.error && fetched.noteType === 1) {
-                        addNote(1, fetched);
-                        fillNoteCache(fetched);
-                        setCurrentMyNote(fetched);
+                        // The cache's copy wins over this read (see
+                        // `cacheFetchedNote`) — render that one, or a rename
+                        // that landed mid-fetch is undone on screen.
+                        setCurrentMyNote(cacheFetchedNote(fetched));
                         setCurrentNoteType(personalBucketType());
                         recordNoteOpen(active.noteId, 1);
                     }
@@ -2189,9 +2187,7 @@ export const useNoteManagement = (
                     );
                     if (cancelled) return;
                     if (fetched && !fetched.error && fetched.noteType === 2) {
-                        addNote(2, fetched);
-                        fillNoteCache(fetched);
-                        setCurrentTaskNote(fetched);
+                        setCurrentTaskNote(cacheFetchedNote(fetched));
                         setCurrentNoteType(2);
                         recordNoteOpen(active.noteId, 2);
                     }
@@ -2215,9 +2211,7 @@ export const useNoteManagement = (
                 );
                 if (cancelled) return;
                 if (fetched && !fetched.error && fetched.noteType === 3) {
-                    addNote(3, fetched);
-                    fillNoteCache(fetched);
-                    setCurrentChatNote(fetched);
+                    setCurrentChatNote(cacheFetchedNote(fetched));
                     setCurrentNoteType(3);
                     recordNoteOpen(active.noteId, 3);
                 }

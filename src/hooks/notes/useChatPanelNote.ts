@@ -8,7 +8,7 @@
 // This hook owns chat-panel state independently. Notes-home is no longer
 // touched by chat-page panel activity.
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
@@ -17,6 +17,7 @@ import { addNote } from "../../features/notes/common/services/addNote";
 import { fmt, getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatNoteMetaProps, ChatNoteProps } from "../../types/notes";
+import { cacheFetchedNote, subscribeToNoteCache, upsertNoteCache } from "./useNoteData";
 
 export interface ChatPanelNoteApi {
     note: ChatNoteProps | null;
@@ -95,6 +96,28 @@ export const useChatPanelNote = ({
         setIsLoading(false);
     }, []);
 
+    // Adopt renames made elsewhere for the note this panel is showing.
+    //
+    // This panel is the one note surface that does NOT render through
+    // `useNoteData`, so it is not part of that hook's reactive cache: the
+    // note lives in the `useState` above, seeded once by `openOrCreate`.
+    // Without this subscription a rename saved on notes-home never reached
+    // the chat page, whose title input then kept the old title until
+    // remount — and whose next body autosave PUT that old title back over
+    // the rename. That is the same "title reverts to the default" bug the
+    // task-note path had, on the chat surface.
+    //
+    // Only the isolation that this hook exists for is preserved (its own
+    // tab list, no writes into notes-home state); converging on the note's
+    // real title is not chat-page activity rippling outward.
+    useEffect(() => {
+        const noteId = note?.noteId;
+        if (noteId === undefined) return;
+        return subscribeToNoteCache("chat", noteId, (updated) => {
+            setNote(updated as ChatNoteProps);
+        });
+    }, [note?.noteId, setNote]);
+
     const refreshMeta = useCallback(async () => {
         if (!accessToken) return;
         try {
@@ -131,9 +154,12 @@ export const useChatPanelNote = ({
                 );
 
                 if (chatNotes && chatNotes.length > 0) {
-                    const next = chatNotes[0];
-                    setNote(next);
-                    addNote(3, next);
+                    // A backend READ: publish it through the shared cache so
+                    // (a) a rename that landed while this request was in
+                    // flight wins over it, and (b) the note is visible to the
+                    // save path's freshest-title lookup, which would
+                    // otherwise fall back to this panel's own snapshot.
+                    setNote(cacheFetchedNote(chatNotes[0]));
                     await refreshMeta();
                     return;
                 }
@@ -152,6 +178,10 @@ export const useChatPanelNote = ({
                 if (created) {
                     const newNote: ChatNoteProps = { noteType: 3, ...created };
                     setNote(newNote);
+                    // Creation is a MUTATION: this note is newer than
+                    // anything the cache could hold, so it publishes
+                    // unconditionally.
+                    upsertNoteCache(newNote);
                     addNote(3, newNote);
                     onNoteCreated?.(newNote);
                     await refreshMeta();

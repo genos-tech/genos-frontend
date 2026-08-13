@@ -122,8 +122,7 @@ const fetchForTab = async (
             );
             if (fetched?.error === "forbidden") return FORBIDDEN;
             if (fetched && !fetched.error && fetched.noteType === 1) {
-                addNote(1, fetched);
-                return fetched;
+                return cacheFetchedNote(fetched);
             }
             return null;
         }
@@ -141,8 +140,7 @@ const fetchForTab = async (
             );
             if (fetched?.error === "forbidden") return FORBIDDEN;
             if (fetched && !fetched.error && fetched.noteType === 2) {
-                addNote(2, fetched);
-                return fetched;
+                return cacheFetchedNote(fetched);
             }
             return null;
         }
@@ -154,8 +152,7 @@ const fetchForTab = async (
         const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, tab.noteId, accessToken);
         if (fetched?.error === "forbidden") return FORBIDDEN;
         if (fetched && !fetched.error && fetched.noteType === 3) {
-            addNote(3, fetched);
-            return fetched;
+            return cacheFetchedNote(fetched);
         }
         return null;
     } catch {
@@ -300,6 +297,41 @@ export const fillNoteCache = <T extends ResolvedNote>(note: T): T => {
     writeCache(key, note);
     return note;
 };
+
+// Mirror a note we just fetched from the BACKEND into both client tiers,
+// oldest-loses, and return whichever copy won.
+//
+// `fillNoteCache` alone only protects the in-memory tier. Every backend read
+// also mirrored its row into IndexedDB with a bare `addNote`, which has no
+// recency check — so a read that lost the race was correctly rejected from
+// memory and then written to IndexedDB anyway, rolling the persisted row
+// back to the pre-rename title. Nothing looked wrong until the next page
+// load, when the cache starts empty and that stale row is what IndexedDB
+// hands back: the same "title reverts to the default" report, one reload
+// later.
+//
+// If the cache already holds a copy, that copy came from a mutation
+// (`upsertNoteCache`), and mutations write IndexedDB themselves — so
+// skipping the mirror here loses nothing.
+export const cacheFetchedNote = <T extends ResolvedNote>(note: T): T => {
+    const effective = fillNoteCache(note);
+    if (effective === note) {
+        addNote(note.noteType as 1 | 2 | 3, note);
+    }
+    return effective;
+};
+
+// Subscribe to writes for ONE note, for surfaces that hold their own copy
+// instead of rendering through `useNoteData`. The chat-PAGE note panel is
+// the only such surface (`useChatPanelNote`): it keeps the open note in
+// plain `useState`, so without this it never learns about a rename made on
+// the notes page, and its next body autosave PUTs the title it is still
+// holding. Returns an unsubscribe fn; safe to call from an effect.
+export const subscribeToNoteCache = (
+    kind: "my" | "task" | "chat",
+    noteId: number,
+    cb: CacheSubscriber
+): (() => void) => subscribeToNote(`${kind}-${noteId}`, cb);
 
 // Synchronous read for callers that need to peek at the in-memory cache
 // outside the React render cycle — used by the legacy active-tab sync

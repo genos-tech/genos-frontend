@@ -20,7 +20,7 @@ import {
     TabRef,
     toRefs,
 } from "./noteTabsPersistence";
-import { fillNoteCache } from "./useNoteData";
+import { cacheFetchedNote, fillNoteCache } from "./useNoteData";
 
 // Which sidebar space a personal-backed note was opened FROM. All three
 // are `note_type: 1` on the backend and share the editor, Yjs room and
@@ -183,14 +183,17 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                     if (!accessToken) return null;
                     const fetched = await loadSpecificNote(myself, 1, ref.noteId, accessToken);
                     if (fetched && !fetched.error) {
-                        fillNoteCache(fetched as MyNoteProps);
+                        // Label the tab from whichever copy the cache kept —
+                        // a rename that landed while this fetch was in flight
+                        // outranks the row we just read.
+                        const myNote = cacheFetchedNote(fetched as MyNoteProps);
                         return {
                             kind: "my",
                             noteType: 1,
-                            noteId: fetched.noteId,
+                            noteId: myNote.noteId,
                             bucket: ref.bucket ?? "my",
-                            id: tabIdFor("my", fetched.noteId),
-                            title: fetched.title,
+                            id: tabIdFor("my", myNote.noteId),
+                            title: myNote.title,
                             teamId,
                         };
                     }
@@ -214,15 +217,15 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                     if (!accessToken) return null;
                     const fetched = await loadSpecificNote(myself, 2, ref.noteId, accessToken);
                     if (fetched && !fetched.error) {
-                        fillNoteCache(fetched as TaskNoteProps);
+                        const taskNote = cacheFetchedNote(fetched as TaskNoteProps);
                         return {
                             kind: "task",
                             noteType: 2,
-                            noteId: fetched.noteId,
-                            projectId: fetched.projectId,
-                            taskId: fetched.taskId,
-                            id: tabIdFor("task", fetched.noteId),
-                            title: fetched.title,
+                            noteId: taskNote.noteId,
+                            projectId: taskNote.projectId,
+                            taskId: taskNote.taskId,
+                            id: tabIdFor("task", taskNote.noteId),
+                            title: taskNote.title,
                             teamId,
                         };
                     }
@@ -247,17 +250,17 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 if (!accessToken) return null;
                 const fetched = await loadSpecificNote(myself, 3, ref.noteId, accessToken);
                 if (fetched && !fetched.error) {
-                    fillNoteCache(fetched as ChatNoteProps);
+                    const chatNote = cacheFetchedNote(fetched as ChatNoteProps);
                     return {
                         kind: "chat",
                         noteType: 3,
-                        noteId: fetched.noteId,
-                        chatType: fetched.chatType,
-                        chatId: fetched.chatId,
-                        isThread: fetched.isThread,
-                        threadId: fetched.threadId,
-                        id: tabIdFor("chat", fetched.noteId),
-                        title: fetched.title,
+                        noteId: chatNote.noteId,
+                        chatType: chatNote.chatType,
+                        chatId: chatNote.chatId,
+                        isThread: chatNote.isThread,
+                        threadId: chatNote.threadId,
+                        id: tabIdFor("chat", chatNote.noteId),
+                        title: chatNote.title,
                         teamId,
                     };
                 }
