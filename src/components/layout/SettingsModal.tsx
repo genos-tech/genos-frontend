@@ -1865,7 +1865,15 @@ export const SettingsModal = ({
                         value="notifications"
                     >
                         <Stack spacing={2}>
-                            <NotificationSettingsPanel />
+                            {/* The three lookups name the muted lists: a muted
+                                DM/MDM has no stored name (see
+                                `chatDisplayName`), so without these the rows
+                                fall back to showing a raw chat UUID. */}
+                            <NotificationSettingsPanel
+                                allChats={useCM?.allChats}
+                                myself={myself}
+                                teamMemberProfiles={useTEM?.teamMemberProfiles}
+                            />
                         </Stack>
                     </TabPanel>
                     <TabPanel

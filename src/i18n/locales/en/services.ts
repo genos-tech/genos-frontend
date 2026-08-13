@@ -173,6 +173,10 @@ export const services = {
             noMutedTargets:
                 "No muted items. Mute a specific thread, task, or note from its header or ⋮ menu.",
             unmuteAriaLabel: "Unmute {name}",
+            fallbackChatName: "Unnamed conversation",
+            fallbackThreadName: "Untitled thread",
+            fallbackTaskName: "Task #{id}",
+            fallbackNoteName: "Note #{id}",
             // Labels for the per-object mute list, by target type.
             targetTypeLabels: {
                 chat: "Chat",

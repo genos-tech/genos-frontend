@@ -171,6 +171,22 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         useCM.currentThreadChat?.chatName ?? ""
     );
 
+    // Label persisted with a thread mute so Settings → Muted items can name it.
+    // A thread has no name of its own (see `threadIdentity`), so identify it by
+    // its ROOT message — `messages[0]` IS the root, and it's the only thing that
+    // distinguishes two threads in the same conversation — prefixed with the
+    // conversation for context. Deliberately built from `dmDisplayName` and not
+    // the raw `chatName` for the reason given above it; handing the mute
+    // `chatName` is what made the muted list show a bare UUID for DM/MDM
+    // threads. `undefined` when we have neither, so the settings panel can fall
+    // back to a readable generic rather than storing an empty label.
+    const threadMuteLabel = (() => {
+        const root = useCM.currentThreadChat?.messages?.[0]?.contentText ?? "";
+        const snippet = root.replace(/\s+/g, " ").trim().slice(0, 60);
+        if (dmDisplayName && snippet) return `${dmDisplayName}: ${snippet}`;
+        return snippet || dmDisplayName || undefined;
+    })();
+
     // Action button style
     const actionButtonStyle = {
         background: styles.buttonBg,
@@ -627,7 +643,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         targetType="thread"
                         targetId={useCM.currentThreadChat.threadId}
                         chatType={useCM.currentThreadChat.chatType}
-                        label={useCM.currentThreadChat.chatName}
+                        label={threadMuteLabel}
                     />
                 )}
 
