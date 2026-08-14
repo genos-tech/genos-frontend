@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { useQuickReactionsPreference } from "../../../hooks/common/useQuickReactionsPreference";
 import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { TaskCommentProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
-import { EmojiGlyph } from "./EmojiGlyph";
 import { MoreReactionsChip, ReactionChip } from "./ReactionChip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
@@ -35,6 +32,11 @@ export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] 
         .sort((a, b) => b.count - a.count);
 };
 
+// This component renders reaction CHIPS only — the counted reactions
+// already on the comment. The quick-add row (3 default picks + the
+// open-picker icon) lives in `TaskCommentEmojiReaction`, which
+// `TaskCommentBubble` mounts in the top-right hover toolbar alongside
+// Edit/⋮, mirroring chat's `ShowEmojiReaction` / `EmojiReaction` split.
 type ReactionEmojiProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -46,42 +48,26 @@ type ReactionEmojiProps = {
     // can stamp it onto the chat-activity-sidebar entry. Without this
     // the activity item for a reaction falls back to "#<taskId>".
     taskDisplayId?: string | null;
-    showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
-    setShowEmojiPicker: (value: boolean) => void;
 };
 export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     const {
-        socket,
         myself,
         comment,
         projectId,
         projectName,
         taskDisplayId,
-        showUnderBarOption,
         reactions,
         setReactions,
-        setShowEmojiPicker,
+        socket,
     } = props;
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    // Same user-picked quick reactions as the chat/thread bubbles
-    // (Settings → Chat), so the hover row is consistent everywhere.
-    const { emojis: quickReactions } = useQuickReactionsPreference();
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
-
-    // Derived, not state — see the note in `EmojiReaction`: the previous
-    // self-narrowing filter permanently dropped an emoji from the row.
-    const baseEmojiList = useMemo(() => {
-        const reacted = new Set(groupedReactions.map((item) => item.emoji));
-        return quickReactions.filter((emoji) => !reacted.has(emoji));
-    }, [quickReactions, groupedReactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
@@ -142,7 +128,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     };
 
     return (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center", mb: 0.5 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
             {displayed.map(({ senders, emoji, count }) => (
                 <AppTooltip
                     key={`emoji-chip-${emoji}`}
@@ -176,58 +162,6 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         text={fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
                     />
                 </AppTooltip>
-            )}
-
-            {showUnderBarOption && (
-                <>
-                    {groupedReactions.length < 3 && (
-                        <>
-                            {baseEmojiList.map((emoji) => (
-                                <Button
-                                    key={`default-emoji-${emoji}`}
-                                    size="sm"
-                                    variant="plain"
-                                    sx={{
-                                        minWidth: "auto",
-                                        paddingX: "6px",
-                                        marginBottom: 0.5,
-                                        fontSize: "16px",
-                                        "&:hover": {
-                                            backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
-                                        },
-                                    }}
-                                    onClick={() => handleAddReaction(emoji)}
-                                >
-                                    {/* Team custom emoji (":name:") must render as an
-                                        image, not the literal shortcode. */}
-                                    <EmojiGlyph emoji={emoji} />
-                                </Button>
-                            ))}
-                        </>
-                    )}
-                    <AppTooltip size="sm" title={t.common.ui.emoji.reaction}>
-                        <IconButton
-                            key={`emoji-icon-${comment.commentId}`}
-                            color="primary"
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                minWidth: "auto",
-                                paddingX: "6px",
-                                marginBottom: 0.5,
-                                fontSize: "16px",
-                                "&:hover": {
-                                    backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
-                                },
-                            }}
-                            onClick={() => {
-                                setShowEmojiPicker(true);
-                            }}
-                        >
-                            <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
-                        </IconButton>
-                    </AppTooltip>
-                </>
             )}
         </Box>
     );

@@ -14,6 +14,7 @@ import { ResolvedUserName } from "../../../../../../components/ui/avatars/Avatar
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
+import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/TaskCommentEmojiReaction";
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
@@ -173,6 +174,10 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // and unmounting the toolbar would tear the open menu down with it
     // (same pattern as MessageBubble's isMoreMenuOpen).
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
+    // Keeps the quick-emoji row visible under the same condition as the
+    // toolbar that hosts it, mirroring MessageBubble's combined
+    // `showUnderBarOption` (which already ORs in its own more-menu flag).
+    const showToolbarActions = showUnderBarOption || isMoreMenuOpen;
     const previewWrapClassName = useMemo(
         () =>
             [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
@@ -316,6 +321,25 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         return null;
     }
 
+    // Quick-add emoji row (3 default picks + open-picker icon), placed
+    // in the hover toolbar next to Edit/⋮ — mirroring MessageBubble's
+    // `EmojiReaction` sitting alongside `BubbleMoreMenu`. The counted
+    // reaction chips stay separate, in `reactionsDisplay` below.
+    const quickEmojiReaction = (
+        <TaskCommentEmojiReaction
+            comment={comment}
+            myself={myself}
+            projectId={currentProjectId}
+            projectName={currentProjectName}
+            reactions={reactions}
+            setReactions={setReactions}
+            setShowEmojiPicker={setShowEmojiPicker}
+            showUnderBarOption={showToolbarActions}
+            socket={socket}
+            taskDisplayId={currentTaskDisplayId}
+        />
+    );
+
     const editButton = (
         <AppTooltip title={t.tasks.comment.editTooltip}>
             <IconButton
@@ -431,8 +455,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                 projectName={currentProjectName}
                 reactions={reactions}
                 setReactions={setReactions}
-                setShowEmojiPicker={setShowEmojiPicker}
-                showUnderBarOption={showUnderBarOption}
                 socket={socket}
                 taskDisplayId={currentTaskDisplayId}
             />
@@ -536,6 +558,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                         onDoubleClick={(e) => e.stopPropagation()}
                     >
                         <Stack alignItems="center" direction="row" spacing={0.25}>
+                            {quickEmojiReaction}
                             {editButton}
                             {moreMenu}
                         </Stack>
@@ -706,11 +729,13 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                         </Box>
                     </Stack>
 
-                    {/* Inline edit + ⋮ more-menu affordances, top-right
-                        of bubble. Both fade in with the hover toolbar
-                        so they don't add visual noise at rest; kept
-                        interactive only while shown so the invisible
-                        buttons can't swallow clicks on the body. */}
+                    {/* Quick-emoji + edit + ⋮ more-menu affordances,
+                        top-right of bubble (mirrors MessageBubble's
+                        EmojiReaction + BubbleMoreMenu pairing). All
+                        fade in with the hover toolbar so they don't add
+                        visual noise at rest; kept interactive only
+                        while shown so the invisible buttons can't
+                        swallow clicks on the body. */}
                     <Box
                         sx={{
                             position: "absolute",
@@ -722,6 +747,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                         }}
                     >
                         <Stack alignItems="center" direction="row" spacing={0.25}>
+                            {quickEmojiReaction}
                             {editButton}
                             {moreMenu}
                         </Stack>

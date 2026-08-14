@@ -27,6 +27,9 @@ vi.mock("../components/messageBody/MessageBody", () => ({
 vi.mock("../components/ui/emoji/ReactionTaskCommentEmojiDisplay", () => ({
     ReactionTaskCommentEmojiDisplay: () => <div data-testid="reactions" />,
 }));
+vi.mock("../components/ui/emoji/TaskCommentEmojiReaction", () => ({
+    TaskCommentEmojiReaction: () => <div data-testid="quick-emoji-reaction" />,
+}));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({
     EmojiPicker: () => null,
 }));
