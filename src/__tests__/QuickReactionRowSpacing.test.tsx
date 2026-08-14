@@ -18,7 +18,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { EmojiReaction } from "../components/ui/emoji/EmojiReaction";
-import { ReactionTaskCommentEmojiDisplay } from "../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
+import { TaskCommentEmojiReaction } from "../components/ui/emoji/TaskCommentEmojiReaction";
 import { UserProps } from "../types/admin";
 
 const me = { userId: "u-me", userName: "Me", teamId: 1 } as unknown as UserProps;
@@ -67,7 +67,7 @@ const renderChatRow = () =>
 const renderTaskCommentRow = () =>
     render(
         <CssVarsProvider>
-            <ReactionTaskCommentEmojiDisplay
+            <TaskCommentEmojiReaction
                 comment={{ commentId: 3, taskId: 1 } as never}
                 myself={me}
                 reactions={[]}
