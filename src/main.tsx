@@ -23,6 +23,7 @@ import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
+import type { SegmentKey } from "./lp/segments";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -44,6 +45,7 @@ const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
 const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
 const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
+const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 
 // Initialize PostHog once, before React mounts. No-ops when
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
@@ -90,12 +92,28 @@ const publicPage = (Page: ComponentType) => (
     </Suspense>
 );
 
+// Same isolation as publicPage, for the /for-* segment pages which take a
+// `segment` prop instead of rendering standalone.
+const publicSegmentPage = (segment: SegmentKey) => (
+    <Suspense fallback={null}>
+        <GenosSegmentPage segment={segment} />
+    </Suspense>
+);
+
 const tree = (
     <Router>
         <Routes>
             {/* Public company / marketing page. Fully isolated from the auth
                 stack: no AuthProvider, no guards, no redirects. */}
             <Route element={publicPage(GenosLandingPage)} path="/home" />
+
+            {/* Audience-specific landing pages linked from /home's route
+                cards. Same isolation as /home: no auth stack, own bespoke
+                ja/en toggle (see src/lp/segments). */}
+            <Route element={publicSegmentPage("research")} path="/for-research" />
+            <Route element={publicSegmentPage("teams")} path="/for-teams" />
+            <Route element={publicSegmentPage("projects")} path="/for-projects" />
+            <Route element={publicSegmentPage("students")} path="/for-students" />
 
             {/* Public product guide (features, how-to, shortcuts). Linked from
                 the landing page and, like /home, fully isolated from the auth
