@@ -2,21 +2,25 @@ import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
     ArrowRight,
+    Beaker,
     Bot,
     Check,
     ChevronRight,
     ClipboardList,
     Database,
     FileText,
+    GraduationCap,
     HelpCircle,
     Layers3,
     Mail,
     MessageSquareText,
     Moon,
+    Rocket,
     Search,
     Sparkles,
     Sun,
     Target,
+    Users,
     Workflow,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -46,18 +50,18 @@ const copy = {
         },
         hero: {
             badge: "MVP公開中 · すべてがつながるワークスペース",
-            title: "散らばったコンテキストを、もう見失わない。",
-            titleSub: "Slack・Notion・Jiraを、ひとつのワークスペースに。",
-            lead: "議論・ドキュメント・タスクが、それぞれ別のツールに分かれている。それらをまたいで探すのは、人にもAIにも大きな負担です。Genosは、会話・ドキュメント・タスクをひとつのつながったワークスペースにまとめ、コンテキストを散らばらせず、仕事の進行とともに自動的に蓄積します。",
+            title: "仕事には、経緯がある。Genosは、そのつながりを残す。",
+            titleSub: "会話・ノート・タスク・予定を、ひとつのワークスペースに。",
+            lead: "何を話し、何を記録し、何を実行し、何が起きたのか。Genosは、その流れを同じワークスペースに置き、AIが根拠へのリンク付きで振り返れるようにします。研究、チーム業務、プロジェクト、学習。それぞれの使い方から選んでください。",
             primary: "デモを試す",
             secondary: "仕組みを見る",
             footnote:
                 "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。Webブラウザのみで利用可能です。",
         },
         socialProof: [
-            "チャット・ドキュメント・タスクをひとつのワークスペースに",
-            "仕事の進行とともにコンテキストが自動で蓄積",
-            "仕事のつながりを理解するAI",
+            "回答には、元の情報へ戻れるリンク",
+            "AIによる書き込みは、実行前に必ず確認",
+            "ログイン不要のデモ・クレジットカード不要",
         ],
         problem: {
             eyebrow: "The problem",
@@ -215,7 +219,7 @@ const copy = {
                 },
                 {
                     q: "Slack、Jira、Notionとは何が違いますか？",
-                    a: "これらのツールは、チャット・タスク・ドキュメントを別々に保存します。Genosはそれらをひとつのワークスペースにまとめ、さらに重要なこととして、互いにつなげます。だからGenos AIは、議論がどう決定になり、タスクになり、ドキュメントになったのかをたどれます。もうひとつのサイロではなく、つながったコンテキストレイヤーです。",
+                    a: "これらのツールは、チャット・タスク・ドキュメントを別々に保存します。Genosは、それらに代わる会話・タスク・ノートをひとつのワークスペースにまとめ、さらに重要なこととして、それらを互いにつなげます。だからGenos AIは、議論がどう決定になり、タスクになり、ドキュメントになったのかをたどれます。既存のSlack・Jira・Notionのデータを自動で取り込んだり同期したりするものではなく、もうひとつのサイロではなく、最初からつながったコンテキストレイヤーです。",
                 },
                 {
                     q: "Genos AIは何ができますか？",
@@ -248,18 +252,18 @@ const copy = {
         },
         hero: {
             badge: "MVP is live · One connected workspace",
-            title: "Stop losing project context",
-            titleSub: "across Slack, Notion & Jira.",
-            lead: "Every discussion, document, and task lives in a different tool — and searching across them is draining, for people and for AI alike. Genos brings conversations, docs, and tasks into one connected workspace, so context is captured automatically as work happens, instead of scattered and lost.",
+            title: "Your work has a history. Genos keeps it connected.",
+            titleSub: "Bring conversations, notes, tasks, and schedules into one workspace.",
+            lead: "What was discussed, what was recorded, what was done, and what happened next should remain traceable. Genos keeps that flow in one workspace and lets AI answer with links to the source. Choose the workflow that matches your research, team, project, or studies.",
             primary: "Try the demo",
             secondary: "See how it works",
             footnote:
                 "You can try it without logging in. Create an account to keep your data permanently. Only available in a web browser.",
         },
         socialProof: [
-            "Chat, docs, and tasks in one workspace",
-            "Context preserved automatically as you work",
-            "AI that understands how your work connects",
+            "Answers link back to their sources",
+            "AI writes only after you approve",
+            "No-login demo and no credit card required",
         ],
         problem: {
             eyebrow: "The problem",
@@ -417,7 +421,7 @@ const copy = {
                 },
                 {
                     q: "How is it different from Slack, Jira, and Notion?",
-                    a: "Those tools store your chat, tasks, and docs separately. Genos keeps them in one workspace and, more importantly, connected — so Genos AI can follow how a discussion became a decision, a task, and a doc. It is a connected context layer, not another silo.",
+                    a: "Those tools store your chat, tasks, and docs separately. Genos gives you its own connected chat, tasks, and notes in one workspace and, more importantly, keeps them linked to each other — so Genos AI can follow how a discussion became a decision, a task, and a doc. Genos does not automatically import or continuously sync data from Slack, Jira, or Notion; it is a connected context layer, not another silo.",
                 },
                 {
                     q: "What can Genos AI do?",
@@ -436,6 +440,65 @@ const copy = {
         },
     },
 };
+
+const audienceRouteCards = [
+    {
+        route: "/for-research",
+        icon: Beaker,
+        ja: {
+            title: "研究者・研究チーム",
+            line: "実験、結果、学び、次の実験をつなぐ。",
+            cta: "研究での使い方を見る",
+        },
+        en: {
+            title: "Researchers and labs",
+            line: "Connect experiments, results, learning, and the next decision.",
+            cta: "See Genos for research",
+        },
+    },
+    {
+        route: "/for-teams",
+        icon: Users,
+        ja: {
+            title: "非テックを含む業務チーム",
+            line: "会議、決定、担当、期限、フォローをつなぐ。",
+            cta: "チーム業務での使い方を見る",
+        },
+        en: {
+            title: "General business teams",
+            line: "Connect meetings, decisions, owners, deadlines, and follow-ups.",
+            cta: "See Genos for teams",
+        },
+    },
+    {
+        route: "/for-projects",
+        icon: Rocket,
+        ja: {
+            title: "プロジェクト・スタートアップ",
+            line: "議論、仕様、タスク、依存関係、リリースをつなぐ。",
+            cta: "プロジェクトでの使い方を見る",
+        },
+        en: {
+            title: "Projects and startups",
+            line: "Connect discussions, specifications, tasks, dependencies, and releases.",
+            cta: "See Genos for projects",
+        },
+    },
+    {
+        route: "/for-students",
+        icon: GraduationCap,
+        ja: {
+            title: "大学生・大学院生",
+            line: "ノート、課題、予定、振り返り、次の学習をつなぐ。",
+            cta: "学習での使い方を見る",
+        },
+        en: {
+            title: "Students and study groups",
+            line: "Connect notes, assignments, schedules, reflection, and the next study plan.",
+            cta: "See Genos for students",
+        },
+    },
+];
 
 function cn(...classes: Array<string | false | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -853,6 +916,35 @@ export default function GenosLandingPage() {
                             label="Genos Workspace"
                             src="/lp-top.png"
                         />
+                    </div>
+                </section>
+
+                <section className="px-4 py-4 sm:px-6 lg:px-8" id="segments">
+                    <div className="mx-auto max-w-7xl">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {audienceRouteCards.map((card) => {
+                                const cardCopy = card[lang];
+                                return (
+                                    <Link
+                                        key={card.route}
+                                        className="group flex flex-col rounded-[2rem] border border-violet-100 bg-white p-6 shadow-lg shadow-violet-900/5 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-900/10 dark:border-white/10 dark:bg-white/5"
+                                        to={card.route}
+                                    >
+                                        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
+                                            <card.icon className="h-5 w-5" />
+                                        </div>
+                                        <h3 className="text-lg font-black">{cardCopy.title}</h3>
+                                        <p className="mt-2 flex-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                            {cardCopy.line}
+                                        </p>
+                                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-violet-700 dark:text-violet-200">
+                                            {cardCopy.cta}
+                                            <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </div>
                 </section>
 
