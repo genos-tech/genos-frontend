@@ -76,7 +76,12 @@
 
 #root {
     display: var(--root-display);
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not 1fr: an "auto" min track won't shrink below
+       the min-content width of whatever's inside it, so a single wide,
+       unbreakable descendant (e.g. a min-w-[...] table) blows out the
+       whole page's width on narrow viewports instead of just scrolling
+       itself. */
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
     overflow-x: var(--root-overflow);
     overflow: var(--root-overflow);
