@@ -478,7 +478,11 @@ export const NotificationSettingsPanel = ({
                         const displayName = mutedTargetName(target, nameLookup, t);
                         return (
                             <Stack
-                                key={`${target.targetType}:${target.targetId}`}
+                                // `noteType` is part of a note target's
+                                // identity, so it belongs in the key too:
+                                // personal note 42 and task note 42 are two
+                                // different rows in this list.
+                                key={`${target.targetType}:${target.targetId}:${target.noteType ?? ""}`}
                                 alignItems="center"
                                 direction="row"
                                 justifyContent="space-between"
@@ -522,7 +526,11 @@ export const NotificationSettingsPanel = ({
                                         name: displayName,
                                     })}
                                     onClick={() =>
-                                        unmuteTarget(target.targetType, target.targetId)
+                                        unmuteTarget(
+                                            target.targetType,
+                                            target.targetId,
+                                            target.noteType
+                                        )
                                     }
                                 >
                                     <NotificationsActiveRounded />

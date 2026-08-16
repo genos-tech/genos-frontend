@@ -66,8 +66,19 @@ export interface NotificationsState extends NotificationPauseState {
     isMuted: (chatType: number, chatId: string) => boolean;
     /** Add/replace a per-object mute (thread / task / note). */
     muteTarget: (entry: MutedTargetRef) => void;
-    unmuteTarget: (targetType: MutedTargetType, targetId: string | number) => void;
-    isTargetMutedByKey: (targetType: MutedTargetType, targetId: string | number) => boolean;
+    /** `noteType` (1 personal / 2 task / 3 chat) is part of a NOTE target's
+     *  identity — pass the same value that was muted or the entry won't be
+     *  found. Ignored for other target types. */
+    unmuteTarget: (
+        targetType: MutedTargetType,
+        targetId: string | number,
+        noteType?: number
+    ) => void;
+    isTargetMutedByKey: (
+        targetType: MutedTargetType,
+        targetId: string | number,
+        noteType?: number
+    ) => boolean;
     setActiveSurface: (surface: ActiveSurface | null) => void;
     subscribeToasts: (listener: (intent: NotificationIntent) => void) => () => void;
 }
@@ -374,13 +385,13 @@ export const useNotifications = (
         [manager]
     );
     const unmuteTarget = useCallback(
-        (targetType: MutedTargetType, targetId: string | number) =>
-            manager.unmuteTarget(targetType, targetId),
+        (targetType: MutedTargetType, targetId: string | number, noteType?: number) =>
+            manager.unmuteTarget(targetType, targetId, noteType),
         [manager]
     );
     const isTargetMutedByKey = useCallback(
-        (targetType: MutedTargetType, targetId: string | number) =>
-            manager.isTargetMutedByKey(targetType, targetId),
+        (targetType: MutedTargetType, targetId: string | number, noteType?: number) =>
+            manager.isTargetMutedByKey(targetType, targetId, noteType),
         [manager]
     );
     // Two consumers of one value: the manager suppresses toasts locally,

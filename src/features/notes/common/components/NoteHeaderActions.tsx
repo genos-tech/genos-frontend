@@ -114,6 +114,10 @@ export const NoteHeaderActions = ({
             : null;
     const activeNoteId = activeNote?.noteId ?? null;
     const activeNoteTitle = activeNote?.title ?? "";
+    // This header serves personal (incl. the shared/team aliases) AND task
+    // notes, whose ids come from different tables — so a note mute has to
+    // carry the backend note type or it names up to three notes at once.
+    const mutedNoteType = toBackendNoteType(noteType);
 
     // Members + my role on the currently-opened note.
     const members = useNM.currentNoteMembers;
@@ -700,13 +704,13 @@ export const NoteHeaderActions = ({
                         label:
                             notifCtx &&
                             activeNoteId != null &&
-                            notifCtx.isTargetMutedByKey("note", activeNoteId)
+                            notifCtx.isTargetMutedByKey("note", activeNoteId, mutedNoteType)
                                 ? t.services.notifications.muteButton.unmute
                                 : t.services.notifications.muteButton.mute,
                         icon:
                             notifCtx &&
                             activeNoteId != null &&
-                            notifCtx.isTargetMutedByKey("note", activeNoteId) ? (
+                            notifCtx.isTargetMutedByKey("note", activeNoteId, mutedNoteType) ? (
                                 <NotificationsOffRoundedIcon sx={{ fontSize: 18 }} />
                             ) : (
                                 <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />
@@ -715,12 +719,13 @@ export const NoteHeaderActions = ({
                         onClick: () => {
                             if (!notifCtx || activeNoteId == null) return;
                             const id = String(activeNoteId);
-                            if (notifCtx.isTargetMutedByKey("note", id)) {
-                                notifCtx.unmuteTarget("note", id);
+                            if (notifCtx.isTargetMutedByKey("note", id, mutedNoteType)) {
+                                notifCtx.unmuteTarget("note", id, mutedNoteType);
                             } else {
                                 notifCtx.muteTarget({
                                     targetType: "note",
                                     targetId: id,
+                                    noteType: mutedNoteType,
                                     label: activeNoteTitle,
                                 });
                             }

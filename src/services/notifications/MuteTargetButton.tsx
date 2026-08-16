@@ -15,6 +15,10 @@ interface MuteTargetButtonProps {
     targetId: string | number | null | undefined;
     /** Optional chat scope, stored on the mute entry (for thread targets). */
     chatType?: number;
+    /** REQUIRED for `note` targets: which note table `targetId` belongs to
+     *  (1 personal / 2 task / 3 chat). The three tables number their rows
+     *  independently, so without it the mute matches nothing. */
+    noteType?: number;
     /** Optional category scope — when set the mute applies only to these
      *  categories (e.g. mute mentions but keep comments). */
     categories?: NotificationCategory[];
@@ -36,6 +40,7 @@ export const MuteTargetButton = ({
     targetType,
     targetId,
     chatType,
+    noteType,
     categories,
     label,
     color = "neutral",
@@ -47,7 +52,7 @@ export const MuteTargetButton = ({
     if (targetId === null || targetId === undefined || targetId === "") return null;
 
     const id = String(targetId);
-    const muted = ctx.isTargetMutedByKey(targetType, id);
+    const muted = ctx.isTargetMutedByKey(targetType, id, noteType);
     const tooltip = muted
         ? t.services.notifications.muteButton.unmute
         : t.services.notifications.muteButton.mute;
@@ -55,12 +60,13 @@ export const MuteTargetButton = ({
     const handleClick = (event: React.MouseEvent) => {
         event.stopPropagation();
         if (muted) {
-            ctx.unmuteTarget(targetType, id);
+            ctx.unmuteTarget(targetType, id, noteType);
         } else {
             ctx.muteTarget({
                 targetType,
                 targetId: id,
                 ...(chatType !== undefined ? { chatType } : {}),
+                ...(noteType !== undefined ? { noteType } : {}),
                 ...(categories && categories.length ? { categories } : {}),
                 ...(label ? { label } : {}),
             });
