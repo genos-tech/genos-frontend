@@ -942,6 +942,20 @@ input[type="checkbox"] {
     background-color: transparent !important;
 }
 
+/* Cap the floating comment card's width. BlockNote/Mantine only sets a
+   min-width (350px) on `.bn-thread`, with no max-width — a long unbroken
+   token (URL, long word) in a comment grows the card until floating-ui's
+   `shift` middleware pins it against the viewport edge, i.e. up to ~window
+   width. `word-break` is inherited by the comment text below, so long
+   tokens wrap inside the cap instead of overflowing it. Every `.bn-thread`
+   in this app IS the floating card — comments-sidebar (CommentsSidebar.tsx)
+   is a custom read-only list that drives this same card via `selectThread`,
+   not BlockNote's own docked `.bn-threads-sidebar`. */
+.bn-thread {
+    max-width: 420px;
+    word-break: break-word;
+}
+
 /* Thread comments section – scrollable when many comments */
 .bn-thread-comments {
     max-height: 50vh;
