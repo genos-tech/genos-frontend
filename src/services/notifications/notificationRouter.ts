@@ -469,6 +469,19 @@ const buildInboxIntent = (
         3: routerMessages.inboxTitleJoinGroup,
         4: routerMessages.inboxTitleNoteAccess,
         5: routerMessages.inboxTitleOwnershipClaim,
+        // No entry for 9 (a fired reminder), and adding one would be a bug
+        // rather than a fix. Reminders never reach this function: it runs off
+        // a `wsType: "inbox"` socket event, which is relayed by the client
+        // whose request created the item, and a reminder is filed by a cron
+        // with no such client. They are announced by `reminderNotice.ts`
+        // instead — which matters because everything built here gets
+        // `category: "inbox"`, and `inbox` IS in the manager's
+        // `PUSH_COVERED_CATEGORIES`: routing a reminder through here would
+        // suppress it on precisely the hidden tab it is for, and would ignore
+        // the `message_reminder` / `todo_reminder` toggles the user actually
+        // has. (6/7/8 are a different matter: those DO arrive by socket and
+        // read "New inbox item" only because nobody has written titles for
+        // them yet.)
     };
     const title = titleByType[item.itemType] || routerMessages.inboxFallback;
 

@@ -10,6 +10,12 @@
  * and on click we focus an existing app tab (and tell it to navigate) or
  * open a new one at the deep-link URL.
  *
+ * We also postMessage any open tab about the push channel itself — that a
+ * push arrived (`push-received`) and that the browser rotated the
+ * subscription (`push-subscription-changed`). Both are things only this
+ * worker can see and only the page can act on; `pushBridge.ts` is the other
+ * end of each. See those handlers for why they exist.
+ *
  * Caching rules, and why each is what it is:
  *
  *   • Navigations → NETWORK-FIRST, falling back to the cached shell.
@@ -147,6 +153,42 @@ const setBadge = (count) => {
     self.navigator.setAppBadge(localBadgeCount).catch(() => {});
 };
 
+// Tell any open tab that a push arrived, so it can catch up on the data the
+// push implies instead of waiting for a timer.
+//
+// The specific gap this closes: an inbox item filed by a backend cron (a
+// reminder coming due) has no socket event, because that event is relayed by
+// whichever client's request created the item and a cron has no client. The
+// page therefore learns about the row from a poll, or not until a reload. A
+// push is the one signal that is already correctly timed — it just wasn't
+// being shared with the page.
+//
+// `tag` is the whole message: the server's reminder tags are
+// `"<kind>:<reminder_id>"` (`message_reminders.fire`), so it says both what
+// kind of thing arrived and which one — enough for the page to decide whether
+// to sync, and to know the card above has ALREADY been shown for it. (There is
+// no `category` in the payload to forward; the tag prefix is it.)
+//
+// Fire-and-forget: no tab open is the normal case, and the OS card has been
+// shown regardless.
+const announcePush = async (data) => {
+    try {
+        const allClients = await self.clients.matchAll({
+            type: "window",
+            includeUncontrolled: true,
+        });
+        for (const client of allClients) {
+            client.postMessage({
+                type: "push-received",
+                tag: data.tag || "",
+                url: data.url || "",
+            });
+        }
+    } catch (e) {
+        // A tab that went away mid-iteration must not break the card.
+    }
+};
+
 self.addEventListener("push", (event) => {
     let data = {};
     try {
@@ -177,7 +219,57 @@ self.addEventListener("push", (event) => {
         silent: data.silent === true,
         data: { url: data.url || "/" },
     };
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        Promise.all([self.registration.showNotification(title, options), announcePush(data)])
+    );
+});
+
+// The browser can retire a push subscription on its own — Chrome does it when
+// the push service rotates its endpoint, and a `permissions` change can too.
+// Until now nothing noticed: the page only re-subscribes on load, so a device
+// stayed silently unsubscribed until its next reload, which for a long-lived
+// laptop tab can be days. That is one of the two ways a device ends up
+// receiving no reminders while another device on the same account gets them.
+//
+// The worker can restore the browser's half itself (re-subscribing with the
+// same VAPID key it was given), but it CANNOT tell the server: that needs the
+// user's access token, which lives in the page. So do both halves — resubscribe
+// here, and ask any open tab to re-register the new endpoint. With no tab open
+// the page's own boot-time `ensurePushSubscription` picks it up, which is why
+// the resubscribe is worth doing even when nobody is listening.
+self.addEventListener("pushsubscriptionchange", (event) => {
+    event.waitUntil(
+        (async () => {
+            const key =
+                event.oldSubscription && event.oldSubscription.options
+                    ? event.oldSubscription.options.applicationServerKey
+                    : null;
+            let renewed = null;
+            try {
+                renewed =
+                    event.newSubscription ||
+                    (key
+                        ? await self.registration.pushManager.subscribe({
+                              userVisibleOnly: true,
+                              applicationServerKey: key,
+                          })
+                        : null);
+            } catch (e) {
+                // Subscribing can fail (permission revoked, no network). The
+                // page's next boot retries; nothing else to do from here.
+            }
+            const allClients = await self.clients.matchAll({
+                type: "window",
+                includeUncontrolled: true,
+            });
+            for (const client of allClients) {
+                client.postMessage({
+                    type: "push-subscription-changed",
+                    endpoint: renewed ? renewed.endpoint : "",
+                });
+            }
+        })()
+    );
 });
 
 self.addEventListener("notificationclick", (event) => {

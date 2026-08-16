@@ -70,6 +70,22 @@ function makeCaches() {
 
 let harness: ReturnType<typeof makeCaches>;
 
+/** An open tab, as the worker sees it. Only `url`/`focus`/`postMessage` are
+ *  ever touched. Declared as a type so `matchAll` can be *typed* as returning
+ *  these — tests hand it clients via `mockResolvedValue`, and an inferred
+ *  `never[]` would reject them. */
+type FakeClient = {
+    url: string;
+    focus: ReturnType<typeof vi.fn>;
+    postMessage: ReturnType<typeof vi.fn>;
+};
+
+const makeClient = (url = `${ORIGIN}/workspace`): FakeClient => ({
+    url,
+    focus: vi.fn(async () => undefined),
+    postMessage: vi.fn(),
+});
+
 function loadWorker(fetchImpl: ReturnType<typeof vi.fn>) {
     const listeners = new Map<string, Handler>();
     const self = {
@@ -77,11 +93,16 @@ function loadWorker(fetchImpl: ReturnType<typeof vi.fn>) {
         skipWaiting: vi.fn(),
         clients: {
             claim: vi.fn(async () => undefined),
-            matchAll: vi.fn(async () => []),
+            matchAll: vi.fn(async (): Promise<FakeClient[]> => []),
             openWindow: vi.fn(async () => undefined),
         },
         location: { origin: ORIGIN },
-        registration: { showNotification: vi.fn(async () => undefined) },
+        registration: {
+            showNotification: vi.fn(async () => undefined),
+            pushManager: {
+                subscribe: vi.fn(async () => ({ endpoint: "https://push.test/renewed" })),
+            },
+        },
         navigator: { setAppBadge: vi.fn(async () => undefined) },
     };
     const src = readFileSync(SW_PATH, "utf-8");
@@ -309,5 +330,199 @@ describe("sw.js — lifecycle", () => {
             "Hi",
             expect.objectContaining({ body: "You were mentioned" })
         );
+    });
+});
+
+/**
+ * The worker also tells open tabs about the push channel itself. Both messages
+ * exist because the worker can see something the page cannot, and both were
+ * added for one reported failure: reminders arriving on a phone and never on a
+ * laptop. `pushBridge.ts` is the other end; these tests pin the shapes it
+ * matches on, which is the only thing holding the two halves together.
+ */
+describe("sw.js — telling the page about the push channel", () => {
+    /** Drive the `push` handler and wait for everything it promised to do. */
+    const push = async (listeners: Map<string, Handler>, data: Record<string, unknown>) => {
+        let waited: Promise<unknown> | undefined;
+        listeners.get("push")!({
+            data: { json: () => data },
+            waitUntil: (p: Promise<unknown>) => {
+                waited = p;
+            },
+        });
+        await waited;
+    };
+
+    it("forwards an arriving push to every open tab", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        const a = makeClient(`${ORIGIN}/workspace/inbox`);
+        const b = makeClient(`${ORIGIN}/workspace/todo`);
+        self.clients.matchAll.mockResolvedValue([a, b]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12", url: "/x" });
+
+        // The tag is the whole message: it says what arrived AND that a card
+        // has already been shown for it, which is how the page avoids raising
+        // a second, plainer one.
+        const expected = { type: "push-received", tag: "todo_reminder:12", url: "/x" };
+        expect(a.postMessage).toHaveBeenCalledWith(expected);
+        expect(b.postMessage).toHaveBeenCalledWith(expected);
+    });
+
+    it("includes tabs this worker doesn't control", async () => {
+        // A tab loaded before the worker activated is uncontrolled but very
+        // much open and showing a stale inbox — the exact tab that needs this.
+        const { listeners, self } = loadWorker(vi.fn());
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+
+        expect(self.clients.matchAll).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "window", includeUncontrolled: true })
+        );
+    });
+
+    it("forwards even a push with no tag, rather than guessing", async () => {
+        // Deciding what's interesting is the page's job (`isReminderTag`);
+        // filtering here would put that rule in two places.
+        const { listeners, self } = loadWorker(vi.fn());
+        const client = makeClient();
+        self.clients.matchAll.mockResolvedValue([client]);
+
+        await push(listeners, { title: "Hi" });
+
+        expect(client.postMessage).toHaveBeenCalledWith({
+            type: "push-received",
+            tag: "",
+            url: "",
+        });
+    });
+
+    it("still shows the card when a tab goes away mid-announce", async () => {
+        // `postMessage` on a client that just closed throws. The OS card is
+        // the user-visible half and must not be lost to that.
+        const { listeners, self } = loadWorker(vi.fn());
+        const dead = makeClient();
+        dead.postMessage.mockImplementation(() => {
+            throw new Error("client is gone");
+        });
+        self.clients.matchAll.mockResolvedValue([dead]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+
+        expect(self.registration.showNotification).toHaveBeenCalled();
+    });
+
+    it("still shows the card when there is no tab to tell", async () => {
+        // The normal case for a reminder: nobody's looking, which is why the
+        // push exists at all.
+        const { listeners, self } = loadWorker(vi.fn());
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+        expect(self.registration.showNotification).toHaveBeenCalled();
+    });
+});
+
+/**
+ * A browser can retire a push subscription on its own. Until this handler
+ * existed nothing noticed: the page only re-subscribes on load, so a laptop
+ * tab left open for days stayed silently unsubscribed for days — one of the
+ * two ways a device receives no reminders while another on the same account
+ * does.
+ */
+describe("sw.js — pushsubscriptionchange", () => {
+    const KEY = new Uint8Array([1, 2, 3]);
+
+    /** Drive the handler and wait for the work it queued. */
+    const rotate = async (listeners: Map<string, Handler>, event: Record<string, unknown>) => {
+        let waited: Promise<unknown> | undefined;
+        listeners.get("pushsubscriptionchange")!({
+            ...event,
+            waitUntil: (p: Promise<unknown>) => {
+                waited = p;
+            },
+        });
+        await waited;
+    };
+
+    it("re-subscribes with the same VAPID key the old subscription used", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+
+        await rotate(listeners, {
+            oldSubscription: { options: { applicationServerKey: KEY } },
+        });
+
+        // Re-subscribing with a *different* key silently produces a
+        // subscription our server can't push to.
+        expect(self.registration.pushManager.subscribe).toHaveBeenCalledWith({
+            userVisibleOnly: true,
+            applicationServerKey: KEY,
+        });
+    });
+
+    it("asks the page to register the new endpoint", async () => {
+        // The worker restores the browser's half but cannot tell the server —
+        // that needs the user's token, which only the page has.
+        const { listeners, self } = loadWorker(vi.fn());
+        const client = makeClient();
+        self.clients.matchAll.mockResolvedValue([client]);
+
+        await rotate(listeners, {
+            oldSubscription: { options: { applicationServerKey: KEY } },
+        });
+
+        expect(client.postMessage).toHaveBeenCalledWith({
+            type: "push-subscription-changed",
+            endpoint: "https://push.test/renewed",
+        });
+    });
+
+    it("uses the subscription the browser already made, when it supplies one", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        const client = makeClient();
+        self.clients.matchAll.mockResolvedValue([client]);
+
+        await rotate(listeners, {
+            oldSubscription: { options: { applicationServerKey: KEY } },
+            newSubscription: { endpoint: "https://push.test/from-browser" },
+        });
+
+        expect(self.registration.pushManager.subscribe).not.toHaveBeenCalled();
+        expect(client.postMessage).toHaveBeenCalledWith({
+            type: "push-subscription-changed",
+            endpoint: "https://push.test/from-browser",
+        });
+    });
+
+    it("still nudges the page when re-subscribing fails", async () => {
+        // Permission revoked, or offline. The page's `ensurePushSubscription`
+        // reads the live subscription itself and is the one that can report a
+        // dead one to the server, so it must hear about this either way.
+        const { listeners, self } = loadWorker(vi.fn());
+        const client = makeClient();
+        self.clients.matchAll.mockResolvedValue([client]);
+        self.registration.pushManager.subscribe.mockRejectedValue(new Error("denied"));
+
+        await rotate(listeners, {
+            oldSubscription: { options: { applicationServerKey: KEY } },
+        });
+
+        expect(client.postMessage).toHaveBeenCalledWith({
+            type: "push-subscription-changed",
+            endpoint: "",
+        });
+    });
+
+    it("doesn't blind-subscribe when there is no key to reuse", async () => {
+        // Safari sends the event with neither subscription populated. A
+        // keyless `subscribe()` either throws or yields something unusable.
+        const { listeners, self } = loadWorker(vi.fn());
+        const client = makeClient();
+        self.clients.matchAll.mockResolvedValue([client]);
+
+        await rotate(listeners, {});
+
+        expect(self.registration.pushManager.subscribe).not.toHaveBeenCalled();
+        expect(client.postMessage).toHaveBeenCalledWith({
+            type: "push-subscription-changed",
+            endpoint: "",
+        });
     });
 });

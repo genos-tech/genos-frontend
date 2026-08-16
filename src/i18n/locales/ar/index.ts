@@ -3150,6 +3150,12 @@ export const ar: DeepPartial<Messages> = {
                 surfaceThread: "اسأل عن هذا الموضوع",
                 surfaceNote: "اسأل عن هذه المذكرة",
             },
+            reminder: {
+                messageTitle: "تذكير برسالة {name}",
+                messageTitleNoSender: "تذكير برسالة",
+                todoTitle: "تذكير بمهمتك",
+                bodyFallback: "لقد طلبت تذكيرك بهذا.",
+            },
         },
     },
     admin: {

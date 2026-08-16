@@ -2626,6 +2626,12 @@ export const fr: DeepPartial<Messages> = {
                 surfaceThread: "Renseignez-vous sur ce fil",
                 surfaceNote: "Renseignez-vous sur cette note",
             },
+            reminder: {
+                messageTitle: "Rappel à propos du message de {name}",
+                messageTitleNoSender: "Rappel à propos d'un message",
+                todoTitle: "Rappel à propos de votre tâche",
+                bodyFallback: "Vous avez demandé un rappel à ce sujet.",
+            },
             routerChatType: {
                 direct: "Message direct",
                 group: "Groupe",

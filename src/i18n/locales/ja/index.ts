@@ -2582,6 +2582,12 @@ export const ja: DeepPartial<Messages> = {
                 surfaceThread: "このスレッドについて質問する",
                 surfaceNote: "このメモについて質問する",
             },
+            reminder: {
+                messageTitle: "{name}さんのメッセージのリマインダー",
+                messageTitleNoSender: "メッセージのリマインダー",
+                todoTitle: "To-Do のリマインダー",
+                bodyFallback: "これのリマインダーを設定していました。",
+            },
             routerChatType: {
                 direct: "ダイレクトメッセージ",
                 group: "グループ",

@@ -82,6 +82,7 @@ import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
 import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
+import { useInboxResync } from "./hooks/inbox/useInboxResync";
 import { useTodoGroups } from "./hooks/useTodoGroups";
 import {
     registerApiHealthListener,
@@ -847,6 +848,14 @@ export const App = () => {
     // re-fetches the authoritative server value so THIS session updates without
     // a reload. See the hook for why it re-fetches rather than adopting the echo.
     useSelfEchoReconcile(myself, setMyself, accessToken, useNotif.manager);
+
+    // The live path for inbox items no client caused: a reminder fired by the
+    // backend cron. Nothing broadcasts those (the `wsType: "inbox"` socket
+    // event is relayed by the acting client, and a cron has none), so the
+    // reminder sweep and an arriving push ask for a delta sync here instead —
+    // which repaints the list and raises the notification the push may have
+    // failed to deliver. See `features/inbox/inboxResyncEvent`.
+    useInboxResync(myself, accessToken, useNotif.manager, useIM.setInboxItems);
 
     // Global Cmd-K / Ctrl-K Spotlight overlay. The hook owns open/close
     // state, the keyboard listener, the debounced query, and an `onAsk`
