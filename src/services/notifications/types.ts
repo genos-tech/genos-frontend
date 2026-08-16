@@ -30,6 +30,12 @@ export interface MutedTargetRef {
     targetId: string;
     /** Optional chat scope (used by `chat`/`thread` targets). */
     chatType?: number;
+    /** Which note table `targetId` belongs to — 1 personal / 2 task / 3 chat.
+     *  Required for a `note` target to mute anything: the three note tables
+     *  have independent primary keys, so a bare note id names up to three
+     *  different notes. Optional in the type only so entries stored before
+     *  this field existed still parse; the server ignores those. */
+    noteType?: number;
     /** Optional category scope. Empty/undefined = all categories. */
     categories?: NotificationCategory[];
     /** Optional display label for the settings list; falls back to id. */

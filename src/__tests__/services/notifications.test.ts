@@ -143,7 +143,7 @@ describe("notificationApi", () => {
                         chatType: 2,
                         categories: ["mention_thread"],
                     },
-                    { targetType: "note", targetId: "n-3" },
+                    { targetType: "note", targetId: "n-3", noteType: 3 },
                 ],
             });
             expect(out.muted_targets).toEqual([
@@ -154,7 +154,9 @@ describe("notificationApi", () => {
                     chat_type: 2,
                     categories: ["mention_thread"],
                 },
-                { target_type: "note", target_id: "n-3" },
+                // `note_type` has to survive the wire in both directions or
+                // the server drops every note mute (it requires the field).
+                { target_type: "note", target_id: "n-3", note_type: 3 },
             ]);
         });
     });
@@ -208,6 +210,7 @@ describe("notificationApi", () => {
                             chat_type: 2,
                             categories: ["mention_thread"],
                         },
+                        { target_type: "note", target_id: "12", note_type: 2 },
                     ],
                 },
             });
@@ -223,6 +226,7 @@ describe("notificationApi", () => {
                     chatType: 2,
                     categories: ["mention_thread"],
                 },
+                { targetType: "note", targetId: "12", noteType: 2 },
             ]);
         });
 
@@ -490,7 +494,7 @@ describe("NotificationManager", () => {
 
         it("notify() ignores a muted note target (by source.noteId, never chatId overload)", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
-            mgr.muteTarget({ targetType: "note", targetId: 12 });
+            mgr.muteTarget({ targetType: "note", targetId: 12, noteType: 2 });
             // Note mention: chatId holds the noteId, but matching uses noteId.
             const noteMention = intent({
                 id: "activity:mention_note_task:9",
@@ -498,6 +502,77 @@ describe("NotificationManager", () => {
                 source: { chatType: 7, chatId: "12", noteId: 12, surfaceType: 7 },
             });
             expect(mgr.notify(noteMention)).toBe("ignored-muted");
+        });
+
+        // The three note tables number their rows independently, so `noteId`
+        // alone names up to three different notes. These pin the discriminator
+        // both ways: it must not leak across tables, and an entry that lacks
+        // it must mute NOTHING rather than guess (the server fails open the
+        // same way — `_target_matches` in `webpush_gating.py`).
+        it("a note mute does not leak across note types", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            // Muted: PERSONAL note 12 (surface 6 => note type 1).
+            mgr.muteTarget({ targetType: "note", targetId: 12, noteType: 1 });
+            const taskNote = intent({
+                id: "activity:mention_note_task:9",
+                category: "mention_note_task",
+                // Same id, but the TASK note table (surface 7 => type 2).
+                source: { chatType: 7, chatId: "12", noteId: 12, surfaceType: 7 },
+            });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            expect(mgr.notify(taskNote)).toBe("toast");
+
+            const personalNote = intent({
+                id: "activity:mention_note_my:9",
+                category: "mention_note_my",
+                source: { chatType: 6, chatId: "12", noteId: 12, surfaceType: 6 },
+            });
+            expect(mgr.notify(personalNote)).toBe("ignored-muted");
+        });
+
+        it("a note mute stored without a noteType mutes nothing", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            // Shape written before `noteType` existed.
+            mgr.muteTarget({ targetType: "note", targetId: 12 });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            expect(
+                mgr.notify(
+                    intent({
+                        id: "activity:mention_note_task:9",
+                        category: "mention_note_task",
+                        source: { chatType: 7, chatId: "12", noteId: 12, surfaceType: 7 },
+                    })
+                )
+            ).toBe("toast");
+        });
+
+        it("note identity includes noteType: the same id in two tables is two entries", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "note", targetId: 12, noteType: 1, label: "Plan" });
+            mgr.muteTarget({ targetType: "note", targetId: 12, noteType: 2, label: "Spec" });
+            expect(mgr.getPreferences().mutedTargets).toEqual([
+                { targetType: "note", targetId: "12", noteType: 1, label: "Plan" },
+                { targetType: "note", targetId: "12", noteType: 2, label: "Spec" },
+            ]);
+            expect(mgr.isTargetMutedByKey("note", 12, 1)).toBe(true);
+            expect(mgr.isTargetMutedByKey("note", 12, 3)).toBe(false);
+            // Unmuting one leaves the other alone.
+            mgr.unmuteTarget("note", 12, 1);
+            expect(mgr.getPreferences().mutedTargets).toEqual([
+                { targetType: "note", targetId: "12", noteType: 2, label: "Spec" },
+            ]);
+        });
+
+        it("re-muting a note sweeps the pre-noteType entry for the same id", () => {
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            mgr.muteTarget({ targetType: "note", targetId: 12 });
+            mgr.muteTarget({ targetType: "note", targetId: 12, noteType: 2 });
+            // Not two rows in the muted-items list, one of them dead.
+            expect(mgr.getPreferences().mutedTargets).toEqual([
+                { targetType: "note", targetId: "12", noteType: 2 },
+            ]);
         });
 
         it("category-scoped mute applies only to listed categories", () => {

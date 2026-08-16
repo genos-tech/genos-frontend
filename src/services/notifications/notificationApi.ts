@@ -7,6 +7,7 @@ interface MutedTargetWire {
     target_type: string;
     target_id: string;
     chat_type?: number;
+    note_type?: number;
     categories?: string[];
     label?: string;
 }
@@ -46,6 +47,7 @@ const fromWire = (wire: NotificationPreferenceWire): NotificationPreference => (
         targetType: t.target_type as MutedTargetRef["targetType"],
         targetId: t.target_id,
         ...(t.chat_type !== undefined ? { chatType: t.chat_type } : {}),
+        ...(t.note_type !== undefined ? { noteType: t.note_type } : {}),
         ...(t.categories && t.categories.length
             ? { categories: t.categories as MutedTargetRef["categories"] }
             : {}),
@@ -88,6 +90,7 @@ export const toWire = (
             target_type: t.targetType,
             target_id: t.targetId,
             ...(t.chatType !== undefined ? { chat_type: t.chatType } : {}),
+            ...(t.noteType !== undefined ? { note_type: t.noteType } : {}),
             ...(t.categories && t.categories.length ? { categories: t.categories } : {}),
             ...(t.label ? { label: t.label } : {}),
         }));

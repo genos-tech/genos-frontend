@@ -50,6 +50,11 @@ import { loadSpecificNote } from "../../common/services/loadSpecificNote";
 import { downloadMarkdown, noteBlocksToMarkdown } from "../../common/services/noteMarkdown";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
+/** Backend note type for the notes this header owns. Part of the identity of
+ *  a note mute: personal/task/chat notes number their rows independently, so
+ *  chat note 42 and personal note 42 must not mute each other. */
+const CHAT_NOTE_TYPE = 3;
+
 interface ChatNoteHeaderProps {
     chat: any;
     isInChatPage: boolean;
@@ -553,13 +558,21 @@ export const ChatNoteHeader = ({
                             label:
                                 notifCtx &&
                                 activeChatNoteId != null &&
-                                notifCtx.isTargetMutedByKey("note", activeChatNoteId)
+                                notifCtx.isTargetMutedByKey(
+                                    "note",
+                                    activeChatNoteId,
+                                    CHAT_NOTE_TYPE
+                                )
                                     ? t.services.notifications.muteButton.unmute
                                     : t.services.notifications.muteButton.mute,
                             icon:
                                 notifCtx &&
                                 activeChatNoteId != null &&
-                                notifCtx.isTargetMutedByKey("note", activeChatNoteId) ? (
+                                notifCtx.isTargetMutedByKey(
+                                    "note",
+                                    activeChatNoteId,
+                                    CHAT_NOTE_TYPE
+                                ) ? (
                                     <NotificationsOffRoundedIcon sx={{ fontSize: 18 }} />
                                 ) : (
                                     <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />
@@ -568,12 +581,13 @@ export const ChatNoteHeader = ({
                             onClick: () => {
                                 if (!notifCtx || activeChatNoteId == null) return;
                                 const id = String(activeChatNoteId);
-                                if (notifCtx.isTargetMutedByKey("note", id)) {
-                                    notifCtx.unmuteTarget("note", id);
+                                if (notifCtx.isTargetMutedByKey("note", id, CHAT_NOTE_TYPE)) {
+                                    notifCtx.unmuteTarget("note", id, CHAT_NOTE_TYPE);
                                 } else {
                                     notifCtx.muteTarget({
                                         targetType: "note",
                                         targetId: id,
+                                        noteType: CHAT_NOTE_TYPE,
                                         label: useNM.currentChatNote?.title,
                                     });
                                 }

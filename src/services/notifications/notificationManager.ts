@@ -29,6 +29,29 @@ interface ManagerOptions {
 
 const DEFAULT_DEDUPE_MS = 30_000;
 
+/** Which note table an intent's `noteId` belongs to, keyed by the activity
+ *  surface it arrived on: 6 personal / 7 task / 8 chat → note type 1 / 2 / 3.
+ *  The three tables have independent primary keys, so a bare note id names up
+ *  to three different notes and the discriminator is what makes a note mute
+ *  mean one note. Mirrors the server's `_NOTE_TYPE_BY_SURFACE`
+ *  (`webpush_gating.py`) and the socket emitter's `_NOTE_CHAT_TYPE_TO_NOTE_TYPE`. */
+const NOTE_TYPE_BY_SURFACE: Record<number, number> = { 6: 1, 7: 2, 8: 3 };
+
+/** Identity of a `mutedTargets` entry: `(targetType, targetId)`, plus
+ *  `noteType` for notes — see `NOTE_TYPE_BY_SURFACE`. Ignoring it would let
+ *  muting task note 42 silently REPLACE the mute on personal note 42.
+ *  `categories` is a mutable scope attribute and deliberately not part of
+ *  identity, so re-muting with a different scope upserts. */
+const isSameTarget = (
+    entry: MutedTargetRef,
+    targetType: MutedTargetType,
+    targetId: string,
+    noteType?: number
+): boolean =>
+    entry.targetType === targetType &&
+    entry.targetId === targetId &&
+    (targetType !== "note" || entry.noteType === noteType);
+
 const isNotificationsApiSupported = (): boolean =>
     typeof window !== "undefined" &&
     typeof Notification !== "undefined" &&
@@ -382,36 +405,52 @@ export class NotificationManager {
 
     // ----- Per-object mute targets (thread / task / note) -----------------
     //
-    // Identity is `(targetType, targetId)`. `categories` is a mutable scope
-    // attribute, NOT part of identity — re-muting the same object with a
-    // different scope upserts (replaces) the existing entry.
+    // Identity is `isSameTarget` — `(targetType, targetId)`, and `noteType`
+    // as well for notes. `categories` is a mutable scope attribute, NOT part
+    // of identity: re-muting the same object with a different scope upserts
+    // (replaces) the existing entry.
+    //
+    // Note callers must pass `noteType` (1 personal / 2 task / 3 chat); a
+    // note entry without it mutes nothing on either side.
 
-    isTargetMutedByKey(targetType: MutedTargetType, targetId: string | number): boolean {
+    isTargetMutedByKey(
+        targetType: MutedTargetType,
+        targetId: string | number,
+        noteType?: number
+    ): boolean {
         const id = String(targetId);
-        return this.prefs.mutedTargets.some(
-            (t) => t.targetType === targetType && t.targetId === id
-        );
+        return this.prefs.mutedTargets.some((t) => isSameTarget(t, targetType, id, noteType));
     }
 
     /**
-     * Add (or replace, by `(targetType, targetId)`) a per-object mute.
-     * `targetId` is normalized to a string so stored and compared forms
-     * always match.
+     * Add (or replace, by `isSameTarget`) a per-object mute. `targetId` is
+     * normalized to a string so stored and compared forms always match.
      */
     muteTarget(entry: MutedTargetRef) {
         const targetId = String(entry.targetId);
         const next = this.prefs.mutedTargets.filter(
-            (t) => !(t.targetType === entry.targetType && t.targetId === targetId)
+            (t) =>
+                !isSameTarget(t, entry.targetType, targetId, entry.noteType) &&
+                // Also sweeps a pre-`noteType` note entry for the same id.
+                // Those can no longer mute anything, so leaving one behind
+                // would show a permanent dead row in the muted-items list
+                // right next to the live entry replacing it.
+                !(
+                    entry.targetType === "note" &&
+                    t.targetType === "note" &&
+                    t.targetId === targetId &&
+                    t.noteType === undefined
+                )
         );
         next.push({ ...entry, targetId });
         this.commitPatch({ mutedTargets: next });
     }
 
-    unmuteTarget(targetType: MutedTargetType, targetId: string | number) {
+    unmuteTarget(targetType: MutedTargetType, targetId: string | number, noteType?: number) {
         const id = String(targetId);
-        if (!this.isTargetMutedByKey(targetType, id)) return;
+        if (!this.isTargetMutedByKey(targetType, id, noteType)) return;
         const next = this.prefs.mutedTargets.filter(
-            (t) => !(t.targetType === targetType && t.targetId === id)
+            (t) => !isSameTarget(t, targetType, id, noteType)
         );
         this.commitPatch({ mutedTargets: next });
     }
@@ -446,7 +485,19 @@ export class NotificationManager {
                 case "task":
                     return src.taskId !== undefined && String(src.taskId) === t.targetId;
                 case "note":
-                    return src.noteId !== undefined && String(src.noteId) === t.targetId;
+                    if (src.noteId === undefined) return false;
+                    if (String(src.noteId) !== t.targetId) return false;
+                    // `noteType` is REQUIRED to match, not optional scope like
+                    // `chatType` above: personal/task/chat notes have separate
+                    // primary keys, so muting on a bare id would silence two
+                    // notes the user never muted. An entry without it mutes
+                    // nothing — the same fail-open the server takes in
+                    // `_target_matches`, and the right direction to err, since
+                    // an extra toast is visible and a wrong silence is not.
+                    return (
+                        t.noteType !== undefined &&
+                        t.noteType === NOTE_TYPE_BY_SURFACE[src.surfaceType ?? 0]
+                    );
                 default:
                     return false;
             }
