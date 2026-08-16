@@ -658,6 +658,12 @@ export const fr: DeepPartial<Messages> = {
             saved: "Enregistré",
             copyLink: "Copier le lien",
             linkCopied: "Lien copié",
+            remindMe: {
+                menu: "Me le rappeler…",
+                setFor: "Rappel : {time}",
+                description:
+                    "Vous recevrez une notification et une activité dans la boîte de réception. Cocher cette tâche l'annule.",
+            },
             createTask: {
                 menu: "Créer une tâche",
                 heading: "Créer une tâche depuis ce rappel",
@@ -1825,12 +1831,17 @@ export const fr: DeepPartial<Messages> = {
             teamConnection: "Connexion d'équipe",
             externalShare: "Partagé avec votre équipe",
             messageReminder: "Rappel",
+            todoReminder: "Rappel de tâche",
         },
         messageReminder: {
             headline: "Vous avez demandé un rappel à propos de ce message.",
             headlineFrom: "Vous avez demandé un rappel à propos du message de {name}.",
             openMessage: "Ouvrir le message",
             openInNamed: "Ouvrir dans {chat}",
+        },
+        todoReminder: {
+            headline: "Vous avez demandé un rappel à propos de cette tâche.",
+            openTodo: "Ouvrir la tâche",
         },
         crossTeam: {
             connectionHint: "Connecting ne partage rien en soi.",
@@ -2520,6 +2531,7 @@ export const fr: DeepPartial<Messages> = {
                 mentionNoteChat: "Dans une note de discussion",
                 agentRunDone: "Réponse IA prête",
                 messageReminder: "Rappels de messages",
+                todoReminder: "Rappels de tâches",
             },
             emailCategories: {
                 mentionChat: "Mentions dans les conversations",
@@ -2601,6 +2613,8 @@ export const fr: DeepPartial<Messages> = {
                         "Lorsqu'une réponse AI se termine après avoir fermé la fenêtre Spotlight, le fil de discussion ou la note.",
                     messageReminder:
                         "Lorsqu'un rappel que vous avez défini sur un message arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
+                    todoReminder:
+                        "Lorsqu'un rappel que vous avez défini sur une tâche arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
                 },
             },
             agentRun: {

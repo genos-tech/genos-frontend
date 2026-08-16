@@ -1,10 +1,17 @@
 /**
- * "Remind me about this message" — preset times plus a date of your own.
+ * "Remind me about this" — preset times plus a date of your own.
  *
  * A dialog rather than a nested submenu on purpose: the same picker is
- * opened from the main bubble's More menu and from the thread bubble's
- * (which is a hand-rolled portal menu with no submenu support), and a
- * date/time field inside a hover menu is unusable on touch.
+ * opened from the main bubble's More menu, from the thread bubble's (a
+ * hand-rolled portal menu with no submenu support), and from a to-do row's
+ * ⋮ menu — and a date/time field inside a hover menu is unusable on touch.
+ *
+ * Subject-agnostic: it knows how to pick a time, and the CALLER supplies
+ * `onCommit` / `onRemove` for whatever is being reminded about (a message
+ * via `channelService`, a to-do via `useTodoGroups`). Both kinds get the
+ * identical picker that way, which is the point — the presets and the
+ * "within the next year" rule are one behaviour, not two that resemble
+ * each other.
  *
  * Every option resolves to an absolute instant in the browser before it is
  * sent — see `reminderPresets` for why the server never computes "tomorrow
@@ -28,8 +35,6 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { fmt, useTranslation } from "../../../../i18n";
-import { channelService } from "../../../../services/channel/channelService";
-import { MessageReminder } from "../../../../types/channel";
 import {
     formatReminderTime,
     fromDatetimeLocalValue,
@@ -40,15 +45,30 @@ import {
 
 type Props = {
     open: boolean;
-    /** v3 message UUID — the same identity the flag uses. */
-    messageId: string;
-    /** The pending reminder on this message, when there is one. Its
-     *  presence turns the dialog from "set" into "change or remove". */
-    reminder?: MessageReminder | null;
+    /** The pending reminder's instant (ISO) when there is one. Its presence
+     *  turns the dialog from "set" into "change or remove". */
+    remindAt?: string | null;
+    /** Persist the chosen instant. Must REJECT when the server refuses it
+     *  (a past time, beyond a year, a to-do already ticked off) — the
+     *  dialog reports the failure instead of closing on a promise nobody
+     *  kept. */
+    onCommit: (at: Date) => Promise<unknown>;
+    /** Drop the pending reminder. Only reachable when `remindAt` is set. */
+    onRemove: () => Promise<unknown>;
+    /** What the reader is told will happen, when the default (a message,
+     *  which also mentions the flag) doesn't fit the subject. */
+    description?: string;
     onClose: () => void;
 };
 
-export const ModalRemindMe = ({ open, messageId, reminder, onClose }: Props) => {
+export const ModalRemindMe = ({
+    open,
+    remindAt,
+    onCommit,
+    onRemove,
+    description,
+    onClose,
+}: Props) => {
     const { t, locale } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -66,15 +86,15 @@ export const ModalRemindMe = ({ open, messageId, reminder, onClose }: Props) => 
     useEffect(() => {
         if (!open) return;
         setError(null);
-        setCustomValue(reminder ? toDatetimeLocalValue(new Date(reminder.remindAt)) : "");
-    }, [open, reminder]);
+        setCustomValue(remindAt ? toDatetimeLocalValue(new Date(remindAt)) : "");
+    }, [open, remindAt]);
 
     const commit = async (at: Date) => {
         if (submitting) return;
         setSubmitting(true);
         setError(null);
         try {
-            await channelService.setReminder(messageId, at);
+            await onCommit(at);
             onClose();
         } catch {
             setError(m.failed);
@@ -88,7 +108,7 @@ export const ModalRemindMe = ({ open, messageId, reminder, onClose }: Props) => 
         setSubmitting(true);
         setError(null);
         try {
-            await channelService.cancelReminder(messageId);
+            await onRemove();
             onClose();
         } catch {
             setError(m.failed);
@@ -131,11 +151,11 @@ export const ModalRemindMe = ({ open, messageId, reminder, onClose }: Props) => 
                 </Stack>
 
                 <Typography level="body-xs" sx={{ opacity: 0.7, mb: 1.5 }}>
-                    {reminder
+                    {remindAt
                         ? fmt(m.currentlySetFor, {
-                              time: formatReminderTime(new Date(reminder.remindAt), locale),
+                              time: formatReminderTime(new Date(remindAt), locale),
                           })
-                        : m.description}
+                        : (description ?? m.description)}
                 </Typography>
 
                 {error && (
@@ -194,7 +214,7 @@ export const ModalRemindMe = ({ open, messageId, reminder, onClose }: Props) => 
                     </Typography>
                 )}
 
-                {reminder && (
+                {remindAt && (
                     <>
                         <Divider sx={{ my: 1.5 }} />
                         <Button

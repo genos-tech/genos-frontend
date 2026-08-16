@@ -168,6 +168,19 @@ export const NOTIFICATION_CATEGORIES = [
         descriptionKey: "messageReminder",
         defaultEnabled: true,
     },
+    {
+        // The same thing for a to-do row: "remind me about this to-do at 3pm".
+        // Delivered by the same cron as the entry above (which drains both
+        // kinds), on the same `enable_inbox` column. A SEPARATE key rather
+        // than reusing `message_reminder`, because the two are asked for in
+        // different places and someone who wants their to-do list to nag
+        // them may well not want every flagged message to.
+        key: "todo_reminder",
+        group: "inbox",
+        labelKey: "todoReminder",
+        descriptionKey: "todoReminder",
+        defaultEnabled: true,
+    },
 ] as const satisfies readonly CategoryEntry[];
 
 /** Union of every fine category key — derived from the registry so the

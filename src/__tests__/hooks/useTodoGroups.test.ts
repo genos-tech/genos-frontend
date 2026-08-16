@@ -12,8 +12,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadTodoGroups } from "../../features/chat/components/todo/services/loadTodoGroups";
 import {
     createTodoItem,
+    deleteTodoItem,
     updateTodoItem,
 } from "../../features/chat/components/todo/services/todoItems";
+import {
+    cancelTodoReminder,
+    loadTodoReminders,
+} from "../../features/chat/components/todo/services/todoReminders";
 import {
     loadTodoSchedules,
     updateTodoSchedule,
@@ -43,6 +48,11 @@ vi.mock("../../features/chat/components/todo/services/todoSchedules", () => ({
     updateTodoSchedule: vi.fn(),
     deleteTodoSchedule: vi.fn(),
 }));
+vi.mock("../../features/chat/components/todo/services/todoReminders", () => ({
+    loadTodoReminders: vi.fn().mockResolvedValue([]),
+    setTodoReminder: vi.fn(),
+    cancelTodoReminder: vi.fn(),
+}));
 vi.mock("../../db/services/todo.service", () => ({
     TodoService: class {
         async getGroupsByUser() {
@@ -58,6 +68,9 @@ const updateTodoItemMock = updateTodoItem as unknown as ReturnType<typeof vi.fn>
 const createTodoItemMock = createTodoItem as unknown as ReturnType<typeof vi.fn>;
 const loadTodoSchedulesMock = loadTodoSchedules as unknown as ReturnType<typeof vi.fn>;
 const updateTodoScheduleMock = updateTodoSchedule as unknown as ReturnType<typeof vi.fn>;
+const deleteTodoItemMock = deleteTodoItem as unknown as ReturnType<typeof vi.fn>;
+const loadTodoRemindersMock = loadTodoReminders as unknown as ReturnType<typeof vi.fn>;
+const cancelTodoReminderMock = cancelTodoReminder as unknown as ReturnType<typeof vi.fn>;
 
 const myself = {
     userId: "u1",
@@ -204,6 +217,91 @@ describe("useTodoGroups — parent completion cascades to children", () => {
         expect(byId[1]).toBe(false); // parent re-opened
         expect(byId[2]).toBe(true); // children untouched
         expect(byId[3]).toBe(true);
+    });
+});
+
+describe("useTodoGroups — reminders follow the to-do they are about", () => {
+    /**
+     * Reminders live in THIS hook rather than a store of their own because
+     * completing a to-do cancels its reminder server-side. Split across two
+     * owners, a ticked-off row would go on promising a nudge that will never
+     * arrive — so the local map has to move with the completion, and move
+     * back if the completion didn't land.
+     */
+    const reminder = {
+        id: "r-1",
+        itemId: 2,
+        remindAt: "2099-01-01T09:00:00Z",
+        tsCreated: "2026-01-01T00:00:00Z",
+    };
+
+    const bootWithReminder = async () => {
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        loadTodoRemindersMock.mockResolvedValue([reminder]);
+        const hook = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        return hook;
+    };
+
+    it("loads the pending set on boot — nothing else announces reminders", async () => {
+        const { result } = await bootWithReminder();
+        expect(result.current.reminderByItemId.get(2)).toEqual(reminder);
+    });
+
+    it("keeps what it had when the read FAILS (undefined ≠ none)", async () => {
+        const { result } = await bootWithReminder();
+        loadTodoRemindersMock.mockResolvedValue(undefined);
+        await act(async () => {
+            await result.current.refreshReminders();
+        });
+        expect(result.current.reminderByItemId.get(2)).toEqual(reminder);
+    });
+
+    it("drops the reminder when the to-do is completed (the server cancels it)", async () => {
+        echoUpdate();
+        const { result } = await bootWithReminder();
+        await act(async () => {
+            await result.current.patchItem(2, { isCompleted: true });
+        });
+        expect(result.current.reminderByItemId.has(2)).toBe(false);
+    });
+
+    it("keeps it on any other patch — renaming a to-do cancels nothing", async () => {
+        echoUpdate();
+        const { result } = await bootWithReminder();
+        await act(async () => {
+            await result.current.patchItem(2, { title: "renamed" });
+        });
+        expect(result.current.reminderByItemId.get(2)).toEqual(reminder);
+    });
+
+    it("puts it back when the completion PATCH never landed", async () => {
+        // No server-side cancellation happened, so a dropped local copy
+        // would be a reminder the user still has and can no longer see.
+        updateTodoItemMock.mockResolvedValue(undefined);
+        const { result } = await bootWithReminder();
+        await act(async () => {
+            await result.current.patchItem(2, { isCompleted: true });
+        });
+        expect(result.current.reminderByItemId.get(2)).toEqual(reminder);
+    });
+
+    it("drops it when the row is deleted, so its sweep can't re-arm forever", async () => {
+        deleteTodoItemMock.mockResolvedValue(true);
+        const { result } = await bootWithReminder();
+        await act(async () => {
+            await result.current.removeItem(2);
+        });
+        expect(result.current.reminderByItemId.has(2)).toBe(false);
+    });
+
+    it("restores the row's reminder when a cancel is refused", async () => {
+        cancelTodoReminderMock.mockRejectedValue(new Error("500"));
+        const { result } = await bootWithReminder();
+        await act(async () => {
+            await expect(result.current.cancelItemReminder(2)).rejects.toThrow();
+        });
+        expect(result.current.reminderByItemId.get(2)).toEqual(reminder);
     });
 });
 

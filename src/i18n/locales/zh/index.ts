@@ -624,6 +624,11 @@ export const zh: DeepPartial<Messages> = {
             saved: "已保存",
             copyLink: "复制链接",
             linkCopied: "链接已复制",
+            remindMe: {
+                menu: "提醒我…",
+                setFor: "提醒：{time}",
+                description: "你会收到通知，并在收件箱动态中看到它。标记完成即会取消提醒。",
+            },
             createTask: {
                 menu: "创建任务",
                 heading: "从此待办事项创建任务",
@@ -1750,12 +1755,17 @@ export const zh: DeepPartial<Messages> = {
             teamConnection: "团队联系",
             externalShare: "与你的团队共享",
             messageReminder: "提醒",
+            todoReminder: "待办提醒",
         },
         messageReminder: {
             headline: "你要求提醒你这条消息。",
             headlineFrom: "你要求提醒你 {name} 的这条消息。",
             openMessage: "打开消息",
             openInNamed: "在「{chat}」中打开",
+        },
+        todoReminder: {
+            headline: "你要求提醒你这个待办事项。",
+            openTodo: "打开待办事项",
         },
         crossTeam: {
             connectionHint: "连接本身不共享任何内容。",
@@ -2409,6 +2419,7 @@ export const zh: DeepPartial<Messages> = {
                 mentionNoteChat: "在聊天中",
                 agentRunDone: "AI 答案已准备就绪",
                 messageReminder: "消息提醒",
+                todoReminder: "待办提醒",
             },
             emailCategories: {
                 mentionChat: "聊天中的提及",
@@ -2482,6 +2493,8 @@ export const zh: DeepPartial<Messages> = {
                     agentRunDone: "当你关闭 Spotlight、话题或笔记窗口后 AI 回答完成时。",
                     messageReminder:
                         "当你在消息上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
+                    todoReminder:
+                        "当你在待办事项上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
                 },
             },
             agentRun: {

@@ -1011,6 +1011,12 @@ export const es: DeepPartial<Messages> = {
             sourceMdm: "Desde multiusuario DM",
             copyLink: "Copiar enlace",
             linkCopied: "Enlace copiado",
+            remindMe: {
+                menu: "Recordármelo…",
+                setFor: "Recordatorio: {time}",
+                description:
+                    "Recibirás una notificación y una actividad en la bandeja. Al marcarlo como hecho se cancela.",
+            },
             createTask: {
                 menu: "Crear tarea",
                 heading: "Crea una tarea a partir de esta tarea pendiente",
@@ -2834,6 +2840,7 @@ export const es: DeepPartial<Messages> = {
             noteAccessRequest: "Acceso a nota",
             ownershipClaim: "Solicitud de propiedad",
             messageReminder: "Recordatorio",
+            todoReminder: "Recordatorio de tarea",
             digest: "Resumen Genos",
             teamConnection: "Conexión de equipo",
             externalShare: "Compartido con tu equipo",
@@ -2843,6 +2850,10 @@ export const es: DeepPartial<Messages> = {
             headlineFrom: "Pediste que te recordáramos el mensaje de {name}.",
             openMessage: "Abrir mensaje",
             openInNamed: "Abrir en {chat}",
+        },
+        todoReminder: {
+            headline: "Pediste que te recordáramos esta tarea pendiente.",
+            openTodo: "Abrir tarea pendiente",
         },
         ownershipClaim: {
             respondBy: "Responde antes del {date} o podrán tomar la propiedad",
@@ -3061,6 +3072,7 @@ export const es: DeepPartial<Messages> = {
                 mentionNoteChat: "En una nota de chat",
                 agentRunDone: "Respuesta de IA lista",
                 messageReminder: "Recordatorios de mensajes",
+                todoReminder: "Recordatorios de tareas pendientes",
             },
             emailCategories: {
                 mentionChat: "Menciones en chats",
@@ -3120,6 +3132,8 @@ export const es: DeepPartial<Messages> = {
                         "Cuando finaliza una respuesta de IA después de haber cerrado la ventana Spotlight, el hilo o la nota.",
                     messageReminder:
                         "Cuando vence un recordatorio que estableciste en un mensaje. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
+                    todoReminder:
+                        "Cuando vence un recordatorio que estableciste en una tarea pendiente. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
                 },
                 permissionStates: {
                     granted: "Otorgada",

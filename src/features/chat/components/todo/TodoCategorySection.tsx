@@ -14,7 +14,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
+import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemRow } from "./TodoItemRow";
 
@@ -33,6 +33,10 @@ interface TodoCategorySectionProps {
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    // Reminder state and mutators, straight through to the rows.
+    reminderByItemId?: ReadonlyMap<number, TodoReminderProps>;
+    onSetReminder?: (itemId: number, at: Date) => Promise<unknown>;
+    onCancelReminder?: (itemId: number) => Promise<unknown>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     useTEM: TeamManagementState;
@@ -55,6 +59,9 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
+        reminderByItemId,
+        onSetReminder,
+        onCancelReminder,
         myself,
         setMyself,
         useTEM,
@@ -158,6 +165,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             item={item}
                             localDate={localDate}
                             myself={myself}
+                            reminderByItemId={reminderByItemId}
                             setMyself={setMyself}
                             socket={socket}
                             subitems={subitemsByParent.get(item.itemId) ?? []}
@@ -165,8 +173,10 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             onAddSubitem={onAddSubitem}
+                            onCancelReminder={onCancelReminder}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDeleteItem}
+                            onSetReminder={onSetReminder}
                             onCategoryChange={(itemId, newCategoryId) =>
                                 onPatchItem(itemId, { categoryId: newCategoryId })
                             }

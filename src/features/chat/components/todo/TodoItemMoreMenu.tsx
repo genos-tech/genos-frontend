@@ -5,6 +5,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Box,
@@ -32,6 +33,16 @@ interface TodoItemMoreMenuProps {
     onCreateCategory: (name: string) => Promise<TodoCategoryProps | undefined>;
     onCopyLink: () => void;
     linkCopied: boolean;
+    // Opens the "remind me about this to-do" picker. Offered on child rows
+    // too — a step of a task is still a thing you can forget — but NOT on a
+    // completed one: the server refuses a reminder there, and a nudge about
+    // something already dealt with is the noise that gets notifications
+    // switched off. `undefined` hides the item.
+    onRemindMe?: () => void;
+    // "Reminder: 15:00" when one is pending, so the menu answers "when?"
+    // without making the user open the picker to find out. Null → the
+    // generic "Remind me…".
+    reminderLabel?: string | null;
     // Opens the "create a task from this to-do" modal. Top-level rows
     // only, matching the other row-scoped actions above — a subitem is
     // part of its parent's item, not a candidate for its own task.
@@ -53,6 +64,8 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         onCreateCategory,
         onCopyLink,
         linkCopied,
+        onRemindMe,
+        reminderLabel,
         onCreateTask,
         onDelete,
     } = props;
@@ -90,6 +103,18 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                 </MenuButton>
             </AppTooltip>
             <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200 }}>
+                {/* First, and on every open row including children: a to-do
+                    you have to remember to look at is the case this whole
+                    feature exists for. `selected` marks a pending one so the
+                    state is visible before reading the label. */}
+                {onRemindMe && (
+                    <MenuItem selected={Boolean(reminderLabel)} onClick={onRemindMe}>
+                        <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography level="body-sm">
+                            {reminderLabel ?? t.chat.todoPane.remindMe.menu}
+                        </Typography>
+                    </MenuItem>
+                )}
                 {!isChild && (
                     <MenuItem onClick={onCopyLink}>
                         <LinkRoundedIcon sx={{ fontSize: 16 }} />

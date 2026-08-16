@@ -29,6 +29,7 @@ export const inbox = {
         teamConnection: "Team Connection",
         externalShare: "Shared With Your Team",
         messageReminder: "Reminder",
+        todoReminder: "To-do reminder",
     },
     // A reminder that has come due (item_type 9). The card is written from
     // the reader's side — they asked for this, so it says so.
@@ -37,6 +38,13 @@ export const inbox = {
         headlineFrom: "You asked to be reminded about {name}'s message.",
         openMessage: "Open message",
         openInNamed: "Open in {chat}",
+    },
+    // The other kind of item_type 9, told apart by `item_optionals.kind`.
+    // Same card, different subject: a to-do of the reader's own, quoted
+    // under the same preview block.
+    todoReminder: {
+        headline: "You asked to be reminded about this to-do.",
+        openTodo: "Open to-do",
     },
     crossTeam: {
         // Both of these are answered from the card, so the card is where
