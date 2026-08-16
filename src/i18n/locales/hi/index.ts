@@ -3474,6 +3474,12 @@ export const hi: DeepPartial<Messages> = {
                 surfaceThread: "इस धागे के बारे में पूछें",
                 surfaceNote: "इस नोट के बारे में पूछें",
             },
+            reminder: {
+                messageTitle: "{name} के मेसेज की याद",
+                messageTitleNoSender: "एक मेसेज की याद",
+                todoTitle: "आपके टू-डू की याद",
+                bodyFallback: "आपने इसकी याद दिलाने के लिए कहा था।",
+            },
             routerChatType: {
                 direct: "डायरेक्ट मेसेज",
                 group: "ग्रुप",

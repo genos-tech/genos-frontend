@@ -32,6 +32,7 @@ import {
 } from "../features/chat/components/todo/services/todoSchedules";
 import { reminderSweepDelayMs } from "../features/chat/utils/reminderSweep";
 import { occursOn } from "../features/chat/utils/todoSchedule";
+import { requestInboxResync } from "../features/inbox/inboxResyncEvent";
 import { UserProps } from "../types/admin";
 import {
     TodoCategoryProps,
@@ -397,6 +398,14 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     // Re-read once the soonest reminder's time has passed, so a row stops
     // promising a nudge that has already been delivered (or was retired as
     // moot). One timer for the whole set — see `utils/reminderSweep`.
+    //
+    // The same moment is also the only signal this client gets that a
+    // reminder has fired: the cron files the inbox item with no acting
+    // client to relay a socket event, so nothing announces it. Hence the
+    // second call — see `features/inbox/inboxResyncEvent`. Asked for
+    // unconditionally rather than only when a reminder actually vanished
+    // from the set: the two reads race (this one may win), and a resync
+    // that finds nothing new is a `?since=` request that notifies nobody.
     useEffect(() => {
         const delay = reminderSweepDelayMs(
             Array.from(reminderByItemId.values(), (r) => r.remindAt)
@@ -404,6 +413,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         if (delay === null) return;
         const id = setTimeout(() => {
             void refreshReminders();
+            requestInboxResync("reminder-sweep");
         }, delay);
         return () => clearTimeout(id);
     }, [reminderByItemId, refreshReminders]);

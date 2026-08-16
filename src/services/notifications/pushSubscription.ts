@@ -8,6 +8,7 @@
 
 import { getDeviceId } from "../../utils/deviceId";
 import { deletePushSubscription, registerPushSubscription } from "./notificationApi";
+import { openAppUrl } from "./openAppUrl";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
@@ -172,12 +173,7 @@ export const initPushClickNavigation = (): void => {
     navigator.serviceWorker.addEventListener("message", (event: MessageEvent) => {
         const data = event.data;
         if (data && data.type === "notification-click" && typeof data.url === "string") {
-            try {
-                const u = new URL(data.url, window.location.origin);
-                window.location.assign(u.pathname + u.search + u.hash);
-            } catch {
-                // Malformed URL — ignore rather than navigate somewhere wrong.
-            }
+            openAppUrl(data.url);
         }
     });
 };

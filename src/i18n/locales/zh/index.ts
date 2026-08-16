@@ -2506,6 +2506,12 @@ export const zh: DeepPartial<Messages> = {
                 surfaceThread: "询问这个话题",
                 surfaceNote: "询问此笔记",
             },
+            reminder: {
+                messageTitle: "{name} 的消息提醒",
+                messageTitleNoSender: "消息提醒",
+                todoTitle: "你的待办提醒",
+                bodyFallback: "你要求提醒你这件事。",
+            },
             routerChatType: {
                 direct: "私信",
                 group: "群组",

@@ -220,6 +220,19 @@ export const services = {
             surfaceThread: "Ask about this thread",
             surfaceNote: "Ask about this note",
         },
+        // A reminder the user set, come due (`reminderNotice.ts`). Composed
+        // here rather than taken from the inbox row's stored English
+        // `{title, text}`, so a reminder set in one language still reads in
+        // the reader's. `{name}` is the message's sender; a to-do's subject
+        // is always the reader themselves, so it needs no name.
+        reminder: {
+            messageTitle: "Reminder about {name}'s message",
+            messageTitleNoSender: "Reminder about a message",
+            todoTitle: "Reminder about your to-do",
+            // Shown when the row carries no preview to quote — a message
+            // whose only content was an attachment, or an empty to-do title.
+            bodyFallback: "You asked to be reminded about this.",
+        },
         // Display labels for chat-type integers. Two separate maps:
         //   * `routerChatType` is the short label embedded in a notification
         //     title (e.g. "Direct message", "Group", "Project chat") — used

@@ -8,6 +8,7 @@ import {
     updateNotificationPreferences,
 } from "../../services/notifications/notificationApi";
 import { NotificationManager } from "../../services/notifications/notificationManager";
+import { initPushBridge } from "../../services/notifications/pushBridge";
 import {
     ensurePushSubscription,
     initPushClickNavigation,
@@ -36,6 +37,12 @@ const readPermission = (): WebNotificationPermission => {
 };
 
 const PUSH_DEBOUNCE_MS = 300;
+
+/** How long a Web Push subscription is trusted before it is re-asserted on
+ *  the next tab-visible. Long enough that a user flicking between tabs costs
+ *  nothing, short enough that a broken subscription is repaired within one
+ *  sitting rather than at the next page load. */
+const PUSH_REVALIDATE_MS = 30 * 60 * 1000;
 
 export interface NotificationsState extends NotificationPauseState {
     manager: NotificationManager;
@@ -94,6 +101,10 @@ export const useNotifications = (
     // a needless render on each one.
     const viewingSurfaceRef = useRef<string>("");
     const beatRef = useRef<(() => void) | null>(null);
+
+    // When the push subscription was last upserted server-side, so the
+    // revalidation effect below can throttle itself.
+    const lastEnsuredAtRef = useRef<number>(0);
 
     const flushPush = useCallback(async () => {
         if (pushTimerRef.current) {
@@ -182,6 +193,7 @@ export const useNotifications = (
         (async () => {
             const active = await ensurePushSubscription(accessTokenRef.current);
             if (cancelled) return;
+            lastEnsuredAtRef.current = Date.now();
             setPushActive(active);
             manager.setPushActive(active);
         })();
@@ -190,9 +202,59 @@ export const useNotifications = (
         };
     }, [manager, accessToken, myself.userId, permission]);
 
+    // Re-assert the subscription when the user comes back to the tab.
+    //
+    // The effect above runs once per token / permission change, which for a
+    // long-lived tab means once. But a subscription can stop working with no
+    // event either side observes: the server PRUNES an endpoint the push
+    // service rejects with 404/410, and a 403 (the push service refusing the
+    // signature after a key rotation) is not pruned at all and simply fails
+    // forever. In both cases `getSubscription()` here keeps returning a
+    // perfectly healthy-looking subscription, so nothing detects it and the
+    // device stays silent until someone reloads the page — days, for a laptop
+    // tab left open. That is one half of "my phone gets reminders and my
+    // laptop doesn't".
+    //
+    // `ensurePushSubscription` is an idempotent upsert (the server keys on
+    // endpoint), so the repair is just to call it again. Throttled and tied
+    // to becoming visible rather than run on an interval: the only moment the
+    // repair is worth anything is when the user is about to rely on it, and
+    // an interval in a background tab would be a POST an hour for nothing.
+    useEffect(() => {
+        if (!accessToken || !myself.userId || permission !== "granted") return;
+        let cancelled = false;
+        const onVisible = () => {
+            if (document.visibilityState !== "visible") return;
+            if (Date.now() - lastEnsuredAtRef.current < PUSH_REVALIDATE_MS) return;
+            lastEnsuredAtRef.current = Date.now();
+            void (async () => {
+                const active = await ensurePushSubscription(accessTokenRef.current);
+                // Same guard as the effect above: a token change can re-run
+                // this while a request is in flight, and the newer one's
+                // answer must win.
+                if (cancelled) return;
+                setPushActive(active);
+                manager.setPushActive(active);
+            })();
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            cancelled = true;
+            document.removeEventListener("visibilitychange", onVisible);
+        };
+    }, [manager, accessToken, myself.userId, permission]);
+
     // Route a push click (while a tab is open) to the deep-link target.
     useEffect(() => {
         initPushClickNavigation();
+    }, []);
+
+    // Let arriving pushes drive an inbox resync, and re-register the endpoint
+    // when the browser rotates the subscription out from under us. Installed
+    // once and never removed — a push that arrives with no listener bound is
+    // a reminder nobody sees. See `pushBridge.ts`.
+    useEffect(() => {
+        initPushBridge(() => accessTokenRef.current);
     }, []);
 
     // "I have a visible tab" heartbeat — drives server-side push

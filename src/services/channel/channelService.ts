@@ -37,6 +37,7 @@ import { INDEX_NAMES, STORES } from "../../db/config/constants";
 import { initDB } from "../../db/config/schema";
 import { CheckpointRepository } from "../../db/repositories/checkpoints";
 import { reminderSweepDelayMs } from "../../features/chat/utils/reminderSweep";
+import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
 import type {
     Ack,
     Channel,
@@ -2342,6 +2343,13 @@ export class ChannelService {
      * server decides what fired (it may have retired the reminder as moot),
      * and the same GET picks up anything set on another device. Only ever
      * one timer, and only while the user has a reminder outstanding.
+     *
+     * It is also where this client learns a reminder has FIRED at all — the
+     * cron that fires it files an inbox item with no acting client to relay
+     * a socket event, so nothing announces it. Hence the resync request; see
+     * `features/inbox/inboxResyncEvent` for the whole story. Sent through the
+     * window rather than called directly because this is a module singleton
+     * with no access token and no route to React state.
      */
     private _scheduleReminderSweep(): void {
         if (this._reminderSweep !== null) {
@@ -2355,6 +2363,7 @@ export class ChannelService {
         this._reminderSweep = setTimeout(() => {
             this._reminderSweep = null;
             void this.fetchReminders();
+            requestInboxResync("reminder-sweep");
         }, delay);
         // Node only (tests): a pending sweep must not hold the process open.
         (this._reminderSweep as unknown as { unref?: () => void }).unref?.();

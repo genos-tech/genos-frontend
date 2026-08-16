@@ -3194,6 +3194,12 @@ export const es: DeepPartial<Messages> = {
                 surfaceThread: "Pregunta sobre este hilo",
                 surfaceNote: "Pregunta por esta nota",
             },
+            reminder: {
+                messageTitle: "Recordatorio sobre el mensaje de {name}",
+                messageTitleNoSender: "Recordatorio sobre un mensaje",
+                todoTitle: "Recordatorio sobre tu tarea pendiente",
+                bodyFallback: "Pediste que te recordáramos esto.",
+            },
         },
     },
     admin: {
