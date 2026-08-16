@@ -166,26 +166,133 @@ const setBadge = (count) => {
 // `tag` is the whole message: the server's reminder tags are
 // `"<kind>:<reminder_id>"` (`message_reminders.fire`), so it says both what
 // kind of thing arrived and which one — enough for the page to decide whether
-// to sync, and to know the card above has ALREADY been shown for it. (There is
+// to sync, and to dedupe against a card shown for the same thing. (There is
 // no `category` in the payload to forward; the tag prefix is it.)
-//
-// Fire-and-forget: no tab open is the normal case, and the OS card has been
-// shown regardless.
-const announcePush = async (data) => {
+const postToClient = (client, message, port) => {
     try {
-        const allClients = await self.clients.matchAll({
+        // One argument when there is no port: a trailing `undefined` transfer
+        // list is a different call, and the page's tests match on the shape.
+        if (port) client.postMessage(message, [port]);
+        else client.postMessage(message);
+        return true;
+    } catch (e) {
+        // A tab that went away mid-iteration must not break the card.
+        return false;
+    }
+};
+
+// Tag prefixes the page announces for itself when it is on screen. MUST match
+// `isReminderTag` in `src/services/notifications/reminderNotice.ts` — the two
+// are one contract, and a kind added there but not here goes back to putting
+// an OS card on top of an open tab.
+const PAGE_ANNOUNCED_TAG_PREFIXES = ["message_reminder:", "todo_reminder:"];
+
+const isPageAnnouncedTag = (tag) =>
+    PAGE_ANNOUNCED_TAG_PREFIXES.some(
+        (prefix) => tag.startsWith(prefix) && tag.length > prefix.length
+    );
+
+// How long to wait for a tab to say it will announce a push itself. Short,
+// because the card is the fallback and a late card is worse than a prompt one;
+// long enough for a main thread busy with a render.
+const ANNOUNCE_ACK_TIMEOUT_MS = 1500;
+
+/**
+ * Ask the tabs that are ON SCREEN to announce this push themselves, and report
+ * which were asked and whether one of them took it.
+ *
+ * Why ask, rather than just read `visibilityState` and stay quiet: this worker
+ * claims pages that were loaded before it (`skipWaiting` + `clients.claim`), so
+ * a long-lived tab can be running a bundle that predates this handshake. Such a
+ * tab suppresses its own notice on every push, on the understanding that a card
+ * was shown for it — so deciding to skip the card on its behalf would leave the
+ * reminder with no surface at all, for as long as that tab stays open. A tab
+ * that answers is the only tab we can safely be silent for.
+ */
+const askVisibleClientsToAnnounce = async (clientsList, message) => {
+    const asked = clientsList.filter((client) => client.visibilityState === "visible");
+    if (asked.length === 0) return { asked, handled: false };
+    const answers = await Promise.all(
+        asked.map(
+            (client) =>
+                new Promise((resolve) => {
+                    // A port rather than the worker's own `message` listener:
+                    // `includeUncontrolled` tabs have no `controller` to post
+                    // back through, and they are exactly the tabs that need
+                    // this. The port is transferred, so it works either way.
+                    const channel = new MessageChannel();
+                    const timer = setTimeout(() => resolve(false), ANNOUNCE_ACK_TIMEOUT_MS);
+                    channel.port1.onmessage = (event) => {
+                        clearTimeout(timer);
+                        resolve(!!(event.data && event.data.handled));
+                    };
+                    if (!postToClient(client, message, channel.port2)) {
+                        clearTimeout(timer);
+                        resolve(false);
+                    }
+                })
+        )
+    );
+    return { asked, handled: answers.some(Boolean) };
+};
+
+/**
+ * Deliver one push: decide who shows it, show it, and tell every open tab it
+ * arrived.
+ *
+ * This is where the app's single notification rule is enforced for reminders:
+ * the tab you are looking at raises an in-app toast, and the OS card is for
+ * when you are not looking. Every other category gets that for free, because
+ * the server skips the push for a device whose tab is visible
+ * (`presence_scope="device"` in `webpush_dispatch.py`). Reminders deliberately
+ * opt out of that gate (`presence_scope="ignore"`) so a rotted subscription
+ * cannot swallow them — which left them as the one kind that put an OS card
+ * over an open tab while every other kind quietly toasted. The choice it gave
+ * up therefore has to be made here instead.
+ *
+ * Declining to show a card is only allowed because a visible client exists;
+ * that is the carve-out in `userVisibleOnly`, and it is why the decision is
+ * keyed on `visibilityState` and not on, say, whether a tab is merely open.
+ */
+const deliverPush = async (data, title, options) => {
+    let clientsList = [];
+    try {
+        clientsList = await self.clients.matchAll({
             type: "window",
             includeUncontrolled: true,
         });
-        for (const client of allClients) {
-            client.postMessage({
-                type: "push-received",
-                tag: data.tag || "",
-                url: data.url || "",
-            });
-        }
     } catch (e) {
-        // A tab that went away mid-iteration must not break the card.
+        // No tab open is the normal case for a push; carry on and show a card.
+        clientsList = [];
+    }
+    const message = {
+        type: "push-received",
+        tag: data.tag || "",
+        url: data.url || "",
+    };
+
+    let asked = [];
+    let handled = false;
+    if (isPageAnnouncedTag(message.tag)) {
+        const outcome = await askVisibleClientsToAnnounce(clientsList, message);
+        asked = outcome.asked;
+        handled = outcome.handled;
+    }
+
+    if (!handled) {
+        try {
+            await self.registration.showNotification(title, options);
+        } catch (e) {
+            // Nothing left to try. The tabs are still told below, so a page
+            // that can announce it has what it needs.
+        }
+    }
+
+    // Tabs that were not asked — hidden ones, and every tab when the push is
+    // not a page-announced kind — still need the data signal.
+    for (const client of clientsList) {
+        if (asked.indexOf(client) !== -1) continue;
+        postToClient(client, message);
     }
 };
 
@@ -219,9 +326,7 @@ self.addEventListener("push", (event) => {
         silent: data.silent === true,
         data: { url: data.url || "/" },
     };
-    event.waitUntil(
-        Promise.all([self.registration.showNotification(title, options), announcePush(data)])
-    );
+    event.waitUntil(deliverPush(data, title, options));
 });
 
 // The browser can retire a push subscription on its own — Chrome does it when

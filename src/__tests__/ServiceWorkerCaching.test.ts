@@ -76,15 +76,29 @@ let harness: ReturnType<typeof makeCaches>;
  *  `never[]` would reject them. */
 type FakeClient = {
     url: string;
+    /** Undefined for the tests that predate the announce handshake — the
+     *  worker only ever treats an explicit `"visible"` as on screen. */
+    visibilityState?: string;
     focus: ReturnType<typeof vi.fn>;
     postMessage: ReturnType<typeof vi.fn>;
 };
 
-const makeClient = (url = `${ORIGIN}/workspace`): FakeClient => ({
+const makeClient = (url = `${ORIGIN}/workspace`, visibilityState?: string): FakeClient => ({
     url,
+    visibilityState,
     focus: vi.fn(async () => undefined),
     postMessage: vi.fn(),
 });
+
+/** A visible tab that answers the worker's "will you announce this?" offer.
+ *  The real answer comes from `pushBridge.ts`; this is just the port shape. */
+const makeAnsweringClient = (handled: boolean, url = `${ORIGIN}/workspace`): FakeClient => {
+    const client = makeClient(url, "visible");
+    client.postMessage.mockImplementation((_message: unknown, transfer?: MessagePort[]) => {
+        transfer?.[0]?.postMessage({ handled });
+    });
+    return client;
+};
 
 function loadWorker(fetchImpl: ReturnType<typeof vi.fn>) {
     const listeners = new Map<string, Handler>();
@@ -417,6 +431,113 @@ describe("sw.js — telling the page about the push channel", () => {
         const { listeners, self } = loadWorker(vi.fn());
         await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
         expect(self.registration.showNotification).toHaveBeenCalled();
+    });
+
+    // The app's one rule is "the tab you're looking at toasts; the OS card is
+    // for when you aren't". Every category gets that from the server, which
+    // skips the push for a device with a visible tab — except reminders, which
+    // opt out of that gate so a rotted subscription can't swallow them. So for
+    // reminders the choice is made here, by ASKING rather than by reading
+    // `visibilityState` alone: this worker claims pages older than itself, and
+    // a pre-handshake bundle suppresses its own notice expecting a card.
+
+    it("leaves the card to a visible tab that will announce the reminder itself", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        self.clients.matchAll.mockResolvedValue([makeAnsweringClient(true)]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+
+        expect(self.registration.showNotification).not.toHaveBeenCalled();
+    });
+
+    it("shows the card when the visible tab declines", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        self.clients.matchAll.mockResolvedValue([makeAnsweringClient(false)]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+
+        expect(self.registration.showNotification).toHaveBeenCalled();
+    });
+
+    it("shows the card when a visible tab never answers", async () => {
+        // A tab on a bundle from before the handshake: it gets the message,
+        // ignores the port, and stays quiet expecting a card. Waiting for the
+        // silence and then showing one is what stops that tab going dark for
+        // as long as it stays open.
+        vi.useFakeTimers();
+        try {
+            const { listeners, self } = loadWorker(vi.fn());
+            const mute = makeClient(`${ORIGIN}/workspace`, "visible");
+            self.clients.matchAll.mockResolvedValue([mute]);
+
+            let waited: Promise<unknown> | undefined;
+            listeners.get("push")!({
+                data: { json: () => ({ title: "Reminder", tag: "todo_reminder:12" }) },
+                waitUntil: (p: Promise<unknown>) => {
+                    waited = p;
+                },
+            });
+            await vi.advanceTimersByTimeAsync(1600);
+            await waited;
+
+            expect(self.registration.showNotification).toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("never offers the choice for a push the page cannot announce", async () => {
+        // A DM or mention: the page has no path that raises one of these from a
+        // push, so withholding the card would be silence. Only the reminder
+        // prefixes qualify, and they must match `isReminderTag`.
+        const { listeners, self } = loadWorker(vi.fn());
+        const visible = makeAnsweringClient(true);
+        self.clients.matchAll.mockResolvedValue([visible]);
+
+        await push(listeners, { title: "DM", tag: "chats:c1" });
+
+        expect(self.registration.showNotification).toHaveBeenCalled();
+        // One argument, i.e. no port: nothing was asked of it.
+        expect(visible.postMessage).toHaveBeenCalledWith({
+            type: "push-received",
+            tag: "chats:c1",
+            url: "",
+        });
+    });
+
+    it("does not ask a hidden tab, and still tells it", async () => {
+        // Hidden is precisely when the card is the right surface.
+        const { listeners, self } = loadWorker(vi.fn());
+        const hidden = makeAnsweringClient(true);
+        hidden.visibilityState = "hidden";
+        self.clients.matchAll.mockResolvedValue([hidden]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12", url: "/x" });
+
+        expect(self.registration.showNotification).toHaveBeenCalled();
+        expect(hidden.postMessage).toHaveBeenCalledWith({
+            type: "push-received",
+            tag: "todo_reminder:12",
+            url: "/x",
+        });
+    });
+
+    it("asks only the visible tab, and tells the background one anyway", async () => {
+        const { listeners, self } = loadWorker(vi.fn());
+        const visible = makeAnsweringClient(true, `${ORIGIN}/workspace/todo`);
+        const background = makeClient(`${ORIGIN}/workspace/inbox`, "hidden");
+        self.clients.matchAll.mockResolvedValue([visible, background]);
+
+        await push(listeners, { title: "Reminder", tag: "todo_reminder:12" });
+
+        expect(self.registration.showNotification).not.toHaveBeenCalled();
+        // The background tab still needs the row synced, even though it is the
+        // visible one that will show it.
+        expect(background.postMessage).toHaveBeenCalledWith({
+            type: "push-received",
+            tag: "todo_reminder:12",
+            url: "",
+        });
     });
 });
 

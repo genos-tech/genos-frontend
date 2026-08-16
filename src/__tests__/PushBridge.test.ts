@@ -44,9 +44,29 @@ const installFakeServiceWorker = () => {
     });
 };
 
-/** Deliver a message as the worker would. */
-const fromWorker = (data: unknown) => {
-    for (const listener of swListeners) listener({ data } as MessageEvent);
+/** Deliver a message as the worker would. `ports` is populated only when the
+ *  worker is offering to skip its OS card if this tab will announce instead. */
+const fromWorker = (data: unknown, ports: MessagePort[] = []) => {
+    for (const listener of swListeners) listener({ data, ports } as MessageEvent);
+};
+
+/** The worker's side of the offer: keep port1 to hear the answer, hand over
+ *  port2. Real jsdom ports, so the delivery is genuinely asynchronous. */
+const makeOffer = () => {
+    const channel = new MessageChannel();
+    const answers: unknown[] = [];
+    channel.port1.onmessage = (event) => answers.push(event.data);
+    return { answers, port: channel.port2 };
+};
+
+/** Let a port message land. */
+const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const setVisibility = (state: "visible" | "hidden") => {
+    Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => state,
+    });
 };
 
 /** Collect resync requests the bridge causes. */
@@ -64,6 +84,7 @@ beforeEach(() => {
     swListeners.clear();
     resetPushBridgeForTests();
     installFakeServiceWorker();
+    setVisibility("visible");
 });
 
 describe("pushBridge — push-received", () => {
@@ -103,6 +124,76 @@ describe("pushBridge — push-received", () => {
         fromWorker({ type: "push-received" });
 
         expect(seen).toEqual([]);
+        stop();
+    });
+});
+
+// Reminders are the one category the server pushes to a device whose tab is
+// visible (they opt out of the presence gate so a rotted subscription can't
+// swallow them), so they are the one category whose surface has to be chosen
+// here. The worker asks by attaching a port; answering yes means "I'll toast
+// it", and that answer also decides whether the tag is forwarded — the tag is
+// what tells `useInboxResync` to stay quiet.
+describe("pushBridge — choosing the surface for a reminder", () => {
+    it("takes a reminder while visible, and withholds the tag", async () => {
+        // The reported bug: an OS card landed on top of an open tab and no
+        // toast appeared. Both halves are fixed by this one answer.
+        const { seen, stop } = watchResyncs();
+        const { answers, port } = makeOffer();
+        initPushBridge(() => "token-1");
+
+        fromWorker({ type: "push-received", tag: "todo_reminder:12", url: "/x" }, [port]);
+        await tick();
+
+        expect(answers).toEqual([{ handled: true }]);
+        expect(seen).toEqual([{ reason: "push", deliveredTag: undefined }]);
+        stop();
+    });
+
+    it("declines while hidden, and keeps the tag", async () => {
+        // Hidden is what the card is for — and a page-raised notice with the
+        // same tag would REPLACE it, losing its action buttons.
+        setVisibility("hidden");
+        const { seen, stop } = watchResyncs();
+        const { answers, port } = makeOffer();
+        initPushBridge(() => "token-1");
+
+        fromWorker({ type: "push-received", tag: "todo_reminder:12" }, [port]);
+        await tick();
+
+        expect(answers).toEqual([{ handled: false }]);
+        expect(seen[0].deliveredTag).toBe("todo_reminder:12");
+        stop();
+    });
+
+    it("declines a push it has no way to announce", async () => {
+        // A worker that offers the choice for a DM must still get a "no": the
+        // page has no path that raises one of these, so a skipped card is
+        // silence. Belt to the worker's braces — it shouldn't ask at all.
+        const { seen, stop } = watchResyncs();
+        const { answers, port } = makeOffer();
+        initPushBridge(() => "token-1");
+
+        fromWorker({ type: "push-received", tag: "mention_chat:9" }, [port]);
+        await tick();
+
+        expect(answers).toEqual([{ handled: false }]);
+        expect(seen).toEqual([]);
+        stop();
+    });
+
+    it("keeps forwarding the tag when the worker offers no choice", async () => {
+        // No port means a worker older than this handshake, which has already
+        // shown its card. Assuming otherwise would suppress the page's notice
+        // with nothing behind it — silence for as long as the tab stays open,
+        // and this pairing is real: the worker claims pages older than itself.
+        const { seen, stop } = watchResyncs();
+        initPushBridge(() => "token-1");
+
+        fromWorker({ type: "push-received", tag: "todo_reminder:12" });
+        await tick();
+
+        expect(seen[0].deliveredTag).toBe("todo_reminder:12");
         stop();
     });
 });
