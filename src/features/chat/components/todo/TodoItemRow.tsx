@@ -3,6 +3,7 @@ import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Box, Checkbox, IconButton, Input, Link, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -233,6 +234,14 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     // "Remind me about this to-do" picker.
     const [remindMeOpen, setRemindMeOpen] = useState(false);
     const reminder = reminderByItemId?.get(item.itemId) ?? null;
+    // "Reminder: 15:00" — one string for both places that say it (the row's
+    // bell tooltip and the ⋮ menu's label), so the two can't disagree about
+    // a time the user is relying on.
+    const reminderLabel = reminder
+        ? fmt(t.chat.todoPane.remindMe.setFor, {
+              time: formatReminderTime(new Date(reminder.remindAt), locale),
+          })
+        : null;
     // Hidden on a completed row: the server refuses a reminder for a to-do
     // already ticked off, so offering it would be a promise we know would be
     // broken. Ticking the row off cancels any pending one (`useTodoGroups`).
@@ -425,6 +434,40 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             : t.chat.todoPane.untitled}
                     </Box>
                 )}
+                {/* A reminder is a promise made about this row, and the only
+                    thing that said so lived inside a ⋮ menu that is closed
+                    by default — so a resting list looked identical whether
+                    a to-do was coming back on its own or not. The bell is
+                    the same icon the menu item uses, on purpose, and its
+                    tooltip carries the WHEN.
+                    Not a button, unlike every other icon in this row: it
+                    reports rather than acts. Changing or removing the
+                    reminder stays in the menu, so there is still one place
+                    that owns it. */}
+                {reminderLabel && (
+                    <AppTooltip title={reminderLabel}>
+                        <Box
+                            aria-label={reminderLabel}
+                            role="img"
+                            sx={{
+                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                // The pane's own accent, so it reads as this
+                                // feature's mark rather than a warning.
+                                color: isDark
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.85)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.8)",
+                                // A ticked-off row keeps the muted, struck
+                                // treatment of its title: the reminder is
+                                // moot and will be retired unfired.
+                                opacity: item.isCompleted ? 0.45 : 1,
+                            }}
+                        >
+                            <NotificationsActiveRoundedIcon sx={{ fontSize: 15 }} />
+                        </Box>
+                    </AppTooltip>
+                )}
                 {/* When this was completed. `tsCompletedAt` was already
                     persisted and serialized server-side but never
                     surfaced, so "what did I finish today?" was
@@ -495,13 +538,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     currentCategoryId={item.categoryId}
                     isChild={isChild}
                     linkCopied={linkCopied}
-                    reminderLabel={
-                        reminder
-                            ? fmt(t.chat.todoPane.remindMe.setFor, {
-                                  time: formatReminderTime(new Date(reminder.remindAt), locale),
-                              })
-                            : null
-                    }
+                    reminderLabel={reminderLabel}
                     onCopyLink={handleCopyLink}
                     onCreateCategory={onCategoryCreate}
                     onCreateTask={() => setCreateTaskOpen(true)}

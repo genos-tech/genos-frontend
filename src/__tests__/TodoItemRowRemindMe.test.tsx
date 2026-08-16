@@ -146,6 +146,33 @@ describe("TodoItemRow — remind me", () => {
         expect(screen.queryByText("Remind me…")).toBeNull();
     });
 
+    it("marks the row with a bell once a reminder is pending", async () => {
+        // The ⋮ menu is closed at rest, so before this a resting list looked
+        // identical whether a to-do was coming back on its own or not.
+        renderRow(makeItem(), makeReminder("2026-07-12T15:00:00Z"));
+        const bell = screen.getByRole("img", { name: /^Reminder: / });
+        expect(bell).toBeTruthy();
+        // Same string the menu's label uses — one source, so the row and the
+        // menu can't disagree about a time the user is relying on.
+        openMenu();
+        expect((await screen.findByText(/^Reminder: /)).textContent).toBe(
+            bell.getAttribute("aria-label")
+        );
+    });
+
+    it("leaves an unscheduled row unmarked", () => {
+        renderRow(makeItem(), null);
+        expect(screen.queryByRole("img", { name: /^Reminder: / })).toBeNull();
+    });
+
+    it("still marks a completed row that a reminder outlived", () => {
+        // Completion cancels the reminder, but a row completed on another
+        // device can arrive with one still attached. Hiding the bell there
+        // would deny something that exists; the server retires it as moot.
+        renderRow(makeItem({ isCompleted: true }), makeReminder("2026-07-12T15:00:00Z"));
+        expect(screen.getByRole("img", { name: /^Reminder: / })).toBeTruthy();
+    });
+
     it("commits a preset through to the hook with this row's item id", async () => {
         const { onSetReminder } = renderRow(makeItem(), null);
         openMenu();
