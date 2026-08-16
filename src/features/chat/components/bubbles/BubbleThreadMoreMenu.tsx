@@ -645,10 +645,15 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
 
             {message.messageIdWithChatIdAndThreadId && (
                 <ModalRemindMe
-                    messageId={message.messageIdWithChatIdAndThreadId}
                     open={openRemindMe}
-                    reminder={reminder}
+                    remindAt={reminder?.remindAt}
                     onClose={() => setOpenRemindMe(false)}
+                    onCommit={(at) =>
+                        channelService.setReminder(message.messageIdWithChatIdAndThreadId!, at)
+                    }
+                    onRemove={() =>
+                        channelService.cancelReminder(message.messageIdWithChatIdAndThreadId!)
+                    }
                 />
             )}
         </Box>

@@ -425,6 +425,20 @@ export type TodoItemProps = {
     tsCompletedAt: string | null;
 };
 
+// "Remind me about this to-do at 3pm" — the pending nudge on one item.
+// At most one per item (the server cancels any prior one), and never sent
+// down inside `TodoItemProps`: reminders are loaded by their own endpoint
+// (`services/todoReminders`) because they change on their own schedule —
+// one fires, or one is set on another device.
+export type TodoReminderProps = {
+    id: string;
+    itemId: number;
+    /** ISO instant, absolute — the browser computed it (see
+     *  `features/chat/utils/reminderPresets`). */
+    remindAt: string;
+    tsCreated: string;
+};
+
 // A day's worth of todos. Created lazily on first item write — there's
 // no longer an "isExistingTodaysTodo" flag; the group is just absent
 // until the user adds an item.

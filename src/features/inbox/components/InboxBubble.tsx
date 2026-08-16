@@ -11,6 +11,7 @@ import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -55,7 +56,8 @@ type RequestLabelKey =
     | "digest"
     | "teamConnection"
     | "externalShare"
-    | "messageReminder";
+    | "messageReminder"
+    | "todoReminder";
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -128,8 +130,11 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
         colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
     },
-    // A message reminder come due. Violet, matching the reminder chip in
-    // the flagged list and the More menu — the same promise, kept.
+    // A reminder come due — a message's or a to-do's, told apart by
+    // `item_optionals.kind` (the chip's LABEL switches on it below; the
+    // violet bell doesn't, because "a promise you made yourself, kept" is
+    // the one thing both cards are). Matches the reminder chip in the
+    // flagged list and the More menu.
     9: {
         labelKey: "messageReminder",
         icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 14 }} />,
@@ -147,9 +152,14 @@ const DIGEST = 6;
 const TEAM_CONNECTION = 7;
 const EXTERNAL_SHARE = 8;
 
-/** `item_type` for a message reminder that came due. See
- *  `origin/services/message_reminders.py`. */
+/** `item_type` for a reminder that came due — a message's or a to-do's.
+ *  ONE type for both, because it is the same thing from the reader's side;
+ *  `item_optionals.kind` says which. See `origin/services/message_reminders.py`
+ *  and `origin/services/todo_reminders.py`. */
 const MESSAGE_REMINDER = 9;
+
+/** `item_optionals.kind` for the to-do flavour of the type above. */
+const TODO_REMINDER_KIND = "todo_reminder";
 
 /** The request types answered over HTTP rather than a socket event. */
 const HTTP_ANSWERED = [OWNERSHIP_CLAIM, TEAM_CONNECTION, EXTERNAL_SHARE];
@@ -253,6 +263,21 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const reminderSender = String(reminderOptionals?.sender_name ?? "");
     const reminderHref = String(reminderOptionals?.href ?? "");
     const reminderChatName = String(reminderOptionals?.chat_name ?? "");
+    // Which of the two reminder kinds this is. The preview block and the
+    // deep-link chip are shared — the to-do's title is quoted under the
+    // same `preview` key, and its `href` opens the To-Do pane focused on
+    // the row — so only the sentence and the chip's wording differ.
+    const isTodoReminder = reminderOptionals?.kind === TODO_REMINDER_KIND;
+    const typeLabelKey: RequestLabelKey | undefined = isTodoReminder
+        ? "todoReminder"
+        : config?.labelKey;
+    // On the deep-link chip below: what it opens, not what reminded you —
+    // the bell already said that at the top of the card.
+    const reminderChipIcon = isTodoReminder ? (
+        <TaskAltRoundedIcon sx={{ fontSize: 14 }} />
+    ) : (
+        <ChatRoundedIcon sx={{ fontSize: 14 }} />
+    );
 
     // Note-access requests (itemType 4) can open the referenced note in the
     // URL-link modal. Only personal notes (note_type 1) are routable from
@@ -418,7 +443,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 },
                             }}
                         >
-                            {t.inbox.requestTypes[config.labelKey]}
+                            {t.inbox.requestTypes[typeLabelKey ?? config.labelKey]}
                         </Chip>
                     )}
 
@@ -489,13 +514,16 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             level="body-sm"
                             sx={{ color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)" }}
                         >
-                            {reminderSender
-                                ? fmt(t.inbox.messageReminder.headlineFrom, {
-                                      name: reminderSender,
-                                  })
-                                : t.inbox.messageReminder.headline}
+                            {isTodoReminder
+                                ? t.inbox.todoReminder.headline
+                                : reminderSender
+                                  ? fmt(t.inbox.messageReminder.headlineFrom, {
+                                        name: reminderSender,
+                                    })
+                                  : t.inbox.messageReminder.headline}
                         </Typography>
-                        {/* The message itself, quoted. A reminder whose
+                        {/* The subject itself, quoted — the message, or the
+                            to-do's title. A reminder whose
                             subject you have to go and look up is a reminder
                             you postpone, so the text comes with it.
 
@@ -605,18 +633,18 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Box>
                 )}
 
-                {/* Jump to the message the reminder is about. Same URL-link
+                {/* Jump to what the reminder is about. Same URL-link
                     modal as the note affordance, so acting on a reminder
                     doesn't cost you the inbox you were working through —
                     with `fullPageHref` offering the preview's Move-to-page
                     button for when the reader wants the chat itself. The
-                    href names the message, so either way it opens focused
-                    on the bubble rather than at the chat. */}
+                    href names the message (or the to-do row), so either way
+                    it opens focused on the thing rather than at its list. */}
                 {reminderOptionals && reminderHref !== "" && urlLinkModal && (
                     <Box sx={{ pl: BODY_TEXT_INDENT }}>
                         <Chip
                             size="sm"
-                            startDecorator={<ChatRoundedIcon sx={{ fontSize: 14 }} />}
+                            startDecorator={reminderChipIcon}
                             variant="soft"
                             sx={{
                                 cursor: "pointer",
@@ -640,11 +668,13 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 })
                             }
                         >
-                            {reminderChatName
-                                ? fmt(t.inbox.messageReminder.openInNamed, {
-                                      chat: reminderChatName,
-                                  })
-                                : t.inbox.messageReminder.openMessage}
+                            {isTodoReminder
+                                ? t.inbox.todoReminder.openTodo
+                                : reminderChatName
+                                  ? fmt(t.inbox.messageReminder.openInNamed, {
+                                        chat: reminderChatName,
+                                    })
+                                  : t.inbox.messageReminder.openMessage}
                         </Chip>
                     </Box>
                 )}

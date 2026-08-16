@@ -113,6 +113,7 @@ export const services = {
             mentionNoteChat: "In a chat note",
             agentRunDone: "AI answer ready",
             messageReminder: "Message reminders",
+            todoReminder: "To-do reminders",
         },
         // Email-channel category labels (emailCategories.ts). These use
         // the SERVER's coarser vocabulary — one "mention_task" where the
@@ -203,6 +204,8 @@ export const services = {
                     "When an AI answer finishes after you've closed the Spotlight, thread, or note window.",
                 messageReminder:
                     "When a reminder you set on a message comes due. Turning this off keeps the reminder in your inbox without a notification.",
+                todoReminder:
+                    "When a reminder you set on a to-do comes due. Turning this off keeps the reminder in your inbox without a notification.",
             },
         },
         // Completion notice for an agent run that finished while its

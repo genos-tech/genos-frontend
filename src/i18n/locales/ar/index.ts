@@ -996,6 +996,11 @@ export const ar: DeepPartial<Messages> = {
             sourceMdm: "من متعدد المستخدمين DM",
             copyLink: "نسخ الوصلة",
             linkCopied: "تم نسخ الرابط",
+            remindMe: {
+                menu: "ذكّرني…",
+                setFor: "تذكير: {time}",
+                description: "سيصلك إشعار ونشاط في صندوق الوارد. وإتمام هذه المهمة يلغي التذكير.",
+            },
             createTask: {
                 menu: "إنشاء مهمة",
                 heading: "أنشئ مهمة من هذه المهمة",
@@ -2796,6 +2801,7 @@ export const ar: DeepPartial<Messages> = {
             noteAccessRequest: "الوصول إلى الملاحظة",
             ownershipClaim: "طلب ملكية",
             messageReminder: "تذكير",
+            todoReminder: "تذكير بمهمة",
             digest: "Genos هضم",
             teamConnection: "اتصال الفريق",
             externalShare: "مشتركة مع فريقك",
@@ -2805,6 +2811,10 @@ export const ar: DeepPartial<Messages> = {
             headlineFrom: "لقد طلبت تذكيرك برسالة {name}.",
             openMessage: "فتح الرسالة",
             openInNamed: "فتح في {chat}",
+        },
+        todoReminder: {
+            headline: "لقد طلبت تذكيرك بهذه المهمة.",
+            openTodo: "فتح المهمة",
         },
         ownershipClaim: {
             respondBy: "يُرجى الرد قبل {date}، وإلا أصبح بإمكانهم الحصول على الملكية",
@@ -3019,6 +3029,7 @@ export const ar: DeepPartial<Messages> = {
                 mentionNoteChat: "في مذكرة الدردشة",
                 agentRunDone: "AI الجواب جاهز",
                 messageReminder: "تذكيرات الرسائل",
+                todoReminder: "تذكيرات المهام",
             },
             emailCategories: {
                 mentionChat: "الإشارات في المحادثات",
@@ -3077,6 +3088,8 @@ export const ar: DeepPartial<Messages> = {
                         "عند انتهاء الإجابة AI بعد إغلاق نافذة Spotlight أو سلسلة الرسائل أو الملاحظة.",
                     messageReminder:
                         "عندما يحين موعد التذكير الذي قمت بتعيينه على الرسالة. يؤدي إيقاف تشغيل هذا إلى إبقاء التذكير في بريدك الوارد دون إشعار.",
+                    todoReminder:
+                        "عندما يحين موعد التذكير الذي قمت بتعيينه على مهمة. يؤدي إيقاف تشغيل هذا إلى إبقاء التذكير في بريدك الوارد دون إشعار.",
                 },
                 permissionStates: {
                     granted: "ممنوح",

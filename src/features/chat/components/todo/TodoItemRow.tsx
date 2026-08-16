@@ -15,9 +15,11 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TodoCategoryProps, TodoItemProps } from "../../../../types/chat";
+import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
+import { formatReminderTime } from "../../utils/reminderPresets";
 import { formatCompletedAt } from "../../utils/todoCompletion";
+import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { ModalCreateTaskFromTodo } from "./ModalCreateTaskFromTodo";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
@@ -48,6 +50,13 @@ interface TodoItemRowProps {
     onCategoryChange: (itemId: number, categoryId: number | null) => void;
     onDelete: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    // Reminders. `reminderByItemId` is passed whole rather than per-row so
+    // the recursive child rows below can read their own without the parent
+    // re-deriving it. Absent on surfaces that don't wire reminders up, which
+    // simply hides the menu item.
+    reminderByItemId?: ReadonlyMap<number, TodoReminderProps>;
+    onSetReminder?: (itemId: number, at: Date) => Promise<unknown>;
+    onCancelReminder?: (itemId: number) => Promise<unknown>;
     // Append a new child under this row's parent (top-level row's
     // own item_id, or — when this row is itself a child rendered by
     // its own parent — undefined).
@@ -181,12 +190,15 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
         onDelete,
         onCategoryCreate,
         onAddSubitem,
+        reminderByItemId,
+        onSetReminder,
+        onCancelReminder,
     } = props;
 
     const isChild = item.parentItemId !== null;
 
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const isDark = mode === "dark";
 
     // null outside the app's UrlLinkModalProvider; passed to
@@ -218,6 +230,13 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const [linkCopied, setLinkCopied] = useState(false);
     // "Create task from this to-do" modal (top-level rows only).
     const [createTaskOpen, setCreateTaskOpen] = useState(false);
+    // "Remind me about this to-do" picker.
+    const [remindMeOpen, setRemindMeOpen] = useState(false);
+    const reminder = reminderByItemId?.get(item.itemId) ?? null;
+    // Hidden on a completed row: the server refuses a reminder for a to-do
+    // already ticked off, so offering it would be a promise we know would be
+    // broken. Ticking the row off cancels any pending one (`useTodoGroups`).
+    const canRemind = Boolean(onSetReminder && onCancelReminder && !item.isCompleted);
     const linkCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
         return () => {
@@ -476,12 +495,31 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     currentCategoryId={item.categoryId}
                     isChild={isChild}
                     linkCopied={linkCopied}
+                    reminderLabel={
+                        reminder
+                            ? fmt(t.chat.todoPane.remindMe.setFor, {
+                                  time: formatReminderTime(new Date(reminder.remindAt), locale),
+                              })
+                            : null
+                    }
                     onCopyLink={handleCopyLink}
                     onCreateCategory={onCategoryCreate}
                     onCreateTask={() => setCreateTaskOpen(true)}
                     onDelete={() => onDelete(item.itemId)}
+                    onRemindMe={canRemind ? () => setRemindMeOpen(true) : undefined}
                     onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
                 />
+                {/* Mounted only while open, like the task modal above. */}
+                {remindMeOpen && onSetReminder && onCancelReminder && (
+                    <ModalRemindMe
+                        description={t.chat.todoPane.remindMe.description}
+                        open={remindMeOpen}
+                        remindAt={reminder?.remindAt}
+                        onClose={() => setRemindMeOpen(false)}
+                        onCommit={(at) => onSetReminder(item.itemId, at)}
+                        onRemove={() => onCancelReminder(item.itemId)}
+                    />
+                )}
                 {/* Mounted only while open so the project fetch inside
                     fires per use, not once per rendered to-do row. */}
                 {createTaskOpen && (
@@ -552,15 +590,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             item={child}
                             localDate={localDate}
                             myself={myself}
+                            reminderByItemId={reminderByItemId}
                             setMyself={setMyself}
                             socket={socket}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            onCancelReminder={onCancelReminder}
                             onCategoryChange={onCategoryChange}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDelete}
                             onNotesCommit={onNotesCommit}
+                            onSetReminder={onSetReminder}
                             onTitleCommit={onTitleCommit}
                             onToggleComplete={onToggleComplete}
                         />

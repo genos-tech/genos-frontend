@@ -648,6 +648,12 @@ export const ja: DeepPartial<Messages> = {
             saved: "保存済み",
             copyLink: "リンクをコピー",
             linkCopied: "リンクをコピーしました",
+            remindMe: {
+                menu: "リマインドする…",
+                setFor: "リマインド: {time}",
+                description:
+                    "通知と受信箱のアクティビティでお知らせします。完了にするとリマインドは解除されます。",
+            },
             createTask: {
                 menu: "タスクを作成",
                 heading: "この To-Do からタスクを作成",
@@ -1802,12 +1808,17 @@ export const ja: DeepPartial<Messages> = {
             teamConnection: "チームのつながり",
             externalShare: "チームと共有",
             messageReminder: "リマインダー",
+            todoReminder: "To-Do リマインダー",
         },
         messageReminder: {
             headline: "このメッセージのリマインダーです。",
             headlineFrom: "{name}さんのメッセージのリマインダーです。",
             openMessage: "メッセージを開く",
             openInNamed: "「{chat}」で開く",
+        },
+        todoReminder: {
+            headline: "この To-Do のリマインダーです。",
+            openTodo: "To-Do を開く",
         },
         crossTeam: {
             connectionHint: "接続自体は何も共有しません。",
@@ -2481,6 +2492,7 @@ export const ja: DeepPartial<Messages> = {
                 mentionNoteChat: "チャットノートで",
                 agentRunDone: "AIによる回答準備完了",
                 messageReminder: "メッセージリマインダー",
+                todoReminder: "To-Do リマインダー",
             },
             emailCategories: {
                 mentionChat: "チャットでのメンション",
@@ -2557,6 +2569,8 @@ export const ja: DeepPartial<Messages> = {
                         "Spotlight、スレッド、またはメモ ウィンドウを閉じた後に AI 回答が終了したとき。",
                     messageReminder:
                         "メッセージに設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信トレイに残ります。",
+                    todoReminder:
+                        "To-Do に設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信トレイに残ります。",
                 },
             },
             agentRun: {

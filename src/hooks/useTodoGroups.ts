@@ -18,6 +18,11 @@ import {
     UpdateTodoItemPatch,
 } from "../features/chat/components/todo/services/todoItems";
 import {
+    cancelTodoReminder,
+    loadTodoReminders,
+    setTodoReminder,
+} from "../features/chat/components/todo/services/todoReminders";
+import {
     createTodoSchedule,
     CreateTodoScheduleInput,
     deleteTodoSchedule,
@@ -25,12 +30,14 @@ import {
     updateTodoSchedule,
     UpdateTodoSchedulePatch,
 } from "../features/chat/components/todo/services/todoSchedules";
+import { reminderSweepDelayMs } from "../features/chat/utils/reminderSweep";
 import { occursOn } from "../features/chat/utils/todoSchedule";
 import { UserProps } from "../types/admin";
 import {
     TodoCategoryProps,
     TodoGroupProps,
     TodoItemProps,
+    TodoReminderProps,
     TodoScheduleProps,
 } from "../types/chat";
 import { getLocalCurrentDate } from "../utils/dateUtils";
@@ -53,6 +60,16 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     const [categories, setCategories] = useState<TodoCategoryProps[]>([]);
     const [schedules, setSchedules] = useState<TodoScheduleProps[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    // Pending "remind me about this to-do" nudges, by item.
+    //
+    // Reminders live HERE rather than in their own store because completion
+    // and cancellation are one fact: the server retires a reminder when the
+    // to-do is ticked off, so `patchOneItem` has to drop it locally in the
+    // same breath. Split across two owners, a completed row would keep
+    // promising a nudge that is never coming.
+    const [reminderByItemId, setReminderByItemId] = useState<
+        ReadonlyMap<number, TodoReminderProps>
+    >(() => new Map());
 
     // Ref so handlers always see the latest groups without re-binding.
     const groupsRef = useRef<TodoGroupProps[]>([]);
@@ -61,6 +78,11 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     // effects that call it don't need `schedules` in their dep arrays.
     const schedulesRef = useRef<TodoScheduleProps[]>([]);
     schedulesRef.current = schedules;
+    // And for reminders, so the mutators below can read the current one
+    // without taking the map as a dependency — it changes whenever any
+    // reminder is set or fires, which would re-bind every item handler.
+    const remindersRef = useRef<ReadonlyMap<number, TodoReminderProps>>(new Map());
+    remindersRef.current = reminderByItemId;
 
     // Load: IDB fast path, then authoritative fetch.
     //
@@ -71,6 +93,19 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     useEffect(() => {
         if (!myself.userId || !myself.teamId) return;
         let cancelled = false;
+        // Reminders ride alongside rather than inside the `Promise.all`
+        // below: they only annotate rows that are perfectly usable without
+        // them, so putting them in the batch would make the list the user
+        // actually opened wait on the decoration over it.
+        //
+        // `undefined` means the read FAILED, which is not the same as "no
+        // reminders" — keep whatever we had rather than telling the user
+        // theirs are gone.
+        void loadTodoReminders(accessToken).then((reminders) => {
+            if (!cancelled && reminders) {
+                setReminderByItemId(new Map(reminders.map((r) => [r.itemId, r])));
+            }
+        });
         (async () => {
             setIsLoading(true);
             const cached = await todoService.getGroupsByUser(myself.userId);
@@ -187,6 +222,19 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         );
     }, []);
 
+    // Forget this item's pending reminder. Declared here, above the item
+    // mutators that call it: completing or deleting a to-do retires its
+    // reminder server-side, and the local map has to follow or the row goes
+    // on promising a nudge that will never arrive.
+    const dropReminderLocally = useCallback((itemId: number) => {
+        setReminderByItemId((prev) => {
+            if (!prev.has(itemId)) return prev; // no re-render for the common case
+            const next = new Map(prev);
+            next.delete(itemId);
+            return next;
+        });
+    }, []);
+
     // Patch a single item: optimistic local update first, then persist,
     // reverting that one item on server failure.
     const patchOneItem = useCallback(
@@ -229,8 +277,21 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                 })
             );
 
+            // Mirror the server's own rule (`todo_views.patch` calls
+            // `todo_reminders.cancel_pending`): finishing the to-do retires
+            // the nudge. Done optimistically alongside the completion so the
+            // row never shows "done" and "Reminder: 15:00" together.
+            const droppedReminder =
+                patch.isCompleted === true ? remindersRef.current.get(itemId) : undefined;
+            if (patch.isCompleted === true) dropReminderLocally(itemId);
+
             const fresh = await updateTodoItem(accessToken, itemId, patch);
             if (!fresh) {
+                // The PATCH never landed, so the server never cancelled
+                // anything — put the reminder back with the item.
+                if (droppedReminder) {
+                    setReminderByItemId((prev) => new Map(prev).set(itemId, droppedReminder));
+                }
                 // Revert on failure.
                 if (prevSnapshot) {
                     setGroups((prev) =>
@@ -250,7 +311,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             upsertItem(fresh);
             return fresh;
         },
-        [accessToken, upsertItem]
+        [accessToken, dropReminderLocally, upsertItem]
     );
 
     // Public patch. Completing a PARENT cascades completion down to its
@@ -282,6 +343,10 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     const removeItem = useCallback(
         async (itemId: number): Promise<boolean> => {
             removeItemLocally(itemId);
+            // The server cascades the reminder away with the row; without
+            // this the map would keep a reminder for a to-do that no longer
+            // exists, and its sweep timer would keep re-arming for it.
+            dropReminderLocally(itemId);
             const ok = await deleteTodoItem(accessToken, itemId);
             if (!ok) {
                 // Reload on failure since we have no snapshot for revert.
@@ -290,8 +355,58 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             }
             return ok;
         },
-        [accessToken, myself, removeItemLocally]
+        [accessToken, dropReminderLocally, myself, removeItemLocally]
     );
+
+    const refreshReminders = useCallback(async () => {
+        const reminders = await loadTodoReminders(accessToken);
+        if (!reminders) return; // read failed — keep what we have
+        setReminderByItemId(new Map(reminders.map((r) => [r.itemId, r])));
+    }, [accessToken]);
+
+    /** Ask to be reminded about this to-do at `at`. Rejects when the server
+     *  refuses the time, so the picker can say so. */
+    const setItemReminder = useCallback(
+        async (itemId: number, at: Date): Promise<TodoReminderProps> => {
+            const reminder = await setTodoReminder(accessToken, itemId, at);
+            setReminderByItemId((prev) => new Map(prev).set(itemId, reminder));
+            return reminder;
+        },
+        [accessToken]
+    );
+
+    /** Cancel it. Optimistic, restoring the row if the server refuses —
+     *  a reminder that silently survives its own cancellation is the worse
+     *  of the two failures. */
+    const cancelItemReminder = useCallback(
+        async (itemId: number): Promise<void> => {
+            const existing = remindersRef.current.get(itemId);
+            dropReminderLocally(itemId);
+            try {
+                await cancelTodoReminder(accessToken, itemId);
+            } catch (e) {
+                if (existing) {
+                    setReminderByItemId((prev) => new Map(prev).set(itemId, existing));
+                }
+                throw e;
+            }
+        },
+        [accessToken, dropReminderLocally]
+    );
+
+    // Re-read once the soonest reminder's time has passed, so a row stops
+    // promising a nudge that has already been delivered (or was retired as
+    // moot). One timer for the whole set — see `utils/reminderSweep`.
+    useEffect(() => {
+        const delay = reminderSweepDelayMs(
+            Array.from(reminderByItemId.values(), (r) => r.remindAt)
+        );
+        if (delay === null) return;
+        const id = setTimeout(() => {
+            void refreshReminders();
+        }, delay);
+        return () => clearTimeout(id);
+    }, [reminderByItemId, refreshReminders]);
 
     const addCategory = useCallback(
         async (name: string): Promise<TodoCategoryProps | undefined> => {
@@ -506,5 +621,9 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         updateSchedule,
         removeSchedule,
         refresh,
+        reminderByItemId,
+        setItemReminder,
+        cancelItemReminder,
+        refreshReminders,
     };
 };

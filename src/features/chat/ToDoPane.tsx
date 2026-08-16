@@ -116,6 +116,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         addSchedule,
         updateSchedule,
         removeSchedule,
+        reminderByItemId,
+        setItemReminder,
+        cancelItemReminder,
     } = useTG;
 
     // Scheduled-todos modal (recurring rules that auto-populate today).
@@ -412,6 +415,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     group={group}
                                     highlightItemId={focusTarget?.itemId}
                                     myself={myself}
+                                    reminderByItemId={reminderByItemId}
                                     setMyself={setMyself}
                                     socket={socket}
                                     useCM={useCM}
@@ -419,9 +423,11 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     useUISM={useUISM}
                                     onAddItem={handleAddItem}
                                     onAddSubitem={handleAddSubitem}
+                                    onCancelReminder={cancelItemReminder}
                                     onCategoryCreate={addCategory}
                                     onDeleteItem={removeItem}
                                     onPatchItem={patchItem}
+                                    onSetReminder={setItemReminder}
                                 />
                             );
                         }}

@@ -36,6 +36,7 @@ import { rememberPeople } from "../../components/ui/avatars/userDirectory";
 import { INDEX_NAMES, STORES } from "../../db/config/constants";
 import { initDB } from "../../db/config/schema";
 import { CheckpointRepository } from "../../db/repositories/checkpoints";
+import { reminderSweepDelayMs } from "../../features/chat/utils/reminderSweep";
 import type {
     Ack,
     Channel,
@@ -72,21 +73,6 @@ function v3BaseURL(): string {
     const legacy = import.meta.env.VITE_API_BASE_URL ?? "";
     return legacy.replace(/\/api\/v\d+$/, "").replace(/\/$/, "");
 }
-
-/**
- * Bounds on the reminder sweep — the re-read that follows a reminder's time
- * so the UI stops promising a nudge that has already been delivered. See
- * `ChannelService._scheduleReminderSweep`.
- *
- * GRACE: the server drains due reminders on a minutely cron, so waiting a
- * little past the time avoids a round trip that returns the row unchanged.
- * MIN: a floor, so a reminder the server hasn't drained yet can't become a
- * tight polling loop. MAX: `setTimeout` overflows past ~24.8 days and would
- * fire immediately, so a reminder set for next month re-arms instead.
- */
-const REMINDER_SWEEP_GRACE_MS = 90_000;
-const REMINDER_SWEEP_MIN_MS = 60_000;
-const REMINDER_SWEEP_MAX_MS = 6 * 60 * 60 * 1000;
 
 /**
  * Errors raised by `ChannelService` REST + socket methods.
@@ -2362,16 +2348,10 @@ export class ChannelService {
             clearTimeout(this._reminderSweep);
             this._reminderSweep = null;
         }
-        let soonest = Number.POSITIVE_INFINITY;
-        for (const r of this._reminderByMessageId.values()) {
-            const at = Date.parse(r.remindAt);
-            if (!Number.isNaN(at) && at < soonest) soonest = at;
-        }
-        if (!Number.isFinite(soonest)) return;
-        const delay = Math.min(
-            Math.max(soonest + REMINDER_SWEEP_GRACE_MS - Date.now(), REMINDER_SWEEP_MIN_MS),
-            REMINDER_SWEEP_MAX_MS
+        const delay = reminderSweepDelayMs(
+            Array.from(this._reminderByMessageId.values(), (r) => r.remindAt)
         );
+        if (delay === null) return;
         this._reminderSweep = setTimeout(() => {
             this._reminderSweep = null;
             void this.fetchReminders();

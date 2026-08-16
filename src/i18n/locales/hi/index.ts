@@ -1004,6 +1004,12 @@ export const hi: DeepPartial<Messages> = {
             saved: "सेव हो गया",
             copyLink: "लिंक की प्रतिलिपि करें",
             linkCopied: "लिंक कॉपी किया गया",
+            remindMe: {
+                menu: "याद दिलाएँ…",
+                setFor: "रिमाइंडर: {time}",
+                description:
+                    "आपको नोटिफिकेशन और इनबॉक्स में एक ऐक्टिविटी मिलेगी। इसे पूरा करने पर रिमाइंडर रद्द हो जाएगा।",
+            },
             createTask: {
                 menu: "कार्य बनाएँ",
                 heading: "इस कार्य से एक कार्य बनाएँ",
@@ -2820,12 +2826,17 @@ export const hi: DeepPartial<Messages> = {
             teamConnection: "टीम कनेक्शन",
             externalShare: "आपकी टीम के साथ साझा किया गया",
             messageReminder: "रिमाइंडर",
+            todoReminder: "टू-डू रिमाइंडर",
         },
         messageReminder: {
             headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",
             headlineFrom: "आपने {name} के मेसेज की याद दिलाने के लिए कहा था।",
             openMessage: "मेसेज खोलें",
             openInNamed: "{chat} में खोलें",
+        },
+        todoReminder: {
+            headline: "आपने इस टू-डू की याद दिलाने के लिए कहा था।",
+            openTodo: "टू-डू खोलें",
         },
         crossTeam: {
             connectionHint: "कनेक्ट करना अपने आप में कुछ भी साझा नहीं करता है.",
@@ -3372,6 +3383,7 @@ export const hi: DeepPartial<Messages> = {
                 mentionNoteChat: "एक चैट नोट में",
                 agentRunDone: "एआई उत्तर तैयार",
                 messageReminder: "संदेश अनुस्मारक",
+                todoReminder: "टू-डू अनुस्मारक",
             },
             emailCategories: {
                 mentionChat: "चैट में मेंशन",
@@ -3449,6 +3461,8 @@ export const hi: DeepPartial<Messages> = {
                         "जब आपके द्वारा स्पॉटलाइट, थ्रेड, या नोट विंडो बंद करने के बाद AI उत्तर समाप्त हो जाता है।",
                     messageReminder:
                         "जब आपके द्वारा किसी संदेश पर सेट किया गया अनुस्मारक नियत समय पर आता है। इसे बंद करने से रिमाइंडर बिना किसी सूचना के आपके इनबॉक्स में रहता है।",
+                    todoReminder:
+                        "जब आपके द्वारा किसी टू-डू पर सेट किया गया अनुस्मारक नियत समय पर आता है। इसे बंद करने से रिमाइंडर बिना किसी सूचना के आपके इनबॉक्स में रहता है।",
                 },
             },
             agentRun: {

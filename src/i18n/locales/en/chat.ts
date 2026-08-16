@@ -61,6 +61,17 @@ export const chat = {
         saved: "Saved",
         copyLink: "Copy link",
         linkCopied: "Link copied",
+        // The row's "Remind me…" item. The picker itself is the shared
+        // `chat.remindMe` dialog, so only the labels around it live here:
+        // `menu` when nothing is set, `setFor` (with the time) when one is
+        // pending, and `description` replacing the message-flavoured
+        // subtitle inside the dialog.
+        remindMe: {
+            menu: "Remind me…",
+            setFor: "Reminder: {time}",
+            description:
+                "You'll get a notification and an inbox activity. Ticking this off cancels it.",
+        },
         createTask: {
             menu: "Create task",
             heading: "Create a task from this to-do",

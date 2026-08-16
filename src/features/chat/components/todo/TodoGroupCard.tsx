@@ -12,7 +12,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TodoCategoryProps, TodoGroupProps } from "../../../../types/chat";
+import { TodoCategoryProps, TodoGroupProps, TodoReminderProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
 import { TodoCategorySection } from "./TodoCategorySection";
 
@@ -46,6 +46,12 @@ interface TodoGroupCardProps {
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    // Reminders are owned by `useTodoGroups` (the same owner as completion,
+    // which cancels them) and passed down whole; absent on any surface that
+    // doesn't wire them, which hides the row's "Remind me…" item.
+    reminderByItemId?: ReadonlyMap<number, TodoReminderProps>;
+    onSetReminder?: (itemId: number, at: Date) => Promise<unknown>;
+    onCancelReminder?: (itemId: number) => Promise<unknown>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     useTEM: TeamManagementState;
@@ -64,6 +70,9 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
+        reminderByItemId,
+        onSetReminder,
+        onCancelReminder,
         myself,
         setMyself,
         useTEM,
@@ -214,6 +223,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         items={s.items}
                         localDate={group.localDate}
                         myself={myself}
+                        reminderByItemId={reminderByItemId}
                         setMyself={setMyself}
                         socket={socket}
                         title={s.title}
@@ -221,9 +231,11 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         useTEM={useTEM}
                         useUISM={useUISM}
                         onAddItem={(t, cId) => onAddItem(group.localDate, t, cId)}
+                        onCancelReminder={onCancelReminder}
                         onCategoryCreate={onCategoryCreate}
                         onDeleteItem={onDeleteItem}
                         onPatchItem={onPatchItem}
+                        onSetReminder={onSetReminder}
                         onAddSubitem={(parentItemId, t) =>
                             onAddSubitem(group.localDate, parentItemId, t)
                         }
