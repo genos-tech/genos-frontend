@@ -34,7 +34,12 @@ const isNotificationsApiSupported = (): boolean =>
     typeof Notification !== "undefined" &&
     window.isSecureContext === true;
 
-const isPageHidden = (): boolean =>
+/** Visibility, deliberately not focus: a tab on a second monitor or behind
+ *  another window is "visible" and gets a toast. Exported because the surface
+ *  choice has to be the SAME predicate wherever it is made — `pushBridge`
+ *  answers the service worker with it, and the two disagreeing would mean
+ *  either two cards for one push or none. */
+export const isPageHidden = (): boolean =>
     typeof document !== "undefined" && document.visibilityState === "hidden";
 
 // Categories the server actually delivers via Web Push (see the backend
@@ -466,6 +471,9 @@ export class NotificationManager {
      *   5. dedupe            -> ignored-duplicate
      *   6. active surface    -> ignored-active-surface (only when foreground)
      *   7. dispatch          -> browser (hidden tab) or toast (foreground)
+     *
+     * The dedupe id is CLAIMED at 6/7, not at 5: a check that means "not now"
+     * rather than "not this" must not spend the slot.
      */
     notify(intent: NotificationIntent): NotificationDispatch {
         if (intent.senderId && intent.senderId === this.currentUserId) {
@@ -506,12 +514,20 @@ export class NotificationManager {
         if (this.seenIds.has(intent.id)) {
             return "ignored-duplicate";
         }
-        this.seenIds.set(intent.id, Date.now());
 
         const hidden = isPageHidden();
         if (!hidden && matchesActiveSurface(intent, this.activeSurface)) {
             return "ignored-active-surface";
         }
+
+        // Claimed only once the intent is actually going to be shown — for the
+        // same reason pause sits above the dedupe check. An active-surface drop
+        // means "you are already looking at this", which stops being true the
+        // moment the user navigates away; burning the id here would swallow the
+        // re-delivery that should then notify. Intent ids are content-derived
+        // and stable (`activity:<cat>:<id>`, `chat:<type>:<chat>:<msg>`), so a
+        // spent slot is silence for the whole dedupe window, not a near-miss.
+        this.seenIds.set(intent.id, Date.now());
 
         if (hidden) {
             // Web Push (service worker) delivers the categories the server

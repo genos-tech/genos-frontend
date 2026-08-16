@@ -672,6 +672,25 @@ describe("NotificationManager", () => {
             expect(mgr.notify(intent({ source: { chatType: 2, chatId: "42" } }))).toBe("toast");
         });
 
+        it("an active-surface drop does NOT consume the dedupe slot", () => {
+            // Same reasoning as pause: "you're already looking at this" is a
+            // "not now", and it stops being true the moment the user navigates
+            // away. Spending the id there would swallow the re-delivery that
+            // should then notify — and intent ids are content-derived, so the
+            // slot is silence for the whole window, not a near-miss.
+            const mgr = new NotificationManager({ currentUserId: "me" });
+            const toast = vi.fn();
+            mgr.subscribeToasts(toast);
+            const i = intent({ id: "same", source: { chatType: 2, chatId: "42" } });
+
+            mgr.setActiveSurface({ chatType: 2, chatId: "42" });
+            expect(mgr.notify(i)).toBe("ignored-active-surface");
+
+            mgr.setActiveSurface({ chatType: 2, chatId: "99" });
+            expect(mgr.notify(i)).toBe("toast");
+            expect(toast).toHaveBeenCalledTimes(1);
+        });
+
         it("active chat surface does not suppress a thread intent (source has threadId)", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
             const toast = vi.fn();

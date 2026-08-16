@@ -216,10 +216,23 @@ export const useNotifications = (
     // laptop doesn't".
     //
     // `ensurePushSubscription` is an idempotent upsert (the server keys on
-    // endpoint), so the repair is just to call it again. Throttled and tied
-    // to becoming visible rather than run on an interval: the only moment the
-    // repair is worth anything is when the user is about to rely on it, and
-    // an interval in a background tab would be a POST an hour for nothing.
+    // endpoint), so re-calling it restores a row the server no longer has —
+    // the 404/410 prune, when the browser's own subscription is still good.
+    //
+    // It does NOT repair the 403, and it is worth being precise about that:
+    // the endpoint is exactly what the push service is refusing, so re-sending
+    // the same endpoint and keys re-creates a row that fails identically.
+    // Fixing that one means breaking the endpoint's identity —
+    // `subscription.unsubscribe()` then a fresh `subscribe()`, which today
+    // happens only when `appServerKeyMatches` fails (i.e. once the frontend's
+    // VITE_VAPID_PUBLIC_KEY has itself been rotated) — and nothing tells this
+    // side a 403 happened. Until the server reports send failures back, a
+    // key rotation without a frontend rotation is silent per-device death.
+    //
+    // Throttled and tied to becoming visible rather than run on an interval:
+    // the only moment the repair is worth anything is when the user is about
+    // to rely on it, and an interval in a background tab would be a POST an
+    // hour for nothing.
     useEffect(() => {
         if (!accessToken || !myself.userId || permission !== "granted") return;
         let cancelled = false;
