@@ -19,16 +19,18 @@ import { rehydrateFilters, rehydrateKeys } from "./taskFilterStorage";
  * everyone's.
  */
 
-/** Field-for-field mirror of the bar's six dimensions. */
+/** Field-for-field mirror of the bar's seven dimensions. */
 export type SavedFilterSelection = {
     status: FilterProps[];
     tags: FilterProps[];
     priorities: FilterProps[];
     effortLevels: FilterProps[];
-    // `MilestoneFilterKey[]` / `MemberFilterKey[]` in TaskFilterMenu. Kept
-    // loose here (the sentinels are private to that module) and cast at
-    // the call site, exactly as `rehydrateKeys` is already used.
+    // `MilestoneFilterKey[]` / `SprintFilterKey[]` / `MemberFilterKey[]` in
+    // TaskFilterMenu. Kept loose here (the sentinels are private to that
+    // module) and cast at the call site, exactly as `rehydrateKeys` is
+    // already used.
     milestoneKeys: (string | number)[];
+    sprintKeys: (string | number)[];
     memberKeys: string[];
 };
 
@@ -61,6 +63,7 @@ export const buildSavedFilterPayload = (input: {
     priorities: FilterProps[];
     effortLevels: FilterProps[];
     milestoneKeys: (string | number)[];
+    sprintKeys: (string | number)[];
     memberKeys: string[];
 }): SavedFilterPayload => ({
     ...(input.hideStatusFilter ? {} : { status: labelsOf(input.status) }),
@@ -68,6 +71,7 @@ export const buildSavedFilterPayload = (input: {
     priorities: labelsOf(input.priorities),
     effortLevels: labelsOf(input.effortLevels),
     milestoneKeys: input.milestoneKeys ?? [],
+    sprintKeys: input.sprintKeys ?? [],
     memberKeys: input.memberKeys ?? [],
 });
 
@@ -89,9 +93,9 @@ export const buildSavedFilterPayload = (input: {
  *
  * Labels and ids are NOT validated against the current project here.
  * `rehydrateFilters` already drops labels that no longer exist, and the
- * milestone / member prune effects drop stale ids and fall back to "All"
- * — so a teammate's filter naming a deleted tag or a departed member
- * takes exactly the path a stale localStorage entry already takes.
+ * milestone / sprint / member prune effects drop stale ids and fall back
+ * to "All" — so a teammate's filter naming a deleted tag or a departed
+ * member takes exactly the path a stale localStorage entry already takes.
  */
 export type ResolveSavedFilterOptions = {
     hideStatusFilter?: boolean;
@@ -125,6 +129,7 @@ export const resolveSavedFilter = (
         opts.predefinedEffortLevelFilters[0],
     ]),
     milestoneKeys: rehydrateKeys(payload.milestoneKeys) ?? ["all"],
+    sprintKeys: rehydrateKeys(payload.sprintKeys) ?? ["all"],
     memberKeys: (rehydrateKeys(payload.memberKeys) as string[] | null) ?? ["__all__"],
 });
 
@@ -132,7 +137,7 @@ export const resolveSavedFilter = (
 // regardless of order. The bar preserves CLICK order, so a saved
 // selection and a hand-built one can list the same statuses in different
 // sequences and still mean exactly the same filter. Keys are stringified
-// because milestone ids are numbers while the sentinels are strings.
+// because milestone / sprint ids are numbers while the sentinels are strings.
 const sameDimension = (
     a: (string | number)[] | undefined,
     b: (string | number)[] | undefined
@@ -180,6 +185,7 @@ export const savedFilterMatchesSelection = (
         priorities: resolved.priorities,
         effortLevels: resolved.effortLevels,
         milestoneKeys: resolved.milestoneKeys,
+        sprintKeys: resolved.sprintKeys,
         memberKeys: resolved.memberKeys,
     });
     return (
@@ -188,6 +194,7 @@ export const savedFilterMatchesSelection = (
         sameDimension(asApplied.priorities, current.priorities) &&
         sameDimension(asApplied.effortLevels, current.effortLevels) &&
         sameDimension(asApplied.milestoneKeys, current.milestoneKeys) &&
+        sameDimension(asApplied.sprintKeys, current.sprintKeys) &&
         sameDimension(asApplied.memberKeys, current.memberKeys)
     );
 };

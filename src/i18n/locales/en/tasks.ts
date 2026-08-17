@@ -564,7 +564,7 @@ export const tasks = {
     filterHelp: {
         title: "How filtering works",
         combine:
-            "Filters combine: a row has to match every category you've narrowed (status, tag, priority, effort, milestone, member).",
+            "Filters combine: a row has to match every category you've narrowed (status, tag, priority, effort, sprint, milestone, member).",
         rootRows:
             "The list shows top-level rows — root tasks and milestones. Expand a row to see what's underneath it.",
         milestoneRescue:
@@ -762,6 +762,18 @@ export const tasks = {
         activity: "Activity",
         downloadTooltip: "Download",
         downloadFileTooltip: 'Download "{name}"',
+    },
+
+    // Sprint filter (in TaskFilterMenu), immediately left of the
+    // milestone filter. Ongoing (active / upcoming) sprints are listed
+    // directly; ended ones sit behind the "Show past sprints" expander,
+    // mirroring the milestone filter's own past-items expander.
+    sprintFilter: {
+        all: "All",
+        allSprints: "All sprints",
+        noSprint: "No sprint",
+        showPastSprints: "Show past sprints",
+        hidePastSprints: "Hide past sprints",
     },
 
     // Milestone filter (in TaskFilterMenu).

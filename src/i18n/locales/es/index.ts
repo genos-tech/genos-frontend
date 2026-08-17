@@ -1972,6 +1972,13 @@ export const es: DeepPartial<Messages> = {
             downloadTooltip: "Descargar",
             downloadFileTooltip: 'Descargar "{name}"',
         },
+        sprintFilter: {
+            all: "Todos",
+            allSprints: "Todos los sprints",
+            noSprint: "Sin sprint",
+            showPastSprints: "Mostrar sprints pasados",
+            hidePastSprints: "Ocultar sprints pasados",
+        },
         milestoneFilter: {
             all: "Todos",
             allMilestones: "Todos los hitos",
@@ -2218,7 +2225,7 @@ export const es: DeepPartial<Messages> = {
         filterHelp: {
             title: "Cómo funciona el filtrado",
             combine:
-                "Los filtros se combinan: una fila debe coincidir con cada categoría que haya reducido (estado, etiqueta, prioridad, esfuerzo, hito, miembro).",
+                "Los filtros se combinan: una fila debe coincidir con cada categoría que haya reducido (estado, etiqueta, prioridad, esfuerzo, sprint, hito, miembro).",
             rootRows:
                 "La lista muestra filas de nivel superior: tareas raíz e hitos. Expande una fila para ver qué hay debajo.",
             milestoneRescue:

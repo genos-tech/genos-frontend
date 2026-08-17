@@ -3715,7 +3715,7 @@ export const zh: DeepPartial<Messages> = {
         filterHelp: {
             title: "过滤的工作原理",
             combine:
-                "过滤器组合：一行必须匹配你缩小范围的每个类别（状态、标签、优先级、工作量、里程碑、成员）。",
+                "过滤器组合：一行必须匹配你缩小范围的每个类别（状态、标签、优先级、工作量、迭代、里程碑、成员）。",
             rootRows: "该列表显示顶级行——根任务和里程碑。展开一行以查看其下方的内容。",
             milestoneRescue:
                 "当里程碑匹配或其中一个任务匹配时，就会显示里程碑 - 因此，如果其下的任务具有你选择的标签，则没有标签的里程碑仍然会出现。展开它以查看哪些任务匹配。",
@@ -3894,6 +3894,13 @@ export const zh: DeepPartial<Messages> = {
             activity: "动态",
             downloadTooltip: "下载",
             downloadFileTooltip: "下载“{name}”",
+        },
+        sprintFilter: {
+            all: "全部",
+            allSprints: "所有迭代",
+            noSprint: "无迭代",
+            showPastSprints: "显示过去的迭代",
+            hidePastSprints: "隐藏过去的迭代",
         },
         milestoneFilter: {
             all: "全部",

@@ -3889,7 +3889,7 @@ export const fr: DeepPartial<Messages> = {
         filterHelp: {
             title: "Comment fonctionne le filtrage",
             combine:
-                "Les filtres se combinent : une ligne doit correspondre à chaque catégorie que vous avez restreinte (statut, balise, priorité, effort, jalon, membre).",
+                "Les filtres se combinent : une ligne doit correspondre à chaque catégorie que vous avez restreinte (statut, balise, priorité, effort, sprint, jalon, membre).",
             rootRows:
                 "La liste affiche les lignes de niveau supérieur : tâches racine et jalons. Développez une ligne pour voir ce qu'il y a en dessous.",
             milestoneRescue:
@@ -4073,6 +4073,13 @@ export const fr: DeepPartial<Messages> = {
             activity: "Activité",
             downloadTooltip: "Télécharger",
             downloadFileTooltip: 'Télécharger "{name}"',
+        },
+        sprintFilter: {
+            all: "Tous",
+            allSprints: "Tous les sprints",
+            noSprint: "Aucun sprint",
+            showPastSprints: "Afficher les sprints passés",
+            hidePastSprints: "Masquer les sprints passés",
         },
         milestoneFilter: {
             all: "Tous",

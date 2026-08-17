@@ -111,6 +111,32 @@ export const ENDED_SPRINT_STATUSES = new Set<Sprint["status"]>(["completed", "ar
 export const selectVisibleSprints = (sprints: Sprint[]): Sprint[] =>
     sprints.filter((s) => !s.isDeleted && !ENDED_SPRINT_STATUSES.has(s.status));
 
+/**
+ * The complement of `selectVisibleSprints`: the ended (completed /
+ * archived) sprints, most-recently-ended FIRST.
+ *
+ * Used by the task filter's "Show past sprints" expander, which exists for
+ * the same reason the milestone filter's does — auto-rolling sprints
+ * accumulate indefinitely, so listing every one of them inline would bury
+ * the two or three the user actually works in.
+ *
+ * Order is imposed here rather than inherited: `selectVisibleSprints`
+ * deliberately preserves the upstream ascending order (the next sprint is
+ * the interesting one), but for finished sprints the interesting one is the
+ * one that just ended. Ties and unparseable dates fall back to
+ * `sequenceNumber`, so a hand-created ad-hoc sprint with a bad date still
+ * lands in a stable place instead of drifting between renders.
+ */
+export const selectEndedSprints = (sprints: Sprint[]): Sprint[] => {
+    const endTime = (s: Sprint): number => {
+        const t = s.endDate ? new Date(s.endDate).getTime() : NaN;
+        return Number.isFinite(t) ? t : -Infinity;
+    };
+    return sprints
+        .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
+        .sort((a, b) => endTime(b) - endTime(a) || b.sequenceNumber - a.sequenceNumber);
+};
+
 export const selectVisibleMilestones = (
     milestones: Milestone[],
     sprints: Sprint[]

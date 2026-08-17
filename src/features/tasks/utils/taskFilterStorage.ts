@@ -30,6 +30,8 @@ export type StoredTaskFilters = {
     effortLevels: string[];
     /** `"all" | "none" | <milestoneId>` */
     milestoneKeys: (string | number)[];
+    /** `"all" | "none" | <sprintId>` */
+    sprintKeys: (string | number)[];
     /** `"all" | "none" | <userId>` */
     memberKeys: string[];
 };
@@ -59,6 +61,11 @@ export const taskFilterStorageKey = (
 const isStringArray = (v: unknown): v is string[] =>
     Array.isArray(v) && v.every((x) => typeof x === "string");
 
+// Milestone and sprint keys are `"all" | "none" | <numeric id>`, so unlike
+// the label dimensions they legitimately hold numbers as well as strings.
+const isKeyArray = (v: unknown): v is (string | number)[] =>
+    Array.isArray(v) && v.every((x) => typeof x === "string" || typeof x === "number");
+
 export const readStoredFilters = (key: string): Partial<StoredTaskFilters> | null => {
     try {
         const raw = localStorage.getItem(key);
@@ -73,10 +80,8 @@ export const readStoredFilters = (key: string): Partial<StoredTaskFilters> | nul
             ...(isStringArray(o.tags) ? { tags: o.tags } : {}),
             ...(isStringArray(o.priorities) ? { priorities: o.priorities } : {}),
             ...(isStringArray(o.effortLevels) ? { effortLevels: o.effortLevels } : {}),
-            ...(Array.isArray(o.milestoneKeys) &&
-            o.milestoneKeys.every((x) => typeof x === "string" || typeof x === "number")
-                ? { milestoneKeys: o.milestoneKeys as (string | number)[] }
-                : {}),
+            ...(isKeyArray(o.milestoneKeys) ? { milestoneKeys: o.milestoneKeys } : {}),
+            ...(isKeyArray(o.sprintKeys) ? { sprintKeys: o.sprintKeys } : {}),
             ...(isStringArray(o.memberKeys) ? { memberKeys: o.memberKeys } : {}),
         };
     } catch {
@@ -124,16 +129,16 @@ export const rehydrateFilters = (
 };
 
 /**
- * Milestone keys are `"all" | "none" | <numeric id>`; a numeric-looking
- * string is coerced back to a number, since JSON round-trips object keys
- * and hand-edited values as strings.
+ * Milestone and sprint keys are `"all" | "none" | <numeric id>`; a
+ * numeric-looking string is coerced back to a number, since JSON
+ * round-trips object keys and hand-edited values as strings.
  *
- * Ids are NOT validated against the current project here. Both the
- * milestone and the member filter already run a prune effect that drops
- * a selected id once the live set loads without it (soft-deleted
- * milestone, member who left the team) and falls back to "All" — so a
- * stored id from another project takes exactly the path a stale id
- * already takes, and there's no second validation to keep in sync.
+ * Ids are NOT validated against the current project here. The milestone,
+ * sprint and member filters each run a prune effect that drops a selected
+ * id once the live set loads without it (soft-deleted milestone, deleted
+ * sprint, member who left the team) and falls back to "All" — so a stored
+ * id from another project takes exactly the path a stale id already takes,
+ * and there's no second validation to keep in sync.
  */
 export const rehydrateKeys = (
     stored: (string | number)[] | undefined
