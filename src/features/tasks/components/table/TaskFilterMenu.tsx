@@ -380,22 +380,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 restoredTagsForKeyRef.current = null;
                 const cleared = tagSelectionDefault(predefinedTagsFilters);
                 setSelectedTags(cleared);
-                applyFilters(
-                    selectedStatus,
-                    cleared,
-                    selectedPriorities,
-                    selectedEffortLevels,
-                    selectedMilestoneKeys,
-                    selectedMemberKeys
-                );
-                persistFilters(
-                    selectedStatus,
-                    cleared,
-                    selectedPriorities,
-                    selectedEffortLevels,
-                    selectedMilestoneKeys,
-                    selectedMemberKeys
-                );
+                applyFilters({ ...selection, tags: cleared });
+                persistFilters({ ...selection, tags: cleared });
             }
             return;
         }
@@ -434,25 +420,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // the restore branch: `selectedTags` isn't in the reactive effect's
         // deps, so a pruned selection has to re-run the pipeline itself.
         if (!sameTagSelection(remapped, selectedTags)) {
-            applyFilters(
-                selectedStatus,
-                remapped,
-                selectedPriorities,
-                selectedEffortLevels,
-                selectedMilestoneKeys,
-                selectedMemberKeys
-            );
+            applyFilters({ ...selection, tags: remapped });
             // Persist too, so a deleted tag's label stops living in storage.
             // Left behind, recreating a tag with the same name later would
             // silently re-apply a filter the user never asked for.
-            persistFilters(
-                selectedStatus,
-                remapped,
-                selectedPriorities,
-                selectedEffortLevels,
-                selectedMilestoneKeys,
-                selectedMemberKeys
-            );
+            persistFilters({ ...selection, tags: remapped });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [predefinedTagsFilters, filterStorageKey]);
