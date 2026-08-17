@@ -505,11 +505,10 @@ export const HistoryModal = ({
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
-    // PUNCH LIST (v3 chatId migration): `AllChatProps.chatId` is `string`
-    // post-flip; `HistoryEntry.chatId` is still `number` (legacy IDB
-    // history shape). Stringify at the comparison.
-    const findChat = (chatType: number, chatId: number): AllChatProps | undefined =>
-        useCM.allChats.find((c) => c.chatType === chatType && c.chatId === String(chatId));
+    // Both sides are now the v3 UUID string: `AllChatProps.chatId` post-flip
+    // and `HistoryEntry.chatId` normalized on read (see `readId`).
+    const findChat = (chatType: number, chatId: string): AllChatProps | undefined =>
+        useCM.allChats.find((c) => c.chatType === chatType && c.chatId === chatId);
 
     // "GIF" / "Image" / … for a chat whose latest message is media-only
     // and so has no preview text at all. `undefined` (not "") so the

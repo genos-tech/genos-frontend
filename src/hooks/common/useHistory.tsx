@@ -15,10 +15,19 @@ import {
 // per-team localStorage so the history follows the team — switching
 // teams scopes to a different list, switching back restores it.
 
+// Chat-side ids (`chatId`, `threadId`) are v3 UUID STRINGS. They were
+// typed `number` from the legacy per-type-IntegerField contract, and the
+// tracker cast UUIDs through that slot — which round-tripped fine in
+// memory but was rejected by the read-side check below, silently emptying
+// the Chats tab on every reload. Persisted ids are therefore normalized
+// to `string` on the way in (see `readId`): one canonical shape, whatever
+// era the row was written in. Ids that are genuinely numeric enums
+// (`chatType`) or numeric elsewhere in the app (`taskId`, `noteId`,
+// `messageId` seq) stay numbers.
 export type ChatHistoryEntry = {
     kind: "chat";
     chatType: number;
-    chatId: number;
+    chatId: string;
     // When the URL the row was recorded from carried `/message/:id`,
     // we persist that id plus the first line of the targeted message
     // so the row deep-links straight back to that bubble. Different
@@ -33,8 +42,10 @@ export type ChatHistoryEntry = {
 export type ThreadHistoryEntry = {
     kind: "thread";
     chatType: number;
-    chatId: number;
-    threadId: number;
+    chatId: string;
+    // The parent message's UUID post-v3 (it addresses the message the
+    // thread hangs off of, not a row in a threads table).
+    threadId: string;
     // When the thread URL carried `/message/:id`, we persist the id
     // plus the first line of the targeted in-thread message. Different
     // in-thread messageIds are separate rows.
@@ -90,8 +101,12 @@ export type NoteHistoryEntry = {
     projectId?: number | null;
     taskId?: number | null;
     chatType?: number | null;
-    chatId?: number | null;
-    threadId?: number | null;
+    // Chat coordinates follow the same v3 string shape as the chat/thread
+    // entries above. Note rows were never dropped on reload (their guard
+    // keys off `noteId`), but they carried the same number-typed lie, and
+    // these two feed the chat-note deep link.
+    chatId?: string | null;
+    threadId?: string | null;
     isThread?: boolean | null;
     // Context labels for the row's subtitle — project name for task
     // notes, chat name for chat notes. Personal notes have no
@@ -137,27 +152,55 @@ const keyForEntry = (e: HistoryEntry): string => {
     }
 };
 
-const isHistoryEntry = (v: unknown): v is HistoryEntry => {
-    if (!v || typeof v !== "object") return false;
+// Read one persisted chat-side id, normalizing to the canonical string
+// shape. Accepts the number a pre-v3 row was written with — those rows
+// are already in users' localStorage, so rejecting them would trade one
+// silent drop for another. `null` means "unusable", which callers treat
+// as a reason to drop the row (an empty id deep-links nowhere: `""` is
+// the v3 uninitialized-chat sentinel).
+const readId = (v: unknown): string | null => {
+    if (typeof v === "string") return v || null;
+    if (typeof v === "number" && Number.isFinite(v)) return String(v);
+    return null;
+};
+
+// Parse-and-normalize, NOT a type guard. A guard could only narrow, and
+// the chat-side ids need converting (legacy number -> canonical string),
+// so the read path has to be able to return a rewritten entry. Returns
+// null for anything unusable, which the caller filters out.
+const reviveEntry = (v: unknown): HistoryEntry | null => {
+    if (!v || typeof v !== "object") return null;
     const o = v as Record<string, unknown>;
-    if (typeof o.label !== "string" || typeof o.openedAt !== "number") return false;
+    if (typeof o.label !== "string" || typeof o.openedAt !== "number") return null;
     switch (o.kind) {
-        case "chat":
-            return typeof o.chatType === "number" && typeof o.chatId === "number";
-        case "thread":
-            return (
-                typeof o.chatType === "number" &&
-                typeof o.chatId === "number" &&
-                typeof o.threadId === "number"
-            );
+        case "chat": {
+            if (typeof o.chatType !== "number") return null;
+            const chatId = readId(o.chatId);
+            return chatId ? ({ ...o, chatId } as ChatHistoryEntry) : null;
+        }
+        case "thread": {
+            if (typeof o.chatType !== "number") return null;
+            const chatId = readId(o.chatId);
+            const threadId = readId(o.threadId);
+            return chatId && threadId ? ({ ...o, chatId, threadId } as ThreadHistoryEntry) : null;
+        }
         case "task":
-            return typeof o.taskId === "number";
+            return typeof o.taskId === "number" ? (o as unknown as TaskHistoryEntry) : null;
         case "milestone":
-            return typeof o.milestoneId === "number";
-        case "note":
-            return typeof o.noteType === "number" && typeof o.noteId === "number";
+            return typeof o.milestoneId === "number"
+                ? (o as unknown as MilestoneHistoryEntry)
+                : null;
+        case "note": {
+            if (typeof o.noteType !== "number" || typeof o.noteId !== "number") return null;
+            // Optional coordinates: absent stays absent (a personal note
+            // has none), present gets normalized like a chat row's.
+            const note = { ...o } as unknown as NoteHistoryEntry;
+            if (o.chatId != null) note.chatId = readId(o.chatId);
+            if (o.threadId != null) note.threadId = readId(o.threadId);
+            return note;
+        }
         default:
-            return false;
+            return null;
     }
 };
 
@@ -168,11 +211,12 @@ const readFromStorage = (teamId: string | null | undefined): HistoryEntry[] => {
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
-        const valid = parsed.filter(isHistoryEntry) as HistoryEntry[];
+        const valid = parsed.map(reviveEntry).filter((e): e is HistoryEntry => e !== null);
         // Collapse any duplicates that may have been written under an
-        // older keying scheme (e.g. per-(chat, messageId)). Entries
-        // are stored newest-first, so the first occurrence of each
-        // key is the one we keep.
+        // older keying scheme (e.g. per-(chat, messageId)) — now also the
+        // pre-v3/post-v3 pair for one chat, which normalization above
+        // makes identical. Entries are stored newest-first, so the first
+        // occurrence of each key is the one we keep.
         const seen = new Set<string>();
         const deduped: HistoryEntry[] = [];
         for (const e of valid) {

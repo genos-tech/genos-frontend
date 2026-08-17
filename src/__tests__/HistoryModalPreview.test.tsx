@@ -77,7 +77,10 @@ describe("HistoryModal chat-row subtitle", () => {
         chatsEntries.push({
             kind: "chat",
             chatType: 2,
-            chatId: 1,
+            // v3 UUID-shaped string, the canonical `HistoryEntry.chatId`.
+            // Matching `AllChatProps.chatId` exactly is what makes the
+            // chat lookup in the modal resolve.
+            chatId: "1",
             messageId: 7,
             messageText: "ship it :party-blob:",
             label: "Design",
@@ -92,7 +95,10 @@ describe("HistoryModal chat-row subtitle", () => {
         chatsEntries.push({
             kind: "chat",
             chatType: 2,
-            chatId: 1,
+            // v3 UUID-shaped string, the canonical `HistoryEntry.chatId`.
+            // Matching `AllChatProps.chatId` exactly is what makes the
+            // chat lookup in the modal resolve.
+            chatId: "1",
             label: "Design",
             openedAt: Date.now(),
         });
@@ -120,7 +126,10 @@ describe("HistoryModal chat-row subtitle", () => {
         chatsEntries.push({
             kind: "chat",
             chatType: 2,
-            chatId: 1,
+            // v3 UUID-shaped string, the canonical `HistoryEntry.chatId`.
+            // Matching `AllChatProps.chatId` exactly is what makes the
+            // chat lookup in the modal resolve.
+            chatId: "1",
             messageId: 7,
             messageText: "just text",
             label: "Design",
