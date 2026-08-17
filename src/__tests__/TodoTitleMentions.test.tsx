@@ -25,6 +25,23 @@ vi.mock("../hooks/common/UrlLinkModalContext", () => ({
     useUrlLinkModal: () => ({ openModalByHref }),
 }));
 
+// The hover card a "#task" chip shows is the chat surface's own card
+// (`TaskMentionHoverCard`), which fetches live status and needs Auth +
+// Avatar context of its own. Stubbed to its props so these tests can
+// assert WHICH chips get a card and what coordinates they pass it.
+vi.mock("../features/tasks/components/TaskMentionHoverCard", () => ({
+    TaskMentionHoverCard: (p: {
+        projectId: string;
+        taskId: string;
+        displayId: string;
+        title: string;
+    }) => (
+        <div data-testid="task-hover-card">
+            {`${p.projectId}/${p.taskId}/${p.displayId}/${p.title}`}
+        </div>
+    ),
+}));
+
 const TASK_HREF = "/workspace/tasks/project/3/task/7";
 
 // A pool as `TodoMentionsProvider` would build it: a user (no href — a
@@ -38,6 +55,8 @@ const ENTITIES: AgentMentionCandidate[] = [
         trigger: "#",
         key: "task:7",
         href: TASK_HREF,
+        projectId: 3,
+        subtitle: "GEN-7",
     },
 ];
 const POOL: TodoMentionPool = {
@@ -45,6 +64,10 @@ const POOL: TodoMentionPool = {
     entities: ENTITIES,
     refs: [...MEMBERS, ...ENTITIES].map((c) => c.ref),
     hrefByKey: new Map([["task:7", TASK_HREF]]),
+    // A task whose project is known also gets a hover card.
+    taskCardByKey: new Map([
+        ["task:7", { projectId: "3", taskId: "7", displayId: "GEN-7", title: "Fix login" }],
+    ]),
     refreshEntities: () => {},
 };
 
@@ -155,6 +178,26 @@ describe("TodoItemRow — a saved mention renders as a chip in the row", () => {
         fireEvent.keyDown(input, { key: "Enter" });
         await waitFor(() => expect(input.value).toBe("Ask @Alice "));
         expect(titleEditor(container)).not.toBeNull();
+    });
+
+    // A `#task` chip previews the task on hover with the same card the
+    // `#task` chip in a chat message shows. The card itself is stubbed —
+    // what's under test is the wiring: which chips get a card, and the
+    // coordinates they hand it (`projectId` in particular, which the task
+    // ref deliberately doesn't carry).
+    it("previews the task on hover over a #task chip", async () => {
+        const { getByText } = renderRow("Blocked by #Fix login");
+        fireEvent.mouseOver(getByText("#Fix login").parentElement as HTMLElement);
+        const card = await screen.findByTestId("task-hover-card");
+        expect(card.textContent).toBe("3/7/GEN-7/Fix login");
+    });
+
+    it("leaves a chip with no task card un-hoverable", async () => {
+        const { getByText } = renderRow("Ask @Alice");
+        fireEvent.mouseOver(getByText("@Alice"));
+        await expect(
+            screen.findByTestId("task-hover-card", {}, { timeout: 400 })
+        ).rejects.toThrow();
     });
 
     it("does not chip a token that sits inside a link", () => {

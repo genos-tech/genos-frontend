@@ -166,6 +166,10 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
     const membersOverride = args?.membersOverride;
     const groupsOverride = args?.groupsOverride;
     const includeTeamTasks = args?.includeTeamTasks ?? false;
+    // Only to flag your own `@` row with a "YOU" chip, as the BlockNote
+    // menu does. Null outside HashMentionDataProvider, which just means
+    // no row is flagged.
+    const myselfId = hash.myself?.userId;
 
     const members = useMemo(() => {
         const profiles: UserProps[] =
@@ -176,12 +180,17 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!u?.userId || !u.userName) continue;
             if (seen.has(u.userId)) continue;
             seen.add(u.userId);
-            // Carry the profile-image path so the dropdown row shows the
-            // user's real photo (display-only — never reaches the wire;
-            // the Avatar falls back to the name's initial when it's empty).
+            // Carry the profile-image path plus the row detail the
+            // BlockNote `@` menu shows (email subtitle, "YOU" chip on
+            // yourself, right-aligned custom status) — all display-only,
+            // none of it reaches the wire. The Avatar falls back to the
+            // name's initial when `avatarImgPath` is empty.
             out.push({
                 ...candidate({ kind: "user", userId: u.userId, label: u.userName }, "@"),
                 avatarImgPath: u.avatarImgPath,
+                email: u.userEmail,
+                customStatus: u.customStatus,
+                isSelf: Boolean(myselfId) && u.userId === myselfId,
             });
         }
         // Mention groups share the `@` pool. Outside MentionGroupsProvider
@@ -190,17 +199,35 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
         const groups: MentionGroup[] = groupsOverride ?? groupsCtx.mentionGroups;
         for (const g of groups) {
             if (!g.groupName || !Number.isFinite(g.groupId)) continue;
-            out.push(candidate({ kind: "group", groupId: g.groupId, label: g.groupName }, "@"));
+            out.push({
+                ...candidate({ kind: "group", groupId: g.groupId, label: g.groupName }, "@"),
+                memberCount: g.memberCount,
+                description: g.description,
+            });
         }
         return out;
-    }, [membersOverride, avatarCtx, groupsOverride, groupsCtx.mentionGroups]);
+    }, [membersOverride, avatarCtx, groupsOverride, groupsCtx.mentionGroups, myselfId]);
 
     const entities = useMemo(() => {
         const out: AgentMentionCandidate[] = [];
+        // Project names by id, so a task row can name its project the way
+        // the BlockNote `#` row does. Read from the project list where
+        // possible (one lookup, always current) and from the search row
+        // otherwise — the same preference `HashMentionMenuItems` applies.
+        // Across projects it's the only thing separating two same-named
+        // tasks.
+        const projectNameById = new Map<number, string>(
+            hash.projects
+                .filter((p) => Number.isFinite(p.projectId))
+                .map((p) => [Number(p.projectId), p.projectName || ""])
+        );
         // Open-project rows FIRST so they win the dedupe below — same
         // task, but that copy is the fresher of the two (an optimistic
         // create lands there before any refetch). Both sources are
-        // normalized to one row shape so the loop stays single-path.
+        // normalized to one row shape so the loop stays single-path —
+        // including `status`, which the two disagree on (the open
+        // project's table rows carry a bare label, the team search a
+        // `TaskStatusProps` object).
         const taskRows = [
             ...hash.tasks.map((t) => ({
                 taskId: Number(t.id),
@@ -208,6 +235,8 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
                 title: t.title,
                 displayId: t.displayId,
                 isMilestone: t.isMilestone,
+                projectName: "",
+                status: t.status || "",
             })),
             ...(includeTeamTasks
                 ? hash.teamTasks.map((t) => ({
@@ -216,6 +245,8 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
                       title: t.title,
                       displayId: t.displayId,
                       isMilestone: t.isMilestone,
+                      projectName: t.projectName || "",
+                      status: t.status?.status || "",
                   }))
                 : []),
         ];
@@ -227,8 +258,15 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!t.title || !Number.isFinite(t.taskId)) continue;
             if (seenTaskIds.has(t.taskId)) continue;
             seenTaskIds.add(t.taskId);
-            out.push(
-                candidate(
+            // A task deep-link — and a task hover card — is project-scoped;
+            // a row with no project can't be linked or previewed, only
+            // mentioned. One condition drives both, so a chip that offers a
+            // card can always fill it. `== null` rather than falsy: guard
+            // the absent case without also rejecting a real id.
+            const projectId =
+                t.projectId == null || !Number.isFinite(t.projectId) ? undefined : t.projectId;
+            out.push({
+                ...candidate(
                     // `isMilestone` is display-only (see AgentMentionRef) —
                     // the row reads "Milestone" but still resolves as a task.
                     {
@@ -239,17 +277,19 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
                     },
                     "#",
                     t.displayId ?? undefined,
-                    // A task deep-link is project-scoped; a row with no
-                    // project can't be linked, only mentioned.
-                    t.projectId == null
+                    projectId == null
                         ? undefined
                         : entityRefToHref({
                               entityType: "task",
-                              projectId: String(t.projectId),
+                              projectId: String(projectId),
                               taskId: String(t.taskId),
                           })
-                )
-            );
+                ),
+                projectId,
+                projectName:
+                    (projectId == null ? "" : projectNameById.get(projectId)) || t.projectName,
+                status: t.status,
+            });
         }
         for (const n of hash.notes) {
             const noteType = NOTE_KIND_TO_TYPE[n.kind];

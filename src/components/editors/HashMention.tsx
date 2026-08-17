@@ -1,15 +1,10 @@
-import { ReactElement } from "react";
+import { ElementType, ReactElement } from "react";
 import {
     createReactInlineContentSpec,
     DefaultReactSuggestionItem,
     SuggestionMenuController,
 } from "@blocknote/react";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
-import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 
 import {
     HashMentionData,
@@ -26,6 +21,7 @@ import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { MentionSuggestionMenu } from "./Mention";
+import { MENTION_ICONS, MentionIconDisc, MentionMenuRow } from "./mentionMenuRow";
 import {
     CHAT_PALETTE,
     MILESTONE_PALETTE,
@@ -261,61 +257,27 @@ export const CreateHashProjectSpec = () =>
 
 // ── Suggestion menu ─────────────────────────────────────────────────────
 
-// A two-line menu row mirroring the `@` menu's layout: a colored icon
-// disc, a bold name, and a muted subtitle (the entity kind / id).
+// A `#` menu row: a colored icon disc, a bold `#name`, and a muted
+// subtitle (the entity kind / id). The layout itself lives in the shared
+// `MentionMenuRow` so the plain-input dropdown renders the identical row
+// — see `mentionMenuRow.tsx` for why the two menus can't be one component.
 //
 // `trailing` is an optional right-aligned slot — task rows put their
-// status chip there. It sits OUTSIDE the name/subtitle column so the
-// title keeps ellipsizing against the remaining width rather than being
-// pushed out by the chip.
+// status chip there.
 const menuRow = (
-    Icon: typeof TaskAltRoundedIcon,
+    Icon: ElementType,
     palette: MentionPalette,
     name: string,
     subtitle: string,
     trailing?: ReactElement | null
 ): ReactElement => (
-    <Box alignItems="center" display="flex" gap={1} sx={{ minWidth: 0, width: "100%" }}>
-        <Box
-            sx={{
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-                borderRadius: "8px",
-                background: palette.bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <Icon sx={{ fontSize: 18, color: palette.text }} />
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-            <Typography
-                level="body-sm"
-                sx={{
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                }}
-            >
-                #{name}
-            </Typography>
-            <Typography
-                level="body-xs"
-                sx={{
-                    opacity: 0.7,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                }}
-            >
-                {subtitle}
-            </Typography>
-        </Box>
-        {trailing}
-    </Box>
+    <MentionMenuRow
+        identity={<MentionIconDisc icon={Icon} palette={palette} />}
+        label={name}
+        subtitle={subtitle}
+        trailing={trailing}
+        trigger="#"
+    />
 );
 
 // Per-editor cache of the built menu items. `HashMentionMenuItems` runs on
@@ -449,7 +411,7 @@ export const HashMentionMenuItems = (
                     ]);
                 },
                 icon: menuRow(
-                    t.isMilestone ? FlagRoundedIcon : TaskAltRoundedIcon,
+                    t.isMilestone ? MENTION_ICONS.milestone : MENTION_ICONS.task,
                     t.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE,
                     title || displayId,
                     t.projectName
@@ -504,7 +466,7 @@ export const HashMentionMenuItems = (
                     editor.insertInlineContent([{ type: "hashNote", props }, " "]);
                 },
                 icon: menuRow(
-                    StickyNote2RoundedIcon,
+                    MENTION_ICONS.note,
                     NOTE_PALETTE,
                     title || copy.hashNoteFallback,
                     subtitle
@@ -526,7 +488,7 @@ export const HashMentionMenuItems = (
                     ]);
                 },
                 icon: menuRow(
-                    ForumRoundedIcon,
+                    MENTION_ICONS.chat,
                     CHAT_PALETTE,
                     chatName || copy.hashChatFallback,
                     copy.hashGroupChat
@@ -548,7 +510,7 @@ export const HashMentionMenuItems = (
                     ]);
                 },
                 icon: menuRow(
-                    FolderRoundedIcon,
+                    MENTION_ICONS.project,
                     PROJECT_PALETTE,
                     projectName || copy.hashProjectFallback,
                     copy.hashProject
