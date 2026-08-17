@@ -60,6 +60,7 @@ const selection = {
     tags: [tagFilter("Frontend")],
     priorities: [byLabel(predefinedPriorityFilters, "High")],
     effortLevels: [byLabel(predefinedEffortLevelFilters, "All")],
+    sprintKeys: [7] as (string | number)[],
     milestoneKeys: [12, "none"] as (string | number)[],
     memberKeys: ["u1"],
 };
@@ -72,6 +73,7 @@ describe("buildSavedFilterPayload", () => {
             tags: ["Frontend"],
             priorities: ["High"],
             effortLevels: ["All"],
+            sprintKeys: [7],
             milestoneKeys: [12, "none"],
             memberKeys: ["u1"],
         });
@@ -98,6 +100,7 @@ describe("resolveSavedFilter", () => {
         expect(resolved.tags.map((f) => f.label)).toEqual(["Frontend"]);
         expect(resolved.priorities.map((f) => f.label)).toEqual(["High"]);
         expect(resolved.effortLevels.map((f) => f.label)).toEqual(["All"]);
+        expect(resolved.sprintKeys).toEqual([7]);
         expect(resolved.milestoneKeys).toEqual([12, "none"]);
         expect(resolved.memberKeys).toEqual(["u1"]);
     });
@@ -145,6 +148,7 @@ describe("resolveSavedFilter", () => {
         expect(resolved.tags.length).toBeGreaterThan(0);
         expect(resolved.priorities.map((f) => f.label)).toEqual(["All"]);
         expect(resolved.effortLevels.map((f) => f.label)).toEqual(["All"]);
+        expect(resolved.sprintKeys).toEqual(["all"]);
         expect(resolved.milestoneKeys).toEqual(["all"]);
         expect(resolved.memberKeys).toEqual(["__all__"]);
     });
@@ -162,6 +166,20 @@ describe("resolveSavedFilter", () => {
         expect(resolved.milestoneKeys).toEqual([12, "none"]);
     });
 
+    it("coerces numeric sprint ids too, and keeps the sentinel", () => {
+        const resolved = resolveSavedFilter({ sprintKeys: ["7", "none"] }, opts());
+        expect(resolved.sprintKeys).toEqual([7, "none"]);
+    });
+
+    it("defaults sprint to All for a filter saved before the dimension existed", () => {
+        // Every filter stored before the sprint dimension shipped has no
+        // `sprintKeys` at all. Applying one must widen sprint to "All" — not
+        // leave it empty, which the bar treats as an invalid selection and the
+        // table renders as no rows.
+        const resolved = resolveSavedFilter({ status: ["Open"] }, opts());
+        expect(resolved.sprintKeys).toEqual(["all"]);
+    });
+
     it("passes member sentinels through untouched", () => {
         expect(resolveSavedFilter({ memberKeys: ["__none__"] }, opts()).memberKeys).toEqual([
             "__none__",
@@ -176,6 +194,7 @@ describe("resolveSavedFilter", () => {
 
         const backOnBoard = resolveSavedFilter(boardPayload, opts(true));
         expect(backOnBoard.status.map((f) => f.label)).toEqual(["All"]);
+        expect(backOnBoard.sprintKeys).toEqual([7]);
         expect(backOnBoard.memberKeys).toEqual(["u1"]);
     });
 });
@@ -259,6 +278,24 @@ describe("savedFilterMatchesSelection", () => {
         const asStrings = { ...current, milestoneKeys: ["12", "none"] };
         expect(savedFilterMatchesSelection(asStrings, current, opts())).toBe(true);
     });
+
+    it("stops matching when only the SPRINT dimension differs", () => {
+        // Sprint and milestone keys have the identical type
+        // (`(string | number)[]`), so a transposed pair inside
+        // `savedFilterMatchesSelection` would compile and pass every other
+        // test in this file. This is the assertion that catches it.
+        const otherSprint = buildSavedFilterPayload({ ...selection, sprintKeys: [8] });
+        expect(savedFilterMatchesSelection(current, otherSprint, opts())).toBe(false);
+    });
+
+    it("does not confuse a sprint id with the same milestone id", () => {
+        const swapped = buildSavedFilterPayload({
+            ...selection,
+            sprintKeys: selection.milestoneKeys,
+            milestoneKeys: selection.sprintKeys,
+        });
+        expect(savedFilterMatchesSelection(current, swapped, opts())).toBe(false);
+    });
 });
 
 describe("buildSavedFilterPayload — malformed selections must not be fatal", () => {
@@ -282,6 +319,7 @@ describe("buildSavedFilterPayload — malformed selections must not be fatal", (
             tags: hole,
             priorities: hole,
             effortLevels: hole,
+            sprintKeys: [],
             milestoneKeys: [],
             memberKeys: [],
         });
@@ -290,6 +328,7 @@ describe("buildSavedFilterPayload — malformed selections must not be fatal", (
             tags: [],
             priorities: [],
             effortLevels: [],
+            sprintKeys: [],
             milestoneKeys: [],
             memberKeys: [],
         });

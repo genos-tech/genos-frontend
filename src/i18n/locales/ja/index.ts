@@ -3829,7 +3829,7 @@ export const ja: DeepPartial<Messages> = {
         filterHelp: {
             title: "フィルタリングの仕組み",
             combine:
-                "フィルタを結合します。行は、絞り込んだすべてのカテゴリ (ステータス、タグ、優先度、作業量、マイルストーン、メンバー) と一致する必要があります。",
+                "フィルタを結合します。行は、絞り込んだすべてのカテゴリ (ステータス、タグ、優先度、作業量、スプリント、マイルストーン、メンバー) と一致する必要があります。",
             rootRows:
                 "リストには、最上位の行、つまりルート タスクとマイルストーンが表示されます。行を展開すると、その下にある内容が表示されます。",
             milestoneRescue:
@@ -4015,6 +4015,13 @@ export const ja: DeepPartial<Messages> = {
             activity: "アクティビティ",
             downloadTooltip: "ダウンロード",
             downloadFileTooltip: "「{name}」をダウンロード",
+        },
+        sprintFilter: {
+            all: "すべて",
+            allSprints: "すべてのスプリント",
+            noSprint: "スプリントなし",
+            showPastSprints: "過去のスプリントを表示する",
+            hidePastSprints: "過去のスプリントを非表示にする",
         },
         milestoneFilter: {
             all: "すべて",

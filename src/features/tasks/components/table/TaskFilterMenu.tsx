@@ -29,13 +29,15 @@ import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { SavedFilterPayload } from "../../services/projectSavedFilters";
-import { Milestone } from "../../sprint-milestone/types";
+import { Milestone, Sprint } from "../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
     getOutdatedMilestoneIds,
     groupMilestonesByYearAndSprint,
+    selectEndedSprints,
     selectOutdatedMilestones,
     selectVisibleMilestones,
+    selectVisibleSprints,
 } from "../../sprint-milestone/utils/sortMilestones";
 import {
     FilterProps,
@@ -101,6 +103,22 @@ const MILESTONE_ACCENT_LIGHT = "#c2410c";
 const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
 const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
 
+// Sprint filter sentinels — same `all` / `none` / numeric-id shape as the
+// milestone filter, one level up the hierarchy (a sprint contains
+// milestones). `none` means "not assigned to any sprint", which is a real
+// and common state, not an error.
+type SprintFilterKey = "all" | "none" | number;
+const SPRINT_ALL: SprintFilterKey = "all";
+const SPRINT_NONE: SprintFilterKey = "none";
+// Sky, echoing the `DirectionsRunRoundedIcon` sprint rows in the milestone
+// dropdown's past-sprint folders. Deliberately NOT the milestone orange:
+// the two filters sit side by side and mean different things, so the chips
+// have to be separable at a glance.
+const SPRINT_ACCENT_DARK = "#38bdf8";
+const SPRINT_ACCENT_LIGHT = "#0369a1";
+const SPRINT_ACCENT_BG_DARK = "rgba(14,165,233,0.35)";
+const SPRINT_ACCENT_BG_LIGHT = "rgba(14,165,233,0.6)";
+
 // Member filter sentinels — mirror the milestone `all`/`none` pattern.
 // Distinct `__…__` strings so they can never collide with a real userId.
 type MemberFilterKey = string; // a userId, or one of the sentinels below
@@ -108,6 +126,29 @@ const MEMBER_ALL = "__all__";
 const MEMBER_NONE = "__none__";
 const MEMBER_ACCENT_DARK = "#818cf8";
 const MEMBER_ACCENT_LIGHT = "#4f46e5";
+
+/**
+ * The bar's whole selection, in one object.
+ *
+ * `applyFilters` and `persistFilters` used to take these as positional
+ * parameters — six of them, threaded through 17 call sites. Sprint made
+ * that untenable rather than merely ugly: `sprintKeys` and `milestoneKeys`
+ * have the SAME type (`(string | number)[]`), so a transposed pair would
+ * have compiled cleanly and silently filtered by the wrong dimension. Named
+ * fields make that unrepresentable, and every call site now reads as
+ * "the current selection, except this one dimension":
+ *
+ *     applyFilters({ ...selection, status: newStatuses });
+ */
+type FilterSelection = {
+    status: FilterProps[];
+    tags: FilterProps[];
+    priorities: FilterProps[];
+    effortLevels: FilterProps[];
+    sprintKeys: SprintFilterKey[];
+    milestoneKeys: MilestoneFilterKey[];
+    memberKeys: MemberFilterKey[];
+};
 
 type TaskFilterMenuProps = {
     useTM: TaskManagementState;
@@ -211,29 +252,23 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     }
     const stored = storedFiltersRef.current ?? {};
 
-    // Persist the six-tuple the user just chose.
+    // Persist the selection the user just chose.
     //
     // Called ONLY from the `handleClose*` handlers and `resetFilters` —
     // i.e. explicit user intent. A blanket effect over the selection
     // state would fire during mount while the async dimensions (tags)
     // are still at their defaults, writing "All" over the stored tag
     // selection before the restore below ever gets to read it.
-    const persistFilters = (
-        statusSel: FilterProps[],
-        tagsSel: FilterProps[],
-        prioritySel: FilterProps[],
-        effortSel: FilterProps[],
-        milestoneSel: MilestoneFilterKey[],
-        memberSel: MemberFilterKey[]
-    ) => {
+    const persistFilters = (sel: FilterSelection) => {
         if (!filterStorageKey) return;
         writeStoredFilters(filterStorageKey, {
-            effortLevels: effortSel.map((f) => f.label),
-            memberKeys: memberSel,
-            milestoneKeys: milestoneSel,
-            priorities: prioritySel.map((f) => f.label),
-            status: statusSel.map((f) => f.label),
-            tags: tagsSel.map((f) => f.label),
+            effortLevels: sel.effortLevels.map((f) => f.label),
+            memberKeys: sel.memberKeys,
+            milestoneKeys: sel.milestoneKeys,
+            priorities: sel.priorities.map((f) => f.label),
+            sprintKeys: sel.sprintKeys,
+            status: sel.status.map((f) => f.label),
+            tags: sel.tags.map((f) => f.label),
         });
     };
     const { mode } = useColorScheme();
@@ -286,22 +321,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElStatusFilter(null);
         }
 
-        applyFilters(
-            newStatuses,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
-        persistFilters(
-            newStatuses,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
+        applyFilters({ ...selection, status: newStatuses });
+        persistFilters({ ...selection, status: newStatuses });
     };
 
     // Tags filter
@@ -336,22 +357,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElTagsFilter(null);
         }
 
-        applyFilters(
-            selectedStatus,
-            newTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
-        persistFilters(
-            selectedStatus,
-            newTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
+        applyFilters({ ...selection, tags: newTags });
+        persistFilters({ ...selection, tags: newTags });
     };
 
     // Tags are the one dimension whose options arrive asynchronously AND
@@ -384,14 +391,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             // to re-run the pipeline itself or the table would show
             // unfiltered rows under a filtered-looking chip.
             if (restored[0]?.label !== predefinedTagsFilters[0].label) {
-                applyFilters(
-                    selectedStatus,
-                    restored,
-                    selectedPriorities,
-                    selectedEffortLevels,
-                    selectedMilestoneKeys,
-                    selectedMemberKeys
-                );
+                applyFilters({ ...selection, tags: restored });
             }
             return;
         }
@@ -402,7 +402,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // Project switch: re-restore the dimensions that a lazy initializer
     // only covered at mount. `TaskFilterMenu` stays mounted across a
     // project change, so without this the previous project's status /
-    // priority / effort / milestone / member selection would linger —
+    // priority / effort / sprint / milestone / member selection would linger —
     // and worse, the next `persistFilters` would write it under the NEW
     // project's key.
     //
@@ -424,6 +424,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const nextEffort = rehydrateFilters(next?.effortLevels, predefinedEffortLevelFilters, [
             predefinedEffortLevelFilters[0],
         ]);
+        const nextSprints = (rehydrateKeys(next?.sprintKeys) as SprintFilterKey[] | null) ?? [
+            SPRINT_ALL,
+        ];
         const nextMilestones = (rehydrateKeys(next?.milestoneKeys) as
             | MilestoneFilterKey[]
             | null) ?? [MILESTONE_ALL];
@@ -434,6 +437,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedStatus(nextStatus);
         setSelectedPriorities(nextPriorities);
         setSelectedEffortLevels(nextEffort);
+        setSelectedSprintKeys(nextSprints);
         setSelectedMilestoneKeys(nextMilestones);
         setSelectedMemberKeys(nextMembers);
         // Tags are restored by the effect above (their options load
@@ -480,22 +484,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElPriorityFilter(null);
         }
 
-        applyFilters(
-            selectedStatus,
-            selectedTags,
-            newPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
-        persistFilters(
-            selectedStatus,
-            selectedTags,
-            newPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
+        applyFilters({ ...selection, priorities: newPriorities });
+        persistFilters({ ...selection, priorities: newPriorities });
     };
 
     // Effort level filter
@@ -540,21 +530,199 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElEffortLevelFilter(null);
         }
 
-        applyFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            newEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
+        applyFilters({ ...selection, effortLevels: newEffortLevels });
+        persistFilters({ ...selection, effortLevels: newEffortLevels });
+    };
+
+    // Shared by the Sprint and Milestone filters below.
+    const currentProjectId = useTM.allTasks[0]?.projectId ?? null;
+    const projectSprints = useMemo(() => {
+        if (!useSM || currentProjectId == null) return [];
+        return useSM.projectSprints[currentProjectId] ?? [];
+    }, [useSM, currentProjectId]);
+
+    // ---- Sprint filter -----------------------------------------------
+    //
+    // Multi-select over the project's sprints, sitting one level above the
+    // milestone filter in the same hierarchy (sprint → milestone → task).
+    //
+    // It reads `task.sprintId` directly, which is safe because the server
+    // keeps that column as a roll-up of the task's milestone: it cascades
+    // `milestone.sprint_id` onto the backing row, every task in the
+    // milestone, and their sub-tasks at any depth, and clears it when the
+    // milestone link goes away. So `task.sprintId != null` iff
+    // `task.milestoneId != null`, and the sprint column in the table
+    // (`DraggableTaskRow`) already reads it the same way — no
+    // `milestoneId → milestone.sprintId` hop is needed here.
+    //
+    // The corollary is worth knowing before picking "No sprint": because
+    // sprint membership comes entirely from the milestone, "no sprint"
+    // means "in no milestone" — i.e. the whole unscheduled backlog, not a
+    // small leftover set.
+    const visibleSprints = useMemo(() => selectVisibleSprints(projectSprints), [projectSprints]);
+    // Ended (completed / archived) sprints, newest first. Hidden behind an
+    // expander rather than listed inline: sprints auto-roll, so a
+    // long-running project accumulates them without limit and the two or
+    // three live ones would be buried. Unlike past MILESTONES, past sprints
+    // don't hide their tasks — only a Closed milestone in an ended sprint
+    // does that (`outdatedMilestoneIds`) — so selecting one needs no
+    // un-hiding counterpart in `applyFilters`.
+    const pastSprints = useMemo(() => selectEndedSprints(projectSprints), [projectSprints]);
+    const [pastSprintsExpanded, setPastSprintsExpanded] = React.useState(false);
+    const [selectedSprintKeys, setSelectedSprintKeys] = React.useState<SprintFilterKey[]>(
+        () => (rehydrateKeys(stored.sprintKeys) as SprintFilterKey[] | null) ?? [SPRINT_ALL]
+    );
+    const [anchorElSprintFilter, setAnchorElSprintFilter] = React.useState<null | HTMLElement>(
+        null
+    );
+    const openSprintFilter = Boolean(anchorElSprintFilter);
+    const handleClickSprintFilter = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElSprintFilter(event.currentTarget);
+    };
+    // Drop a selected sprint id that the live set no longer has (other
+    // project, deleted sprint) so we never filter by a stale id and show an
+    // empty table forever. Same shape as the milestone and member prunes.
+    useEffect(() => {
+        if (selectedSprintKeys.length === 1 && selectedSprintKeys[0] === SPRINT_ALL) return;
+        // Valid = ongoing OR ended sprints; a selected past sprint has to
+        // survive the prune, else it'd be dropped the instant it's picked.
+        const validIds = new Set<number>(
+            [...visibleSprints, ...pastSprints].map((s) => s.sprintId)
         );
-        persistFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            newEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
+        const pruned = selectedSprintKeys.filter(
+            (k) => k === SPRINT_NONE || (typeof k === "number" && validIds.has(k))
+        );
+        if (pruned.length === selectedSprintKeys.length) return;
+        setSelectedSprintKeys(pruned.length > 0 ? pruned : [SPRINT_ALL]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visibleSprints, pastSprints, currentProjectId]);
+    const handleCloseSprintFilter = (key: SprintFilterKey) => {
+        let next: SprintFilterKey[];
+        if (key === SPRINT_ALL) {
+            next = [SPRINT_ALL];
+            setSelectedSprintKeys(next);
+            setAnchorElSprintFilter(null);
+        } else if (selectedSprintKeys.some((k) => k === key)) {
+            next = selectedSprintKeys.filter((k) => k !== key);
+            setSelectedSprintKeys(next);
+        } else {
+            next = [...selectedSprintKeys.filter((k) => k !== SPRINT_ALL), key];
+            setSelectedSprintKeys(next);
+        }
+
+        if (next.length === 0) {
+            next = [SPRINT_ALL];
+            setSelectedSprintKeys(next);
+            setAnchorElSprintFilter(null);
+        }
+
+        applyFilters({ ...selection, sprintKeys: next });
+        persistFilters({ ...selection, sprintKeys: next });
+    };
+
+    const sprintNameOf = (sprintId: number): string =>
+        [...visibleSprints, ...pastSprints].find((s) => s.sprintId === sprintId)?.name ??
+        `#${sprintId}`;
+
+    // "Nothing narrowed" — drives the button's neutral vs accented look and
+    // its label. Named once rather than repeated inline the way the milestone
+    // button repeats its own version of this check.
+    const sprintFilterIsAll =
+        selectedSprintKeys.length === 1 && selectedSprintKeys[0] === SPRINT_ALL;
+
+    const sprintFilterButtonLabel = useMemo(() => {
+        if (sprintFilterIsAll) return t.tasks.sprintFilter.all;
+        const first = selectedSprintKeys[0];
+        if (first === SPRINT_NONE) return t.tasks.sprintFilter.noSprint;
+        if (typeof first === "number") {
+            const name = sprintNameOf(first);
+            return name.length > 16 ? `${name.slice(0, 16)}…` : name;
+        }
+        return t.tasks.sprintFilter.all;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedSprintKeys, visibleSprints, pastSprints, t]);
+
+    // One selectable sprint row in the dropdown. Shared by the ongoing list
+    // and the past-sprints expander; the status chip is what tells an
+    // "Active" sprint apart from an "Upcoming" one, which matters because
+    // both are listed together.
+    const renderSprintMenuItem = (s: Sprint) => {
+        const isSelected = selectedSprintKeys.some((k) => k === s.sprintId);
+        // Reuses the sprint manager's own status wording rather than adding
+        // a fourth copy of "Active" / "Completed" to the locale files.
+        const statusLabel = t.tasks.sprint.status[s.status] ?? s.status;
+        return (
+            <MenuItem
+                key={`sprint-${s.sprintId}`}
+                sx={{
+                    borderRadius: "8px",
+                    mx: 0.5,
+                    my: 0.25,
+                    pl: 2,
+                    transition: "all 0.2s ease",
+                    "&:hover": { background: styles.buttonHoverBg },
+                }}
+                onClick={() => handleCloseSprintFilter(s.sprintId)}
+            >
+                <Box sx={{ width: "100%", display: "flex", alignItems: "center", gap: 1 }}>
+                    <DirectionsRunRoundedIcon
+                        sx={{
+                            fontSize: 14,
+                            color: isDark ? SPRINT_ACCENT_DARK : SPRINT_ACCENT_LIGHT,
+                            flexShrink: 0,
+                        }}
+                    />
+                    <Typography
+                        sx={{
+                            fontSize: "13px",
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected
+                                ? isDark
+                                    ? SPRINT_ACCENT_DARK
+                                    : SPRINT_ACCENT_LIGHT
+                                : styles.textColor,
+                            flex: 1,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {s.name}
+                    </Typography>
+                    <Chip
+                        label={statusLabel}
+                        size="small"
+                        sx={{
+                            height: 16,
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            background: styles.buttonHoverBg,
+                            color: styles.mutedText,
+                            flexShrink: 0,
+                            "& .MuiChip-label": { px: 0.75, lineHeight: 1 },
+                        }}
+                    />
+                    {isSelected && (
+                        <Box
+                            sx={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: "4px",
+                                background: isDark ? SPRINT_ACCENT_DARK : SPRINT_ACCENT_LIGHT,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "10px",
+                                color: "#fff",
+                                fontWeight: 700,
+                                flexShrink: 0,
+                            }}
+                        >
+                            ✓
+                        </Box>
+                    )}
+                </Box>
+            </MenuItem>
         );
     };
 
@@ -562,17 +730,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // set the sidebar shows in `MilestonesListItem` so the user can
     // narrow the table to one or more milestones (or explicitly the
     // unattached ones via the "No milestone" sentinel).
-    const currentProjectId = useTM.allTasks[0]?.projectId ?? null;
     const visibleMilestones = useMemo(() => {
         if (!useSM || currentProjectId == null) return [];
         return selectVisibleMilestones(
             useSM.projectMilestones[currentProjectId] ?? [],
             useSM.projectSprints[currentProjectId] ?? []
         );
-    }, [useSM, currentProjectId]);
-    const projectSprints = useMemo(() => {
-        if (!useSM || currentProjectId == null) return [];
-        return useSM.projectSprints[currentProjectId] ?? [];
     }, [useSM, currentProjectId]);
 
     // Outdated (Closed + ended-sprint) milestone ids for THIS project. Their
@@ -684,22 +847,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElMilestoneFilter(null);
         }
 
-        applyFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            next,
-            selectedMemberKeys
-        );
-        persistFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            next,
-            selectedMemberKeys
-        );
+        applyFilters({ ...selection, milestoneKeys: next });
+        persistFilters({ ...selection, milestoneKeys: next });
     };
 
     const milestoneFilterButtonLabel = useMemo(() => {
@@ -970,22 +1119,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setSelectedMemberKeys(next);
             setAnchorElMemberFilter(null);
         }
-        applyFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            next
-        );
-        persistFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            next
-        );
+        applyFilters({ ...selection, memberKeys: next });
+        persistFilters({ ...selection, memberKeys: next });
     };
     const memberFilterButtonLabel = useMemo(() => {
         if (selectedMemberKeys.length === 1 && selectedMemberKeys[0] === MEMBER_ALL) {
@@ -997,6 +1132,25 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const name = m?.userName ?? first;
         return name.length > 16 ? `${name.slice(0, 16)}…` : name;
     }, [selectedMemberKeys, teamMembers, t]);
+
+    // The current selection, as one value. Every handler above spreads it
+    // and overrides its own dimension
+    // (`applyFilters({ ...selection, tags: next })`), which is what keeps
+    // the other six from being re-listed — and mis-ordered — at each of the
+    // seventeen call sites.
+    //
+    // Declared after the state it reads but before the handlers that use
+    // it: those are closures invoked from render output or effects, i.e.
+    // after this line has run.
+    const selection: FilterSelection = {
+        status: selectedStatus,
+        tags: selectedTags,
+        priorities: selectedPriorities,
+        effortLevels: selectedEffortLevels,
+        sprintKeys: selectedSprintKeys,
+        milestoneKeys: selectedMilestoneKeys,
+        memberKeys: selectedMemberKeys,
+    };
 
     // Apply filters — single-pass walk over allTasks. Previously this was
     // 5-6 chained `.filter()` calls allocating intermediate arrays plus a
@@ -1010,14 +1164,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     //     to `childIdSet`) in the same pass.
     // Semantics are preserved exactly — see the legacy chained version
     // in git history if you need to cross-check a corner case.
-    const applyFilters = (
-        statuses: FilterProps[],
-        tags: FilterProps[],
-        priority: FilterProps[],
-        effortLevel: FilterProps[],
-        milestoneSel: MilestoneFilterKey[],
-        memberSel: MemberFilterKey[]
-    ) => {
+    const applyFilters = (sel: FilterSelection) => {
+        // Re-aliased to the names the walk below uses.
+        const {
+            status: statuses,
+            tags,
+            priorities: priority,
+            effortLevels: effortLevel,
+            sprintKeys: sprintSel,
+            milestoneKeys: milestoneSel,
+            memberKeys: memberSel,
+        } = sel;
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
         const now = Date.now();
 
@@ -1057,6 +1214,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (!(effortLevel.length === 1 && effortLevel[0].label === "All")) {
             effortSet = new Set(effortLevel.map((e) => e.label));
         }
+
+        // --- Sprint (multi-select) predicate ---
+        // Reads `task.sprintId`, which the server maintains as a roll-up of
+        // the task's milestone (see the filter's own comment above), so
+        // "No sprint" is the same set as "no milestone" — the unscheduled
+        // backlog, which is usually the biggest bucket in the project.
+        const sprintFilterActive = !(sprintSel.length === 1 && sprintSel[0] === SPRINT_ALL);
+        const sprintAllowNone = sprintSel.includes(SPRINT_NONE);
+        const sprintIdSet = new Set<number>(
+            sprintSel.filter((k): k is number => typeof k === "number")
+        );
 
         // --- Milestone (multi-select) predicate ---
         const milestoneFilterActive = !(
@@ -1193,6 +1361,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             // Effort
             if (effortSet !== null && !effortSet.has(task.effortLevel ?? "")) {
                 continue;
+            }
+
+            // Sprint multi-select
+            if (sprintFilterActive) {
+                if (task.sprintId == null) {
+                    if (!sprintAllowNone) continue;
+                } else if (!sprintIdSet.has(task.sprintId)) {
+                    continue;
+                }
             }
 
             // Milestone multi-select
@@ -1342,7 +1519,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     // ---- Saved Filters (named, project-shared selections) ------------
     //
-    // Reads the CURRENT six-tuple in the same identity-only shape the
+    // Reads the CURRENT selection in the same identity-only shape the
     // localStorage path uses (`StoredTaskFilters`) — labels and keys, never
     // the `FilterProps` objects, which carry predicates and palette colors
     // that ship with the app. Crossing users makes that rule stricter, not
@@ -1352,12 +1529,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // filter omits status entirely) — see that module's docstring.
     const currentSavedFilterPayload = buildSavedFilterPayload({
         hideStatusFilter,
-        status: selectedStatus,
-        tags: selectedTags,
-        priorities: selectedPriorities,
-        effortLevels: selectedEffortLevels,
-        milestoneKeys: selectedMilestoneKeys,
-        memberKeys: selectedMemberKeys,
+        ...selection,
     });
     const getCurrentSavedFilterPayload = (): SavedFilterPayload => currentSavedFilterPayload;
 
@@ -1371,8 +1543,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // selection that happens to equal a saved one shows it as applied.
     // Reset lands in the first case.
     //
-    // Rebuilt each render rather than memoised: it closes over all six
-    // selections, so a `useCallback` would need every one in its deps and
+    // Rebuilt each render rather than memoised: it closes over every
+    // selection, so a `useCallback` would need all of them in its deps and
     // would be recreated just as often. The comparison is a handful of
     // short arrays per saved filter.
     const isCurrentSavedFilterSelection = (payload: SavedFilterPayload): boolean =>
@@ -1402,39 +1574,29 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             predefinedPriorityFilters,
             predefinedEffortLevelFilters,
         });
-        const nextStatus = resolved.status;
-        const nextTags = resolved.tags;
-        const nextPriorities = resolved.priorities;
-        const nextEffort = resolved.effortLevels;
-        const nextMilestones = resolved.milestoneKeys as MilestoneFilterKey[];
-        const nextMembers = resolved.memberKeys as MemberFilterKey[];
+        const next: FilterSelection = {
+            status: resolved.status,
+            tags: resolved.tags,
+            priorities: resolved.priorities,
+            effortLevels: resolved.effortLevels,
+            sprintKeys: resolved.sprintKeys as SprintFilterKey[],
+            milestoneKeys: resolved.milestoneKeys as MilestoneFilterKey[],
+            memberKeys: resolved.memberKeys as MemberFilterKey[],
+        };
 
-        setSelectedStatus(nextStatus);
-        setSelectedTags(nextTags);
-        setSelectedPriorities(nextPriorities);
-        setSelectedEffortLevels(nextEffort);
-        setSelectedMilestoneKeys(nextMilestones);
-        setSelectedMemberKeys(nextMembers);
+        setSelectedStatus(next.status);
+        setSelectedTags(next.tags);
+        setSelectedPriorities(next.priorities);
+        setSelectedEffortLevels(next.effortLevels);
+        setSelectedSprintKeys(next.sprintKeys);
+        setSelectedMilestoneKeys(next.milestoneKeys);
+        setSelectedMemberKeys(next.memberKeys);
 
-        applyFilters(
-            nextStatus,
-            nextTags,
-            nextPriorities,
-            nextEffort,
-            nextMilestones,
-            nextMembers
-        );
+        applyFilters(next);
         // Persist like any other selection change, so the applied filter
         // survives the table/board/dashboard remount the same way a
         // hand-picked one does.
-        persistFilters(
-            nextStatus,
-            nextTags,
-            nextPriorities,
-            nextEffort,
-            nextMilestones,
-            nextMembers
-        );
+        persistFilters(next);
     };
 
     const resetFilters = () => {
@@ -1445,38 +1607,35 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // status view, so a status filter makes no sense) — reset must
         // return to that "All", or Closed/Deleted cards silently vanish
         // after a Reset. Mirrors the mount-time initializer above.
-        const resetStatus = hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters;
-        setSelectedStatus(resetStatus);
-        setSelectedTags(tagSelectionDefault(predefinedTagsFilters));
-        setSelectedPriorities([predefinedPriorityFilters[0]]);
-        setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
-        setSelectedMilestoneKeys([MILESTONE_ALL]);
-        setSelectedMemberKeys([MEMBER_ALL]);
+        const reset: FilterSelection = {
+            status: hideStatusFilter ? [predefinedStatusFilters[0]] : defaultStatusFilters,
+            tags: tagSelectionDefault(predefinedTagsFilters),
+            priorities: [predefinedPriorityFilters[0]],
+            effortLevels: [predefinedEffortLevelFilters[0]],
+            sprintKeys: [SPRINT_ALL],
+            milestoneKeys: [MILESTONE_ALL],
+            memberKeys: [MEMBER_ALL],
+        };
+        setSelectedStatus(reset.status);
+        setSelectedTags(reset.tags);
+        setSelectedPriorities(reset.priorities);
+        setSelectedEffortLevels(reset.effortLevels);
+        setSelectedSprintKeys(reset.sprintKeys);
+        setSelectedMilestoneKeys(reset.milestoneKeys);
+        setSelectedMemberKeys(reset.memberKeys);
+        setPastSprintsExpanded(false);
         setPastMilestonesExpanded(false);
-        applyFilters(
-            resetStatus,
-            tagSelectionDefault(predefinedTagsFilters),
-            [predefinedPriorityFilters[0]],
-            [predefinedEffortLevelFilters[0]],
-            [MILESTONE_ALL],
-            [MEMBER_ALL]
-        );
+        applyFilters(reset);
         if (filterStorageKey) clearStoredFilters(filterStorageKey);
     };
 
     useEffect(() => {
-        applyFilters(
-            selectedStatus,
-            selectedTags,
-            selectedPriorities,
-            selectedEffortLevels,
-            selectedMilestoneKeys,
-            selectedMemberKeys
-        );
+        applyFilters(selection);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         useTM.allTasks,
         useTM.tableMilestoneFilterId,
+        selectedSprintKeys,
         selectedMilestoneKeys,
         selectedMemberKeys,
         outdatedMilestoneKey,
@@ -1686,6 +1845,281 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         flexShrink: 0,
                     }}
                 />
+
+                {/* Sprint Filter — sits immediately left of the milestone
+                    filter, matching the sprint → milestone → task
+                    hierarchy the sidebar and the picker both present.
+                    Hidden under the sidebar's milestone scope for the same
+                    reason the milestone filter is: that scope already pins
+                    the view to one milestone, hence to one sprint, so a
+                    sprint filter on top could only agree with it or empty
+                    the table. */}
+                {useSM && useTM.tableMilestoneFilterId == null && (
+                    <>
+                        <AppTooltip
+                            title={(() => {
+                                if (
+                                    selectedSprintKeys.length === 1 &&
+                                    selectedSprintKeys[0] === SPRINT_ALL
+                                ) {
+                                    return t.tasks.sprintFilter.allSprints;
+                                }
+                                return selectedSprintKeys
+                                    .map((k) =>
+                                        k === SPRINT_NONE
+                                            ? t.tasks.sprintFilter.noSprint
+                                            : sprintNameOf(k as number)
+                                    )
+                                    .join(", ");
+                            })()}
+                        >
+                            <Button
+                                aria-controls={openSprintFilter ? "fade-menu" : undefined}
+                                aria-expanded={openSprintFilter ? "true" : undefined}
+                                aria-haspopup="true"
+                                variant="contained"
+                                startIcon={
+                                    <DirectionsRunRoundedIcon
+                                        sx={{
+                                            fontSize: "16px",
+                                            color: sprintFilterIsAll
+                                                ? isDark
+                                                    ? SPRINT_ACCENT_DARK
+                                                    : SPRINT_ACCENT_LIGHT
+                                                : "#fff",
+                                        }}
+                                    />
+                                }
+                                sx={{
+                                    color: sprintFilterIsAll ? styles.textColor : "#fff",
+                                    background: sprintFilterIsAll
+                                        ? isDark
+                                            ? "rgba(14,165,233,0.15)"
+                                            : "rgba(14,165,233,0.1)"
+                                        : isDark
+                                          ? `linear-gradient(135deg, ${alpha("#0ea5e9", 0.5)} 0%, ${alpha("#0ea5e9", 0.7)} 100%)`
+                                          : `linear-gradient(135deg, ${alpha("#0ea5e9", 0.75)} 0%, ${alpha("#0ea5e9", 0.95)} 100%)`,
+                                    border: `1px solid ${
+                                        isDark ? SPRINT_ACCENT_BG_DARK : SPRINT_ACCENT_BG_LIGHT
+                                    }`,
+                                    borderRadius: "10px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    height: "32px",
+                                    whiteSpace: "nowrap",
+                                    px: 1.5,
+                                    my: 0.5,
+                                    textTransform: "none",
+                                    boxShadow: isDark
+                                        ? "0 2px 8px rgba(14,165,233,0.25)"
+                                        : "0 2px 8px rgba(14,165,233,0.2)",
+                                    transition: "all 0.2s ease",
+                                    flexShrink: 0,
+                                    "&:hover": {
+                                        background: sprintFilterIsAll
+                                            ? isDark
+                                                ? "rgba(14,165,233,0.25)"
+                                                : "rgba(14,165,233,0.2)"
+                                            : isDark
+                                              ? `linear-gradient(135deg, ${alpha("#0ea5e9", 0.6)} 0%, ${alpha("#0ea5e9", 0.8)} 100%)`
+                                              : `linear-gradient(135deg, ${alpha("#0ea5e9", 0.85)} 0%, ${alpha("#0ea5e9", 1)} 100%)`,
+                                        transform: "translateY(-1px)",
+                                        boxShadow: isDark
+                                            ? "0 4px 12px rgba(14,165,233,0.35)"
+                                            : "0 4px 12px rgba(14,165,233,0.3)",
+                                    },
+                                }}
+                                onClick={handleClickSprintFilter}
+                            >
+                                Sprint: {sprintFilterButtonLabel}
+                                {selectedSprintKeys.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedSprintKeys.length - 1}`}
+                                        size="small"
+                                        sx={{
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </AppTooltip>
+                        <Menu
+                            anchorEl={anchorElSprintFilter}
+                            open={openSprintFilter}
+                            slots={{ transition: Fade }}
+                            slotProps={{
+                                paper: {
+                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
+                                    sx: {
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "220px",
+                                        maxHeight: "320px",
+                                    },
+                                },
+                            }}
+                            onClose={() => setAnchorElSprintFilter(null)}
+                        >
+                            {([SPRINT_ALL, SPRINT_NONE] as SprintFilterKey[]).map((key) => {
+                                const isSelected = selectedSprintKeys.some((k) => k === key);
+                                const label =
+                                    key === SPRINT_ALL
+                                        ? t.tasks.sprintFilter.all
+                                        : t.tasks.sprintFilter.noSprint;
+                                return (
+                                    <MenuItem
+                                        key={`sprint-key-${String(key)}`}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": { background: styles.buttonHoverBg },
+                                        }}
+                                        onClick={() => handleCloseSprintFilter(key)}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <DirectionsRunRoundedIcon
+                                                sx={{
+                                                    fontSize: 14,
+                                                    color: isDark
+                                                        ? SPRINT_ACCENT_DARK
+                                                        : SPRINT_ACCENT_LIGHT,
+                                                    opacity: key === SPRINT_ALL ? 0.5 : 1,
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "13px",
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected
+                                                        ? isDark
+                                                            ? SPRINT_ACCENT_DARK
+                                                            : SPRINT_ACCENT_LIGHT
+                                                        : styles.textColor,
+                                                    flex: 1,
+                                                }}
+                                            >
+                                                {label}
+                                            </Typography>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: isDark
+                                                            ? SPRINT_ACCENT_DARK
+                                                            : SPRINT_ACCENT_LIGHT,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                            {visibleSprints.length > 0 && (
+                                <Box
+                                    sx={{
+                                        height: "1px",
+                                        background: styles.containerBorder,
+                                        mx: 1,
+                                        my: 0.5,
+                                    }}
+                                />
+                            )}
+                            {visibleSprints.map((s) => renderSprintMenuItem(s))}
+
+                            {/* "Show past sprints" expander — same affordance as the
+                                milestone filter's, and needed for the same reason:
+                                sprints auto-roll, so the ended ones grow without
+                                bound. Clicking the row only expands, so keep the
+                                menu open. */}
+                            {pastSprints.length > 0 && (
+                                <MenuItem
+                                    sx={{
+                                        borderRadius: "8px",
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        "&:hover": { background: styles.buttonHoverBg },
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPastSprintsExpanded((prev) => !prev);
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: "100%",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
+                                        <HistoryRoundedIcon
+                                            sx={{
+                                                fontSize: 15,
+                                                color: styles.mutedText,
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                        <Typography
+                                            sx={{
+                                                fontSize: "13px",
+                                                fontWeight: 600,
+                                                color: styles.textColor,
+                                                flex: 1,
+                                            }}
+                                        >
+                                            {pastSprintsExpanded
+                                                ? t.tasks.sprintFilter.hidePastSprints
+                                                : t.tasks.sprintFilter.showPastSprints}
+                                        </Typography>
+                                        <Chip
+                                            label={pastSprints.length}
+                                            size="small"
+                                            sx={{
+                                                height: 16,
+                                                fontSize: "9px",
+                                                fontWeight: 700,
+                                                background: styles.buttonHoverBg,
+                                                color: styles.mutedText,
+                                                "& .MuiChip-label": { px: 0.75, lineHeight: 1 },
+                                            }}
+                                        />
+                                    </Box>
+                                </MenuItem>
+                            )}
+                            {pastSprintsExpanded &&
+                                pastSprints.map((s) => renderSprintMenuItem(s))}
+                        </Menu>
+                    </>
+                )}
 
                 {/* Milestone Filter — multi-select drawn from the same
                     visible/sorted set the sidebar shows in

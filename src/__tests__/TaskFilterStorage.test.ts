@@ -58,11 +58,16 @@ describe("readStoredFilters / writeStoredFilters", () => {
             memberKeys: ["__all__"],
             milestoneKeys: ["all"],
             priorities: ["High"],
+            sprintKeys: [7, "none"],
             status: ["Open", "WIP"],
             tags: ["backend"],
         });
         expect(readStoredFilters(KEY)?.status).toEqual(["Open", "WIP"]);
         expect(readStoredFilters(KEY)?.tags).toEqual(["backend"]);
+        // Sprint keys mix numeric ids with a string sentinel, so the shape
+        // guard has to admit both — `isStringArray` would drop the whole
+        // dimension.
+        expect(readStoredFilters(KEY)?.sprintKeys).toEqual([7, "none"]);
     });
 
     it("returns null when nothing is stored", () => {
@@ -87,6 +92,7 @@ describe("readStoredFilters / writeStoredFilters", () => {
             memberKeys: [],
             milestoneKeys: [],
             priorities: [],
+            sprintKeys: [],
             status: ["Open"],
             tags: [],
         });

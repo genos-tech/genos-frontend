@@ -1948,6 +1948,13 @@ export const ar: DeepPartial<Messages> = {
             downloadTooltip: "تنزيل",
             downloadFileTooltip: 'تنزيل "{name}"',
         },
+        sprintFilter: {
+            all: "الكل",
+            allSprints: "جميع السبرنتات",
+            noSprint: "بدون سبرنت",
+            showPastSprints: "إظهار السبرنتات الماضية",
+            hidePastSprints: "إخفاء السبرنتات الماضية",
+        },
         milestoneFilter: {
             all: "الكل",
             allMilestones: "جميع المعالم",
@@ -2189,7 +2196,7 @@ export const ar: DeepPartial<Messages> = {
         filterHelp: {
             title: "كيف تعمل التصفية",
             combine:
-                "يتم دمج المرشحات: يجب أن يتطابق الصف مع كل فئة قمت بتضييق نطاقها (الحالة، العلامة، الأولوية، الجهد، الإنجاز، العضو).",
+                "يتم دمج المرشحات: يجب أن يتطابق الصف مع كل فئة قمت بتضييق نطاقها (الحالة، العلامة، الأولوية، الجهد، السبرنت، الإنجاز، العضو).",
             rootRows:
                 "تعرض القائمة صفوف المستوى الأعلى — المهام الجذرية والمراحل الرئيسية. قم بتوسيع الصف لرؤية ما يوجد تحته.",
             milestoneRescue:
