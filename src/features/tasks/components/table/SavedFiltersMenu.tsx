@@ -32,6 +32,7 @@ import BookmarksRoundedIcon from "@mui/icons-material/BookmarksRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
 import SaveAsRoundedIcon from "@mui/icons-material/SaveAsRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
     Alert,
     Input,
@@ -54,7 +55,7 @@ import { alpha } from "@mui/system";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import {
     createProjectSavedFilter,
     deleteProjectSavedFilter,
@@ -77,7 +78,12 @@ type DialogState =
     | { kind: "closed" }
     | { kind: "save" }
     // Rename targets one row; `name` seeds the input with the current one.
-    | { kind: "rename"; id: number; name: string };
+    | { kind: "rename"; id: number; name: string }
+    // Delete targets one row too. The id is carried HERE rather than in a
+    // separate "pending row" state so the confirm can only ever act on the row
+    // whose button opened it — the menu lists every saved filter, and the
+    // dialog is shared.
+    | { kind: "delete"; id: number; name: string };
 
 type SavedFiltersMenuProps = {
     teamId: string | null | undefined;
@@ -264,13 +270,27 @@ export const SavedFiltersMenu = ({
         void refresh();
     };
 
-    const handleDelete = async (row: ProjectSavedFilter) => {
-        if (!projectId) return;
-        // Shared project-wide, so deleting takes it away from teammates
-        // too — worth a confirm even though it destroys no task data.
-        if (!window.confirm(ts.confirmDelete.replace("{name}", row.filterName))) return;
-        const ok = await deleteProjectSavedFilter(projectId, row.id, accessToken);
-        if (!ok) return;
+    // Shared project-wide, so deleting takes it away from teammates too — worth
+    // a confirm even though it destroys no task data.
+    const openDeleteDialog = (row: ProjectSavedFilter) => {
+        closeMenu();
+        setDialogError(null);
+        setDialog({ kind: "delete", id: row.id, name: row.filterName });
+    };
+
+    const handleSubmitDelete = async () => {
+        if (!projectId || dialog.kind !== "delete") return;
+        setIsSubmitting(true);
+        setDialogError(null);
+        const ok = await deleteProjectSavedFilter(projectId, dialog.id, accessToken);
+        setIsSubmitting(false);
+        if (!ok) {
+            // Keep the dialog open on failure — the service fails soft, so
+            // closing here would look like the delete had succeeded.
+            setDialogError(ts.errorDeleteFailed);
+            return;
+        }
+        closeDialog();
         void refresh();
     };
 
@@ -522,7 +542,7 @@ export const SavedFiltersMenu = ({
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                void handleDelete(row);
+                                                openDeleteDialog(row);
                                             }}
                                         >
                                             <DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />
@@ -560,77 +580,144 @@ export const SavedFiltersMenu = ({
             </Menu>
 
             {/* Joy Modal, not a Material Dialog — see the file header note
-                on the Joy theme and the Material backdrop. */}
+                on the Joy theme and the Material backdrop.
+
+                One Modal for all three dialogs: they're mutually exclusive by
+                construction (`dialog.kind`), and sharing it keeps one backdrop,
+                one close path and one `isSubmitting`. Delete gets its own body
+                rather than a fourth variant of the name form — it has no input,
+                and its confirm is destructive. */}
             <Modal open={dialog.kind !== "closed"} onClose={closeDialog}>
-                <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
-                    <JoyTypography level="title-md">
-                        {dialog.kind === "rename" ? ts.renameTitle : ts.saveTitle}
-                    </JoyTypography>
-                    <JoyTypography level="body-xs" sx={{ mb: 0.5 }}>
-                        {dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
-                    </JoyTypography>
-                    <JoyStack spacing={1.5}>
-                        <Input
-                            placeholder={ts.namePlaceholder}
-                            size="sm"
-                            slotProps={{ input: { maxLength: NAME_MAX_LENGTH } }}
-                            value={nameDraft}
-                            autoFocus
-                            onChange={(e) => {
-                                setNameDraft(e.target.value);
-                                setDialogError(null);
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key !== "Enter" || isSubmitting) return;
-                                e.preventDefault();
-                                void (dialog.kind === "rename"
-                                    ? handleSubmitRename()
-                                    : handleSubmitSave());
-                            }}
-                        />
-                        {/* Typing an existing name IS the overwrite
-                            gesture, so say so before the click rather
-                            than refusing it after. */}
-                        {willOverwrite && (
-                            <Alert color="warning" size="sm" variant="soft">
-                                {ts.overwriteWarning.replace("{name}", trimmedDraft)}
-                            </Alert>
-                        )}
-                        {dialogError && (
-                            <Alert color="danger" size="sm" variant="soft">
-                                {dialogError}
-                            </Alert>
-                        )}
-                        <JoyBox
-                            sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 0.5 }}
+                {dialog.kind === "delete" ? (
+                    <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
+                        <JoyTypography
+                            level="title-md"
+                            startDecorator={
+                                <WarningAmberRoundedIcon
+                                    sx={{ color: isDark ? "#f87171" : "#dc2626" }}
+                                />
+                            }
                         >
-                            <JoyButton
-                                color="neutral"
-                                size="sm"
-                                variant="plain"
-                                onClick={closeDialog}
+                            {ts.deleteTitle}
+                        </JoyTypography>
+                        <JoyStack spacing={1.5}>
+                            <JoyTypography level="body-sm">
+                                {fmt(ts.deleteHelper, { name: dialog.name })}
+                            </JoyTypography>
+                            {dialogError && (
+                                <Alert color="danger" size="sm" variant="soft">
+                                    {dialogError}
+                                </Alert>
+                            )}
+                            <JoyBox
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: 1,
+                                    mt: 0.5,
+                                }}
                             >
-                                {ts.cancel}
-                            </JoyButton>
-                            <JoyButton
-                                disabled={isSubmitting || trimmedDraft.length === 0}
+                                <JoyButton
+                                    color="neutral"
+                                    disabled={isSubmitting}
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={closeDialog}
+                                >
+                                    {ts.cancel}
+                                </JoyButton>
+                                <JoyButton
+                                    color="danger"
+                                    // The row's Delete icon carries the same
+                                    // word as its accessible name, so tests get
+                                    // an unambiguous handle on the confirm.
+                                    data-testid="saved-filter-delete-confirm"
+                                    loading={isSubmitting}
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() => void handleSubmitDelete()}
+                                >
+                                    {ts.deleteConfirm}
+                                </JoyButton>
+                            </JoyBox>
+                        </JoyStack>
+                    </ModalDialog>
+                ) : (
+                    <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
+                        <JoyTypography level="title-md">
+                            {dialog.kind === "rename" ? ts.renameTitle : ts.saveTitle}
+                        </JoyTypography>
+                        <JoyTypography level="body-xs" sx={{ mb: 0.5 }}>
+                            {dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
+                        </JoyTypography>
+                        <JoyStack spacing={1.5}>
+                            <Input
+                                placeholder={ts.namePlaceholder}
                                 size="sm"
-                                variant="solid"
-                                onClick={() =>
+                                slotProps={{ input: { maxLength: NAME_MAX_LENGTH } }}
+                                value={nameDraft}
+                                autoFocus
+                                onChange={(e) => {
+                                    setNameDraft(e.target.value);
+                                    setDialogError(null);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key !== "Enter" || isSubmitting) return;
+                                    e.preventDefault();
                                     void (dialog.kind === "rename"
                                         ? handleSubmitRename()
-                                        : handleSubmitSave())
-                                }
+                                        : handleSubmitSave());
+                                }}
+                            />
+                            {/* Typing an existing name IS the overwrite
+                            gesture, so say so before the click rather
+                            than refusing it after. */}
+                            {willOverwrite && (
+                                <Alert color="warning" size="sm" variant="soft">
+                                    {fmt(ts.overwriteWarning, { name: trimmedDraft })}
+                                </Alert>
+                            )}
+                            {dialogError && (
+                                <Alert color="danger" size="sm" variant="soft">
+                                    {dialogError}
+                                </Alert>
+                            )}
+                            <JoyBox
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: 1,
+                                    mt: 0.5,
+                                }}
                             >
-                                {dialog.kind === "rename"
-                                    ? ts.renameConfirm
-                                    : willOverwrite
-                                      ? ts.overwriteConfirm
-                                      : ts.saveConfirm}
-                            </JoyButton>
-                        </JoyBox>
-                    </JoyStack>
-                </ModalDialog>
+                                <JoyButton
+                                    color="neutral"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={closeDialog}
+                                >
+                                    {ts.cancel}
+                                </JoyButton>
+                                <JoyButton
+                                    disabled={isSubmitting || trimmedDraft.length === 0}
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() =>
+                                        void (dialog.kind === "rename"
+                                            ? handleSubmitRename()
+                                            : handleSubmitSave())
+                                    }
+                                >
+                                    {dialog.kind === "rename"
+                                        ? ts.renameConfirm
+                                        : willOverwrite
+                                          ? ts.overwriteConfirm
+                                          : ts.saveConfirm}
+                                </JoyButton>
+                            </JoyBox>
+                        </JoyStack>
+                    </ModalDialog>
+                )}
             </Modal>
         </>
     );

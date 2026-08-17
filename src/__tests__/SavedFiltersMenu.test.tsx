@@ -144,6 +144,11 @@ const openMenu = async () => {
     fireEvent.click(await trigger());
 };
 
+// Each row's Delete icon carries "Delete" as its accessible name (AppTooltip
+// again), so the confirm button gets a testid rather than being queried by the
+// same word.
+const deleteConfirm = () => screen.findByTestId("saved-filter-delete-confirm");
+
 describe("SavedFiltersMenu", () => {
     beforeEach(() => {
         vi.mocked(loadProjectSavedFilters).mockReset().mockResolvedValue([row()]);
@@ -266,10 +271,8 @@ describe("SavedFiltersMenu", () => {
 
         // And the third row's action really fires — proof they aren't
         // pointer-events: none.
-        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
         fireEvent.click((await screen.findAllByLabelText("Delete"))[2]);
-        await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 3, "tok"));
-        confirmSpy.mockRestore();
+        expect(await screen.findByText("Delete saved filter")).toBeTruthy();
     });
 
     it("refetches when the dropdown opens, so a teammate's new filter shows up", async () => {
@@ -405,28 +408,71 @@ describe("SavedFiltersMenu", () => {
         expect(updateProjectSavedFilter).not.toHaveBeenCalled();
     });
 
-    it("deletes behind a confirm and refetches", async () => {
-        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    it("deletes behind an in-app confirm and refetches", async () => {
+        const confirmSpy = vi.spyOn(window, "confirm");
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByLabelText("Delete"));
 
+        // Nothing happens on the icon click alone — and it must be OUR modal,
+        // not the browser's `genosai.dev says…` dialog.
+        expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+        expect(confirmSpy).not.toHaveBeenCalled();
+        expect(await screen.findByText("Delete saved filter")).toBeTruthy();
+        // Shared project-wide, so the confirm names the blast radius AND the row.
+        const body = await screen.findByText(/everyone in the project/);
+        expect(body.textContent).toContain("My blocked work");
+
+        fireEvent.click(await deleteConfirm());
         await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 1, "tok"));
-        // Shared project-wide, so the confirm names the blast radius.
-        expect(confirmSpy.mock.calls[0][0]).toContain("everyone in the project");
         // mount + open + post-delete refresh.
         await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(3));
         confirmSpy.mockRestore();
     });
 
     it("does not delete when the confirm is dismissed", async () => {
-        const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByLabelText("Delete"));
+        fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
+        await waitFor(() => expect(screen.queryByText("Delete saved filter")).toBeNull());
         expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
-        confirmSpy.mockRestore();
+    });
+
+    it("keeps the delete dialog open and says so when the request fails", async () => {
+        // The service fails soft (resolves false), so closing on failure would
+        // look exactly like a successful delete.
+        vi.mocked(deleteProjectSavedFilter).mockResolvedValue(false);
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+        fireEvent.click(await deleteConfirm());
+
+        expect(await screen.findByText("Couldn’t delete. Please try again.")).toBeTruthy();
+        expect(screen.getByText("Delete saved filter")).toBeTruthy();
+        // No refetch — mount + open only.
+        expect(loadProjectSavedFilters).toHaveBeenCalledTimes(2);
+    });
+
+    it("deletes the row whose button was pressed, not the first one", async () => {
+        // The dialog is shared across rows, so the target id has to travel with
+        // it. A `pendingDelete` that lost the id would pass the single-row test
+        // above and silently delete the wrong filter here.
+        vi.mocked(loadProjectSavedFilters).mockResolvedValue([
+            row(),
+            row({ id: 2, filterName: "Second" }),
+            row({ id: 3, filterName: "Third" }),
+        ]);
+        renderMenu();
+        await openMenu();
+        fireEvent.click((await screen.findAllByLabelText("Delete"))[2]);
+
+        expect((await screen.findByText(/everyone in the project/)).textContent).toContain(
+            "Third"
+        );
+        fireEvent.click(await deleteConfirm());
+        await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 3, "tok"));
     });
 
     it("a row action does not also apply the row's filter", async () => {
