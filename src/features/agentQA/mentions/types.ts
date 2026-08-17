@@ -56,6 +56,45 @@ export interface AgentMentionCandidate {
     // Display-only, like `subtitle`: never reaches `mentionKey` or the
     // wire payload, and the agent surfaces simply ignore it.
     href?: string;
+
+    // ── Row-detail fields ────────────────────────────────────────────
+    // Everything below exists so the Joy-input dropdown can render the
+    // SAME row as the BlockNote `@`/`#` menus, which build their rows
+    // straight from the source datasets (`UserProps`, `MentionGroup`,
+    // the task tables) and so have this detail on hand. A candidate is
+    // the only thing the dropdown sees, so the detail has to ride along.
+    //
+    // All of it is display-only in exactly the sense `subtitle` and
+    // `href` are: populated in `useAgentMentionSources`, never part of
+    // `mentionKey`, never sent on the wire. `toWireMentions` reads the
+    // `ref` alone, so nothing here can change how a mention resolves.
+
+    /** `@user`: email — the BlockNote `@` row's subtitle line. */
+    email?: string;
+    /** `@user`: their custom status, shown right-aligned and italic. */
+    customStatus?: string;
+    /** `@user`: true for the signed-in user, who gets a "YOU" chip. */
+    isSelf?: boolean;
+    /** `@group`: member count, shown as the trailing green chip. */
+    memberCount?: number;
+    /** `@group`: the group's description, used as its subtitle line. */
+    description?: string;
+    /**
+     * `#task`: the owning project's id and name, and the task's status
+     * label ("Open" / "WIP" / …). The subtitle reads "Task · ID · Project"
+     * when the name is known, and `status` paints the trailing
+     * `TaskStatusChip` — both matching the BlockNote `#` row.
+     *
+     * `projectId` additionally supplies the coordinate a task hover card
+     * needs (`TaskMentionHoverCard` is project-scoped), which is why the
+     * to-do title chips can offer one. It is deliberately NOT on the
+     * `task` ref: the ref is the wire identity, and the agent resolves a
+     * task by id alone. Absent when the source row carried no project —
+     * the same condition that leaves `href` absent.
+     */
+    projectId?: number;
+    projectName?: string;
+    status?: string;
 }
 
 export const mentionKey = (ref: AgentMentionRef): string => {

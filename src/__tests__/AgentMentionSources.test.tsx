@@ -23,6 +23,7 @@ import {
     useAgentMentionSources,
 } from "../features/agentQA/mentions/useAgentMentionSources";
 import type { MentionGroup } from "../services/mentionGroupsApi";
+import type { UserProps } from "../types/admin";
 import type { AllChatProps, TodoGroupProps, TodoItemProps } from "../types/chat";
 import type { ProjectProps, TaskTableProps } from "../types/tasks";
 
@@ -153,6 +154,88 @@ describe("useAgentMentionSources # entity coverage", () => {
     });
 });
 
+// The row detail a candidate carries so the plain-input dropdown can draw
+// the SAME row the BlockNote menus draw (email / "YOU" / custom status on a
+// person; project name + status chip on a task). All display-only —
+// `toWireMentions` reads the ref alone, so none of it can change how a
+// mention resolves. `projectId` doubles as the coordinate a task hover card
+// needs, which is why it rides here rather than on the ref.
+describe("useAgentMentionSources row detail", () => {
+    it("carries a task's project name and status, and its projectId for the hover card", () => {
+        const value: HashMentionData = {
+            ...DATA,
+            tasks: [
+                {
+                    id: "10",
+                    projectId: 7,
+                    title: "Plain task",
+                    displayId: "WRD-10",
+                    status: "WIP",
+                } as unknown as TaskTableProps,
+            ],
+        };
+        const w = ({ children }: { children: React.ReactNode }) => (
+            <HashMentionDataProvider value={value}>{children}</HashMentionDataProvider>
+        );
+        const { result } = renderHook(() => useAgentMentionSources({ membersOverride: [] }), {
+            wrapper: w,
+        });
+        const task = result.current.entities.find((c) => c.key === "task:10");
+        // The project NAME comes from the project list, not the task row —
+        // one lookup, always current, same preference the editor menu uses.
+        expect(task?.projectName).toBe("Website Redesign");
+        expect(task?.status).toBe("WIP");
+        expect(task?.projectId).toBe(7);
+        // Still just a task on the wire: none of the above leaks into it.
+        expect(toWireMentions([task!.ref])).toEqual([
+            { type: "task", task_id: 10, label: "Plain task" },
+        ]);
+    });
+
+    it("leaves projectId and href off a task with no project, so no chip offers a card it can't fill", () => {
+        const value: HashMentionData = {
+            ...DATA,
+            tasks: [
+                { id: "11", projectId: null, title: "Orphan task" } as unknown as TaskTableProps,
+            ],
+        };
+        const w = ({ children }: { children: React.ReactNode }) => (
+            <HashMentionDataProvider value={value}>{children}</HashMentionDataProvider>
+        );
+        const { result } = renderHook(() => useAgentMentionSources({ membersOverride: [] }), {
+            wrapper: w,
+        });
+        const task = result.current.entities.find((c) => c.key === "task:11");
+        expect(task).toBeDefined();
+        expect(task?.projectId).toBeUndefined();
+        expect(task?.href).toBeUndefined();
+    });
+
+    it("carries a member's email and custom status, and flags only yourself", () => {
+        const members = [
+            {
+                userId: "u-1",
+                userName: "Alice",
+                userEmail: "alice@example.com",
+                customStatus: "On leave",
+            },
+            { userId: "u-2", userName: "Carol", userEmail: "carol@example.com" },
+        ] as UserProps[];
+        const w = ({ children }: { children: React.ReactNode }) => (
+            <HashMentionDataProvider value={{ ...DATA, myself: { userId: "u-1" } as UserProps }}>
+                {children}
+            </HashMentionDataProvider>
+        );
+        const { result } = renderHook(() => useAgentMentionSources({ membersOverride: members }), {
+            wrapper: w,
+        });
+        expect(result.current.members.map((c) => [c.email, c.customStatus, c.isSelf])).toEqual([
+            ["alice@example.com", "On leave", true],
+            ["carol@example.com", undefined, false],
+        ]);
+    });
+});
+
 describe("useAgentMentionSources @ pool", () => {
     it("appends mention groups after members via groupsOverride", () => {
         const groups: MentionGroup[] = [
@@ -168,6 +251,12 @@ describe("useAgentMentionSources @ pool", () => {
                 trigger: "@",
                 key: "group:3",
                 subtitle: undefined,
+                href: undefined,
+                // Row detail the dropdown shows: the trailing member-count
+                // chip, and the description as the subtitle line (absent on
+                // this fixture, so the row falls back to "Mention group").
+                memberCount: 2,
+                description: undefined,
             },
         ]);
     });

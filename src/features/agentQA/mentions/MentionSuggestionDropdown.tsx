@@ -2,18 +2,25 @@
 // presentational — trigger detection, filtering, and keyboard state
 // live in `useAgentMentionDraft`; the host input owns focus.
 //
-// Row look mirrors the BlockNote editors' mention menus (see `menuRow`
-// in HashMention.tsx and the `@group` row in Mention.tsx): a colored
-// icon disc + a bold `@`/`#` name over a muted kind subtitle, with the
-// same keyboard-highlight treatment. The per-type disc colors come from
-// the shared `mentionPalettes` module, so a `#task` reads the same blue
-// here, in the BlockNote `#` menu, and in a message body. The `@` user
-// row shows the person's real profile photo, matching the editor's `@`
-// menu. (This dropdown can't reuse the BlockNote rows directly: Spotlight
-// mounts outside AvatarContext, so it can't use `UserAvatar` — instead
-// the user row renders a bare Joy `<Avatar src>` built context-free from
-// the candidate's `avatarImgPath` via `buildAvatarSrc`. And importing the
-// editor files would drag `@blocknote/react` into Spotlight's entry chunk.)
+// Rows are the SHARED `MentionMenuRow` the BlockNote editors' mention
+// menus use, so a `#task` row here is the same row it is in the editor:
+// same icon vocabulary (`MENTION_ICONS`), same palettes, same trailing
+// status chip, same email/"YOU"/custom-status treatment on a person. The
+// editor menus are the reference look; this menu follows them by
+// construction rather than by re-description, which is how the two used
+// to drift (a task was an assignment clipboard here and a check circle
+// there).
+//
+// The one thing that stays local is the identity visual for a person:
+// Spotlight mounts outside AvatarContext, so `UserAvatar` — which throws
+// without its provider — is unavailable, and the row instead gets a bare
+// Joy `<Avatar src>` built context-free from the candidate's
+// `avatarImgPath` via `buildAvatarSrc`. (Importing the editor files
+// wholesale would also drag `@blocknote/react` into Spotlight's entry
+// chunk; `mentionMenuRow` and `mentionPalettes` are BlockNote-free
+// precisely so this menu can share them.) Everything a row shows beyond
+// the ref itself rides on the candidate — see the row-detail fields on
+// `AgentMentionCandidate`.
 //
 // Rendered through a PORTAL to document.body and positioned off the
 // anchor element's viewport rect: the host surfaces clip absolutely-
@@ -26,16 +33,17 @@
 // focused through the pick — same trick as the ThreadPanelV3 picker.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Avatar, Box, Sheet, Typography } from "@mui/joy";
+import { Avatar, Box, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
+import {
+    MENTION_ICONS,
+    MentionCountChip,
+    MentionCustomStatus,
+    MentionIconDisc,
+    MentionMenuRow,
+    MentionSelfChip,
+} from "../../../components/editors/mentionMenuRow";
 import {
     CHAT_PALETTE,
     GROUP_PALETTE,
@@ -48,6 +56,7 @@ import {
 } from "../../../components/editors/mentionPalettes";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
+import { TaskStatusChip } from "../../tasks/components/TaskStatusChip";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
 
 // Above the Spotlight sheet (13100) and every Joy modal so the portaled
@@ -56,34 +65,28 @@ const DROPDOWN_Z_INDEX = 14000;
 const VIEWPORT_GUTTER = 8;
 const MAX_MENU_HEIGHT = 280;
 
-// Same icon vocabulary as the answer's citation chips (`_sourceIcon` in
-// SpotlightOverlay / `sourceIcon` in SourceChips), so a mention option
-// and the source chip it later becomes read as the same object. A
-// milestone (a task flagged `isMilestone`) takes the flag icon so it
-// reads as a milestone, matching Spotlight's milestone chip — even
-// though it resolves as a task on the wire. `user` is absent: people
-// render their real profile photo (see `renderIdentity`), not an icon.
-const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>, color: string) => {
-    const sx = { fontSize: 18, color };
+// The shared icon vocabulary (`MENTION_ICONS`), which is also what the
+// answer's citation chips use (`_sourceIcon` in SpotlightOverlay /
+// `sourceIcon` in SourceChips) — so a mention option, the editor row for
+// the same thing, and the source chip it later becomes all read as one
+// object. A milestone (a task flagged `isMilestone`) takes the flag icon
+// so it reads as a milestone even though it resolves as a task on the
+// wire. `user` is absent: people render their real profile photo (see
+// `renderIdentity`), not an icon.
+const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>) => {
     switch (ref.kind) {
         case "task":
-            return ref.isMilestone ? (
-                <FlagRoundedIcon sx={sx} />
-            ) : (
-                <AssignmentRoundedIcon sx={sx} />
-            );
+            return ref.isMilestone ? MENTION_ICONS.milestone : MENTION_ICONS.task;
         case "note":
-            return <StickyNote2RoundedIcon sx={sx} />;
+            return MENTION_ICONS.note;
         case "chat":
-            return <ChatBubbleOutlineRoundedIcon sx={sx} />;
+            return MENTION_ICONS.chat;
         case "project":
-            return <FolderRoundedIcon sx={sx} />;
-        // Same icons as the editors' @group menu (GroupRounded) and the
-        // Spotlight todo citation chip (TaskAltRounded).
+            return MENTION_ICONS.project;
         case "group":
-            return <GroupRoundedIcon sx={sx} />;
+            return MENTION_ICONS.group;
         case "todo":
-            return <TaskAltRoundedIcon sx={sx} />;
+            return MENTION_ICONS.todo;
     }
 };
 
@@ -107,74 +110,90 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
     }
 };
 
-// A group gets a circular disc; entities (task/note/…) get a rounded
-// square — mirroring the BlockNote menus, where the `@group` row is a
-// circular disc and the `#` rows are rounded squares. (Users are handled
-// before this — they render a circular avatar photo.)
-const isPersonKind = (ref: Exclude<AgentMentionRef, { kind: "user" }>): boolean =>
-    ref.kind === "group";
-
-// The leading 32px identity visual for a row. A user shows their real
-// profile photo (`avatarImgPath` → absolute src via the context-free
+// The leading identity visual for a row. A user shows their real profile
+// photo (`avatarImgPath` → absolute src via the context-free
 // `buildAvatarSrc`), falling back to the initial of their name the same
 // way `UserAvatar` does — so a user with no photo still reads as a person
-// disc, not a broken image. Every other kind shows its colored icon disc.
+// disc, not a broken image. This is the one place the two menus can't
+// share: the editor rows use `UserAvatar` (online dot, live name), which
+// needs an AvatarContext this menu may not have. Sized 36 to match it.
+//
+// Every other kind shows its colored icon disc — circular for a group,
+// rounded square for entities, the BlockNote menus' "some people" vs "a
+// thing" cue.
 const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
     if (c.ref.kind === "user") {
         return (
             <Avatar
                 size="sm"
                 src={buildAvatarSrc(c.avatarImgPath)}
-                sx={{ width: 32, height: 32, flexShrink: 0, fontSize: "0.85rem" }}
+                sx={{ width: 36, height: 36, fontSize: "0.9rem" }}
             >
                 {(c.ref.label || "?").charAt(0).toUpperCase()}
             </Avatar>
         );
     }
-    const palette = kindPalette(c.ref);
-    // The violet palettes (note, todo) resolve `text` to the brand var,
-    // which blends into the dark sheet — swap up the ramp to the lighter
-    // alt stop, the app-wide dark convention (`isDark ? brandalt-400 :
-    // brand-700`). The hardcoded-hex palettes are legible on both grounds.
-    const iconColor =
-        isDark && palette.text.includes("--gp-brand-700")
-            ? "var(--gp-brandalt-400)"
-            : palette.text;
     return (
-        <Box
-            sx={{
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-                borderRadius: isPersonKind(c.ref) ? "50%" : "8px",
-                background: palette.bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            {kindIcon(c.ref, iconColor)}
-        </Box>
+        <MentionIconDisc
+            icon={kindIcon(c.ref)}
+            isDark={isDark}
+            palette={kindPalette(c.ref)}
+            shape={c.ref.kind === "group" ? "circle" : "rounded"}
+        />
     );
 };
 
-// The muted second line — the entity's kind (and id, for tasks). Reuses
-// the BlockNote `#` menu's wording (`common.editor.hash*`) so the two
-// menus read identically. `useTranslation()` returns the English stub
-// when no I18nProvider is mounted, so this is safe on every surface.
+// The right-aligned slot, matching the editor rows: a task's status chip,
+// a group's member count, a person's custom status. Absent when the
+// candidate carries no such detail.
+const renderTrailing = (c: AgentMentionCandidate, isDark: boolean) => {
+    if (c.ref.kind === "task") {
+        // The canonical dashboard status chip, so a status reads
+        // identically here, in the editor menu, and in the task surfaces.
+        // No chip at all when the status is unknown, rather than a
+        // misleading "Open".
+        return c.status ? <TaskStatusChip iconSize={11} status={c.status} /> : undefined;
+    }
+    if (c.ref.kind === "group") {
+        return c.memberCount == null ? undefined : <MentionCountChip count={c.memberCount} />;
+    }
+    if (c.ref.kind === "user" && c.customStatus) {
+        return <MentionCustomStatus isDark={isDark} text={c.customStatus} />;
+    }
+    return undefined;
+};
+
+// The muted second line. Reuses the BlockNote menus' own wording
+// (`common.editor.*`) so the two menus read identically.
+// `useTranslation()` returns the English stub when no I18nProvider is
+// mounted, so this is safe on every surface.
 const kindSubtitle = (t: Messages, c: AgentMentionCandidate): string => {
     const e = t.common.editor;
     const { ref, subtitle } = c;
     switch (ref.kind) {
         case "user":
-            return e.mentionPerson;
+            // The editor's `@` row shows the person's email — the one
+            // reliable way to tell two same-named teammates apart. Falls
+            // back to the generic "Person" label when the source dataset
+            // carried no email.
+            return c.email || e.mentionPerson;
         case "group":
-            return e.mentionGroupLabel;
+            // Editor parity: the group's own description, with the generic
+            // "Mention group" label as the fallback.
+            return c.description || e.mentionGroupLabel;
         case "task": {
-            // Mirror the BlockNote row: "Task · <id>" / "Milestone · <id>",
-            // falling back to the raw task id when there's no display id
-            // (same `displayId || taskId` rule the editor uses).
+            // Mirror the BlockNote row: "Task · <id> · <project>" when the
+            // project is known (across projects it's the only thing
+            // separating two same-named tasks), else "Task · <id>" /
+            // "Milestone · <id>". The id falls back to the raw task id when
+            // there's no display id, the same rule the editor uses.
             const id = subtitle || String(ref.taskId);
+            if (c.projectName) {
+                return fmt(ref.isMilestone ? e.hashMilestoneProject : e.hashTaskProject, {
+                    id,
+                    project: c.projectName,
+                });
+            }
             return fmt(ref.isMilestone ? e.hashMilestone : e.hashTask, { id });
         }
         case "note":
@@ -332,11 +351,10 @@ export const MentionSuggestionDropdown = ({
                         sx={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 1,
                             minWidth: 0,
                             mx: 0.5,
                             px: 1,
-                            py: 0.5,
+                            py: 0.25,
                             borderRadius: "6px",
                             cursor: "pointer",
                             backgroundColor: highlighted ? selectedBg : "transparent",
@@ -350,45 +368,20 @@ export const MentionSuggestionDropdown = ({
                             onSelect(c);
                         }}
                     >
-                        {/* Identity visual: the user's real profile photo for
-                            `@` people, else a colored icon disc (circle for a
-                            group, rounded square for entities) — the BlockNote
-                            who/what cue. */}
-                        {renderIdentity(c, isDark)}
-                        {/* Two-line block: `@Name` / `#Title` (bold) over the
-                            kind subtitle (muted), matching the editor rows. */}
-                        <Box
-                            sx={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}
-                        >
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 600,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    color: isDark ? "rgba(255,255,255,0.92)" : undefined,
-                                }}
-                            >
-                                {c.trigger}
-                                {c.ref.label}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    // Light: muted primary text (BlockNote look).
-                                    // Dark: an explicit muted white — stacking
-                                    // opacity on Joy's light token would wash out.
-                                    color: isDark ? "rgba(255,255,255,0.62)" : undefined,
-                                    opacity: isDark ? 1 : 0.7,
-                                }}
-                            >
-                                {kindSubtitle(t, c)}
-                            </Typography>
-                        </Box>
+                        <MentionMenuRow
+                            identity={renderIdentity(c, isDark)}
+                            isDark={isDark}
+                            label={c.ref.label}
+                            subtitle={kindSubtitle(t, c)}
+                            trailing={renderTrailing(c, isDark)}
+                            trigger={c.trigger}
+                            variant={c.ref.kind === "user" ? "person" : "entity"}
+                            badge={
+                                c.isSelf ? (
+                                    <MentionSelfChip label={t.common.editor.mentionYou} />
+                                ) : undefined
+                            }
+                        />
                     </Box>
                 );
             })}

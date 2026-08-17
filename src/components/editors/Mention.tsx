@@ -6,7 +6,7 @@ import {
     useComponentsContext,
 } from "@blocknote/react";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { Box, Chip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
@@ -18,6 +18,14 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import {
+    MENTION_ICONS,
+    MentionCountChip,
+    MentionCustomStatus,
+    MentionIconDisc,
+    MentionMenuRow,
+    MentionSelfChip,
+} from "./mentionMenuRow";
 import {
     GROUP_PALETTE,
     USER_OTHER_PALETTE,
@@ -274,34 +282,19 @@ export const MentionMenuItems = (
             ]);
         },
         icon: (
-            <Box alignItems="center" display="flex" gap={1}>
-                <Box
-                    sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: "rgba(34, 197, 94, 0.18)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <GroupRoundedIcon sx={{ fontSize: 18, color: "#16a34a" }} />
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        @{g.groupName}
-                    </Typography>
-                    {g.description && (
-                        <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                            {g.description}
-                        </Typography>
-                    )}
-                </Box>
-                <Chip color="success" size="sm" sx={{ ml: "auto" }} variant="soft">
-                    {g.memberCount}
-                </Chip>
-            </Box>
+            <MentionMenuRow
+                label={g.groupName}
+                subtitle={g.description || undefined}
+                trailing={<MentionCountChip count={g.memberCount} />}
+                trigger="@"
+                identity={
+                    <MentionIconDisc
+                        icon={MENTION_ICONS.group}
+                        palette={GROUP_PALETTE}
+                        shape="circle"
+                    />
+                }
+            />
         ),
     }));
 
@@ -336,99 +329,26 @@ export const MentionMenuItems = (
                 ]);
             },
             icon: (
-                <Box
-                    alignItems="center"
-                    display="flex"
-                    gap={1.25}
-                    sx={{ minWidth: 0, width: "100%", py: 0.25 }}
-                >
-                    {/* Avatar + online dot via the shared `UserAvatar`
-                        so size, status color, fallback initial, and
-                        online/offline logic stay in sync with every
-                        other avatar in the app. `clickable={false}`
-                        because the whole row is already a click target
-                        (selecting the mention); we don't also want the
-                        avatar to open the user-profile modal underneath
-                        the menu. */}
-                    <Box sx={{ flexShrink: 0 }}>
-                        <UserAvatar clickable={false} size={36} userId={user.userId} />
-                    </Box>
-
-                    {/* Two-line block: @userName (bold) over email
-                        (muted), matching the group item's layout above. */}
-                    <Box
-                        display="flex"
-                        flexDirection="column"
-                        sx={{ minWidth: 0, flex: 1, gap: 0.125 }}
-                    >
-                        <Box alignItems="center" display="flex" gap={0.5} sx={{ minWidth: 0 }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 600,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    minWidth: 0,
-                                }}
-                            >
-                                @{user.userName}
-                            </Typography>
-                            {isSelf && (
-                                <Chip
-                                    color="warning"
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        fontSize: "0.6rem",
-                                        fontWeight: 700,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.04em",
-                                        minHeight: 0,
-                                        py: "1px",
-                                        px: "5px",
-                                        "--Chip-paddingInline": "5px",
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {copy.mentionYou}
-                                </Chip>
-                            )}
-                        </Box>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                opacity: 0.7,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}
-                        >
-                            {user.userEmail}
-                        </Typography>
-                    </Box>
-
-                    {/* Custom status pulled to the right so it never
-                        crowds the name. Italic + muted so it reads as
-                        ambient context, not a primary label. */}
-                    {user.customStatus && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                opacity: 0.7,
-                                fontStyle: "italic",
-                                ml: "auto",
-                                flexShrink: 0,
-                                maxWidth: 140,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                            }}
-                        >
-                            {user.customStatus}
-                        </Typography>
-                    )}
-                </Box>
+                <MentionMenuRow
+                    badge={isSelf ? <MentionSelfChip label={copy.mentionYou} /> : undefined}
+                    /* Avatar + online dot via the shared `UserAvatar` so
+                       size, status color, fallback initial, and
+                       online/offline logic stay in sync with every other
+                       avatar in the app. `clickable={false}` because the
+                       whole row is already a click target (selecting the
+                       mention); we don't also want the avatar to open the
+                       user-profile modal underneath the menu. */
+                    identity={<UserAvatar clickable={false} size={36} userId={user.userId} />}
+                    label={user.userName}
+                    subtitle={user.userEmail}
+                    trigger="@"
+                    variant="person"
+                    trailing={
+                        user.customStatus ? (
+                            <MentionCustomStatus text={user.customStatus} />
+                        ) : undefined
+                    }
+                />
             ),
         };
     });

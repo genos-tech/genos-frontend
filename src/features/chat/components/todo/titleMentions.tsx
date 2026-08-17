@@ -55,6 +55,7 @@ import {
     USER_SELF_PALETTE,
     type MentionPalette,
 } from "../../../../components/editors/mentionPalettes";
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useHashMentionData } from "../../../../context/HashMentionDataContext";
 import { useTranslation } from "../../../../i18n";
 import { MentionHighlightOverlay } from "../../../agentQA/mentions/MentionHighlightOverlay";
@@ -70,10 +71,19 @@ import {
     type MentionTokenMatch,
 } from "../../../agentQA/mentions/useAgentMentionDraft";
 import { useAgentMentionSources } from "../../../agentQA/mentions/useAgentMentionSources";
+import { TaskMentionHoverCard } from "../../../tasks/components/TaskMentionHoverCard";
 
 /* ------------------------------------------------------------------ */
 /* Candidate pool (built once per pane)                                */
 /* ------------------------------------------------------------------ */
+
+/** The coordinates `TaskMentionHoverCard` needs to preview a task. */
+export interface TitleTaskCard {
+    projectId: string;
+    taskId: string;
+    displayId: string;
+    title: string;
+}
 
 export interface TodoMentionPool {
     members: AgentMentionCandidate[];
@@ -82,6 +92,17 @@ export interface TodoMentionPool {
     refs: AgentMentionRef[];
     /** `mentionKey(ref)` → internal deep-link, for clickable `#` chips. */
     hrefByKey: Map<string, string>;
+    /**
+     * `mentionKey(ref)` → hover-card coordinates, for `#task` chips only.
+     *
+     * Separate from `hrefByKey` because a hover card needs more than a
+     * link: the display id and title it renders in its header, and a
+     * `projectId` the `task` ref deliberately doesn't carry (see
+     * `AgentMentionCandidate.projectId`). Present for exactly the tasks
+     * `hrefByKey` covers — both need the project — so a chip never offers
+     * a card it can't fill.
+     */
+    taskCardByKey: Map<string, TitleTaskCard>;
     refreshEntities: () => void;
 }
 
@@ -90,6 +111,7 @@ const EMPTY_POOL: TodoMentionPool = {
     entities: [],
     refs: [],
     hrefByKey: new Map(),
+    taskCardByKey: new Map(),
     refreshEntities: () => {},
 };
 
@@ -124,14 +146,26 @@ export const TodoMentionsProvider = ({ children }: { children: ReactNode }) => {
     const value = useMemo<TodoMentionPool>(() => {
         const all = [...sources.members, ...sources.entities];
         const hrefByKey = new Map<string, string>();
+        const taskCardByKey = new Map<string, TitleTaskCard>();
         for (const c of all) {
             if (c.href) hrefByKey.set(c.key, c.href);
+            if (c.ref.kind === "task" && c.projectId != null) {
+                taskCardByKey.set(c.key, {
+                    projectId: String(c.projectId),
+                    taskId: String(c.ref.taskId),
+                    // `displayId || taskId`, the same fallback the
+                    // BlockNote `#task` chip applies.
+                    displayId: c.subtitle || String(c.ref.taskId),
+                    title: c.ref.label,
+                });
+            }
         }
         return {
             members: sources.members,
             entities: sources.entities,
             refs: all.map((c) => c.ref),
             hrefByKey,
+            taskCardByKey,
             refreshEntities: refresh,
         };
     }, [sources.members, sources.entities, refresh]);
@@ -352,6 +386,9 @@ export interface ResolvedTitleMention extends MentionTokenMatch {
     /** Absent for kinds with nowhere to go (`@user`, `@group`, `#todo`)
      *  and for entities whose coordinates were missing. */
     href?: string;
+    /** Present only for a `#task` (or `#milestone`) whose project is
+     *  known — the chip then previews the task on hover. */
+    taskCard?: TitleTaskCard;
 }
 
 /**
@@ -363,10 +400,14 @@ export const resolveTitleMentions = (
     text: string,
     pool: TodoMentionPool
 ): ResolvedTitleMention[] =>
-    matchMentionTokens(text, pool.refs).map((m) => ({
-        ...m,
-        href: pool.hrefByKey.get(mentionKey(m.ref)),
-    }));
+    matchMentionTokens(text, pool.refs).map((m) => {
+        const key = mentionKey(m.ref);
+        return {
+            ...m,
+            href: pool.hrefByKey.get(key),
+            taskCard: pool.taskCardByKey.get(key),
+        };
+    });
 
 const paletteForRef = (ref: AgentMentionRef, myselfUserId: string | undefined): MentionPalette => {
     switch (ref.kind) {
@@ -413,7 +454,7 @@ export const TitleMentionChip = ({
             : palette.text;
     const href = mention.href;
 
-    return (
+    const chip = (
         <Box
             component="span"
             sx={{
@@ -443,5 +484,26 @@ export const TitleMentionChip = ({
         >
             {text}
         </Box>
+    );
+
+    // A `#task` chip previews the task on hover, with the same card and
+    // the same 250ms delay as the `#task` chip in a chat message (see
+    // `CreateHashTaskSpec`) — one hover behaviour for one kind of chip,
+    // wherever it's written. Only tasks: no other mention kind has a
+    // hover card to show.
+    if (!mention.taskCard) return chip;
+    return (
+        <AppTooltip
+            enterDelay={250}
+            placement="top-start"
+            surface="none"
+            title={<TaskMentionHoverCard {...mention.taskCard} />}
+        >
+            {/* Plain <span> anchor: Joy's Tooltip clones its child and
+                injects props (ref, hover handlers, a stray `component`) —
+                landing them on the styled chip drops its styling, so
+                anchor on a bare span and leave the chip inside alone. */}
+            <span>{chip}</span>
+        </AppTooltip>
     );
 };

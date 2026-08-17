@@ -75,3 +75,18 @@ export const TODO_PALETTE: MentionPalette = {
     bgHover: "rgba(var(--gp-brand-700-rgb), 0.28)",
     text: "var(--gp-brand-700)",
 };
+
+/**
+ * A palette's foreground, corrected for a dark ground.
+ *
+ * The violet palettes (note, todo) resolve `text` to the brand var, which
+ * blends into a dark surface — the Spotlight sheet, a dark-mode to-do row —
+ * so it swaps up the ramp to the lighter alt stop, the app-wide dark
+ * convention (`isDark ? brandalt-400 : brand-700`). Every other palette
+ * uses a hardcoded hex that is legible on both grounds and passes through.
+ *
+ * Lives here rather than in each surface because three of them had grown
+ * their own copy of the same substring test.
+ */
+export const mentionIconColor = (palette: MentionPalette, isDark?: boolean): string =>
+    isDark && palette.text.includes("--gp-brand-700") ? "var(--gp-brandalt-400)" : palette.text;

@@ -140,9 +140,12 @@ describe("statusExpiry.formatStatusExpiry", () => {
     });
 
     it("omits the weekday when the instant is later today", () => {
-        // A couple of hours from now is the same calendar day.
-        const laterToday = new Date(Date.now() + 2 * STATUS_EXPIRY_1H).toISOString();
-        const out = formatStatusExpiry(laterToday);
+        // A fixed reference "now" (see NOON_UTC above), not the real clock —
+        // this used to be `Date.now() + 2h`, which flipped to a different
+        // calendar day (and flaked) whenever the suite happened to run
+        // within 2h of local midnight.
+        const laterToday = new Date(NOON_UTC + 2 * STATUS_EXPIRY_1H).toISOString();
+        const out = formatStatusExpiry(laterToday, NOON_UTC);
         expect(out).not.toBe("");
         // No three-letter weekday abbreviation when it's today.
         expect(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(out)).toBe(false);
@@ -151,8 +154,8 @@ describe("statusExpiry.formatStatusExpiry", () => {
     it("includes the weekday when the instant is on another day", () => {
         // Eight days out is guaranteed a different calendar day regardless of
         // the local clock the test runs under.
-        const nextWeek = new Date(Date.now() + 8 * 24 * STATUS_EXPIRY_1H).toISOString();
-        const out = formatStatusExpiry(nextWeek);
+        const nextWeek = new Date(NOON_UTC + 8 * 24 * STATUS_EXPIRY_1H).toISOString();
+        const out = formatStatusExpiry(nextWeek, NOON_UTC);
         expect(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(out)).toBe(true);
     });
 });
