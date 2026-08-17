@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -23,6 +23,14 @@ import { formatCompletedAt } from "../../utils/todoCompletion";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { ModalCreateTaskFromTodo } from "./ModalCreateTaskFromTodo";
 import { useLinkifyPaste } from "./titleLinks";
+import {
+    resolveTitleMentions,
+    TitleMentionChip,
+    TodoTitleMentionLayer,
+    useTodoMentionPool,
+    useTodoTitleMentions,
+    type ResolvedTitleMention,
+} from "./titleMentions";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
 
@@ -107,16 +115,29 @@ const LINK_RE = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s]+)/g;
 // plain text — building <Link> elements here then carries no injection risk.
 const isSafeHref = (url: string): boolean => /^https?:\/\//i.test(url);
 
+// One decorated stretch of the title — a link or a mention chip. Both are
+// collected as [start, end) spans first so the two passes can't produce
+// overlapping output (see the overlap skip below).
+interface TitleSpan {
+    start: number;
+    end: number;
+    node: ReactNode;
+}
+
 const renderTitleWithLinks = (
     text: string,
     // Provided when the row renders inside the app's UrlLinkModalProvider
     // (null on e.g. signin surfaces). When present, internal links open in
     // the preview modal / react-router instead of a new tab; null falls back
     // to the plain target="_blank" anchor below.
-    urlLinkModal: ReturnType<typeof useUrlLinkModal>
+    urlLinkModal: ReturnType<typeof useUrlLinkModal>,
+    // `@`/`#` tokens that still resolve against the mention pool. Empty on
+    // any title without one, which is nearly all of them.
+    mentions: ResolvedTitleMention[],
+    myselfUserId: string | undefined,
+    isDark: boolean
 ): ReactNode => {
-    const out: ReactNode[] = [];
-    let lastIndex = 0;
+    const spans: TitleSpan[] = [];
     for (const match of text.matchAll(LINK_RE)) {
         const [whole, mdLabel, mdUrl, bareUrl] = match;
         const start = match.index;
@@ -138,8 +159,9 @@ const renderTitleWithLinks = (
             consumed = href.length;
         }
 
-        if (start > lastIndex) out.push(text.slice(lastIndex, start));
-        out.push(
+        spans.push({
+            start,
+            end: start + consumed,
             // stopPropagation: opening the link must not also flip the row
             // into edit mode. When the modal provider is present, route the
             // click through openModalByHref — it self-terminates (opens the
@@ -147,25 +169,58 @@ const renderTitleWithLinks = (
             // window.opens externals), so preventDefault cancels the native
             // anchor and lets it own the click. With no provider, fall
             // through to the plain target="_blank" anchor.
-            <Link
-                key={start}
-                href={href}
-                rel="noopener noreferrer"
-                sx={{ fontSize: "inherit", color: "primary.500" }}
-                target="_blank"
-                underline="always"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (urlLinkModal) {
-                        e.preventDefault();
-                        urlLinkModal.openModalByHref(href);
-                    }
-                }}
-            >
-                {label}
-            </Link>
-        );
-        lastIndex = start + consumed;
+            node: (
+                <Link
+                    key={`l${start}`}
+                    href={href}
+                    rel="noopener noreferrer"
+                    sx={{ fontSize: "inherit", color: "primary.500" }}
+                    target="_blank"
+                    underline="always"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (urlLinkModal) {
+                            e.preventDefault();
+                            urlLinkModal.openModalByHref(href);
+                        }
+                    }}
+                >
+                    {label}
+                </Link>
+            ),
+        });
+    }
+
+    for (const m of mentions) {
+        // A link wins: a "#tag" sitting inside a markdown label or a URL
+        // path is part of that link, not a mention of its own.
+        if (spans.some((s) => m.start < s.end && s.start < m.end)) continue;
+        spans.push({
+            start: m.start,
+            end: m.end,
+            node: (
+                <TitleMentionChip
+                    key={`m${m.start}`}
+                    isDark={isDark}
+                    mention={m}
+                    myselfUserId={myselfUserId}
+                    text={text.slice(m.start, m.end)}
+                    onOpenHref={(href) => urlLinkModal?.openModalByHref(href)}
+                />
+            ),
+        });
+    }
+
+    // Mentions were appended after the links, so a sort is what puts the
+    // two kinds back into reading order.
+    spans.sort((a, b) => a.start - b.start);
+
+    const out: ReactNode[] = [];
+    let lastIndex = 0;
+    for (const s of spans) {
+        if (s.start > lastIndex) out.push(text.slice(lastIndex, s.start));
+        out.push(s.node);
+        lastIndex = s.end;
     }
     if (lastIndex < text.length) out.push(text.slice(lastIndex));
     return out;
@@ -212,10 +267,13 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     // Set on Escape so the blur that follows restores instead of committing.
     const skipTitleCommitRef = useRef(false);
-    // Refs to the title editor + subitem-add <input>s, so paste-to-link can be
-    // wired onto each (see useLinkifyPaste below).
+    // Refs to the title editor + subitem-add <input>s, so paste-to-link and
+    // the @/# picker can be wired onto each (see below). The *Row refs are
+    // the positioned wrappers the picker anchors to.
     const titleInputRef = useRef<HTMLInputElement | null>(null);
     const subitemInputRef = useRef<HTMLInputElement | null>(null);
+    const titleRowRef = useRef<HTMLDivElement | null>(null);
+    const subitemRowRef = useRef<HTMLDivElement | null>(null);
     // Default to expanded when the item ships with actual notes content
     // (i.e. not just the placeholder empty paragraph) so the user sees
     // them without an extra click. Empty notes stay collapsed.
@@ -303,6 +361,27 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     useLinkifyPaste(titleInputRef, title, setTitle, isEditingTitle);
     useLinkifyPaste(subitemInputRef, newSubitemTitle, setNewSubitemTitle, subitemAddOpen);
 
+    // `@`/`#` picker on the same two inputs, gated the same way — neither
+    // field exists until the user opens it, and a closed field should do no
+    // matching work.
+    const titleMentions = useTodoTitleMentions({
+        inputRef: titleInputRef,
+        value: title,
+        setValue: setTitle,
+        enabled: isEditingTitle,
+    });
+    const subitemMentions = useTodoTitleMentions({
+        inputRef: subitemInputRef,
+        value: newSubitemTitle,
+        setValue: setNewSubitemTitle,
+        enabled: subitemAddOpen,
+    });
+
+    // Read mode: re-resolve the saved title's tokens against the pool. Free
+    // for a title with no "@"/"#" in it — the matcher bails before sorting.
+    const pool = useTodoMentionPool();
+    const titleMentionSpans = useMemo(() => resolveTitleMentions(title, pool), [title, pool]);
+
     // Periodic notes auto-save while expanded — mirrors the prior
     // TodoBubble cadence (was 3s for the whole-day doc; tighter here
     // since each item is small). An "effectively empty" body (single
@@ -357,12 +436,28 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                 },
             }}
         >
-            <Stack alignItems="center" direction="row" spacing={1}>
+            {/* position: relative — anchors the title editor's @/# menu and
+                hosts its token highlight overlay. */}
+            <Stack
+                ref={titleRowRef}
+                alignItems="center"
+                direction="row"
+                spacing={1}
+                sx={{ position: "relative" }}
+            >
                 <Checkbox
                     checked={item.isCompleted}
                     size="sm"
                     onChange={(e) => onToggleComplete(item.itemId, e.target.checked)}
                 />
+                {isEditingTitle && (
+                    <TodoTitleMentionLayer
+                        anchorRef={titleRowRef}
+                        inputRef={titleInputRef}
+                        mentions={titleMentions}
+                        value={title}
+                    />
+                )}
                 {isEditingTitle ? (
                     <Input
                         // Select a word, paste a URL → the word becomes
@@ -387,7 +482,8 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             },
                         }}
                         autoFocus
-                        onChange={(e) => setTitle(e.target.value)}
+                        onClick={titleMentions.syncCaret}
+                        onKeyUp={titleMentions.syncCaret}
                         onBlur={() => {
                             if (skipTitleCommitRef.current) {
                                 skipTitleCommitRef.current = false;
@@ -397,7 +493,16 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             }
                             setIsEditingTitle(false);
                         }}
+                        onChange={(e) => {
+                            setTitle(e.target.value);
+                            titleMentions.syncCaret();
+                        }}
                         onKeyDown={(e) => {
+                            // Picker first: while it's open Enter completes the
+                            // highlighted mention instead of blurring (which
+                            // would commit "@ali"), and Escape closes just the
+                            // menu instead of cancelling the whole edit.
+                            if (titleMentions.handleKeyDown(e)) return;
                             // Enter commits (blur fires onTitleCommit); Escape
                             // cancels and restores the last-saved title. Both
                             // just blur — onBlur owns the commit/restore logic.
@@ -430,7 +535,13 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         onClick={() => setIsEditingTitle(true)}
                     >
                         {title
-                            ? renderTitleWithLinks(title, urlLinkModal)
+                            ? renderTitleWithLinks(
+                                  title,
+                                  urlLinkModal,
+                                  titleMentionSpans,
+                                  myself.userId,
+                                  isDark
+                              )
                             : t.chat.todoPane.untitled}
                     </Box>
                 )}
@@ -645,12 +756,20 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     ))}
 
                     {subitemAddOpen && (
+                        // position: relative — anchors the @/# menu.
                         <Stack
+                            ref={subitemRowRef}
                             alignItems="center"
                             direction="row"
                             spacing={1}
-                            sx={{ mt: 0.25, px: 1 }}
+                            sx={{ mt: 0.25, px: 1, position: "relative" }}
                         >
+                            <TodoTitleMentionLayer
+                                anchorRef={subitemRowRef}
+                                inputRef={subitemInputRef}
+                                mentions={subitemMentions}
+                                value={newSubitemTitle}
+                            />
                             <Input
                                 placeholder={t.chat.todoPane.addSubitemPlaceholder}
                                 size="sm"
@@ -663,8 +782,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                                     "& input": { px: 0 },
                                 }}
                                 autoFocus
-                                onChange={(e) => setNewSubitemTitle(e.target.value)}
+                                onClick={subitemMentions.syncCaret}
+                                onKeyUp={subitemMentions.syncCaret}
+                                onChange={(e) => {
+                                    setNewSubitemTitle(e.target.value);
+                                    subitemMentions.syncCaret();
+                                }}
                                 onKeyDown={(e) => {
+                                    // Picker first: Enter completes a mention
+                                    // rather than adding a half-typed subitem,
+                                    // Escape dismisses only the menu instead of
+                                    // closing the whole adder.
+                                    if (subitemMentions.handleKeyDown(e)) return;
                                     if (e.key === "Enter") {
                                         e.preventDefault();
                                         handleAddSubitem();

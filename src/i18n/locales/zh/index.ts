@@ -588,6 +588,9 @@ export const zh: DeepPartial<Messages> = {
             todaySuffix: "（今天）",
             untitled: "无标题待办事项",
             addItemPlaceholder: "+ 添加项目",
+            mentions: {
+                ariaLabel: "提及建议",
+            },
             addSubitem: "添加子项目",
             addSubitemPlaceholder: "+ 添加子项目",
             completedTooltip: "已完成 {time}",

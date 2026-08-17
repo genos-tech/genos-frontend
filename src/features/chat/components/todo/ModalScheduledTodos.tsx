@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -35,6 +35,7 @@ import {
     parseRecurrence,
     type RecurrenceSpec,
 } from "../../../calendar/utils/rrule";
+import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
 
 type ModalScheduledTodosProps = {
     open: boolean;
@@ -70,6 +71,14 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
     const today = getLocalCurrentDate();
 
     const [title, setTitle] = useState("");
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+    const titleRowRef = useRef<HTMLDivElement | null>(null);
+    const mentions = useTodoTitleMentions({
+        inputRef: titleInputRef,
+        value: title,
+        setValue: setTitle,
+        enabled: open,
+    });
     const [categoryId, setCategoryId] = useState<number | null>(null);
     const [spec, setSpec] = useState<RecurrenceSpec>({
         ...DEFAULT_RECURRENCE,
@@ -142,15 +151,33 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
 
                 {/* Add form */}
                 <Stack spacing={1.5}>
-                    <FormControl>
+                    {/* position: relative — anchors the @/# menu. */}
+                    <FormControl ref={titleRowRef} sx={{ position: "relative" }}>
                         <FormLabel>{ts.titleLabel}</FormLabel>
+                        <TodoTitleMentionLayer
+                            anchorRef={titleRowRef}
+                            inputRef={titleInputRef}
+                            mentions={mentions}
+                            value={title}
+                        />
                         <Input
                             disabled={isSubmitting}
                             placeholder={ts.titlePlaceholder}
+                            slotProps={{ input: { ref: titleInputRef } }}
                             value={title}
                             autoFocus
-                            onChange={(e) => setTitle(e.target.value)}
+                            onClick={mentions.syncCaret}
+                            onKeyUp={mentions.syncCaret}
+                            onChange={(e) => {
+                                setTitle(e.target.value);
+                                mentions.syncCaret();
+                            }}
                             onKeyDown={(e) => {
+                                // Picker first: its Escape must dismiss the
+                                // menu without closing the whole modal, and
+                                // its Enter completes a mention rather than
+                                // submitting the schedule.
+                                if (mentions.handleKeyDown(e)) return;
                                 if (e.key === "Enter") {
                                     e.preventDefault();
                                     void submit();

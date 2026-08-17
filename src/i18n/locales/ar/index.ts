@@ -971,6 +971,9 @@ export const ar: DeepPartial<Messages> = {
             todaySuffix: "(اليوم)",
             untitled: "مهمة بلا عنوان",
             addItemPlaceholder: "+ إضافة عنصر",
+            mentions: {
+                ariaLabel: "اذكر الاقتراحات",
+            },
             addSubitem: "إضافة عنصر فرعي",
             addSubitemPlaceholder: "+ إضافة عنصر فرعي",
             completedTooltip: "اكتملت {time}",
