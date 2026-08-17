@@ -10,6 +10,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ModalScheduledTodos } from "./components/todo/ModalScheduledTodos";
+import { TodoMentionsProvider } from "./components/todo/titleMentions";
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
 import {
     countCompletedToday,
@@ -217,326 +218,344 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     }, [focusTarget, groups, useCM.showOnlyInCompleteTodos]);
 
     return (
-        <Box
-            sx={{
-                height: hostedInModal ? "100%" : "calc(100dvh - 64px)",
-                display: "flex",
-                flexDirection: "column",
-                background: isDark
-                    ? "linear-gradient(180deg, rgba(30,30,35,0.4) 0%, transparent 100%)"
-                    : "linear-gradient(180deg, rgba(245,247,250,0.8) 0%, transparent 100%)",
-            }}
-        >
-            {/* Header */}
+        // Builds the @/# candidate pool once for every title field in the
+        // pane — the add-item inputs, each row's title editor, and the
+        // schedule modal below. See `TodoMentionsProvider`.
+        <TodoMentionsProvider>
             <Box
                 sx={{
-                    px: 2.5,
-                    pt: 2,
-                    pb: 1.5,
-                    borderBottom: isDark
-                        ? "1px solid rgba(255,255,255,0.06)"
-                        : "1px solid rgba(0,0,0,0.06)",
+                    height: hostedInModal ? "100%" : "calc(100dvh - 64px)",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: isDark
+                        ? "linear-gradient(180deg, rgba(30,30,35,0.4) 0%, transparent 100%)"
+                        : "linear-gradient(180deg, rgba(245,247,250,0.8) 0%, transparent 100%)",
                 }}
             >
-                <Stack alignItems="center" direction="row" justifyContent="space-between" mb={1.5}>
-                    <Stack alignItems="center" direction="row" spacing={1.5}>
-                        <Box
-                            sx={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: "10px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: isDark
-                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)"
-                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)",
-                            }}
-                        >
-                            <TaskAltRoundedIcon
+                {/* Header */}
+                <Box
+                    sx={{
+                        px: 2.5,
+                        pt: 2,
+                        pb: 1.5,
+                        borderBottom: isDark
+                            ? "1px solid rgba(255,255,255,0.06)"
+                            : "1px solid rgba(0,0,0,0.06)",
+                    }}
+                >
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        mb={1.5}
+                    >
+                        <Stack alignItems="center" direction="row" spacing={1.5}>
+                            <Box
                                 sx={{
-                                    fontSize: 20,
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                }}
-                            />
-                        </Box>
-                        <Stack spacing={0}>
-                            <Typography
-                                level="title-lg"
-                                sx={{
-                                    fontWeight: 700,
-                                    fontSize: "1.1rem",
-                                    color: isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.85)",
-                                    letterSpacing: "-0.01em",
-                                }}
-                            >
-                                {t.chat.todoPane.myTodos}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                    fontSize: "0.75rem",
-                                }}
-                            >
-                                {fmt(t.chat.todoPane.completedOfTotal, {
-                                    completed: completedItems,
-                                    total: totalItems,
-                                })}
-                            </Typography>
-                        </Stack>
-                    </Stack>
-
-                    {/* Right-hand action cluster: repeat (always visible) +
-                        Start today (only when today's group is empty/absent). */}
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <AppTooltip title={t.chat.todoPane.schedule.tooltip}>
-                            <IconButton
-                                size="sm"
-                                sx={{
+                                    width: 36,
+                                    height: 36,
                                     borderRadius: "10px",
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                     background: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(var(--gp-brand-700-rgb), 0.25)"
-                                            : "rgba(var(--gp-brand-700-rgb), 0.18)",
-                                    },
+                                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)"
+                                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)",
                                 }}
-                                onClick={() => setScheduleModalOpen(true)}
                             >
-                                <RepeatRoundedIcon sx={{ fontSize: "18px" }} />
-                            </IconButton>
-                        </AppTooltip>
+                                <TaskAltRoundedIcon
+                                    sx={{
+                                        fontSize: 20,
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
+                                    }}
+                                />
+                            </Box>
+                            <Stack spacing={0}>
+                                <Typography
+                                    level="title-lg"
+                                    sx={{
+                                        fontWeight: 700,
+                                        fontSize: "1.1rem",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.92)"
+                                            : "rgba(0,0,0,0.85)",
+                                        letterSpacing: "-0.01em",
+                                    }}
+                                >
+                                    {t.chat.todoPane.myTodos}
+                                </Typography>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.45)"
+                                            : "rgba(0,0,0,0.45)",
+                                        fontSize: "0.75rem",
+                                    }}
+                                >
+                                    {fmt(t.chat.todoPane.completedOfTotal, {
+                                        completed: completedItems,
+                                        total: totalItems,
+                                    })}
+                                </Typography>
+                            </Stack>
+                        </Stack>
 
-                        {/* "New Todo" button — only when today's group is empty/absent. */}
-                        {!todayExists && (
-                            <AppTooltip title={t.chat.todoPane.createTodayTooltip}>
+                        {/* Right-hand action cluster: repeat (always visible) +
+                        Start today (only when today's group is empty/absent). */}
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <AppTooltip title={t.chat.todoPane.schedule.tooltip}>
                                 <IconButton
                                     size="sm"
                                     sx={{
                                         borderRadius: "10px",
-                                        px: 1.5,
-                                        py: 0.75,
-                                        fontSize: "13px",
-                                        fontWeight: 600,
-                                        gap: 0.5,
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
                                         background: isDark
-                                            ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
-                                            : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
-                                        color: "#fff",
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                         "&:hover": {
                                             background: isDark
-                                                ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
-                                                : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.25)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.18)",
                                         },
                                     }}
-                                    onClick={handleCreateTodayGroup}
+                                    onClick={() => setScheduleModalOpen(true)}
                                 >
-                                    <AddIcon sx={{ fontSize: "18px" }} />
-                                    {t.chat.todoPane.startToday}
+                                    <RepeatRoundedIcon sx={{ fontSize: "18px" }} />
                                 </IconButton>
                             </AppTooltip>
-                        )}
+
+                            {/* "New Todo" button — only when today's group is empty/absent. */}
+                            {!todayExists && (
+                                <AppTooltip title={t.chat.todoPane.createTodayTooltip}>
+                                    <IconButton
+                                        size="sm"
+                                        sx={{
+                                            borderRadius: "10px",
+                                            px: 1.5,
+                                            py: 0.75,
+                                            fontSize: "13px",
+                                            fontWeight: 600,
+                                            gap: 0.5,
+                                            background: isDark
+                                                ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
+                                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
+                                            color: "#fff",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
+                                                    : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
+                                            },
+                                        }}
+                                        onClick={handleCreateTodayGroup}
+                                    >
+                                        <AddIcon sx={{ fontSize: "18px" }} />
+                                        {t.chat.todoPane.startToday}
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
+                        </Stack>
                     </Stack>
-                </Stack>
 
-                {/* Filter row */}
-                <Stack alignItems="center" direction="row" justifyContent="space-between">
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <Chip
-                            size="sm"
-                            sx={{ cursor: "pointer", borderRadius: "6px" }}
-                            variant={
-                                !showCompletedToday && !useCM.showOnlyInCompleteTodos
-                                    ? "solid"
-                                    : "soft"
-                            }
-                            onClick={() => {
-                                setShowCompletedToday(false);
-                                useCM.setShowOnlyInCompleteTodos(false);
-                            }}
-                        >
-                            {fmt(t.chat.todoPane.allFilter, { count: totalItems })}
-                        </Chip>
-                        <Chip
-                            color="warning"
-                            size="sm"
-                            startDecorator={<FilterListRoundedIcon sx={{ fontSize: 14 }} />}
-                            sx={{ cursor: "pointer", borderRadius: "6px" }}
-                            variant={
-                                !showCompletedToday && useCM.showOnlyInCompleteTodos
-                                    ? "solid"
-                                    : "soft"
-                            }
-                            onClick={() => {
-                                setShowCompletedToday(false);
-                                useCM.setShowOnlyInCompleteTodos(true);
-                            }}
-                        >
-                            {fmt(t.chat.todoPane.incompleteFilter, { count: incompleteCount })}
-                        </Chip>
-                        <Chip
-                            color="success"
-                            size="sm"
-                            startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 14 }} />}
-                            sx={{ cursor: "pointer", borderRadius: "6px" }}
-                            variant={showCompletedToday ? "solid" : "soft"}
-                            onClick={() => setShowCompletedToday(true)}
-                        >
-                            {fmt(t.chat.todoPane.completedTodayFilter, {
-                                count: completedTodayCount,
-                            })}
-                        </Chip>
+                    {/* Filter row */}
+                    <Stack alignItems="center" direction="row" justifyContent="space-between">
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <Chip
+                                size="sm"
+                                sx={{ cursor: "pointer", borderRadius: "6px" }}
+                                variant={
+                                    !showCompletedToday && !useCM.showOnlyInCompleteTodos
+                                        ? "solid"
+                                        : "soft"
+                                }
+                                onClick={() => {
+                                    setShowCompletedToday(false);
+                                    useCM.setShowOnlyInCompleteTodos(false);
+                                }}
+                            >
+                                {fmt(t.chat.todoPane.allFilter, { count: totalItems })}
+                            </Chip>
+                            <Chip
+                                color="warning"
+                                size="sm"
+                                startDecorator={<FilterListRoundedIcon sx={{ fontSize: 14 }} />}
+                                sx={{ cursor: "pointer", borderRadius: "6px" }}
+                                variant={
+                                    !showCompletedToday && useCM.showOnlyInCompleteTodos
+                                        ? "solid"
+                                        : "soft"
+                                }
+                                onClick={() => {
+                                    setShowCompletedToday(false);
+                                    useCM.setShowOnlyInCompleteTodos(true);
+                                }}
+                            >
+                                {fmt(t.chat.todoPane.incompleteFilter, { count: incompleteCount })}
+                            </Chip>
+                            <Chip
+                                color="success"
+                                size="sm"
+                                startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 14 }} />}
+                                sx={{ cursor: "pointer", borderRadius: "6px" }}
+                                variant={showCompletedToday ? "solid" : "soft"}
+                                onClick={() => setShowCompletedToday(true)}
+                            >
+                                {fmt(t.chat.todoPane.completedTodayFilter, {
+                                    count: completedTodayCount,
+                                })}
+                            </Chip>
+                        </Stack>
                     </Stack>
-                </Stack>
-            </Box>
+                </Box>
 
-            {/* Group list */}
-            <Box sx={{ flex: 1, py: 0.5, overflow: "hidden" }}>
-                {displayGroups.length > 0 ? (
-                    <Virtuoso
-                        ref={virtuosoRef}
-                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                        initialTopMostItemIndex={focusGroupIndex >= 0 ? focusGroupIndex : 0}
-                        totalCount={displayGroups.length}
-                        itemContent={(index) => {
-                            const group = displayGroups[index] as TodoGroupProps;
-                            return (
-                                <TodoGroupCard
-                                    key={`todo-group-${group.groupId}`}
-                                    categories={categories}
-                                    group={group}
-                                    highlightItemId={focusTarget?.itemId}
-                                    myself={myself}
-                                    reminderByItemId={reminderByItemId}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                    onAddItem={handleAddItem}
-                                    onAddSubitem={handleAddSubitem}
-                                    onCancelReminder={cancelItemReminder}
-                                    onCategoryCreate={addCategory}
-                                    onDeleteItem={removeItem}
-                                    onPatchItem={patchItem}
-                                    onSetReminder={setItemReminder}
-                                />
-                            );
-                        }}
-                        style={{
-                            height: hostedInModal
-                                ? "100%"
-                                : isMobile
-                                  ? // `currentWindowHeight` comes from
-                                    // `window.innerHeight`, which iOS does NOT
-                                    // shrink when the keyboard opens — so on a
-                                    // phone this list stayed full height and
-                                    // pushed the input behind the keyboard.
-                                    // `--mobile-bottom-inset` is the tab bar,
-                                    // or the keyboard when that's taller.
-                                    // Split panes are desktop-only, so the
-                                    // 0.43 branch can't apply here.
-                                    "calc(100dvh - var(--mobile-bottom-inset, 60px) - 250px)"
-                                  : useCM.isSubChatVisible
-                                    ? `${(currentWindowHeight - 250) * 0.43}px`
-                                    : `${currentWindowHeight - 250}px`,
-                        }}
-                    />
-                ) : (
-                    <EmptyState
-                        isDark={isDark}
-                        showCompletedToday={showCompletedToday}
-                        showIncompleteOnly={useCM.showOnlyInCompleteTodos}
-                        onAddTodayClick={handleCreateTodayGroup}
-                    />
-                )}
-            </Box>
+                {/* Group list */}
+                <Box sx={{ flex: 1, py: 0.5, overflow: "hidden" }}>
+                    {displayGroups.length > 0 ? (
+                        <Virtuoso
+                            ref={virtuosoRef}
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                            initialTopMostItemIndex={focusGroupIndex >= 0 ? focusGroupIndex : 0}
+                            totalCount={displayGroups.length}
+                            itemContent={(index) => {
+                                const group = displayGroups[index] as TodoGroupProps;
+                                return (
+                                    <TodoGroupCard
+                                        key={`todo-group-${group.groupId}`}
+                                        categories={categories}
+                                        group={group}
+                                        highlightItemId={focusTarget?.itemId}
+                                        myself={myself}
+                                        reminderByItemId={reminderByItemId}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                        onAddItem={handleAddItem}
+                                        onAddSubitem={handleAddSubitem}
+                                        onCancelReminder={cancelItemReminder}
+                                        onCategoryCreate={addCategory}
+                                        onDeleteItem={removeItem}
+                                        onPatchItem={patchItem}
+                                        onSetReminder={setItemReminder}
+                                    />
+                                );
+                            }}
+                            style={{
+                                height: hostedInModal
+                                    ? "100%"
+                                    : isMobile
+                                      ? // `currentWindowHeight` comes from
+                                        // `window.innerHeight`, which iOS does NOT
+                                        // shrink when the keyboard opens — so on a
+                                        // phone this list stayed full height and
+                                        // pushed the input behind the keyboard.
+                                        // `--mobile-bottom-inset` is the tab bar,
+                                        // or the keyboard when that's taller.
+                                        // Split panes are desktop-only, so the
+                                        // 0.43 branch can't apply here.
+                                        "calc(100dvh - var(--mobile-bottom-inset, 60px) - 250px)"
+                                      : useCM.isSubChatVisible
+                                        ? `${(currentWindowHeight - 250) * 0.43}px`
+                                        : `${currentWindowHeight - 250}px`,
+                            }}
+                        />
+                    ) : (
+                        <EmptyState
+                            isDark={isDark}
+                            showCompletedToday={showCompletedToday}
+                            showIncompleteOnly={useCM.showOnlyInCompleteTodos}
+                            onAddTodayClick={handleCreateTodayGroup}
+                        />
+                    )}
+                </Box>
 
-            {/* Pro Tip footer — dropped in the modal, and on mobile, to give
+                {/* Pro Tip footer — dropped in the modal, and on mobile, to give
                 the list room. It's a static hint about asking the agent; on a
                 phone it costs a permanent band of a short screen to say
                 something you only need to read once. */}
-            {hostedInModal || isMobile ? null : (
-                <Box
-                    sx={{
-                        mt: "auto",
-                        px: 2.5,
-                        py: 2,
-                        borderTop: "1px solid",
-                        borderColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                        background: isDark
-                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-500-rgb), 0.08) 100%)"
-                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.06) 0%, rgba(var(--gp-brand-500-rgb), 0.06) 100%)",
-                    }}
-                >
-                    <Stack alignItems="center" direction="row" spacing={2}>
-                        <Box
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: "10px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                                backgroundColor: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            }}
-                        >
-                            <TipsAndUpdatesRoundedIcon
+                {hostedInModal || isMobile ? null : (
+                    <Box
+                        sx={{
+                            mt: "auto",
+                            px: 2.5,
+                            py: 2,
+                            borderTop: "1px solid",
+                            borderColor: isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                            background: isDark
+                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-500-rgb), 0.08) 100%)"
+                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.06) 0%, rgba(var(--gp-brand-500-rgb), 0.06) 100%)",
+                        }}
+                    >
+                        <Stack alignItems="center" direction="row" spacing={2}>
+                            <Box
                                 sx={{
-                                    fontSize: 22,
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                }}
-                            />
-                        </Box>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography
-                                level="title-sm"
-                                sx={{
-                                    fontWeight: 600,
-                                    color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
-                                    mb: 0.25,
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: "10px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                    backgroundColor: isDark
+                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
                                 }}
                             >
-                                {t.chat.todoPane.proTip}
-                            </Typography>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
-                                }}
-                            >
-                                {t.chat.todoPane.spotlightTip}
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </Box>
-            )}
+                                <TipsAndUpdatesRoundedIcon
+                                    sx={{
+                                        fontSize: 22,
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
+                                    }}
+                                />
+                            </Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                    level="title-sm"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.85)"
+                                            : "rgba(0,0,0,0.8)",
+                                        mb: 0.25,
+                                    }}
+                                >
+                                    {t.chat.todoPane.proTip}
+                                </Typography>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.55)"
+                                            : "rgba(0,0,0,0.55)",
+                                    }}
+                                >
+                                    {t.chat.todoPane.spotlightTip}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                    </Box>
+                )}
 
-            <ModalScheduledTodos
-                categories={categories}
-                open={scheduleModalOpen}
-                schedules={schedules}
-                onAdd={addSchedule}
-                onClose={() => setScheduleModalOpen(false)}
-                onRemove={removeSchedule}
-                onUpdate={updateSchedule}
-            />
-        </Box>
+                <ModalScheduledTodos
+                    categories={categories}
+                    open={scheduleModalOpen}
+                    schedules={schedules}
+                    onAdd={addSchedule}
+                    onClose={() => setScheduleModalOpen(false)}
+                    onRemove={removeSchedule}
+                    onUpdate={updateSchedule}
+                />
+            </Box>
+        </TodoMentionsProvider>
     );
 };
 

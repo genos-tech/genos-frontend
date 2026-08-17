@@ -109,14 +109,47 @@ describe("useAgentMentionSources # entity coverage", () => {
                 trigger: "#",
                 key: "project:7",
                 subtitle: "WRD",
+                href: "/workspace/tasks/project/7",
             },
             {
                 ref: { kind: "project", projectId: 8, label: "Q2 Roadmap" },
                 trigger: "#",
                 key: "project:8",
                 subtitle: undefined,
+                href: "/workspace/tasks/project/8",
             },
         ]);
+    });
+
+    // `href` is the display-only deep-link the to-do title chips click
+    // through to. It can't be derived from an `AgentMentionRef` alone (a
+    // task's projectId, a note's kind + coordinates are missing there), so
+    // it's resolved here, where the source rows still carry them.
+    it("attaches a deep-link href per kind, and none where there's nowhere to go", () => {
+        const value: HashMentionData = {
+            ...DATA,
+            tasks: [
+                {
+                    id: "10",
+                    projectId: 7,
+                    title: "Plain task",
+                    displayId: "APL-10",
+                } as unknown as TaskTableProps,
+            ],
+        };
+        const w = ({ children }: { children: React.ReactNode }) => (
+            <HashMentionDataProvider value={value}>{children}</HashMentionDataProvider>
+        );
+        const { result } = renderHook(() => useAgentMentionSources({ membersOverride: [] }), {
+            wrapper: w,
+        });
+        const hrefByKey = new Map(result.current.entities.map((c) => [c.key, c.href]));
+        expect(hrefByKey.get("task:10")).toBe("/workspace/tasks/project/7/task/10");
+        // Chat ids stay strings all the way through — a v3 chatId is a UUID.
+        expect(hrefByKey.get("chat:2:gm-1")).toBe("/workspace/chat/gm/gm-1");
+        expect(hrefByKey.get("chat:1:dm-1")).toBe("/workspace/chat/dm/dm-1");
+        // A to-do has no standalone route, so no chip link.
+        expect(hrefByKey.get("todo:55")).toBeUndefined();
     });
 });
 

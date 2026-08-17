@@ -685,7 +685,7 @@ export const SpotlightContent = ({
                         containerRef={inputRowRef}
                         isDark={isDark}
                         ranges={mention.highlightRanges}
-                        textareaRef={inputRef}
+                        elementRef={inputRef}
                         value={localInput}
                     />
                     <Box

@@ -612,6 +612,9 @@ export const ja: DeepPartial<Messages> = {
             todaySuffix: "（今日）",
             untitled: "無題のTo-Do",
             addItemPlaceholder: "+ アイテムを追加",
+            mentions: {
+                ariaLabel: "メンション候補",
+            },
             addSubitem: "サブ項目の追加",
             addSubitemPlaceholder: "+ サブアイテムを追加",
             completedTooltip: "{time}を完了しました",

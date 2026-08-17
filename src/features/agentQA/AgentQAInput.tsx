@@ -89,7 +89,7 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
             <MentionHighlightOverlay
                 containerRef={wrapperRef}
                 ranges={mention.highlightRanges}
-                textareaRef={textareaRef}
+                elementRef={textareaRef}
                 value={state.query}
             />
             <Stack alignItems="flex-end" direction="row" spacing={1}>

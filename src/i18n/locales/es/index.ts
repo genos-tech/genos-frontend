@@ -986,6 +986,9 @@ export const es: DeepPartial<Messages> = {
             todaySuffix: "(Hoy)",
             untitled: "Tareas pendientes sin título",
             addItemPlaceholder: "+ Agregar artículo",
+            mentions: {
+                ariaLabel: "Sugerencias de menciones",
+            },
             addSubitem: "Agregar subelemento",
             addSubitemPlaceholder: "+ Agregar subelemento",
             completedTooltip: "Completado {time}",

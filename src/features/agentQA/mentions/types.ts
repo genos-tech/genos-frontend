@@ -45,6 +45,17 @@ export interface AgentMentionCandidate {
     key: string;
     subtitle?: string;
     avatarImgPath?: string;
+    // Internal deep-link for surfaces that render a picked mention as a
+    // CLICKABLE chip (the todo-title rows), built by
+    // `useAgentMentionSources` via `entityRefToHref`. It has to be
+    // resolved there rather than from the `AgentMentionRef` alone,
+    // because a link needs coordinates the ref deliberately doesn't
+    // carry — a task's `projectId`, a note's kind plus its project/task
+    // or chat/thread ids. Absent for kinds with nowhere to go (`user`,
+    // `group`, `todo`) and for rows whose coordinates are missing.
+    // Display-only, like `subtitle`: never reaches `mentionKey` or the
+    // wire payload, and the agent surfaces simply ignore it.
+    href?: string;
 }
 
 export const mentionKey = (ref: AgentMentionRef): string => {

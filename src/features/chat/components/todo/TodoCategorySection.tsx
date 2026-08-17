@@ -16,6 +16,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { useLinkifyPaste } from "./titleLinks";
+import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
 import { TodoItemRow } from "./TodoItemRow";
 
 interface TodoCategorySectionProps {
@@ -85,7 +86,13 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     // Paste a URL over a selected word in the "+ Add item" field → "[word](url)".
     const addInputRef = useRef<HTMLInputElement | null>(null);
+    const addRowRef = useRef<HTMLDivElement | null>(null);
     useLinkifyPaste(addInputRef, newTitle, setNewTitle);
+    const mentions = useTodoTitleMentions({
+        inputRef: addInputRef,
+        value: newTitle,
+        setValue: setNewTitle,
+    });
 
     // Group children under their parents so TodoItemRow renders the tree.
     const { topLevelItems, subitemsByParent } = useMemo(() => {
@@ -192,7 +199,21 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                         />
                     ))}
 
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 0.5, px: 1 }}>
+                    {/* position: relative — anchors the @/# menu and hosts
+                        the token highlight overlay. */}
+                    <Stack
+                        ref={addRowRef}
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                        sx={{ mt: 0.5, px: 1, position: "relative" }}
+                    >
+                        <TodoTitleMentionLayer
+                            anchorRef={addRowRef}
+                            inputRef={addInputRef}
+                            mentions={mentions}
+                            value={newTitle}
+                        />
                         <Input
                             placeholder={t.chat.todoPane.addItemPlaceholder}
                             size="sm"
@@ -200,8 +221,18 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             sx={{ flex: 1, fontSize: "0.85rem", "& input": { px: 0 } }}
                             value={newTitle}
                             variant="plain"
-                            onChange={(e) => setNewTitle(e.target.value)}
+                            onClick={mentions.syncCaret}
+                            onKeyUp={mentions.syncCaret}
+                            onChange={(e) => {
+                                setNewTitle(e.target.value);
+                                mentions.syncCaret();
+                            }}
                             onKeyDown={(e) => {
+                                // The picker gets first refusal on
+                                // Enter/Arrows/Escape — otherwise Enter
+                                // would add a half-typed "@ali" instead of
+                                // completing the highlighted mention.
+                                if (mentions.handleKeyDown(e)) return;
                                 if (e.key === "Enter") {
                                     e.preventDefault();
                                     handleAdd();

@@ -968,6 +968,9 @@ export const hi: DeepPartial<Messages> = {
             todaySuffix: "(आज)",
             untitled: "शीर्षक रहित कार्य",
             addItemPlaceholder: "+ आइटम जोड़ें",
+            mentions: {
+                ariaLabel: "सुझावों का उल्लेख करें",
+            },
             addSubitem: "उपआइटम जोड़ें",
             addSubitemPlaceholder: "+ उपआइटम जोड़ें",
             completedTooltip: "{time} पूरा हुआ",

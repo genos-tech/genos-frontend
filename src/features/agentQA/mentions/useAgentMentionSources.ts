@@ -19,11 +19,12 @@
 import { useMemo } from "react";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
-import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import { useHashMentionData, type HashNoteEntry } from "../../../context/HashMentionDataContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import type { MentionGroup } from "../../../services/mentionGroupsApi";
 import type { UserProps } from "../../../types/admin";
 import type { AllChatProps, TodoGroupProps } from "../../../types/chat";
+import { chatTypeCodeToSlug, entityRefToHref } from "../../../utils/entityHref";
 import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./types";
 
 // HashNoteEntry kind → NoteContext integer code. "shared" is the UI
@@ -42,8 +43,64 @@ const NOTE_KIND_TO_TYPE: Record<string, 1 | 2 | 3> = {
 const candidate = (
     ref: AgentMentionRef,
     trigger: "@" | "#",
-    subtitle?: string
-): AgentMentionCandidate => ({ ref, trigger, key: mentionKey(ref), subtitle });
+    subtitle?: string,
+    href?: string
+): AgentMentionCandidate => ({ ref, trigger, key: mentionKey(ref), subtitle, href });
+
+// Deep-link for a note candidate, keyed off the sidebar kind the entry
+// came from. The `AgentMentionRef` collapses my/shared/team into
+// noteType 1 and drops the task/chat coordinates (the agent resolves a
+// note by id alone), so the href has to be built HERE, where the source
+// entry still has them. Returns undefined when a required coordinate is
+// missing, which just leaves the chip unclickable.
+//
+// `chatId` / `threadId` are stringified rather than range-checked: they
+// are declared `number` on ChatNoteMetaProps but carry v3 UUID strings at
+// runtime, so any numeric validation would silently reject every current
+// chat note.
+const noteHref = (n: HashNoteEntry): string | undefined => {
+    switch (n.kind) {
+        case "my":
+            return entityRefToHref({
+                entityType: "note",
+                noteKind: "my",
+                noteId: String(n.noteId),
+            });
+        case "shared":
+            return entityRefToHref({
+                entityType: "note",
+                noteKind: "shared",
+                noteId: String(n.noteId),
+            });
+        case "team":
+            return entityRefToHref({
+                entityType: "note",
+                noteKind: "team",
+                noteId: String(n.noteId),
+            });
+        case "task":
+            if (n.projectId == null || n.taskId == null) return undefined;
+            return entityRefToHref({
+                entityType: "note",
+                noteKind: "task",
+                projectId: String(n.projectId),
+                taskId: String(n.taskId),
+                noteId: String(n.noteId),
+            });
+        case "chat":
+            if (!n.chatType || !n.chatId) return undefined;
+            return entityRefToHref({
+                entityType: "note",
+                noteKind: "chat",
+                chatType: chatTypeCodeToSlug(n.chatType),
+                chatId: String(n.chatId),
+                // "0" is the builder's own sentinel for a note on the
+                // parent chat rather than a thread within it.
+                threadId: n.isThread ? String(n.threadId ?? "") : "0",
+                noteId: String(n.noteId),
+            });
+    }
+};
 
 // MDM (chatType 4) chats carry no server-side `chatName`; their display
 // name is the comma-separated member names — same convention as the
@@ -59,6 +116,19 @@ const chatDisplayName = (c: AllChatProps): string => {
 export interface UseAgentMentionSourcesArgs {
     membersOverride?: UserProps[];
     groupsOverride?: MentionGroup[];
+    /**
+     * Also offer `teamTasks` — every active task in the team — merged with
+     * the open project's rows, the way the BlockNote "#" menu does.
+     *
+     * Off by default because the agent surfaces have always been
+     * open-project-scoped, and because the list is fetched lazily: a
+     * surface opting in should call `useHashMentionData().refresh()` when
+     * a "#" trigger opens, or it will only see whatever another surface
+     * already pulled. Surfaces that live outside the tasks area (the
+     * to-do pane, which sits in chat) need this — with no project open,
+     * `tasks` is empty and "#" would offer no tasks at all.
+     */
+    includeTeamTasks?: boolean;
 }
 
 // Completed todos older than this stop being offered — a done chore
@@ -95,6 +165,7 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
     const groupsCtx = useMentionGroupsContext();
     const membersOverride = args?.membersOverride;
     const groupsOverride = args?.groupsOverride;
+    const includeTeamTasks = args?.includeTeamTasks ?? false;
 
     const members = useMemo(() => {
         const profiles: UserProps[] =
@@ -126,23 +197,71 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
 
     const entities = useMemo(() => {
         const out: AgentMentionCandidate[] = [];
-        for (const t of hash.tasks) {
-            const taskId = Number(t.id);
-            if (!t.title || !Number.isFinite(taskId)) continue;
+        // Open-project rows FIRST so they win the dedupe below — same
+        // task, but that copy is the fresher of the two (an optimistic
+        // create lands there before any refetch). Both sources are
+        // normalized to one row shape so the loop stays single-path.
+        const taskRows = [
+            ...hash.tasks.map((t) => ({
+                taskId: Number(t.id),
+                projectId: t.projectId,
+                title: t.title,
+                displayId: t.displayId,
+                isMilestone: t.isMilestone,
+            })),
+            ...(includeTeamTasks
+                ? hash.teamTasks.map((t) => ({
+                      taskId: Number(t.taskId),
+                      projectId: t.projectId,
+                      title: t.title,
+                      displayId: t.displayId,
+                      isMilestone: t.isMilestone,
+                  }))
+                : []),
+        ];
+        // Two sources can carry the same task, and `mentionKey` is
+        // `task:<id>` — an un-deduped merge would put duplicate rows (and
+        // duplicate React keys) in the dropdown.
+        const seenTaskIds = new Set<number>();
+        for (const t of taskRows) {
+            if (!t.title || !Number.isFinite(t.taskId)) continue;
+            if (seenTaskIds.has(t.taskId)) continue;
+            seenTaskIds.add(t.taskId);
             out.push(
                 candidate(
                     // `isMilestone` is display-only (see AgentMentionRef) —
                     // the row reads "Milestone" but still resolves as a task.
-                    { kind: "task", taskId, label: t.title, isMilestone: Boolean(t.isMilestone) },
+                    {
+                        kind: "task",
+                        taskId: t.taskId,
+                        label: t.title,
+                        isMilestone: Boolean(t.isMilestone),
+                    },
                     "#",
-                    t.displayId ?? undefined
+                    t.displayId ?? undefined,
+                    // A task deep-link is project-scoped; a row with no
+                    // project can't be linked, only mentioned.
+                    t.projectId == null
+                        ? undefined
+                        : entityRefToHref({
+                              entityType: "task",
+                              projectId: String(t.projectId),
+                              taskId: String(t.taskId),
+                          })
                 )
             );
         }
         for (const n of hash.notes) {
             const noteType = NOTE_KIND_TO_TYPE[n.kind];
             if (!n.title || !noteType) continue;
-            out.push(candidate({ kind: "note", noteType, noteId: n.noteId, label: n.title }, "#"));
+            out.push(
+                candidate(
+                    { kind: "note", noteType, noteId: n.noteId, label: n.title },
+                    "#",
+                    undefined,
+                    noteHref(n)
+                )
+            );
         }
         // Chat types DM / GM / MDM (see the module comment). PM chats
         // (chatType 3) are deliberately EXCLUDED: every PM chat mirrors a
@@ -154,7 +273,16 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             const label = chatDisplayName(c);
             if (!label || !c.chatId) continue;
             out.push(
-                candidate({ kind: "chat", chatType: c.chatType, chatId: c.chatId, label }, "#")
+                candidate(
+                    { kind: "chat", chatType: c.chatType, chatId: c.chatId, label },
+                    "#",
+                    undefined,
+                    entityRefToHref({
+                        entityType: "chat",
+                        chatType: chatTypeCodeToSlug(c.chatType),
+                        chatId: String(c.chatId),
+                    })
+                )
             );
         }
         for (const p of hash.projects) {
@@ -163,15 +291,26 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
                 candidate(
                     { kind: "project", projectId: p.projectId, label: p.projectName },
                     "#",
-                    p.projectCode ?? undefined
+                    p.projectCode ?? undefined,
+                    entityRefToHref({ entityType: "project", projectId: String(p.projectId) })
                 )
             );
         }
+        // No href: a to-do item has no route or preview modal of its own —
+        // it lives in the pane it was created in.
         for (const t of todoCandidateItems(hash.todoGroups)) {
             out.push(candidate({ kind: "todo", itemId: t.itemId, label: t.title }, "#"));
         }
         return out;
-    }, [hash.tasks, hash.notes, hash.allChats, hash.projects, hash.todoGroups]);
+    }, [
+        hash.tasks,
+        hash.teamTasks,
+        hash.notes,
+        hash.allChats,
+        hash.projects,
+        hash.todoGroups,
+        includeTeamTasks,
+    ]);
 
     return useMemo(() => ({ members, entities }), [members, entities]);
 };

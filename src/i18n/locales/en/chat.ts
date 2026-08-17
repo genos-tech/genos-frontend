@@ -25,6 +25,10 @@ export const chat = {
         todaySuffix: " (Today)",
         untitled: "Untitled to-do",
         addItemPlaceholder: "+ Add item",
+        // Accessible name for the @/# picker that opens over a title field.
+        mentions: {
+            ariaLabel: "Mention suggestions",
+        },
         addSubitem: "Add subitem",
         addSubitemPlaceholder: "+ Add subitem",
         completedTooltip: "Completed {time}",
