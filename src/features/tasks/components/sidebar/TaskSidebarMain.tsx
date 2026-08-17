@@ -123,7 +123,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         updateRecentTasks();
     }, [useTM.currentPreviewTaskId]);
 
-    // Refresh tags whenever the active project changes.
+    // Refresh tags whenever the active project changes, or a tag is created /
+    // renamed / deleted anywhere in the app (`useTM.tagsRevision`).
+    //
+    // This is the only effect that FETCHES `currentProject.projectTags`, and
+    // everything downstream reads it — the task filter bar's Tags dropdown, the
+    // tag autocompletes, the manage-tags modal. Keyed on the projectId alone it
+    // never re-ran after a mutation (creating a tag doesn't change the project),
+    // so a new tag was invisible in the filter until a page reload. Adding the
+    // revision reuses the fetch + race guard that already live here instead of
+    // giving each tag modal its own copy of them.
     //
     // This used to fire on `[myself]`, which produced a tricky team-switch
     // race: on team change `myself` flips first, so this effect fired while
@@ -152,6 +161,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 accessToken
             );
             if (cancelled) return;
+            // `loadProjectTags` resolves to undefined when the request fails.
+            // Writing that through would blank the tag list everywhere on a
+            // single flaky response — far more likely now that this runs on
+            // every tag mutation, not just once per project. An empty ARRAY is
+            // a legitimate result (the last tag was deleted) and must land.
+            if (!Array.isArray(loadedProjectTags)) return;
             usePM.setCurrentProject({
                 ...projectAtStart,
                 projectTags: loadedProjectTags,
@@ -161,7 +176,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         return () => {
             cancelled = true;
         };
-    }, [usePM.currentProject?.projectId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.currentProject?.projectId, useTM.tagsRevision]);
 
     return (
         <Sheet

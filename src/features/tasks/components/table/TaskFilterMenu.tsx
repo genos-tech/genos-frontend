@@ -56,6 +56,11 @@ import {
     savedFilterMatchesSelection,
 } from "../../utils/savedFilterPayload";
 import {
+    remapTagSelection,
+    sameTagSelection,
+    tagSelectionDefault,
+} from "../../utils/tagFilterSelection";
+import {
     clearStoredFilters,
     readStoredFilters,
     rehydrateFilters,
@@ -75,18 +80,6 @@ import { SavedFiltersMenu } from "./SavedFiltersMenu";
 const defaultStatusFilters: FilterProps[] = predefinedStatusFilters.filter((f) =>
     taskTypes.ongoing.statuses.includes(f.label)
 );
-
-// The "no tag filter" selection: the leading "All" entry when the project
-// HAS tags, and an empty list when it doesn't.
-//
-// Every site that resets the tag dimension has to go through this. Writing
-// `[predefinedTagsFilters[0]]` directly puts `[undefined]` into state in a
-// project with no tags (or before they've loaded) — a corrupt selection
-// that then crashes anything reading `tags[0].label`, which `applyFilters`
-// does. `[]` takes the "no tag filter" path in `applyFilters` and means
-// exactly the same thing.
-const tagSelectionDefault = (tagFilters: FilterProps[]): FilterProps[] =>
-    tagFilters.length > 0 ? [tagFilters[0]] : [];
 
 // Sentinels used by the milestone filter alongside numeric milestone
 // ids. Mirrors the `NO_MILESTONE` pattern in `SprintMilestonePicker`
@@ -375,7 +368,37 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // so neither can leave the other holding a stale selection.
     const restoredTagsForKeyRef = React.useRef<string | undefined | null>(null);
     React.useEffect(() => {
-        if (predefinedTagsFilters.length === 0) return;
+        if (predefinedTagsFilters.length === 0) {
+            // Either the tags haven't loaded yet, or the project's last tag was
+            // just deleted — newly reachable now that deletes propagate. A
+            // leftover selection in that second case is unclearable: the
+            // dropdown it would be deselected from has no rows left. Drop it,
+            // and forget the restore marker so the next list to arrive (another
+            // project's, or a tag recreated here) is restored from storage
+            // rather than inheriting this cleared state.
+            if (selectedTags.length > 0) {
+                restoredTagsForKeyRef.current = null;
+                const cleared = tagSelectionDefault(predefinedTagsFilters);
+                setSelectedTags(cleared);
+                applyFilters(
+                    selectedStatus,
+                    cleared,
+                    selectedPriorities,
+                    selectedEffortLevels,
+                    selectedMilestoneKeys,
+                    selectedMemberKeys
+                );
+                persistFilters(
+                    selectedStatus,
+                    cleared,
+                    selectedPriorities,
+                    selectedEffortLevels,
+                    selectedMilestoneKeys,
+                    selectedMemberKeys
+                );
+            }
+            return;
+        }
 
         if (restoredTagsForKeyRef.current !== filterStorageKey) {
             restoredTagsForKeyRef.current = filterStorageKey;
@@ -395,7 +418,42 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             }
             return;
         }
-        setSelectedTags(tagSelectionDefault(predefinedTagsFilters));
+
+        // Same key, new options — the project's tag list was refetched after a
+        // tag was created, renamed or deleted (`useTM.tagsRevision`). This used
+        // to blanket-reset to "All", which was invisible while the list only
+        // ever loaded once per project but would now silently discard the user's
+        // active tag filter every time any tag was edited.
+        //
+        // Remap by label instead — see `remapTagSelection`.
+        const remapped = remapTagSelection(selectedTags, predefinedTagsFilters);
+        setSelectedTags(remapped);
+
+        // Only when the selection's MEANING changed — a pure colour/identity
+        // refresh must not churn the table or rewrite storage. Same reasoning as
+        // the restore branch: `selectedTags` isn't in the reactive effect's
+        // deps, so a pruned selection has to re-run the pipeline itself.
+        if (!sameTagSelection(remapped, selectedTags)) {
+            applyFilters(
+                selectedStatus,
+                remapped,
+                selectedPriorities,
+                selectedEffortLevels,
+                selectedMilestoneKeys,
+                selectedMemberKeys
+            );
+            // Persist too, so a deleted tag's label stops living in storage.
+            // Left behind, recreating a tag with the same name later would
+            // silently re-apply a filter the user never asked for.
+            persistFilters(
+                selectedStatus,
+                remapped,
+                selectedPriorities,
+                selectedEffortLevels,
+                selectedMilestoneKeys,
+                selectedMemberKeys
+            );
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [predefinedTagsFilters, filterStorageKey]);
 
