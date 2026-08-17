@@ -97,15 +97,18 @@ export const STATUS_EXPIRY_4H = 4 * HOUR;
  * Shared with the notification-pause status line (`NotificationPausePicker`),
  * which formats its one-shot `snoozeUntil` the same way.
  */
-export const formatStatusExpiry = (iso: string | null | undefined): string => {
+export const formatStatusExpiry = (
+    iso: string | null | undefined,
+    now: number = Date.now()
+): string => {
     if (!iso) return "";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    const now = new Date();
+    const nowDate = new Date(now);
     const sameDay =
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate();
+        d.getFullYear() === nowDate.getFullYear() &&
+        d.getMonth() === nowDate.getMonth() &&
+        d.getDate() === nowDate.getDate();
     return d.toLocaleString(
         undefined,
         sameDay
