@@ -19,6 +19,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
+import { useAdoptableTitleDraft } from "./utils/useAdoptableTitleDraft";
 import { useInitialTabIndex } from "./utils/useInitialTabIndex";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -1381,7 +1382,12 @@ const MilestonePreviewInner = ({
 
     // Edit state. We mirror the milestone fields locally and persist on
     // change events (debounced for body, immediate for everything else).
-    const [titleDraft, setTitleDraft] = useState<string>(milestone?.title ?? "");
+    // Title adopts external renames (e.g. inline from the task table) while
+    // no local edit is pending — see the hook for why it can't just re-seed.
+    const { titleDraft, setTitleDraft, markTitleSaved } = useAdoptableTitleDraft(
+        milestoneId,
+        milestone?.title
+    );
     const [bodyDraft, setBodyDraft] = useState<PartialBlock[]>(
         (milestone?.description as PartialBlock[]) ?? []
     );
@@ -1446,24 +1452,24 @@ const MilestonePreviewInner = ({
     const { tabIndex, setTabIndex, markCommentsLoaded, markNotesLoaded, reportFileCount } =
         useInitialTabIndex(milestone?.taskId);
 
-    // Reset the title / body drafts ONLY when the milestone identity
-    // itself changes (i.e. the user switched to a different milestone).
-    // Re-running on every `tsUpdatedAt` bump or `backingTask` arrival
-    // would clobber an in-progress local edit — e.g. typing into the
-    // title input right after mount, while the initial
-    // `refreshMilestone` / `loadSpecificTask` calls are still in
-    // flight, would otherwise revert the user's keystrokes the moment
-    // those async loads resolve. Title is persisted on blur via
-    // `saveTitle`; body is auto-saved on a 3s loop and additionally
-    // gated by `bodyEdited` so a refresh-driven reset can't wipe an
-    // unsaved body either.
+    // Reset the body draft ONLY when the milestone identity itself changes
+    // (i.e. the user switched to a different milestone). Re-running on every
+    // `tsUpdatedAt` bump or `backingTask` arrival would clobber an
+    // in-progress local edit — the body autosave's own deferred flush bumps
+    // `tsUpdatedAt`, so a re-seed there would push a fresh array identity
+    // into the editor mid-session. Hence the `bodyEdited` gate as well, so a
+    // refresh-driven reset can't wipe an unsaved body either.
+    //
+    // The title is NOT reset here: it is the one draft an external edit can
+    // legitimately move (the task table renames milestones inline), so
+    // `useAdoptableTitleDraft` owns both its identity reset and its adoption
+    // of external renames. It applies the same unsaved-edit guard.
     useEffect(() => {
         if (!milestone) return;
         // Land any deferred sync still pending for the PREVIOUS milestone
         // before this one takes over the draft state (the pending payload
         // carries its own ids, so flushing here is always safe).
         flushPendingMilestoneSyncRef.current();
-        setTitleDraft(milestone.title);
         if (!bodyEdited) {
             setBodyDraft((milestone.description as PartialBlock[]) ?? []);
             bodyDraftRef.current = (milestone.description as PartialBlock[]) ?? [];
@@ -1958,12 +1964,21 @@ const MilestonePreviewInner = ({
     // Title save on blur / Enter.
     const saveTitle = async () => {
         if (!milestone) return;
-        if (titleDraft.trim() === milestone.title) return;
+        if (titleDraft.trim() === milestone.title) {
+            // Nothing to persist — and the draft already matches the store,
+            // so the input is no longer dirty. Let external renames back in.
+            markTitleSaved();
+            return;
+        }
         const updated = await useSM.updateExistingMilestone(
             { milestoneId: milestone.milestoneId, title: titleDraft.trim() },
             milestone.projectId
         );
         if (updated) {
+            // Only now does the store hold what the input shows. Marking it
+            // saved on a FAILED update instead would let the next external
+            // refresh discard the user's still-unpersisted text.
+            markTitleSaved();
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
         }
