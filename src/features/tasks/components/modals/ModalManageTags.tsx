@@ -121,6 +121,12 @@ export const ModalManageTags: React.FC<Props> = ({
             );
             setEditingTag(null);
             useTM.setIsNewTagCreated(true);
+            // The local patch above only reaches this modal's own copy of the
+            // list. Bump so the shared `currentProject.projectTags` is refetched
+            // too — a rename is worse than a stale create in the filter bar,
+            // since tag filtering matches by NAME (`concatTags`), so filtering
+            // on the old name silently matches nothing.
+            useTM.bumpTagsRevision();
         } catch (error) {
             setErrorMessage(`${error}`);
         }
@@ -148,6 +154,9 @@ export const ModalManageTags: React.FC<Props> = ({
             setProjectTags(projectTags.filter((t) => t.tagName !== tagName));
             setConfirmDelete(null);
             useTM.setIsNewTagCreated(true);
+            // Same reason as the rename above — otherwise the deleted tag stays
+            // in the filter bar as an option that can never match a task again.
+            useTM.bumpTagsRevision();
         } catch (error) {
             setErrorMessage(`${error}`);
         }

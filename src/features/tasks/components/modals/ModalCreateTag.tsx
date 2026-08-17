@@ -77,6 +77,10 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                 useTM.setOpenCreateTag(false);
                 setTagName("");
                 useTM.setIsNewTagCreated(true);
+                // Republish the project's tag list so the new tag reaches every
+                // consumer of `currentProject.projectTags` — the task filter
+                // bar's Tags dropdown included — without a page reload.
+                useTM.bumpTagsRevision();
             }
         } catch (error) {
             const errMsg = `${error}`;

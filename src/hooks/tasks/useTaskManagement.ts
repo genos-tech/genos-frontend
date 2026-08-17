@@ -202,6 +202,20 @@ export interface TaskManagementState {
     setOpenCreateTag: (open: boolean) => void;
     isNewTagCreated: boolean;
     setIsNewTagCreated: (created: boolean) => void;
+    /**
+     * Monotonic counter bumped by every project-tag mutation (create, rename,
+     * delete). The project's tag list lives on `usePM.currentProject.projectTags`
+     * and is fetched by exactly one effect — TaskSidebarMain's, keyed on the
+     * active projectId — so creating a tag left every consumer of that list
+     * (most visibly the task filter bar's Tags dropdown) stale until a reload.
+     * This is the invalidation signal that effect also watches.
+     *
+     * A counter rather than a boolean because the mutation can repeat within a
+     * session and each occurrence has to re-fire the effect; a latched flag only
+     * ever transitions once.
+     */
+    tagsRevision: number;
+    bumpTagsRevision: () => void;
 
     // Custom project body templates (create-form picker + manage modal)
     projectTaskTemplates: CustomTaskTemplate[];
@@ -459,6 +473,10 @@ export const useTaskManagement = (
     // Tag and project creation
     const [openCreateTag, setOpenCreateTag] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
+    const [tagsRevision, setTagsRevision] = useState(0);
+    // Functional update so two tag mutations in the same tick can't collapse
+    // into one bump, and stable so consumers can hold it across renders.
+    const bumpTagsRevision = useCallback(() => setTagsRevision((n) => n + 1), []);
 
     // Custom project body templates
     const [projectTaskTemplates, setProjectTaskTemplates] = useState<CustomTaskTemplate[]>([]);
@@ -992,6 +1010,8 @@ export const useTaskManagement = (
         setOpenCreateTag,
         isNewTagCreated,
         setIsNewTagCreated,
+        tagsRevision,
+        bumpTagsRevision,
 
         // Custom project body templates
         projectTaskTemplates,
