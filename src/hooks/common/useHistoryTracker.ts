@@ -1,16 +1,3 @@
-/*
- * PUNCH LIST (v3 chatId migration):
- * `HistoryEntry.chatId` is still typed `number` in `useHistory.tsx`
- * (the localStorage persistence layer + the `isHistoryEntry` runtime
- * narrowing check assume integer ids). `ChatProps.chatId` is now
- * `string` post-flip, so the boundary needs a cast — written as
- * `as unknown as number` with this note. Runtime gap: v3-shaped UUID
- * chatIds get persisted as string-disguised-as-number; the runtime
- * narrowing check (`typeof o.chatId === "number"`) silently drops
- * them on reload. Fix properly by flipping `HistoryEntry.chatId` to
- * `string` and updating the consumers in `useHistory.tsx`,
- * `HistoryShell.tsx`, and `HistoryModal.tsx` — follow-on session.
- */
 import { useEffect, useRef } from "react";
 
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
@@ -186,9 +173,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const label =
             currentMainChat.chatName || (currentMainChat.dmPartnerUser?.userName ?? `#${chatId}`);
         record({
-            // See file-header punch-list note: HistoryEntry.chatId
-            // is still typed number; cast at the write boundary.
-            chatId: chatId as unknown as number,
+            chatId,
             chatType,
             kind: "chat",
             label,
@@ -209,19 +194,18 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         // can find; `mergeAndCap` keys by (chat, messageId) so a late
         // record still lands on the right entry.
         if (messageText == null && hint) {
-            // v3 source. `chatId` is the v3 channel UUID (typed `number`
-            // per legacy `HistoryEntry`, runtime string).
+            // v3 source. `chatId` is the v3 channel UUID.
             // `loadV3SpecificMessages` triggers `syncChannel` + reads the
             // snapshot, returning legacy-shape MessageProps. Resolve the
             // hinted bubble (by UUID or seq) and record its seq + preview.
-            void loadV3SpecificMessages(chatId as unknown as string, chatType).then((all) => {
+            void loadV3SpecificMessages(chatId, chatType).then((all) => {
                 const found = findHintedMessage(all, hint, (m) => m.messageIdWithChatId, 2);
                 const text = found ? previewFromMessage(found) : null;
                 if (!found || !text) return;
                 const seq = Number(found.messageId);
                 lastChatKeyRef.current = `chat:${chatType}:${chatId}:${seq}:1`;
                 record({
-                    chatId: chatId as unknown as number,
+                    chatId,
                     chatType,
                     kind: "chat",
                     label,
@@ -239,8 +223,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         if (
             !currentThreadChat ||
             currentThreadChat.chatId == null ||
-            currentThreadChat.threadId == null ||
-            currentThreadChat.threadId === 0
+            currentThreadChat.threadId == null
         ) {
             return;
         }
@@ -248,6 +231,20 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const chatType = currentThreadChat.chatType;
         const chatId = currentThreadChat.chatId;
         const threadId = currentThreadChat.threadId;
+        // Normalized copies for PERSISTENCE only — `HistoryEntry` ids are
+        // canonical strings. The raw locals above stay as-is because they
+        // get compared against in-memory `MessageProps.threadId` /
+        // `ChatProps.chatId` values, which carry whatever shape the loaded
+        // slice has; stringifying those comparisons would break the
+        // legacy-numeric case.
+        const chatIdKey = String(chatId);
+        const threadIdKey = String(threadId);
+        // `0` is the legacy "no thread" sentinel and `""` is its v3
+        // counterpart (`ThreadProps.threadId` is typed `number` but carries
+        // the parent message's UUID post-flip, so the old `=== 0` check
+        // could never see the v3 form). Both stringify into this one test.
+        // An empty id would persist a row that deep-links nowhere.
+        if (!chatIdKey || !threadIdKey || threadIdKey === "0") return;
         const hint = currentThreadChat.moveToSpecificIndex;
         const targetMsg = findHintedMessage(
             currentThreadChat.messages,
@@ -286,7 +283,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             if (parent) parentMessageText = firstLine(parent.contentText);
         }
         record({
-            chatId,
+            chatId: chatIdKey,
             chatType,
             kind: "thread",
             label: parentName,
@@ -294,22 +291,18 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             messageText,
             openedAt: Date.now(),
             parentMessageText,
-            threadId,
+            threadId: threadIdKey,
         });
         // Async IDB fallback for the targeted in-thread bubble — same
         // story as the chat effect: the in-memory `messages` slice is
         // only the part Virtuoso loaded. No cancellation — see the
         // matching comment in the chat effect for why.
         if (messageText == null && hint) {
-            // v3 source. `chatId` carries the channel UUID and
-            // `threadId` carries the parent message's UUID via the
-            // legacy `number` slot — same cast pattern. Resolve the
-            // hinted reply (by UUID or seq) and record its seq + preview.
-            void loadV3SpecificThreadMessages(
-                chatId as unknown as string,
-                threadId as unknown as string,
-                chatType
-            ).then((all) => {
+            // v3 source. `chatId` carries the channel UUID and `threadId`
+            // the parent message's UUID, both via the legacy `number`
+            // slots — hence the normalized keys. Resolve the hinted reply
+            // (by UUID or seq) and record its seq + preview.
+            void loadV3SpecificThreadMessages(chatIdKey, threadIdKey, chatType).then((all) => {
                 const found = findHintedMessage(
                     all,
                     hint,
@@ -321,7 +314,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                 const seq = Number(found.messageId);
                 lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${seq}:1`;
                 record({
-                    chatId,
+                    chatId: chatIdKey,
                     chatType,
                     kind: "thread",
                     label: parentName,
@@ -329,7 +322,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                     messageText: text,
                     openedAt: Date.now(),
                     parentMessageText,
-                    threadId,
+                    threadId: threadIdKey,
                 });
             });
         }
@@ -520,7 +513,9 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
                   )?.chatName ?? null)
                 : null;
         const entry: HistoryEntry = {
-            chatId: currentChatNote.chatId ?? null,
+            // Canonical string id, same as a chat/thread row — the note
+            // shape still types it `number` but carries the channel UUID.
+            chatId: currentChatNote.chatId != null ? String(currentChatNote.chatId) : null,
             chatName,
             chatType: currentChatNote.chatType ?? null,
             isThread: currentChatNote.isThread ?? null,
@@ -529,7 +524,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             noteId: currentChatNote.noteId,
             noteType: currentChatNote.noteType,
             openedAt: Date.now(),
-            threadId: currentChatNote.threadId ?? null,
+            threadId: currentChatNote.threadId != null ? String(currentChatNote.threadId) : null,
         };
         record(entry);
     }, [currentChatNote, allChatsForNotes, record]);
