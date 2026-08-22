@@ -226,7 +226,7 @@ function PlansPageInner() {
 
                         {/* Invisible until a second currency has prices
                             configured server-side. */}
-                        <div className="mt-6 flex justify-center">
+                        {/* <div className="mt-6 flex justify-center">
                             <CurrencyPicker
                                 ariaLabel={p.currencyLabel}
                                 className="rounded-full border border-violet-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-slate-200"
@@ -234,7 +234,7 @@ function PlansPageInner() {
                                 value={plans?.currency || currency}
                                 onChange={setCurrency}
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </section>
 
