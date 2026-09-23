@@ -18,7 +18,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
-import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getLocalTomorrowDate } from "../../../../utils/dateUtils";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { formatCompletedAt } from "../../utils/todoCompletion";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
@@ -71,6 +71,11 @@ interface TodoItemRowProps {
     // own item_id, or — when this row is itself a child rendered by
     // its own parent — undefined).
     onAddSubitem?: (parentItemId: number, title: string) => Promise<void>;
+    // Carry this to-do over to tomorrow. Absent on surfaces that don't wire
+    // the move up, which simply hides the menu item; the row itself hides it
+    // on a to-do already on tomorrow, and on a subitem (whose day is its
+    // parent's — see the menu prop).
+    onMoveToTomorrow?: (itemId: number) => void;
 }
 
 const NOTES_SAVE_INTERVAL_MS = 2000;
@@ -247,12 +252,18 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
         onDelete,
         onCategoryCreate,
         onAddSubitem,
+        onMoveToTomorrow,
         reminderByItemId,
         onSetReminder,
         onCancelReminder,
     } = props;
 
     const isChild = item.parentItemId !== null;
+    // Offered only where it would actually do something: a to-do already on
+    // tomorrow has nowhere to go, and a subitem's day is its parent's (the
+    // server refuses a lone child), so the action lives on the parent's row.
+    const canMoveToTomorrow =
+        Boolean(onMoveToTomorrow) && !isChild && localDate !== getLocalTomorrowDate();
 
     const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
@@ -680,6 +691,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     onToggleNotes={isMobile ? handleToggleNotes : undefined}
                     onAddSubitem={
                         isMobile && !isChild && onAddSubitem ? handleToggleSubitemAdd : undefined
+                    }
+                    onMoveToTomorrow={
+                        canMoveToTomorrow ? () => onMoveToTomorrow!(item.itemId) : undefined
                     }
                 />
                 {/* Mounted only while open, like the task modal above. */}

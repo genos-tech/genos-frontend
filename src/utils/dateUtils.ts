@@ -19,6 +19,27 @@ export const getLocalCurrentDate = (): string => {
     return `${year}-${month}-${day}`;
 };
 
+/** Tomorrow's local calendar date as `YYYY-MM-DD`.
+ *
+ *  The partner of `getLocalCurrentDate` above, and it has to be built the
+ *  same way: to-do groups are keyed by the date the CLIENT says it is, so a
+ *  "tomorrow" that disagrees with that function's "today" by one day — which
+ *  is what `getFormattedNDaysAfterDateStr(1)` gives you, since it formats
+ *  through `toISOString()` in UTC — files the to-do under today's date for
+ *  anyone west of UTC, and two days out for anyone far enough east.
+ *
+ *  `new Date(y, m, d + 1)` is deliberate rather than arithmetic on the day
+ *  number: the Date constructor rolls the month and year over for you, so
+ *  the 31st and Dec 31 need no special case. */
+export const getLocalTomorrowDate = (): string => {
+    const now = new Date();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const day = String(tomorrow.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
 const formatDateLocal = (date: Date): string => {
     const pad = (n: number) => n.toString().padStart(2, "0");
 

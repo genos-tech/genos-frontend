@@ -610,6 +610,10 @@ export const ja: DeepPartial<Messages> = {
             createTodayTooltip: "今日のやることリストを作成する",
             completedTodayFilter: "本日完了分 ({count})",
             todaySuffix: "（今日）",
+            startTomorrow: "明日の To-Do を作成",
+            createTomorrowTooltip: "明日のやることリストを作成する",
+            tomorrowSuffix: "（明日）",
+            moveToTomorrow: "明日に移動",
             untitled: "無題のTo-Do",
             addItemPlaceholder: "+ アイテムを追加",
             mentions: {

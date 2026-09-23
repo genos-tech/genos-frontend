@@ -2,6 +2,7 @@ import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
@@ -59,6 +60,11 @@ interface TodoItemMoreMenuProps {
     onToggleNotes?: () => void;
     notesExpanded?: boolean;
     onAddSubitem?: () => void;
+    // Carries the to-do over to tomorrow — the leftovers of a day. Absent
+    // on a row where it would be a no-op or a lie: a to-do already ON
+    // tomorrow, and a subitem (whose day is its parent's, so the server
+    // refuses a lone child — the parent's menu is where this belongs).
+    onMoveToTomorrow?: () => void;
 }
 
 // Consolidates the row's secondary actions (copy link, tag picker,
@@ -82,6 +88,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         onToggleNotes,
         notesExpanded,
         onAddSubitem,
+        onMoveToTomorrow,
     } = props;
     const { t } = useTranslation();
     const [newName, setNewName] = useState("");
@@ -152,6 +159,16 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                         <Typography level="body-sm">
                             {reminderLabel ?? t.chat.todoPane.remindMe.menu}
                         </Typography>
+                    </MenuItem>
+                )}
+                {/* Next to the reminder, not down with copy-link/create-task:
+                    both of these answer "not now" about the same to-do —
+                    nudge me later, or carry it to tomorrow — whereas those
+                    two take the to-do somewhere else. */}
+                {onMoveToTomorrow && (
+                    <MenuItem onClick={onMoveToTomorrow}>
+                        <EventRepeatRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography level="body-sm">{t.chat.todoPane.moveToTomorrow}</Typography>
                     </MenuItem>
                 )}
                 {!isChild && (

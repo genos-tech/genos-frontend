@@ -966,6 +966,10 @@ export const hi: DeepPartial<Messages> = {
             createTodayTooltip: "आज की कार्य सूची बनाएं",
             completedTodayFilter: "आज पूरा हुआ ({count})",
             todaySuffix: "(आज)",
+            startTomorrow: "कल शुरू करें",
+            createTomorrowTooltip: "कल की कार्य सूची बनाएं",
+            tomorrowSuffix: "(कल)",
+            moveToTomorrow: "कल पर ले जाएं",
             untitled: "शीर्षक रहित कार्य",
             addItemPlaceholder: "+ आइटम जोड़ें",
             mentions: {
