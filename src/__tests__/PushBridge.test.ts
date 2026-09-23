@@ -59,8 +59,24 @@ const makeOffer = () => {
     return { answers, port: channel.port2 };
 };
 
-/** Let a port message land. */
-const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+/** Let a port message land.
+ *
+ *  A single `setTimeout(0)` is not enough: jsdom delivers a MessagePort
+ *  message on its own task, and under load (the coverage run, a busy CI
+ *  runner) that task can land AFTER the one this timer schedules — the
+ *  assertion then reads an empty `answers` and the test flakes. Polling
+ *  until the expected number of messages arrives is timing-independent,
+ *  and still returns on the first tick in the normal case.
+ *
+ *  `expected` is how many port messages the case waits for; the default
+ *  0 keeps the plain "drain one round of tasks" behaviour for cases with
+ *  no port (they assert on a synchronous CustomEvent instead). */
+const tick = async (answers?: unknown[], expected = 1) => {
+    for (let i = 0; i < 50; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (!answers || answers.length >= expected) return;
+    }
+};
 
 const setVisibility = (state: "visible" | "hidden") => {
     Object.defineProperty(document, "visibilityState", {
@@ -143,7 +159,7 @@ describe("pushBridge — choosing the surface for a reminder", () => {
         initPushBridge(() => "token-1");
 
         fromWorker({ type: "push-received", tag: "todo_reminder:12", url: "/x" }, [port]);
-        await tick();
+        await tick(answers);
 
         expect(answers).toEqual([{ handled: true }]);
         expect(seen).toEqual([{ reason: "push", deliveredTag: undefined }]);
@@ -159,7 +175,7 @@ describe("pushBridge — choosing the surface for a reminder", () => {
         initPushBridge(() => "token-1");
 
         fromWorker({ type: "push-received", tag: "todo_reminder:12" }, [port]);
-        await tick();
+        await tick(answers);
 
         expect(answers).toEqual([{ handled: false }]);
         expect(seen[0].deliveredTag).toBe("todo_reminder:12");
@@ -175,7 +191,7 @@ describe("pushBridge — choosing the surface for a reminder", () => {
         initPushBridge(() => "token-1");
 
         fromWorker({ type: "push-received", tag: "mention_chat:9" }, [port]);
-        await tick();
+        await tick(answers);
 
         expect(answers).toEqual([{ handled: false }]);
         expect(seen).toEqual([]);
