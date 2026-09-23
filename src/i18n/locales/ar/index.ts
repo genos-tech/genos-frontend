@@ -302,6 +302,7 @@ export const ar: DeepPartial<Messages> = {
             actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
+            idleReload: "جارٍ تحديث الصفحة بعد فترة من عدم النشاط…",
         },
         features: {
             integrations: "التكامل",

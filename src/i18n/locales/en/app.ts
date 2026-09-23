@@ -45,6 +45,11 @@ export const app = {
         limitReached: "You've reached a plan limit. See Settings → Plan & Usage for details.",
         actionFailed: "Couldn't complete that action. Please try again.",
         messageSendFailed: "Couldn't send your message. Please try again.",
+        // Shown for ~2s before `useIdleAutoReload` reloads a page that sat
+        // idle overnight. Phrased as a statement because the reload is
+        // already happening — and it names inactivity as the cause so the
+        // flash reads as routine housekeeping rather than as a crash.
+        idleReload: "Refreshing after inactivity…",
     },
     // Global "generate Meet link → clipboard" feature, triggered by
     // Ctrl+⌘+M / Ctrl+Alt+M. Distinct from the chat-header Quick Meet:
