@@ -23,6 +23,7 @@ import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { HistoryShell } from "./components/layout/HistoryShell";
+import { IdleReloadSnackbar } from "./components/layout/IdleReloadSnackbar";
 import { InstallBanner } from "./components/layout/InstallBanner";
 import { MentionGroupModal } from "./components/layout/MentionGroupModal";
 import { MobileAccountSheet } from "./components/layout/MobileAccountSheet";
@@ -61,6 +62,7 @@ import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePref
 import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { HistoryProvider } from "./hooks/common/useHistory";
+import { useIdleAutoReload } from "./hooks/common/useIdleAutoReload";
 import { useKeyboardInset } from "./hooks/common/useKeyboardInset";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { PersonalGMTagsBootstrap } from "./hooks/common/usePersonalGMTags";
@@ -889,6 +891,41 @@ export const App = () => {
     useEffect(() => {
         if (isGenosPage && spotlight.isOpen) spotlightClose();
     }, [isGenosPage, spotlight.isOpen, spotlightClose]);
+    // The escalation from the wake refresh above: after a long idle stretch,
+    // reload the page outright.
+    //
+    // `useWakeRefresh` repopulates IDB, which fixes stale DATA. It can't fix
+    // a stale PROCESS — timers that never fired, a socket whose reconnect
+    // backoff gave up, module caches nobody re-primes, React state built
+    // against a bundle we've since redeployed. That residue is what makes the
+    // app "behave weird until I refresh", and the only honest fix is the
+    // refresh the user would otherwise do by hand. The two hooks also catch
+    // DIFFERENT events: `useWakeRefresh` is gated on a hidden→visible
+    // transition, which a closed macOS lid frequently never fires (the page
+    // stays `visible` while the machine suspends) — `useIdleAutoReload`
+    // watches the wall clock instead, so it sees exactly that case.
+    //
+    // Placed below `useSpotlight` because `isBusy` reads its live state.
+    // Gated on `!useUISM.isLoading` so it can't fire mid-boot, when the shell
+    // is still assembling and a reload would only restart that work.
+    const idleReloadPending = useIdleAutoReload({
+        enabled: !useUISM.isLoading,
+        // This app has no `beforeunload` guard anywhere, so a reload destroys
+        // in-flight work silently. The losses that can't be undone:
+        //   * a streaming Genos answer — only COMPLETED turns are persisted,
+        //     so reloading mid-stream drops the partial answer with no resume
+        //     path,
+        //   * an agent approval awaiting the user — dropping it leaves the
+        //     backend run dangling.
+        // Typed text is deliberately NOT here: the chat / thread / comment
+        // composers and the task-create form persist drafts to localStorage,
+        // so a reload keeps them.
+        isBusy: () =>
+            spotlight.ask.isStreaming ||
+            spotlight.ask.pendingApproval != null ||
+            spotlight.isLoading,
+    });
+
     // Sidebar "Genos" button + mobile FAB: go to the page (the overlay
     // stays reachable everywhere via Cmd/Ctrl-K).
     const openGenosPage = useCallback(() => {
@@ -1440,6 +1477,9 @@ export const App = () => {
                                                             apiDownReason={apiDownReason}
                                                             showApiDown={showApiDown}
                                                             showWsDisconnected={showWsDisconnected}
+                                                        />
+                                                        <IdleReloadSnackbar
+                                                            open={idleReloadPending}
                                                         />
                                                         <RequestErrorSnackbar />
                                                         <NonMemberMentionSnackbar

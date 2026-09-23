@@ -308,6 +308,7 @@ export const es: DeepPartial<Messages> = {
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
             messageSendFailed: "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
+            idleReload: "Actualizando tras un periodo de inactividad…",
         },
         features: {
             integrations: "Integraciones",
