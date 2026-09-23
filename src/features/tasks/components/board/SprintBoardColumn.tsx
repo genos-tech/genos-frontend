@@ -23,31 +23,63 @@ export type ColumnConfig = {
     icon?: React.ReactNode;
 };
 
+// Narrowest a column may get before the BOARD scrolls horizontally
+// instead of squeezing the columns (see SprintBoard's grid template).
+// Sized so a card keeps its full layout — 2-line title, priority chip,
+// tag row, and the assignee + due-date footer all on one line each.
+export const COLUMN_MIN_WIDTH = 280;
+
 // Style helpers
-const getColumnStyles = (
-    color: string,
-    mode: "light" | "dark" | undefined
-): React.CSSProperties => ({
+//
+// NOTE on scrolling: the column is deliberately NOT a scroll container.
+// The board is the single scrollport for both axes (see
+// `getBoardContainerStyles`), because @hello-pangea/dnd supports only one
+// scroll parent per Droppable — a per-column `overflow-y: auto` nested
+// inside the board's `overflow: auto` is the "unsupported nested scroll
+// container" case, and dnd would refuse to auto-scroll the board sideways
+// mid-drag (making off-screen columns unreachable while holding a card).
+// So: no `overflow` and no `height` here. The grid row stretches the
+// column to the board's height when content is short and grows past it
+// when content is tall; the header below pins with `position: sticky`
+// against the board's scrollport.
+const getColumnStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
     display: "flex",
     flexDirection: "column",
-    minHeight: 0,
-    height: "100%",
+    minWidth: 0,
     backgroundColor: mode === "dark" ? "#16161e" : "#ffffff",
     borderRadius: 10,
     boxShadow: mode === "dark" ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(0, 0, 0, 0.06)",
-    overflow: "hidden",
-    borderTop: `3px solid ${color}`,
 });
 
-const getColumnHeaderStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
+const getColumnHeaderStyles = (
+    color: string,
+    mode: "light" | "dark" | undefined
+): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     padding: "10px 14px",
     flexShrink: 0,
-    backgroundColor: mode === "dark" ? "rgba(255, 255, 255, 0.02)" : "rgba(0, 0, 0, 0.01)",
+    // Pinned so the status + count stay readable while the board scrolls
+    // vertically past a long column. `top: 0` resolves against the
+    // board's padding box, so it parks just inside the board's padding.
+    position: "sticky",
+    top: 0,
+    zIndex: 3,
+    // OPAQUE, unlike the old translucent overlay: cards now scroll
+    // UNDER this header, so a see-through background would show them
+    // bleeding through. These are the former rgba overlays
+    // pre-composited onto the column background above (#16161e + 2%
+    // white, #ffffff + 1% black).
+    backgroundColor: mode === "dark" ? "#1b1b22" : "#fcfcfc",
     borderBottom:
         mode === "dark" ? "1px solid rgba(255, 255, 255, 0.05)" : "1px solid rgba(0, 0, 0, 0.05)",
+    // The column's status accent. Lives on the (sticky) header rather
+    // than the column box so it stays on screen while scrolling instead
+    // of sliding away with the column's top edge.
+    borderTop: `3px solid ${color}`,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
 });
 
 type SprintBoardColumnProps = {
@@ -87,9 +119,9 @@ const SprintBoardColumnImpl = ({
     const columnTitle = t.tasks.board[column.titleKey];
 
     return (
-        <div style={getColumnStyles(column.color, mode)}>
-            {/* Column Header */}
-            <div style={getColumnHeaderStyles(mode)}>
+        <div style={getColumnStyles(mode)}>
+            {/* Column Header — sticky against the board's scrollport. */}
+            <div style={getColumnHeaderStyles(column.color, mode)}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                     <Typography
                         level="title-sm"
@@ -156,15 +188,28 @@ const SprintBoardColumnImpl = ({
                     return (
                         <Box
                             ref={provided.innerRef}
-                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             {...provided.droppableProps}
                             sx={{
                                 position: "relative",
+                                // Grows with its cards instead of scrolling
+                                // itself; the board scrolls. `flex: 1` keeps
+                                // the drop target filling the column when the
+                                // cards don't reach the bottom, so dropping
+                                // into empty space below the last card still
+                                // registers. No `overflow` — see the
+                                // scrolling note at the top of this file.
                                 flex: 1,
                                 padding: 1,
                                 minHeight: 100,
-                                overflowY: "auto",
-                                overflowX: "hidden",
+                                // The column can no longer clip with
+                                // `overflow: hidden` (that would trap the
+                                // sticky header), so the bottom corners are
+                                // rounded here — on the last child — to keep
+                                // the column's rounded silhouette. The drop
+                                // pulse/shimmer paint inside this box, so
+                                // they stay within the rounding too.
+                                borderBottomLeftRadius: 10,
+                                borderBottomRightRadius: 10,
                                 transition: "background-color 150ms ease",
                                 ...(isOver && {
                                     animation: "sprintColumnPulse 1.1s ease-in-out infinite",
