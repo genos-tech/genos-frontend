@@ -25,7 +25,7 @@ import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
-import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
+import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
 const materialTheme = createTheme({ cssVariables: true });
 
@@ -83,15 +83,42 @@ const COLUMNS: ColumnConfig[] = [
 // Style helpers
 const getBoardContainerStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
     display: "grid",
-    // One equal-width column per status — derived from COLUMNS so adding
-    // a status (e.g. Blocked) can't silently overflow the fixed grid.
-    gridTemplateColumns: `repeat(${COLUMNS.length}, 1fr)`,
+    // One column per status, each at least COLUMN_MIN_WIDTH wide. The
+    // `1fr` upper bound still shares leftover space equally when the pane
+    // is roomy (so a wide board looks exactly as it always did), but the
+    // `minmax` floor stops columns collapsing into unreadable slivers
+    // when the window narrows or a preview pane opens alongside — past
+    // that point the board scrolls horizontally instead (`overflow: auto`
+    // below). `1fr` alone resolves its implicit `auto` minimum against
+    // the content and would keep shrinking.
+    gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(${COLUMN_MIN_WIDTH}px, 1fr))`,
+    // Columns stretch to the board height when the cards are short, and
+    // grow past it (scrolling the board) when they're tall — which is the
+    // default `auto` row + `align-content/items: stretch` behaviour, so
+    // it's left implicit. Deliberately NOT `minmax(100%, auto)`: a
+    // percentage row resolves against the board's content box, which
+    // shrinks when the horizontal scrollbar appears, and that feedback
+    // loop can leave a spurious ~8px vertical scrollbar alongside it.
     gap: 12,
     padding: 12,
     flex: 1,
     minHeight: 0,
     width: "100%",
-    overflow: "hidden",
+    // THE scroll container for the board, on both axes — horizontally
+    // once the columns hit their min width, vertically for long columns.
+    // Deliberately the only scrollport in the subtree: @hello-pangea/dnd
+    // allows a Droppable just one scroll parent, so the columns no longer
+    // scroll themselves (see SprintBoardColumn). Owning both axes is what
+    // lets dnd auto-scroll the board sideways mid-drag, keeping
+    // off-screen columns reachable while dragging a card.
+    overflow: "auto",
+    // Reserve the vertical scrollbar's track even when it isn't needed.
+    // Without this, a column growing tall enough to need vertical scroll
+    // steals ~8px of width, which can tip columns that exactly fit into
+    // not fitting and flash a horizontal scrollbar in as well. Costs a
+    // thin always-blank gutter; buys a layout that doesn't jump as cards
+    // are added or filtered.
+    scrollbarGutter: "stable",
     backgroundColor: mode === "dark" ? "#0a0a10" : "#f4f5f7",
     borderRadius: 12,
 });
@@ -584,7 +611,13 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     </AppTooltip>
                 )}
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div style={getBoardContainerStyles(mode)}>
+                    {/* The board owns both scrollbars now (the columns used
+                        to own the vertical one), so the themed scrollbar
+                        class moves here with them. */}
+                    <div
+                        className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
+                        style={getBoardContainerStyles(mode)}
+                    >
                         {COLUMNS.map((column) => {
                             // Pending state lights up the just-clicked
                             // card; the debounced setters catch the
