@@ -3935,8 +3935,7 @@ export const ja: DeepPartial<Messages> = {
             addRowTooltip: "{label}に追加",
             noneLabel: "なし",
             blockedBadge: "ブロックされました",
-            blockedTooltip:
-                "1 つ以上のOpen ブロッカー — 以下の「依存関係」を参照してください。",
+            blockedTooltip: "1 つ以上のOpen ブロッカー — 以下の「依存関係」を参照してください。",
             removeChipTooltip: "依存関係を削除する",
             modal: {
                 title: "依存関係を管理する",
