@@ -2,10 +2,13 @@ import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Box,
@@ -48,6 +51,14 @@ interface TodoItemMoreMenuProps {
     // part of its parent's item, not a candidate for its own task.
     onCreateTask: () => void;
     onDelete: () => void;
+    // Mobile only: the notes toggle and "add subitem" are inline icon
+    // buttons on desktop, but a phone row can't carry five of them, so
+    // they fold in here as the first two items. `undefined` on desktop
+    // (where the inline buttons are still shown) hides them, keeping one
+    // affordance per action rather than two competing ones.
+    onToggleNotes?: () => void;
+    notesExpanded?: boolean;
+    onAddSubitem?: () => void;
 }
 
 // Consolidates the row's secondary actions (copy link, tag picker,
@@ -68,6 +79,9 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         reminderLabel,
         onCreateTask,
         onDelete,
+        onToggleNotes,
+        notesExpanded,
+        onAddSubitem,
     } = props;
     const { t } = useTranslation();
     const [newName, setNewName] = useState("");
@@ -103,6 +117,31 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                 </MenuButton>
             </AppTooltip>
             <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200 }}>
+                {/* Mobile-only row actions, folded in from the inline icon
+                    strip. They lead because they act on THIS row's content
+                    (its notes, its steps) rather than on the row as an
+                    object, and the divider keeps that distinction. */}
+                {onToggleNotes && (
+                    <MenuItem onClick={onToggleNotes}>
+                        {notesExpanded ? (
+                            <ExpandLessRoundedIcon sx={{ fontSize: 16 }} />
+                        ) : (
+                            <ExpandMoreRoundedIcon sx={{ fontSize: 16 }} />
+                        )}
+                        <Typography level="body-sm">
+                            {notesExpanded
+                                ? t.chat.todoPane.collapseNotes
+                                : t.chat.todoPane.expandNotes}
+                        </Typography>
+                    </MenuItem>
+                )}
+                {onAddSubitem && (
+                    <MenuItem onClick={onAddSubitem}>
+                        <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography level="body-sm">{t.chat.todoPane.addSubitem}</Typography>
+                    </MenuItem>
+                )}
+                {(onToggleNotes || onAddSubitem) && <ListDivider />}
                 {/* First, and on every open row including children: a to-do
                     you have to remember to look at is the case this whole
                     feature exists for. `selected` marks a pending one so the

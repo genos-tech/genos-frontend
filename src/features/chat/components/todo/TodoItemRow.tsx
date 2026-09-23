@@ -12,6 +12,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -256,6 +257,9 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
     const isDark = mode === "dark";
+    // Drives where the notes / add-subitem actions live: inline icons on
+    // desktop, ⋮ menu items on a phone. Same 900px breakpoint the pane uses.
+    const isMobile = useIsMobile();
 
     // null outside the app's UrlLinkModalProvider; passed to
     // renderTitleWithLinks so internal title links open as a preview modal.
@@ -404,6 +408,17 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
             onNotesCommit(item.itemId, isEffectivelyEmpty(notesBody) ? null : notesBody);
         }
     };
+
+    // Shared by the inline icon buttons (desktop) and the ⋮ menu items
+    // (mobile), so both entry points behave identically — in particular
+    // the flush-before-collapse, which the 3s autosave above relies on:
+    // it stops running the moment `notesExpanded` goes false, so an
+    // unsaved edit would be lost without this.
+    const handleToggleNotes = () => {
+        if (notesExpanded) flushNotesIfDirty();
+        setNotesExpanded((v) => !v);
+    };
+    const handleToggleSubitemAdd = () => setSubitemAddOpen((v) => !v);
 
     // Purple accent family, matching the pane's header/footer styling.
     const accentBg = isDark
@@ -608,35 +623,40 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         </Box>
                     </AppTooltip>
                 )}
-                <AppTooltip
-                    title={
-                        notesExpanded ? t.chat.todoPane.collapseNotes : t.chat.todoPane.expandNotes
-                    }
-                >
-                    <IconButton
-                        size="sm"
-                        sx={{ borderRadius: "6px" }}
-                        variant="plain"
-                        onClick={() => {
-                            if (notesExpanded) flushNotesIfDirty();
-                            setNotesExpanded((v) => !v);
-                        }}
+                {/* Notes toggle and "+ subitem" are inline on desktop only —
+                    on a phone they'd make four-plus icons compete with the
+                    title for a narrow row, so they move into the ⋮ menu
+                    (passed as props below) and render nowhere else. */}
+                {!isMobile && (
+                    <AppTooltip
+                        title={
+                            notesExpanded
+                                ? t.chat.todoPane.collapseNotes
+                                : t.chat.todoPane.expandNotes
+                        }
                     >
-                        {notesExpanded ? (
-                            <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
-                        ) : (
-                            <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
-                        )}
-                    </IconButton>
-                </AppTooltip>
+                        <IconButton
+                            size="sm"
+                            sx={{ borderRadius: "6px" }}
+                            variant="plain"
+                            onClick={handleToggleNotes}
+                        >
+                            {notesExpanded ? (
+                                <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
+                            ) : (
+                                <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
+                            )}
+                        </IconButton>
+                    </AppTooltip>
+                )}
                 {/* "+ subitem" only on top-level rows. */}
-                {!isChild && onAddSubitem && (
+                {!isMobile && !isChild && onAddSubitem && (
                     <AppTooltip title={t.chat.todoPane.addSubitem}>
                         <IconButton
                             size="sm"
                             sx={{ borderRadius: "6px" }}
                             variant="plain"
-                            onClick={() => setSubitemAddOpen((v) => !v)}
+                            onClick={handleToggleSubitemAdd}
                         >
                             <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
@@ -649,6 +669,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     currentCategoryId={item.categoryId}
                     isChild={isChild}
                     linkCopied={linkCopied}
+                    notesExpanded={notesExpanded}
                     reminderLabel={reminderLabel}
                     onCopyLink={handleCopyLink}
                     onCreateCategory={onCategoryCreate}
@@ -656,6 +677,10 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     onDelete={() => onDelete(item.itemId)}
                     onRemindMe={canRemind ? () => setRemindMeOpen(true) : undefined}
                     onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
+                    onToggleNotes={isMobile ? handleToggleNotes : undefined}
+                    onAddSubitem={
+                        isMobile && !isChild && onAddSubitem ? handleToggleSubitemAdd : undefined
+                    }
                 />
                 {/* Mounted only while open, like the task modal above. */}
                 {remindMeOpen && onSetReminder && onCancelReminder && (
