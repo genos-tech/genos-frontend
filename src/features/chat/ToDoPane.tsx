@@ -224,7 +224,20 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         <TodoMentionsProvider>
             <Box
                 sx={{
-                    height: hostedInModal ? "100%" : "calc(100dvh - 64px)",
+                    // On mobile: no own height at all. The ancestors already
+                    // subtract both the 64px chat header and the bottom tab
+                    // bar (`outerWrapper` caps at 100dvh - --mobile-bottom-
+                    // inset), so asking for `100dvh - 64px` here made this
+                    // box about a tab-bar TALLER than the space it was given
+                    // — and since the list below sized itself independently,
+                    // the surplus showed up as dead gradient under the last
+                    // card. `flex: 1` + `minHeight: 0` takes exactly the room
+                    // left after the header/banner siblings instead.
+                    ...(hostedInModal
+                        ? { height: "100%" }
+                        : isMobile
+                          ? { flex: 1, minHeight: 0 }
+                          : { height: "calc(100dvh - 64px)" }),
                     display: "flex",
                     flexDirection: "column",
                     background: isDark
@@ -413,7 +426,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 </Box>
 
                 {/* Group list */}
-                <Box sx={{ flex: 1, py: 0.5, overflow: "hidden" }}>
+                {/* minHeight: 0 — without it a flex child refuses to shrink
+                below its content, so the `height: 100%` list above would
+                overflow the pane instead of fitting it. */}
+                <Box sx={{ flex: 1, minHeight: 0, py: 0.5, overflow: "hidden" }}>
                     {displayGroups.length > 0 ? (
                         <Virtuoso
                             ref={virtuosoRef}
@@ -446,22 +462,24 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 );
                             }}
                             style={{
-                                height: hostedInModal
-                                    ? "100%"
-                                    : isMobile
-                                      ? // `currentWindowHeight` comes from
-                                        // `window.innerHeight`, which iOS does NOT
-                                        // shrink when the keyboard opens — so on a
-                                        // phone this list stayed full height and
-                                        // pushed the input behind the keyboard.
-                                        // `--mobile-bottom-inset` is the tab bar,
-                                        // or the keyboard when that's taller.
-                                        // Split panes are desktop-only, so the
-                                        // 0.43 branch can't apply here.
-                                        "calc(100dvh - var(--mobile-bottom-inset, 60px) - 250px)"
-                                      : useCM.isSubChatVisible
-                                        ? `${(currentWindowHeight - 250) * 0.43}px`
-                                        : `${currentWindowHeight - 250}px`,
+                                // Mobile joins the modal on `100%`: the pane
+                                // root is now a flex child sized by its
+                                // container, and the wrapper Box below is
+                                // `flex: 1, minHeight: 0`, so "fill the
+                                // leftover" is exact — no viewport subtraction
+                                // to drift out of step with the real chrome
+                                // (which is what left dead space here).
+                                // The keyboard is still handled: it inflates
+                                // `--mobile-bottom-inset`, which shortens
+                                // `outerWrapper`, which shortens this list.
+                                // Split panes are desktop-only, so the 0.43
+                                // branch can't apply on mobile.
+                                height:
+                                    hostedInModal || isMobile
+                                        ? "100%"
+                                        : useCM.isSubChatVisible
+                                          ? `${(currentWindowHeight - 250) * 0.43}px`
+                                          : `${currentWindowHeight - 250}px`,
                             }}
                         />
                     ) : (
