@@ -31,6 +31,8 @@ interface TodoCategorySectionProps {
     highlightItemId?: number;
     onAddItem: (title: string, categoryId: number | null) => Promise<void>;
     onAddSubitem: (parentItemId: number, title: string) => Promise<void>;
+    // Straight through to the rows, which decide whether to offer it.
+    onMoveToTomorrow?: (itemId: number) => void;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
@@ -57,6 +59,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         highlightItemId,
         onAddItem,
         onAddSubitem,
+        onMoveToTomorrow,
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
@@ -183,6 +186,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             onCancelReminder={onCancelReminder}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDeleteItem}
+                            onMoveToTomorrow={onMoveToTomorrow}
                             onSetReminder={onSetReminder}
                             onCategoryChange={(itemId, newCategoryId) =>
                                 onPatchItem(itemId, { categoryId: newCategoryId })

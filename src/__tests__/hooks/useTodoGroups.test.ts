@@ -374,3 +374,195 @@ describe("useTodoGroups — scheduled-todo materialization is not duplicated", (
         expect(createTodoItemMock).toHaveBeenCalledTimes(1);
     });
 });
+
+// "Move to tomorrow", for the leftovers of a day. The move is the one
+// mutation that changes which GROUP an item belongs to, which is why it isn't
+// a `patchItem({ localDate })`: `upsertItem` locates the group by the item's
+// `groupId`, so upserting a moved item would file it under the target day
+// while leaving the original where it was.
+describe("useTodoGroups — moving a to-do to another day", () => {
+    const TOMORROW = "2026-07-09";
+
+    /** The server's answer to a move: the same row, re-homed. */
+    const echoMove = (newGroupId = 200) =>
+        updateTodoItemMock.mockImplementation(async (_t: unknown, itemId: number) => ({
+            ...mkItem(itemId, parentOf(itemId)),
+            groupId: newGroupId,
+        }));
+
+    const mounted = async (groups: TodoGroupProps[]) => {
+        loadTodoGroupsMock.mockResolvedValue(groups);
+        const hook = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        return hook;
+    };
+
+    it("sends the target date to the server", async () => {
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+
+        await act(async () => {
+            await result.current.moveItem(4, TOMORROW);
+        });
+
+        expect(updateTodoItemMock).toHaveBeenCalledWith("token", 4, { localDate: TOMORROW });
+    });
+
+    it("does not leave the item behind on the day it came from", async () => {
+        // The duplication this exists to prevent: the same to-do showing on
+        // two days at once. Asserted before the reconciling reload lands, on
+        // the locally-computed state — that reload would hide the bug.
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        let resolveReload: ((v: unknown) => void) | undefined;
+        loadTodoGroupsMock.mockImplementation(
+            () => new Promise((r) => (resolveReload = r as (v: unknown) => void))
+        );
+
+        act(() => {
+            void result.current.moveItem(4, TOMORROW);
+        });
+        await flush();
+
+        const occurrences = result.current.groups
+            .flatMap((g) => g.items)
+            .filter((i) => i.itemId === 4);
+        expect(occurrences).toHaveLength(1);
+        expect(occurrences[0].groupId).toBe(200);
+        expect(result.current.groups.find((g) => g.groupId === 100)?.items).not.toContainEqual(
+            expect.objectContaining({ itemId: 4 })
+        );
+        resolveReload?.([seedGroup()]);
+    });
+
+    it("stubs a target day that does not exist yet, with the right date", async () => {
+        // The common case — the user moves a leftover before tomorrow's group
+        // exists. The date has to be the one asked for: labelling the stub
+        // "today" is what made a moved to-do flash under the wrong heading.
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        let resolveReload: ((v: unknown) => void) | undefined;
+        loadTodoGroupsMock.mockImplementation(
+            () => new Promise((r) => (resolveReload = r as (v: unknown) => void))
+        );
+
+        act(() => {
+            void result.current.moveItem(4, TOMORROW);
+        });
+        await flush();
+
+        const target = result.current.groups.find((g) => g.groupId === 200);
+        expect(target?.localDate).toBe(TOMORROW);
+        expect(target?.items.map((i) => i.itemId)).toEqual([4]);
+        resolveReload?.([seedGroup()]);
+    });
+
+    it("takes the subitems along with their parent", async () => {
+        // Server-side the children follow the parent, but they are not in the
+        // response — only the parent is. Left alone they would keep pointing
+        // at the group their parent just left.
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        let resolveReload: ((v: unknown) => void) | undefined;
+        loadTodoGroupsMock.mockImplementation(
+            () => new Promise((r) => (resolveReload = r as (v: unknown) => void))
+        );
+
+        act(() => {
+            void result.current.moveItem(1, TOMORROW);
+        });
+        await flush();
+
+        const target = result.current.groups.find((g) => g.groupId === 200);
+        expect(target?.items.map((i) => i.itemId).sort()).toEqual([1, 2, 3]);
+        const source = result.current.groups.find((g) => g.groupId === 100);
+        expect(source?.items.map((i) => i.itemId)).toEqual([4]);
+        resolveReload?.([seedGroup()]);
+    });
+
+    it("merges into an existing target day instead of adding a second card", async () => {
+        echoMove(200);
+        const existingTarget: TodoGroupProps = {
+            groupId: 200,
+            localDate: TOMORROW,
+            isCompleted: false,
+            items: [{ ...mkItem(9, null), groupId: 200 }],
+            tsCreatedAt: "2026-01-01T00:00:00Z",
+            tsUpdatedAt: "2026-01-01T00:00:00Z",
+        };
+        const { result } = await mounted([seedGroup(), existingTarget]);
+        let resolveReload: ((v: unknown) => void) | undefined;
+        loadTodoGroupsMock.mockImplementation(
+            () => new Promise((r) => (resolveReload = r as (v: unknown) => void))
+        );
+
+        act(() => {
+            void result.current.moveItem(4, TOMORROW);
+        });
+        await flush();
+
+        expect(result.current.groups.filter((g) => g.localDate === TOMORROW)).toHaveLength(1);
+        const target = result.current.groups.find((g) => g.groupId === 200);
+        expect(target?.items.map((i) => i.itemId).sort()).toEqual([4, 9]);
+        resolveReload?.([seedGroup(), existingTarget]);
+    });
+
+    it("changes nothing and reports failure when the server refuses", async () => {
+        // No optimistic pass, so a refusal must leave the board exactly as it
+        // was — and must not trigger the reconciling reload either.
+        updateTodoItemMock.mockResolvedValue(undefined);
+        const { result } = await mounted([seedGroup()]);
+        loadTodoGroupsMock.mockClear();
+
+        let ok: boolean | undefined;
+        await act(async () => {
+            ok = await result.current.moveItem(4, TOMORROW);
+        });
+
+        expect(ok).toBe(false);
+        expect(loadTodoGroupsMock).not.toHaveBeenCalled();
+        expect(result.current.groups.find((g) => g.groupId === 100)?.items).toHaveLength(4);
+    });
+
+    it("re-reads the groups afterwards so ordering and completion are the server's", async () => {
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        const reconciled: TodoGroupProps[] = [
+            {
+                groupId: 200,
+                localDate: TOMORROW,
+                isCompleted: false,
+                items: [{ ...mkItem(4, null), groupId: 200 }],
+                tsCreatedAt: "2026-01-01T00:00:00Z",
+                tsUpdatedAt: "2026-01-01T00:00:00Z",
+            },
+        ];
+        loadTodoGroupsMock.mockResolvedValue(reconciled);
+
+        await act(async () => {
+            await result.current.moveItem(4, TOMORROW);
+        });
+
+        expect(loadTodoGroupsMock).toHaveBeenCalled();
+        expect(result.current.groups).toEqual(reconciled);
+    });
+
+    it("leaves the source day's remaining items untouched", async () => {
+        echoMove();
+        const { result } = await mounted([seedGroup()]);
+        let resolveReload: ((v: unknown) => void) | undefined;
+        loadTodoGroupsMock.mockImplementation(
+            () => new Promise((r) => (resolveReload = r as (v: unknown) => void))
+        );
+
+        act(() => {
+            void result.current.moveItem(1, TOMORROW);
+        });
+        await flush();
+
+        const source = result.current.groups.find((g) => g.groupId === 100);
+        expect(completionById(source?.items ?? [])).toEqual({ 4: false });
+        resolveReload?.([seedGroup()]);
+    });
+});

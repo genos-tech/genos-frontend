@@ -969,6 +969,10 @@ export const ar: DeepPartial<Messages> = {
             createTodayTooltip: "أنشئ قائمة مهام اليوم",
             completedTodayFilter: "اكتمل اليوم ({count})",
             todaySuffix: "(اليوم)",
+            startTomorrow: "ابدأ غدًا",
+            createTomorrowTooltip: "أنشئ قائمة مهام الغد",
+            tomorrowSuffix: "(غدًا)",
+            moveToTomorrow: "نقل إلى الغد",
             untitled: "مهمة بلا عنوان",
             addItemPlaceholder: "+ إضافة عنصر",
             mentions: {

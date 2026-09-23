@@ -23,6 +23,10 @@ export const chat = {
         createTodayTooltip: "Create today's to-do list",
         completedTodayFilter: "Completed today ({count})",
         todaySuffix: " (Today)",
+        startTomorrow: "Start tomorrow",
+        createTomorrowTooltip: "Create tomorrow's to-do list",
+        tomorrowSuffix: " (Tomorrow)",
+        moveToTomorrow: "Move to tomorrow",
         untitled: "Untitled to-do",
         addItemPlaceholder: "+ Add item",
         // Accessible name for the @/# picker that opens over a title field.

@@ -169,7 +169,14 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
 
     // Mutators -----------------------------------------------------------
 
-    const upsertItem = useCallback((item: TodoItemProps) => {
+    // `localDate` is the date the CALLER asked the server to file this item
+    // under, for the stub below. It's optional only because the callers that
+    // can't know it (a patch response for an item already on screen) never
+    // reach the stub branch — but where a group is genuinely new, guessing
+    // today is wrong: a to-do created for TOMORROW would show up under
+    // today's date, complete with the "(Today)" label, until the follow-up
+    // load corrected it. That flash is the whole reason this is a parameter.
+    const upsertItem = useCallback((item: TodoItemProps, localDate?: string) => {
         setGroups((prev) => {
             const idx = prev.findIndex((g) => g.groupId === item.groupId);
             if (idx === -1) {
@@ -178,7 +185,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                 // localDate / timestamps on the next load.
                 const stub: TodoGroupProps = {
                     groupId: item.groupId,
-                    localDate: getLocalCurrentDate(),
+                    localDate: localDate ?? getLocalCurrentDate(),
                     isCompleted: item.isCompleted,
                     items: [item],
                     tsCreatedAt: item.tsCreatedAt,
@@ -198,7 +205,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     const addItem = useCallback(
         async (input: CreateTodoItemInput): Promise<TodoItemProps | undefined> => {
             const created = await createTodoItem(accessToken, myself, input);
-            if (created) upsertItem(created);
+            if (created) upsertItem(created, input.localDate);
             // Re-fetch groups when the server created a brand-new group
             // for this date, so we get its real metadata (timestamps,
             // localDate) instead of the stub.
@@ -339,6 +346,74 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             return patchOneItem(itemId, patch);
         },
         [patchOneItem]
+    );
+
+    /** Move a to-do to another day — carrying over the leftovers of a day.
+     *
+     *  Deliberately NOT a `patchItem({ localDate })`: every other patch
+     *  leaves the item in the group it's already in, and `upsertItem` finds
+     *  that group by the item's `groupId`. A move changes `groupId`, so
+     *  upserting the response would ADD the item to the target group while
+     *  leaving the original behind — the same to-do on two days at once.
+     *
+     *  Subitems follow their parent server-side, and they're not in the
+     *  response (only the parent is), so they're moved here to match rather
+     *  than left pointing at the day their parent just left. `refresh()`
+     *  afterwards is what gets the real group metadata: a brand-new target
+     *  day arrives as a stub, and both days' completion flags are the
+     *  server's to decide. */
+    const moveItem = useCallback(
+        async (itemId: number, localDate: string): Promise<boolean> => {
+            const moved = await updateTodoItem(accessToken, itemId, { localDate });
+            // No optimistic pass: the group this lands in may not exist yet,
+            // and a failed move that had already redrawn two days is a worse
+            // lie than a move that takes a moment to appear.
+            if (!moved) return false;
+            setGroups((prev) => {
+                const childIds = new Set(
+                    prev
+                        .flatMap((g) => g.items)
+                        .filter((i) => i.parentItemId === itemId)
+                        .map((i) => i.itemId)
+                );
+                const children = prev
+                    .flatMap((g) => g.items)
+                    .filter((i) => childIds.has(i.itemId))
+                    .map((i) => ({ ...i, groupId: moved.groupId }));
+                const withoutMoved = prev.map((g) =>
+                    recomputeGroupCompletion({
+                        ...g,
+                        items: g.items.filter(
+                            (i) => i.itemId !== itemId && !childIds.has(i.itemId)
+                        ),
+                    })
+                );
+                const idx = withoutMoved.findIndex((g) => g.groupId === moved.groupId);
+                if (idx === -1) {
+                    const stub: TodoGroupProps = {
+                        groupId: moved.groupId,
+                        localDate,
+                        isCompleted: false,
+                        items: [moved, ...children],
+                        tsCreatedAt: moved.tsCreatedAt,
+                        tsUpdatedAt: moved.tsUpdatedAt,
+                    };
+                    return [stub, ...withoutMoved];
+                }
+                const target = withoutMoved[idx];
+                const updated = recomputeGroupCompletion({
+                    ...target,
+                    items: [...target.items, moved, ...children],
+                });
+                return [...withoutMoved.slice(0, idx), updated, ...withoutMoved.slice(idx + 1)];
+            });
+            // Reconcile: group ordering is the server's (`-local_date`), and
+            // an emptied source day may now be gone from the window.
+            const fresh = await loadTodoGroups(myself, accessToken);
+            if (fresh) setGroups(fresh);
+            return true;
+        },
+        [accessToken, myself]
     );
 
     const removeItem = useCallback(
@@ -623,6 +698,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         isLoading,
         addItem,
         patchItem,
+        moveItem,
         removeItem,
         addCategory,
         renameCategory,

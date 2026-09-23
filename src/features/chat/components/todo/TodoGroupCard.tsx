@@ -13,7 +13,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoGroupProps, TodoReminderProps } from "../../../../types/chat";
-import { getLocalCurrentDate } from "../../../../utils/dateUtils";
+import { getLocalCurrentDate, getLocalTomorrowDate } from "../../../../utils/dateUtils";
 import { TodoCategorySection } from "./TodoCategorySection";
 
 // Each color is carried twice: the plain value for opaque use and an
@@ -27,6 +27,18 @@ const COLORS = {
         darkRgb: "var(--gp-brandalt-400-rgb)",
         light: "var(--gp-brand-700)",
         lightRgb: "var(--gp-brand-700-rgb)",
+    },
+    // Tomorrow gets its own accent rather than sharing today's. Every card
+    // that isn't today is styled as the PAST — flat border, no accent bar —
+    // which reads as "a day gone by", exactly the wrong thing to say about
+    // the day you just filed a leftover under. A separate hue distinguishes
+    // it from today without competing with it. Plain hex, not a theme token,
+    // so no `var()` + hex-alpha trap (see above).
+    tomorrow: {
+        dark: "#a78bfa",
+        darkRgb: "167, 139, 250",
+        light: "#7c3aed",
+        lightRgb: "124, 58, 237",
     },
     completed: {
         dark: "#22c55e",
@@ -43,6 +55,8 @@ interface TodoGroupCardProps {
     highlightItemId?: number;
     onAddItem: (localDate: string, title: string, categoryId: number | null) => Promise<void>;
     onAddSubitem: (localDate: string, parentItemId: number, title: string) => Promise<void>;
+    // Carry a to-do over to tomorrow; forwarded to the rows.
+    onMoveToTomorrow?: (itemId: number) => void;
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
@@ -67,6 +81,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         highlightItemId,
         onAddItem,
         onAddSubitem,
+        onMoveToTomorrow,
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
@@ -84,6 +99,11 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const isToday = group.localDate === getLocalCurrentDate();
+    const isTomorrow = group.localDate === getLocalTomorrowDate();
+    // The accent this card wears, or null for an ordinary past day. Today
+    // and tomorrow differ only in hue, so the three styled spots below read
+    // from this instead of branching on the two flags each time.
+    const accent = isToday ? COLORS.today : isTomorrow ? COLORS.tomorrow : null;
 
     // Bucket items by categoryId. Uncategorized (null) renders first.
     const sections = useMemo(() => {
@@ -127,24 +147,24 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         ? "linear-gradient(135deg, rgba(30,30,35,1) 0%, rgba(25,25,30,1) 100%)"
                         : "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(250,250,252,1) 100%)",
                     border: "1px solid",
-                    borderColor: isToday
+                    borderColor: accent
                         ? isDark
-                            ? `rgba(${COLORS.today.darkRgb}, 0.19)`
-                            : `rgba(${COLORS.today.lightRgb}, 0.13)`
+                            ? `rgba(${accent.darkRgb}, 0.19)`
+                            : `rgba(${accent.lightRgb}, 0.13)`
                         : isDark
                           ? "rgba(255,255,255,0.06)"
                           : "rgba(0,0,0,0.06)",
-                    boxShadow: isToday
+                    boxShadow: accent
                         ? isDark
-                            ? `0 4px 20px rgba(${COLORS.today.darkRgb}, 0.08)`
-                            : `0 4px 20px rgba(${COLORS.today.lightRgb}, 0.07)`
+                            ? `0 4px 20px rgba(${accent.darkRgb}, 0.08)`
+                            : `0 4px 20px rgba(${accent.lightRgb}, 0.07)`
                         : isDark
                           ? "0 2px 8px rgba(0,0,0,0.2)"
                           : "0 2px 8px rgba(0,0,0,0.04)",
                 }}
             >
-                {/* Top accent bar for today */}
-                {isToday && (
+                {/* Top accent bar — today, and tomorrow in its own hue */}
+                {accent && (
                     <Box
                         sx={{
                             position: "absolute",
@@ -153,8 +173,8 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                             width: "100%",
                             height: 3,
                             background: isDark
-                                ? `linear-gradient(90deg, ${COLORS.today.dark} 0%, rgba(${COLORS.today.darkRgb}, 0.38) 100%)`
-                                : `linear-gradient(90deg, ${COLORS.today.light} 0%, rgba(${COLORS.today.lightRgb}, 0.38) 100%)`,
+                                ? `linear-gradient(90deg, ${accent.dark} 0%, rgba(${accent.darkRgb}, 0.38) 100%)`
+                                : `linear-gradient(90deg, ${accent.light} 0%, rgba(${accent.lightRgb}, 0.38) 100%)`,
                         }}
                     />
                 )}
@@ -165,17 +185,21 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         level="title-sm"
                         sx={{
                             fontWeight: 700,
-                            color: isToday
+                            color: accent
                                 ? isDark
-                                    ? COLORS.today.dark
-                                    : COLORS.today.light
+                                    ? accent.dark
+                                    : accent.light
                                 : isDark
                                   ? "rgba(255,255,255,0.85)"
                                   : "rgba(0,0,0,0.8)",
                         }}
                     >
                         {group.localDate}
-                        {isToday ? t.chat.todoPane.todaySuffix : ""}
+                        {isToday
+                            ? t.chat.todoPane.todaySuffix
+                            : isTomorrow
+                              ? t.chat.todoPane.tomorrowSuffix
+                              : ""}
                     </Typography>
                     <Box
                         sx={{
@@ -234,6 +258,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         onCancelReminder={onCancelReminder}
                         onCategoryCreate={onCategoryCreate}
                         onDeleteItem={onDeleteItem}
+                        onMoveToTomorrow={onMoveToTomorrow}
                         onPatchItem={onPatchItem}
                         onSetReminder={onSetReminder}
                         onAddSubitem={(parentItemId, t) =>

@@ -619,6 +619,10 @@ export const fr: DeepPartial<Messages> = {
             createTodayTooltip: "Créer la liste de tâches du jour",
             completedTodayFilter: "Terminé aujourd'hui ({count})",
             todaySuffix: "(Aujourd'hui)",
+            startTomorrow: "Commencez demain",
+            createTomorrowTooltip: "Créer la liste de tâches de demain",
+            tomorrowSuffix: "(Demain)",
+            moveToTomorrow: "Déplacer à demain",
             untitled: "Tâche sans titre",
             addItemPlaceholder: "+ Ajouter un élément",
             mentions: {

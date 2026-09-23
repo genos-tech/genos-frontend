@@ -586,6 +586,10 @@ export const zh: DeepPartial<Messages> = {
             createTodayTooltip: "创建今天的待办事项列表",
             completedTodayFilter: "今天完成（{count}）",
             todaySuffix: "（今天）",
+            startTomorrow: "从明天开始",
+            createTomorrowTooltip: "创建明天的待办事项列表",
+            tomorrowSuffix: "（明天）",
+            moveToTomorrow: "移至明天",
             untitled: "无标题待办事项",
             addItemPlaceholder: "+ 添加项目",
             mentions: {

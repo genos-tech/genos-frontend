@@ -27,7 +27,7 @@ import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { fmt, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { TodoGroupProps } from "../../types/chat";
-import { getLocalCurrentDate } from "../../utils/dateUtils";
+import { getLocalCurrentDate, getLocalTomorrowDate } from "../../utils/dateUtils";
 
 type ToDoPaneProps = {
     useCM: ChatManagementState;
@@ -112,6 +112,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         incompleteCount,
         addItem,
         patchItem,
+        moveItem,
         removeItem,
         addCategory,
         addSchedule,
@@ -138,12 +139,18 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // zero items still shows so the user can add to today; on Completed
     // Today it doesn't, because an "add" affordance is noise on a view
     // whose whole job is reviewing what's already done.
+    //
+    // Tomorrow keeps its empty card for the same reason today does: it's a
+    // day you can still add to. Without it, starting tomorrow's list and
+    // then completing the placeholder would make the whole card disappear
+    // from the Incomplete tab, taking the only place to add to it with it.
     const displayGroups = useMemo(() => {
         if (showCompletedToday) return selectCompletedToday(groups);
         if (!useCM.showOnlyInCompleteTodos) return groups;
+        const openDays = new Set([getLocalCurrentDate(), getLocalTomorrowDate()]);
         return groups
             .map((g) => ({ ...g, items: g.items.filter((i) => !i.isCompleted) }))
-            .filter((g) => g.items.length > 0 || g.localDate === getLocalCurrentDate());
+            .filter((g) => g.items.length > 0 || openDays.has(g.localDate));
     }, [groups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
 
     const totalItems = useMemo(() => groups.reduce((a, g) => a + g.items.length, 0), [groups]);
@@ -169,7 +176,22 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         await addItem({ localDate, title, categoryId: null, parentItemId });
     };
 
+    const handleCreateTomorrowGroup = async () => {
+        // The mirror of the today button: tomorrow's list has to be startable
+        // before tomorrow arrives, both for the leftovers of today and for
+        // anything you already know belongs there.
+        await addItem({
+            localDate: getLocalTomorrowDate(),
+            title: t.chat.todoPane.untitled,
+        });
+    };
+
+    const handleMoveToTomorrow = (itemId: number) => {
+        void moveItem(itemId, getLocalTomorrowDate());
+    };
+
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
+    const tomorrowExists = groups.some((g) => g.localDate === getLocalTomorrowDate());
 
     // Deep-link: bring the target group into the viewport. Prefer the
     // group that actually CONTAINS the item (belt-and-braces against the
@@ -371,6 +393,45 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     </IconButton>
                                 </AppTooltip>
                             )}
+
+                            {/* "Start tomorrow" — same gate as today's, so a
+                            day that already has a list doesn't offer to
+                            create it again. Outlined rather than the filled
+                            gradient: tomorrow is the secondary of the two
+                            when both are offered, and two identical filled
+                            buttons side by side read as one control split in
+                            half. */}
+                            {!tomorrowExists && (
+                                <AppTooltip title={t.chat.todoPane.createTomorrowTooltip}>
+                                    <IconButton
+                                        size="sm"
+                                        sx={{
+                                            borderRadius: "10px",
+                                            px: 1.5,
+                                            py: 0.75,
+                                            fontSize: "13px",
+                                            fontWeight: 600,
+                                            gap: 0.5,
+                                            border: "1px solid",
+                                            borderColor: isDark
+                                                ? "rgba(var(--gp-brandalt-400-rgb), 0.4)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.3)",
+                                            color: isDark
+                                                ? "var(--gp-brandalt-400)"
+                                                : "var(--gp-brand-700)",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.12)"
+                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
+                                            },
+                                        }}
+                                        onClick={handleCreateTomorrowGroup}
+                                    >
+                                        <AddIcon sx={{ fontSize: "18px" }} />
+                                        {t.chat.todoPane.startTomorrow}
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
                         </Stack>
                     </Stack>
 
@@ -456,6 +517,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         onCancelReminder={cancelItemReminder}
                                         onCategoryCreate={addCategory}
                                         onDeleteItem={removeItem}
+                                        onMoveToTomorrow={handleMoveToTomorrow}
                                         onPatchItem={patchItem}
                                         onSetReminder={setItemReminder}
                                     />

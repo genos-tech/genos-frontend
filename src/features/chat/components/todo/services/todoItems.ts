@@ -54,6 +54,13 @@ export interface UpdateTodoItemPatch {
     isCompleted?: boolean;
     categoryId?: number | null;
     sortOrder?: number;
+    // Moves the to-do to another day, re-homing it into that date's group
+    // (created on demand server-side). The only field here that changes
+    // which group the item belongs to rather than the item's own content,
+    // so the response's `groupId` differs from the one that was sent —
+    // callers holding the item by group have to re-read, not patch in place.
+    // Subitems move with their parent; the server refuses a lone child.
+    localDate?: string;
 }
 
 export const updateTodoItem = async (
@@ -70,6 +77,7 @@ export const updateTodoItem = async (
         if (patch.isCompleted !== undefined) body.is_completed = patch.isCompleted;
         if (patch.categoryId !== undefined) body.category_id = patch.categoryId;
         if (patch.sortOrder !== undefined) body.sort_order = patch.sortOrder;
+        if (patch.localDate !== undefined) body.local_date = patch.localDate;
         const res = await api.patch(`/todo/items/${itemId}/`, body);
         return res.data as TodoItemProps;
     } catch (error) {
