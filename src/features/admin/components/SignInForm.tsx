@@ -52,7 +52,7 @@ interface SignInFormElement extends HTMLFormElement {
 
 export const SignInForm = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);
@@ -147,7 +147,10 @@ export const SignInForm = () => {
             AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
             await DatabaseUtils.clearTeamScopedStores();
 
-            const res = await demoSignIn(setErrorMessage);
+            // `locale` is read from the provider, not storage: the wipe above
+            // deliberately preserves `genos-locale`, but reading the live
+            // context value keeps this correct even if that ever changes.
+            const res = await demoSignIn(setErrorMessage, locale);
             if (!res) return;
 
             setAccessToken(res.access);
