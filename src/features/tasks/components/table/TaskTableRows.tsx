@@ -20,6 +20,11 @@ export type TaskTableRowsProps = {
      *  a matching subtask's dependency chain visible even though they aren't
      *  assigned to the filtered member. Rendered dimmed + non-interactive. */
     ghostIds: Set<string>;
+    /** Row id → the id of the root task/milestone its parent chain ends at.
+     *  Published to the DOM as `data-task-family` so the generated hover
+     *  stylesheet can dim every row outside the hovered row's family. Built
+     *  in the same tree walk as `depthMap`, so it shares its identity. */
+    familyKeyByRow: Map<string, string>;
     columns: ColumnDef[];
     /** The current project's custom field definitions — the row needs
      *  them to resolve `cf_<id>` column values (tag options, types). */
@@ -67,6 +72,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         depthMap,
         childrenByParent,
         ghostIds,
+        familyKeyByRow,
         columns,
         customFieldDefs,
         expandedRows,
@@ -104,6 +110,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
                         customFieldDefs={customFieldDefs}
                         depth={depthMap.get(String(task.id)) ?? 0}
                         expandedRows={expandedRows}
+                        familyKey={familyKeyByRow.get(String(task.id))}
                         hasChildren={childrenByParent.has(String(task.id))}
                         index={index}
                         isGhost={ghostIds.has(String(task.id))}
@@ -186,6 +193,7 @@ export const taskTableRowsPropsAreEqual = (
     prev.depthMap === next.depthMap &&
     prev.childrenByParent === next.childrenByParent &&
     prev.ghostIds === next.ghostIds &&
+    prev.familyKeyByRow === next.familyKeyByRow &&
     prev.columns === next.columns &&
     prev.customFieldDefs === next.customFieldDefs &&
     prev.expandedRows === next.expandedRows &&

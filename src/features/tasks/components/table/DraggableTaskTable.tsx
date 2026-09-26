@@ -32,6 +32,7 @@ import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascadeTreePosition";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
+import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { sortTableTasks, SortTier } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
@@ -489,6 +490,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // only request it via the identity-stable callback below (excluded
     // from DraggableTaskRow's areEqual, same contract as openQuickAdd).
     const [diagramTask, setDiagramTask] = useState<TaskTableProps | null>(null);
+
+    // Suppresses hover family-focus for the duration of a drag. A boolean (not
+    // per-row), flipped twice per drag — so unlike a hovered-row state it can't
+    // churn the row map. See `DND_ACTIVE_ATTR`.
+    const [isDragActive, setIsDragActive] = useState(false);
     const openDiagram = useCallback((task: TaskTableProps) => {
         if (task.id == null) return;
         setDiagramTask(task);
@@ -624,9 +630,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     }, [isMemberFilterActive, ghostInfo, childrenByParent, sortTasks]);
 
     const depthMap = useMemo(() => new Map<string, number>(), []);
+    // Row id → its root ancestor's id ("family"). Filled by the same tree walk
+    // that fills `depthMap`, which is the only place the root of each rendered
+    // row is already known — reading `rootTaskId` off the task instead would
+    // miss the optimistic window after a reparent (the server re-derives that
+    // field, so the dragged row carries a stale root until the next reload).
+    const familyKeyByRow = useMemo(() => new Map<string, string>(), []);
 
     const displayRows = useMemo(() => {
         depthMap.clear();
+        familyKeyByRow.clear();
         const result: TaskTableProps[] = [];
 
         // Force ghost-ancestor chains open so the matching subtask beneath
@@ -643,13 +656,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 ? new Set<string>([...expandedRows, ...forcedOpen])
                 : expandedRows;
 
-        const insertWithChildren = (task: TaskTableProps, depth: number) => {
+        // `familyKey` is the id of the root this branch descends from, passed
+        // down unchanged so every row in one subtree shares it.
+        const insertWithChildren = (task: TaskTableProps, depth: number, familyKey: string) => {
             depthMap.set(String(task.id), depth);
+            familyKeyByRow.set(String(task.id), familyKey);
             result.push(task);
             if (task.id && effectiveExpanded.has(String(task.id))) {
                 const children = childrenByParentEffective.get(String(task.id)) || [];
                 for (const child of children) {
-                    insertWithChildren(child, depth + 1);
+                    insertWithChildren(child, depth + 1, familyKey);
                 }
             }
         };
@@ -662,7 +678,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 ? sortTasks([...rootMatches, ...ghostInfo.ghostRoots])
                 : rootMatches;
         for (const row of parentRows) {
-            insertWithChildren(row, 0);
+            insertWithChildren(row, 0, String(row.id));
         }
         return result;
     }, [
@@ -672,7 +688,20 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         ghostInfo,
         milestoneAutoExpandIds,
         sortTasks,
+        familyKeyByRow,
+        depthMap,
     ]);
+
+    // Hover family-focus stylesheet. Rebuilt only when the visible tree
+    // changes — hovering itself runs entirely in the browser's selector engine
+    // (see `familyFocusCss.ts` for why this isn't React state).
+    const familyFocusCss = useMemo(
+        () => buildFamilyFocusCss(familyKeyByRow.values()),
+        // `displayRows` is the signal: `familyKeyByRow` is a stable Map
+        // mutated in place by the walk above, so its identity never changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [displayRows, familyKeyByRow]
+    );
 
     // Close a pristine quick-add row whose anchor row left the visible
     // tree (filtered out, ancestor collapsed, project switch). A dirty
@@ -965,6 +994,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // persist); destination = drop between rows (local reorder only,
     // matches previous behaviour).
     const handleDragEnd = (result: DropResult) => {
+        // Before any early return below — a cancelled drag (Esc, drop outside
+        // the list) still has to re-enable hover family-focus.
+        setIsDragActive(false);
         if (result.combine) {
             void reparentTask(result.draggableId, result.combine.draggableId);
             return;
@@ -1686,6 +1718,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                     </div>
 
+                    {/* Hover family-focus rules for the families currently in
+                        view. Inline rather than a static .css file because the
+                        selectors name the visible root ids; empty (and so
+                        omitted) whenever fewer than two families are on screen.
+                        Kept OUTSIDE the Droppable so it never appears as a
+                        sibling among the Draggables that dnd measures. */}
+                    {familyFocusCss !== "" && <style>{familyFocusCss}</style>}
+
                     {/* Draggable Table Body */}
                     <DragDropContext
                         onDragEnd={handleDragEnd}
@@ -1696,6 +1736,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             // a dirty one is preserved — typed input is never
                             // destroyed by starting a drag.
                             if (!quickAddDirtyRef.current) closeQuickAdd();
+                            setIsDragActive(true);
                         }}
                     >
                         <Droppable
@@ -1709,6 +1750,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
+                                    // Scope for the hover family-focus rules:
+                                    // they match `.task-table-body:has(<row>:hover)`,
+                                    // so the class must sit on the rows' common
+                                    // parent. The drag attribute disables them
+                                    // wholesale while a row is in flight.
+                                    className={TASK_BODY_CLASS}
+                                    {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
                                     style={{
                                         minHeight: 100,
                                         minWidth: totalTableWidth,
@@ -1729,6 +1777,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         depthMap={depthMap}
                                         displayRows={displayRows}
                                         expandedRows={expandedRows}
+                                        familyKeyByRow={familyKeyByRow}
                                         ghostIds={ghostInfo.ghostIds}
                                         mode={mode}
                                         myself={myself}

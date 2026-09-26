@@ -32,6 +32,7 @@ const ROWS = [{ id: "1" }, { id: "2" }] as unknown as TaskTableProps[];
 const DEPTHS = new Map<string, number>();
 const CHILDREN = new Map<string, TaskTableProps[]>();
 const GHOSTS = new Set<string>();
+const FAMILIES = new Map<string, string>();
 const COLUMNS = [] as unknown as TaskTableRowsProps["columns"];
 const EXPANDED = new Set<string>();
 const SPRINTS = new Map<number, string>();
@@ -65,6 +66,7 @@ const baseProps = (over: Partial<TaskTableRowsProps> = {}): TaskTableRowsProps =
         depthMap: DEPTHS,
         childrenByParent: CHILDREN,
         ghostIds: GHOSTS,
+        familyKeyByRow: FAMILIES,
         columns: COLUMNS,
         expandedRows: EXPANDED,
         sprintNamesById: SPRINTS,

@@ -48,6 +48,7 @@ import {
     setCustomFieldValue,
 } from "../../utils/customFields";
 import { deriveDaysLeft } from "../../utils/daysLeft";
+import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -142,9 +143,15 @@ const getTableRowStyles = (
               : "none",
         borderRadius: isDragging ? 6 : 0,
         // Don't use transitions when dragging - it interferes with drag positioning
+        //
+        // `opacity` / `filter` are here for the hover family-focus dimming
+        // (familyFocusCss.ts). They must be in THIS list, not the `sx` below:
+        // an inline `transition` shorthand beats the emotion class, so a
+        // transition declared only in `sx` never applies to this element.
         transition: isDragging
             ? "none"
-            : "background-color 0.15s ease, box-shadow 0.15s ease, border-left 0.15s ease",
+            : "background-color 0.15s ease, box-shadow 0.15s ease, border-left 0.15s ease," +
+              " opacity 0.15s ease, filter 0.15s ease",
     };
 };
 
@@ -230,6 +237,19 @@ export type DraggableTaskRowProps = {
     // fully non-interactive (no preview open, no inline edit, no drag) — it's
     // context, not a row the user acts on. Defaults to false everywhere else.
     isGhost?: boolean;
+    // Which root-task/milestone family this row belongs to: the id of the
+    // root its parent chain ends at (its own id when it IS a root). Rendered
+    // as a `data-task-family` attribute and read by the generated hover
+    // stylesheet in `familyFocusCss.ts` — hovering any row dims every row
+    // outside that family.
+    //
+    // It is only an attribute, never read at render time, which is the whole
+    // point: the cross-row highlight resolves in the browser's selector
+    // engine, so mouse movement costs React nothing. Driving it from a
+    // hovered-id state in the table would re-render the entire row map on
+    // every mouse-enter — the exact cost the hover-in-CSS note above
+    // `getTableRowStyles` exists to avoid.
+    familyKey?: string;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -276,6 +296,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         onRequestPreview,
         isSelected,
         isGhost = false,
+        familyKey,
         projectTags,
         customFieldDefs,
         useTM,
@@ -2347,6 +2368,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             rowRef.current = el;
                         }}
                         {...provided.draggableProps}
+                        // Hooks for the generated family-focus stylesheet
+                        // (see `familyFocusCss.ts`). The class makes this row
+                        // both a `:hover` probe and a dim target; the family
+                        // attribute is what the rules match on. `selected` is
+                        // published so the dim rules can exempt the row whose
+                        // preview pane is open.
+                        className={TASK_ROW_CLASS}
+                        data-task-family={familyKey}
+                        data-task-selected={isSelected ? "true" : undefined}
                         // Base layout/colors come from the helper.
                         // `provided.draggableProps.style` carries dnd's
                         // transform / transition during drag and must
@@ -2648,6 +2678,10 @@ export const draggableTaskRowPropsAreEqual = (
     prev.isSelected === next.isSelected &&
     prev.projectTags === next.projectTags &&
     prev.customFieldDefs === next.customFieldDefs &&
-    (prev.isGhost ?? false) === (next.isGhost ?? false);
+    (prev.isGhost ?? false) === (next.isGhost ?? false) &&
+    // A reparent (drag-to-nest) moves a row to a different root, so its
+    // family attribute must be re-rendered or the hover dimming would keep
+    // grouping it with its previous root.
+    prev.familyKey === next.familyKey;
 
 export const DraggableTaskRow = memo(DraggableTaskRowImpl, draggableTaskRowPropsAreEqual);
