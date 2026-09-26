@@ -214,8 +214,15 @@ export const ModalRemindMe = ({
                     </Typography>
                 )}
 
+                {/* A real element, not a fragment: ModalDialog injects
+                    `data-last-child` into its direct children, and a
+                    React.Fragment can't accept it (React warns on every
+                    re-render once this branch is live). The explicit column
+                    keeps ModalDialog's own layout, so the Button's
+                    `alignSelf: flex-start` still resolves against a flex
+                    parent rather than stretching to full width. */}
                 {remindAt && (
-                    <>
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
                         <Divider sx={{ my: 1.5 }} />
                         <Button
                             color="danger"
@@ -231,7 +238,7 @@ export const ModalRemindMe = ({
                         >
                             {m.remove}
                         </Button>
-                    </>
+                    </Box>
                 )}
             </ModalDialog>
         </Modal>

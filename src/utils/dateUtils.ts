@@ -1,4 +1,13 @@
-import { getMessages } from "../i18n";
+// Imported from the leaf module, NOT the `../i18n` barrel. The barrel
+// re-exports `I18nProvider.tsx`, and in dev `@vitejs/plugin-react-swc`
+// prepends an UNCONDITIONAL `import "/@react-refresh"` to any module that
+// exports a component. That runtime touches `window` at top level, so pulling
+// the barrel into a web worker (which has `self`, not `window`) threw
+// `ReferenceError: window is not defined` at import time and killed the
+// worker. dateUtils is reachable from the tasks/users/notes/activity workers
+// via their handlers, so the barrel edge here took the task table's entire
+// data path down. `getMessages.ts` is a React-free leaf — keep it that way.
+import { getMessages } from "../i18n/getMessages";
 
 export const getLocalCurrentTimestamp = () => {
     const now = new Date();

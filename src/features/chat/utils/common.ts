@@ -1,4 +1,8 @@
-import { getMessages } from "../../../i18n";
+// Leaf module, not the `../../../i18n` barrel — the barrel re-exports a
+// `.tsx` component module, which in dev drags Vite's React Refresh runtime
+// (top-level `window`) into any web worker that reaches this file. The
+// activity worker does. See the note in `src/utils/dateUtils.ts`.
+import { getMessages } from "../../../i18n/getMessages";
 import { PreviewMediaKind } from "../../../types/chat";
 
 // `t.chat.sidebar` key per media kind — shared so the chat list and the

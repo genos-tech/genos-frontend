@@ -185,8 +185,13 @@ export const ModalInviteMembers = ({ open, teamId, onClose, projectId, projectNa
                     </Typography>
                 </Box>
 
+                {/* Both branches wrap in a Box, not a fragment: ModalDialog
+                    injects `data-last-child` into its direct children, and a
+                    React.Fragment can't accept it (React warns on every
+                    re-render). The explicit column keeps the dialog's own
+                    layout, so inner `justifyContent`/margins behave as before. */}
                 {results ? (
-                    <>
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
                         <Typography
                             level="title-sm"
                             sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}
@@ -266,9 +271,9 @@ export const ModalInviteMembers = ({ open, teamId, onClose, projectId, projectNa
                                 {t.admin.inviteMembers.done}
                             </Button>
                         </Stack>
-                    </>
+                    </Box>
                 ) : (
-                    <>
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
                         {emails.length > 0 && (
                             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1.5 }}>
                                 {emails.map((email) => (
@@ -399,7 +404,7 @@ export const ModalInviteMembers = ({ open, teamId, onClose, projectId, projectNa
                                     : t.admin.inviteMembers.send}
                             </Button>
                         </Stack>
-                    </>
+                    </Box>
                 )}
             </ModalDialog>
         </Modal>

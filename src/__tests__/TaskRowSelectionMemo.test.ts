@@ -64,6 +64,7 @@ const baseProps = (over: Partial<DraggableTaskRowProps> = {}): DraggableTaskRowP
         sprintNamesById: SPRINT_NAMES,
         isSelected: false,
         projectTags: PROJECT_TAGS,
+        familyKey: "42",
         useTM: freshUseTM(),
         ...over,
     }) as unknown as DraggableTaskRowProps;
@@ -160,6 +161,14 @@ describe("draggableTaskRowPropsAreEqual — must-render (staleness guards)", () 
 
     it("re-renders when sprint names resolve", () => {
         const next = baseProps({ sprintNamesById: new Map([[1, "Sprint 1"]]) });
+        expect(draggableTaskRowPropsAreEqual(baseProps(), next)).toBe(false);
+    });
+
+    it("re-renders when a reparent moves the row to another family", () => {
+        // `familyKey` reaches the DOM as the attribute the hover family-focus
+        // rules match on. Skipping this render would leave the row grouped
+        // with the root it was dragged away from.
+        const next = baseProps({ familyKey: "99" });
         expect(draggableTaskRowPropsAreEqual(baseProps(), next)).toBe(false);
     });
 });
