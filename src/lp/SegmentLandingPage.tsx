@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useLpLang } from "./lpLang";
 import { SEGMENTS, type Lang, type SegmentKey } from "./segments";
 import { AVAILABILITY_LABELS, createSegmentMailtoHref, SHARED_FOOTER } from "./segments/shared";
 import { useDocumentMeta } from "./useDocumentMeta";
@@ -164,7 +165,7 @@ function StepFlow({ steps }: { steps: string[] }) {
 }
 
 export default function GenosSegmentPage({ segment }: { segment: SegmentKey }) {
-    const [lang, setLang] = useState<Lang>("en");
+    const { lang, setLang, appHref } = useLpLang();
     const [dark, setDark] = useState(false);
     const config = SEGMENTS[segment];
     const t = config[lang];
@@ -242,7 +243,7 @@ export default function GenosSegmentPage({ segment }: { segment: SegmentKey }) {
                             </button>
                             <a
                                 className="hidden rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-violet-700 dark:bg-white dark:text-slate-950 dark:hover:bg-violet-100 lg:inline-flex"
-                                href={APP_URL}
+                                href={appHref(APP_URL)}
                                 rel="noreferrer"
                                 target="_blank"
                             >
@@ -300,7 +301,7 @@ export default function GenosSegmentPage({ segment }: { segment: SegmentKey }) {
                             >
                                 <a
                                     className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
-                                    href={APP_URL}
+                                    href={appHref(APP_URL)}
                                     rel="noreferrer"
                                     target="_blank"
                                 >
@@ -698,7 +699,7 @@ export default function GenosSegmentPage({ segment }: { segment: SegmentKey }) {
                             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                                 <a
                                     className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
-                                    href={APP_URL}
+                                    href={appHref(APP_URL)}
                                     rel="noreferrer"
                                     target="_blank"
                                 >
