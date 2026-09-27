@@ -4415,13 +4415,15 @@ export const es: DeepPartial<Messages> = {
             headlineBadge: "Titular",
             groups: [
                 {
-                    id: "buscar",
+                    id: "search",
                     title: "Busca en todo",
                     desc: "Presione ⌘K y simplemente escriba. Estas son palabras clave, no preguntas: los chats, las tareas y las notas aparecen en vivo a medida que escribe. Utilice ↑ / ↓ para resaltar un resultado y Enter para abrirlo.",
-                    prompts: ["movimiento-enmarcador", "Plausible", "síntesis", "Comando-K"],
+                    // Búsqueda literal: deben coincidir con el contenido
+                    // sembrado, que está en inglés para este locale.
+                    prompts: ["framer-motion", "Plausible", "synthesis", "Cmd-K"],
                 },
                 {
-                    id: "preguntar",
+                    id: "ask",
                     title: "hacer una pregunta",
                     desc: "Escriba una pregunta completa y presione Enter. Genos elige la herramienta adecuada (búsqueda, lista de tareas, análisis del proyecto) y respuestas con citas en las que puede hacer clic.",
                     prompts: [
@@ -4432,19 +4434,19 @@ export const es: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "razón",
+                    id: "reason",
                     title: "Déjalo razonar entre fuentes.",
                     desc: "Algunas respuestas necesitan más de una búsqueda. Mire la tira de actividades debajo de la respuesta que muestra cada paso mientras Genos encadena chats, tareas y notas.",
                     prompts: [
-                        "¿Por qué descartamos el movimiento del marco?",
+                        "¿Por qué descartamos framer-motion?",
                         "¿Qué está bloqueando la reconstrucción de la página de inicio?",
                         "Resuma la señal de la entrevista con el cliente hasta el momento.",
                     ],
                 },
                 {
-                    id: "hacer un seguimiento",
+                    id: "followup",
                     title: "Mantenga la conversación",
-                    desc: 'Solicite un seguimiento justo después de la respuesta del movimiento del marco. Genos recuerda el hilo, por lo que "eso" y "esa decisión" simplemente funcionan.',
+                    desc: 'Solicite un seguimiento justo después de la respuesta de framer-motion. Genos recuerda el hilo, por lo que "eso" y "esa decisión" simplemente funcionan.',
                     prompts: [
                         "¿Y cuál es la decisión sobre la animación en la aplicación?",
                         "¿A quién pertenece?",
@@ -4458,11 +4460,11 @@ export const es: DeepPartial<Messages> = {
                         "¿Qué hay en mi lista de tareas pendientes hoy?",
                         "¿Qué queda abierto desde principios de esta semana?",
                         "Agregue una tarea pendiente: revise el panel de Plausible antes de ponerse en marcha",
-                        "Marque la revisión del movimiento del encuadre como terminada.",
+                        "Marque la revisión de framer-motion como terminada.",
                     ],
                 },
                 {
-                    id: "hilo",
+                    id: "thread",
                     title: "Preguntar por un hilo",
                     desc: "Estos no usan ⌘K. Abre cualquier hilo de chat y haga clic en ✨ en su encabezado: Genos resume solo esa conversación y luego responde preguntas estrictamente relacionadas con ella.",
                     prompts: [
@@ -4472,7 +4474,7 @@ export const es: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "agente",
+                    id: "agent",
                     headline: true,
                     title: "Pon a funcionar Genos",
                     desc: "El titular. Describe el trabajo desordenado en una oración y Genos lo propone todo: un hito con tareas, subtareas en el trabajo que ya existe, una nueva priorización o una nota escrita. No se guarda nada hasta que lo apruebes con un solo clic.",

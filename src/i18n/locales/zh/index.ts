@@ -1403,7 +1403,9 @@ export const zh: DeepPartial<Messages> = {
                     id: "search",
                     title: "搜索所有内容",
                     desc: "按 ⌘K 并输入即可。这些是关键字，而不是问题 - 聊天、任务和笔记会在你键入时实时显示。使用 ↑ / ↓ 突出显示结果，然后使用 Enter 打开它。",
-                    prompts: ["成帧器运动", "似是而非的", "合成", "Cmd-K"],
+                    // 字面搜索关键词：必须与已填充的内容完全匹配，
+                    // 该内容在此语言环境下为英文。
+                    prompts: ["framer-motion", "Plausible", "synthesis", "Cmd-K"],
                 },
                 {
                     id: "ask",
@@ -1421,7 +1423,7 @@ export const zh: DeepPartial<Messages> = {
                     title: "让它跨来源推理",
                     desc: "有些答案需要多次查找。观看答案下方的活动条显示 Genos 将聊天、任务和笔记链接在一起的每一步。",
                     prompts: [
-                        "为什么我们排除成帧器运动？",
+                        "为什么我们排除 framer-motion？",
                         "是什么阻碍了主页重建？",
                         "总结迄今为止的客户访谈信号。",
                     ],

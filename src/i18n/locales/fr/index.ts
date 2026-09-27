@@ -1466,13 +1466,15 @@ export const fr: DeepPartial<Messages> = {
             headlineBadge: "Titre",
             groups: [
                 {
-                    id: "recherche",
+                    id: "search",
                     title: "Rechercher partout",
                     desc: "Appuyez sur ⌘K et tapez simplement. Ce sont des mots-clés, pas des questions : les discussions, les tâches et les notes apparaissent en direct au fur et à mesure que vous tapez. Utilisez ↑ / ↓ pour mettre en surbrillance un résultat et Entrée pour l'ouvrir.",
-                    prompts: ["framer-motion", "Plausible", "synthèse", "Cmd-K"],
+                    // Mots-clés de recherche littéraux : ils doivent
+                    // correspondre au contenu généré, en anglais ici.
+                    prompts: ["framer-motion", "Plausible", "synthesis", "Cmd-K"],
                 },
                 {
-                    id: "demander",
+                    id: "ask",
                     title: "Poser une question",
                     desc: "Tapez une question complète et appuyez sur Entrée. Genos choisit le bon outil – recherche, votre liste de tâches, analyse de projet – et répond avec des citations sur lesquelles vous pouvez cliquer.",
                     prompts: [
@@ -1483,7 +1485,7 @@ export const fr: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "raison",
+                    id: "reason",
                     title: "Laissez-le raisonner à travers les sources",
                     desc: "Certaines réponses nécessitent plus d'une recherche. Regardez la bande d'activité sous la réponse montrer chaque étape pendant que Genos enchaîne les discussions, les tâches et les notes.",
                     prompts: [
@@ -1493,7 +1495,7 @@ export const fr: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "suivi",
+                    id: "followup",
                     title: "Poursuivez la conversation",
                     desc: "Demandez un suivi juste après la réponse de l'encadrant. Genos se souvient du fil de discussion, donc « cela » et « cette décision » fonctionnent.",
                     prompts: [
@@ -1502,7 +1504,7 @@ export const fr: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "tâches",
+                    id: "todos",
                     title: "Gérez votre journée",
                     desc: "Genos lit votre liste de tâches quotidiennes et peut ajouter ou cocher des éléments. Chaque modification est d'abord soumise à votre approbation : rien n'est écrit en silence.",
                     prompts: [
@@ -1513,7 +1515,7 @@ export const fr: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "fil",
+                    id: "thread",
                     title: "Renseignez-vous sur un fil de discussion",
                     desc: "Ceux-ci n'utilisent pas ⌘K. Ouvrez n'importe quel fil de discussion et cliquez sur le ✨ dans son en-tête – Genos résume uniquement cette conversation, puis répond aux questions qui s'y rapportent strictement.",
                     prompts: [
