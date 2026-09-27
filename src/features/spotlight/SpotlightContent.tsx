@@ -106,7 +106,7 @@ import {
     SpotlightResultItem,
 } from "./SpotlightResultItem";
 import type { SpotlightResult } from "./types";
-import type { HistoryMode } from "./useSpotlight";
+import type { HistoryMode, SpotlightAskOrigin } from "./useSpotlight";
 
 type SpotlightMessages = Messages["spotlight"];
 
@@ -161,7 +161,12 @@ export interface SpotlightContentProps {
     onPreview: (r: SpotlightResult) => void;
     // `mentions` carries the structured @/# refs the input's picker
     // collected for the live query (absent on retry — see useSpotlight).
-    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
+    // `origin` is analytics-only; omitted means "typed".
+    onAsk: (
+        overrideQuery?: string,
+        mentions?: AgentMentionRef[],
+        origin?: SpotlightAskOrigin
+    ) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -1045,7 +1050,7 @@ export const SpotlightContent = ({
                                         : {}),
                                 }}
                                 title={item}
-                                onClick={() => onAsk(item)}
+                                onClick={() => onAsk(item, undefined, "starter")}
                             >
                                 {item}
                             </Chip>
@@ -1785,7 +1790,11 @@ interface TurnViewProps {
     // handler is composed inside `TurnView` from `onAsk` + `askedQuery`,
     // so memoised past turns aren't invalidated when the current turn
     // streams in a new `answer_delta`.
-    onAsk?: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
+    onAsk?: (
+        overrideQuery?: string,
+        mentions?: AgentMentionRef[],
+        origin?: SpotlightAskOrigin
+    ) => void;
     askDisabled?: boolean;
     // F1 — the turn's AgentRun id (from the `done` event) + the
     // feedback submitter. Both optional: error/cancelled turns and
@@ -1907,7 +1916,7 @@ const TurnViewInner = ({
     // own `askedQuery` so past turns can stay memoised across streaming
     // updates of the current turn.
     const onRetry = useCallback(() => {
-        if (onAsk) onAsk(askedQuery, mentions);
+        if (onAsk) onAsk(askedQuery, mentions, "retry");
     }, [onAsk, askedQuery, mentions]);
 
     // Look-up table for `rewriteCitations` and the `a` override below.

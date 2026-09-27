@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { getMessages, type Locale } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
+import { trackDemoSignInFailed } from "../../../services/demoFunnel";
 import { DemoSignInResponse } from "../../../types/admin";
 
 /**
@@ -25,21 +26,29 @@ export const demoSignIn = async (
         const res = await api.post<DemoSignInResponse>("/user/demo/", body);
         return res.data;
     } catch (error: unknown) {
+        // Reported here rather than at the call site because only this function
+        // can tell the branches apart — the caller just sees `undefined`. A
+        // drop in `demo_started` means nothing without knowing whether the
+        // throttle, the network or the seeder was the cause.
         const m = getMessages().admin.auth.errors;
         if (axios.isAxiosError(error)) {
             if (!error.response) {
                 console.error("Network error:", error.message);
                 setErrorMessage?.(m.network);
+                trackDemoSignInFailed("network");
             } else if (error.response.status === 429) {
                 console.error("Demo signin rate-limited:", error.response.data);
                 setErrorMessage?.(m.demoRateLimited);
+                trackDemoSignInFailed("rate_limited");
             } else {
                 console.error("API error:", error.response.status, error.response.data);
                 setErrorMessage?.(m.demoFailed);
+                trackDemoSignInFailed("error");
             }
         } else {
             console.error("Unexpected error:", error);
             setErrorMessage?.(m.unexpected);
+            trackDemoSignInFailed("unexpected");
         }
     }
 };
