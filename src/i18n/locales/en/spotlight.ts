@@ -29,6 +29,32 @@ export const spotlight = {
         initial: "Start typing to search across chats, tasks, and notes.",
         noMatches: "No matches yet — try different keywords.",
     },
+    // One-click starter questions, shown under the Genos page's empty
+    // input. An empty box is a dead end for a first-time visitor: nothing
+    // on the page says what Genos can be *asked* (as opposed to searched),
+    // so the placeholder's "press Enter to ask" goes unread and the visitor
+    // may never ask anything at all.
+    //
+    // Deliberately generic — no project, person or product name. Unlike
+    // `demoPage.spotlight.groups[].prompts`, which are pinned verbatim to
+    // the seeded demo content, these fire against whatever workspace the
+    // viewer is in, including a brand-new one, and a starter that returns
+    // nothing is worse than no starter. Each also demonstrates a different
+    // capability — catch-up, retrieval-with-rationale, triage — rather than
+    // three rephrasings of "search".
+    //
+    // `items` is an array, and `deepMerge` replaces arrays wholesale, so a
+    // locale may ship any number of starters (including none) without
+    // half-translated output. The renderer reads `.length`, so nothing here
+    // assumes three.
+    starters: {
+        label: "Try asking",
+        items: [
+            "What happened in my projects this week?",
+            "What did we decide about our current priorities, and why?",
+            "What's blocked right now, and who owns it?",
+        ],
+    },
     filter: {
         ariaLabel: "Filter results by service",
         label: "Filters",

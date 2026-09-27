@@ -365,6 +365,17 @@ export const SpotlightContent = ({
         count: selectedProjectIds.length,
     });
 
+    // Starter questions for the page's empty state (see the render site).
+    // Read defensively rather than as `t.spotlight.starters.items`: a
+    // non-English catalog is `DeepPartial<Messages>` deep-merged onto
+    // English, and `deepMerge` replaces arrays wholesale — so a translator
+    // can legitimately ship `items: []`, and a malformed catalog could put
+    // a non-array here. Either way the row simply doesn't render.
+    const starters = useMemo(() => {
+        const items = t.spotlight.starters?.items;
+        return Array.isArray(items) ? items.filter((s) => typeof s === "string" && s.trim()) : [];
+    }, [t]);
+
     // ---- Input performance: decouple display from heavy renders. ----
     //
     // `localInput` updates on EVERY keystroke (instant, local). It drives
@@ -949,6 +960,98 @@ export const SpotlightContent = ({
                     </AppTooltip>
                 </Box>
             )}
+
+            {/* Starter questions — the page's empty state ONLY.
+                    The placeholder says "press Enter to ask Genos", but a
+                    first-time visitor on a centered empty box has no idea
+                    what's worth asking, and an unasked question is the one
+                    failure mode no amount of answer quality fixes. These
+                    give three one-click asks.
+
+                    Every clause of the gate is load-bearing:
+                      - `variant === "page"`: the overlay is opened by ⌘K,
+                        i.e. deliberately, by someone who already knows what
+                        Spotlight is — and its sheet has no room to spare.
+                      - `!inAgentMode`: past the first ask the conversation
+                        panel owns the surface, and "Ask a follow-up" is the
+                        affordance there.
+                      - `!hasQuery`: the moment anything is typed the
+                        visitor has their own question; replacing it with a
+                        starter would throw their text away.
+                      - `aiAnswersEnabled`: HIDDEN, not disabled. `onAsk`
+                        silently returns when AI answers are off, so a
+                        visible chip would do nothing at all on click —
+                        worse than absent. (Contrast the service chips
+                        below, which stay visible-but-disabled: those
+                        describe a *selection* that still exists.)
+
+                    `onAsk(item)` and not `setQuery` + submit: `overrideQuery`
+                    is exactly the "ask this, never mind the input" path the
+                    retry button already uses, so no debounce or render cycle
+                    sits between the click and the ask. No mentions are
+                    passed — these name no entity, by design. */}
+            {variant === "page" &&
+                !inAgentMode &&
+                !hasQuery &&
+                aiAnswersEnabled &&
+                starters.length > 0 && (
+                    <Box
+                        aria-label={t.spotlight.starters.label}
+                        role="group"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexWrap: "wrap",
+                            gap: 0.75,
+                            px: { xs: 1, sm: 2 },
+                            pt: 1.5,
+                        }}
+                    >
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 700,
+                                mr: 0.25,
+                                whiteSpace: "nowrap",
+                                color: isDark ? DARK_TEXT_SOFT : undefined,
+                                opacity: isDark ? 1 : 0.6,
+                            }}
+                        >
+                            {t.spotlight.starters.label}
+                        </Typography>
+                        {starters.map((item) => (
+                            <Chip
+                                key={item}
+                                color="neutral"
+                                size="sm"
+                                startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />}
+                                variant="soft"
+                                sx={{
+                                    "--Chip-minHeight": "28px",
+                                    fontWeight: 500,
+                                    // Joy's Chip label is `nowrap` + ellipsis and
+                                    // the root is `max-content`, so a full
+                                    // sentence would run off a phone screen.
+                                    // Cap the width and let it truncate — the
+                                    // click still asks the whole question, and
+                                    // the title attribute shows it in full.
+                                    maxWidth: { xs: "100%", sm: 340 },
+                                    ...(isDark
+                                        ? {
+                                              color: DARK_TEXT_MEDIUM,
+                                              backgroundColor: "rgba(255,255,255,0.07)",
+                                          }
+                                        : {}),
+                                }}
+                                title={item}
+                                onClick={() => onAsk(item)}
+                            >
+                                {item}
+                            </Chip>
+                        ))}
+                    </Box>
+                )}
 
             {/* Service filter chips — search mode ONLY. The moment an
                     ask starts (inAgentMode), the conversation panel owns
