@@ -21,17 +21,45 @@ import { I18nProvider, useTranslation } from "../i18n";
 
 const APP_URL = "https://genosai.dev";
 
-// Icon per Spotlight prompt group. Keyed by the `id` in
-// `demoPage.spotlight.groups`; falls back to Sparkles for anything unmapped.
-const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    search: Search,
-    ask: MessageSquareText,
-    reason: Workflow,
-    followup: CornerDownRight,
-    todos: ListTodo,
-    thread: Sparkles,
-    agent: Bot,
-};
+/**
+ * Icon per Spotlight prompt group, in render order.
+ *
+ * Keyed by POSITION, not by the translated `id`. The icon used to be looked
+ * up as `GROUP_ICONS[groupItem.id]`, which made a translator's edit to a
+ * field that is really a lookup key silently break the page: six locales
+ * translated `id` (ja/ar/hi resolved 0 of 7, es/fr 1 of 7 by luck) and every
+ * unresolved card fell back to a generic Sparkles. `DeepPartial<Messages>`
+ * widens string literals so translators can fill keys incrementally, so
+ * TypeScript cannot catch that — nothing but position is safe to rely on.
+ *
+ * This mirrors `FeaturesPage`'s `FEATURE_ORDER`, which was never affected
+ * because it iterates a code-side constant and uses translations only as
+ * values. `localeGroupIds.test.ts` pins both halves.
+ */
+const GROUP_ICONS: ReadonlyArray<React.ComponentType<{ className?: string }>> = [
+    Search,
+    MessageSquareText,
+    Workflow,
+    CornerDownRight,
+    ListTodo,
+    Sparkles,
+    Bot,
+];
+
+/**
+ * Canonical group ids, in the same order as `GROUP_ICONS`. Exported so the
+ * cross-locale test asserts against the real table rather than a copy that
+ * could drift and let the test pass while the page stays broken.
+ */
+export const GROUP_ORDER = [
+    "search",
+    "ask",
+    "reason",
+    "followup",
+    "todos",
+    "thread",
+    "agent",
+] as const;
 
 function cn(...classes: Array<string | false | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -338,7 +366,7 @@ function DemoPageInner() {
                             {copy.spotlight.groups.map((groupItem, index) => {
                                 const isHeadline =
                                     "headline" in groupItem && groupItem.headline === true;
-                                const Icon = GROUP_ICONS[groupItem.id] ?? Sparkles;
+                                const Icon = GROUP_ICONS[index] ?? Sparkles;
                                 return (
                                     <motion.div
                                         key={groupItem.id}

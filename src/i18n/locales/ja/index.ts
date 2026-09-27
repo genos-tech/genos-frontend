@@ -1443,13 +1443,19 @@ export const ja: DeepPartial<Messages> = {
             headlineBadge: "見出し",
             groups: [
                 {
-                    id: "検索",
+                    id: "search",
                     title: "すべてを横断して検索する",
                     desc: "⌘K を押して入力するだけです。これらは質問ではなくキーワードです。入力すると、チャット、タスク、メモがライブで表示されます。 ↑ / ↓ を使用して結果を強調表示し、Enter を使用して結果を開きます。",
-                    prompts: ["フレーマーモーション", "もっともらしい", "合成", "Cmd+K"],
+                    // These are literal search keywords, so they must match the
+                    // seeded workspace verbatim. `framer-motion` / `Plausible` /
+                    // `Cmd-K` are Latin in the Japanese seed data too (the
+                    // seeder keeps proper nouns and shortcuts unlocalised), and
+                    // "synthesis" has no Japanese surface form there — the
+                    // 顧客インタビュー analysis task is the equivalent entry point.
+                    prompts: ["framer-motion", "Plausible", "顧客インタビュー", "Cmd-K"],
                 },
                 {
-                    id: "聞く",
+                    id: "ask",
                     title: "質問する",
                     desc: "質問全体を入力して Enter キーを押します。 Genos は、検索、タスク リスト、プロジェクト分析など、適切なツールを選択し、クリックできる引用で回答します。",
                     prompts: [
@@ -1460,37 +1466,37 @@ export const ja: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "理由",
+                    id: "reason",
                     title: "ソースを横断して推論してみましょう",
                     desc: "一部の回答には複数回の検索が必要です。回答の下にあるアクティビティ ストリップに、Genosがチャット、タスク、メモを連鎖させていく各ステップが表示されます。",
                     prompts: [
-                        "フレーマーモーションを除外したのはなぜですか?",
+                        "framer-motion を除外したのはなぜですか?",
                         "ホームページの再構築を妨げているものは何ですか?",
                         "これまでの顧客インタビュー信号を要約します。",
                     ],
                 },
                 {
-                    id: "フォローアップ",
+                    id: "followup",
                     title: "会話を続けてください",
-                    desc: "フレーマーモーションの回答の直後にフォローアップを求めます。Genosはスレッドを覚えているので、「それ」と「その決断」はそのまま機能します。",
+                    desc: "framer-motion の回答の直後にフォローアップを求めます。Genosはスレッドを覚えているので、「それ」と「その決断」はそのまま機能します。",
                     prompts: [
                         "そして、アプリ内アニメーションの決定は何ですか?",
                         "誰が所有していますか?",
                     ],
                 },
                 {
-                    id: "To-Do",
+                    id: "todos",
                     title: "一日を管理する",
                     desc: "Genos は毎日の To-Do リストを読み取り、項目を追加したりチェックを入れたりできます。すべての変更は最初に承認を得るために一時停止されます。何も黙って書き込まれることはありません。",
                     prompts: [
                         "今日の To-Do リストには何が入っていますか?",
                         "今週初めからまだ開いているものは何ですか？",
                         "To-Do を追加する: 立ち上がる前に Plausible ダッシュボードを確認する",
-                        "フレーマーモーションのレビュー To-Do を完了としてマークします。",
+                        "framer-motion のレビュー To-Do を完了としてマークします。",
                     ],
                 },
                 {
-                    id: "スレッド",
+                    id: "thread",
                     title: "1つのスレッドについて質問する",
                     desc: "これらは ⌘K を使用しません。チャット スレッドを開いてヘッダーの ✨ をクリックします。Genosはその会話だけを要約し、その会話に限定された質問に答えます。",
                     prompts: [
@@ -1500,7 +1506,7 @@ export const ja: DeepPartial<Messages> = {
                     ],
                 },
                 {
-                    id: "エージェント",
+                    id: "agent",
                     headline: true,
                     title: "Genosを働かせる",
                     desc: "見出し。面倒な作業を一文で説明すると、Genos はタスクのマイルストーン、既存の作業の下にあるサブタスク、優先順位の再設定、またはメモの作成など、全体を提案します。ワンクリックで承認するまでは何も保存されません。",
