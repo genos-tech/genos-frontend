@@ -31,6 +31,7 @@ import {
 } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
 import { useTranslation } from "../../../i18n";
+import { markDemoStarted } from "../../../services/demoFunnel";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
@@ -175,6 +176,14 @@ export const SignInForm = () => {
             localStorage.setItem("teamId", res.team_id);
             localStorage.setItem("teamName", res.team_name);
             localStorage.setItem("isDemoUser", "yes");
+
+            // Arms the demo funnel and emits `demo_started`. Deliberately
+            // here rather than beside the POST: only a signin that actually
+            // produced a workspace is a funnel entry (`demoSignIn` returns
+            // undefined on 429/network, and reports those separately). The
+            // funnel's other half fires on the visitor's first answered ask —
+            // see services/demoFunnel.ts for why arrival isn't the payoff.
+            markDemoStarted(res.lang);
 
             navigate("/workspace");
         } finally {

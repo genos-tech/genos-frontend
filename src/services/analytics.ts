@@ -48,6 +48,17 @@ const readUserEnabledFromStorage = (): boolean => {
  */
 export const ANALYTICS_EVENTS = {
     PAGEVIEW: "$pageview",
+    // The demo funnel. A visitor arriving from the marketing pages has a
+    // workspace seeded for them, but the demo's whole purpose is that they
+    // ask Genos something and get a cited answer back — so the funnel has
+    // to measure the ASK, not the signin. See `services/demoFunnel.ts`.
+    DEMO_STARTED: "demo_started",
+    DEMO_COMPLETED: "demo_completed",
+    // A signin that never produced a workspace (rate limit, network, 5xx).
+    // Its own event name on purpose: folding it into `demo_started` with a
+    // `failed` property would put non-entrants in the funnel's first step
+    // and depress the conversion rate by however many 429s we served.
+    DEMO_START_FAILED: "demo_start_failed",
 } as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS] | string;

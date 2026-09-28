@@ -53,6 +53,7 @@ import {
     type AgentSessionSummary,
     type PendingApprovalPayload,
 } from "../../services/agentApi";
+import { markDemoCompleted } from "../../services/demoFunnel";
 import {
     isRunBeingWatched,
     notifyAgentRunComplete,
@@ -113,6 +114,14 @@ const STORAGE_KEY = (teamId: string) => `spotlight:session:v1:${teamId}`;
 const STORAGE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const MAX_STORED_TURNS = 10; // lower cap than in-memory to limit storage size
 
+/**
+ * Where an ask came from. Passed explicitly rather than inferred from
+ * `overrideQuery !== undefined`, which cannot tell a starter chip from a
+ * retry button — both supply one. Shape only: no question text travels with
+ * it (see `services/demoFunnel`).
+ */
+export type SpotlightAskOrigin = "typed" | "starter" | "retry";
+
 export interface UseSpotlightArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
@@ -162,7 +171,13 @@ export interface UseSpotlightReturn {
     // `filterServices`.
     filterProjectIds: number[];
     onChangeFilterProjects: (projectIds: number[]) => void;
-    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
+    // `origin` is analytics-only and optional — every existing caller keeps
+    // working and lands in the "typed" default.
+    onAsk: (
+        overrideQuery?: string,
+        mentions?: AgentMentionRef[],
+        origin?: SpotlightAskOrigin
+    ) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -293,8 +308,25 @@ export const useSpotlight = ({
     // the user has moved on. `liveRunRef` mirrors the in-flight turn
     // because the stream handlers can't read fresh `ask` state — updaters
     // run at commit time, so a handler closure only sees a stale
-    // snapshot. Mirrored fields are exactly what the notice needs.
-    const liveRunRef = useRef<{ turnId: number; askedQuery: string } | null>(null);
+    // snapshot.
+    //
+    // It has a second consumer: the demo funnel's `demo_completed`, which
+    // also fires from `onDone` and needs the same two things the notice
+    // needs — "is this turn still the live one?" and per-turn facts a
+    // commit-time updater can't hand back. Sharing the ref rather than
+    // adding a parallel one is deliberate: its lifecycle is the part
+    // that's easy to get wrong (cancel and "New conversation" both null
+    // it, which is exactly when neither a notice nor a conversion should
+    // fire), and one ref means one place that can be got right.
+    const liveRunRef = useRef<{
+        turnId: number;
+        askedQuery: string;
+        // Where the question came from. Funnel-only; the notice ignores it.
+        origin: SpotlightAskOrigin;
+        // Citation count, mirrored from `onSources` because `onDone` lands
+        // before the sources state commit is readable here.
+        sourceCount: number;
+    } | null>(null);
     // At most one notice per turn. Kept separate from
     // `promotedTurnIdsRef` because Cancel also promotes, and a run the
     // user stopped on purpose must not announce itself.
@@ -325,6 +357,25 @@ export const useSpotlight = ({
         },
         []
     );
+
+    // ---- Demo funnel: the visitor's first answered ask. ----
+    //
+    // This is the demo's payoff moment, so it's the second half of the
+    // funnel — see `services/demoFunnel` for why arrival in the workspace
+    // isn't. Called only from the clean-finish path: `onError` and Cancel
+    // must not count, because a visitor who saw a failure or stopped the
+    // stream did not get the answer the demo exists to show.
+    //
+    // No-ops entirely outside a demo session, which is every normal user.
+    const maybeCompleteDemoFunnel = useCallback((turnId: number, elapsedMs?: number) => {
+        const live = liveRunRef.current;
+        if (!live || live.turnId !== turnId) return;
+        markDemoCompleted({
+            origin: live.origin,
+            ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
+            sourceCount: live.sourceCount,
+        });
+    }, []);
 
     // ---- Global keyboard shortcut: Cmd-K / Ctrl-K toggles. ----
     useEffect(() => {
@@ -685,6 +736,14 @@ export const useSpotlight = ({
                     setAsk((prev) =>
                         stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
                     );
+                    // Mirror the count for the funnel: `onDone` runs before
+                    // this state update is readable from a handler closure,
+                    // so reading `ask.answerSources` there would report 0 on
+                    // every answer.
+                    const live = liveRunRef.current;
+                    if (live && live.turnId === askedTurnId) {
+                        live.sourceCount = sources.length;
+                    }
                 },
                 onDelta: (text: string) => {
                     setAsk((prev) =>
@@ -707,6 +766,11 @@ export const useSpotlight = ({
                               }
                             : prev
                     );
+                    // Before `promoteCurrentTurn` — nothing there clears the
+                    // mirror today, but ordering the read first means a
+                    // future cleanup added to promotion can't silently zero
+                    // the conversion rate.
+                    maybeCompleteDemoFunnel(askedTurnId, elapsedMs);
                     promoteCurrentTurn(askedTurnId);
                     notifyRunFinished(askedTurnId, runId ?? null, null);
                 },
@@ -847,7 +911,7 @@ export const useSpotlight = ({
                 },
             };
         },
-        [promoteCurrentTurn, notifyRunFinished]
+        [promoteCurrentTurn, notifyRunFinished, maybeCompleteDemoFunnel]
     );
 
     // ---- Enter / Ask button handler: stream the agent's answer. ----
@@ -857,7 +921,11 @@ export const useSpotlight = ({
     // retry re-sends the refs stored on the turn (CompletedTurn.mentions),
     // so a re-ask keeps its references block + search boost.
     const onAsk = useCallback(
-        (overrideQuery?: string, mentions?: AgentMentionRef[]) => {
+        (
+            overrideQuery?: string,
+            mentions?: AgentMentionRef[],
+            origin: SpotlightAskOrigin = "typed"
+        ) => {
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
             if (!trimmed) return;
             // Defense: never start a new ask while the previous one is
@@ -908,8 +976,16 @@ export const useSpotlight = ({
                 askedMentions: mentions?.length ? mentions : undefined,
             });
 
-            // Mirror for the completion notice (see `notifyRunFinished`).
-            liveRunRef.current = { turnId: askedTurnId, askedQuery: trimmed };
+            // Mirror for the completion notice (see `notifyRunFinished`) and
+            // the demo funnel (see `maybeCompleteDemoFunnel`). `sourceCount`
+            // starts at 0 and is filled in by `onSources`; an answer that
+            // cites nothing legitimately leaves it there.
+            liveRunRef.current = {
+                turnId: askedTurnId,
+                askedQuery: trimmed,
+                origin,
+                sourceCount: 0,
+            };
 
             // The Spotlight filters — service chips AND the project
             // dropdown — are a SEARCH-ONLY feature: they scope the

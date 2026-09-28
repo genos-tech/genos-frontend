@@ -125,6 +125,11 @@ export type DemoSignInResponse = SignInResponse & {
     team_id: string;
     team_name: string;
     is_demo: boolean;
+    // Which content table actually seeded the workspace. The `lang` we POST is
+    // a preference, not a guarantee — an unknown code degrades to "en" server
+    // side — so this is the authority on what the visitor is looking at.
+    // Optional: a server that predates the bilingual seeder omits it.
+    lang?: string;
 };
 
 export type SignUpResponse = {

@@ -135,8 +135,15 @@ describe("Genos page starter prompts", () => {
         const { props } = renderContent();
         fireEvent.click(screen.getByRole("button", { name: STARTERS[0] }));
         // The whole question, verbatim — a truncated chip label must not
-        // become a truncated ask.
-        expect(props.onAsk).toHaveBeenCalledWith(STARTERS[0]);
+        // become a truncated ask. No mentions: these name no entity.
+        //
+        // `"starter"` is the analytics origin, and it has to be passed
+        // explicitly: `overrideQuery !== undefined` cannot distinguish a chip
+        // from the retry button, which supplies one too — so without this
+        // argument the demo funnel would report every starter-driven
+        // conversion as a typed question, and the measurement these chips
+        // exist to enable would be the one thing they can't provide.
+        expect(props.onAsk).toHaveBeenCalledWith(STARTERS[0], undefined, "starter");
         // Not staged in the input first: that path is debounced (so the ask
         // could fire against stale text) and would leave the question in the
         // box after submitting.
