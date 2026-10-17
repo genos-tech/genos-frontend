@@ -9,6 +9,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
@@ -119,11 +120,14 @@ const actionIcon = (action: string) => {
         case "milestone_assignee_removed":
             return <AssignmentIndRoundedIcon sx={{ fontSize: 18 }} />;
         case "due_date_changed":
+        case "start_date_changed":
             return <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />;
         case "description_edited":
             return <EditOutlinedIcon sx={{ fontSize: 18 }} />;
         case "tags_changed":
             return <LocalOfferOutlinedIcon sx={{ fontSize: 18 }} />;
+        case "project_changed":
+            return <FolderOutlinedIcon sx={{ fontSize: 18 }} />;
         case "closed":
             return <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
         case "reopened":
@@ -555,7 +559,7 @@ const formatRelative = (iso: string, messages: ActivityMessages): string => {
 // by the backend signal, falling back to "#<id>" so a missing /
 // stale relation still renders something useful. Everything else
 // is stringified.
-const RELATION_ID_FIELDS = new Set(["parent_task_id", "milestone_id", "sprint_id"]);
+const RELATION_ID_FIELDS = new Set(["parent_task_id", "milestone_id", "sprint_id", "project_id"]);
 
 const formatValue = (
     value: unknown,
@@ -602,7 +606,7 @@ const formatValue = (
             };
         }
 
-        // Milestones / sprints have no ticket-style id, and their raw
+        // Milestones / sprints / projects have no ticket-style id, and their raw
         // primary key is meaningless to a human skimming the feed — show
         // the name alone, falling back to "#<id>" only when the name is
         // unavailable (e.g. the relation was deleted).
@@ -610,6 +614,15 @@ const formatValue = (
             label: hasTitle ? (titleLabel as string) : `#${value}`,
             isUser: false,
         };
+    }
+    // Tags are stored as `[{ tagName }]`; show the names, not the JSON.
+    if (fieldName === "tags" && Array.isArray(value)) {
+        const names = value
+            .map((tag) =>
+                tag && typeof tag === "object" ? (tag as { tagName?: unknown }).tagName : tag
+            )
+            .filter((name) => typeof name === "string" && name !== "");
+        return { label: names.length ? names.join(", ") : noneLabel, isUser: false };
     }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
         return { label: String(value), isUser: false };
@@ -636,9 +649,12 @@ const DIFF_ACTIONS = new Set([
     "assignee_changed",
     "reporter_changed",
     "due_date_changed",
+    "start_date_changed",
+    "tags_changed",
     "parent_changed",
     "milestone_changed",
     "sprint_changed",
+    "project_changed",
 ]);
 
 // Per-action sentence skeleton. The actor / chips are rendered
@@ -661,6 +677,8 @@ const verbFor = (action: string, messages: ActivityMessages): string => {
             return messages.verbs.reporterChanged;
         case "due_date_changed":
             return messages.verbs.dueDateChanged;
+        case "start_date_changed":
+            return messages.verbs.startDateChanged;
         case "description_edited":
             return messages.verbs.descriptionEdited;
         case "tags_changed":
@@ -671,6 +689,8 @@ const verbFor = (action: string, messages: ActivityMessages): string => {
             return messages.verbs.milestoneChanged;
         case "sprint_changed":
             return messages.verbs.sprintChanged;
+        case "project_changed":
+            return messages.verbs.projectChanged;
         case "closed":
             return messages.verbs.closed;
         case "reopened":
