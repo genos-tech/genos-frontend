@@ -3755,6 +3755,7 @@ export const ar: DeepPartial<Messages> = {
             effort_level: "جهد",
             status: "حالة",
             due_date: "حق",
+            milestone_id: "معلم",
         },
         cleared: "لا أحد",
         unset: "—",

@@ -405,6 +405,7 @@ export const zh: DeepPartial<Messages> = {
             effort_level: "努力",
             status: "地位",
             due_date: "到期的",
+            milestone_id: "里程碑",
         },
         cleared: "没有任何",
         unset: "—",

@@ -2,7 +2,10 @@
 // task showing its display id + title, an old→new diff for every field
 // the model proposes to change (the backend enriched each row with a
 // `current` snapshot at emission time), and the model's per-task
-// rationale underneath.
+// rationale underneath. A milestone move diffs like any other field: the
+// backend labels both `current.milestone_id` and the proposed
+// `milestone_id` with milestone titles (`''` = taken out of its milestone,
+// shown as cleared; a null current = it was in none).
 
 import { Box, Typography } from "@mui/joy";
 
@@ -10,7 +13,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 
-const DIFF_FIELDS = ["priority", "effort_level", "status", "due_date"] as const;
+const DIFF_FIELDS = ["priority", "effort_level", "status", "due_date", "milestone_id"] as const;
 type DiffField = (typeof DIFF_FIELDS)[number];
 
 interface BulkUpdateRow {
@@ -23,6 +26,8 @@ interface BulkUpdateRow {
     effort_level?: string;
     status?: string;
     due_date?: string;
+    // A title, or the raw id when it didn't resolve.
+    milestone_id?: string | number;
 }
 
 export const BulkUpdatePreview = ({ args, isDark }: ApprovalPreviewProps) => {
@@ -30,10 +35,10 @@ export const BulkUpdatePreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const updates = (Array.isArray(args.updates) ? args.updates : []) as BulkUpdateRow[];
 
-    const renderValue = (v: string | null | undefined): string => {
+    const renderValue = (v: string | number | null | undefined): string => {
         if (v === "" || v === null) return t.agentApproval.cleared;
         if (v === undefined) return t.agentApproval.unset;
-        return v;
+        return String(v);
     };
 
     return (

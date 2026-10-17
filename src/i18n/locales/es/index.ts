@@ -3975,6 +3975,7 @@ export const es: DeepPartial<Messages> = {
             effort_level: "Esfuerzo",
             status: "Estado",
             due_date: "Vencimiento",
+            milestone_id: "Hito",
         },
         cleared: "ninguno",
         unset: "—",

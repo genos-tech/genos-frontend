@@ -3950,6 +3950,7 @@ export const hi: DeepPartial<Messages> = {
             effort_level: "मेहनत",
             status: "स्थिति",
             due_date: "देय",
+            milestone_id: "माइलस्टोन",
         },
         cleared: "कोई नहीं",
         unset: "—",
