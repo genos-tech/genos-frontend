@@ -36,6 +36,7 @@ export const agentApproval = {
         effort_level: "Effort",
         status: "Status",
         due_date: "Due",
+        milestone_id: "Milestone",
     },
     cleared: "none",
     unset: "—",

@@ -141,6 +141,35 @@ describe("BulkUpdatePreview (update_tasks_bulk approval)", () => {
         expect(screen.getByText("Blocks the QA pass.")).toBeTruthy();
         // Fields the row doesn't change (status) must not show a diff.
         expect(screen.queryByText(/Status:/)).toBeNull();
+        expect(screen.queryByText(/Milestone:/)).toBeNull();
+    });
+
+    it("shows a milestone move, including a move-only row and a removal", () => {
+        renderCard("update_tasks_bulk", {
+            // Both sides arrive labelled with milestone titles.
+            updates: [
+                {
+                    task_id: 7,
+                    display_id: "WRD-2",
+                    title: "Implementation",
+                    current: { milestone_id: "v1.0" },
+                    milestone_id: "v2.0",
+                    rationale: "Slips to the next release.",
+                },
+                {
+                    task_id: 8,
+                    display_id: "WRD-3",
+                    title: "Docs",
+                    current: { milestone_id: "v1.0" },
+                    milestone_id: "",
+                    rationale: "Not release-bound.",
+                },
+            ],
+        });
+        // A move is a change — the row must not read as "(no field changes)".
+        expect(screen.queryByText("(no field changes)")).toBeNull();
+        const rows = screen.getAllByText(/Milestone:/).map((el) => el.textContent);
+        expect(rows).toEqual(["Milestone: v1.0 → v2.0", "Milestone: v1.0 → none"]);
     });
 });
 
@@ -257,6 +286,41 @@ describe("UpdateTaskPreview (update_task approval)", () => {
         renderCard("update_task", { task_id: "WRD-9", due_date: "" });
         expect(screen.getByText("Update task: WRD-9")).toBeTruthy();
         expect(screen.getByText("Due: none")).toBeTruthy();
+    });
+
+    it("shows a milestone move as old → new", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            milestone_id: "v2.0",
+            current: { milestone_id: "v1.0" },
+        });
+        expect(screen.getByText("Milestone: v1.0 → v2.0")).toBeTruthy();
+    });
+
+    it("shows a removal from a milestone as cleared", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            milestone_id: "",
+            current: { milestone_id: "v1.0" },
+        });
+        expect(screen.getByText("Milestone: v1.0 → none")).toBeTruthy();
+    });
+
+    it("shows a move into a milestone from none, and no chip for a null (no move)", () => {
+        const { unmount } = renderCard("update_task", {
+            task_id: "WRD-5",
+            milestone_id: "v1.0",
+            current: { milestone_id: null },
+        });
+        expect(screen.getByText("Milestone: none → v1.0")).toBeTruthy();
+        unmount();
+        renderCard("update_task", { task_id: "WRD-5", milestone_id: null, priority: "High" });
+        expect(screen.queryByText(/Milestone:/)).toBeNull();
+    });
+
+    it("still shows the target when the event has no current snapshot", () => {
+        renderCard("update_task", { task_id: "WRD-5", milestone_id: "v2.0" });
+        expect(screen.getByText("Milestone: v2.0")).toBeTruthy();
     });
 });
 

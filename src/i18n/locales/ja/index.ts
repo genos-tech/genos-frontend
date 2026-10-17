@@ -421,6 +421,7 @@ export const ja: DeepPartial<Messages> = {
             effort_level: "Effortレベル",
             status: "ステータス",
             due_date: "締切",
+            milestone_id: "マイルストーン",
         },
         cleared: "なし",
         unset: "—",

@@ -7,8 +7,11 @@
 //
 // Unlike `update_tasks_bulk`, the pending event carries no `current`
 // snapshot for a single update, so this shows the proposed value only
-// (no old → new diff). `due_date: ''` / `content_text: ''` are the tool's
-// "clear this field" sentinels and render as a clear rather than a blank.
+// (no old → new diff) — except for a milestone move, where the backend
+// adds `current.milestone_id` (the task's present milestone title, null =
+// in none) so the chip reads "Milestone: old → new". `due_date: ''` /
+// `content_text: ''` / `milestone_id: ''` are the tool's "clear this
+// field" sentinels and render as a clear rather than a blank.
 
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Chip, Typography } from "@mui/joy";
@@ -47,6 +50,19 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
         if (value === undefined) continue;
         const shown = value === "" || value === null ? t.agentApproval.cleared : String(value);
         chips.push(`${t.agentApproval.fieldLabels[field]}: ${shown}`);
+    }
+    // null is the tool's "no move", not a detach — only '' detaches.
+    const milestone = args.milestone_id;
+    if (milestone !== undefined && milestone !== null) {
+        const asMilestone = (v: unknown) =>
+            v === "" || v === null ? t.agentApproval.cleared : String(v);
+        const current = (args.current as { milestone_id?: string | null } | undefined)
+            ?.milestone_id;
+        const shown =
+            current === undefined
+                ? asMilestone(milestone)
+                : `${asMilestone(current)} → ${asMilestone(milestone)}`;
+        chips.push(`${t.agentApproval.fieldLabels.milestone_id}: ${shown}`);
     }
     if (bodyProposed && !body)
         chips.push(`${t.agentApproval.changesBody}: ${t.agentApproval.cleared}`);
