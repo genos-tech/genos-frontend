@@ -48,7 +48,7 @@ export const agentApproval = {
     // Present-continuous phrasing reads as "happening now" on the strip and
     // still fits the approval-title template. Keys mirror the authoritative
     // registry in genos-api `search_engine/agent/tools/categories.py`
-    // (all 58 tools); an unmapped name falls back to the raw tool_name.
+    // (all 60 tools); an unmapped name falls back to the raw tool_name.
     toolNames: {
         // search
         search_knowledge_base: "Searching your workspace",
@@ -64,6 +64,7 @@ export const agentApproval = {
         list_task_dependencies: "Checking task dependencies",
         get_task_blockers: "Checking what's blocking a task",
         get_task_history: "Reading a task's history",
+        find_task_by_delivery: "Finding the task for a branch",
         get_stale_tasks: "Finding stalled tasks",
         get_task_throughput_stats: "Reviewing task throughput",
         // tasks (write)
@@ -73,6 +74,7 @@ export const agentApproval = {
         update_tasks_bulk: "Updating several tasks",
         assign_task: "Assigning a task",
         add_comment: "Adding a comment",
+        add_task_delivery: "Linking a pull request to a task",
         // projects
         list_projects: "Looking through projects",
         get_project_summary: "Summarizing a project",
