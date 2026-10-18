@@ -152,4 +152,31 @@ describe("presence updates a person's status, not their team", () => {
         expect(stored?.teamId).toBe(THEIR_TEAM);
         expect(stored?.tsLastSeen).toBe("2026-08-04T12:00:00Z");
     });
+
+    // What the socket layer sends when it couldn't get a card from
+    // genos-api: the connect-verified id, presence state, and nothing else.
+    const bare = {
+        userId: "u-bob",
+        isOnline: true,
+        teamId: THEIR_TEAM,
+        customStatus: "in a meeting",
+    } as unknown as UserProps;
+
+    it("does not file a nameless row for someone it has never seen", async () => {
+        await beat(bare);
+
+        expect(await new UserRepository().getUser("u-bob")).toBeNull();
+    });
+
+    it("still takes a nameless beat about someone it knows", async () => {
+        const repo = new UserRepository();
+        await repo.saveUser(rosterRow);
+
+        await beat(bare);
+
+        const stored = await repo.getUser("u-bob");
+        expect(stored?.userName).toBe("Bob");
+        expect(stored?.customStatus).toBe("in a meeting");
+        expect(stored?.teamId).toBe(MY_TEAM);
+    });
 });

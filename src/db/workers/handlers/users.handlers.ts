@@ -66,9 +66,15 @@ const checkIsOnline = (
 // both. A key the card leaves out is the card not saying, not the person
 // clearing it, so the roster's value stands. Replacing the row would blank
 // a teammate's email and phone on their profile card within one beat.
-const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
+//
+// When genos-api can't be asked, the socket layer sends just the `userId`
+// its connect check verified. Over a stored row that is a plain "online";
+// about someone never seen it is a row with no name, and a dozen surfaces
+// call string methods on `userName`. So it isn't stored: the next roster
+// load, or the next beat that has a card, files them properly.
+const withStoredIdentity = async (user: UserProps): Promise<UserProps | null> => {
     const stored = await userService.getUser(user.userId);
-    if (!stored) return user;
+    if (!stored) return user.userName ? user : null;
     return {
         ...stored,
         ...user,
@@ -86,7 +92,8 @@ const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
 export const usersHandlers: HandlerMap<UsersRequests> = {
     // Presence only (the `userStatus` socket message is the sole caller).
     addUser: async ({ user }) => {
-        await userService.saveUser(await withStoredIdentity(user));
+        const merged = await withStoredIdentity(user);
+        if (merged) await userService.saveUser(merged);
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {
