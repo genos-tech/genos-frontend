@@ -146,4 +146,92 @@ describe("DevelopersPage", () => {
         renderPage();
         expect(document.body.textContent).toMatch(/Bad input is always a/);
     });
+
+    // ── MCP ──────────────────────────────────────────────────────────
+
+    // genos-api `origin/views/public/mcp/tools.py` CATALOG, in order. A
+    // copy, because this repo cannot import that one: when the catalog
+    // changes, this list and the page's `MCP_TOOLS` change with it. The
+    // page said "Fourteen" through every change from 14 to 39.
+    const MCP_CATALOG = {
+        read: [
+            "get_task",
+            "list_my_tasks",
+            "list_tasks",
+            "list_projects",
+            "list_milestones",
+            "get_milestone_summary",
+            "get_task_blockers",
+            "get_task_history",
+            "find_task_by_delivery",
+            "search_workspace",
+            "get_note",
+            "get_current_user",
+            "get_team_members",
+            "list_project_members",
+            "list_task_dependencies",
+            "list_note_folders",
+            "list_uncompleted_todos",
+            "list_today_todos",
+            "list_calendar_events",
+            "list_calendars",
+            "get_pr",
+            "list_pr_reviews",
+            "list_pr_comments",
+            "list_pr_files",
+            "list_pr_commits",
+        ],
+        write: [
+            "update_task",
+            "add_comment",
+            "add_task_delivery",
+            "create_task",
+            "assign_task",
+            "update_tasks_bulk",
+            "create_task_plan",
+            "create_note",
+            "update_note",
+            "create_todo_item",
+            "update_todo_item",
+            "create_calendar_event",
+            "update_calendar_event",
+            "delete_calendar_event",
+        ],
+    };
+
+    const mcpTable = () => {
+        const label = screen.getByText("Tools · scope");
+        return [...label.parentElement!.querySelectorAll("tr")].map((tr) => {
+            const cells = tr.querySelectorAll("td");
+            return { name: cells[0].textContent, type: cells[1].textContent };
+        });
+    };
+
+    it("lists exactly the published MCP tools, each with its scope", () => {
+        renderPage();
+        expect(mcpTable()).toEqual([
+            ...MCP_CATALOG.read.map((name) => ({ name, type: "read" })),
+            ...MCP_CATALOG.write.map((name) => ({ name, type: "write" })),
+        ]);
+    });
+
+    it("states counts that agree with the tool table", () => {
+        renderPage();
+        const { read, write } = MCP_CATALOG;
+        const text = document.body.textContent ?? "";
+        expect(text).toContain(
+            `${read.length + write.length} tools, ${read.length} reads and ${write.length} writes`
+        );
+        expect(text).toContain(`returns the ${read.length} reads only`);
+        expect(text).toContain(`the ${write.length} writes in the table above need a write key`);
+        // The original cut's numbers, which outlived it by 25 tools.
+        expect(text).not.toMatch(/Fourteen|out of the 57|three writes/);
+    });
+
+    it("warns that MCP writes have no confirmation step and no undo", () => {
+        renderPage();
+        expect(screen.getByText("No confirmation step")).toBeTruthy();
+        expect(document.body.textContent).toMatch(/Over MCP none of them do/);
+        expect(document.body.textContent).toMatch(/there is no undo/);
+    });
 });

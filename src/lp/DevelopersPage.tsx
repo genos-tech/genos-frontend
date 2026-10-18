@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
  *   - `genos-api/origin/views/public/openapi.py`   (REST — drift-tested)
  *   - `genos-api/origin/tests/test_api_contract.py` (the key sets)
  *   - `genos-sockets/WEBSOCKET_EVENTS.md`          (extracted from handlers)
+ *   - `genos-api/origin/views/public/mcp/tools.py` (MCP — `MCP_TOOLS` below)
  */
 
 const API_BASE = import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev";
@@ -127,6 +128,177 @@ const Params = ({ rows, title }: { rows: Row[]; title: string }) => (
         </div>
     </div>
 );
+
+// The published MCP catalog, in its order. Every count and list in the
+// MCP section is derived from this, so the prose cannot drift from the
+// table again — it did on every catalog change from 14 tools to 39.
+// `taskRef` marks the arguments resolved from a display id / url / raw id.
+type McpTool = Row & { type: "read" | "write"; taskRef?: true };
+
+const MCP_TOOLS: McpTool[] = [
+    {
+        name: "get_task",
+        type: "read",
+        taskRef: true,
+        meaning: (
+            <>
+                One task in full. Read <Code>content_markdown</Code> for the description — it keeps
+                headings, checklists and code fences.
+            </>
+        ),
+    },
+    {
+        name: "list_my_tasks",
+        type: "read",
+        meaning: (
+            <>
+                What is on your plate. Where an agent starts when no task is named.{" "}
+                <Code>delivery: open_pr</Code> narrows it to what is in flight.
+            </>
+        ),
+    },
+    {
+        name: "list_tasks",
+        type: "read",
+        meaning:
+            "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, status, priority, assignee or overdue.",
+    },
+    {
+        name: "list_projects",
+        type: "read",
+        meaning: "The projects you belong to, with the ids and short codes other tools take.",
+    },
+    { name: "list_milestones", type: "read", meaning: "Milestones in a project, with progress." },
+    {
+        name: "get_milestone_summary",
+        type: "read",
+        meaning: "A milestone and the tasks under it.",
+    },
+    {
+        name: "get_task_blockers",
+        type: "read",
+        taskRef: true,
+        meaning: "What a task is waiting on.",
+    },
+    {
+        name: "get_task_history",
+        type: "read",
+        taskRef: true,
+        meaning: "Who changed a task, what, when — and whether through the app, the agent or MCP.",
+    },
+    {
+        name: "find_task_by_delivery",
+        type: "read",
+        meaning:
+            "Which task a GitHub branch or PR is for. No match rather than a guess when the branch names no task.",
+    },
+    {
+        name: "search_workspace",
+        type: "read",
+        meaning: "Search across tasks, notes, chat and todos.",
+    },
+    { name: "get_note", type: "read", meaning: "A note's body." },
+    { name: "get_current_user", type: "read", meaning: "Who the key acts as." },
+    { name: "get_team_members", type: "read", meaning: "Who is in the team, for assigning." },
+    { name: "list_project_members", type: "read", meaning: "Who is in one project." },
+    {
+        name: "list_task_dependencies",
+        type: "read",
+        meaning: "Every blocker → blocked edge in a project or milestone, in one call.",
+    },
+    { name: "list_note_folders", type: "read", meaning: "Your personal notes' folders." },
+    { name: "list_uncompleted_todos", type: "read", meaning: "Your open to-dos." },
+    { name: "list_today_todos", type: "read", meaning: "Your to-dos for today." },
+    {
+        name: "list_calendar_events",
+        type: "read",
+        meaning: "Your Google Calendar events in a date range.",
+    },
+    { name: "list_calendars", type: "read", meaning: "Your Google Calendars." },
+    {
+        name: "get_pr",
+        type: "read",
+        meaning: "A GitHub pull request by url: state, branches, diff size.",
+    },
+    { name: "list_pr_reviews", type: "read", meaning: "A pull request's reviews and verdicts." },
+    {
+        name: "list_pr_comments",
+        type: "read",
+        meaning: "A pull request's conversation and inline comments.",
+    },
+    { name: "list_pr_files", type: "read", meaning: "The files a pull request changes." },
+    { name: "list_pr_commits", type: "read", meaning: "A pull request's commits." },
+    {
+        name: "update_task",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Status, title, description, priority, effort, due date or milestone. A new description replaces the whole body.",
+    },
+    { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
+    {
+        name: "add_task_delivery",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Record the branch and PR delivering a task. Writing the same link twice updates it.",
+    },
+    {
+        name: "create_task",
+        type: "write",
+        meaning: (
+            <>
+                Needs a project id from <Code>list_projects</Code>.
+            </>
+        ),
+    },
+    {
+        name: "assign_task",
+        type: "write",
+        taskRef: true,
+        meaning: "Assign a task, or unassign it.",
+    },
+    {
+        name: "update_tasks_bulk",
+        type: "write",
+        meaning: "Priority, due date, status, effort or milestone on many tasks in one call.",
+    },
+    {
+        name: "create_task_plan",
+        type: "write",
+        taskRef: true,
+        meaning: "A milestone with its tasks and dependencies, in one call.",
+    },
+    {
+        name: "create_note",
+        type: "write",
+        taskRef: true,
+        meaning: "A new note, optionally attached to a task.",
+    },
+    { name: "update_note", type: "write", meaning: "A note's title or body, or its folder." },
+    { name: "create_todo_item", type: "write", meaning: "A personal to-do." },
+    { name: "update_todo_item", type: "write", meaning: "Tick off or edit a to-do." },
+    { name: "create_calendar_event", type: "write", meaning: "An event on your Google Calendar." },
+    { name: "update_calendar_event", type: "write", meaning: "Change a calendar event." },
+    {
+        name: "delete_calendar_event",
+        type: "write",
+        meaning: "Delete a calendar event. Nothing on this side can bring it back.",
+    },
+];
+
+const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");
+const MCP_WRITES = MCP_TOOLS.filter((t) => t.type === "write");
+const MCP_TASK_REF_TOOLS = MCP_TOOLS.filter((t) => t.taskRef);
+
+// "a, b and c", each in <Code>.
+const codeList = (tools: McpTool[]) =>
+    tools.map((t, i) => (
+        <span key={t.name}>
+            {i === 0 ? "" : i === tools.length - 1 ? " and " : ", "}
+            <Code>{t.name}</Code>
+        </span>
+    ));
 
 const TASK_JSON = `{
   "id": ${TASK_ID},
@@ -345,96 +517,25 @@ export default function DevelopersPage() {
                         </p>
                     </Endpoint>
 
-                    <Params
-                        rows={[
-                            {
-                                name: "get_task",
-                                type: "read",
-                                meaning: (
-                                    <>
-                                        One task in full. Read <Code>content_markdown</Code> for
-                                        the description — it keeps headings, checklists and code
-                                        fences.
-                                    </>
-                                ),
-                            },
-                            {
-                                name: "list_my_tasks",
-                                type: "read",
-                                meaning:
-                                    "What is on your plate. Where an agent starts when no task is named.",
-                            },
-                            {
-                                name: "list_tasks",
-                                type: "read",
-                                meaning:
-                                    "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, status, priority, assignee or overdue.",
-                            },
-                            {
-                                name: "list_projects",
-                                type: "read",
-                                meaning: "The projects you belong to.",
-                            },
-                            {
-                                name: "list_milestones",
-                                type: "read",
-                                meaning: "Milestones in the projects you belong to.",
-                            },
-                            {
-                                name: "get_milestone_summary",
-                                type: "read",
-                                meaning: "A milestone and the tasks under it.",
-                            },
-                            {
-                                name: "get_task_blockers",
-                                type: "read",
-                                meaning: "What a task is waiting on.",
-                            },
-                            {
-                                name: "search_workspace",
-                                type: "read",
-                                meaning: "Search across tasks, notes, chat and todos.",
-                            },
-                            { name: "get_note", type: "read", meaning: "A note's body." },
-                            {
-                                name: "get_current_user",
-                                type: "read",
-                                meaning: "Who the key acts as.",
-                            },
-                            {
-                                name: "get_team_members",
-                                type: "read",
-                                meaning: "Who is in the team, for assigning.",
-                            },
-                            {
-                                name: "update_task",
-                                type: "write",
-                                meaning:
-                                    "Status, title, description, priority, effort or due date. Reassigning is not exposed.",
-                            },
-                            {
-                                name: "add_comment",
-                                type: "write",
-                                meaning: "A comment on a task.",
-                            },
-                            {
-                                name: "create_task",
-                                type: "write",
-                                meaning: (
-                                    <>
-                                        Needs a project id from <Code>list_projects</Code>.
-                                    </>
-                                ),
-                            },
-                        ]}
-                        title="Tools · scope"
-                    />
+                    <Params rows={MCP_TOOLS} title="Tools · scope" />
                     <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        Fourteen, out of the 57 the in-app agent has — the ones worth a round trip
-                        from outside, rather than the whole surface. A read-scoped key&apos;s{" "}
-                        <Code>tools/list</Code> returns the eleven reads only: the three writes are
-                        not listed at all, so an agent never plans around a tool it would be
-                        refused.
+                        {MCP_TOOLS.length} tools, {MCP_READS.length} reads and {MCP_WRITES.length}{" "}
+                        writes — the ones worth a round trip from outside, rather than the in-app
+                        agent&apos;s whole surface. A read-scoped key&apos;s{" "}
+                        <Code>tools/list</Code> returns the {MCP_READS.length} reads only: the
+                        writes are not listed at all, so an agent never plans around a tool it
+                        would be refused.
+                    </p>
+
+                    <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
+                        No confirmation step
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        In the Genos app, every write the agent proposes waits for you to approve
+                        it. Over MCP none of them do: the key&apos;s write scope is the approval,
+                        given once when you created it. There is nobody watching this connection to
+                        click a confirmation, so a write takes effect the moment it is called, and
+                        there is no undo. Give an agent a read key unless it needs to write.
                     </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
@@ -465,9 +566,8 @@ export default function DevelopersPage() {
 raw id       #${TASK_ID}  /  ${TASK_ID}
 pasted url   https://app.genosai.dev/workspace/tasks/project/${PROJECT_ID}/task/${TASK_ID}`}</Pre>
                     <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        Resolved before the tool runs, and only on the four tools that take a task:{" "}
-                        <Code>get_task</Code>, <Code>get_task_blockers</Code>,{" "}
-                        <Code>update_task</Code> and <Code>add_comment</Code>. The rest take
+                        Resolved before the tool runs, and only on the {MCP_TASK_REF_TOOLS.length}{" "}
+                        tools that take a task: {codeList(MCP_TASK_REF_TOOLS)}. The rest take
                         ordinary arguments — <Code>list_tasks</Code> does not accept a display id.
                         A reference that does not resolve comes back as a tool error saying what to
                         try instead, so the agent retries rather than stops.
@@ -480,9 +580,9 @@ pasted url   https://app.genosai.dev/workspace/tasks/project/${PROJECT_ID}/task/
                         Scope is not read off the HTTP method here, because every MCP message is a{" "}
                         <Code>POST</Code> — <Code>tools/list</Code> and a read-only{" "}
                         <Code>tools/call</Code> included. Going by the method would refuse a read
-                        key on every request it ever makes, so scope is enforced per tool instead:{" "}
-                        <Code>update_task</Code>, <Code>add_comment</Code> and{" "}
-                        <Code>create_task</Code> need a write key, and nothing else does.
+                        key on every request it ever makes, so scope is enforced per tool instead:
+                        the {MCP_WRITES.length} writes in the table above need a write key, and
+                        nothing else does.
                     </p>
                     <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
                         This is the one place the endpoint differs from the REST routes below,
