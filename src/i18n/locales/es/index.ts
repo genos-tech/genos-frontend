@@ -749,7 +749,7 @@ export const es: DeepPartial<Messages> = {
         autoCloseOnPrMerge: {
             heading: "Cerrar al fusionar PR",
             description:
-                "Cuando se fusiona un PR de GitHub, cierra automáticamente la tarea cuyo ID aparezca en el nombre de la rama de origen (ej. rama `feature/GEN-42-foo` cierra la tarea GEN-42). Solo se aplica a tareas asignadas a ti.",
+                "Cuando se fusiona un PR de GitHub, cierra automáticamente la tarea cuyo ID aparezca en el nombre de la rama de origen (ej. rama `feature/GEN-42-foo` cierra la tarea GEN-42). Solo se aplica a tareas asignadas a ti. Si la tarea tiene varios PR, se cierra cuando se fusiona el último que sigue abierto.",
             toggleLabel: "Cerrar mis tareas al fusionar su PR",
             toggleHelper:
                 "Desactivado por defecto. El nombre de la rama debe seguir el formato `…<TASK-ID>…` para activar la coincidencia.",
