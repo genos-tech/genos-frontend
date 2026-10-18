@@ -404,7 +404,9 @@ export default function DevelopersPage() {
                                 meaning: (
                                     <>
                                         Bound to one team, which is then implied. Passing a
-                                        different <Code>team_id</Code> does not widen it.
+                                        different <Code>team_id</Code> does not widen it. It stops
+                                        working when the person who made it leaves the team, and
+                                        the team owner can revoke it at any time.
                                     </>
                                 ),
                             },
@@ -425,6 +427,12 @@ export default function DevelopersPage() {
                         ]}
                         title="Key kinds"
                     />
+
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <b>Every key expires</b> — after 90 days unless you choose another
+                        lifetime, up to one year. Make a replacement before then. A key works only
+                        under <Code>/api/public/</Code>; the app&apos;s own endpoints refuse it.
+                    </p>
 
                     <Pre label="start here — confirms the key is live and says what it can do">{`GET /api/public/v1/me/
 

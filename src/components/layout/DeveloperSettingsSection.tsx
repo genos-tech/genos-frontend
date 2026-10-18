@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import KeyRoundedIcon from "@mui/icons-material/KeyRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import WebhookRoundedIcon from "@mui/icons-material/WebhookRounded";
@@ -22,18 +23,23 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import {
+    API_KEY_EXPIRY_DAYS,
     ApiKey,
     CHANNEL_SCOPED_EVENTS,
     createApiKey,
     createWebhook,
+    DEFAULT_API_KEY_EXPIRY_DAYS,
     deleteWebhook,
     listApiKeys,
     listScopeOptions,
+    listTeamApiKeys,
     listWebhooks,
     revokeApiKey,
+    revokeTeamApiKey,
     ScopeOptions,
+    TeamApiKey,
     WEBHOOK_EVENTS,
     WebhookEndpoint,
 } from "../../services/developerApi";
@@ -61,11 +67,15 @@ type Props = {
  * copy-first treatment that has to be dismissed deliberately.
  */
 export const DeveloperSettingsSection = ({ teamId }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const d = t.settings.developer;
 
     const [keys, setKeys] = useState<ApiKey[]>([]);
+    // `null` = not the team's owner (or no team): the section is hidden,
+    // not shown empty — an editor seeing "no team keys" would read it as
+    // a fact about the team rather than about their access.
+    const [teamKeys, setTeamKeys] = useState<TeamApiKey[] | null>(null);
     const [hooks, setHooks] = useState<WebhookEndpoint[]>([]);
     const [loaded, setLoaded] = useState(false);
 
@@ -76,6 +86,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
 
     const [keyName, setKeyName] = useState("");
     const [keyScope, setKeyScope] = useState<"read" | "write">("read");
+    const [keyExpiryDays, setKeyExpiryDays] = useState<number>(DEFAULT_API_KEY_EXPIRY_DAYS);
     const [keyBusy, setKeyBusy] = useState(false);
 
     const [hookUrl, setHookUrl] = useState("");
@@ -95,11 +106,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const wantsChat = hookEvents.some((e) => CHANNEL_SCOPED_EVENTS.includes(e));
 
     const refresh = useCallback(async () => {
-        const [k, w] = await Promise.all([
+        const [k, w, tk] = await Promise.all([
             listApiKeys(accessToken),
             teamId ? listWebhooks(accessToken, teamId) : Promise.resolve([]),
+            teamId ? listTeamApiKeys(accessToken, teamId) : Promise.resolve(null),
         ]);
         setKeys(k ?? []);
+        setTeamKeys(tk);
         // `null` means the request failed OR the caller isn't a team
         // manager — the endpoint 403s/404s for non-managers. Either way
         // an empty list is the honest render; the create form below
@@ -128,6 +141,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
         const res = await createApiKey(accessToken, {
             name: keyName.trim(),
             scope: keyScope,
+            expiresInDays: keyExpiryDays,
         });
         setKeyBusy(false);
         if (res.status === "created") {
@@ -174,6 +188,14 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const copy = (value: string) => {
         void navigator.clipboard?.writeText(value);
     };
+
+    // Keys made before every key had to expire still carry `null`, and
+    // they really do never expire — saying so is the nudge to replace
+    // them, so it is not hidden as a blank.
+    const expiryLabel = (k: ApiKey) =>
+        k.expiresAt
+            ? fmt(d.keys.expiresOn, { date: new Date(k.expiresAt).toLocaleDateString(locale) })
+            : d.keys.neverExpires;
 
     return (
         <Stack spacing={3}>
@@ -250,6 +272,19 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         <Option value="read">{d.keys.scopeRead}</Option>
                         <Option value="write">{d.keys.scopeWrite}</Option>
                     </Select>
+                    <Select
+                        size="sm"
+                        aria-label={d.keys.expiryLabel}
+                        value={keyExpiryDays}
+                        onChange={(_, v) => setKeyExpiryDays(v ?? DEFAULT_API_KEY_EXPIRY_DAYS)}
+                        sx={{ minWidth: 120 }}
+                    >
+                        {API_KEY_EXPIRY_DAYS.map((days) => (
+                            <Option key={days} value={days}>
+                                {fmt(d.keys.expiryDays, { count: days })}
+                            </Option>
+                        ))}
+                    </Select>
                     <Button
                         size="sm"
                         startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
@@ -289,6 +324,9 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 >
                                     {k.prefix}…
                                 </Typography>
+                                <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
+                                    {expiryLabel(k)}
+                                </Typography>
                             </Box>
                             <Chip size="sm" variant="soft">
                                 {k.scope === "write" ? d.keys.scopeWrite : d.keys.scopeRead}
@@ -309,6 +347,76 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     </Sheet>
                 ))}
             </Stack>
+
+            {/* ── Team keys (owner only) ───────────────────────────── */}
+            {/* Every live key bound to this team, whoever minted it. An
+                editor's team key acts on the team for up to a year, and
+                the list above shows the caller's own keys only, so
+                without this the owner could neither see nor stop it. */}
+            {teamId && teamKeys && (
+                <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <GroupsRoundedIcon sx={{ fontSize: 18 }} />
+                        <Typography level="title-md">{d.teamKeys.title}</Typography>
+                    </Stack>
+                    <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                        {d.teamKeys.blurb}
+                    </Typography>
+                    {teamKeys.length === 0 && (
+                        <Typography level="body-xs" sx={{ opacity: 0.6 }}>
+                            {d.teamKeys.empty}
+                        </Typography>
+                    )}
+                    {teamKeys.map((k) => (
+                        <Sheet
+                            key={k.id}
+                            variant="soft"
+                            sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                        >
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                sx={{ minWidth: 0 }}
+                            >
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography level="title-sm" noWrap>
+                                        {k.name}
+                                    </Typography>
+                                    <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
+                                        {fmt(d.teamKeys.createdBy, {
+                                            name: k.userName || k.userEmail,
+                                        })}
+                                    </Typography>
+                                    <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
+                                        <Box component="span" sx={{ fontFamily: "monospace" }}>
+                                            {k.prefix}…
+                                        </Box>{" "}
+                                        · {expiryLabel(k)}
+                                    </Typography>
+                                </Box>
+                                <Chip size="sm" variant="soft">
+                                    {k.scope === "write" ? d.keys.scopeWrite : d.keys.scopeRead}
+                                </Chip>
+                                <AppTooltip title={d.keys.revoke}>
+                                    <IconButton
+                                        size="sm"
+                                        variant="plain"
+                                        color="danger"
+                                        aria-label={fmt(d.teamKeys.revokeNamed, { name: k.name })}
+                                        onClick={async () => {
+                                            if (await revokeTeamApiKey(accessToken, teamId, k.id))
+                                                void refresh();
+                                        }}
+                                    >
+                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            </Stack>
+                        </Sheet>
+                    ))}
+                </Stack>
+            )}
 
             {/* ── Webhooks ─────────────────────────────────────────── */}
             <Stack spacing={1.5}>

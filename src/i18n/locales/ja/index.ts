@@ -2699,6 +2699,17 @@ export const ja: DeepPartial<Messages> = {
                 create: "キーの作成",
                 revoke: "取り消す",
                 empty: "API キーはまだありません。",
+                expiryLabel: "有効期間",
+                expiryDays: "{count}日",
+                expiresOn: "{date} に期限切れ",
+                neverExpires: "無期限 — 新しいキーへの切り替えをおすすめします",
+            },
+            teamKeys: {
+                title: "チームの API キー",
+                blurb: "このチームとして動作できるすべてのキーです（作成者を問いません）。オーナーはどのキーでも取り消せます。作成者がチームを抜けると、そのキーも使えなくなります。",
+                empty: "現在、チームのキーはありません。",
+                createdBy: "作成者: {name}",
+                revokeNamed: "{name} を取り消す",
             },
             docsLink: "API ドキュメントを読む→",
             webhooks: {
