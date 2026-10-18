@@ -1,0 +1,10 @@
+# Reviewed gitleaks findings (MIP-720). One fingerprint per line, with the
+# reason it's safe on the line above: gitleaks doesn't strip a trailing
+# comment, so `fp  # why` would stop matching. Only add a fingerprint after
+# checking the value is a test fixture or was revoked.
+
+# VITE_POSTHOG_KEY: a PostHog project key. It's public by design, because it
+# ships in the browser bundle and can only send events.
+fc2cb09a139c8a253d68d581782ec7b7f8b5faab:.github/workflows/ci.yml:generic-api-key:137
+# HYDRATED_TEAM_KEY is a localStorage key name, not a credential.
+7eec2691504ff6a5dee990c36289e11f1bbb8b0d:src/services/hydrationState.ts:generic-api-key:13
