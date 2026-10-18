@@ -3899,6 +3899,16 @@ export const zh: DeepPartial<Messages> = {
             loadError: "无法加载 PR — 在 GitHub 上打开",
             privateOrDeleted: "此 PR 是你无权访问的仓库的私有文件，或者它已被删除。",
         },
+        delivery: {
+            label: "交付",
+            stateBranch: "仅分支",
+            stateOpen: "打开",
+            stateMerged: "已合并",
+            stateClosed: "已关闭",
+            stateUnknown: "未知",
+            noBranch: "未记录分支",
+            mergedNotClosed: "已合并，但任务仍为 {status}",
+        },
         tabs: {
             ariaLabel: "任务标签",
             comments: "评论",

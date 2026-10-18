@@ -2117,6 +2117,16 @@ export const hi: DeepPartial<Messages> = {
             privateOrDeleted:
                 "यह PR एक रेपो के लिए निजी है जिस तक आपकी पहुंच नहीं है, या इसे हटा दिया गया था।",
         },
+        delivery: {
+            label: "डिलीवरी",
+            stateBranch: "केवल ब्रांच",
+            stateOpen: "खुला",
+            stateMerged: "मर्ज किया गया",
+            stateClosed: "बंद",
+            stateUnknown: "अज्ञात",
+            noBranch: "ब्रांच दर्ज नहीं",
+            mergedNotClosed: "मर्ज हो गया, लेकिन टास्क अभी भी {status} है",
+        },
         tabs: {
             ariaLabel: "टास्क टैब",
             comments: "कमेंट",

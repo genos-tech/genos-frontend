@@ -755,6 +755,19 @@ export const tasks = {
             "This PR is private to a repo you don't have access to, or it was deleted.",
     },
 
+    // The branches / PRs delivering a task (`TaskDelivery`), kept current
+    // by the GitHub webhook. The "Delivery" row in the task metadata.
+    delivery: {
+        label: "Delivery",
+        stateBranch: "Branch only",
+        stateOpen: "Open",
+        stateMerged: "Merged",
+        stateClosed: "Closed",
+        stateUnknown: "Unknown",
+        noBranch: "Branch not recorded",
+        mergedNotClosed: "Merged, but the task is still {status}",
+    },
+
     // Tabs.
     tabs: {
         ariaLabel: "Task Tabs",

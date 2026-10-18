@@ -28,8 +28,10 @@ import {
 import { getCachedOrFetchPrStatus } from "../../../../integrations/services/prStatusCache";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
+import { useTaskDeliveries } from "../../../hooks/useTaskDeliveries";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
+import { deliveryPrUrls } from "../../../utils/deliveryPrUrls";
 import { ownsItsProject } from "../../../utils/taskKind";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
@@ -45,6 +47,7 @@ import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 import { TaskStartDateInput } from "./sub/TaskStartDateInput";
+import { TaskDeliveriesBlock } from "./TaskDeliveriesBlock";
 import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
 
 // Single shared label for every row. Pinned width keeps the data
@@ -244,6 +247,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     }, [taskContent.id]);
     const showStartDate = !!taskContent.startDate || explicitlyShowStartDate;
     const [linkedBranches, setLinkedBranches] = useState<LinkedBranch[]>([]);
+    // Stored delivery links (branch / PR / state). Preview only: a task
+    // being created has none, and the create form shouldn't fetch.
+    const deliveries = useTaskDeliveries(myself, isPreviewMode ? taskContent.id : null);
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -1021,12 +1027,29 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         the edit/delete icons) past the pane edge. */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <DynamicURLManager
+                            hiddenAutoLinkUrls={deliveryPrUrls(deliveries)}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             taskContent={taskContent}
                         />
                     </Box>
                 </ListItem>
+
+                {/* Delivery — stored branch / PR links with their state,
+                    kept current by the GitHub webhook. Hidden when the
+                    task has none. */}
+                {deliveries.length > 0 && (
+                    <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.delivery.label}</FieldLabel>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <TaskDeliveriesBlock
+                                deliveries={deliveries}
+                                isDark={isDark}
+                                taskStatus={taskContent.status?.status}
+                            />
+                        </Box>
+                    </ListItem>
+                )}
 
                 {/* Linked branches — auto-discovered branches whose names
                     contain the task's display ID. Read-only chips that

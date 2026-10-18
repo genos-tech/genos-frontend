@@ -2321,6 +2321,16 @@ export const ar: DeepPartial<Messages> = {
             loadError: "تعذر تحميل PR — مفتوح في GitHub",
             privateOrDeleted: "هذا PR خاص بمستودع لا يمكنك الوصول إليه، أو تم حذفه.",
         },
+        delivery: {
+            label: "التسليم",
+            stateBranch: "فرع فقط",
+            stateOpen: "مفتوح",
+            stateMerged: "مدمج",
+            stateClosed: "مغلق",
+            stateUnknown: "غير معروف",
+            noBranch: "لم يُسجَّل الفرع",
+            mergedNotClosed: "مدمج، لكن المهمة لا تزال {status}",
+        },
         memberFilter: {
             all: "الجميع",
             allMembers: "جميع الأعضاء",
