@@ -4078,6 +4078,16 @@ export const fr: DeepPartial<Messages> = {
             privateOrDeleted:
                 "Ce PR est privé d'un dépôt auquel vous n'avez pas accès, ou il a été supprimé.",
         },
+        delivery: {
+            label: "Livraison",
+            stateBranch: "Branche seule",
+            stateOpen: "Ouvert",
+            stateMerged: "Fusionné",
+            stateClosed: "Fermé",
+            stateUnknown: "Inconnu",
+            noBranch: "Branche non enregistrée",
+            mergedNotClosed: "Fusionné, mais la tâche est toujours {status}",
+        },
         tabs: {
             ariaLabel: "Onglets de tâche",
             comments: "Commentaires",

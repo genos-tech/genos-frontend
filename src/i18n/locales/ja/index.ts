@@ -4023,6 +4023,16 @@ export const ja: DeepPartial<Messages> = {
             privateOrDeleted:
                 "この PR は、アクセス権のないリポジトリに対してプライベートになっているか、削除されています。",
         },
+        delivery: {
+            label: "デリバリー",
+            stateBranch: "ブランチのみ",
+            stateOpen: "オープン",
+            stateMerged: "マージ済み",
+            stateClosed: "クローズ",
+            stateUnknown: "不明",
+            noBranch: "ブランチ未記録",
+            mergedNotClosed: "マージ済みですが、タスクはまだ {status} です",
+        },
         tabs: {
             ariaLabel: "タスクタブ",
             comments: "コメント",

@@ -29,10 +29,15 @@ type DynamicURLManagerProps = {
     taskContent?: TaskProps;
     setTaskContent?: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
+    // Lowercased PR urls the Delivery row already shows. Auto-linked
+    // entries for them are hidden from the list but kept in `links`:
+    // they're read-only here anyway, and the PR column still reads the
+    // flag (Source 2 in `pulls-for-task`).
+    hiddenAutoLinkUrls?: Set<string>;
 };
 
 export const DynamicURLManager = (props: DynamicURLManagerProps) => {
-    const { taskContent, setTaskContent, setTaskUpdated } = props;
+    const { taskContent, setTaskContent, setTaskUpdated, hiddenAutoLinkUrls } = props;
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -167,17 +172,21 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 
     return (
         <Box sx={{ width: "100%" }}>
-            {/* Display existing links */}
-            {links.map((link) => (
-                <LinkDisplay
-                    key={link.id}
-                    editingId={editingId}
-                    link={link}
-                    onDelete={handleDeleteLink}
-                    onEdit={setEditingId}
-                    onSave={handleEditLink}
-                />
-            ))}
+            {/* Display existing links. Filtered at render only — the
+                edit/delete handlers work on the full `links`, so a hidden
+                entry survives every save. */}
+            {links
+                .filter((link) => !isHiddenAutoLink(link, hiddenAutoLinkUrls))
+                .map((link) => (
+                    <LinkDisplay
+                        key={link.id}
+                        editingId={editingId}
+                        link={link}
+                        onDelete={handleDeleteLink}
+                        onEdit={setEditingId}
+                        onSave={handleEditLink}
+                    />
+                ))}
 
             {/* Add new link form */}
             {isAddingNew ? (
@@ -276,6 +285,11 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
         </Box>
     );
 };
+
+// Only auto-linked entries are ever hidden: a link the user added by
+// hand is theirs to edit or delete, even when a delivery row repeats it.
+const isHiddenAutoLink = (link: LinkItem, hidden: Set<string> | undefined): boolean =>
+    !!link.isAutoLinked && !!hidden?.has(link.url.toLowerCase().replace(/\/$/, ""));
 
 // Leading icon for a link row: a recognizable brand glyph (Slack, Notion,
 // Figma, GitHub, …) when we know the host, otherwise the generic chain

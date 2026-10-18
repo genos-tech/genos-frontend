@@ -2354,6 +2354,16 @@ export const es: DeepPartial<Messages> = {
             privateOrDeleted:
                 "Este PR es privado para un repo al que no tiene acceso o fue eliminado.",
         },
+        delivery: {
+            label: "Entrega",
+            stateBranch: "Solo rama",
+            stateOpen: "Abierto",
+            stateMerged: "Fusionado",
+            stateClosed: "Cerrado",
+            stateUnknown: "Desconocido",
+            noBranch: "Rama no registrada",
+            mergedNotClosed: "Fusionado, pero la tarea sigue en {status}",
+        },
         memberFilter: {
             all: "Todo",
             allMembers: "Todos los miembros",

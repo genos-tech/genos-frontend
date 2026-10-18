@@ -161,6 +161,25 @@ export type TaskActivityProps = {
     tsCreatedAt: string;
 };
 
+// One branch / PR delivering a task — `GET /task/deliveries/`, which
+// serializes `TaskDelivery` through `delivery_as_dict` (snake_case, the
+// same shape the agent tools return). `pr_url` is null for a branch
+// with no PR yet; `branch` is null for a backfilled PR whose branch was
+// never recorded.
+export type TaskDeliveryState = "branch" | "open" | "merged" | "closed" | "unknown";
+
+export type TaskDeliveryProps = {
+    delivery_id: number;
+    repo: string;
+    branch: string | null;
+    pr_url: string | null;
+    pr_number: number | null;
+    pr_title: string | null;
+    state: TaskDeliveryState;
+    merged_at: string | null;
+    source: "webhook" | "manual" | "backfill";
+};
+
 export type TaskStatusProps = {
     code: number | null;
     status: string | null;
