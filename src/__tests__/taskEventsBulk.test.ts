@@ -37,6 +37,7 @@ describe("genos:tasks-bulk-changed bus", () => {
         // the task surfaces.
         expect(TASK_WRITE_TOOLS.has("create_task_plan")).toBe(true);
         expect(TASK_WRITE_TOOLS.has("update_tasks_bulk")).toBe(true);
+        expect(TASK_WRITE_TOOLS.has("update_task_dependencies")).toBe(true);
         expect(TASK_WRITE_TOOLS.has("create_task")).toBe(true);
         expect(TASK_WRITE_TOOLS.has("update_task")).toBe(true);
         expect(TASK_WRITE_TOOLS.has("assign_task")).toBe(true);

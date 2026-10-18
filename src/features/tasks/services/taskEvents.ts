@@ -64,6 +64,8 @@ export type TasksBulkChangedDetail = {
 export const TASK_WRITE_TOOLS: ReadonlySet<string> = new Set([
     "create_task_plan",
     "update_tasks_bulk",
+    // A new dependency can flip the blocked task to Blocked.
+    "update_task_dependencies",
     "create_task",
     "update_task",
     "assign_task",

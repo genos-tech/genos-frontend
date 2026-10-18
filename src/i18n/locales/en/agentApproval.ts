@@ -75,6 +75,7 @@ export const agentApproval = {
         assign_task: "Assigning a task",
         add_comment: "Adding a comment",
         add_task_delivery: "Linking a pull request to a task",
+        update_task_dependencies: "Linking task dependencies",
         // projects
         list_projects: "Looking through projects",
         get_project_summary: "Summarizing a project",

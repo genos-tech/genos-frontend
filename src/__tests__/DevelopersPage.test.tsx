@@ -185,6 +185,7 @@ describe("DevelopersPage", () => {
             "update_task",
             "add_comment",
             "add_task_delivery",
+            "update_task_dependencies",
             "create_task",
             "assign_task",
             "update_tasks_bulk",
