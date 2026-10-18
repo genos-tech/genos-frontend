@@ -53,15 +53,24 @@ const checkIsOnline = (
 // on it, so carry the stored value through.
 //
 // The OTHER profile fields (`currentLocation`, `aboutMe`, `role`, …) are
-// deliberately NOT pinned here: they DO ride the beat via `...myself`, so
-// the beat is the sender describing themselves with their current values,
-// which is exactly what should win — pinning the stored copy instead would
-// make a user's own profile edit invisible to teammates until the next
-// roster poll.
+// deliberately NOT pinned here: they DO ride the beat, so the beat is the
+// sender's current values, which is exactly what should win — pinning the
+// stored copy instead would make a user's own profile edit invisible to
+// teammates until the next roster poll.
+//
+// The beat is laid OVER the stored row, never in place of it. The socket
+// layer no longer relays the sender's `myself` (MIP-715): it sends the card
+// genos-api builds for the widest room a beat reaches (`presence_profile`)
+// plus the presence state, and that card has no `phoneNumber` or
+// `userEmail`, because the far side of a cross-team share was reading
+// both. A key the card leaves out is the card not saying, not the person
+// clearing it, so the roster's value stands. Replacing the row would blank
+// a teammate's email and phone on their profile card within one beat.
 const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
     const stored = await userService.getUser(user.userId);
     if (!stored) return user;
     return {
+        ...stored,
         ...user,
         teamId: stored.teamId,
         teamName: stored.teamName,

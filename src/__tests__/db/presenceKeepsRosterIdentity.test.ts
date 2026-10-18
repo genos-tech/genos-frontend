@@ -123,6 +123,26 @@ describe("presence updates a person's status, not their team", () => {
         expect(stored?.avatarImgPath).toBe("bob-new.jpg");
     });
 
+    it("keeps the contact details a server-built card leaves out", async () => {
+        // The socket layer now sends genos-api's presence card instead of
+        // the sender's `myself` (MIP-715). It has no `phoneNumber` or
+        // `userEmail`, because it reaches the far side of every cross-team
+        // share. Replacing the stored row with it blanked both on the
+        // profile card within one beat.
+        const repo = new UserRepository();
+        await repo.saveUser({ ...rosterRow, phoneNumber: "+81-90-0000-0000" });
+
+        const { userEmail: _email, teamId: _team, teamName: _teamName, ...card } = heartbeat;
+        await beat(card as UserProps);
+
+        const stored = await repo.getUser("u-bob");
+        expect(stored?.userEmail).toBe("bob@team-b.test");
+        expect(stored?.phoneNumber).toBe("+81-90-0000-0000");
+        expect(stored?.teamId).toBe(MY_TEAM);
+        expect(stored?.avatarImgPath).toBe("bob-new.jpg");
+        expect(stored?.tsLastSeen).toBe("2026-08-04T12:00:00Z");
+    });
+
     it("stores someone it has never seen as they describe themselves", async () => {
         // No roster row to defer to: a heartbeat is all we know, and
         // dropping it would leave the person unnamed everywhere.
