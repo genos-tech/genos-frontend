@@ -61,6 +61,22 @@ export const settings = {
             create: "Create key",
             revoke: "Revoke",
             empty: "No API keys yet.",
+            // Every key expires (default 90 days, at most a year), so the
+            // picker has no "never" option.
+            expiryLabel: "Expires after",
+            expiryDays: "{count, plural, one {# day} other {# days}}",
+            expiresOn: "Expires {date}",
+            // Only keys made before expiry became mandatory say this.
+            neverExpires: "Never expires — replace it with a new key",
+        },
+        // Owner-only. Lists every live key bound to the team, including
+        // the ones editors made, which the list above never shows.
+        teamKeys: {
+            title: "Team API keys",
+            blurb: "Every key that can act on this team, whoever made it. As the owner, you can revoke any of them. A key also stops working when its creator leaves the team.",
+            empty: "No team keys right now.",
+            createdBy: "Made by {name}",
+            revokeNamed: "Revoke {name}",
         },
         docsLink: "Read the API docs →",
         webhooks: {

@@ -112,9 +112,20 @@ export type CreateApiKeyResult =
     | { status: "created"; key: string; created: ApiKey }
     | { status: "error"; message?: string };
 
+/** Lifetimes the create form offers. Every key expires — the server
+ *  defaults an omitted lifetime to 90 days and refuses anything past 365
+ *  — so "never" is deliberately not on the list. */
+export const API_KEY_EXPIRY_DAYS = [30, 90, 180, 365] as const;
+export const DEFAULT_API_KEY_EXPIRY_DAYS = 90;
+
 export const createApiKey = async (
     accessToken: string | null,
-    input: { name: string; scope: "read" | "write"; teamId?: string | null }
+    input: {
+        name: string;
+        scope: "read" | "write";
+        teamId?: string | null;
+        expiresInDays?: number;
+    }
 ): Promise<CreateApiKeyResult> => {
     const api = authApi(accessToken);
     if (!api) return { status: "error" };
@@ -123,6 +134,7 @@ export const createApiKey = async (
             name: input.name,
             scope: input.scope,
             ...(input.teamId ? { team_id: input.teamId } : {}),
+            ...(input.expiresInDays ? { expires_in_days: input.expiresInDays } : {}),
         });
         const { key, ...rest } = res.data;
         return { status: "created", key, created: rest };
@@ -138,6 +150,49 @@ export const revokeApiKey = async (accessToken: string | null, id: string): Prom
     if (!api) return false;
     try {
         await api.delete(`/api-keys/${id}/`);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+/** A team key, as its team's owner sees it — whoever minted it. */
+export interface TeamApiKey extends ApiKey {
+    userId: string;
+    userName: string;
+    userEmail: string;
+}
+
+/** Every live key bound to `teamId`. Owner only: the server answers 404
+ *  to everyone else (editors included), and that is `null` here, which
+ *  the panel reads as "don't show the section" rather than an error. */
+export const listTeamApiKeys = async (
+    accessToken: string | null,
+    teamId: string
+): Promise<TeamApiKey[] | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        const res = await api.get<{ api_keys: TeamApiKey[] }>("/team/api-keys/", {
+            params: { team_id: teamId },
+            // A non-owner's 404 is the normal answer, not a failure.
+            suppressErrorToast: true,
+        });
+        return res.data.api_keys ?? [];
+    } catch {
+        return null;
+    }
+};
+
+export const revokeTeamApiKey = async (
+    accessToken: string | null,
+    teamId: string,
+    id: string
+): Promise<boolean> => {
+    const api = authApi(accessToken);
+    if (!api) return false;
+    try {
+        await api.delete(`/team/api-keys/${id}/`, { params: { team_id: teamId } });
         return true;
     } catch {
         return false;

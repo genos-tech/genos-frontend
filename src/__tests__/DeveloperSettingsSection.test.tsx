@@ -12,6 +12,8 @@ vi.mock("../context/AuthContext", () => ({
 const listApiKeys = vi.fn();
 const createApiKey = vi.fn();
 const revokeApiKey = vi.fn();
+const listTeamApiKeys = vi.fn();
+const revokeTeamApiKey = vi.fn();
 const listWebhooks = vi.fn();
 const createWebhook = vi.fn();
 const deleteWebhook = vi.fn();
@@ -25,6 +27,8 @@ vi.mock("../services/developerApi", async () => {
         listApiKeys: (...a: unknown[]) => listApiKeys(...a),
         createApiKey: (...a: unknown[]) => createApiKey(...a),
         revokeApiKey: (...a: unknown[]) => revokeApiKey(...a),
+        listTeamApiKeys: (...a: unknown[]) => listTeamApiKeys(...a),
+        revokeTeamApiKey: (...a: unknown[]) => revokeTeamApiKey(...a),
         listWebhooks: (...a: unknown[]) => listWebhooks(...a),
         createWebhook: (...a: unknown[]) => createWebhook(...a),
         deleteWebhook: (...a: unknown[]) => deleteWebhook(...a),
@@ -46,11 +50,25 @@ const KEY = {
     createdAt: "2026-08-02T00:00:00Z",
 };
 
+const TEAM_KEY = {
+    ...KEY,
+    id: "tk1",
+    name: "Deploy bot",
+    prefix: "gnos_teamkey",
+    teamId: "t1",
+    expiresAt: "2027-01-15T00:00:00Z",
+    userId: "u2",
+    userName: "Editor Ed",
+    userEmail: "ed@example.com",
+};
+
 describe("DeveloperSettingsSection", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         listApiKeys.mockResolvedValue([]);
         listWebhooks.mockResolvedValue([]);
+        // Not the owner — the server's 404, which is the common case.
+        listTeamApiKeys.mockResolvedValue(null);
     });
 
     it("lists existing keys by prefix, never by value", async () => {
@@ -159,5 +177,94 @@ describe("DeveloperSettingsSection", () => {
         render(<DeveloperSettingsSection teamId={null} />);
         await waitFor(() => expect(listApiKeys).toHaveBeenCalled());
         expect(listWebhooks).not.toHaveBeenCalled();
+        expect(listTeamApiKeys).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Every key expires now. The form must send a lifetime — 90 days
+     * unless the person picks another — and offer no "never".
+     */
+    it("creates a key with the 90-day default lifetime", async () => {
+        const user = userEvent.setup();
+        createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });
+        render(<DeveloperSettingsSection teamId="t1" />);
+
+        await user.type(screen.getByPlaceholderText(/What is this key for/i), "CI bot");
+        await user.click(screen.getByRole("button", { name: /Create key/i }));
+
+        await waitFor(() =>
+            expect(createApiKey).toHaveBeenCalledWith("tok", {
+                name: "CI bot",
+                scope: "read",
+                expiresInDays: 90,
+            })
+        );
+    });
+
+    it("creates a key with the lifetime the person picks", async () => {
+        const user = userEvent.setup();
+        createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });
+        render(<DeveloperSettingsSection teamId="t1" />);
+
+        await user.click(screen.getByRole("combobox", { name: /Expires after/i }));
+        const options = screen.getAllByRole("option").map((o) => o.textContent);
+        expect(options).toEqual(["30 days", "90 days", "180 days", "365 days"]);
+        await user.click(screen.getByRole("option", { name: "365 days" }));
+
+        await user.type(screen.getByPlaceholderText(/What is this key for/i), "CI bot");
+        await user.click(screen.getByRole("button", { name: /Create key/i }));
+
+        await waitFor(() =>
+            expect(createApiKey).toHaveBeenCalledWith(
+                "tok",
+                expect.objectContaining({ expiresInDays: 365 })
+            )
+        );
+    });
+
+    it("says when each key expires, and flags one that never does", async () => {
+        listApiKeys.mockResolvedValue([
+            { ...KEY, id: "k1", name: "Old key", expiresAt: null },
+            { ...KEY, id: "k2", name: "New key", expiresAt: "2027-01-15T00:00:00Z" },
+        ]);
+        render(<DeveloperSettingsSection teamId="t1" />);
+
+        expect(await screen.findByText(/Never expires/i)).toBeInTheDocument();
+        const date = new Date("2027-01-15T00:00:00Z").toLocaleDateString("en");
+        expect(screen.getByText(`Expires ${date}`)).toBeInTheDocument();
+    });
+
+    /**
+     * The owner's view of every team key, including ones an editor made —
+     * the list above shows the caller's own keys only.
+     */
+    it("shows the owner every team key, with who made it, and revokes one", async () => {
+        const user = userEvent.setup();
+        listTeamApiKeys.mockResolvedValueOnce([TEAM_KEY]).mockResolvedValue([]);
+        revokeTeamApiKey.mockResolvedValue(true);
+        render(<DeveloperSettingsSection teamId="t1" />);
+
+        expect(await screen.findByText("Team API keys")).toBeInTheDocument();
+        expect(listTeamApiKeys).toHaveBeenCalledWith("tok", "t1");
+        expect(screen.getByText("Deploy bot")).toBeInTheDocument();
+        expect(screen.getByText("Made by Editor Ed")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Revoke Deploy bot" }));
+
+        await waitFor(() => expect(revokeTeamApiKey).toHaveBeenCalledWith("tok", "t1", "tk1"));
+        expect(revokeApiKey).not.toHaveBeenCalled();
+        expect(await screen.findByText(/No team keys right now/i)).toBeInTheDocument();
+    });
+
+    /**
+     * A non-owner gets a 404 (`null`), and the section is ABSENT, not
+     * empty — "no team keys" would be a false statement about the team.
+     */
+    it("hides the team-keys section from anyone but the owner", async () => {
+        render(<DeveloperSettingsSection teamId="t1" />);
+        await waitFor(() => expect(listTeamApiKeys).toHaveBeenCalled());
+        expect(await screen.findByText(/No API keys yet/i)).toBeInTheDocument();
+        expect(screen.queryByText("Team API keys")).not.toBeInTheDocument();
+        expect(screen.queryByText(/No team keys right now/i)).not.toBeInTheDocument();
     });
 });
