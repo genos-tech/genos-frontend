@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import SvgIcon from "@mui/joy/SvgIcon";
 
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
+import { useOptionalAccessToken } from "../../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
@@ -39,6 +40,8 @@ type DynamicURLManagerProps = {
 export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     const { taskContent, setTaskContent, setTaskUpdated, hiddenAutoLinkUrls } = props;
     const { t } = useTranslation();
+    // Optional: a missing token only means no fetched title.
+    const accessToken = useOptionalAccessToken();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [links, setLinks] = useState<LinkItem[]>([]);
@@ -97,10 +100,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 
         let pageTitle: string = newTitle;
         if (pageTitle === "") {
-            pageTitle = await getPageTitle(newUrl);
-            if (!pageTitle) {
-                pageTitle = newUrl;
-            }
+            pageTitle = (await getPageTitle(accessToken, newUrl)) ?? newUrl;
         }
 
         const isGitHub = isGitHubURL(newUrl);
@@ -132,10 +132,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 
         let pageTitle: string = title;
         if (pageTitle === "") {
-            pageTitle = await getPageTitle(url);
-            if (!pageTitle) {
-                pageTitle = url;
-            }
+            pageTitle = (await getPageTitle(accessToken, url)) ?? url;
         }
 
         const isGitHub = isGitHubURL(url);
