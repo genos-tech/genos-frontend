@@ -21,10 +21,13 @@
 //               src= module script and no dependency evals.
 //   style-src   'unsafe-inline' is required — MUI Joy/Emotion and
 //               BlockNote inject runtime <style> without nonces.
-//   img-src     any https origin: agent/Spotlight answers render
-//               markdown that may reference external images, and
-//               images can't execute. data:/blob: for pasted images
-//               and object-URL previews.
+//   img-src     any https origin: people embed external images in
+//               notes and chat (BlockNote image blocks, GIPHY), and
+//               GitHub avatars load from their own host. NOT for agent
+//               answers — those never render an <img> at all (MIP-723,
+//               features/agentQA/agentMarkdown.tsx), because an image
+//               is a request that leaks whatever its URL carries.
+//               data:/blob: for pasted images and object-URL previews.
 //   connect-src the API/Django/media/sockets/collab/PostHog origins,
 //               with ws(s) variants for the socket hosts (socket.io
 //               long-polls over http(s) before upgrading).

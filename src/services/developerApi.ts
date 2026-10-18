@@ -19,6 +19,9 @@ export interface ApiKey {
     name: string;
     prefix: string;
     scope: "read" | "write";
+    /** May call the one tool that can't be undone (deleting a calendar
+     *  event). Off unless asked for at mint time; write keys only. */
+    allowDestructive: boolean;
     teamId: string | null;
     lastUsedAt: string | null;
     expiresAt: string | null;
@@ -30,6 +33,7 @@ interface ApiKeyWire {
     name: string;
     prefix: string;
     scope: "read" | "write";
+    allowDestructive: boolean;
     teamId: string | null;
     lastUsedAt: string | null;
     expiresAt: string | null;
@@ -125,6 +129,7 @@ export const createApiKey = async (
         scope: "read" | "write";
         teamId?: string | null;
         expiresInDays?: number;
+        allowDestructive?: boolean;
     }
 ): Promise<CreateApiKeyResult> => {
     const api = authApi(accessToken);
@@ -135,6 +140,9 @@ export const createApiKey = async (
             scope: input.scope,
             ...(input.teamId ? { team_id: input.teamId } : {}),
             ...(input.expiresInDays ? { expires_in_days: input.expiresInDays } : {}),
+            // Sent only when asked for: the server refuses it on a read
+            // key, and omitting it is the safe default.
+            ...(input.allowDestructive ? { allow_destructive: true } : {}),
         });
         const { key, ...rest } = res.data;
         return { status: "created", key, created: rest };

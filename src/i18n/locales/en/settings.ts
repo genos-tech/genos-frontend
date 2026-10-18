@@ -68,6 +68,11 @@ export const settings = {
             expiresOn: "Expires {date}",
             // Only keys made before expiry became mandatory say this.
             neverExpires: "Never expires — replace it with a new key",
+            // Write keys only, off by default. Deleting a calendar event is
+            // the one thing a key can do that can't be undone, and an
+            // instruction hidden in a task or a web page can ask for it.
+            allowDestructive: "Also allow actions that can't be undone (deleting calendar events)",
+            destructiveChip: "Can delete",
         },
         // Owner-only. Lists every live key bound to the team, including
         // the ones editors made, which the list above never shows.

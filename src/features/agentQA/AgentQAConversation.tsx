@@ -18,6 +18,7 @@ import remarkGfm from "remark-gfm";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useTranslation } from "../../i18n";
 import { SpotlightResult } from "../spotlight/types";
+import { agentMarkdownComponents } from "./agentMarkdown";
 import { ApprovalCard } from "./ApprovalCard";
 import { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
 import { buildSourcesById, citedChipSources, rewriteCitations } from "./citationUtils";
@@ -211,6 +212,7 @@ const TurnRowInner = ({
                         remarkPlugins={[remarkGfm]}
                         urlTransform={agentQAUrlTransform}
                         components={{
+                            ...agentMarkdownComponents,
                             a: ({ href, children }) => (
                                 <CitationAnchor
                                     href={href}
@@ -398,6 +400,7 @@ const InFlightTurn = ({
                         remarkPlugins={[remarkGfm]}
                         urlTransform={agentQAUrlTransform}
                         components={{
+                            ...agentMarkdownComponents,
                             a: ({ href, children }) => (
                                 <CitationAnchor
                                     href={href}

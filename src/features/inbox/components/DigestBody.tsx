@@ -21,6 +21,7 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import { useNavigate } from "react-router-dom";
 
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
+import { agentMarkdownComponents, ExternalLink } from "../../agentQA/agentMarkdown";
 
 // Old digest rows stored the agent's raw token grammar as link targets.
 // Blank them (the anchor override then renders plain text) rather than
@@ -67,6 +68,9 @@ const DigestBody = ({ text, isDark }: { text: string; isDark: boolean }) => {
             <ReactMarkdown
                 urlTransform={digestUrlTransform}
                 components={{
+                    // Agent-authored, so an image would load the moment the
+                    // inbox opens — see `agentMarkdown`.
+                    img: agentMarkdownComponents.img,
                     a: ({ href, children }) => {
                         if (!href) {
                             // A blanked citation token from a pre-rewrite
@@ -96,11 +100,7 @@ const DigestBody = ({ text, isDark }: { text: string; isDark: boolean }) => {
                                 </a>
                             );
                         }
-                        return (
-                            <a href={href} rel="noopener noreferrer" target="_blank">
-                                {children}
-                            </a>
-                        );
+                        return <ExternalLink href={href}>{children}</ExternalLink>;
                     },
                 }}
             >

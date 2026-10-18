@@ -40,6 +40,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { chatTypeCodeToSlug, entityRefToHref } from "../../utils/entityHref";
 import {
+    agentMarkdownComponents,
     AgentQAConversation,
     AgentQAInput,
     agentQAUrlTransform,
@@ -370,6 +371,7 @@ export const ThreadAskModal = ({
                         }}
                     >
                         <ReactMarkdown
+                            components={agentMarkdownComponents}
                             remarkPlugins={[remarkGfm]}
                             urlTransform={agentQAUrlTransform}
                         >
