@@ -634,6 +634,8 @@ export const tasks = {
             milestoneChanged: "changed milestone from",
             sprintChanged: "changed sprint from",
             projectChanged: "changed project from",
+            customFieldChanged: "changed {field} from",
+            customFieldUnnamed: "a custom field",
             closed: "closed this",
             reopened: "reopened this",
             deleted: "deleted this",

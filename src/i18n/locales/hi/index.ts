@@ -2011,6 +2011,8 @@ export const hi: DeepPartial<Messages> = {
                 milestoneChanged: "से मील का पत्थर बदल दिया",
                 sprintChanged: "से स्प्रिंट बदल दिया",
                 projectChanged: "से प्रोजेक्ट बदल दिया",
+                customFieldChanged: "से {field} बदल दिया",
+                customFieldUnnamed: "कस्टम फ़ील्ड",
                 closed: "इसे बंद कर दिया",
                 reopened: "इसे दोबारा खोला",
                 deleted: "इसे हटा दिया",

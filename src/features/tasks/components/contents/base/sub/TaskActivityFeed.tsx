@@ -14,6 +14,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -128,6 +129,8 @@ const actionIcon = (action: string) => {
             return <LocalOfferOutlinedIcon sx={{ fontSize: 18 }} />;
         case "project_changed":
             return <FolderOutlinedIcon sx={{ fontSize: 18 }} />;
+        case "custom_field_changed":
+            return <TuneRoundedIcon sx={{ fontSize: 18 }} />;
         case "closed":
             return <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
         case "reopened":
@@ -615,6 +618,16 @@ const formatValue = (
             isUser: false,
         };
     }
+    // A custom-field row's raw values are option ids / user ids; the
+    // signal snapshotted the readable labels (a list for a tag field).
+    if (fieldName === "custom_field") {
+        const label = metadata?.[side === "old" ? "oldLabel" : "newLabel"];
+        if (Array.isArray(label)) {
+            const names = label.filter((name) => typeof name === "string" && name !== "");
+            return { label: names.length ? names.join(", ") : noneLabel, isUser: false };
+        }
+        if (typeof label === "string" && label !== "") return { label, isUser: false };
+    }
     // Tags are stored as `[{ tagName }]`; show the names, not the JSON.
     if (fieldName === "tags" && Array.isArray(value)) {
         const names = value
@@ -655,11 +668,17 @@ const DIFF_ACTIONS = new Set([
     "milestone_changed",
     "sprint_changed",
     "project_changed",
+    "custom_field_changed",
 ]);
 
 // Per-action sentence skeleton. The actor / chips are rendered
 // outside; this returns the verb phrase only ("changed status from").
-const verbFor = (action: string, messages: ActivityMessages): string => {
+// `metadata` names the field of a custom-field row.
+const verbFor = (
+    action: string,
+    messages: ActivityMessages,
+    metadata?: Record<string, unknown> | null
+): string => {
     switch (action) {
         case "created":
             return messages.verbs.created;
@@ -691,6 +710,15 @@ const verbFor = (action: string, messages: ActivityMessages): string => {
             return messages.verbs.sprintChanged;
         case "project_changed":
             return messages.verbs.projectChanged;
+        case "custom_field_changed": {
+            const name = metadata?.fieldName;
+            return fmt(messages.verbs.customFieldChanged, {
+                field:
+                    typeof name === "string" && name !== ""
+                        ? name
+                        : messages.verbs.customFieldUnnamed,
+            });
+        }
         case "closed":
             return messages.verbs.closed;
         case "reopened":
@@ -975,7 +1003,7 @@ export const TaskActivityFeed = ({
                                     color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
                                 }}
                             >
-                                {verbFor(row.actionType, t.tasks.activity)}
+                                {verbFor(row.actionType, t.tasks.activity, row.metadata)}
                             </Typography>
                             {showOldChip && (
                                 <ValueChip
