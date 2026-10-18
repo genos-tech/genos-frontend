@@ -93,6 +93,7 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
+import { agentMarkdownComponents, ExternalLink } from "../agentQA/agentMarkdown";
 import {
     isServiceDisabledByProjectScope,
     SPOTLIGHT_FILTER_SERVICES,
@@ -1876,12 +1877,8 @@ const CitationLink = ({ href, children, sourcesById, onPreview, isDark }: Citati
         // but be safe: render the children plainly without an anchor.
         return <>{children}</>;
     }
-    // Any other href: pass through as a normal external link.
-    return (
-        <a href={href} rel="noopener noreferrer" target="_blank">
-            {children}
-        </a>
-    );
+    // Any other href: an external link that says where it goes.
+    return <ExternalLink href={href}>{children}</ExternalLink>;
 };
 
 const TurnViewInner = ({
@@ -2116,6 +2113,7 @@ const TurnViewInner = ({
                                 // to the library default so the existing
                                 // XSS guards still apply.
                                 components={{
+                                    ...agentMarkdownComponents,
                                     a: ({ href, children }) => (
                                         <CitationLink
                                             href={href}
@@ -2709,6 +2707,7 @@ const HistoryArchiveTurn = ({
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
+                                    ...agentMarkdownComponents,
                                     a: ({ href, children }) => (
                                         <CitationLink
                                             href={href}

@@ -13,6 +13,7 @@ import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
+import { agentMarkdownComponents, ExternalLink } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 
 const asString = (v: unknown): string | undefined =>
@@ -100,6 +101,10 @@ export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
                 >
                     <ReactMarkdown
                         components={{
+                            // Shown as a chip naming its host, never
+                            // fetched: what is being approved should be
+                            // visible without the preview phoning out.
+                            img: agentMarkdownComponents.img,
                             // Proposed bodies may carry citation-token links
                             // ([prose](task:12)) that only become real
                             // /workspace/... hrefs when the backend converts
@@ -110,9 +115,7 @@ export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
                             // in a new tab as usual.
                             a: ({ href, children }) =>
                                 href && /^(https?:|mailto:)/.test(href) ? (
-                                    <a href={href} rel="noreferrer" target="_blank">
-                                        {children}
-                                    </a>
+                                    <ExternalLink href={href}>{children}</ExternalLink>
                                 ) : (
                                     <Box component="span" sx={{ textDecoration: "underline" }}>
                                         {children}

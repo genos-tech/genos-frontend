@@ -16,6 +16,7 @@ import { defaultUrlTransform } from "react-markdown";
 
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { SpotlightResult } from "../spotlight/types";
+import { ExternalLink } from "./agentMarkdown";
 import { CITATION_HREF_PREFIX, sourceToUrl } from "./citationUtils";
 
 // URL transform for ReactMarkdown that preserves our citation sentinel
@@ -95,9 +96,5 @@ export const CitationAnchor = ({
         // happen post-rewriteCitations but be defensive.
         return <>{children}</>;
     }
-    return (
-        <a href={href} rel="noopener noreferrer" target="_blank">
-            {children}
-        </a>
-    );
+    return <ExternalLink href={href}>{children}</ExternalLink>;
 };

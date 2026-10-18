@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
+import { agentMarkdownComponents } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 
 interface PlanTaskArg {
@@ -124,7 +125,9 @@ const TaskRow = ({
                         "& ul, & ol": { m: 0, pl: 2.5 },
                     }}
                 >
-                    <ReactMarkdown>{task.content_markdown}</ReactMarkdown>
+                    <ReactMarkdown components={agentMarkdownComponents}>
+                        {task.content_markdown}
+                    </ReactMarkdown>
                 </Box>
             ) : null}
         </Box>

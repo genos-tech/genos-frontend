@@ -2703,6 +2703,8 @@ export const ja: DeepPartial<Messages> = {
                 expiryDays: "{count}日",
                 expiresOn: "{date} に期限切れ",
                 neverExpires: "無期限 — 新しいキーへの切り替えをおすすめします",
+                allowDestructive: "取り消せない操作（カレンダーの予定の削除）も許可する",
+                destructiveChip: "削除可",
             },
             teamKeys: {
                 title: "チームの API キー",

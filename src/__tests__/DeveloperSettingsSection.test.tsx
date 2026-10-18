@@ -44,6 +44,7 @@ const KEY = {
     name: "CI bot",
     prefix: "gnos_abcdef",
     scope: "read" as const,
+    allowDestructive: false,
     teamId: null,
     lastUsedAt: null,
     expiresAt: null,
@@ -220,6 +221,91 @@ describe("DeveloperSettingsSection", () => {
                 expect.objectContaining({ expiresInDays: 365 })
             )
         );
+    });
+
+    /**
+     * The delete is the one call that can't be undone, and an instruction
+     * planted in what a key reads can ask for it. So it is per key, asked
+     * for at mint time, offered only where the server would accept it
+     * (write keys), and never carried over.
+     */
+    describe("the can't-be-undone opt-in", () => {
+        const ALLOW = /actions that can't be undone/i;
+        const scopeSelect = () => screen.getAllByRole("combobox")[0];
+        const pickScope = async (user: ReturnType<typeof userEvent.setup>, name: RegExp) => {
+            await user.click(scopeSelect());
+            await user.click(screen.getByRole("option", { name }));
+        };
+
+        it("is not offered on a read key", async () => {
+            render(<DeveloperSettingsSection teamId="t1" />);
+            await screen.findByText(/No API keys yet/i);
+            expect(screen.queryByLabelText(ALLOW)).not.toBeInTheDocument();
+        });
+
+        it("is off on a write key unless ticked", async () => {
+            const user = userEvent.setup();
+            createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await pickScope(user, /Read & write/);
+            expect(screen.getByLabelText(ALLOW)).not.toBeChecked();
+            await user.type(screen.getByPlaceholderText(/What is this key for/i), "CI bot");
+            await user.click(screen.getByRole("button", { name: /Create key/i }));
+
+            await waitFor(() => expect(createApiKey).toHaveBeenCalled());
+            expect(createApiKey.mock.calls[0][1]).toEqual({
+                name: "CI bot",
+                scope: "write",
+                expiresInDays: 90,
+            });
+        });
+
+        it("sends the opt-in when ticked, then resets it for the next key", async () => {
+            const user = userEvent.setup();
+            createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await pickScope(user, /Read & write/);
+            await user.click(screen.getByLabelText(ALLOW));
+            await user.type(screen.getByPlaceholderText(/What is this key for/i), "Ops bot");
+            await user.click(screen.getByRole("button", { name: /Create key/i }));
+
+            await waitFor(() =>
+                expect(createApiKey).toHaveBeenCalledWith(
+                    "tok",
+                    expect.objectContaining({ scope: "write", allowDestructive: true })
+                )
+            );
+            await screen.findByDisplayValue("gnos_X");
+            expect(screen.getByLabelText(ALLOW)).not.toBeChecked();
+        });
+
+        it("is dropped when the key goes back to read", async () => {
+            const user = userEvent.setup();
+            createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await pickScope(user, /Read & write/);
+            await user.click(screen.getByLabelText(ALLOW));
+            await pickScope(user, /^Read$/);
+            expect(screen.queryByLabelText(ALLOW)).not.toBeInTheDocument();
+            // Back to write: still off — the tick did not survive the trip.
+            await pickScope(user, /Read & write/);
+            expect(screen.getByLabelText(ALLOW)).not.toBeChecked();
+        });
+
+        it("marks the keys that have it, in both lists", async () => {
+            listApiKeys.mockResolvedValue([
+                { ...KEY, id: "k1", name: "Plain", scope: "write" },
+                { ...KEY, id: "k2", name: "Deleter", scope: "write", allowDestructive: true },
+            ]);
+            listTeamApiKeys.mockResolvedValue([{ ...TEAM_KEY, allowDestructive: true }]);
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await screen.findByText("Deleter");
+            expect(screen.getAllByText("Can delete")).toHaveLength(2);
+        });
     });
 
     it("says when each key expires, and flags one that never does", async () => {

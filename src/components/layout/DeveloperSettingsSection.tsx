@@ -87,6 +87,9 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const [keyName, setKeyName] = useState("");
     const [keyScope, setKeyScope] = useState<"read" | "write">("read");
     const [keyExpiryDays, setKeyExpiryDays] = useState<number>(DEFAULT_API_KEY_EXPIRY_DAYS);
+    // Off by default and per key: a planted instruction in something the
+    // key reads can ask for the delete, and only this says yes to it.
+    const [keyAllowDestructive, setKeyAllowDestructive] = useState(false);
     const [keyBusy, setKeyBusy] = useState(false);
 
     const [hookUrl, setHookUrl] = useState("");
@@ -142,11 +145,14 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
             name: keyName.trim(),
             scope: keyScope,
             expiresInDays: keyExpiryDays,
+            ...(keyAllowDestructive ? { allowDestructive: true } : {}),
         });
         setKeyBusy(false);
         if (res.status === "created") {
             setFreshKey(res.key);
             setKeyName("");
+            // Never carried into the next key: each one is asked for.
+            setKeyAllowDestructive(false);
             void refresh();
         }
     };
@@ -266,7 +272,12 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     <Select
                         size="sm"
                         value={keyScope}
-                        onChange={(_, v) => setKeyScope((v as "read" | "write") ?? "read")}
+                        onChange={(_, v) => {
+                            const scope = (v as "read" | "write") ?? "read";
+                            setKeyScope(scope);
+                            // The server refuses it on a read key.
+                            if (scope !== "write") setKeyAllowDestructive(false);
+                        }}
                         sx={{ minWidth: 120 }}
                     >
                         <Option value="read">{d.keys.scopeRead}</Option>
@@ -295,6 +306,16 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         {d.keys.create}
                     </Button>
                 </Stack>
+                {keyScope === "write" && (
+                    <Checkbox
+                        checked={keyAllowDestructive}
+                        color="danger"
+                        label={d.keys.allowDestructive}
+                        size="sm"
+                        slotProps={{ label: { sx: { fontSize: "0.8125rem" } } }}
+                        onChange={(e) => setKeyAllowDestructive(e.target.checked)}
+                    />
+                )}
 
                 {loaded && keys.length === 0 && (
                     <Typography level="body-xs" sx={{ opacity: 0.6 }}>
@@ -328,6 +349,11 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                     {expiryLabel(k)}
                                 </Typography>
                             </Box>
+                            {k.allowDestructive && (
+                                <Chip color="danger" size="sm" variant="soft">
+                                    {d.keys.destructiveChip}
+                                </Chip>
+                            )}
                             <Chip size="sm" variant="soft">
                                 {k.scope === "write" ? d.keys.scopeWrite : d.keys.scopeRead}
                             </Chip>
@@ -395,6 +421,11 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                         · {expiryLabel(k)}
                                     </Typography>
                                 </Box>
+                                {k.allowDestructive && (
+                                    <Chip color="danger" size="sm" variant="soft">
+                                        {d.keys.destructiveChip}
+                                    </Chip>
+                                )}
                                 <Chip size="sm" variant="soft">
                                     {k.scope === "write" ? d.keys.scopeWrite : d.keys.scopeRead}
                                 </Chip>

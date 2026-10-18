@@ -1,6 +1,7 @@
 // Public surface of the agentQA package. Wrappers (threadAsk and
 // future noteAsk variants) import everything they need from here.
 
+export { agentMarkdownComponents, BlockedImage, ExternalLink } from "./agentMarkdown";
 export { AgentQAConversation } from "./AgentQAConversation";
 export { AgentQAInput } from "./AgentQAInput";
 export { ApprovalCard } from "./ApprovalCard";

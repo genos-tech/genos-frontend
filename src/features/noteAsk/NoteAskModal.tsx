@@ -39,6 +39,7 @@ import {
 } from "../../components/modals/noteModalHostZIndex";
 import { useTranslation } from "../../i18n";
 import {
+    agentMarkdownComponents,
     AgentQAConversation,
     AgentQAInput,
     agentQAUrlTransform,
@@ -226,6 +227,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                         }}
                     >
                         <ReactMarkdown
+                            components={agentMarkdownComponents}
                             remarkPlugins={[remarkGfm]}
                             urlTransform={agentQAUrlTransform}
                         >
