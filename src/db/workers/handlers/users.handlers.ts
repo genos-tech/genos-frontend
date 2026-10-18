@@ -53,15 +53,30 @@ const checkIsOnline = (
 // on it, so carry the stored value through.
 //
 // The OTHER profile fields (`currentLocation`, `aboutMe`, `role`, …) are
-// deliberately NOT pinned here: they DO ride the beat via `...myself`, so
-// the beat is the sender describing themselves with their current values,
-// which is exactly what should win — pinning the stored copy instead would
-// make a user's own profile edit invisible to teammates until the next
-// roster poll.
-const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
+// deliberately NOT pinned here: they DO ride the beat, so the beat is the
+// sender's current values, which is exactly what should win — pinning the
+// stored copy instead would make a user's own profile edit invisible to
+// teammates until the next roster poll.
+//
+// The beat is laid OVER the stored row, never in place of it. The socket
+// layer no longer relays the sender's `myself` (MIP-715): it sends the card
+// genos-api builds for the widest room a beat reaches (`presence_profile`)
+// plus the presence state, and that card has no `phoneNumber` or
+// `userEmail`, because the far side of a cross-team share was reading
+// both. A key the card leaves out is the card not saying, not the person
+// clearing it, so the roster's value stands. Replacing the row would blank
+// a teammate's email and phone on their profile card within one beat.
+//
+// When genos-api can't be asked, the socket layer sends just the `userId`
+// its connect check verified. Over a stored row that is a plain "online";
+// about someone never seen it is a row with no name, and a dozen surfaces
+// call string methods on `userName`. So it isn't stored: the next roster
+// load, or the next beat that has a card, files them properly.
+const withStoredIdentity = async (user: UserProps): Promise<UserProps | null> => {
     const stored = await userService.getUser(user.userId);
-    if (!stored) return user;
+    if (!stored) return user.userName ? user : null;
     return {
+        ...stored,
         ...user,
         teamId: stored.teamId,
         teamName: stored.teamName,
@@ -77,7 +92,8 @@ const withStoredIdentity = async (user: UserProps): Promise<UserProps> => {
 export const usersHandlers: HandlerMap<UsersRequests> = {
     // Presence only (the `userStatus` socket message is the sole caller).
     addUser: async ({ user }) => {
-        await userService.saveUser(await withStoredIdentity(user));
+        const merged = await withStoredIdentity(user);
+        if (merged) await userService.saveUser(merged);
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {
