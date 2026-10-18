@@ -2285,6 +2285,8 @@ export const es: DeepPartial<Messages> = {
                 milestoneChanged: "hito cambiado de",
                 sprintChanged: "sprint cambiado de",
                 projectChanged: "proyecto cambiado de",
+                customFieldChanged: "{field} cambiado de",
+                customFieldUnnamed: "Campo personalizado",
                 closed: "Cerré esto",
                 reopened: "reabrió esto",
                 deleted: "borré esto",

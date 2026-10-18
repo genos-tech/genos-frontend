@@ -3794,6 +3794,8 @@ export const zh: DeepPartial<Messages> = {
                 milestoneChanged: "改变了里程碑",
                 sprintChanged: "更改了迭代",
                 projectChanged: "更改了项目",
+                customFieldChanged: "更改了{field}",
+                customFieldUnnamed: "自定义字段",
                 closed: "关闭了这个",
                 reopened: "重新打开这个",
                 deleted: "删除了这个",

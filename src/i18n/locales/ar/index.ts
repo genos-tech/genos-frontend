@@ -2256,6 +2256,8 @@ export const ar: DeepPartial<Messages> = {
                 milestoneChanged: "تم تغيير المعلم من",
                 sprintChanged: "تم تغيير العدو من",
                 projectChanged: "تم تغيير المشروع من",
+                customFieldChanged: "تم تغيير {field} من",
+                customFieldUnnamed: "حقل مخصص",
                 closed: "أغلق هذا",
                 reopened: "أعيد فتح هذا",
                 deleted: "حذف هذا",

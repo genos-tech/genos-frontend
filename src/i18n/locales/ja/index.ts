@@ -3914,6 +3914,8 @@ export const ja: DeepPartial<Messages> = {
                 milestoneChanged: "からマイルストーンを変更しました",
                 sprintChanged: "スプリントをから変更しました",
                 projectChanged: "からプロジェクトを変更しました",
+                customFieldChanged: "から{field}を変更しました",
+                customFieldUnnamed: "カスタムフィールド",
                 closed: "これを閉じました",
                 reopened: "これを再開しました",
                 deleted: "これを削除しました",
