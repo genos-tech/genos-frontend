@@ -244,6 +244,12 @@ const MCP_TOOLS: McpTool[] = [
             "Record the branch and PR delivering a task. Writing the same link twice updates it.",
     },
     {
+        name: "update_task_dependencies",
+        type: "write",
+        taskRef: true,
+        meaning: "Add or remove “X blocks Y” between existing tasks, in one call. Refuses a loop.",
+    },
+    {
         name: "create_task",
         type: "write",
         meaning: (
