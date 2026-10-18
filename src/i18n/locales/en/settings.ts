@@ -547,7 +547,7 @@ export const settings = {
     autoCloseOnPrMerge: {
         heading: "Auto-close on PR merge",
         description:
-            "When a GitHub PR is merged, automatically close the task whose ID is in the PR's head branch name (e.g. branch `feature/GEN-42-foo` closes task GEN-42). Only fires for tasks you are assigned to.",
+            "When a GitHub PR is merged, automatically close the task whose ID is in the PR's head branch name (e.g. branch `feature/GEN-42-foo` closes task GEN-42). Only fires for tasks you are assigned to. If the task has several PRs, it closes once the last open one merges.",
         toggleLabel: "Close my tasks when their PR merges",
         toggleHelper:
             "Disabled by default. Branch must follow the convention `…<TASK-ID>…` for the match to fire.",
