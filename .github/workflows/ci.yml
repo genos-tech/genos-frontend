@@ -25,6 +25,11 @@ on:
         branches: [main]
     pull_request:
 
+# Least privilege (MIP-727): every job reads the repo and nothing more,
+# unless it says otherwise below.
+permissions:
+    contents: read
+
 concurrency:
     group: frontend-${{ github.ref }}
     cancel-in-progress: true
@@ -43,6 +48,11 @@ jobs:
     changes:
         name: detect relevant changes
         runs-on: ubuntu-latest
+        # Listing the PR's files needs this. Without it the call fails and the
+        # job fails open, so CI would still run, just on docs-only PRs too.
+        permissions:
+            contents: read
+            pull-requests: read
         outputs:
             code: ${{ steps.filter.outputs.code }}
         steps:
@@ -92,8 +102,8 @@ jobs:
             matrix:
                 shard: [1, 2, 3]
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: 22
                   cache: npm
@@ -154,8 +164,8 @@ jobs:
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: 22
                   cache: npm
@@ -163,7 +173,7 @@ jobs:
             - run: npm ci
             - name: Vitest + coverage
               run: npx vitest run --coverage
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always()
               with:
                   name: frontend-coverage
@@ -176,8 +186,8 @@ jobs:
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: 22
                   cache: npm
@@ -211,8 +221,8 @@ jobs:
         name: frontend-quality (report-only)
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: 22
                   cache: npm
@@ -226,6 +236,23 @@ jobs:
             - name: Prettier
               if: always() # report both, even if eslint failed
               run: npx prettier --check .
+
+    # Known-vulnerable dependencies (MIP-727), production deps only: what
+    # ships in the bundle, plus `serve`, which serves it on Railway.
+    # Report-only: the lock has open high advisories, and making this
+    # required waits on those upgrades. Reads package-lock.json and installs
+    # nothing.
+    npm-audit:
+        name: npm audit (report-only)
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version: 22
+            - run: npm audit --omit=dev
 
     # Build + deploy to GCP Cloud Run on merge to main. Gated on frontend-test
     # (the required check) so a red test never ships. GCP has no other CD for
@@ -253,13 +280,13 @@ jobs:
             GCP_REGION: asia-northeast1
             AR: asia-northeast1-docker.pkg.dev/amplified-album-496413-t2/genos
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
             - name: Authenticate to Google Cloud (keyless WIF)
-              uses: google-github-actions/auth@v2
+              uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
               with:
                   workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
                   service_account: ${{ secrets.GCP_DEPLOY_SA }}
-            - uses: google-github-actions/setup-gcloud@v2
+            - uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
             # VITE_* is baked into the bundle at BUILD time (src/vite-env.d.ts);
             # these are the GCP prod URLs. If the GCP domains change, edit here.
             # VITE_VAPID_PUBLIC_KEY enables browser push — it MUST equal the api's
