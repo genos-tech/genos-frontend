@@ -134,7 +134,10 @@ const config = {
                 { key: "X-Content-Type-Options", value: "nosniff" },
                 { key: "X-Frame-Options", value: "DENY" },
                 { key: "Referrer-Policy", value: "same-origin" },
-                { key: "Strict-Transport-Security", value: "max-age=31536000" },
+                // Every genosai.dev host is HTTPS-only, so subdomains too
+                // (MIP-621), the same as genos-api sends. Not `preload`:
+                // that is a hard-to-undo listing, a separate decision.
+                { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
                 {
                     key: "Permissions-Policy",
                     value: "camera=(), microphone=(), geolocation=()",
