@@ -14,6 +14,7 @@ const createApiKey = vi.fn();
 const revokeApiKey = vi.fn();
 const listTeamApiKeys = vi.fn();
 const revokeTeamApiKey = vi.fn();
+const listTeamSecurityEvents = vi.fn();
 const listWebhooks = vi.fn();
 const createWebhook = vi.fn();
 const deleteWebhook = vi.fn();
@@ -29,6 +30,7 @@ vi.mock("../services/developerApi", async () => {
         revokeApiKey: (...a: unknown[]) => revokeApiKey(...a),
         listTeamApiKeys: (...a: unknown[]) => listTeamApiKeys(...a),
         revokeTeamApiKey: (...a: unknown[]) => revokeTeamApiKey(...a),
+        listTeamSecurityEvents: (...a: unknown[]) => listTeamSecurityEvents(...a),
         listWebhooks: (...a: unknown[]) => listWebhooks(...a),
         createWebhook: (...a: unknown[]) => createWebhook(...a),
         deleteWebhook: (...a: unknown[]) => deleteWebhook(...a),
@@ -70,6 +72,7 @@ describe("DeveloperSettingsSection", () => {
         listWebhooks.mockResolvedValue([]);
         // Not the owner — the server's 404, which is the common case.
         listTeamApiKeys.mockResolvedValue(null);
+        listTeamSecurityEvents.mockResolvedValue(null);
     });
 
     it("lists existing keys by prefix, never by value", async () => {
@@ -340,6 +343,15 @@ describe("DeveloperSettingsSection", () => {
         await waitFor(() => expect(revokeTeamApiKey).toHaveBeenCalledWith("tok", "t1", "tk1"));
         expect(revokeApiKey).not.toHaveBeenCalled();
         expect(await screen.findByText(/No team keys right now/i)).toBeInTheDocument();
+    });
+
+    // The log's own behaviour is in SecurityLogSection.test; this is that
+    // the owner finds it here, for the team the panel is about.
+    it("shows the owner the team's security log", async () => {
+        listTeamSecurityEvents.mockResolvedValue({ events: [], nextBefore: null });
+        render(<DeveloperSettingsSection teamId="t1" />);
+        expect(await screen.findByText("Security log")).toBeInTheDocument();
+        expect(listTeamSecurityEvents).toHaveBeenCalledWith("tok", "t1");
     });
 
     /**

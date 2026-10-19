@@ -44,6 +44,7 @@ import {
     WebhookEndpoint,
 } from "../../services/developerApi";
 import { AppTooltip } from "../ui/AppTooltip";
+import { SecurityLogSection } from "./SecurityLogSection";
 
 type Props = {
     /** Team the webhook half operates on. API keys are per-user, so the
@@ -448,6 +449,9 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     ))}
                 </Stack>
             )}
+
+            {/* ── Security log (owner only; hides itself otherwise) ── */}
+            {teamId && <SecurityLogSection teamId={teamId} />}
 
             {/* ── Webhooks ─────────────────────────────────────────── */}
             <Stack spacing={1.5}>

@@ -207,6 +207,57 @@ export const revokeTeamApiKey = async (
     }
 };
 
+// ── Security log ─────────────────────────────────────────────────────
+
+/** One row of the team's security audit log. `actionLabel` is the
+ *  server's English label, the fallback for an action this client has
+ *  no translation for yet. */
+export interface SecurityEvent {
+    id: number;
+    createdAt: string;
+    action: string;
+    actionLabel: string;
+    actorId: string | null;
+    actorLabel: string;
+    targetType: string;
+    targetId: string;
+    targetLabel: string;
+    /** "app" | "api_key" | "mcp" | "agent" | "system" | "anonymous". */
+    source: string;
+    apiKeyId: string | null;
+    ip: string | null;
+    userAgent: string;
+    metadata: Record<string, unknown>;
+}
+
+export interface SecurityEventPage {
+    events: SecurityEvent[];
+    /** Pass as `before` for the next page; `null` on the last one. */
+    nextBefore: number | null;
+}
+
+/** A page of `teamId`'s security log, newest first. Owner only, with
+ *  the same 404 for everyone else as the team key list — `null` here,
+ *  which the panel reads as "don't show the section". */
+export const listTeamSecurityEvents = async (
+    accessToken: string | null,
+    teamId: string,
+    before?: number | null
+): Promise<SecurityEventPage | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        const res = await api.get<SecurityEventPage>("/team/security-events/", {
+            params: { team_id: teamId, ...(before ? { before } : {}) },
+            // A non-owner's 404 is the normal answer, not a failure.
+            suppressErrorToast: true,
+        });
+        return { events: res.data.events ?? [], nextBefore: res.data.nextBefore ?? null };
+    } catch {
+        return null;
+    }
+};
+
 // ── Webhooks ─────────────────────────────────────────────────────────
 
 export const listWebhooks = async (
