@@ -29,6 +29,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
+import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
@@ -138,7 +139,8 @@ export const SignUpForm = () => {
             localStorage.setItem("isSigningIn", "yes");
             localStorage.setItem("userName", signUpRes.user.username || "");
             localStorage.setItem("userId", signUpRes.user.id || "");
-            localStorage.setItem("userEmail", signUpRes.user.email || "");
+            // Memory only (MIP-619); a brand-new account has no other field yet.
+            setPrivateProfile(privateProfileFromWire({ email: signUpRes.user.email }));
             navigate("/jointeam");
             return;
         }

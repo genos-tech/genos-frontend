@@ -4,6 +4,11 @@ import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
 import { analytics } from "../services/analytics";
+import {
+    clearPrivateProfile,
+    ensurePrivateProfile,
+    purgeStoredPrivateProfile,
+} from "../services/privateProfileStore";
 import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
 
 interface AuthContextType {
@@ -23,20 +28,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // `userId` is intentionally NOT in this list: it survives logout as
 // a "last signed-in user" marker so the next sign-in can detect a
 // user change and decide whether to wipe team-scoped IndexedDB.
+//
+// Nor are the email, phone, country, location and bio: those are never
+// written to localStorage at all (MIP-619). They live in
+// `privateProfileStore`, which every sign-out path clears.
 export const AUTH_LOCAL_STORAGE_KEYS = [
     "isSigningIn",
-    "userEmail",
     "userName",
     "avatarImgPath",
     "teamId",
     "tsJoined",
     "isOfflineForced",
     "role",
-    "baseCountry",
-    "phoneNumber",
-    "currentLocation",
     "locationShared",
-    "aboutMe",
     "customStatus",
     "teamName",
     "lastOpenMyNoteId",
@@ -82,8 +86,9 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
 // so it isn't "the previous user's data" — it's intent for the action the
 // current sign-in/sign-up is completing. Without preserving it, the
 // `localStorage.clear()` in clearUserScopedLocalStorage drops the token
-// before the post-auth consume funnel (JoinTeam) can redeem it.
-export const TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS = ["pendingInviteToken", "pendingInviteEmail"];
+// before the post-auth consume funnel (JoinTeam) can redeem it. Only the
+// token: JoinTeam asks the invite preview which address it is for.
+export const TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS = ["pendingInviteToken"];
 
 /**
  * Wipe localStorage of the previously signed-in user's data while keeping
@@ -110,6 +115,8 @@ export const clearUserScopedLocalStorage = (): void => {
     for (const [key, val] of preserved) {
         localStorage.setItem(key, val);
     }
+    // The previous user's private profile is in memory, not storage.
+    clearPrivateProfile();
 };
 
 // Outcome of a single refresh attempt. We need to distinguish three
@@ -133,6 +140,9 @@ const REFRESH_BACKOFF_SCHEDULE_MS = [2_000, 5_000, 10_000, 20_000, 60_000];
 // the entire app boot indefinitely. Aborting turns it into a retryable
 // `transient` failure that the backoff schedule above re-arms.
 const REFRESH_TIMEOUT_MS = 10_000;
+
+// Delays between attempts to load the private profile after a reload.
+const PRIVATE_PROFILE_RETRY_MS = [2_000, 10_000];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -202,6 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearRefreshTimer();
         AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.setItem(key, ""));
         localStorage.setItem("isOfflineForced", "false");
+        clearPrivateProfile();
         clearAllEditorDrafts();
         analytics.reset();
         setAccessToken(null);
@@ -234,9 +245,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // AuthProvider page that manages its own auth routing: a
             // logged-out invitee must be sent to /signup or /signin based
             // on the invite preview, not force-redirected to /signin (which
-            // would drop the invite context). It never needs an access
-            // token itself — the actual accept happens on /jointeam (where
-            // refresh runs normally) or via the signup endpoint.
+            // would drop the invite context). For a logged-in visitor it
+            // refreshes the token itself and hands it over; the actual
+            // accept happens on /jointeam or via the signup endpoint.
             if (
                 window.location.pathname === "/signin" ||
                 window.location.pathname === "/signup" ||
@@ -291,6 +302,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearRefreshTimer();
         };
     }, []);
+
+    // The signed-in user's email, phone, country, location and bio are
+    // kept in memory only (`privateProfileStore`, MIP-619). Delete the
+    // copies earlier releases cached in localStorage, which outlived every
+    // sign-out as empty-or-not keys.
+    useEffect(() => {
+        purgeStoredPrivateProfile();
+    }, []);
+
+    // A reload empties that store, so refill it once there is a token. A
+    // sign-in has usually filled it already, which makes this a no-op. A
+    // failure is retried a couple of times: the user's own profile card
+    // reads these, and an empty bio there looks like one to be rewritten.
+    useEffect(() => {
+        if (!accessToken) return;
+        let cancelled = false;
+        let retryTimer: ReturnType<typeof setTimeout> | null = null;
+        const attempt = async (n: number) => {
+            const profile = await ensurePrivateProfile(accessToken);
+            if (cancelled || profile || n >= PRIVATE_PROFILE_RETRY_MS.length) return;
+            retryTimer = setTimeout(() => void attempt(n + 1), PRIVATE_PROFILE_RETRY_MS[n]);
+        };
+        void attempt(0);
+        return () => {
+            cancelled = true;
+            if (retryTimer) clearTimeout(retryTimer);
+        };
+    }, [accessToken]);
 
     // One-shot sweep of orphaned per-document Yjs IndexedDB databases
     // (`task-body:<id>`, `my-note:<id>`, `chat-note:<id>`, `task-note:<id>`).

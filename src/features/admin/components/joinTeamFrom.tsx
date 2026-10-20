@@ -29,6 +29,7 @@ import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import { useTranslation } from "../../../i18n";
+import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { CreateTeamResponse, FindTeamResponse, Team } from "../../../types/admin";
 import { sleepMilliSeconds } from "../../../utils/sleep";
@@ -36,7 +37,7 @@ import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
-import { acceptInvite } from "../services/teamInvite";
+import { acceptInvite, previewInvite } from "../services/teamInvite";
 import { LanguageSwitchButton } from "./LanguageSwitchButton";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
@@ -83,11 +84,13 @@ export const JoinTeam = () => {
             reconnectionDelayMax: 5000,
             timeout: 10000,
             withCredentials: true,
+            // No `userEmail`: it isn't stored any more (MIP-619). The server
+            // only copied it into join-request mentions, which never render
+            // it (MIP-732).
             query: {
                 teamId: localStorage.getItem("teamId"),
                 userId: localStorage.getItem("userId"),
                 userName: localStorage.getItem("userName"),
-                userEmail: localStorage.getItem("userEmail"),
             },
             extraHeaders: {
                 Authorization: accessToken || "",
@@ -118,8 +121,7 @@ export const JoinTeam = () => {
     const getApproveToJoinTeam = async (targetTeamDetails: Team) => {
         const userId: string | null = localStorage.getItem("userId");
         const userName: string | null = localStorage.getItem("userName");
-        const userEmail: string | null = localStorage.getItem("userEmail");
-        if (userId && userName && userEmail && socketInstance !== null) {
+        if (userId && userName && socketInstance !== null) {
             socketInstance.emit("join_team_request", {
                 joiningTeamId: targetTeamDetails.teamId,
                 joiningTeamName: targetTeamDetails.teamName,
@@ -192,29 +194,38 @@ export const JoinTeam = () => {
         const token = localStorage.getItem("pendingInviteToken");
         if (!token || !accessToken) return;
 
-        // If the stashed invite is for a different email than the
-        // signed-in user — e.g. a previous user on a shared device
-        // abandoned an invite — it isn't ours to redeem. Clear it silently:
-        // don't hit the server or show a mismatch error to someone who
-        // never requested an invite. (acceptInvite also enforces the match
-        // server-side, so this can't wrongly add anyone either way.)
-        const pendingEmail = (localStorage.getItem("pendingInviteEmail") || "").toLowerCase();
-        const myEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
-        if (pendingEmail && myEmail && pendingEmail !== myEmail) {
-            localStorage.removeItem("pendingInviteToken");
-            localStorage.removeItem("pendingInviteEmail");
-            return;
-        }
-
         inviteConsumedRef.current = true;
         let cancelled = false;
         (async () => {
+            // If the stashed invite is for a different email than the
+            // signed-in user — e.g. a previous user on a shared device
+            // abandoned an invite — it isn't ours to redeem. Clear it
+            // silently: don't redeem or show a mismatch error to someone
+            // who never requested an invite. (acceptInvite also enforces the
+            // match server-side, so this can't wrongly add anyone either
+            // way.) Both addresses are asked for rather than read from
+            // storage, which no longer holds either (MIP-619); if either is
+            // unknown, the server's check decides.
+            //
+            // No `cancelled` check before the accept: a token refresh re-runs
+            // this effect, the ref above stops the re-run, so this run is
+            // the only one that will redeem the invite.
+            const [preview, profile] = await Promise.all([
+                previewInvite(token),
+                ensurePrivateProfile(accessToken),
+            ]);
+            const pendingEmail = preview.valid ? preview.invited_email.toLowerCase() : "";
+            const myEmail = (profile?.userEmail ?? "").toLowerCase();
+            if (pendingEmail && myEmail && pendingEmail !== myEmail) {
+                localStorage.removeItem("pendingInviteToken");
+                return;
+            }
+
             const r = await acceptInvite(accessToken, token);
             if (cancelled) return;
             // Clear on every terminal outcome so a stale token can't leak
             // into a later, unrelated sign-in on this device.
             localStorage.removeItem("pendingInviteToken");
-            localStorage.removeItem("pendingInviteEmail");
             if (r.ok && r.team_id) {
                 localStorage.setItem("teamId", r.team_id);
                 localStorage.setItem("teamName", r.team_name ?? "");
@@ -788,6 +799,7 @@ export const JoinTeam = () => {
                             console.error("Error signing out:", error);
                         }
                         localStorage.setItem("isSigningIn", "");
+                        clearPrivateProfile();
                         setAccessToken(null);
                         navigate("/signin");
                     }}

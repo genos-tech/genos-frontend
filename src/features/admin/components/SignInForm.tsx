@@ -32,6 +32,11 @@ import {
 import { DatabaseUtils } from "../../../db/utils";
 import { useTranslation } from "../../../i18n";
 import { markDemoStarted } from "../../../services/demoFunnel";
+import {
+    clearPrivateProfile,
+    privateProfileFromWire,
+    setPrivateProfile,
+} from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
@@ -104,19 +109,16 @@ export const SignInForm = () => {
             localStorage.setItem("tsJoined", signInRes.ts_joined_at || "");
             localStorage.setItem("isOfflineForced", signInRes.is_offline_forced || "");
             localStorage.setItem("role", signInRes.role || "");
-            localStorage.setItem("baseCountry", signInRes.base_country || "");
-            localStorage.setItem("phoneNumber", signInRes.phone_number || "");
-            localStorage.setItem("currentLocation", signInRes.current_location || "");
             // Store the string "false" only on an explicit opt-out; a missing
             // field (older server) leaves it shared, matching useAuth's read.
             localStorage.setItem(
                 "locationShared",
                 signInRes.location_shared === false ? "false" : "true"
             );
-            localStorage.setItem("aboutMe", signInRes.about_me || "");
             localStorage.setItem("customStatus", signInRes.custom_status || "");
-            localStorage.setItem("userEmail", signInRes.email || "");
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
+            // Email, phone, country, location and bio: memory only (MIP-619).
+            setPrivateProfile(privateProfileFromWire(signInRes));
 
             if (signInRes.user_id) {
                 if (isDifferentUser) {
@@ -146,6 +148,7 @@ export const SignInForm = () => {
             // or leftover IndexedDB rows could leak into the new demo
             // session before the new values are written below.
             AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+            clearPrivateProfile();
             await DatabaseUtils.clearTeamScopedStores();
 
             // `locale` is read from the provider, not storage: the wipe above
@@ -161,17 +164,13 @@ export const SignInForm = () => {
             localStorage.setItem("tsJoined", res.ts_joined_at || "");
             localStorage.setItem("isOfflineForced", res.is_offline_forced || "");
             localStorage.setItem("role", res.role || "");
-            localStorage.setItem("baseCountry", res.base_country || "");
-            localStorage.setItem("phoneNumber", res.phone_number || "");
-            localStorage.setItem("currentLocation", res.current_location || "");
             localStorage.setItem(
                 "locationShared",
                 res.location_shared === false ? "false" : "true"
             );
-            localStorage.setItem("aboutMe", res.about_me || "");
             localStorage.setItem("customStatus", res.custom_status || "");
-            localStorage.setItem("userEmail", res.email || "");
             localStorage.setItem("avatarImgPath", res.profile_image_file_name || "");
+            setPrivateProfile(privateProfileFromWire(res));
             // Demo-specific: pre-set the team so we can skip /jointeam.
             localStorage.setItem("teamId", res.team_id);
             localStorage.setItem("teamName", res.team_name);

@@ -9,6 +9,7 @@ import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthConte
 import { DatabaseUtils } from "../../../db/utils";
 import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 
 interface MeResponse {
@@ -117,17 +118,14 @@ export const OAuthSuccessHandler = () => {
                 localStorage.setItem("tsJoined", me.ts_created_at || "");
                 localStorage.setItem("isOfflineForced", me.is_offline_forced ? "true" : "false");
                 localStorage.setItem("role", me.role || "");
-                localStorage.setItem("baseCountry", me.base_country || "");
-                localStorage.setItem("phoneNumber", me.phone_number || "");
-                localStorage.setItem("currentLocation", me.current_location || "");
                 localStorage.setItem(
                     "locationShared",
                     me.location_shared === false ? "false" : "true"
                 );
-                localStorage.setItem("aboutMe", me.about_me || "");
                 localStorage.setItem("customStatus", me.custom_status || "");
-                localStorage.setItem("userEmail", me.email || "");
                 localStorage.setItem("avatarImgPath", me.profile_image_file_name || "");
+                // Email, phone, country, location and bio: memory only (MIP-619).
+                setPrivateProfile(privateProfileFromWire(me));
 
                 if (isDifferentUser) {
                     await DatabaseUtils.clearTeamScopedStores();

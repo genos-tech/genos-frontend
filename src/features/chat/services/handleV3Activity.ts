@@ -6,12 +6,14 @@
  * write; this adapter just converts the v3 wire shape to the legacy
  * `ActivityMessageProps` shape it expects.
  *
- * `myself` is pulled out of localStorage rather than passed through
+ * `myself` is pulled out of localStorage (and, for the email, the private
+ * profile store) rather than passed through
  * `channelService` because this fires from the socket router (no React
  * context) and the activity row's `receiver` field has always been the
  * signed-in user — there's no cross-tenant ambiguity to resolve.
  */
 
+import { getPrivateProfile } from "../../../services/privateProfileStore";
 import type { UserProps } from "../../../types/admin";
 import { v3ActivityToLegacy } from "../adapters/v3ActivityToLegacy";
 import { addActivityMessage } from "../components/sidebar/activity/services/addActivityMessage";
@@ -33,7 +35,8 @@ function getMyself(): UserProps {
         ...EMPTY_USER,
         userId: localStorage.getItem("userId") || "",
         userName: localStorage.getItem("userName") || "",
-        userEmail: localStorage.getItem("userEmail") || "",
+        // Memory only (MIP-619).
+        userEmail: getPrivateProfile().userEmail,
         teamId: localStorage.getItem("teamId") || "",
         teamName: localStorage.getItem("teamName") || "",
         avatarImgPath: localStorage.getItem("avatarImgPath") || "",

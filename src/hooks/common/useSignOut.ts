@@ -2,26 +2,24 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { analytics } from "../../services/analytics";
+import { clearPrivateProfile } from "../../services/privateProfileStore";
 import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // `userId` is intentionally NOT cleared: it survives logout as a
 // "last signed-in user" marker so the next sign-in can detect a user
-// change and decide whether to wipe IndexedDB.
+// change and decide whether to wipe IndexedDB. The email, phone,
+// country, location and bio were never here to clear: they're memory
+// only (`privateProfileStore`, MIP-619).
 const KEYS_TO_CLEAR = [
     "isSigningIn",
-    "userEmail",
     "userName",
     "avatarImgPath",
     "teamId",
     "tsJoined",
     "isOfflineForced",
     "role",
-    "baseCountry",
-    "phoneNumber",
-    "currentLocation",
-    "aboutMe",
     "customStatus",
     "teamName",
     "lastOpenMyNoteId",
@@ -65,6 +63,7 @@ export const useSignOut = () => {
 
             KEYS_TO_CLEAR.forEach((key) => localStorage.setItem(key, ""));
             localStorage.setItem("isOfflineForced", "false");
+            clearPrivateProfile();
             // Wipe per-team history buckets ("genos.history.v1.<teamId>").
             // The user may belong to several teams; logout should clear
             // every team's history on this device, not just the active one.

@@ -6,6 +6,7 @@ import { ProfileMarkdown } from "../../../../../components/ui/misc/ProfileMarkdo
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
+import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -72,7 +73,7 @@ export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
             return;
         }
         setMyself({ ...myself, aboutMe: trimmed });
-        localStorage.setItem("aboutMe", trimmed);
+        patchPrivateProfile({ aboutMe: trimmed });
         setEditing(false);
     };
 

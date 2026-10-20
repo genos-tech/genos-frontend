@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../i18n";
+import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -69,7 +70,7 @@ export const UserProfilePhone = ({ myself, setMyself, user }: Props) => {
         setSaving(false);
         if (!result) return;
         setMyself({ ...myself, phoneNumber: next });
-        localStorage.setItem("phoneNumber", next);
+        patchPrivateProfile({ phoneNumber: next });
         setEditing(false);
     };
 
