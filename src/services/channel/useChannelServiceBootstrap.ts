@@ -96,7 +96,8 @@ export function useChannelServiceBootstrap(
                 // its broadcasts.
                 teamId: teamId ?? "",
                 userName: localStorage.getItem("userName") ?? "",
-                userEmail: localStorage.getItem("userEmail") ?? "",
+                // No `userEmail`: the /v3 handler never read it, and it
+                // isn't stored any more (MIP-619).
             },
             extraHeaders: { Authorization: accessToken || "" },
         });

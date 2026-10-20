@@ -14,6 +14,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
+import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { UserProps } from "../../../../../types/admin";
 import {
     listZoneOptions,
@@ -90,7 +91,7 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
             currentLocation: nextZoneId,
         });
         setMyself({ ...myself, currentLocation: nextZoneId });
-        localStorage.setItem("currentLocation", nextZoneId);
+        patchPrivateProfile({ currentLocation: nextZoneId });
         setEditing(false);
     };
 

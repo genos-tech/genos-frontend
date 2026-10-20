@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
+import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
 import { previewInvite } from "../services/teamInvite";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -15,13 +16,37 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 type Phase = "loading" | "invalid" | "mismatch";
 
 /**
+ * The signed-in user's email, or "" when it can't be learned. It isn't
+ * kept in storage (MIP-619), so ask the server, refreshing the access
+ * token first: AuthProvider skips that on this page. The token is handed
+ * to AuthProvider, so /jointeam can use it.
+ */
+const loadSessionEmail = async (setAccessToken: (token: string) => void): Promise<string> => {
+    try {
+        const response = await fetch(`${base_url}/user/signin/refresh/`, {
+            method: "GET",
+            credentials: "include",
+        });
+        if (!response.ok) return "";
+        const { access } = (await response.json()) as { access?: string };
+        if (!access) return "";
+        setAccessToken(access);
+        const profile = await ensurePrivateProfile(access);
+        return profile?.userEmail ?? "";
+    } catch {
+        return "";
+    }
+};
+
+/**
  * Public landing page for an invite link (`/accept-invite?token=...`).
  * Sits OUTSIDE both auth guards — the visitor may be logged in or not.
- * It only *previews* the token (a public call) and then routes; it never
- * needs an access token, so AuthProvider deliberately skips its refresh /
- * force-sign-out cycle for this path (see AuthContext). The actual accept
- * is performed by the JoinTeam consume funnel (existing accounts) or the
- * signup endpoint (new accounts) — both places where a token is available.
+ * It previews the token (a public call) and then routes. AuthProvider
+ * deliberately skips its refresh / force-sign-out cycle for this path (see
+ * AuthContext); a logged-in visitor's token is refreshed here, once, only
+ * to learn which account they're signed in as. The actual accept is
+ * performed by the JoinTeam consume funnel (existing accounts) or the
+ * signup endpoint (new accounts).
  *
  * Branch order is login-state FIRST, then preview status, so we never
  * blind-redirect a logged-in visitor into GuestGuard. The token is stashed
@@ -55,7 +80,6 @@ export const AcceptInviteHandler = () => {
             if (!preview.valid) {
                 // invalid OR expired — clear any stale stash and stop.
                 localStorage.removeItem("pendingInviteToken");
-                localStorage.removeItem("pendingInviteEmail");
                 setPhase("invalid");
                 return;
             }
@@ -63,9 +87,9 @@ export const AcceptInviteHandler = () => {
 
             // Stash so the token survives the auth round-trip. The consume
             // points (JoinTeam effect / signup) clear it on a terminal
-            // outcome.
+            // outcome. Only the token: the invited email can be had from
+            // the preview again, and is not stored (MIP-619).
             localStorage.setItem("pendingInviteToken", token);
-            localStorage.setItem("pendingInviteEmail", preview.invited_email);
 
             const isLoggedIn = localStorage.getItem("isSigningIn") === "yes";
             if (!isLoggedIn) {
@@ -77,22 +101,28 @@ export const AcceptInviteHandler = () => {
                 return;
             }
 
-            const sessionEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
-            if (sessionEmail && sessionEmail !== preview.invited_email.toLowerCase()) {
+            const sessionEmail = await loadSessionEmail(setAccessToken);
+            if (cancelled) return;
+            if (
+                sessionEmail &&
+                sessionEmail.toLowerCase() !== preview.invited_email.toLowerCase()
+            ) {
                 // Logged in as a different account than the invite is for.
-                setCurrentEmail(localStorage.getItem("userEmail") || "");
+                setCurrentEmail(sessionEmail);
                 setPhase("mismatch");
                 return;
             }
 
-            // Logged in as the invited email — hand off to /jointeam, whose
-            // consume funnel redeems the token with a live access token.
+            // Logged in as the invited email, or as an account we couldn't
+            // identify — hand off to /jointeam, whose consume funnel redeems
+            // the token with a live access token (and the server rejects a
+            // mismatch there).
             navigate("/jointeam");
         })();
         return () => {
             cancelled = true;
         };
-    }, [token, navigate]);
+    }, [token, navigate, setAccessToken]);
 
     const handleSignOutAndContinue = async () => {
         try {
@@ -105,6 +135,7 @@ export const AcceptInviteHandler = () => {
             // state below so the re-entry runs as a logged-out visitor.
         }
         AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.setItem(key, ""));
+        clearPrivateProfile();
         setAccessToken(null);
         // Token is preserved in the URL; a full reload re-runs this handler
         // as a logged-out visitor, which routes to signup/signin.

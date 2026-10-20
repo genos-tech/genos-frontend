@@ -18,6 +18,11 @@ import { UserProfileLocation } from "../features/admin/components/modals/sub/Use
 import { UserProfileLocationShare } from "../features/admin/components/modals/sub/UserProfileLocationShare";
 import { UserProfilePhone } from "../features/admin/components/modals/sub/UserProfilePhone";
 import { updateUserProfile } from "../features/admin/services/updateUserProfile";
+import {
+    clearPrivateProfile,
+    getPrivateProfile,
+    patchPrivateProfile,
+} from "../services/privateProfileStore";
 import { UserProps } from "../types/admin";
 import { zoneLabel } from "../utils/userTimezone";
 
@@ -49,6 +54,7 @@ const other = makeUser({ userId: "user-2", userName: "Bob" });
 beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    clearPrivateProfile();
     vi.mocked(updateUserProfile).mockResolvedValue({ ok: true });
 });
 
@@ -101,7 +107,7 @@ describe("UserProfilePhone", () => {
         expect(screen.queryByRole("textbox")).toBeNull();
     });
 
-    it("saves my own number and mirrors it locally", async () => {
+    it("saves my own number and mirrors it in memory, not storage", async () => {
         const user = userEvent.setup();
         const setMyself = vi.fn();
         wrap(<UserProfilePhone myself={me} setMyself={setMyself} user={me} />);
@@ -117,7 +123,9 @@ describe("UserProfilePhone", () => {
         expect(setMyself).toHaveBeenCalledWith(
             expect.objectContaining({ phoneNumber: "+81 90-1234-5678" })
         );
-        expect(localStorage.getItem("phoneNumber")).toBe("+81 90-1234-5678");
+        expect(getPrivateProfile().phoneNumber).toBe("+81 90-1234-5678");
+        // Profile PII is never written to localStorage (MIP-619).
+        expect(localStorage.getItem("phoneNumber")).toBeNull();
     });
 
     it("does not commit locally when the save fails", async () => {
@@ -132,7 +140,7 @@ describe("UserProfilePhone", () => {
 
         await waitFor(() => expect(updateUserProfile).toHaveBeenCalled());
         expect(setMyself).not.toHaveBeenCalled();
-        expect(localStorage.getItem("phoneNumber")).toBeNull();
+        expect(getPrivateProfile().phoneNumber).toBe("");
     });
 });
 
@@ -210,7 +218,8 @@ describe("UserProfileLocation", () => {
         expect(updateUserProfile).toHaveBeenCalledWith(
             expect.objectContaining({ currentLocation: "Europe/Lisbon" })
         );
-        expect(localStorage.getItem("currentLocation")).toBe("Europe/Lisbon");
+        expect(getPrivateProfile().currentLocation).toBe("Europe/Lisbon");
+        expect(localStorage.getItem("currentLocation")).toBeNull();
         expect(setMyself).toHaveBeenCalledWith(
             expect.objectContaining({ currentLocation: "Europe/Lisbon" })
         );
@@ -220,6 +229,7 @@ describe("UserProfileLocation", () => {
         const user = userEvent.setup();
         const setMyself = vi.fn();
         const overridden = makeUser({ currentLocation: "Europe/Lisbon" });
+        patchPrivateProfile({ currentLocation: "Europe/Lisbon" });
         wrap(<UserProfileLocation myself={overridden} setMyself={setMyself} user={overridden} />);
 
         await user.click(screen.getByText("Lisbon"));
@@ -231,7 +241,8 @@ describe("UserProfileLocation", () => {
         expect(updateUserProfile).toHaveBeenCalledWith(
             expect.objectContaining({ currentLocation: "" })
         );
-        expect(localStorage.getItem("currentLocation")).toBe("");
+        expect(getPrivateProfile().currentLocation).toBe("");
+        expect(localStorage.getItem("currentLocation")).toBeNull();
     });
 
     it("offers no reset when there is no override to reset", async () => {
@@ -369,6 +380,8 @@ describe("UserProfileAbout", () => {
         expect(updateUserProfile).toHaveBeenCalledWith(
             expect.objectContaining({ aboutMe: "Ships things." })
         );
+        expect(getPrivateProfile().aboutMe).toBe("Ships things.");
+        expect(localStorage.getItem("aboutMe")).toBeNull();
     });
 
     it("blocks the save past the cap instead of letting the server reject it", async () => {

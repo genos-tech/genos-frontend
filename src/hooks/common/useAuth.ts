@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { getPrivateProfile, subscribePrivateProfile } from "../../services/privateProfileStore";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
@@ -7,20 +8,18 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 // cross-tab `storage` listener only re-pulls when one of these (or
 // `null`, meaning a full `localStorage.clear()`) changed — every other
 // write is noise (PostHog, draft caches, history bucket, etc.).
+//
+// The email, phone, country, location and bio aren't here: they come
+// from the in-memory `privateProfileStore` (MIP-619), not localStorage.
 const WATCHED_STORAGE_KEYS = new Set<string>([
     "teamId",
     "teamName",
     "userId",
     "userName",
-    "userEmail",
     "tsJoined",
     "isOfflineForced",
     "role",
-    "baseCountry",
-    "phoneNumber",
-    "currentLocation",
     "locationShared",
-    "aboutMe",
     "customStatus",
     "avatarImgPath",
 ]);
@@ -64,19 +63,20 @@ export const useMyself = (accessToken: string | null) => {
             // holds the winning team, which would un-freeze the tab and
             // resume the leaky in-place migration we're avoiding).
             if (supersededRef.current) return;
+            const profile = getPrivateProfile();
             const newMyself: UserProps = {
                 teamId: localStorage.getItem("teamId") || "",
                 teamName: localStorage.getItem("teamName") || "",
                 userId: localStorage.getItem("userId") || "",
                 userName: localStorage.getItem("userName") || "",
-                userEmail: localStorage.getItem("userEmail") || "",
+                userEmail: profile.userEmail,
                 tsLastSeen: getLocalCurrentTimestamp(),
                 tsJoined: localStorage.getItem("tsJoined") || "",
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
-                baseCountry: localStorage.getItem("baseCountry") || "",
-                phoneNumber: localStorage.getItem("phoneNumber") || "",
-                currentLocation: localStorage.getItem("currentLocation") || "",
+                baseCountry: profile.baseCountry,
+                phoneNumber: profile.phoneNumber,
+                currentLocation: profile.currentLocation,
                 // Stored as the string "false" only when the user opted out;
                 // absent (pre-feature) or "true" both mean shared, matching
                 // the server default. Drives the profile editor's toggle on
@@ -89,7 +89,7 @@ export const useMyself = (accessToken: string | null) => {
                 // the subject is the viewer. Mirroring the server's copy
                 // into localStorage as well would add a second, staler
                 // answer to a question the browser can answer exactly.
-                aboutMe: localStorage.getItem("aboutMe") || "",
+                aboutMe: profile.aboutMe,
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             };
@@ -147,9 +147,28 @@ export const useMyself = (accessToken: string | null) => {
         };
         window.addEventListener("storage", onStorage);
 
+        // After a reload the private profile arrives from `/user/me/` some
+        // time after the first pull, so take it when it lands (and drop it
+        // when a sign-out clears it). Merged into the current `myself`
+        // rather than re-pulled: a re-pull would also reset what other
+        // hooks set in memory since (a status expiry, a reconciled avatar).
+        const unsubscribeProfile = subscribePrivateProfile(() => {
+            if (supersededRef.current) return;
+            const profile = getPrivateProfile();
+            setMyself((prev) => ({
+                ...prev,
+                userEmail: profile.userEmail,
+                phoneNumber: profile.phoneNumber,
+                baseCountry: profile.baseCountry,
+                currentLocation: profile.currentLocation,
+                aboutMe: profile.aboutMe,
+            }));
+        });
+
         return () => {
             clearTimeout(hydrationTimer);
             window.removeEventListener("storage", onStorage);
+            unsubscribeProfile();
         };
     }, [accessToken]);
 

@@ -46,7 +46,9 @@ const createSocket = (accessToken: string | null): Socket => {
             teamName: localStorage.getItem("teamName"),
             userId: localStorage.getItem("userId"),
             userName: localStorage.getItem("userName"),
-            userEmail: localStorage.getItem("userEmail"),
+            // No `userEmail`: it isn't stored any more (MIP-619). The
+            // server only copied it into join-request mentions, which
+            // never render it (MIP-732).
         },
         extraHeaders: {
             Authorization: accessToken || "",
@@ -66,7 +68,7 @@ export const useWebSocket = (
         if (socketInstance) {
             const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
             const role: string = localStorage.getItem("role") || "";
-            const baseCountry: string = localStorage.getItem("baseCountry") || "";
+            const baseCountry: string = myself.baseCountry || "";
             const customStatus: string = localStorage.getItem("customStatus") || "";
             // Absolute ISO instant the custom status auto-clears; "" = none.
             // Rides the beat so other users' rosters learn the expiry within a
