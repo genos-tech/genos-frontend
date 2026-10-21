@@ -47,10 +47,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
-import {
-    getMyNoteRoleId,
-    isNoteEditableForRole,
-} from "../../features/notes/common/utils/noteRoles";
+import { getMyNoteRoleId, isNoteEditable } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -149,7 +146,6 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     // Editor vs. viewer toggle. See `bnMyNoteEditor` for the
     // rationale on the `null` (implicit-owner) branch.
     const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
-    const isEditable = isNoteEditableForRole(myRoleId);
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -289,7 +285,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
 
     const documentName = `chat-note:${currentChatNote.noteId}`;
 
-    const { editor, threadStore } = useCollaborativeBlockNote({
+    const { editor, threadStore, collabScope } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
         userId: myself.userId,
@@ -307,6 +303,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
     });
+    const isEditable = isNoteEditable(myRoleId, collabScope);
 
     // Fan @-mentions left in inline comments out to the activity system,
     // exactly as a chat-note body mention does. Host = chat note (surface 8),

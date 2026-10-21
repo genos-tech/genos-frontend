@@ -47,10 +47,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
-import {
-    getMyNoteRoleId,
-    isNoteEditableForRole,
-} from "../../features/notes/common/utils/noteRoles";
+import { getMyNoteRoleId, isNoteEditable } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -149,7 +146,6 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     // Editor vs. viewer toggle. See `bnMyNoteEditor` for the
     // rationale on the `null` (implicit-owner) branch.
     const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
-    const isEditable = isNoteEditableForRole(myRoleId);
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -277,7 +273,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     const documentName = `task-note:${currentTaskNote.noteId}`;
 
-    const { editor, threadStore } = useCollaborativeBlockNote({
+    const { editor, threadStore, collabScope } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
         userId: myself.userId,
@@ -295,6 +291,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
     });
+    const isEditable = isNoteEditable(myRoleId, collabScope);
 
     // Fan @-mentions left in inline comments out to the activity system,
     // exactly as a task-note body mention does. Host = task note (surface 7),

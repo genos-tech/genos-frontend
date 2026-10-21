@@ -24,3 +24,18 @@ export const getMyNoteRoleId = (members: NoteRoleMember[], myselfUserId: string)
 
 export const isNoteEditableForRole = (roleId: number | null): boolean =>
     roleId !== NOTE_ROLE_VIEWER;
+
+/**
+ * Whether the editor should accept typing: the explicit role AND the
+ * scope the collab server granted the connection (`authorizedScope`).
+ *
+ * The explicit list misses every role that doesn't come from a
+ * `NotePermissionMaster` row: a Team Note folder grant, project or chat
+ * membership. The server resolves all of them, and since MIP-714 opens a
+ * Viewer's connection `"readonly"` and drops their edits — so a null
+ * explicit role must not be read as "editable" once the server has said
+ * otherwise. `undefined` (not authenticated yet, or no collab connection)
+ * leaves the explicit role in charge.
+ */
+export const isNoteEditable = (roleId: number | null, collabScope: string | undefined): boolean =>
+    isNoteEditableForRole(roleId) && collabScope !== "readonly";

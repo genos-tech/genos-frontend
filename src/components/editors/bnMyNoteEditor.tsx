@@ -47,10 +47,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
-import {
-    getMyNoteRoleId,
-    isNoteEditableForRole,
-} from "../../features/notes/common/utils/noteRoles";
+import { getMyNoteRoleId, isNoteEditable } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -151,11 +148,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         resyncSignal,
     } = props;
 
-    // Editor vs. viewer toggle. `null` (no explicit grant) means the
-    // user is the implicit owner of an unshared personal note —
-    // treat as editable. Comments stay enabled in both modes.
+    // Editor vs. viewer toggle, decided below once the collab scope is
+    // known. A `null` explicit role is the implicit owner of an unshared
+    // personal note — or a role the server resolves from elsewhere (a
+    // Team Note folder grant), which only `collabScope` reveals.
+    // Comments stay enabled in both modes.
     const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
-    const isEditable = isNoteEditableForRole(myRoleId);
 
     // The @-picker offers the whole team, matching every other editor
     // (task note, chat note, chat, task comment).
@@ -304,7 +302,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
 
     const documentName = `my-note:${currentMyNote.noteId}`;
 
-    const { editor, threadStore } = useCollaborativeBlockNote({
+    const { editor, threadStore, collabScope } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
         userId: myself.userId,
@@ -322,6 +320,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         // users get the same Markdown shortcut they expect.
         extensions: [codeBlockEnterShortcut],
     });
+    const isEditable = isNoteEditable(myRoleId, collabScope);
 
     // Fan @-mentions left in inline comments out to the activity system,
     // exactly as a personal-note body mention does. Host = personal note
