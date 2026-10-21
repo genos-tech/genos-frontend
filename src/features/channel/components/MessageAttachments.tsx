@@ -79,7 +79,7 @@ interface AttachmentChipProps {
 
 function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
     const isImage = (attachment.mime || "").startsWith("image/");
-    const filename = extractFilename(attachment.fileUrl);
+    const filename = attachment.fileName || extractFilename(attachment.fileUrl);
     const sizeLabel = formatSize(attachment.sizeBytes);
     // `/media/` attachments are gated per file, and an <img> can only offer
     // the browser's cookie — which has proven to be the wrong user's, or

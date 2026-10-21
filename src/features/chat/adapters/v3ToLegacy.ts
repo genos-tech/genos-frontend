@@ -86,15 +86,18 @@ function formatBytes(n: number | undefined | null): string {
  * (and the `BubbleAttachmentSheet` it renders) only carries ONE
  * `{ fileName, type, size }` chip. Surfacing the first attachment makes
  * the bubble render the chip instead of dropping the file silently
- * (text-only message). The v3 row has no stored filename — derive it
- * from the `fileUrl` basename. Multi-attachment rendering is a follow-up
- * gated on the legacy bubble growing more than one slot.
+ * (text-only message). The name is the row's `fileName`; a row cached
+ * before the API sent one falls back to the `fileUrl` basename.
+ * Multi-attachment rendering is a follow-up gated on the legacy bubble
+ * growing more than one slot.
  */
 function v3AttachmentToLegacy(
     attachments: readonly MessageAttachment[] | undefined
 ): { fileName: string; type: string; size: string } | undefined {
     if (!attachments || attachments.length === 0) return undefined;
     const a = attachments[0];
+    const size = formatBytes(a.sizeBytes);
+    if (a.fileName) return { fileName: a.fileName, type: a.mime || "", size };
     const path = (a.fileUrl || "").split("?")[0];
     const rawName = path.split("/").pop() || "file";
     let fileName = rawName;
@@ -103,7 +106,7 @@ function v3AttachmentToLegacy(
     } catch {
         /* malformed %-encoding in the URL — fall back to the raw basename */
     }
-    return { fileName, type: a.mime || "", size: formatBytes(a.sizeBytes) };
+    return { fileName, type: a.mime || "", size };
 }
 
 /** A best-effort empty user — used for `dmPartnerUser` on non-DM
