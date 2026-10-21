@@ -18,6 +18,10 @@ dist-ssr
 
 stats.html
 
+# scripts/uptime-probe.mjs state (the workflow keeps it in the Actions cache)
+.uptime-state/
+.uptime-state.json
+
 # `vitest run --coverage` output. CI uploads it as an artifact; locally it
 # just litters the tree after any coverage run.
 coverage/

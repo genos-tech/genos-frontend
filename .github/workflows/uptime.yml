@@ -1,0 +1,88 @@
+name: uptime
+
+# Production uptime, from outside Railway (MIP-772). Every 10 minutes
+# `scripts/uptime-probe.mjs` checks genosai.dev, api, sockets and collab,
+# their TLS certificates, the domain's registration, and genos-api's alert
+# pipeline (`api/v2/health/alerting/`, which answers 503 when the
+# ops-alert-tick cron has stopped). See that script for the thresholds.
+#
+# The alert is GitHub's own email for a failed scheduled run, sent to
+# whoever last edited the schedule (Settings -> Notifications -> Actions
+# must allow it). So a run fails only when a check STARTS failing. The
+# failing set is kept between runs in the Actions cache, so an outage
+# fails one run, not one every 10 minutes. A check that keeps failing is a
+# warning in each run's summary.
+#
+# Here, in the public repo, because public repos' Actions minutes are
+# free, and the probe has to run outside Railway. It holds no secret but
+# OPS_HEALTH_TOKEN, which the script never prints. It needs nothing from
+# this repo but the script.
+#
+# Watched back: each call to health/alerting is also this probe's
+# heartbeat, and genos-api alerts when it stops (GitHub disables a public
+# repo's schedules after 60 days without a commit). If it does, re-enable
+# it from the Actions tab.
+#
+# Runbook: genos-docs operations/ALERTS.md, section "Uptime".
+
+on:
+    schedule:
+        - cron: "*/10 * * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+# A run that's still retrying when the next one starts would race it for
+# the state. Queue instead.
+concurrency:
+    group: uptime
+    cancel-in-progress: false
+
+jobs:
+    probe:
+        name: probe production
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            # In the workspace, outside anything checked out. (`runner` isn't
+            # available at job level.)
+            STATE_FILE: .uptime-state/state.json
+        steps:
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+              with:
+                  sparse-checkout: scripts/uptime-probe.mjs
+                  sparse-checkout-cone-mode: false
+
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version: 22
+
+            # The last run's failing set. Restore and save are split, and the
+            # save always runs: the combined action saves only when the job
+            # passes, so a run that opened an incident would never record
+            # it, and the next one would open it again.
+            - name: Restore the last run's state
+              uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+              with:
+                  path: .uptime-state
+                  key: uptime-state-${{ github.run_id }}
+                  restore-keys: uptime-state-
+
+            - name: Probe
+              id: probe
+              env:
+                  OPS_HEALTH_TOKEN: ${{ secrets.OPS_HEALTH_TOKEN }}
+              run: |
+                  mkdir -p "$(dirname "$STATE_FILE")"
+                  node scripts/uptime-probe.mjs
+
+            # Only when an incident opened or resolved. Entries are
+            # immutable, so each save is a new key; the restore above takes
+            # the newest by prefix.
+            - name: Save this run's state
+              if: always() && steps.probe.outputs.changed == 'true'
+              uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+              with:
+                  path: .uptime-state
+                  key: uptime-state-${{ github.run_id }}-${{ github.run_attempt }}
