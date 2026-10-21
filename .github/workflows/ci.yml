@@ -239,11 +239,13 @@ jobs:
 
     # Known-vulnerable dependencies (MIP-727), production deps only: what
     # ships in the bundle, plus `serve`, which serves it on Railway.
-    # Report-only: the lock has open high advisories, and making this
-    # required waits on those upgrades. Reads package-lock.json and installs
-    # nothing.
+    # Blocking on high and critical since MIP-751, when the lock reached
+    # zero; moderates are listed but don't fail it. An advisory published
+    # later turns this red on every PR until the package is bumped (an
+    # `overrides` entry in package.json when the parent pins it, as `serve`
+    # does `compression`). Reads package-lock.json and installs nothing.
     npm-audit:
-        name: npm audit (report-only)
+        name: npm audit (required)
         needs: changes
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
@@ -252,7 +254,7 @@ jobs:
             - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: 22
-            - run: npm audit --omit=dev
+            - run: npm audit --omit=dev --audit-level=high
 
     # Build + deploy to GCP Cloud Run on merge to main. Gated on frontend-test
     # (the required check) so a red test never ships. GCP has no other CD for
