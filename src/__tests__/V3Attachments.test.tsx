@@ -14,6 +14,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 
 import { formatSize, MessageAttachments } from "../features/channel/components/MessageAttachments";
 import { MessagesPaneV3 } from "../features/channel/components/MessagesPaneV3";
+import { v3MessageToLegacy } from "../features/chat/adapters/v3ToLegacy";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind, type Channel, type Message, type MessageAttachment } from "../types/channel";
 import { setMediaAccessToken } from "../utils/mediaAuth";
@@ -285,6 +286,22 @@ describe("MessageAttachments", () => {
         });
     });
 
+    it("shows the uploader's filename, not the generated name it's stored under", () => {
+        const stored = `${API_HOST}/media/chats/${CHANNEL_UUID}/messages/9/${"ab12".repeat(8)}.pdf`;
+        const atts: MessageAttachment[] = [
+            {
+                ...fakeAttachment("a-named", stored, "application/pdf", 2048),
+                fileName: "Q3 plan (final).pdf",
+            },
+        ];
+        render(<MessageAttachments attachments={atts} messageId="m-1" />);
+        const link = screen.getByTestId("message-attachment-link-a-named");
+        expect(link).toHaveTextContent("Q3 plan (final).pdf");
+        expect(link).not.toHaveTextContent("ab12");
+        expect(link).toHaveAttribute("download", "Q3 plan (final).pdf");
+        expect(link).toHaveAttribute("href", stored);
+    });
+
     it("falls back to 'attachment' when the URL has no filename", () => {
         const atts: MessageAttachment[] = [
             fakeAttachment("a-noname", "", "application/octet-stream", 16),
@@ -308,6 +325,38 @@ describe("MessageAttachments", () => {
         expect(screen.getByTestId("message-attachment-link-a-utf")).toHaveTextContent(
             "字 file.txt"
         );
+    });
+});
+
+describe("v3MessageToLegacy attachment chip name", () => {
+    const toLegacyName = (attachment: MessageAttachment) =>
+        v3MessageToLegacy({
+            message: fakeMessage("m-1", CHANNEL_UUID, { attachments: [attachment] }),
+            channelId: CHANNEL_UUID,
+            chatType: ChannelKind.GM,
+        }).attachment?.fileName;
+
+    it("uses the row's fileName over the generated stored name", () => {
+        const stored = `${API_HOST}/media/chats/${CHANNEL_UUID}/messages/9/${"ab12".repeat(8)}.pdf`;
+        expect(
+            toLegacyName({
+                ...fakeAttachment("a-1", stored, "application/pdf", 10),
+                fileName: "Q3 plan (final).pdf",
+            })
+        ).toBe("Q3 plan (final).pdf");
+    });
+
+    it("falls back to the URL basename for a row cached without one", () => {
+        expect(
+            toLegacyName(
+                fakeAttachment(
+                    "a-2",
+                    `${API_HOST}/media/chats/c/messages/9/old%20report.pdf?v=1`,
+                    "application/pdf",
+                    10
+                )
+            )
+        ).toBe("old report.pdf");
     });
 });
 

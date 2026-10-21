@@ -65,6 +65,10 @@ export interface MessageMention {
 export interface MessageAttachment {
     id: string;
     fileUrl: string;
+    /** The uploader's filename. The stored file has a generated name, so
+     *  `fileUrl` doesn't carry it; absent on rows cached before the API
+     *  sent it, whose URL still ends in the original name. */
+    fileName?: string;
     mime: string;
     sizeBytes: number;
     uploader: UserLite | null;
