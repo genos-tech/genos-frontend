@@ -80,6 +80,12 @@ export function useCollaborativeBlockNote({
     extensions,
 }: UseCollaborativeBlockNoteOptions) {
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
+    // The provider's `authorizedScope` from its latest authentication:
+    // `"readonly"` when Django resolves this user to Viewer by any path
+    // (explicit grant, Team Note folder, project, chat). Collab re-checks
+    // access on every connect, so a reconnect after a role change updates
+    // it. `undefined` until then, and for an editor with no provider.
+    const [collabScope, setCollabScope] = useState<string | undefined>(undefined);
     const seededRef = useRef(false);
     const editorRef = useRef<any>(null);
     const initialBodyRef = useRef(initialBody);
@@ -104,6 +110,9 @@ export function useCollaborativeBlockNote({
     }, []);
     const safeSetConnectionStatus = useCallback((s: ConnectionStatus) => {
         if (mountedRef.current) setConnectionStatus(s);
+    }, []);
+    const safeSetCollabScope = useCallback((scope: string | undefined) => {
+        if (mountedRef.current) setCollabScope(scope);
     }, []);
 
     const isDocumentEmpty = useCallback((fragment: Y.XmlFragment, editor: any): boolean => {
@@ -194,6 +203,7 @@ export function useCollaborativeBlockNote({
             document: yjsDoc,
             token: accessToken,
             onConnect: () => safeSetConnectionStatus("connected"),
+            onAuthenticated: () => safeSetCollabScope(hocuspocusProvider.authorizedScope),
             onDisconnect: () => {
                 safeSetConnectionStatus("disconnected");
                 // If we disconnected before ever syncing, seed immediately
@@ -213,6 +223,12 @@ export function useCollaborativeBlockNote({
 
         return { doc: yjsDoc, provider: hocuspocusProvider, idbProvider: idb, fragment: frag };
     }, [documentName, accessToken, seedDocument]);
+
+    // A new provider (another document, or a refreshed token) hasn't been
+    // granted anything yet: don't carry the previous document's scope over.
+    useEffect(() => {
+        safeSetCollabScope(undefined);
+    }, [provider, safeSetCollabScope]);
 
     // Retry seeding when initialBody arrives after sync or connection failure
     useEffect(() => {
@@ -403,6 +419,7 @@ export function useCollaborativeBlockNote({
         editor,
         provider,
         connectionStatus,
+        collabScope,
         threadStore,
     };
 }
