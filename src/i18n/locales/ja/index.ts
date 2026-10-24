@@ -1975,8 +1975,7 @@ export const ja: DeepPartial<Messages> = {
                 stepPayload: "ペイロード URL: 上の URL を貼り付けます。コンテンツタイプ:",
                 contentTypeLabel: "アプリケーション/json",
                 stepSecret:
-                    "Secret: オペレーターがバックエンド環境変数に設定したのと同じ値を貼り付けます。",
-                secretEnvLabel: "GITHUB_WEBHOOK_SECRET",
+                    "Secret: 任意の値を入力します(GitHub では必須です)。GitHub を連携しているメンバーがこのリポジトリの PR またはブランチをリンクするまで、このフックは何も行いません。リンクされると、Genos がフック専用の Secret に置き換えます。",
                 stepEventsPrefix: "イベント: 選択",
                 eventSelectionLabel: "「個別のイベントを選択させてください」",
                 stepEventsSuffix: "→チェックのみ",

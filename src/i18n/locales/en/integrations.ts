@@ -86,8 +86,8 @@ export const integrations = {
             settingsPath: "Settings → Webhooks → Add webhook",
             stepPayload: "Payload URL: paste the URL above. Content type:",
             contentTypeLabel: "application/json",
-            stepSecret: "Secret: paste the same value the operator set in the backend env var",
-            secretEnvLabel: "GITHUB_WEBHOOK_SECRET",
+            stepSecret:
+                "Secret: enter any value (GitHub requires one). The hook does nothing until someone with GitHub connected links a PR or branch from this repo; Genos then gives it a secret of its own.",
             stepEventsPrefix: "Events: select",
             eventSelectionLabel: '"Let me select individual events"',
             stepEventsSuffix: "→ check only",
