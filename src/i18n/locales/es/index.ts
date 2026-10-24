@@ -3720,8 +3720,7 @@ export const es: DeepPartial<Messages> = {
                 stepPayload: "Payload URL: pega la URL anterior. Content type:",
                 contentTypeLabel: "application/json",
                 stepSecret:
-                    "Secret: pega el mismo valor definido por el operador en la variable de entorno del backend",
-                secretEnvLabel: "GITHUB_WEBHOOK_SECRET",
+                    "Secret: introduce cualquier valor (GitHub exige uno). El webhook no hace nada hasta que alguien con GitHub conectado vincule un PR o una rama de este repositorio; entonces Genos le asigna un secreto propio.",
                 stepEventsPrefix: "Events: selecciona",
                 eventSelectionLabel: '"Déjame seleccionar eventos individuales"',
                 stepEventsSuffix: "→ marca solo",

@@ -4231,8 +4231,7 @@ export const ar: DeepPartial<Messages> = {
                 stepPayload: "Payload URL: الصق URL أعلاه. نوع المحتوى:",
                 contentTypeLabel: "application/json",
                 stepSecret:
-                    "Secret: الصق القيمة نفسها التي عيّنها المشغّل في متغير بيئة الواجهة الخلفية",
-                secretEnvLabel: "GITHUB_WEBHOOK_SECRET",
+                    "Secret: أدخل أي قيمة (يشترطها GitHub). لا يفعل الـ webhook شيئًا إلى أن يربط عضو متصل بـ GitHub طلب سحب (PR) أو فرعًا من هذا المستودع؛ وعندئذٍ يمنحه Genos سرًّا خاصًا به.",
                 stepEventsPrefix: "الأحداث: اختر",
                 eventSelectionLabel: '"Let me select individual events"',
                 stepEventsSuffix: "← ثم حدّد فقط",

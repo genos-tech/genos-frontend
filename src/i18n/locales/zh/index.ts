@@ -1913,8 +1913,8 @@ export const zh: DeepPartial<Messages> = {
                 settingsPath: "Settings → Webhooks → Add webhook",
                 stepPayload: "Payload URL：粘贴上面的 URL。Content type：",
                 contentTypeLabel: "application/json",
-                stepSecret: "Secret：粘贴运维人员在后端环境变量中设置的相同值",
-                secretEnvLabel: "GITHUB_WEBHOOK_SECRET",
+                stepSecret:
+                    "Secret：填写任意值（GitHub 要求必填）。在已连接 GitHub 的成员关联此仓库的 PR 或分支之前，此 Webhook 不会执行任何操作；关联后，Genos 会为其生成专用的 Secret。",
                 stepEventsPrefix: "Events：选择",
                 eventSelectionLabel: '"Let me select individual events"',
                 stepEventsSuffix: "→ 仅勾选",

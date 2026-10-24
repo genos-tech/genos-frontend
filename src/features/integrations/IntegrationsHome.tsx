@@ -380,8 +380,12 @@ const CalendarTab = ({
 // via "Connect GitHub"). The manual section is only relevant when the
 // user lacks repo-admin and an org admin needs to wire it up by hand.
 //
-// We deliberately do NOT expose `GITHUB_WEBHOOK_SECRET` over the API
-// — the operator who sets it in env vars already knows the value.
+// The secret step says "enter any value": a hook made by hand has no
+// registration row, so it delivers nothing until someone with GitHub
+// connected links a PR or branch from the repo. Adopting it replaces the
+// secret with one of its own (genos-api `_adopt_existing_hook` → `rekey_hook`,
+// MIP-618). The shared `GITHUB_WEBHOOK_SECRET` is being retired and is not
+// shown here.
 const WebhookSetup = () => {
     const { t } = useTranslation();
     const djangoUrl =
@@ -504,9 +508,7 @@ const WebhookSetup = () => {
                                 </li>
                                 <li>
                                     <Typography level="body-xs">
-                                        {t.integrations.github.webhook.stepSecret}{" "}
-                                        <code>{t.integrations.github.webhook.secretEnvLabel}</code>
-                                        .
+                                        {t.integrations.github.webhook.stepSecret}
                                     </Typography>
                                 </li>
                                 <li>
