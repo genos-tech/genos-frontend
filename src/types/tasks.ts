@@ -207,20 +207,6 @@ export type TaskDependencies = {
     blockedBy: TaskDependencyRef[];
 };
 
-export type TaskListByTagProps = {
-    projectId: number;
-    projectName: string;
-    tags: {
-        tagName: string;
-        tagColor: string;
-        tasks: {
-            taskId: number;
-            title: string;
-            status: string;
-        }[];
-    }[];
-};
-
 export type TaskProps = {
     id?: number;
     // Human-readable task ID shown to users ("GEN-42"). Falls back to
