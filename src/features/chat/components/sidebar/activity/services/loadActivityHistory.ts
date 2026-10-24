@@ -7,6 +7,10 @@ import { v3ActivityToLegacy } from "../../../../adapters/v3ActivityToLegacy";
 
 const periodDays: number = 30;
 
+// The server pages at 200, so this is 10,000 entries in the 30-day window:
+// far past any real feed, and a stop for a server that never says "done".
+const MAX_PAGES = 50;
+
 export interface ActivityDeltaItem extends ActivityMessageProps {
     isDeleted?: boolean;
 }
@@ -45,13 +49,45 @@ export const loadActivityHistory = async (
         if (myself.teamId) {
             params.push(`team_id=${encodeURIComponent(myself.teamId)}`);
         }
-        const res = await axios.get(`${v3ApiBaseURL()}/api/v3/activities/?${params.join("&")}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            withCredentials: true,
-        });
-        const activities = Array.isArray(res.data?.activities) ? res.data.activities : [];
+        // The server answers with the newest page and, when there is an older
+        // one, `has_more` + `next_cursor`. Follow it to the end BEFORE
+        // returning: the caller stores `serverTime` as its next `since` and, on
+        // a full load, clears the store first, so a partial list would lose
+        // everything past the cut for good (MIP-740).
+        const base = `${v3ApiBaseURL()}/api/v3/activities/?${params.join("&")}`;
+        const activities: unknown[] = [];
+        let serverTime: string | undefined;
+        let cursor: string | null = null;
+        for (let page = 0; ; page += 1) {
+            if (page >= MAX_PAGES) {
+                // A server that never stops saying `has_more` must not hang the
+                // worker. Throwing leaves the checkpoint where it was, so the
+                // next sync retries the same window instead of recording a
+                // short list as complete.
+                throw new Error(`Activity history did not end after ${MAX_PAGES} pages.`);
+            }
+            const url: string = cursor ? `${base}&cursor=${encodeURIComponent(cursor)}` : base;
+            const res = await axios.get(url, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                withCredentials: true,
+            });
+            if (Array.isArray(res.data?.activities)) {
+                activities.push(...res.data.activities);
+            }
+            // The FIRST page's clock, not the last: a later page's is later
+            // still, and the next `since` would then skip rows created while
+            // the pages were being fetched. Using the first can only re-fetch
+            // a row, which the applier's upsert already tolerates.
+            serverTime ??= res.data?.server_time;
+            // A server that predates the field sends neither key: one page,
+            // exactly as before.
+            if (res.data?.has_more !== true || typeof res.data?.next_cursor !== "string") {
+                break;
+            }
+            cursor = res.data.next_cursor;
+        }
         return {
-            serverTime: res.data.server_time,
+            serverTime: serverTime as string,
             activity: activities.map((a: unknown) =>
                 v3ActivityToLegacy(a as Parameters<typeof v3ActivityToLegacy>[0], myself)
             ),
