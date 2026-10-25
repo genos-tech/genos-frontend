@@ -28,6 +28,22 @@ const TEAM_SCOPED_STORES: readonly string[] = [
     STORES.MESSAGE_ATTACHMENTS,
 ];
 
+// Everything `wipeLocalCache` clears: the team-scoped stores PLUS the ones a
+// team switch deliberately keeps. `TEAM_SCOPED_STORES` is "what must not leak
+// into another team" and is the wrong question for a sign-out, which is "what
+// must not outlive the session". The roster (names, emails) and the to-dos are
+// on that second list, and `TODOS` is on neither of the first.
+const SIGN_OUT_STORES: readonly string[] = [...TEAM_SCOPED_STORES, STORES.TODOS];
+
+// Name prefixes of the per-document Yjs databases (y-indexeddb makes one
+// IndexedDB database per document): the text of task bodies and notes.
+const YJS_DATABASE_PREFIXES: readonly string[] = [
+    "task-body:",
+    "my-note:",
+    "chat-note:",
+    "task-note:",
+];
+
 // Database utility functions
 export class DatabaseUtils {
     // Get all store names in the database
@@ -88,6 +104,59 @@ export class DatabaseUtils {
             console.error("Failed to clear team-scoped IndexedDB stores:", error);
             return false;
         }
+    }
+
+    // Wipe everything this browser cached for the signed-in person: every store
+    // in `SIGN_OUT_STORES` and every per-document Yjs database. Called on
+    // sign-out (MIP-809), so a signed-out device does not hold the last user's
+    // team roster with its emails, inbox, tasks, messages, to-dos and note text.
+    //
+    // Never throws and never blocks the sign-out: it returns what it managed.
+    // `ok` is false when a store could not be cleared. A Yjs database that is
+    // still open (`blocked`) is counted as left, not as an error, since the
+    // browser removes it once its owner lets go.
+    static async wipeLocalCache(): Promise<{ ok: boolean; yjsDeleted: number; yjsLeft: number }> {
+        let ok = true;
+        try {
+            const db = await initDB();
+            const present = SIGN_OUT_STORES.filter((name) => db.objectStoreNames.contains(name));
+            if (present.length > 0) {
+                const tx = db.transaction(present, "readwrite");
+                await Promise.all(present.map((name) => tx.objectStore(name).clear()));
+                await tx.done;
+            }
+        } catch (error) {
+            ok = false;
+            console.error("Failed to clear the local cache on sign-out:", error);
+        }
+
+        let yjsDeleted = 0;
+        let yjsLeft = 0;
+        const databasesFn = (
+            indexedDB as IDBFactory & {
+                databases?: () => Promise<{ name?: string }[]>;
+            }
+        ).databases;
+        // Browsers without `indexedDB.databases()` (older Firefox) cannot be
+        // enumerated; the startup sweep still collects those later.
+        if (typeof databasesFn === "function") {
+            try {
+                const dbs = await databasesFn.call(indexedDB);
+                for (const { name } of dbs) {
+                    if (!name || !YJS_DATABASE_PREFIXES.some((p) => name.startsWith(p))) continue;
+                    // Not `isYjsDocumentOpen`: an open editor is exactly what a
+                    // sign-out has to close, and the page navigates away next.
+                    // `deleteYjsDatabase` resolves on `blocked` and the browser
+                    // finishes the delete when the connection closes.
+                    if (await DatabaseUtils.deleteYjsDatabase(name)) yjsDeleted += 1;
+                    else yjsLeft += 1;
+                }
+            } catch (error) {
+                ok = false;
+                console.error("Failed to enumerate Yjs databases on sign-out:", error);
+            }
+        }
+        return { ok, yjsDeleted, yjsLeft };
     }
 
     // Delete the entire database

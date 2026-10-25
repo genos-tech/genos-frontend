@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import { DatabaseUtils } from "../../db/utils/database";
 import { analytics } from "../../services/analytics";
 import { clearPrivateProfile } from "../../services/privateProfileStore";
 import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
@@ -8,10 +9,15 @@ import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // `userId` is intentionally NOT cleared: it survives logout as a
-// "last signed-in user" marker so the next sign-in can detect a user
-// change and decide whether to wipe IndexedDB. The email, phone,
-// country, location and bio were never here to clear: they're memory
-// only (`privateProfileStore`, MIP-619).
+// "last signed-in user" marker (SignInForm still uses it to spot a user
+// change). The email, phone, country, location and bio were never here to
+// clear: they're memory only (`privateProfileStore`, MIP-619).
+//
+// IndexedDB is wiped below (MIP-809). It used to be left for the next
+// sign-in to clear, and only when a DIFFERENT person signed in, which left
+// the whole team cache on a signed-out device: the roster with its emails,
+// inbox, tasks, messages, to-dos and note text. The price is that the next
+// sign-in on this browser loads cold, even for the same person.
 const KEYS_TO_CLEAR = [
     "isSigningIn",
     "userName",
@@ -79,6 +85,15 @@ export const useSignOut = () => {
             }
             clearAllEditorDrafts();
             analytics.reset();
+            // After the server has confirmed the sign-out, and never allowed to
+            // fail it: a wipe that cannot finish must not strand someone signed
+            // in on a screen that says they are not. `wipeLocalCache` does not
+            // throw; the catch is for a failure to even load it.
+            try {
+                await DatabaseUtils.wipeLocalCache();
+            } catch (error) {
+                console.error("Could not clear the local cache on sign-out:", error);
+            }
 
             setAccessToken(null);
             navigate("/");
