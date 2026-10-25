@@ -97,6 +97,15 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {
+        // Rows stored before the roster stopped keeping phone numbers (MIP-768)
+        // still hold them, and an incremental sync only rewrites the people who
+        // changed. Sweep them out first: it is a no-op once none are left, and
+        // it runs before the network, so it happens even when the sync fails.
+        try {
+            await userRepo.stripStoredPhones();
+        } catch (error) {
+            console.error("Failed to strip stored phone numbers from the roster:", error);
+        }
         // For backward compatibility (callers expect the list back to
         // detect "no team members were loaded" failures), capture the
         // current set after the sync completes and return it.
