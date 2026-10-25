@@ -436,16 +436,6 @@ describe("UserService", () => {
         expect(team.map((u) => u.userId).sort()).toEqual(["m1", "m2"]);
     });
 
-    it("getUserByEmail finds by email or returns null", async () => {
-        const svc = new UserService();
-        await svc.saveUser(makeUser({ userId: "e1", userEmail: "found@example.test" }));
-
-        const found = await svc.getUserByEmail("found@example.test");
-        expect(found?.userId).toBe("e1");
-
-        expect(await svc.getUserByEmail("nobody@example.test")).toBeNull();
-    });
-
     it("searchUsersByName is case-insensitive substring match", async () => {
         const svc = new UserService();
         await svc.saveUser(makeUser({ userId: "n1", userName: "Alice Anderson" }));

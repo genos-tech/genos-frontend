@@ -13,6 +13,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
+import { personLabel } from "../../../../utils/personLabel";
 
 type ACTeamUsersProps = {
     myself: UserProps;
@@ -95,11 +96,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             // were the assignee.
             size="sm"
             value={resolvedValue}
-            getOptionLabel={(option) =>
-                option.userEmail === myself.userEmail
-                    ? `${option.userName} ${youSuffix} - ${option.userEmail}`
-                    : `${option.userName} - ${option.userEmail}`
-            }
+            getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             renderOption={(props, option) => {
                 return (
                     <AutocompleteOption
@@ -120,9 +117,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                                     useUISM={useUISM}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
-                                    {option.userEmail === myself.userEmail
-                                        ? `${option.userName} ${youSuffix} - ${option.userEmail}`
-                                        : `${option.userName} - ${option.userEmail}`}
+                                    {personLabel(option, myself.userId, youSuffix)}
                                 </Typography>
                             </Stack>
                         </ListItemContent>
