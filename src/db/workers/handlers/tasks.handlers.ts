@@ -103,12 +103,17 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
     },
 
     loadTeamTasks: async ({ myself, accessToken }) => {
+        // Fetch ALL of it before touching the store. The loader returns
+        // `undefined` when any page failed, and emptying the store first and
+        // then having nothing to put back is the worst outcome here: every
+        // per-project checkpoint below counts on this store being full.
+        const taskList: TaskTableProps[] | undefined = await loadTeamTasks(myself, accessToken);
+        if (!taskList) return;
         await taskRepo.clear();
         // The store this just emptied is the one every per-project
         // checkpoint counts on. Drop them together or each project's next
         // sync asks for changes-since and restores nothing.
         await checkpointRepo.forgetCheckpointsWithPrefix("tasks:");
-        const taskList: TaskTableProps[] = await loadTeamTasks(myself, accessToken);
         for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
             await taskRepo.batchInsert(taskList.slice(i, i + BATCH_SIZE));
         }
