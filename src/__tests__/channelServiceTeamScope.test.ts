@@ -75,8 +75,9 @@ describe("channelService team scoping", () => {
     it("sends team_id on the channel list request", async () => {
         channelService.setCurrentTeamId(TEAM_A);
         await channelService.listChannels();
+        // `limit` is the page size (MIP-808); the team narrowing is what this checks.
         expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
-            params: { team_id: TEAM_A },
+            params: { team_id: TEAM_A, limit: 200 },
         });
     });
 
@@ -85,7 +86,10 @@ describe("channelService team scoping", () => {
         // "undefined", which matches no team and would blank the chat
         // list during the window before the team resolves.
         await channelService.listChannels();
-        expect(get).toHaveBeenCalledWith("/api/v3/channels/", { params: undefined });
+        // Only the page size: no `team_id` key at all, which is the invariant.
+        expect(get).toHaveBeenCalledWith("/api/v3/channels/", { params: { limit: 200 } });
+        const sent = get.mock.calls[0][1].params as Record<string, unknown>;
+        expect("team_id" in sent).toBe(false);
     });
 
     it("asks for the new team after a switch", async () => {
@@ -94,7 +98,7 @@ describe("channelService team scoping", () => {
         channelService.setCurrentTeamId(TEAM_B);
         await channelService.listChannels();
         expect(get).toHaveBeenLastCalledWith("/api/v3/channels/", {
-            params: { team_id: TEAM_B },
+            params: { team_id: TEAM_B, limit: 200 },
         });
     });
 
