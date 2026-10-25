@@ -29,7 +29,7 @@
  * arriving alongside the hook live-query work). Storage stays uniform.
  */
 
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 import type { Socket } from "socket.io-client";
 
 import { rememberPeople } from "../../components/ui/avatars/userDirectory";
@@ -57,6 +57,12 @@ import type {
     UserLite,
 } from "../../types/channel";
 import { isV3Uuid } from "../../utils/legacyId";
+
+// A page of the chat list. The server pages at the size it is asked for (capped
+// at 500); 50 pages is far past any real user, and a stop for a server that
+// never says it is done.
+const CHANNEL_LIST_PAGE_SIZE = 200;
+const CHANNEL_LIST_MAX_PAGES = 50;
 
 /**
  * v3 REST base URL.
@@ -796,10 +802,43 @@ export class ChannelService {
             // all-teams behaviour, which is wrong but not broken; sending
             // `team_id=undefined` would serialize as the string
             // "undefined" and match no team, blanking the sidebar.
-            const res = await this.api().get<{ channels: Channel[] }>("/api/v3/channels/", {
-                params: this.currentTeamId ? { team_id: this.currentTeamId } : undefined,
-            });
-            return res.data.channels ?? [];
+            //
+            // Follow the server's pages to the end BEFORE returning. The one
+            // caller that matters, `reconcileChannelList`, EVICTS every local
+            // channel (messages, cursors, members, pins) that this list does not
+            // name, and requires an authoritative full list. A list that stopped
+            // at the first page would delete every channel past the cut from the
+            // sidebar and from the local store (MIP-808). So a failed page, or a
+            // server that never says it is done, THROWS; it must never return a
+            // short list for the reconcile to act on.
+            const channels: Channel[] = [];
+            let cursor: string | null = null;
+            for (let page = 0; ; page += 1) {
+                if (page >= CHANNEL_LIST_MAX_PAGES) {
+                    throw new Error(
+                        `Channel list did not end after ${CHANNEL_LIST_MAX_PAGES} pages.`
+                    );
+                }
+                const res: AxiosResponse<{
+                    channels: Channel[];
+                    has_more?: boolean;
+                    next_cursor?: string | null;
+                }> = await this.api().get("/api/v3/channels/", {
+                    params: {
+                        ...(this.currentTeamId ? { team_id: this.currentTeamId } : {}),
+                        limit: CHANNEL_LIST_PAGE_SIZE,
+                        ...(cursor ? { cursor } : {}),
+                    },
+                });
+                channels.push(...(res.data.channels ?? []));
+                // A server that predates paging sends neither key, so one
+                // response is the whole list, exactly as before.
+                if (res.data.has_more !== true || typeof res.data.next_cursor !== "string") {
+                    break;
+                }
+                cursor = res.data.next_cursor;
+            }
+            return channels;
         } catch (e) {
             throw unwrapAxiosError(e);
         }
