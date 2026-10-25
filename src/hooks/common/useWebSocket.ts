@@ -41,14 +41,13 @@ const createSocket = (accessToken: string | null): Socket => {
         reconnectionDelayMax: 60000,
         timeout: 100000,
         withCredentials: true,
+        // Ids only. The name, email and team name are not sent: the server takes
+        // them from the token, and a value here was both spoofable and written
+        // into proxy and access logs (MIP-732). An older server still demands a
+        // `userName`, so this ships AFTER genos-sockets #33 is deployed.
         query: {
             teamId: localStorage.getItem("teamId"),
-            teamName: localStorage.getItem("teamName"),
             userId: localStorage.getItem("userId"),
-            userName: localStorage.getItem("userName"),
-            // No `userEmail`: it isn't stored any more (MIP-619). The
-            // server only copied it into join-request mentions, which
-            // never render it (MIP-732).
         },
         extraHeaders: {
             Authorization: accessToken || "",
