@@ -67,8 +67,10 @@ describe("loadTeamMembers", () => {
 
         const result = await loadTeamMembers(mockMyself, "token123", null);
 
+        // The roster is requested a page at a time (MIP-805); `limit` is the page
+        // size and there is no `cursor` on the first request.
         expect(mockGet).toHaveBeenCalledWith(
-            "/team/getTeamMembers/?team_id=team1&team_name=Team One&user_id=user1"
+            "/team/getTeamMembers/?team_id=team1&team_name=Team One&user_id=user1&limit=200"
         );
         expect(result).toEqual({
             serverTime: "2026-05-25T12:00:00Z",
