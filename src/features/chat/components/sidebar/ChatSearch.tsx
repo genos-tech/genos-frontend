@@ -25,6 +25,7 @@ import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind, type Channel } from "../../../../types/channel";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
+import { personLabel } from "../../../../utils/personLabel";
 import { loadSearchList } from "../../services/loadChatSearchList";
 
 type ChatSearchProps = {
@@ -243,9 +244,15 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 }
                 getOptionLabel={(option) =>
                     option.type === "People"
-                        ? option.email === myself.userEmail
-                            ? `${option.name} ${t.common.personPicker.youSuffix} - ${option.email}`
-                            : `${option.name} - ${option.email}`
+                        ? personLabel(
+                              {
+                                  userId: option.userId,
+                                  userName: option.name,
+                                  userEmail: option.email,
+                              },
+                              myself.userId,
+                              t.common.personPicker.youSuffix
+                          )
                         : option.isPrivate
                           ? `🔒 ${option.name}`
                           : option.name
@@ -313,9 +320,14 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             }}
                                         >
                                             {option.type === "People"
-                                                ? option.email === myself.userEmail
-                                                    ? `${option.name} ${t.common.personPicker.youSuffix}`
-                                                    : option.name
+                                                ? personLabel(
+                                                      {
+                                                          userId: option.userId,
+                                                          userName: option.name,
+                                                      },
+                                                      myself.userId,
+                                                      t.common.personPicker.youSuffix
+                                                  )
                                                 : option.isPrivate
                                                   ? `🔒 ${option.name}`
                                                   : option.name}

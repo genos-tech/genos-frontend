@@ -39,12 +39,6 @@ export class UserService {
         return this.userRepo.userExists(userId);
     }
 
-    // Get user by email (if email is stored)
-    async getUserByEmail(email: string): Promise<UserProps | null> {
-        const users = await this.getAllUsers();
-        return users.find((user) => user.userEmail === email) || null;
-    }
-
     // Search users by name
     async searchUsersByName(searchTerm: string): Promise<UserProps[]> {
         const users = await this.getAllUsers();

@@ -10,6 +10,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { personLabel } from "../../../../utils/personLabel";
 
 type Props = {
     selected: UserProps[];
@@ -52,10 +53,7 @@ export const MultiMemberPicker = ({
         [useTEM.teamMembers, myself.userId]
     );
 
-    const optionLabel = (option: UserProps) =>
-        option.userEmail === myself.userEmail
-            ? `${option.userName} ${youSuffix} - ${option.userEmail}`
-            : `${option.userName} - ${option.userEmail}`;
+    const optionLabel = (option: UserProps) => personLabel(option, myself.userId, youSuffix);
 
     return (
         <Autocomplete
