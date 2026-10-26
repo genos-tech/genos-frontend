@@ -566,6 +566,19 @@ input[type="checkbox"] {
     color: #c7d2fe;
 }
 
+/* Where an external link really goes (MIP-737). `data-link-host` is set from the
+   link's href by utils/labelExternalLinks, never from its label, so a link
+   reading "internal.company.com" that opens attacker.example says so. Not
+   selectable and not announced twice: it is a caption on the link. */
+.bn-editor a[data-link-host]::after {
+    content: " (" attr(data-link-host) ")";
+    font-size: 0.85em;
+    opacity: 0.7;
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+}
+
 /* Editor common styles */
 .bn-editor img {
     max-width: 500px;
