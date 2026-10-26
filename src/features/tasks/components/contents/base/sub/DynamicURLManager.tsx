@@ -11,6 +11,7 @@ import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { useOptionalAccessToken } from "../../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
+import { isWebUrl, safeWebHref } from "../../../../../../utils/safeHref";
 import { getPageTitle } from "../../../../utils/getPageTitle";
 import { brandColor, resolveLinkBrand } from "../../../../utils/linkBrandIcons";
 
@@ -58,14 +59,9 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     };
 
     // Validate URL
-    const isValidUrl = (inputUrl: string): boolean => {
-        try {
-            new URL(inputUrl);
-            return true;
-        } catch {
-            return false;
-        }
-    };
+    // A web link only. `new URL` alone parses `javascript:alert(1)` happily, and
+    // the link is later rendered as an `href` for the whole team (MIP-821).
+    const isValidUrl = (inputUrl: string): boolean => isWebUrl(inputUrl);
 
     // Initialize links from taskContent. We use `link.id` as-is rather
     // than re-prefixing it — earlier this re-mapped to `link-${link.id}`
@@ -394,9 +390,16 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     marginLeft: "10px",
                 }}
             >
-                <a href={link.url} rel="noopener noreferrer" target="_blank">
-                    {link.title}
-                </a>
+                {/* A link stored before the form refused non-web schemes may still
+                    be a `javascript:` URL, so the href is checked at render time
+                    too, and a refused one is shown as plain text, not a link. */}
+                {safeWebHref(link.url) ? (
+                    <a href={safeWebHref(link.url)} rel="noopener noreferrer" target="_blank">
+                        {link.title}
+                    </a>
+                ) : (
+                    <span title={link.url}>{link.title}</span>
+                )}
             </Typography>
             {/* Edit / Delete buttons are hidden for auto-linked entries:
                 Source 2 in `pulls-for-task` uses the `isAutoLinked` flag
