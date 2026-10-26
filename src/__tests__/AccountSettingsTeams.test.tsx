@@ -29,6 +29,12 @@ vi.mock("../features/admin/services/accountLifecycle", () => ({
 }));
 vi.mock("../features/admin/services/loadMyTeams", () => ({ loadMyTeams: vi.fn() }));
 vi.mock("../features/admin/services/leaveTeam", () => ({ leaveTeam: vi.fn() }));
+vi.mock("../services/developerApi", async () => ({
+    ...(await vi.importActual<typeof import("../services/developerApi")>(
+        "../services/developerApi"
+    )),
+    listMySecurityEvents: vi.fn().mockResolvedValue({ events: [], nextBefore: null }),
+}));
 
 const MYSELF = { userId: "me", teamId: "team-a" } as UserProps;
 
@@ -142,5 +148,18 @@ describe("Settings → Account team list", () => {
         await waitFor(() => expect(screen.getByText(/couldn't leave/i)).toBeInTheDocument());
         expect(within(container).getByText("Bravo")).toBeInTheDocument();
         expect(navigate).not.toHaveBeenCalled();
+    });
+});
+
+describe("Settings → Account security activity", () => {
+    it("shows the person's own security activity above the teams and the deletion", async () => {
+        await renderSection();
+
+        const activity = await screen.findByText("Your security activity");
+        const teams = screen.getByText("Your teams");
+        // Document order: the log sits before teams, which sit before deletion.
+        expect(
+            activity.compareDocumentPosition(teams) & Node.DOCUMENT_POSITION_FOLLOWING
+        ).toBeTruthy();
     });
 });

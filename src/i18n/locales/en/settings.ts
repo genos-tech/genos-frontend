@@ -176,6 +176,15 @@ export const settings = {
         exportDescription:
             "Download everything you've created here — your profile, notes, todos, tasks, messages and comments — as a JSON file. Team content written by other people isn't included.",
         exportButton: "Download my data",
+        // The person's own security log (MIP-745). The rows reuse the team
+        // log's action and source labels (`developer.securityLog`).
+        activityHeading: "Your security activity",
+        activityDescription:
+            "Your recent sign-ins, sign-outs, data exports, connected accounts and API keys, plus failed attempts to sign in to your account. For a failed attempt the address shown is the one the attempt came from, not yours. If something here wasn't you, change your password.",
+        activityEmpty: "Nothing recorded yet.",
+        activityLoadFailed: "Couldn't load your security activity.",
+        activityLoadMore: "Show older",
+        activityRetry: "Try again",
         teamsHeading: "Your teams",
         teamsDescription:
             "Leaving a team ends your access to its chats, projects and notes. Your account and your other teams are untouched, and someone can invite you back later.",
