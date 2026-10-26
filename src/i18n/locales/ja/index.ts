@@ -3945,6 +3945,21 @@ export const ja: DeepPartial<Messages> = {
         },
         activity: {
             empty: "まだ活動はありません",
+            restore: {
+                button: "以前の説明に戻す",
+                viaAgent: "Genos AI が書き換えました",
+                viaApiKey: "API 経由で書き換えられました（{name}）",
+                viaApiKeyUnnamed: "API 経由で書き換えられました",
+                viaUnknown: "書き換えられました",
+                confirmTitle: "以前の説明に戻しますか？",
+                confirmBody:
+                    "現在の説明を、この編集の前の説明に置き換えます。元に戻すこともできます。置き換えられる説明もこの履歴に残ります。",
+                confirm: "戻す",
+                cancel: "キャンセル",
+                restoring: "復元中…",
+                failed: "説明を復元できませんでした。もう一度お試しください。",
+                notFound: "このバージョンはもう利用できません。",
+            },
             someone: "誰か",
             githubUser: "GitHub ユーザー",
             commentedOn: "コメントしました",

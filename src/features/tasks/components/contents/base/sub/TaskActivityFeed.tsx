@@ -26,9 +26,14 @@ import { TeamManagementState } from "../../../../../../hooks/common/useTeamManag
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../../../i18n";
 import { UserProps } from "../../../../../../types/admin";
-import { TaskActivityProps, TaskTableProps } from "../../../../../../types/tasks";
+import {
+    keepsPreviousBody,
+    TaskActivityProps,
+    TaskTableProps,
+} from "../../../../../../types/tasks";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
+import { RestoreBodyControl } from "./RestoreBodyControl";
 
 type ActivityMessages = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
 
@@ -49,6 +54,10 @@ type TaskActivityFeedProps = {
      *  backend started snapshotting `oldDisplayId` / `newDisplayId` into
      *  metadata. */
     allTasks: TaskTableProps[];
+    /** The task these rows belong to. Needed only to put back a description an
+     *  agent or API key rewrote (MIP-738): without it that button is not
+     *  offered, never offered against a guessed task. */
+    taskId?: number | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -799,6 +808,7 @@ export const TaskActivityFeed = ({
     activities,
     isLoading,
     allTasks,
+    taskId,
     myself,
     setMyself,
     socket,
@@ -950,99 +960,114 @@ export const TaskActivityFeed = ({
                         : undefined) ?? (row.actor as UserProps | undefined);
 
                 return (
-                    <Stack
+                    <Box
                         key={row.activityId}
-                        alignItems="flex-start"
-                        direction="row"
-                        spacing={1.25}
                         sx={{
-                            py: 1,
-                            px: 1,
                             borderRadius: "8px",
                             "&:hover": {
                                 background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                             },
                         }}
                     >
-                        <AvatarWithStatus
-                            avatarSize={30}
-                            avatarUser={avatarUser}
-                            isYou={actorId != null && String(myself.userId) === String(actorId)}
-                            myself={myself}
-                            setMyself={setMyself}
-                            showPulseDot={false}
-                            socket={socket}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                        />
-                        <Box
-                            sx={{
-                                flex: 1,
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 0.75,
-                                flexWrap: "wrap",
-                            }}
+                        <Stack
+                            alignItems="flex-start"
+                            direction="row"
+                            spacing={1.25}
+                            sx={{ py: 1, px: 1 }}
                         >
+                            <AvatarWithStatus
+                                avatarSize={30}
+                                avatarUser={avatarUser}
+                                isYou={
+                                    actorId != null && String(myself.userId) === String(actorId)
+                                }
+                                myself={myself}
+                                setMyself={setMyself}
+                                showPulseDot={false}
+                                socket={socket}
+                                useCM={useCM}
+                                useUISM={useUISM}
+                            />
                             <Box
                                 sx={{
-                                    color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                                    flex: 1,
                                     display: "flex",
+                                    flexDirection: "row",
                                     alignItems: "center",
+                                    gap: 0.75,
+                                    flexWrap: "wrap",
                                 }}
                             >
-                                {actionIcon(row.actionType)}
-                            </Box>
-                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                {actorName}
-                            </Typography>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
-                                }}
-                            >
-                                {verbFor(row.actionType, t.tasks.activity, row.metadata)}
-                            </Typography>
-                            {showOldChip && (
-                                <ValueChip
-                                    fieldName={row.fieldName}
-                                    isDark={isDark}
-                                    label={oldFmt.label}
-                                />
-                            )}
-                            {showOldChip && showNewChip && (
+                                <Box
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.55)"
+                                            : "rgba(0,0,0,0.5)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    {actionIcon(row.actionType)}
+                                </Box>
+                                <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                    {actorName}
+                                </Typography>
                                 <Typography
                                     level="body-sm"
                                     sx={{
                                         color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.45)",
+                                            ? "rgba(255,255,255,0.7)"
+                                            : "rgba(0,0,0,0.65)",
                                     }}
                                 >
-                                    →
+                                    {verbFor(row.actionType, t.tasks.activity, row.metadata)}
                                 </Typography>
-                            )}
-                            {showNewChip && (
-                                <ValueChip
-                                    fieldName={row.fieldName}
-                                    isDark={isDark}
-                                    label={newFmt.label}
-                                />
-                            )}
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                                    whiteSpace: "nowrap",
-                                }}
-                            >
-                                {formatRelative(row.tsCreatedAt, t.tasks.activity)}
-                            </Typography>
-                        </Box>
-                    </Stack>
+                                {showOldChip && (
+                                    <ValueChip
+                                        fieldName={row.fieldName}
+                                        isDark={isDark}
+                                        label={oldFmt.label}
+                                    />
+                                )}
+                                {showOldChip && showNewChip && (
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.5)"
+                                                : "rgba(0,0,0,0.45)",
+                                        }}
+                                    >
+                                        →
+                                    </Typography>
+                                )}
+                                {showNewChip && (
+                                    <ValueChip
+                                        fieldName={row.fieldName}
+                                        isDark={isDark}
+                                        label={newFmt.label}
+                                    />
+                                )}
+                                <Box sx={{ flexGrow: 1 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.4)"
+                                            : "rgba(0,0,0,0.4)",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {formatRelative(row.tsCreatedAt, t.tasks.activity)}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                        {taskId != null && keepsPreviousBody(row) && (
+                            <Box sx={{ pb: 1, px: 1 }}>
+                                <RestoreBodyControl activity={row} taskId={taskId} />
+                            </Box>
+                        )}
+                    </Box>
                 );
             })}
         </Stack>
