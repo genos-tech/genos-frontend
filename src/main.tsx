@@ -20,6 +20,7 @@ import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags
 import { analytics } from "./services/analytics";
 import { registerServiceWorkerOnBoot } from "./services/notifications/pushSubscription";
 import { startLongTaskObserver } from "./services/perfObserver";
+import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
 
 import { App } from "./App";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
@@ -214,7 +215,13 @@ const tree = (
     </Router>
 );
 
-const mount = () => createRoot(document.getElementById("root")!).render(tree);
+const mount = () => {
+    createRoot(document.getElementById("root")!).render(tree);
+    // Print the host after every external link in an editor, wherever BlockNote
+    // renders one (MIP-737). Started once, with the tree, and never stopped: it
+    // lives as long as the page.
+    startLabellingExternalLinks();
+};
 
 // Gate the mount on the initial locale's catalog.
 //
