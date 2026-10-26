@@ -318,6 +318,10 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
     const { t } = useTranslation();
     const [editUrl, setEditUrl] = useState(link.url);
     const [editTitle, setEditTitle] = useState(link.title);
+    // The only value that may reach an `href` below: the stored URL if it is a web
+    // link, `undefined` if it is not (a `javascript:` URL stored before the form
+    // refused them). Computed once so the anchor and its guard cannot disagree.
+    const webHref = safeWebHref(link.url);
 
     useEffect(() => {
         if (editingId !== link.id) {
@@ -393,8 +397,8 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                 {/* A link stored before the form refused non-web schemes may still
                     be a `javascript:` URL, so the href is checked at render time
                     too, and a refused one is shown as plain text, not a link. */}
-                {safeWebHref(link.url) ? (
-                    <a href={safeWebHref(link.url)} rel="noopener noreferrer" target="_blank">
+                {webHref ? (
+                    <a href={webHref} rel="noopener noreferrer" target="_blank">
                         {link.title}
                     </a>
                 ) : (
