@@ -258,6 +258,30 @@ export const listTeamSecurityEvents = async (
     }
 };
 
+/** A page of the signed-in person's OWN security log: their sign-ins, exports,
+ *  connected accounts and API keys, plus failed sign-in attempts against their
+ *  account (MIP-745), newest first.
+ *
+ *  `null` means the request FAILED. Unlike the team log there is no "not
+ *  allowed" answer to read as "hide the section", so a failure must not look
+ *  like an empty log: "nothing recorded" would be a false statement about
+ *  someone's own account. The caller shows an error. */
+export const listMySecurityEvents = async (
+    accessToken: string | null,
+    before?: number | null
+): Promise<SecurityEventPage | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        const res = await api.get<SecurityEventPage>("/user/security-events/", {
+            params: before ? { before } : {},
+        });
+        return { events: res.data.events ?? [], nextBefore: res.data.nextBefore ?? null };
+    } catch {
+        return null;
+    }
+};
+
 // ── Webhooks ─────────────────────────────────────────────────────────
 
 export const listWebhooks = async (

@@ -11,6 +11,60 @@ type Props = {
 };
 
 /**
+ * One row of a security log: what happened, to whom, by whom, when, from
+ * where, and through which surface. Shared by the team log (Developer) and a
+ * person's own log (Account) so the two cannot describe an event differently.
+ */
+export const SecurityEventRow = ({ event: e }: { event: SecurityEvent }) => {
+    const { t, locale } = useTranslation();
+    const s = t.settings.developer.securityLog;
+
+    // The server's English label covers an action added after this
+    // client was built.
+    const actionLabel = (s.actions as Record<string, string>)[e.action] ?? e.actionLabel;
+    const sourceLabel = (s.sources as Record<string, string>)[e.source] ?? e.source;
+    const isAlert = e.action.startsWith("alert.");
+
+    return (
+        <Sheet
+            color={isAlert ? "warning" : "neutral"}
+            data-testid="security-event"
+            sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+            variant="soft"
+        >
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm" noWrap>
+                        {actionLabel}
+                        {e.targetLabel && (
+                            <Typography component="span" level="body-sm" sx={{ opacity: 0.8 }}>
+                                {" "}
+                                — {e.targetLabel}
+                            </Typography>
+                        )}
+                    </Typography>
+                    <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
+                        {fmt(s.byWhen, {
+                            actor: e.actorLabel || s.unknownActor,
+                            when: new Date(e.createdAt).toLocaleString(locale),
+                        })}
+                        {e.ip && (
+                            <Box component="span" sx={{ fontFamily: "monospace" }}>
+                                {" "}
+                                · {e.ip}
+                            </Box>
+                        )}
+                    </Typography>
+                </Box>
+                <Chip size="sm" variant="soft">
+                    {sourceLabel}
+                </Chip>
+            </Stack>
+        </Sheet>
+    );
+};
+
+/**
  * Settings → Developer: the team's security log, for its owner.
  *
  * Hidden, not shown empty, for everyone else — the server answers 404
@@ -60,14 +114,6 @@ export const SecurityLogSection = ({ teamId }: Props) => {
 
     if (events === null) return null;
 
-    // The server's English label covers an action added after this
-    // client was built.
-    const actionLabel = (e: SecurityEvent) =>
-        (s.actions as Record<string, string>)[e.action] ?? e.actionLabel;
-    const sourceLabel = (e: SecurityEvent) =>
-        (s.sources as Record<string, string>)[e.source] ?? e.source;
-    const isAlert = (e: SecurityEvent) => e.action.startsWith("alert.");
-
     return (
         <Stack spacing={1.5}>
             <Stack alignItems="center" direction="row" spacing={1}>
@@ -83,46 +129,7 @@ export const SecurityLogSection = ({ teamId }: Props) => {
                 </Typography>
             )}
             {events.map((e) => (
-                <Sheet
-                    key={e.id}
-                    color={isAlert(e) ? "warning" : "neutral"}
-                    data-testid="security-event"
-                    sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
-                    variant="soft"
-                >
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                            <Typography level="title-sm" noWrap>
-                                {actionLabel(e)}
-                                {e.targetLabel && (
-                                    <Typography
-                                        component="span"
-                                        level="body-sm"
-                                        sx={{ opacity: 0.8 }}
-                                    >
-                                        {" "}
-                                        — {e.targetLabel}
-                                    </Typography>
-                                )}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
-                                {fmt(s.byWhen, {
-                                    actor: e.actorLabel || s.unknownActor,
-                                    when: new Date(e.createdAt).toLocaleString(locale),
-                                })}
-                                {e.ip && (
-                                    <Box component="span" sx={{ fontFamily: "monospace" }}>
-                                        {" "}
-                                        · {e.ip}
-                                    </Box>
-                                )}
-                            </Typography>
-                        </Box>
-                        <Chip size="sm" variant="soft">
-                            {sourceLabel(e)}
-                        </Chip>
-                    </Stack>
-                </Sheet>
+                <SecurityEventRow event={e} key={e.id} />
             ))}
             {moreFailed && (
                 <Typography color="danger" level="body-xs">

@@ -50,6 +50,7 @@ import { useSignOut } from "../../hooks/common/useSignOut";
 import { useTranslation } from "../../i18n";
 import { Team, UserProps } from "../../types/admin";
 import { ModalLeaveConfirm } from "../ui/misc/ModalLeaveConfirm";
+import { MySecurityActivity } from "./MySecurityActivity";
 
 const CONFIRM_WORD = "DELETE";
 
@@ -198,6 +199,11 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                     </Alert>
                 )}
             </Box>
+
+            <Divider />
+
+            {/* Their own sign-ins, exports and connected accounts (MIP-745) */}
+            <MySecurityActivity />
 
             <Divider />
 
