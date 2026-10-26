@@ -1080,6 +1080,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <TaskActivityFeed
                             activities={taskActivities}
                             allTasks={useTM.allTasks}
+                            taskId={taskContent.id ?? null}
                             isLoading={isLoadingTaskActivities}
                             myself={myself}
                             setMyself={setMyself}

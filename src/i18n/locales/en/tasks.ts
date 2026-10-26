@@ -618,6 +618,23 @@ export const tasks = {
         hoursAgo: "{count} hours ago",
         dayAgo: "{count} day ago",
         daysAgo: "{count} days ago",
+        // Restoring the description an agent, an API key or MCP replaced
+        // (MIP-738). Offered on the history row that kept the old body.
+        restore: {
+            button: "Restore the previous description",
+            viaAgent: "Rewritten by the Genos AI",
+            viaApiKey: "Rewritten through the API ({name})",
+            viaApiKeyUnnamed: "Rewritten through the API",
+            viaUnknown: "Rewritten",
+            confirmTitle: "Restore the previous description?",
+            confirmBody:
+                "This replaces the description as it is now with the one it had before this edit. You can undo it: the description you replace is kept in this history too.",
+            confirm: "Restore",
+            cancel: "Cancel",
+            restoring: "Restoring…",
+            failed: "Couldn't restore the description. Please try again.",
+            notFound: "That version is no longer available.",
+        },
         verbs: {
             created: "created this",
             titleChanged: "renamed this from",

@@ -231,6 +231,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         <TaskActivityFeed
                             activities={threadTaskActivities}
                             allTasks={useTM.allTasks}
+                            taskId={threadTaskId}
                             isLoading={isLoadingThreadTaskActivities}
                             myself={myself}
                             setMyself={setMyself}

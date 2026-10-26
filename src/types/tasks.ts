@@ -161,6 +161,12 @@ export type TaskActivityProps = {
     tsCreatedAt: string;
 };
 
+/** Does this history row hold the description it replaced, so it can be put
+ *  back (MIP-738)? Only a `description_edited` row that an agent, an API key
+ *  or MCP wrote carries one; the editor's own autosave does not. */
+export const keepsPreviousBody = (row: TaskActivityProps): boolean =>
+    row.actionType === "description_edited" && row.metadata?.previousBodyKept === true;
+
 // One branch / PR delivering a task — `GET /task/deliveries/`, which
 // serializes `TaskDelivery` through `delivery_as_dict` (snake_case, the
 // same shape the agent tools return). `pr_url` is null for a branch
