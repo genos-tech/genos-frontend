@@ -3386,6 +3386,7 @@ export const ja: DeepPartial<Messages> = {
             taskComment: "{subtitle} {id} のコメント{sep}",
             taskPlain: "{subtitle} {id}{sep}",
             milestone: "{subtitle}{sep}",
+            milestoneComment: "{subtitle} のコメント{sep}",
             chatThread: "{subtitle} のスレッド{sep}",
             chatPlain: "{subtitle}{sep}",
             noteThread: "{subtitle}（スレッド）{sep}",

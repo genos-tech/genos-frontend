@@ -148,6 +148,7 @@ export const spotlight = {
         taskComment: "{subtitle} {id} comment{sep}",
         taskPlain: "{subtitle} {id}{sep}",
         milestone: "{subtitle}{sep}",
+        milestoneComment: "{subtitle} comment{sep}",
         chatThread: "{subtitle} thread{sep}",
         chatPlain: "{subtitle}{sep}",
         noteThread: "{subtitle} (thread){sep}",

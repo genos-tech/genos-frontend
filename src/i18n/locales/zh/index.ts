@@ -3218,6 +3218,7 @@ export const zh: DeepPartial<Messages> = {
             taskComment: "{subtitle} {id} 评论{sep}",
             taskPlain: "{subtitle} {id}{sep}",
             milestone: "{subtitle}{sep}",
+            milestoneComment: "{subtitle} 评论{sep}",
             chatThread: "{subtitle} 话题{sep}",
             chatPlain: "{subtitle}{sep}",
             noteThread: "{subtitle}（话题）{sep}",

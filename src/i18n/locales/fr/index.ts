@@ -3375,6 +3375,7 @@ export const fr: DeepPartial<Messages> = {
             taskComment: "Commentaire {subtitle} {id}{sep}",
             taskPlain: "{subtitle} {id}{sep}",
             milestone: "{subtitle}{sep}",
+            milestoneComment: "Commentaire {subtitle}{sep}",
             chatThread: "Fil {subtitle}{sep}",
             chatPlain: "{subtitle}{sep}",
             noteThread: "{subtitle} (fil){sep}",
