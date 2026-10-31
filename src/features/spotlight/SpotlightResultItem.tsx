@@ -177,7 +177,13 @@ export type BadgeKey = "thread" | "comment";
 
 export const badgeFor = (r: SpotlightResult): BadgeKey | null => {
     if (r.entity_type === "chat" && r.thread_id) return "thread";
-    if (r.entity_type === "task" && r.matched_chunk_types[0] === "task_comment") {
+    // A milestone's comments hang off its backing task, so they are
+    // indexed as task comments; the backend relabels that row to the
+    // milestone (`milestone_mirrors.py`) and keeps its chunk types.
+    if (
+        (r.entity_type === "task" || r.entity_type === "milestone") &&
+        r.matched_chunk_types[0] === "task_comment"
+    ) {
         return "comment";
     }
     if (r.entity_type === "note" && r.note_type === "chat" && r.thread_id) {

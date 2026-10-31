@@ -2352,7 +2352,8 @@ function _chipLabel(
         return fmt(template, { subtitle, id, sep });
     }
     if (s.entity_type === "milestone") {
-        return fmt(ts.chip.milestone, { subtitle, sep });
+        const template = badge === "comment" ? ts.chip.milestoneComment : ts.chip.milestone;
+        return fmt(template, { subtitle, sep });
     }
     if (s.entity_type === "chat" && s.chat_id) {
         const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
@@ -2777,3 +2778,4 @@ function _relativeTime(iso: string, ts: SpotlightMessages): string {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const relativeTimeLabel = _relativeTime;
+export const sourceChipLabel = _chipLabel;

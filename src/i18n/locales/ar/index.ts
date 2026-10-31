@@ -2974,6 +2974,7 @@ export const ar: DeepPartial<Messages> = {
         chip: {
             taskComment: "تعليق {subtitle} {id}{sep}",
             taskPlain: "{subtitle} {id}{sep}",
+            milestoneComment: "تعليق {subtitle}{sep}",
             chatThread: "موضوع {subtitle}{sep}",
             chatPlain: "{subtitle}{sep}",
             noteThread: "{subtitle} (موضوع){sep}",
