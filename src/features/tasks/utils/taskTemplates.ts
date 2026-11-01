@@ -331,3 +331,18 @@ export const stripUntouchedPrompts = <T>(blocks: T[]): T[] => {
     const hasContent = out.some((b) => !isBlankParagraph(b));
     return hasContent ? out : ([blank()] as unknown as T[]);
 };
+
+/**
+ * Has anyone written what a milestone is for (MIP-799)? False when its
+ * description is empty or only the untouched template: the same question the
+ * API answers as `has_goal`. Deliberately not a check of the "Goal" section,
+ * which breaks on custom templates and renamed headings.
+ *
+ * `undefined` (the field was not loaded) reads as "has one", so a row that
+ * simply lacks the data is never flagged.
+ */
+export const milestoneHasGoal = (description: unknown): boolean => {
+    if (description === undefined) return true;
+    if (!Array.isArray(description)) return false;
+    return stripUntouchedPrompts(description as unknown[]).some((b) => !isBlankParagraph(b));
+};

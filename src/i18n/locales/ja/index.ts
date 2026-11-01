@@ -3552,6 +3552,8 @@ export const ja: DeepPartial<Messages> = {
             moveToSprintPrefix: "移動先：",
             sprintFallback: "スプリント",
             noSprint: "スプリントなし",
+            noGoal: "ゴール未設定",
+            noGoalHint: "このマイルストーンの目的はまだ書かれていません。",
         },
         header: {
             privateProject: "プライベートプロジェクト",

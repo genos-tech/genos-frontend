@@ -37,6 +37,7 @@ import {
     selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
+import { milestoneHasGoal } from "../../../utils/taskTemplates";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -199,7 +200,12 @@ export const MilestonesListItem = ({
                                 {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
                             </Chip>
                         </Stack>
-                        <Stack alignItems="center" direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ mt: 0.25, flexWrap: "wrap", rowGap: 0.25 }}
+                        >
                             <Chip size="sm" variant="outlined">
                                 {sprintName}
                             </Chip>
@@ -219,6 +225,16 @@ export const MilestonesListItem = ({
                                     </Chip>
                                 );
                             })()}
+                            {!milestoneHasGoal(m.description) && (
+                                <Chip
+                                    color="warning"
+                                    size="sm"
+                                    title={t.tasks.sidebar.noGoalHint}
+                                    variant="outlined"
+                                >
+                                    {t.tasks.sidebar.noGoal}
+                                </Chip>
+                            )}
                             <Box sx={{ flex: 1 }} />
                             <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
                                 {m.assignees.slice(0, 4).map((a) => {
