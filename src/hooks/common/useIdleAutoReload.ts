@@ -53,7 +53,7 @@ import { useEffect, useRef, useState } from "react";
 //     instead of a reload loop.
 
 interface UseIdleAutoReloadOptions {
-    /** Idle time that makes the page stale. Default 12h. */
+    /** Idle time that makes the page stale. Default 8h (`resolveIdleThresholdMs`). */
     idleThresholdMs?: number;
     /** Snackbar lead time before the reload. Default 2s. */
     graceMs?: number;
@@ -67,7 +67,25 @@ interface UseIdleAutoReloadOptions {
     isBusy?: () => boolean;
 }
 
-const DEFAULT_IDLE_THRESHOLD_MS = 12 * 60 * 60 * 1000;
+// 8h, not 12h (MIP-790): the case this exists for is a laptop closed in the
+// evening and opened the next morning, which is often 8-10h. At 12h that
+// overnight never counted as stale, so the page could live for days, one
+// sub-threshold sleep at a time, and "behave weird until I hard-refresh".
+export const DEFAULT_IDLE_THRESHOLD_MS = 8 * 60 * 60 * 1000;
+
+/**
+ * The idle threshold to use: `VITE_IDLE_RELOAD_HOURS` (build time) when it is
+ * a positive number of hours, otherwise the 8h default. A bad value falls
+ * back rather than disabling the feature or reloading in a tight loop.
+ */
+export const resolveIdleThresholdMs = (
+    hours: unknown = import.meta.env.VITE_IDLE_RELOAD_HOURS
+) => {
+    const n = typeof hours === "string" ? Number(hours.trim()) : Number(hours);
+    return hours != null && hours !== "" && Number.isFinite(n) && n > 0
+        ? n * 60 * 60 * 1000
+        : DEFAULT_IDLE_THRESHOLD_MS;
+};
 const DEFAULT_GRACE_MS = 2000;
 
 // Background tabs get timers throttled to roughly once a minute, so a

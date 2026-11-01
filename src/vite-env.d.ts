@@ -7,6 +7,9 @@ declare module "*.md" {
 
 interface ImportMetaEnv {
     readonly VITE_API_BASE_URL: string;
+    /** Hours of inactivity (or of a sleeping laptop) before the page reloads
+     *  itself. Optional; default 8. See `useIdleAutoReload`. */
+    readonly VITE_IDLE_RELOAD_HOURS?: string;
     readonly VITE_WS_BASE_URL: string;
     readonly VITE_API_DJANGO_BASE_URL: string;
     readonly VITE_DJANGO_URL: string;

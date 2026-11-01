@@ -62,7 +62,7 @@ import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePref
 import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { HistoryProvider } from "./hooks/common/useHistory";
-import { useIdleAutoReload } from "./hooks/common/useIdleAutoReload";
+import { resolveIdleThresholdMs, useIdleAutoReload } from "./hooks/common/useIdleAutoReload";
 import { useKeyboardInset } from "./hooks/common/useKeyboardInset";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { PersonalGMTagsBootstrap } from "./hooks/common/usePersonalGMTags";
@@ -924,6 +924,7 @@ const AppBody = () => {
     // is still assembling and a reload would only restart that work.
     const idleReloadPending = useIdleAutoReload({
         enabled: !useUISM.isLoading,
+        idleThresholdMs: resolveIdleThresholdMs(),
         // This app has no `beforeunload` guard anywhere, so a reload destroys
         // in-flight work silently. The losses that can't be undone:
         //   * a streaming Genos answer — only COMPLETED turns are persisted,
