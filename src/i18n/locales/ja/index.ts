@@ -2022,7 +2022,7 @@ export const ja: DeepPartial<Messages> = {
                 unknownTitle: "Genos がまだ使えないイベントを送っているリポジトリ",
                 unknownIntro:
                     "これらのリポジトリには Genos を指す Webhook がありますが、どのチームにも登録されていないため、PR は何にもリンクされません。登録すると同期が始まります。",
-                events: "{count, plural, other {# 件のイベント}}",
+                events: "{count, plural, one {# 件のイベント} other {# 件のイベント}}",
                 lastEvent: "最後: {event}",
                 needsAdmin: "リポジトリの管理者権限が必要です",
             },
