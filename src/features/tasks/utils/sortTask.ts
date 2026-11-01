@@ -363,3 +363,35 @@ export const isSortField = (val: unknown): val is string =>
 
 export const isSortDirection = (val: unknown): val is SortDirection =>
     val === "asc" || val === "desc";
+
+/**
+ * Next tiers after a click on a table column header.
+ *
+ * A header click is a TEMPORARY view over the saved sort (the saved sort is
+ * only changed from the Task sort modal), so the click cycles:
+ *   1. a different column            -> that column ascending
+ *   2. same column, ascending        -> descending
+ *   3. same column, descending, and a temporary sort is already active
+ *                                    -> `null` = drop the temporary sort and
+ *                                       return to the saved sort
+ * Without an active temporary sort a click on the saved primary column still
+ * toggles (asc <-> desc) rather than being a no-op.
+ *
+ * The primary tier is replaced; a secondary tier is preserved unless it would
+ * duplicate the new primary field. Returns `null` when the caller should clear
+ * its override.
+ */
+export const nextHeaderTiers = (
+    current: SortTier[],
+    field: string,
+    hasOverride: boolean
+): SortTier[] | null => {
+    const primary = current[0];
+    const samePrimary = primary?.field === field;
+    if (samePrimary && primary.direction === "desc" && hasOverride) return null;
+    const direction: SortDirection = samePrimary && primary.direction === "asc" ? "desc" : "asc";
+    const next: SortTier[] = [{ field, direction }];
+    const secondary = current[1];
+    if (secondary && secondary.field !== field) next.push(secondary);
+    return next;
+};

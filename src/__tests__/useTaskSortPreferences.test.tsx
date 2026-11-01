@@ -3,6 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+    tableSortOverrideFor,
     TaskSortPreferencesProvider,
     useTaskSortPreferences,
 } from "../hooks/common/useTaskSortPreferences";
@@ -102,5 +103,89 @@ describe("useTaskSortPreferences", () => {
             { field: "priority", direction: "desc" },
             { field: "title", direction: "asc" },
         ]);
+    });
+
+    describe("temporary table sort override (header click)", () => {
+        const OVERRIDE = [{ field: "title", direction: "asc" }] as const;
+
+        it("never touches storage or the saved sort", () => {
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            expect(result.current.tableSortOverride?.tiers).toEqual(OVERRIDE);
+            expect(result.current.tableSortTiers).toEqual([
+                { field: "priority", direction: "desc" },
+            ]);
+            expect(window.localStorage.getItem("genos.taskTable.sortTiers.v2")).toBeNull();
+        });
+
+        it("keeps a previously saved sort in storage untouched", () => {
+            const saved = [{ field: "status", direction: "asc" }];
+            window.localStorage.setItem("genos.taskTable.sortTiers.v2", JSON.stringify(saved));
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            expect(
+                JSON.parse(window.localStorage.getItem("genos.taskTable.sortTiers.v2")!)
+            ).toEqual(saved);
+            expect(result.current.tableSortTiers).toEqual(saved);
+        });
+
+        it("is cleared when the modal saves a table sort", () => {
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            act(() => {
+                result.current.setTableSortTiers([{ field: "dueDate", direction: "desc" }]);
+            });
+            expect(result.current.tableSortOverride).toBeNull();
+        });
+
+        it("is not cleared by a sprint board save", () => {
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            act(() => {
+                result.current.setSprintBoardSortTiers([{ field: "priority", direction: "asc" }]);
+            });
+            expect(result.current.tableSortOverride?.tiers).toEqual(OVERRIDE);
+        });
+
+        it("can be cleared with null", () => {
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            act(() => {
+                result.current.setTableSortOverride(null, 7);
+            });
+            expect(result.current.tableSortOverride).toBeNull();
+        });
+
+        it("does not survive a reload (new mount returns to the saved sort)", () => {
+            const first = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                first.result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            first.unmount();
+            const second = renderHook(() => useTaskSortPreferences(), { wrapper });
+            expect(second.result.current.tableSortOverride).toBeNull();
+        });
+
+        it("only applies to the project it was made in", () => {
+            const { result } = renderHook(() => useTaskSortPreferences(), { wrapper });
+            act(() => {
+                result.current.setTableSortOverride([...OVERRIDE], 7);
+            });
+            const o = result.current.tableSortOverride;
+            expect(tableSortOverrideFor(o, 7)).toEqual(OVERRIDE);
+            expect(tableSortOverrideFor(o, 8)).toBeNull();
+            expect(tableSortOverrideFor(o, null)).toBeNull();
+            expect(tableSortOverrideFor(null, 7)).toBeNull();
+        });
     });
 });

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
     buildComparator,
     buildTierComparator,
+    nextHeaderTiers,
     sortTableTasks,
     SortTier,
 } from "../features/tasks/utils/sortTask";
@@ -158,5 +159,47 @@ describe("sortTableTasks", () => {
         const rows = [task({ id: "2", priority: "Low" }), task({ id: "1", priority: "Critical" })];
         sortTableTasks(rows, [{ field: "priority", direction: "desc" }]);
         expect(rows.map((r) => r.id)).toEqual(["2", "1"]);
+    });
+});
+
+describe("nextHeaderTiers", () => {
+    const priorityDesc: SortTier[] = [{ field: "priority", direction: "desc" }];
+
+    it("a different column sorts ascending", () => {
+        expect(nextHeaderTiers(priorityDesc, "title", false)).toEqual([
+            { field: "title", direction: "asc" },
+        ]);
+    });
+
+    it("cycles asc -> desc -> back to the saved sort (null)", () => {
+        const first = nextHeaderTiers(priorityDesc, "title", false)!;
+        expect(first).toEqual([{ field: "title", direction: "asc" }]);
+        const second = nextHeaderTiers(first, "title", true)!;
+        expect(second).toEqual([{ field: "title", direction: "desc" }]);
+        expect(nextHeaderTiers(second, "title", true)).toBeNull();
+    });
+
+    it("toggles the saved primary column instead of doing nothing when no override is active", () => {
+        expect(nextHeaderTiers(priorityDesc, "priority", false)).toEqual([
+            { field: "priority", direction: "asc" },
+        ]);
+    });
+
+    it("keeps a secondary tier unless it duplicates the new primary", () => {
+        const saved: SortTier[] = [
+            { field: "status", direction: "asc" },
+            { field: "title", direction: "desc" },
+        ];
+        expect(nextHeaderTiers(saved, "dueDate", false)).toEqual([
+            { field: "dueDate", direction: "asc" },
+            { field: "title", direction: "desc" },
+        ]);
+        expect(nextHeaderTiers(saved, "title", false)).toEqual([
+            { field: "title", direction: "asc" },
+        ]);
+    });
+
+    it("starts from an empty sort", () => {
+        expect(nextHeaderTiers([], "id", false)).toEqual([{ field: "id", direction: "asc" }]);
     });
 });
