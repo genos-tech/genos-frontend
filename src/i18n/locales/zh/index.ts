@@ -3363,8 +3363,6 @@ export const zh: DeepPartial<Messages> = {
             refreshPullRequests: "刷新关联的 PR",
             addStartDate: "添加开始日期",
             subTaskProjectLocked: "子任务归属于其父任务的项目。请移动顶层任务，子任务会随之移动。",
-            milestoneTaskProjectLocked:
-                "里程碑中的任务归属于该里程碑的项目。请移动里程碑，此任务会随之移动。",
             openTaskGraph: "打开任务图",
             openTaskGraphWithShortcut: "打开任务图（{shortcut}）",
         },

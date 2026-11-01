@@ -1570,8 +1570,6 @@ export const es: DeepPartial<Messages> = {
             addStartDate: "Añadir fecha de inicio",
             subTaskProjectLocked:
                 "Una subtarea pertenece al proyecto de su tarea principal. Mueve la tarea de nivel superior y la subtarea se moverá con ella.",
-            milestoneTaskProjectLocked:
-                "Una tarea de un hito pertenece al proyecto de ese hito. Mueve el hito y la tarea se moverá con él.",
             openTaskGraph: "Abrir gráfico de tareas",
             openTaskGraphWithShortcut: "Abrir gráfico de tareas ({shortcut})",
         },

@@ -1563,8 +1563,6 @@ export const hi: DeepPartial<Messages> = {
             addStartDate: "प्रारंभ तिथि जोड़ें",
             subTaskProjectLocked:
                 "सब-टास्क अपने पैरेंट टास्क के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए टॉप-लेवल टास्क को मूव करें।",
-            milestoneTaskProjectLocked:
-                "माइलस्टोन के अंदर का टास्क उस माइलस्टोन के प्रोजेक्ट में रहता है। इसे साथ ले जाने के लिए माइलस्टोन को मूव करें।",
             openTaskGraph: "कार्य ग्राफ़ खोलें",
             openTaskGraphWithShortcut: "कार्य ग्राफ़ खोलें ({shortcut})",
         },

@@ -82,20 +82,25 @@ export const getTaskKind = (
 /**
  * Does this task decide its own project, or follow something above it?
  *
- * Only a milestone or a ROOT task — one with no parent task — decides.
- * Everything else belongs to the project of what it is filed under, and
- * that includes a task living directly in a milestone: those hang off the
- * milestone's backing row, so the milestone owns which project they are
- * in and they travel when IT moves. Moving one alone left it pointing at
- * a parent in the project it came from, and the destination's table nests
- * rows under their parent, so the row went missing from both. The server
+ * A milestone, a ROOT task (no parent) and a task living DIRECTLY in a
+ * milestone decide. Everything filed under an ORDINARY task belongs to that
+ * task's project and travels when it moves: moved alone it would keep a
+ * parent in the project it came from, and the destination's table nests rows
+ * under their parent, so the row would go missing from both. The server
  * enforces the same rule (`task_views._is_nested_task`).
  *
- * Not expressible as a `TaskKind`: a milestone's own task is "task" there
- * and must stay that way, since it still picks a milestone and a sprint.
+ * A task directly in a milestone hangs off the milestone's backing row. It
+ * may leave (MIP-786): the move detaches it from that milestone and its
+ * sprint, and the destination milestone is picked afterwards. That is why
+ * this takes the task table: whether the parent is a milestone is not on
+ * the task. Until the table has loaded the parent can't be resolved and the
+ * task reads as locked, the safe side.
+ *
  * A milestone reads as owning its project — `MilestonePreview` synthesizes
  * `parentTaskId: null` — and moves through the milestone endpoint, which
  * also resets the sprint.
  */
-export const ownsItsProject = (task: Pick<TaskProps, "parentTaskId">): boolean =>
-    task.parentTaskId == null;
+export const ownsItsProject = (
+    task: Pick<TaskProps, "parentTaskId">,
+    allTasks: TaskTableProps[]
+): boolean => task.parentTaskId == null || isParentMilestone(task.parentTaskId, allTasks);

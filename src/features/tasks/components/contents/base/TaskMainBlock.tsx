@@ -217,24 +217,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const isRequired = (field: string) => requiredFields?.includes(field) === true;
-    // Only a milestone or a ROOT task picks a project. Anything with a
-    // parent follows what it is filed under, and that includes a task
-    // living in a milestone: those hang off the milestone's backing row,
-    // so the milestone owns which project they are in. See the Project
-    // row for why. Create mounts are exempt — the row doesn't exist to
-    // the user yet.
-    //
-    // Not `isSubTask`: that means the parent is an ORDINARY task, and it
-    // also hides the Sprint/Milestone row, which a task inside a
-    // milestone still needs. So it was false for exactly the rows this
-    // has to lock, and the picker stayed live for them.
-    const projectLocked = isPreviewMode && !ownsItsProject(taskContent);
-    // Same lock, two reasons — and the useful half of the message is
-    // WHICH thing to move instead, so it has to name the right one.
-    const projectLockHint =
-        isSubTask === true
-            ? t.tasks.tooltips.subTaskProjectLocked
-            : t.tasks.tooltips.milestoneTaskProjectLocked;
+    // Only a milestone, a ROOT task or a task directly in a milestone picks
+    // a project. A task under an ORDINARY task follows its parent's project.
+    // See the Project row for why. Create mounts are exempt — the row doesn't
+    // exist to the user yet.
+    const projectLocked = isPreviewMode && !ownsItsProject(taskContent, useTM.allTasks);
+    // A task directly in a milestone may move (MIP-786), so what is left to
+    // lock is a task under an ordinary task: its parent is what to move.
+    const projectLockHint = t.tasks.tooltips.subTaskProjectLocked;
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
