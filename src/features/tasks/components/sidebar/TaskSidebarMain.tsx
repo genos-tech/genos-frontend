@@ -24,6 +24,9 @@ import { TaskSidebarSearchBox } from "./SearchBox";
 import { SprintBoardListItem } from "./SprintBoardListItem";
 import { TaskTableListItem } from "./TaskTableListItem";
 
+const RECENTS_PER_PROJECT = 20;
+const RECENTS_STATUSES = "open,wip,blocked,pending";
+
 type TaskSidebarProps = {
     myself: UserProps;
     // Forwarded down to MilestonesListItem so its assignee avatars
@@ -105,17 +108,22 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
     const updateRecentTasks = () => {
-        const TOP_N = 20;
+        // 20 per PROJECT, not 20 in total. The server returns them sorted by
+        // project, so there must be no client-side slice here: it would keep
+        // only the first project or two. Blocked is still live work.
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 -1,
-                "open,wip,pending",
-                TOP_N,
+                RECENTS_STATUSES,
+                RECENTS_PER_PROJECT,
                 accessToken,
-                true
+                true,
+                RECENTS_PER_PROJECT
             );
-            setRecentTasks([...loadedTeamTasks.slice(0, TOP_N)]);
+            // A failed request resolves to undefined; keep the last list.
+            if (!Array.isArray(loadedTeamTasks)) return;
+            setRecentTasks([...loadedTeamTasks]);
         })();
     };
 
