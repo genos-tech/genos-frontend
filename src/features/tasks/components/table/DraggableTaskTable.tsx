@@ -14,7 +14,10 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
+import {
+    tableSortOverrideFor,
+    useTaskSortPreferences,
+} from "../../../../hooks/common/useTaskSortPreferences";
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -34,7 +37,7 @@ import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascad
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
-import { sortTableTasks, SortTier } from "../../utils/sortTask";
+import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
@@ -441,12 +444,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // across reloads via localStorage. Default = `[{priority, desc}]`,
     // matching the long-standing "Critical first" first-paint behaviour.
     //
-    // Column-header click is treated as an in-place override of the
-    // **primary** tier (tier index 0) — the secondary tier set in
-    // Settings is left untouched. Clicking the same header twice
-    // toggles direction.
-    const { tableSortTiers: sortTiers, setTableSortTiers: setSortTiers } =
-        useTaskSortPreferences();
+    // Column-header click sets a TEMPORARY, in-memory override (kept in the
+    // provider, scoped to the project, never persisted) — the saved sort only
+    // changes from the Task sort modal. Effective tiers = override ?? saved.
+    const {
+        tableSortTiers: savedSortTiers,
+        tableSortOverride,
+        setTableSortOverride,
+    } = useTaskSortPreferences();
+    const sortOverrideProjectId = usePM.currentProject?.projectId ?? null;
+    const activeSortOverride = tableSortOverrideFor(tableSortOverride, sortOverrideProjectId);
+    const sortTiers = activeSortOverride ?? savedSortTiers;
 
     const toggleExpand = useCallback((id: string) => {
         setExpandedRows((prev) => {
@@ -1010,28 +1018,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         setCurrentDisplayingTasks(items);
     };
 
-    // Handle header click for sorting. Clicking a header overrides the
-    // **primary** tier (tier index 0) only — any secondary tier the
-    // user configured in Settings is preserved. Clicking the same
-    // header twice toggles direction.
+    // Handle header click for sorting: a temporary override of the primary
+    // tier (see `nextHeaderTiers` for the asc -> desc -> back-to-saved cycle).
     const handleHeaderClick = (field: string) => {
         // Custom-field columns are display-only for sorting — the sort
         // pipeline (sortTask.ts fieldValue) has no resolver for them,
         // so a click would set a tier that compares nothing.
         if (parseCustomFieldColKey(field) != null) return;
-        const currentPrimary = sortTiers[0];
-        const direction: "asc" | "desc" =
-            currentPrimary?.field === field && currentPrimary.direction === "asc" ? "desc" : "asc";
-        const nextPrimary: SortTier = { field, direction };
-        const next: SortTier[] = [nextPrimary];
-        // Preserve a configured secondary tier as long as it doesn't
-        // duplicate the new primary field (the hook would drop the dup
-        // anyway; we filter here for clarity).
-        const existingSecondary = sortTiers[1];
-        if (existingSecondary && existingSecondary.field !== field) {
-            next.push(existingSecondary);
-        }
-        setSortTiers(next);
+        setTableSortOverride(
+            nextHeaderTiers(sortTiers, field, activeSortOverride != null),
+            sortOverrideProjectId
+        );
     };
 
     // Apply sorting whenever the user's sort tiers change. The deep

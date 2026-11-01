@@ -35,12 +35,13 @@ import { groupMilestonesByFolder } from "../../../sprint-milestone/utils/groupMi
 import {
     getMilestoneStatusChipColor,
     groupMilestonesByYearAndSprint,
-    selectOutdatedMilestones,
-    selectVisibleMilestones,
+    selectSidebarLiveMilestones,
+    selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
 import { FolderMenu, MilestoneRowMenu } from "./MilestoneFolderMenus";
 import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
+import { milestoneHasGoal } from "../../../utils/taskTemplates";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -76,16 +77,19 @@ export const MilestonesListItem = ({
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
 
     const milestones: Milestone[] = useMemo(
-        () => selectVisibleMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        () =>
+            selectSidebarLiveMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
-    // "Past milestones": Closed milestones whose sprint has ended. They're
-    // hidden from the board/table (and the member filter); this folder is the
-    // only way to reach them. Clicking one scopes the table/board to it (same
+    // "Past milestones": Closed milestones whose sprint has ended, plus Closed
+    // milestones that never got a sprint (shown here as "No Sprint"). The
+    // ended-sprint ones are hidden from the board/table (and the member
+    // filter); this folder is the only way to reach them. Clicking one scopes the table/board to it (same
     // `handleOpen` as a live milestone), which un-hides its full task history.
     const pastMilestones: Milestone[] = useMemo(
-        () => selectOutdatedMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        () =>
+            selectSidebarPastMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
@@ -116,6 +120,10 @@ export const MilestonesListItem = ({
         [milestones, folders]
     );
     const [folderModal, setFolderModal] = useState<MilestoneFolderModalState | null>(null);
+    // A Closed milestone that never had a sprint buckets under a null sprint
+    // (its name would otherwise render as the "—" placeholder).
+    const pastSprintLabel = (g: { sprintId: number | null; sprintName: string }) =>
+        g.sprintId == null ? t.tasks.sidebar.noSprint : g.sprintName;
 
     const handleOpen = async (milestoneId: number) => {
         // If the clicked milestone belongs to a different project than the
@@ -231,7 +239,12 @@ export const MilestonesListItem = ({
                                 {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
                             </Chip>
                         </Stack>
-                        <Stack alignItems="center" direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ mt: 0.25, flexWrap: "wrap", rowGap: 0.25 }}
+                        >
                             <Chip size="sm" variant="outlined">
                                 {sprintName}
                             </Chip>
@@ -251,6 +264,16 @@ export const MilestonesListItem = ({
                                     </Chip>
                                 );
                             })()}
+                            {!milestoneHasGoal(m.description) && (
+                                <Chip
+                                    color="warning"
+                                    size="sm"
+                                    title={t.tasks.sidebar.noGoalHint}
+                                    variant="outlined"
+                                >
+                                    {t.tasks.sidebar.noGoal}
+                                </Chip>
+                            )}
                             <Box sx={{ flex: 1 }} />
                             <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
                                 {m.assignees.slice(0, 4).map((a) => {
@@ -397,7 +420,7 @@ export const MilestonesListItem = ({
                                         key={sprintGroup.sprintId ?? "none"}
                                         count={sprintGroup.milestones.length}
                                         isDark={isDark}
-                                        label={sprintGroup.sprintName}
+                                        label={pastSprintLabel(sprintGroup)}
                                         ml={9}
                                         icon={
                                             <DirectionsRunRoundedIcon

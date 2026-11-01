@@ -15,9 +15,11 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
+import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
 import { useLinkifyPaste } from "./titleLinks";
 import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
 import { TodoItemRow } from "./TodoItemRow";
+import { todoTagColor } from "./todoTagColor";
 
 interface TodoCategorySectionProps {
     title: string;
@@ -119,6 +121,11 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     const completed = items.filter((i) => i.isCompleted).length;
 
+    // A real tag shows as its coloured chip; the untagged "General" section
+    // has no colour to show and stays plain text.
+    const category =
+        categoryId === null ? undefined : categories.find((c) => c.categoryId === categoryId);
+
     const handleAdd = async () => {
         const t = newTitle.trim();
         if (!t) return;
@@ -148,15 +155,24 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                 ) : (
                     <ExpandLessRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />
                 )}
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        fontWeight: 600,
-                        color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.7)",
-                    }}
-                >
-                    {title}
-                </Typography>
+                {category ? (
+                    <ProjectTagChip
+                        fontSize="0.8rem"
+                        isDark={isDark}
+                        label={title}
+                        tagColor={todoTagColor(category)}
+                    />
+                ) : (
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            fontWeight: 600,
+                            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.7)",
+                        }}
+                    >
+                        {title}
+                    </Typography>
+                )}
                 <Typography
                     level="body-xs"
                     sx={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)" }}

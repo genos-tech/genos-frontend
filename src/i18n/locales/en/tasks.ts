@@ -104,6 +104,9 @@ export const tasks = {
         moveToSprintPrefix: "Move to: ",
         sprintFallback: "Sprint",
         noSprint: "No sprint",
+        // A milestone whose description is empty or still the untouched template.
+        noGoal: "No goal",
+        noGoalHint: "Nobody has written what this milestone is for yet.",
     },
 
     // Task header (top bar of tasks home).

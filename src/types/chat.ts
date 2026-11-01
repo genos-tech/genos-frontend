@@ -402,6 +402,9 @@ export type CreateGMResponse = {
 export type TodoCategoryProps = {
     categoryId: number;
     name: string;
+    // Chip colour (MIP-759): a preset hex and the text colour that reads on it.
+    color: string;
+    textColor: string;
     sortOrder: number;
     tsCreatedAt: string;
     tsUpdatedAt: string;

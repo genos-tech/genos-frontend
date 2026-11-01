@@ -21,11 +21,14 @@ import {
     MenuButton,
     MenuItem,
     Typography,
+    useColorScheme,
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../i18n";
 import { TodoCategoryProps } from "../../../../types/chat";
+import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
+import { todoTagColor } from "./todoTagColor";
 
 interface TodoItemMoreMenuProps {
     // Child rows get a Delete-only menu: subitems have no own deep link
@@ -90,6 +93,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         onAddSubitem,
         onMoveToTomorrow,
     } = props;
+    const isDark = useColorScheme().mode === "dark";
     const { t } = useTranslation();
     const [newName, setNewName] = useState("");
     const [creating, setCreating] = useState(false);
@@ -216,7 +220,11 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                                         <CheckIcon sx={{ fontSize: 16 }} />
                                     ) : null}
                                 </Box>
-                                <Typography level="body-sm">{c.name}</Typography>
+                                <ProjectTagChip
+                                    isDark={isDark}
+                                    label={c.name}
+                                    tagColor={todoTagColor(c)}
+                                />
                             </MenuItem>
                         ))}
                         <Box sx={{ display: "flex", gap: 0.5, p: 0.5 }}>

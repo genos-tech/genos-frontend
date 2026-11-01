@@ -42,6 +42,19 @@ export const chat = {
         tag: "Tag",
         general: "General",
         newTagPlaceholder: "New tag",
+        // Manage-tags modal (MIP-759). Tags are personal to each user.
+        tags: {
+            manageTitle: "Manage tags",
+            manageTooltip: "Manage tags",
+            privateHint: "Your tags are private to you. Click a name to rename it.",
+            emptyList: "No tags yet. Add one below.",
+            createButton: "Add",
+            deleteConfirm: "Delete",
+            close: "Close",
+            invalidName: "Enter a tag name (up to 64 characters) that you do not already use.",
+            createFailed: "Could not create that tag.",
+            updateFailed: "Could not save that change. The name may already be in use.",
+        },
         delete: "Delete",
         spotlightTip:
             'Ask the agent: "what’s left today?" or "create a to-do: …" — Spotlight can read, add, and toggle your items directly.',

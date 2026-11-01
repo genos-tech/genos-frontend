@@ -22,6 +22,9 @@
  *     half-written question would throw the text away.
  *  4. The overlay (⌘K) does not get them: it is opened deliberately, by
  *     someone who already knows what Spotlight is.
+ *  5. They are for DEMO users only (MIP-837), from the server's `is_demo`
+ *     flag. A real user has their own work to ask about, and a browser flag
+ *     could outlive a demo session.
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -102,6 +105,9 @@ const contentProps = (over: Record<string, unknown> = {}) => ({
     closeHistory: vi.fn(),
     onOpenSettings: vi.fn(),
     variant: "page" as const,
+    // The page is the demo visitor's by default; the tests that need a real
+    // user pass `isDemoUser: false`.
+    isDemoUser: true,
     ...over,
 });
 
@@ -164,6 +170,19 @@ describe("Genos page starter prompts", () => {
         // Keyed off the input's own text, not the debounced `query` prop —
         // the same reason the results card flips on `localInput`.
         fireEvent.change(screen.getByRole("textbox"), { target: { value: "w" } });
+        expect(starterRow()).toBeNull();
+    });
+
+    it("hides them from a real (non-demo) user", () => {
+        renderContent({ isDemoUser: false });
+        expect(starterRow()).toBeNull();
+        expect(screen.queryByRole("button", { name: STARTERS[0] })).toBeNull();
+        // The page itself is still there.
+        expect(screen.getByRole("textbox")).toBeInTheDocument();
+    });
+
+    it("treats an absent flag as not demo", () => {
+        renderContent({ isDemoUser: undefined });
         expect(starterRow()).toBeNull();
     });
 
