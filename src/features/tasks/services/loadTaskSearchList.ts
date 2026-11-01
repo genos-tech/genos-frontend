@@ -9,13 +9,18 @@ export const loadTeamTaskList = async (
     statuses: string,
     topN: number,
     accessToken: string | null,
-    includeAll?: boolean
+    includeAll?: boolean,
+    // Keep this many most-recent tasks PER PROJECT instead of `topN` in
+    // total (the server then ignores `topN`). Omit for the global cap.
+    topNPerProject?: number
 ) => {
     try {
         const api = authApi(accessToken);
         const _includeAll = includeAll === true ? true : false;
         if (api) {
-            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&statuses=${statuses}&top_n=${topN}&include_all=${_includeAll}`;
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&statuses=${statuses}&top_n=${topN}&include_all=${_includeAll}${
+                topNPerProject ? `&top_n_per_project=${topNPerProject}` : ""
+            }`;
             const res = await api.get(`/search/teamTasks/?${query}`);
             return res.data;
         } else {

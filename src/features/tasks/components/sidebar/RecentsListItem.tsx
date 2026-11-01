@@ -13,6 +13,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { groupRecentTasks } from "../../utils/groupRecentTasks";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdChip } from "../CopyableTaskId";
 import { Toggler } from "./common";
@@ -29,45 +30,8 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
     const isDark = mode === "dark";
     const { t } = useTranslation();
 
-    // Group tasks by projectName and sort by tsUpdated descending
-    const groupedTasks = useMemo(() => {
-        const groups: Record<
-            string,
-            {
-                projectId: number;
-                projectName: string;
-                systemUserId: string;
-                tasks: SearchTeamTasksResponse[];
-            }
-        > = {};
-
-        recentTasks.forEach((task) => {
-            const key = task.projectName;
-            if (!groups[key]) {
-                groups[key] = {
-                    projectId: task.projectId,
-                    projectName: task.projectName,
-                    systemUserId: task.systemUserId,
-                    tasks: [],
-                };
-            }
-            groups[key].tasks.push(task);
-        });
-
-        // Sort tasks within each group by tsUpdated descending
-        Object.values(groups).forEach((group) => {
-            group.tasks.sort(
-                (a, b) => new Date(b.tsUpdated).getTime() - new Date(a.tsUpdated).getTime()
-            );
-        });
-
-        // Sort groups by most recent task's tsUpdated descending
-        return Object.values(groups).sort((a, b) => {
-            const aLatest = a.tasks[0]?.tsUpdated ?? "";
-            const bLatest = b.tasks[0]?.tsUpdated ?? "";
-            return new Date(bLatest).getTime() - new Date(aLatest).getTime();
-        });
-    }, [recentTasks]);
+    // Group by projectId (NOT name: same-named projects must not merge).
+    const groupedTasks = useMemo(() => groupRecentTasks(recentTasks), [recentTasks]);
 
     return (
         <ListItem nested>
