@@ -634,6 +634,19 @@ export const ja: DeepPartial<Messages> = {
             tag: "タグ",
             general: "一般",
             newTagPlaceholder: "新しいタグ",
+            tags: {
+                manageTitle: "タグを管理",
+                manageTooltip: "タグを管理",
+                privateHint: "タグはあなただけに表示されます。名前をクリックすると変更できます。",
+                emptyList: "タグはまだありません。下から追加してください。",
+                createButton: "追加",
+                deleteConfirm: "削除",
+                close: "閉じる",
+                invalidName: "使用していない 64 文字以内のタグ名を入力してください。",
+                createFailed: "タグを作成できませんでした。",
+                updateFailed:
+                    "変更を保存できませんでした。名前がすでに使われている可能性があります。",
+            },
             delete: "消去",
             spotlightTip:
                 "エージェントに「今日は何が残っていますか?」と尋ねます。または「To-Do を作成する: …」 — Spotlight は項目を直接読み取り、追加し、切り替えることができます。",
