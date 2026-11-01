@@ -688,6 +688,7 @@ export const tasks = {
             commentDeleted: "deleted a comment",
             milestoneAssigneeAdded: "added",
             milestoneAssigneeRemoved: "removed",
+            prUnlinked: "removed the link to",
         },
     },
 

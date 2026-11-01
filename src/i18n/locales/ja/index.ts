@@ -4065,6 +4065,7 @@ export const ja: DeepPartial<Messages> = {
                 commentDeleted: "コメントを削除しました",
                 milestoneAssigneeAdded: "追加した",
                 milestoneAssigneeRemoved: "削除されました",
+                prUnlinked: "次のリンクを削除しました:",
             },
         },
         dynamicUrl: {

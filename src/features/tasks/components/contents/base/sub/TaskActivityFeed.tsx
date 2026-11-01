@@ -11,6 +11,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
@@ -157,6 +158,8 @@ const actionIcon = (action: string) => {
             return <GitHubIcon sx={{ fontSize: 18 }} />;
         case "pr_linked":
             return <CallSplitRoundedIcon sx={{ fontSize: 18 }} />;
+        case "pr_unlinked":
+            return <LinkOffRoundedIcon sx={{ fontSize: 18 }} />;
         default:
             return <HistoryRoundedIcon sx={{ fontSize: 18 }} />;
     }
@@ -537,6 +540,50 @@ const PrLinkActivityRow = ({
     );
 };
 
+// What a `pr_unlinked` row points at (MIP-834): a link someone took back from
+// this task. The PR ref (linked to the PR) when the link had one, else the
+// repo and branch of a branch-only link. The delivery row itself is gone, so
+// this reads the snapshot in the row's metadata.
+const PrUnlinkedRef = ({
+    metadata,
+    isDark,
+}: {
+    metadata: Record<string, unknown> | null | undefined;
+    isDark: boolean;
+}) => {
+    const { t } = useTranslation();
+    const prUrl = typeof metadata?.pr_url === "string" ? (metadata.pr_url as string) : undefined;
+    const prRef = formatPrRefFromUrl(prUrl);
+    const repo = typeof metadata?.repo === "string" ? (metadata.repo as string) : null;
+    const branch = typeof metadata?.branch === "string" ? (metadata.branch as string) : null;
+    const style = {
+        fontFamily: "monospace",
+        fontSize: "0.8rem",
+        textDecoration: "none",
+        color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)",
+    } as const;
+    if (prRef) {
+        return (
+            <Typography
+                component="a"
+                href={prUrl}
+                level="body-sm"
+                rel="noopener noreferrer"
+                sx={style}
+                target="_blank"
+            >
+                {prRef}
+            </Typography>
+        );
+    }
+    const label = [repo, branch].filter(Boolean).join(" ");
+    return (
+        <Typography level="body-sm" sx={style}>
+            {label || t.tasks.activity.pullRequest}
+        </Typography>
+    );
+};
+
 // Smaller-than-Intl.RelativeTimeFormat formatter so we don't pull in a
 // new dep. Returns "just now" / "5 minutes ago" / "2 hours ago" /
 // "May 1, 2026".
@@ -748,6 +795,8 @@ const verbFor = (
             return messages.verbs.milestoneAssigneeAdded;
         case "milestone_assignee_removed":
             return messages.verbs.milestoneAssigneeRemoved;
+        case "pr_unlinked":
+            return messages.verbs.prUnlinked;
         default:
             return action.replace(/_/g, " ");
     }
@@ -1022,6 +1071,9 @@ export const TaskActivityFeed = ({
                                 >
                                     {verbFor(row.actionType, t.tasks.activity, row.metadata)}
                                 </Typography>
+                                {row.actionType === "pr_unlinked" && (
+                                    <PrUnlinkedRef isDark={isDark} metadata={row.metadata} />
+                                )}
                                 {showOldChip && (
                                     <ValueChip
                                         fieldName={row.fieldName}
