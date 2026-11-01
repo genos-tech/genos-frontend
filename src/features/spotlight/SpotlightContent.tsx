@@ -469,15 +469,19 @@ export const SpotlightContent = ({
     // splices a plain-text token into `localInput` via
     // `handleInputChange`, which dual-writes the hook `query` — so
     // `onAsk` still reads the full text.
+    // Every project's tasks, like the editors' `#` menu: open-project-only
+    // rows made a task elsewhere unmentionable here (MIP-788).
     const mentionSources = useAgentMentionSources({
         membersOverride: mentionMembers,
         groupsOverride: mentionGroups,
+        includeTeamTasks: true,
     });
     const mention = useAgentMentionDraft({
         value: localInput,
         onChange: handleInputChange,
         members: mentionSources.members,
         entities: mentionSources.entities,
+        lookupTask: mentionSources.lookupTask,
     });
     // Submit path: cancel any pending debounced query write (the ask
     // supplies its own text; a post-ask write would just trigger a stray

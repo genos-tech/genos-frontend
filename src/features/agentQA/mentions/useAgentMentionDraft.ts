@@ -22,10 +22,22 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import {
+    displayIdEquals,
+    displayIdMatches,
+    fullDisplayIdIn,
+    pickedByDisplayId,
+} from "../../tasks/utils/taskDisplayId";
 import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./types";
 
 // Dropdown row cap — long lists are noise; the user narrows by typing.
 const MAX_SUGGESTIONS = 8;
+// How long typing must pause before an exact task id is looked up.
+const LOOKUP_DELAY_MS = 250;
+
+// A task row's display id rides in `subtitle` (see useAgentMentionSources).
+const taskDisplayId = (c: AgentMentionCandidate): string | undefined =>
+    c.ref.kind === "task" ? c.subtitle : undefined;
 
 interface Trigger {
     char: "@" | "#";
@@ -74,6 +86,9 @@ export interface UseAgentMentionDraftArgs {
     onChange: (next: string) => void;
     members: AgentMentionCandidate[];
     entities: AgentMentionCandidate[];
+    /** One task by its exact display id, whatever its status (MIP-739):
+     *  the entity pool holds open work only. */
+    lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
 }
 
 export interface MentionTokenMatch {
@@ -168,6 +183,7 @@ export function useAgentMentionDraft({
     onChange,
     members,
     entities,
+    lookupTask,
 }: UseAgentMentionDraftArgs): UseAgentMentionDraftReturn {
     const [caret, setCaretPos] = useState(0);
     // Trigger start the user dismissed with Escape — the picker stays
@@ -184,6 +200,30 @@ export function useAgentMentionDraft({
 
     const trigger = useMemo(() => detectMentionTrigger(value, caret), [value, caret]);
 
+    // A task found by its exact id that the pool doesn't hold (a closed
+    // one), for the `#` query it was looked up for.
+    const [lookedUp, setLookedUp] = useState<{
+        query: string;
+        candidate: AgentMentionCandidate;
+    } | null>(null);
+    const lookupQuery = trigger?.char === "#" ? trigger.query : "";
+    useEffect(() => {
+        const id = fullDisplayIdIn(lookupQuery);
+        if (!id || !lookupTask || entities.some((c) => displayIdEquals(id, taskDisplayId(c)))) {
+            return;
+        }
+        let live = true;
+        const timer = setTimeout(() => {
+            void lookupTask(id).then((candidate) => {
+                if (live && candidate) setLookedUp({ query: lookupQuery, candidate });
+            });
+        }, LOOKUP_DELAY_MS);
+        return () => {
+            live = false;
+            clearTimeout(timer);
+        };
+    }, [lookupQuery, lookupTask, entities]);
+
     const suggestions = useMemo(() => {
         if (!trigger) return [];
         if (dismissedStart === trigger.start) return [];
@@ -191,23 +231,35 @@ export function useAgentMentionDraft({
         // menu opens once the user starts narrowing.
         const q = trigger.query.toLowerCase();
         if (!q.trim()) return [];
-        const pool = trigger.char === "@" ? members : entities;
+        const extra =
+            trigger.char === "#" &&
+            lookedUp?.query === trigger.query &&
+            !entities.some((c) => c.key === lookedUp.candidate.key)
+                ? [lookedUp.candidate]
+                : [];
+        const pool = trigger.char === "@" ? members : [...extra, ...entities];
         // Substring filter + exact→prefix→substring rank, on the RAW
         // query — deliberately not `filterAndRankByText`, which trims.
         // Keeping trailing spaces significant makes multi-word narrowing
         // work ("#fix log" still matches "Fix login bug") while closing
         // the menu right after a pick (the inserted token ends with a
         // space no title contains).
-        const rank = (label: string): number => {
-            if (label === q) return 0;
+        // A task also matches by its display id ("MIP-739", "mip739");
+        // an exact id ranks with an exact title.
+        const rank = (c: AgentMentionCandidate): number => {
+            const label = c.ref.label.toLowerCase();
+            if (label === q || displayIdEquals(q, taskDisplayId(c))) return 0;
             if (label.startsWith(q)) return 1;
             return 2;
         };
         return pool
-            .filter((c) => c.ref.label.toLowerCase().includes(q))
-            .sort((a, b) => rank(a.ref.label.toLowerCase()) - rank(b.ref.label.toLowerCase()))
+            .filter(
+                (c) =>
+                    c.ref.label.toLowerCase().includes(q) || displayIdMatches(q, taskDisplayId(c))
+            )
+            .sort((a, b) => rank(a) - rank(b))
             .slice(0, MAX_SUGGESTIONS);
-    }, [trigger, dismissedStart, members, entities]);
+    }, [trigger, dismissedStart, members, entities, lookedUp]);
 
     // Keep the highlight inside the list as it refilters, and reset it
     // whenever the trigger query changes so the top match is primed.
@@ -238,10 +290,18 @@ export function useAgentMentionDraft({
     const selectSuggestion = useCallback(
         (c: AgentMentionCandidate): number => {
             if (!trigger) return caret;
-            const inserted = `${trigger.char}${c.ref.label} `;
+            // A task found by its id goes in as `#MIP-739`, not its title
+            // (MIP-739). The label is advisory on the wire — the server
+            // resolves the task by id — and the token is matched by label.
+            const id = taskDisplayId(c);
+            const ref: AgentMentionRef =
+                id && pickedByDisplayId(trigger.query, id, c.ref.label)
+                    ? { ...c.ref, label: id }
+                    : c.ref;
+            const inserted = `${trigger.char}${ref.label} `;
             const next = `${value.slice(0, trigger.start)}${inserted}${value.slice(trigger.end)}`;
             const newCaret = trigger.start + inserted.length;
-            pickedRef.current.set(c.key, c.ref);
+            pickedRef.current.set(c.key, ref);
             setPicksVersion((v) => v + 1);
             onChange(next);
             setCaretPos(newCaret);
@@ -265,8 +325,15 @@ export function useAgentMentionDraft({
     // length sort is stable, so for identical labels the picked instance
     // claims the span (same entity → same result; a rare label collision
     // resolves to what the user explicitly chose).
+    // A task is also typed by its id, so `#MIP-739` resolves by hand too.
     const candidateRefs = useMemo(
-        () => [...members, ...entities].map((c) => c.ref),
+        () => [
+            ...[...members, ...entities].map((c) => c.ref),
+            ...entities.flatMap((c) => {
+                const id = taskDisplayId(c);
+                return id ? [{ ...c.ref, label: id }] : [];
+            }),
+        ],
         [members, entities]
     );
 

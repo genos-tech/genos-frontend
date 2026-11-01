@@ -322,6 +322,31 @@ const AppBody = () => {
     // OPEN project's table data, and widening that would change what every
     // table / dashboard / sort reads.
     const [hashTeamTasks, setHashTeamTasks] = useState<SearchTeamTasksResponse[]>([]);
+    // Team-wide task list — the only source that spans projects.
+    // `project_id=-1` + `top_n=-1` is the same call the task search
+    // bars make, including their active-work scope
+    // (`include_all=false` hides tasks under a closed parent or
+    // milestone), so `#` offers exactly what task search offers.
+    const loadHashTeamTasks = async () => {
+        const teamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+            myself,
+            -1,
+            "open,wip,blocked,pending",
+            -1,
+            accessToken,
+            false
+        );
+        if (Array.isArray(teamTasks)) setHashTeamTasks(teamTasks);
+    };
+    const loadHashTeamTasksRef = useRef(loadHashTeamTasks);
+    loadHashTeamTasksRef.current = loadHashTeamTasks;
+    // Loaded as soon as there is a session, not on the first refresh
+    // trigger: until then `#` offered the open project's tasks only, and
+    // the `#` query that kicked the refresh was answered from the empty
+    // list, so a task in another project never showed up (MIP-788).
+    useEffect(() => {
+        if (accessToken && myself?.teamId) void loadHashTeamTasksRef.current();
+    }, [accessToken, myself?.teamId]);
     const refreshHashMentionImplRef = useRef<() => void>(() => {});
     refreshHashMentionImplRef.current = () => {
         void useNM.getMyNoteMeta();
@@ -343,22 +368,7 @@ const AppBody = () => {
         })();
         const projectId = usePM.currentProject?.projectId;
         if (projectId) void usePM.refreshProjectTasks(projectId);
-        // Team-wide task list — the only source that spans projects.
-        // `project_id=-1` + `top_n=-1` is the same call the task search
-        // bars make, including their active-work scope
-        // (`include_all=false` hides tasks under a closed parent or
-        // milestone), so `#` offers exactly what task search offers.
-        void (async () => {
-            const teamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                myself,
-                -1,
-                "open,wip,blocked,pending",
-                -1,
-                accessToken,
-                false
-            );
-            if (Array.isArray(teamTasks)) setHashTeamTasks(teamTasks);
-        })();
+        void loadHashTeamTasksRef.current();
     };
     const refreshHashMentionData = useMemo(
         () => createThrottledRefresh(() => refreshHashMentionImplRef.current()),
