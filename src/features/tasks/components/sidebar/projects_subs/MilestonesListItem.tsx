@@ -33,8 +33,8 @@ import { Milestone } from "../../../sprint-milestone/types";
 import {
     getMilestoneStatusChipColor,
     groupMilestonesByYearAndSprint,
-    selectOutdatedMilestones,
-    selectVisibleMilestones,
+    selectSidebarLiveMilestones,
+    selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
 
@@ -72,16 +72,19 @@ export const MilestonesListItem = ({
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
 
     const milestones: Milestone[] = useMemo(
-        () => selectVisibleMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        () =>
+            selectSidebarLiveMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
-    // "Past milestones": Closed milestones whose sprint has ended. They're
-    // hidden from the board/table (and the member filter); this folder is the
-    // only way to reach them. Clicking one scopes the table/board to it (same
+    // "Past milestones": Closed milestones whose sprint has ended, plus Closed
+    // milestones that never got a sprint (shown here as "No Sprint"). The
+    // ended-sprint ones are hidden from the board/table (and the member
+    // filter); this folder is the only way to reach them. Clicking one scopes the table/board to it (same
     // `handleOpen` as a live milestone), which un-hides its full task history.
     const pastMilestones: Milestone[] = useMemo(
-        () => selectOutdatedMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        () =>
+            selectSidebarPastMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
@@ -93,6 +96,11 @@ export const MilestonesListItem = ({
         () => groupMilestonesByYearAndSprint(pastMilestones, sprints),
         [pastMilestones, sprints]
     );
+
+    // A Closed milestone that never had a sprint buckets under a null sprint
+    // (its name would otherwise render as the "—" placeholder).
+    const pastSprintLabel = (g: { sprintId: number | null; sprintName: string }) =>
+        g.sprintId == null ? t.tasks.sidebar.noSprint : g.sprintName;
 
     const handleOpen = async (milestoneId: number) => {
         // If the clicked milestone belongs to a different project than the
@@ -307,7 +315,7 @@ export const MilestonesListItem = ({
                                         key={sprintGroup.sprintId ?? "none"}
                                         count={sprintGroup.milestones.length}
                                         isDark={isDark}
-                                        label={sprintGroup.sprintName}
+                                        label={pastSprintLabel(sprintGroup)}
                                         ml={9}
                                         icon={
                                             <DirectionsRunRoundedIcon

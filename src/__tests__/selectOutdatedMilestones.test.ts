@@ -17,6 +17,9 @@ import {
     MILESTONE_SPRINT_UNKNOWN,
     MILESTONE_YEAR_UNKNOWN,
     selectOutdatedMilestones,
+    selectSidebarLiveMilestones,
+    selectSidebarPastMilestones,
+    selectVisibleMilestones,
 } from "../features/tasks/sprint-milestone/utils/sortMilestones";
 
 const sprint = (sprintId: number, status: Sprint["status"], isDeleted = false): Sprint =>
@@ -158,5 +161,60 @@ describe("groupMilestonesByYearAndSprint", () => {
             DATED_SPRINTS
         );
         expect(groups.map((g) => g.year)).toEqual(["2026", MILESTONE_YEAR_UNKNOWN]);
+    });
+});
+
+describe("sidebar milestone lists (Closed + no sprint -> Past milestones)", () => {
+    const ids = (ms: Milestone[]) => ms.map((m) => m.milestoneId);
+
+    it("moves a Closed no-sprint milestone from the live list to Past", () => {
+        const ms = [milestone(10, "Closed", null), milestone(11, "Open", null)];
+        expect(ids(selectSidebarLiveMilestones(ms, SPRINTS))).toEqual([11]);
+        expect(ids(selectSidebarPastMilestones(ms, SPRINTS))).toEqual([10]);
+    });
+
+    it("keeps an Open / WIP no-sprint milestone live", () => {
+        const ms = [milestone(10, "Open", null), milestone(11, "WIP", null)];
+        expect(ids(selectSidebarLiveMilestones(ms, SPRINTS)).sort()).toEqual([10, 11]);
+        expect(selectSidebarPastMilestones(ms, SPRINTS)).toEqual([]);
+    });
+
+    it("keeps a Closed milestone in a live sprint on the live list", () => {
+        const ms = [milestone(10, "Closed", 2)];
+        expect(ids(selectSidebarLiveMilestones(ms, SPRINTS))).toEqual([10]);
+        expect(selectSidebarPastMilestones(ms, SPRINTS)).toEqual([]);
+    });
+
+    it("keeps a Closed milestone in an ended sprint in Past (as before), merged and sorted", () => {
+        const ms = [
+            milestone(10, "Closed", 1, { title: "B" }),
+            milestone(11, "Closed", null, { title: "A" }),
+        ];
+        expect(ids(selectSidebarPastMilestones(ms, SPRINTS))).toEqual([11, 10]);
+        expect(selectSidebarLiveMilestones(ms, SPRINTS)).toEqual([]);
+    });
+
+    it("never lists deleted Closed no-sprint milestones anywhere", () => {
+        const ms = [milestone(10, "Closed", null, { isDeleted: true })];
+        expect(selectSidebarLiveMilestones(ms, SPRINTS)).toEqual([]);
+        expect(selectSidebarPastMilestones(ms, SPRINTS)).toEqual([]);
+    });
+
+    it("does NOT widen the shared selectors (filter/picker/dashboard and task hiding)", () => {
+        const ms = [milestone(10, "Closed", null)];
+        expect(ids(selectVisibleMilestones(ms, SPRINTS))).toEqual([10]);
+        expect(selectOutdatedMilestones(ms, SPRINTS)).toEqual([]);
+        expect(getOutdatedMilestoneIds(ms, SPRINTS).size).toBe(0);
+    });
+
+    it("groups a no-sprint Past milestone under a null-sprint bucket in its due-date year", () => {
+        const ms = [milestone(10, "Closed", null, { dueDate: "2026-03-01" })];
+        const tree = groupMilestonesByYearAndSprint(
+            selectSidebarPastMilestones(ms, SPRINTS),
+            SPRINTS
+        );
+        expect(tree).toHaveLength(1);
+        expect(tree[0].year).toBe("2026");
+        expect(tree[0].sprints[0].sprintId).toBeNull();
     });
 });
