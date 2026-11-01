@@ -943,6 +943,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             chatId: fromThread?.chatId ?? null,
             threadId: fromThread?.threadId ?? null,
             sprintId: (taskContent as any)?.sprintId ?? null,
+            // Folder picked in the form (MIP-847). Dropped unless it is one of the
+            // chosen project's folders: the form can switch project after the pick.
+            folderId: (() => {
+                const picked = (taskContent as any)?.folderId ?? null;
+                return picked != null &&
+                    (useSM.projectFolders[projectId] ?? []).some((f) => f.folderId === picked)
+                    ? picked
+                    : null;
+            })(),
             dueDate: taskContent.dueDate || null,
             priority: taskContent.priority?.priority || null,
             // Mirror the priority pattern: backend stores both the

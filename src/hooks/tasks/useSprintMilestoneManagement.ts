@@ -6,12 +6,15 @@ import { addTask } from "../../features/tasks/services/addTask";
 import {
     addMilestoneAssignee,
     createMilestone,
+    createMilestoneFolder,
     CreateMilestoneInput,
     createSprint,
     CreateSprintInput,
     deleteMilestone,
+    deleteMilestoneFolder,
     deleteSprint,
     loadMilestone,
+    loadMilestoneFolders,
     loadProjectMilestones,
     LoadProjectMilestonesOptions,
     loadProjectSprints,
@@ -21,13 +24,19 @@ import {
     removeMilestoneAssignee,
     SprintConfigInput,
     updateMilestone,
+    updateMilestoneFolder,
     UpdateMilestoneInput,
     updateSprint,
     UpdateSprintInput,
     upsertSprintConfig,
 } from "../../features/tasks/sprint-milestone/services";
 import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
-import { Milestone, Sprint, SprintConfig } from "../../features/tasks/sprint-milestone/types";
+import {
+    Milestone,
+    MilestoneFolder,
+    Sprint,
+    SprintConfig,
+} from "../../features/tasks/sprint-milestone/types";
 import { upsertMilestoneInList } from "../../features/tasks/sprint-milestone/utils/milestoneListState";
 
 // Every milestone mutation goes through `_sync_backing_task` on the
@@ -118,6 +127,24 @@ export interface SprintMilestoneManagementState {
     currentMilestone: Milestone | null;
     setCurrentMilestone: (m: Milestone | null) => void;
 
+    // Milestone folders (MIP-847), keyed by projectId. A milestone points at
+    // one through `folderId`; folders do not nest.
+    projectFolders: Record<number, MilestoneFolder[]>;
+    loadFoldersForProject: (projectId: number) => Promise<MilestoneFolder[]>;
+    createFolder: (projectId: number, name: string) => Promise<MilestoneFolder | null>;
+    renameFolder: (
+        folderId: number,
+        projectId: number,
+        name: string
+    ) => Promise<MilestoneFolder | null>;
+    /** Deleting a folder unfiles its milestones; nothing else is deleted. */
+    removeFolder: (folderId: number, projectId: number) => Promise<boolean>;
+    /** File a milestone into a folder of its project, or out of any (`null`). */
+    moveMilestoneToFolder: (
+        milestoneId: number,
+        folderId: number | null
+    ) => Promise<Milestone | null>;
+
     // Mutation flags so other parts of the app can react.
     tsLastMilestonesLoaded: number | undefined;
     tsLastSprintsLoaded: number | undefined;
@@ -186,6 +213,7 @@ export const useSprintMilestoneManagement = (
         {}
     );
     const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
+    const [projectFolders, setProjectFolders] = useState<Record<number, MilestoneFolder[]>>({});
 
     // Tracks the sprintId we last auto-selected as the default
     // `currentSprint`. Lets a reload re-point that default to the newly
@@ -213,6 +241,7 @@ export const useSprintMilestoneManagement = (
         setCurrentSprint(null);
         setProjectMilestonesState({});
         setCurrentMilestone(null);
+        setProjectFolders({});
         autoSelectedSprintIdRef.current = null;
         setTsLastSprintsLoaded(undefined);
         setTsLastMilestonesLoaded(undefined);
@@ -462,6 +491,89 @@ export const useSprintMilestoneManagement = (
         [accessToken, currentMilestone]
     );
 
+    const loadFoldersForProject = useCallback(
+        async (projectId: number): Promise<MilestoneFolder[]> => {
+            const res = await loadMilestoneFolders(projectId, accessToken);
+            // A failed read resolves to `undefined`; keep what we had rather
+            // than blanking the sidebar's folders on a transient error.
+            if (!res) return [];
+            const folders = res.folders ?? [];
+            setProjectFolders((prev) => ({ ...prev, [projectId]: folders }));
+            return folders;
+        },
+        [accessToken]
+    );
+
+    const createFolder = useCallback(
+        async (projectId: number, name: string): Promise<MilestoneFolder | null> => {
+            const folder = await createMilestoneFolder(projectId, name, accessToken);
+            if (folder) {
+                setProjectFolders((prev) => ({
+                    ...prev,
+                    [projectId]: [...(prev[projectId] ?? []), folder],
+                }));
+            }
+            return folder ?? null;
+        },
+        [accessToken]
+    );
+
+    const renameFolder = useCallback(
+        async (
+            folderId: number,
+            projectId: number,
+            name: string
+        ): Promise<MilestoneFolder | null> => {
+            const folder = await updateMilestoneFolder(folderId, { name }, accessToken);
+            if (folder) {
+                setProjectFolders((prev) => ({
+                    ...prev,
+                    [projectId]: (prev[projectId] ?? []).map((f) =>
+                        f.folderId === folderId ? folder : f
+                    ),
+                }));
+            }
+            return folder ?? null;
+        },
+        [accessToken]
+    );
+
+    const removeFolder = useCallback(
+        async (folderId: number, projectId: number): Promise<boolean> => {
+            const ok = await deleteMilestoneFolder(folderId, accessToken);
+            if (ok) {
+                setProjectFolders((prev) => ({
+                    ...prev,
+                    [projectId]: (prev[projectId] ?? []).filter((f) => f.folderId !== folderId),
+                }));
+                // The server unfiled its milestones (SET_NULL); mirror that
+                // locally so they move to the unfiled list without a reload.
+                setProjectMilestonesState((prev) => ({
+                    ...prev,
+                    [projectId]: (prev[projectId] ?? []).map((m) =>
+                        m.folderId === folderId ? { ...m, folderId: null } : m
+                    ),
+                }));
+            }
+            return ok;
+        },
+        [accessToken]
+    );
+
+    const moveMilestoneToFolder = useCallback(
+        async (milestoneId: number, folderId: number | null): Promise<Milestone | null> => {
+            const res = await updateMilestone({ milestoneId, folderId }, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+                setCurrentMilestone((prev) =>
+                    prev && prev.milestoneId === res.milestone.milestoneId ? res.milestone : prev
+                );
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken]
+    );
+
     const removeMilestone = useCallback(
         async (milestoneId: number, projectId: number): Promise<boolean> => {
             // Capture the backing-task id BEFORE the milestone gets
@@ -539,6 +651,12 @@ export const useSprintMilestoneManagement = (
         setProjectMilestones,
         currentMilestone,
         setCurrentMilestone,
+        projectFolders,
+        loadFoldersForProject,
+        createFolder,
+        renameFolder,
+        removeFolder,
+        moveMilestoneToFolder,
         tsLastMilestonesLoaded,
         tsLastSprintsLoaded,
         loadConfigForProject,

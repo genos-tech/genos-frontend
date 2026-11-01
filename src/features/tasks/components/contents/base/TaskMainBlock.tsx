@@ -30,6 +30,7 @@ import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractP
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { useTaskDeliveries } from "../../../hooks/useTaskDeliveries";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
+import { MilestoneFolderPicker } from "../../../sprint-milestone/components/MilestoneFolderPicker";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
 import { deliveryPrUrls } from "../../../utils/deliveryPrUrls";
 import { ownsItsProject } from "../../../utils/taskKind";
@@ -861,6 +862,28 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         ...(taskContent as any),
                                         sprintId: sid,
                                         dueDate: nextDueDate,
+                                    } as TaskProps);
+                                    setTaskUpdated?.(true);
+                                }}
+                            />
+                        </Box>
+                    </ListItem>
+                )}
+
+                {/* Folder row (MIP-847): milestones only. Folders group milestones
+                    within the project; independent of the sprint above. */}
+                {useSM && isMilestone === true && (
+                    <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.folder}</FieldLabel>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <MilestoneFolderPicker
+                                folderId={(taskContent as any)?.folderId ?? null}
+                                projectId={taskContent?.project?.projectId}
+                                useSM={useSM}
+                                onChangeFolder={(fid) => {
+                                    setTaskContent({
+                                        ...(taskContent as any),
+                                        folderId: fid,
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
                                 }}

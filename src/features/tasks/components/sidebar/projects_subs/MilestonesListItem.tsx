@@ -1,8 +1,9 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import DirectionsRunRoundedIcon from "@mui/icons-material/DirectionsRunRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import {
@@ -29,7 +30,8 @@ import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSp
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
-import { Milestone } from "../../../sprint-milestone/types";
+import { Milestone, MilestoneFolder } from "../../../sprint-milestone/types";
+import { groupMilestonesByFolder } from "../../../sprint-milestone/utils/groupMilestonesByFolder";
 import {
     getMilestoneStatusChipColor,
     groupMilestonesByYearAndSprint,
@@ -37,6 +39,8 @@ import {
     selectVisibleMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
+import { FolderMenu, MilestoneRowMenu } from "./MilestoneFolderMenus";
+import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -93,6 +97,25 @@ export const MilestonesListItem = ({
         () => groupMilestonesByYearAndSprint(pastMilestones, sprints),
         [pastMilestones, sprints]
     );
+
+    // Folders (MIP-847): load the project's folders when the sidebar shows it,
+    // and again whenever its milestones reload, so a folder renamed or filed
+    // into elsewhere shows up. Members change folders from other tabs and
+    // devices; there is no socket push for them, same as sprint moves.
+    const { loadFoldersForProject, tsLastMilestonesLoaded } = useSM;
+    useEffect(() => {
+        void loadFoldersForProject(currentProjectId);
+    }, [loadFoldersForProject, currentProjectId, tsLastMilestonesLoaded]);
+
+    const folders: MilestoneFolder[] = useSM.projectFolders[currentProjectId] ?? [];
+    // Plain grouping of the VISIBLE milestones. A Closed milestone whose sprint
+    // ended is not in `milestones`, so it appears only under Past milestones
+    // (and keeps its folder for if it comes back).
+    const { folders: folderGroups, unfiled } = useMemo(
+        () => groupMilestonesByFolder(milestones, folders),
+        [milestones, folders]
+    );
+    const [folderModal, setFolderModal] = useState<MilestoneFolderModalState | null>(null);
 
     const handleOpen = async (milestoneId: number) => {
         // If the clicked milestone belongs to a different project than the
@@ -151,14 +174,31 @@ export const MilestonesListItem = ({
 
     // `ml` lets callers indent the row deeper when it's nested inside the
     // Past-milestones year/sprint tree (default 5 = the flat, top-level indent).
-    const renderMilestoneRow = (m: Milestone, ml = 5) => {
+    const renderMilestoneRow = (m: Milestone, ml = 5, canFile = true) => {
         const sprintName =
             m.sprintId == null
                 ? t.tasks.sidebar.noSprint
                 : (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
                   t.tasks.sidebar.sprintFallback);
         return (
-            <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
+            <ListItem
+                key={m.milestoneId}
+                sx={{ pl: 0, pr: 1 }}
+                endAction={
+                    // Past milestones keep their folder but are not filed from here:
+                    // they sit in the year/sprint tree, not in a folder.
+                    canFile ? (
+                        <MilestoneRowMenu
+                            currentFolderId={m.folderId ?? null}
+                            folders={folders}
+                            milestoneTitle={m.title}
+                            onMoveToFolder={(folderId) =>
+                                void useSM.moveMilestoneToFolder(m.milestoneId, folderId)
+                            }
+                        />
+                    ) : undefined
+                }
+            >
                 <ListItemButton
                     sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
                     selected={
@@ -261,7 +301,57 @@ export const MilestonesListItem = ({
 
     return (
         <List sx={{ gap: 0.25 }}>
-            {milestones.map((m) => renderMilestoneRow(m))}
+            {folderGroups.map(({ folder, milestones: inFolder }) => (
+                <MilestoneTreeFolder
+                    key={`folder-${folder.folderId}`}
+                    count={inFolder.length}
+                    isDark={isDark}
+                    label={folder.name}
+                    ml={5}
+                    actions={
+                        <FolderMenu
+                            folderName={folder.name}
+                            onDelete={() =>
+                                setFolderModal({
+                                    mode: "delete",
+                                    folderId: folder.folderId,
+                                    name: folder.name,
+                                })
+                            }
+                            onRename={() =>
+                                setFolderModal({
+                                    mode: "rename",
+                                    folderId: folder.folderId,
+                                    name: folder.name,
+                                })
+                            }
+                        />
+                    }
+                    icon={
+                        <FolderRoundedIcon
+                            sx={{
+                                fontSize: 15,
+                                mr: 0.75,
+                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                            }}
+                        />
+                    }
+                    defaultOpen
+                >
+                    {inFolder.map((m) => renderMilestoneRow(m, 7))}
+                </MilestoneTreeFolder>
+            ))}
+            {folderGroups.length > 0 && unfiled.length > 0 && (
+                <ListItem sx={{ pl: 0, pb: 0 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{ ml: 5, pl: 1, opacity: 0.55, textTransform: "uppercase" }}
+                    >
+                        {t.tasks.folders.unfiled}
+                    </Typography>
+                </ListItem>
+            )}
+            {unfiled.map((m) => renderMilestoneRow(m))}
             {pastMilestones.length > 0 && (
                 <MilestoneTreeFolder
                     count={pastMilestones.length}
@@ -322,7 +412,7 @@ export const MilestonesListItem = ({
                                         }
                                     >
                                         {sprintGroup.milestones.map((m) =>
-                                            renderMilestoneRow(m, 11)
+                                            renderMilestoneRow(m, 11, false)
                                         )}
                                     </MilestoneTreeFolder>
                                 ))}
@@ -332,6 +422,18 @@ export const MilestonesListItem = ({
                 </MilestoneTreeFolder>
             )}
             <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
+            <AddFolderRow isDark={isDark} onClick={() => setFolderModal({ mode: "create" })} />
+            <ModalMilestoneFolder
+                state={folderModal}
+                onClose={() => setFolderModal(null)}
+                onDelete={(folderId) => useSM.removeFolder(folderId, currentProjectId)}
+                onCreate={async (name) =>
+                    (await useSM.createFolder(currentProjectId, name)) !== null
+                }
+                onRename={async (folderId, name) =>
+                    (await useSM.renameFolder(folderId, currentProjectId, name)) !== null
+                }
+            />
         </List>
     );
 };
@@ -347,6 +449,8 @@ const MilestoneTreeFolder = ({
     ml,
     isDark,
     children,
+    defaultOpen = false,
+    actions,
 }: {
     icon: ReactNode;
     label: string;
@@ -354,11 +458,16 @@ const MilestoneTreeFolder = ({
     ml: number;
     isDark: boolean;
     children: ReactNode;
+    // Folders of live milestones open by default (the work is the point);
+    // the Past-milestones archive stays collapsed.
+    defaultOpen?: boolean;
+    // Row actions (a "..." menu), laid out at the right edge by ListItem.
+    actions?: ReactNode;
 }) => {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(defaultOpen);
     return (
         <>
-            <ListItem sx={{ pl: 0 }}>
+            <ListItem endAction={actions} sx={{ pl: 0, pr: actions ? 1 : undefined }}>
                 <ListItemButton
                     sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
                     onClick={() => setOpen((prev) => !prev)}
@@ -409,6 +518,29 @@ const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boo
                     }}
                 >
                     {t.tasks.sidebar.addMilestone}
+                </Typography>
+            </ListItemButton>
+        </ListItem>
+    );
+};
+
+const AddFolderRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
+    const { t } = useTranslation();
+    return (
+        <ListItem sx={{ pl: 0 }}>
+            <ListItemButton sx={{ borderRadius: 8, ml: 5, py: 0.5 }} onClick={onClick}>
+                <FolderRoundedIcon
+                    sx={{
+                        fontSize: 16,
+                        mr: 0.5,
+                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                    }}
+                />
+                <Typography
+                    level="body-sm"
+                    sx={{ color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)" }}
+                >
+                    {t.tasks.folders.newFolder}
                 </Typography>
             </ListItemButton>
         </ListItem>

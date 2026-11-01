@@ -1156,6 +1156,9 @@ const milestoneToTaskProps = (
         // picker can read it without TS gymnastics on the official
         // TaskProps shape.
         sprintId: m.sprintId ?? null,
+        // Grouping folder (MIP-847), edited by MilestoneFolderPicker in
+        // TaskMainBlock the same loose-field way as `sprintId`.
+        folderId: m.folderId ?? null,
         milestoneId: m.milestoneId,
         // Custom-field values come off the backing task row via the
         // milestone payload; `?? {}` (not undefined) so the preview's
@@ -1902,6 +1905,16 @@ const MilestonePreviewInner = ({
             nextSprintId !== milestone.sprintId
         ) {
             patch.sprintId = nextSprintId ?? null;
+        }
+        // Folder (MIP-847). A project move leaves it behind server-side, so it is
+        // only diffed when the project stays put.
+        const nextFolderId = (next as unknown as { folderId?: number | null }).folderId;
+        if (
+            movedFromProjectId == null &&
+            nextFolderId !== undefined &&
+            (nextFolderId ?? null) !== (milestone.folderId ?? null)
+        ) {
+            patch.folderId = nextFolderId ?? null;
         }
         // Custom-field values (CustomFieldsBlock edits). Only diff when
         // the working copy actually carries a map — undefined means the

@@ -14,6 +14,10 @@ export type UpdateMilestoneInput = {
      *  is ignored for that reason. */
     projectId?: number;
     sprintId?: number | null;
+    /** Move the milestone into a folder of its project (MIP-847); `null`
+     *  takes it out. Omit the key to leave it untouched. A project move
+     *  clears the folder server-side. */
+    folderId?: number | null;
     description?: unknown;
     status?: string;
     statusCode?: number | null;
@@ -63,6 +67,7 @@ export const updateMilestone = async (
             // pass `sprintId: null` to clear the sprint, omit the key
             // entirely to leave it untouched.
             if ("sprintId" in input) body.sprint_id = input.sprintId;
+            if ("folderId" in input) body.folder_id = input.folderId;
             if (input.description !== undefined) body.description = input.description;
             if (input.status !== undefined) body.status = input.status;
             if (input.statusCode !== undefined) body.status_code = input.statusCode;

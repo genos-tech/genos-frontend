@@ -66,6 +66,9 @@ export type Milestone = {
     projectId: number;
     teamId: number | string | null;
     sprintId: number | null;
+    // Grouping folder (MIP-847); null / absent = unfiled. Independent of the
+    // sprint: a milestone has both.
+    folderId?: number | null;
     reporterId: number | string | null;
     // Resolved reporter user object (same shape as MilestoneAssignee)
     // so the milestone preview can render the reporter without an
@@ -99,6 +102,20 @@ export type Milestone = {
     assignees: MilestoneAssignee[];
     tasksTotal?: number;
     tasksClosed?: number;
+};
+
+// A named group of milestones within a project (MIP-847).
+export type MilestoneFolder = {
+    folderId: number;
+    projectId: number;
+    name: string;
+    sortOrder: number;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+};
+
+export type ProjectMilestoneFoldersResponse = {
+    folders: MilestoneFolder[];
 };
 
 export type ProjectMilestonesResponse = {
