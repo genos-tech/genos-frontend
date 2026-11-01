@@ -20,7 +20,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { resolveUploadLimitBytes } from "../../../../services/uploadLimit";
 import { UserProps } from "../../../../types/admin";
-import { MyNoteFolderProps } from "../../../../types/notes";
+import { MyNoteFolderProps, TaskNoteProps } from "../../../../types/notes";
 import {
     buildChatNoteDestinations,
     buildTaskNoteDestinations,
@@ -60,6 +60,12 @@ interface Props {
      *  destination IS that folder, so the picker is suppressed and
      *  `context` is used verbatim. */
     allowDestinationChange?: boolean;
+    /** Task context only. Create the note without opening a notes-page
+     *  tab, for a host (the modal-hosted task preview) that shows it
+     *  itself through `onTaskNoteCreated`. */
+    skipOpenTab?: boolean;
+    /** Task context only: called with the note once it exists. */
+    onTaskNoteCreated?: (note: TaskNoteProps) => void;
 }
 
 /** One searchable row in the destination picker. */
@@ -120,6 +126,8 @@ export const ModalImportMarkdown = ({
     myself,
     hostZIndex,
     allowDestinationChange = false,
+    skipOpenTab = false,
+    onTaskNoteCreated,
 }: Props) => {
     const { t } = useTranslation();
     // Optional rather than `useAuth`: this dialog is rendered from the
@@ -286,13 +294,14 @@ export const ModalImportMarkdown = ({
                 // The picked destination when the user changed it, else
                 // the surface this dialog was opened from.
                 const picked = taskDestinations.find((d) => d.key === destinationKey);
-                await useNM.handleCreateNewTaskNote(
+                const created = await useNM.handleCreateNewTaskNote(
                     null,
                     picked?.projectId ?? context.projectId,
                     picked?.taskId ?? context.taskId,
                     undefined,
-                    opts
+                    skipOpenTab ? { ...opts, skipOpenTab: true } : opts
                 );
+                if (created) onTaskNoteCreated?.(created);
             } else {
                 const picked = chatDestinations.find((d) => d.key === destinationKey);
                 await useNM.handleCreateNewChatNote(
