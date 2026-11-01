@@ -7,9 +7,14 @@
  * re-opening a parent leaves children as they are.
  */
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadTodoGroups } from "../../features/chat/components/todo/services/loadTodoGroups";
+import {
+    createTodoCategory,
+    loadTodoCategories,
+    updateTodoCategory,
+} from "../../features/chat/components/todo/services/todoCategories";
 import {
     createTodoItem,
     deleteTodoItem,
@@ -25,7 +30,12 @@ import {
 } from "../../features/chat/components/todo/services/todoSchedules";
 import { useTodoGroups } from "../../hooks/useTodoGroups";
 import { UserProps } from "../../types/admin";
-import { TodoGroupProps, TodoItemProps, TodoScheduleProps } from "../../types/chat";
+import {
+    TodoCategoryProps,
+    TodoGroupProps,
+    TodoItemProps,
+    TodoScheduleProps,
+} from "../../types/chat";
 import { getLocalCurrentDate } from "../../utils/dateUtils";
 
 vi.mock("../../features/chat/components/todo/services/loadTodoGroups", () => ({
@@ -63,6 +73,9 @@ vi.mock("../../db/services/todo.service", () => ({
     },
 }));
 
+const createTodoCategoryMock = createTodoCategory as unknown as ReturnType<typeof vi.fn>;
+const loadTodoCategoriesMock = loadTodoCategories as unknown as ReturnType<typeof vi.fn>;
+const updateTodoCategoryMock = updateTodoCategory as unknown as ReturnType<typeof vi.fn>;
 const loadTodoGroupsMock = loadTodoGroups as unknown as ReturnType<typeof vi.fn>;
 const updateTodoItemMock = updateTodoItem as unknown as ReturnType<typeof vi.fn>;
 const createTodoItemMock = createTodoItem as unknown as ReturnType<typeof vi.fn>;
@@ -564,5 +577,76 @@ describe("useTodoGroups — moving a to-do to another day", () => {
         const source = result.current.groups.find((g) => g.groupId === 100);
         expect(completionById(source?.items ?? [])).toEqual({ 4: false });
         resolveReload?.([seedGroup()]);
+    });
+});
+
+describe("useTodoGroups — tag colours (MIP-759)", () => {
+    // Earlier suites leave their own group / schedule fixtures on these mocks;
+    // start from a clean load so only the categories are in play.
+    beforeEach(() => {
+        loadTodoGroupsMock.mockResolvedValue([]);
+        loadTodoSchedulesMock.mockResolvedValue([]);
+    });
+    afterEach(() => loadTodoCategoriesMock.mockResolvedValue([]));
+
+    const tag = (over: Partial<TodoCategoryProps> = {}): TodoCategoryProps => ({
+        categoryId: 7,
+        name: "Work",
+        color: "#808080",
+        textColor: "white",
+        sortOrder: 0,
+        tsCreatedAt: "2026-01-01T00:00:00Z",
+        tsUpdatedAt: "2026-01-01T00:00:00Z",
+        ...over,
+    });
+
+    it("addCategory sends the chosen colour and keeps the saved tag", async () => {
+        const created = tag({ color: "#ff2323", textColor: "white" });
+        createTodoCategoryMock.mockResolvedValueOnce(created);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+
+        await act(async () => {
+            await result.current.addCategory("Work", { color: "#ff2323", textColor: "white" });
+        });
+
+        expect(createTodoCategoryMock).toHaveBeenCalledWith("token", myself, "Work", 0, {
+            color: "#ff2323",
+            textColor: "white",
+        });
+        expect(result.current.categories).toEqual([created]);
+    });
+
+    it("updateCategory swaps in the saved tag so every chip recolours", async () => {
+        loadTodoCategoriesMock.mockResolvedValue([tag()]);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        expect(result.current.categories[0].color).toBe("#808080");
+
+        updateTodoCategoryMock.mockResolvedValueOnce(tag({ color: "#0044c2" }));
+        await act(async () => {
+            await result.current.updateCategory(7, { color: "#0044c2", textColor: "white" });
+        });
+
+        expect(updateTodoCategoryMock).toHaveBeenCalledWith("token", 7, {
+            color: "#0044c2",
+            textColor: "white",
+        });
+        expect(result.current.categories[0].color).toBe("#0044c2");
+    });
+
+    it("a refused update (rename clash) leaves the tag as it was and resolves undefined", async () => {
+        loadTodoCategoriesMock.mockResolvedValue([tag()]);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+
+        updateTodoCategoryMock.mockResolvedValueOnce(undefined);
+        let saved: unknown = "unset";
+        await act(async () => {
+            saved = await result.current.updateCategory(7, { name: "Home" });
+        });
+
+        expect(saved).toBeUndefined();
+        expect(result.current.categories[0].name).toBe("Work");
     });
 });

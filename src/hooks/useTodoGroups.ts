@@ -494,8 +494,11 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     }, [reminderByItemId, refreshReminders]);
 
     const addCategory = useCallback(
-        async (name: string): Promise<TodoCategoryProps | undefined> => {
-            const created = await createTodoCategory(accessToken, myself, name);
+        async (
+            name: string,
+            color?: { color: string; textColor: string }
+        ): Promise<TodoCategoryProps | undefined> => {
+            const created = await createTodoCategory(accessToken, myself, name, 0, color);
             if (created) {
                 setCategories((prev) => {
                     if (prev.some((c) => c.categoryId === created.categoryId)) return prev;
@@ -507,14 +510,20 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         [accessToken, myself]
     );
 
-    const renameCategory = useCallback(
-        async (categoryId: number, name: string) => {
-            const updated = await updateTodoCategory(accessToken, categoryId, { name });
+    // Rename and/or recolour a tag. Resolves to the saved tag, or undefined
+    // when the server refused (e.g. a rename onto another tag's name).
+    const updateCategory = useCallback(
+        async (
+            categoryId: number,
+            patch: { name?: string; color?: string; textColor?: string }
+        ): Promise<TodoCategoryProps | undefined> => {
+            const updated = await updateTodoCategory(accessToken, categoryId, patch);
             if (updated) {
                 setCategories((prev) =>
                     prev.map((c) => (c.categoryId === categoryId ? updated : c))
                 );
             }
+            return updated;
         },
         [accessToken]
     );
@@ -701,7 +710,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         moveItem,
         removeItem,
         addCategory,
-        renameCategory,
+        updateCategory,
         removeCategory,
         addSchedule,
         updateSchedule,

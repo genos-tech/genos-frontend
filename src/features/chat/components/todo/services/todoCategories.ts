@@ -30,7 +30,8 @@ export const createTodoCategory = async (
     accessToken: string | null,
     myself: UserProps,
     name: string,
-    sortOrder = 0
+    sortOrder = 0,
+    color?: { color: string; textColor: string }
 ): Promise<TodoCategoryProps | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -39,6 +40,7 @@ export const createTodoCategory = async (
             team_id: myself.teamId,
             name,
             sort_order: sortOrder,
+            ...(color ? { color: color.color, text_color: color.textColor } : {}),
         });
         return res.data as TodoCategoryProps;
     } catch (error) {
@@ -57,7 +59,7 @@ export const createTodoCategory = async (
 export const updateTodoCategory = async (
     accessToken: string | null,
     categoryId: number,
-    patch: { name?: string; sortOrder?: number }
+    patch: { name?: string; sortOrder?: number; color?: string; textColor?: string }
 ): Promise<TodoCategoryProps | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -65,6 +67,8 @@ export const updateTodoCategory = async (
         const body: Record<string, unknown> = {};
         if (patch.name !== undefined) body.name = patch.name;
         if (patch.sortOrder !== undefined) body.sort_order = patch.sortOrder;
+        if (patch.color !== undefined) body.color = patch.color;
+        if (patch.textColor !== undefined) body.text_color = patch.textColor;
         const res = await api.patch(`/todo/categories/${categoryId}/`, body);
         return res.data as TodoCategoryProps;
     } catch (error) {

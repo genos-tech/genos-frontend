@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
@@ -9,6 +10,7 @@ import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/j
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { ModalManageTodoTags } from "./components/todo/ModalManageTodoTags";
 import { ModalScheduledTodos } from "./components/todo/ModalScheduledTodos";
 import { TodoMentionsProvider } from "./components/todo/titleMentions";
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
@@ -115,6 +117,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         moveItem,
         removeItem,
         addCategory,
+        updateCategory,
+        removeCategory,
         addSchedule,
         updateSchedule,
         removeSchedule,
@@ -125,6 +129,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
     // Scheduled-todos modal (recurring rules that auto-populate today).
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+    const [tagsModalOpen, setTagsModalOpen] = useState(false);
 
     // "Completed Today" is a LOCAL third mode rather than a third value on
     // `useCM.showOnlyInCompleteTodos`. That flag is shared state which
@@ -341,6 +346,30 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         {/* Right-hand action cluster: repeat (always visible) +
                         Start today (only when today's group is empty/absent). */}
                         <Stack alignItems="center" direction="row" spacing={1}>
+                            <AppTooltip title={t.chat.todoPane.tags.manageTooltip}>
+                                <IconButton
+                                    aria-label={t.chat.todoPane.tags.manageTooltip}
+                                    size="sm"
+                                    sx={{
+                                        borderRadius: "10px",
+                                        color: isDark
+                                            ? "var(--gp-brandalt-400)"
+                                            : "var(--gp-brand-700)",
+                                        background: isDark
+                                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
+                                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.25)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.18)",
+                                        },
+                                    }}
+                                    onClick={() => setTagsModalOpen(true)}
+                                >
+                                    <LocalOfferOutlinedIcon sx={{ fontSize: "18px" }} />
+                                </IconButton>
+                            </AppTooltip>
+
                             <AppTooltip title={t.chat.todoPane.schedule.tooltip}>
                                 <IconButton
                                     size="sm"
@@ -624,6 +653,15 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         </Stack>
                     </Box>
                 )}
+
+                <ModalManageTodoTags
+                    categories={categories}
+                    open={tagsModalOpen}
+                    onClose={() => setTagsModalOpen(false)}
+                    onCreate={addCategory}
+                    onDelete={removeCategory}
+                    onUpdate={updateCategory}
+                />
 
                 <ModalScheduledTodos
                     categories={categories}
