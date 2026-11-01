@@ -21,12 +21,14 @@
 //               src= module script and no dependency evals.
 //   style-src   'unsafe-inline' is required — MUI Joy/Emotion and
 //               BlockNote inject runtime <style> without nonces.
-//   img-src     any https origin: people embed external images in
-//               notes and chat (BlockNote image blocks, GIPHY), and
-//               GitHub avatars load from their own host. NOT for agent
-//               answers — those never render an <img> at all (MIP-723,
-//               features/agentQA/agentMarkdown.tsx), because an image
-//               is a request that leaks whatever its URL carries.
+//   img-src     an ALLOWLIST, not "any https origin" (MIP-734): an <img>
+//               is a request that leaks whatever its URL carries, so a
+//               note or chat message that embeds someone else's URL can
+//               beacon to any host on load. Allowed: our own API and
+//               media origins, GIPHY, GitHub avatars, and the one other
+//               host real content embeds today (see EXTERNAL_IMAGE_HOSTS).
+//               NOT for agent answers — those never render an <img> at
+//               all (MIP-723, features/agentQA/agentMarkdown.tsx).
 //               data:/blob: for pasted images and object-URL previews.
 //   connect-src the API/Django/media/sockets/collab/PostHog origins,
 //               with ws(s) variants for the socket hosts (socket.io
@@ -85,6 +87,23 @@ const posthogAssetsOrigin = posthogOrigin
 
 const uniq = (values) => [...new Set(values.filter(Boolean))];
 
+// Third-party image hosts, besides our own origins (MIP-734).
+//   *.giphy.com                   the GIF picker (media, media0..4)
+//   avatars.githubusercontent.com GitHub avatars, from their own host
+//   img.magnific.com              the ONE other host any existing note, task
+//                                 body or chat message embeds (1 of 331
+//                                 images, counted in production on
+//                                 2026-11-01). Remove it if that image goes.
+// An image from any other host no longer loads. If people start pasting
+// external image URLs, the answer is an image proxy (fetch server-side
+// through the SSRF-guarded fetcher, serve from our media origin), not a
+// longer list: see MIP-734.
+const EXTERNAL_IMAGE_HOSTS = [
+    "https://*.giphy.com",
+    "https://avatars.githubusercontent.com",
+    "https://img.magnific.com",
+];
+
 const connectSrc = uniq([
     "'self'",
     "blob:",
@@ -101,7 +120,7 @@ const csp = [
     `default-src 'self'`,
     `script-src ${uniq(["'self'", posthogOrigin, posthogAssetsOrigin]).join(" ")}`,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: blob: https:`,
+    `img-src ${uniq(["'self'", "data:", "blob:", djangoOrigin, mediaOrigin, ...EXTERNAL_IMAGE_HOSTS]).join(" ")}`,
     `font-src 'self' data:`,
     `connect-src ${connectSrc.join(" ")}`,
     `media-src ${uniq(["'self'", "blob:", "data:", djangoOrigin, mediaOrigin]).join(" ")}`,
@@ -169,8 +188,9 @@ const config = {
     ],
 };
 
-const outDir = join(root, "dist");
+// Overridable so a test can write somewhere other than a real build's dist/.
+const outDir = process.env.SERVE_CONFIG_OUT_DIR || join(root, "dist");
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, "serve.json"), JSON.stringify(config, null, 4) + "\n");
-console.log(`[serve-config] wrote dist/serve.json`);
+console.log(`[serve-config] wrote ${join(outDir, "serve.json")}`);
 console.log(`[serve-config] CSP: ${csp}`);
