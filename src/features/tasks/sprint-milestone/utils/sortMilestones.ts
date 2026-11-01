@@ -85,10 +85,10 @@ export const compareMilestones = (a: Milestone, b: Milestone): number => {
 export const ENDED_SPRINT_STATUSES = new Set<Sprint["status"]>(["completed", "archived"]);
 
 /**
- * Shared visibility selector for project milestones. Mirrors the
- * sidebar's `MilestonesListItem` rules so every surface that lists
- * "currently relevant" milestones (sidebar, table filter, etc.) works
- * off the exact same set:
+ * Shared visibility selector for project milestones. The base set for every
+ * surface that lists "currently relevant" milestones (sidebar, table filter,
+ * picker, dashboard); the sidebar then moves Closed no-sprint milestones to
+ * "Past milestones" (`selectSidebarLiveMilestones`):
  *   - Always hide soft-deleted milestones and the "Deleted" status.
  *   - Hide a Closed milestone only when its sprint is known AND
  *     already ended (completed/archived). Closed-without-sprint and
@@ -192,6 +192,38 @@ export const selectOutdatedMilestones = (
         )
         .sort(compareMilestones);
 };
+
+/** A live (non-deleted) Closed milestone that was never given a sprint. */
+const isClosedWithoutSprint = (m: Milestone): boolean =>
+    !m.isDeleted && m.status === "Closed" && m.sprintId == null;
+
+/**
+ * SIDEBAR-ONLY milestone lists. The sidebar also files Closed milestones that
+ * have no sprint under "Past milestones": they can never leave the live list
+ * on their own (a milestone only ages out through an ended sprint), so they
+ * would otherwise sit there forever.
+ *
+ * Deliberately NOT folded into `selectVisibleMilestones` /
+ * `selectOutdatedMilestones`: those feed the picker, the filter and the
+ * dashboard, and `getOutdatedMilestoneIds` hides TASKS. A Closed no-sprint
+ * milestone's tasks must stay on the table and board, so only the sidebar
+ * moves the row.
+ */
+export const selectSidebarLiveMilestones = (
+    milestones: Milestone[],
+    sprints: Sprint[]
+): Milestone[] =>
+    selectVisibleMilestones(milestones, sprints).filter((m) => !isClosedWithoutSprint(m));
+
+/** Sidebar "Past milestones": the outdated ones plus Closed milestones with no sprint. */
+export const selectSidebarPastMilestones = (
+    milestones: Milestone[],
+    sprints: Sprint[]
+): Milestone[] =>
+    [
+        ...selectOutdatedMilestones(milestones, sprints),
+        ...milestones.filter(isClosedWithoutSprint),
+    ].sort(compareMilestones);
 
 /** Ids of the outdated milestones (see `selectOutdatedMilestones`) — the
  *  hide-set the task filter uses to drop outdated milestones and their tasks. */

@@ -146,8 +146,8 @@ type FilterSelection = {
 type TaskFilterMenuProps = {
     useTM: TaskManagementState;
     // Optional: when provided, the filter bar exposes a Milestone
-    // multi-select drawn from the same visible/sorted set as the
-    // sidebar's `MilestonesListItem`. Left optional so the legacy
+    // multi-select drawn from the shared visible/sorted set
+    // (`selectVisibleMilestones`). Left optional so the legacy
     // `ProjectTaskTable` call site can keep working without it.
     useSM?: SprintMilestoneManagementState;
     predefinedTagsFilters: FilterProps[];
@@ -756,8 +756,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         );
     };
 
-    // Milestone filter — pulls from the same visible/sorted milestone
-    // set the sidebar shows in `MilestonesListItem` so the user can
+    // Milestone filter — pulls from the shared visible/sorted milestone
+    // set (`selectVisibleMilestones`). The sidebar's `MilestonesListItem`
+    // additionally files Closed no-sprint milestones under "Past milestones";
+    // this filter keeps them listed so the user can
     // narrow the table to one or more milestones (or explicitly the
     // unattached ones via the "No milestone" sentinel).
     const visibleMilestones = useMemo(() => {
