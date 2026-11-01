@@ -1,21 +1,48 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { PROCESSORS } from "./privacyProcessors";
+
 /**
  * `/privacy` — プライバシーポリシー (privacy policy).
  *
  * Same conventions as `/legal` (LegalPage.tsx): a public, auth-free
  * legal document deliberately NOT run through the app i18n — the
  * wording must not drift per-locale. Japanese is the operative text
- * (個人情報保護法 audience); an English summary follows.
+ * (個人情報保護法 audience); an English summary follows. Both are
+ * written from the one `PROCESSORS` table (privacyProcessors.ts), so a processor cannot
+ * be added to one language and forgotten in the other.
  *
- * Every claim is grounded in the actual stack: PostHog product
- * analytics with the in-app opt-out (Settings → Privacy & analytics),
- * Stripe-hosted payments (no card numbers on our servers), AI features
- * via business-tier APIs (Gemini / Claude) that don't train on the
- * data, Tavily for web-search queries, Resend for transactional mail,
- * Google Cloud / Railway hosting. Update this page when a processor is
- * added or removed.
+ * Every claim is grounded in the code (see genos-docs
+ * `operations/THIRD_PARTY_REVIEW.md`, MIP-729, for what each processor
+ * receives). Update this page — and that document — when a processor
+ * is added or removed.
+ *
+ * This text is rendered to users, so nothing here is a placeholder. What
+ * could NOT be stated as fact is left OUT of the page and listed here for
+ * the owner (legal sign-off) instead:
+ *
+ * TODO(owner): legal review of the whole text; the Japanese was drafted
+ *   by an AI assistant, not by a lawyer or native legal writer.
+ * TODO(owner): add an effective / last-updated date when the text is
+ *   approved. None is shown (it is a legal fact the owner sets).
+ * TODO(owner): the previous text said the AI providers are used "via
+ *   business-tier APIs that do not train on your data". Nothing in the
+ *   repos documents the agreement behind that, so it is not claimed.
+ *   Reinstate it once confirmed for the route in use (Gemini via AI
+ *   Studio vs Vertex; Anthropic; OpenAI).
+ * TODO(owner): which optional providers are live in production
+ *   (EMBEDDING_PROVIDER, RAG_RERANKER_PROVIDER, LLM_PROVIDER, ...) is a
+ *   Railway setting that was not checked. OpenAI is listed because it is
+ *   the code default for embeddings; Anthropic and Cohere are described
+ *   as "when configured".
+ * TODO(owner): not stated because unknown: hosting region and any
+ *   cross-border-transfer wording, vendor retention, signed DPAs,
+ *   compliance regimes, retention periods, how long the security audit
+ *   log is kept.
+ * TODO(owner): MIP-767 (does Stripe need the customer email?) and
+ *   MIP-864 (PostHog identifying users with team name) may change the
+ *   Stripe and PostHog entries below.
  */
 
 const CONTACT_EMAIL = "genos.support@genosai.dev";
@@ -43,9 +70,9 @@ const JA_SECTIONS: Section[] = [
         body: (
             <ul className="list-disc space-y-1.5 pl-5">
                 <li>
-                    <b>アカウント情報</b>：メールアドレス、ユーザー名、チーム情報。Google
-                    アカウントでのサインインや連携を行った場合は、Google
-                    から提供される基本プロフィールと、お客様が許可した範囲の情報（例：カレンダー）。
+                    <b>アカウント情報</b>：メールアドレス、ユーザー名、チーム情報。Google または
+                    GitHub
+                    でのサインインや連携を行った場合は、各社から提供される基本プロフィールと、お客様が許可した範囲の情報（例：カレンダー、リポジトリ）。
                 </li>
                 <li>
                     <b>コンテンツ</b>
@@ -57,12 +84,14 @@ const JA_SECTIONS: Section[] = [
                     とプラン情報のみを保持します）。
                 </li>
                 <li>
-                    <b>利用状況</b>：機能改善のためのプロダクト分析（PostHog）。アプリ内の「設定 →
-                    一般 → プライバシーと分析」からいつでも無効にできます。また、AI
+                    <b>利用状況</b>：機能改善のためのプロダクト分析（PostHog。送信内容は第 3
+                    項のとおりです）。アプリ内の「設定 → 一般 →
+                    プライバシーと分析」から無効にできます。また、AI
                     利用回数などプラン上限の計測データを保持します。
                 </li>
                 <li>
-                    <b>Cookie 等</b>：ログイン状態の維持のための Cookie
+                    <b>Cookie 等</b>
+                    ：ログイン状態の維持と、プロダクト分析（PostHog）の識別子の保存のために、Cookie
                     とブラウザストレージを使用します。広告目的の Cookie は使用しません。
                 </li>
             </ul>
@@ -78,20 +107,22 @@ const JA_SECTIONS: Section[] = [
             <>
                 <p>
                     個人情報を販売したり、広告目的で第三者に提供したりすることはありません。
-                    サービスの提供に必要な範囲で、以下の事業者に処理を委託しています：
+                    サービスの提供に必要な範囲で、以下の事業者に処理を委託しています。各事業者に送信される情報は次のとおりです：
                 </p>
                 <ul className="mt-2 list-disc space-y-1.5 pl-5">
-                    <li>Stripe（決済処理）</li>
-                    <li>Google Cloud / Railway（ホスティング・データ保管）</li>
-                    <li>
-                        Google Gemini / Anthropic Claude（AI 機能 — AI
-                        機能の実行に必要なコンテンツのみが送信されます。モデルの学習にデータが利用されない事業者向け
-                        API を利用しています）
-                    </li>
-                    <li>Tavily（AI のウェブ検索機能における検索クエリ）</li>
-                    <li>PostHog（プロダクト分析 — 「設定 → 一般」から無効化できます）</li>
-                    <li>Resend（通知・確認メールの送信）</li>
+                    {PROCESSORS.map((p) => (
+                        <li key={p.name}>
+                            <b>{p.name}</b>：{p.ja}
+                        </li>
+                    ))}
                 </ul>
+                <p className="mt-2">
+                    利用する事業者は、設定や提供状況により変更されることがあります。変更する場合は、本ページを更新します。
+                </p>
+                <p className="mt-2">
+                    また、チームの管理者が Webhook
+                    を設定した場合、管理者が選択したイベント（チャット、タスクなどの内容）が、管理者の指定した送信先に送信されます。この送信先は当サービスの委託先ではなく、管理者の責任で設定されます。
+                </p>
             </>
         ),
     },
@@ -99,7 +130,23 @@ const JA_SECTIONS: Section[] = [
         heading: "4. データの保存と削除",
         body: (
             <>
-                データはアカウントが有効な間保存されます。プランによるメッセージ履歴の表示期間は「非表示」であり、データの削除ではありません（アップグレードすると再び表示されます）。アカウントおよびデータの削除をご希望の場合は、下記メールアドレスまでご連絡ください。合理的な期間内に対応いたします。
+                <p>
+                    データはアカウントが有効な間保存されます。プランによるメッセージ履歴の表示期間は「非表示」であり、データの削除ではありません（アップグレードすると再び表示されます）。
+                </p>
+                <p className="mt-2">
+                    <b>アカウントの削除</b>
+                    ：アプリ内の「設定 → アカウント →
+                    アカウントを削除」から、ご自身で実行できます。実行すると、氏名・メールアドレス・プロフィールが匿名化され、すべての端末で直ちにサインアウトされます。非公開のノート・To-Do・AI
+                    の利用履歴は削除され、API キーは無効化され、Google・GitHub
+                    等の連携は削除されます。チームのメンバーと共同で作成した内容はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖されます。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
+                </p>
+                <p className="mt-2">
+                    この操作の対象は当サービス内のデータです。第 3
+                    項の事業者にすでに送信された情報や、セキュリティ上の監査記録は、この操作では自動的には削除されません。
+                </p>
+                <p className="mt-2">
+                    サインインできない場合など、アプリ内で削除できない場合は、下記メールアドレスまでご連絡ください。合理的な期間内に対応いたします。
+                </p>
             </>
         ),
     },
@@ -111,7 +158,9 @@ const JA_SECTIONS: Section[] = [
         heading: "6. 開示・訂正・利用停止等の請求",
         body: (
             <>
-                保有個人データの開示・訂正・利用停止等のご請求は、
+                ご自身が作成したデータは、アプリ内の「設定 → アカウント →
+                データをエクスポート」から JSON
+                ファイルでダウンロードできます。保有個人データの開示・訂正・利用停止等のご請求は、
                 <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
                     {CONTACT_EMAIL}
                 </a>
@@ -140,7 +189,7 @@ const JA_SECTIONS: Section[] = [
 const EN_SECTIONS: Section[] = [
     {
         heading: "What we collect",
-        body: "Account details (email, username, team), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — can be disabled in Settings → General → Privacy & analytics), and cookies/browser storage for keeping you signed in. No advertising cookies.",
+        body: "Account details (email, username, team; if you sign in with or connect Google or GitHub, the basic profile and whatever access you grant, such as calendar or repositories), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — can be disabled in Settings → General → Privacy & analytics), and cookies/browser storage for keeping you signed in and for the analytics identifier. No advertising cookies.",
     },
     {
         heading: "How we use it",
@@ -148,17 +197,67 @@ const EN_SECTIONS: Section[] = [
     },
     {
         heading: "Processors",
-        body: "We never sell personal data or share it for advertising. Processors used to run the service: Stripe (payments), Google Cloud / Railway (hosting), Google Gemini / Anthropic Claude (AI features — only the content needed for the request is sent, via business APIs that do not train on your data), Tavily (web-search queries), PostHog (analytics, opt-out available), Resend (transactional email).",
+        body: (
+            <>
+                <p>
+                    We never sell personal data or share it for advertising. We use the following
+                    processors to run the service, and send each of them only what is listed:
+                </p>
+                <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                    {PROCESSORS.map((p) => (
+                        <li key={p.name}>
+                            <b>{p.name}</b>: {p.en}
+                        </li>
+                    ))}
+                </ul>
+                <p className="mt-2">
+                    The providers we use can change with configuration and availability; we will
+                    update this page when they do.
+                </p>
+                <p className="mt-2">
+                    If a team administrator configures a webhook, the events they choose (chat,
+                    task and similar content) are sent to the destination they specify. That
+                    destination is not our processor; the administrator is responsible for it.
+                </p>
+            </>
+        ),
     },
     {
         heading: "Retention & deletion",
-        body: "Data is kept while your account is active. Plan-based history windows hide messages, they don't delete them (upgrading restores visibility). To delete your account and data, email us — we will act within a reasonable period.",
+        body: (
+            <>
+                <p>
+                    Data is kept while your account is active. Plan-based history windows hide
+                    messages, they don't delete them (upgrading restores visibility).
+                </p>
+                <p className="mt-2">
+                    <b>Deleting your account:</b> you can do it yourself in the app under Settings
+                    → Account → Delete account. Your name, email and profile are anonymized and you
+                    are signed out on every device immediately. Your private notes, to-dos and AI
+                    history are deleted, your API keys are revoked and your Google / GitHub
+                    connections are removed. Work you did with teammates stays in their workspace,
+                    attributed to "Deleted user". Teams where you were the last member are closed.
+                    If you own a team that still has other members, you must transfer ownership
+                    first.
+                </p>
+                <p className="mt-2">
+                    This applies to data within the service. Information already sent to the
+                    processors above, and security audit records, are not deleted automatically by
+                    it.
+                </p>
+                <p className="mt-2">
+                    If you cannot sign in, or cannot delete in the app, email us at the address
+                    below — we will act within a reasonable period.
+                </p>
+            </>
+        ),
     },
     {
         heading: "Your requests",
         body: (
             <>
-                Disclosure, correction, or deletion requests:{" "}
+                You can download the data you created in the app under Settings → Account → Export
+                your data. Disclosure, correction, or deletion requests:{" "}
                 <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
                     {CONTACT_EMAIL}
                 </a>
