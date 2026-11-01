@@ -5,7 +5,8 @@
 // full inside a scroll box rather than behind a toggle. Renders purely
 // from the (friendly-ized) proposal arguments: project_id arrives as
 // the project name, task_id as the task's display id, folder_id as the
-// folder name, and updates carry a server-resolved `note_title`.
+// folder name, and updates carry a server-resolved `note_title`; a chat
+// note's create carries a server-resolved `chat_name`.
 
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Chip, Typography } from "@mui/joy";
@@ -38,14 +39,19 @@ export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const projectLabel = asString(args.project_id);
     const taskLabel = asString(args.task_id);
     const folderLabel = asString(args.folder_id);
+    const chatLabel = asString(args.chat_name) || asString(args.chat_id);
+    const isThread = Boolean(asString(args.thread_id)) || /\/thread\//.test(chatLabel ?? "");
 
+    const newNoteHeader: Record<string, string> = {
+        task: t.agentApproval.newTaskNote,
+        team: t.agentApproval.newTeamNote,
+        chat: t.agentApproval.newChatNote,
+    };
     const header = isUpdate
         ? fmt(t.agentApproval.updateNote, {
               note: asString(args.note_title) || `#${asString(args.note_id)}`,
           })
-        : noteType === "task"
-          ? t.agentApproval.newTaskNote
-          : t.agentApproval.newPersonalNote;
+        : newNoteHeader[noteType ?? ""] || t.agentApproval.newPersonalNote;
 
     // Creates show WHERE the note lands; updates show WHAT changes.
     const chips: string[] = [];
@@ -59,6 +65,10 @@ export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
         if (projectLabel) chips.push(`${t.agentApproval.project}: ${projectLabel}`);
         if (taskLabel) chips.push(`${t.agentApproval.task}: ${taskLabel}`);
         if (folderLabel) chips.push(`${t.agentApproval.folder}: ${folderLabel}`);
+        if (noteType === "chat" && chatLabel) {
+            chips.push(`${t.agentApproval.chat}: ${chatLabel}`);
+            if (isThread) chips.push(t.agentApproval.thread);
+        }
     }
 
     return (

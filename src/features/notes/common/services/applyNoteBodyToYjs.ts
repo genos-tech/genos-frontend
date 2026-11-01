@@ -74,9 +74,14 @@ export const applyBlocksToFragment = (blocks: unknown[], fragment: Y.XmlFragment
 };
 
 export const noteDocumentName = (
-    noteType: "personal" | "task",
+    noteType: "personal" | "task" | "chat",
     noteId: number | string
-): string => (noteType === "task" ? `task-note:${noteId}` : `my-note:${noteId}`);
+): string =>
+    noteType === "task"
+        ? `task-note:${noteId}`
+        : noteType === "chat"
+          ? `chat-note:${noteId}`
+          : `my-note:${noteId}`;
 
 export interface ApplyNoteBodyOptions {
     documentName: string;

@@ -16,7 +16,10 @@ import { yXmlFragmentToBlocks } from "@blocknote/core/yjs";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
 
-import { applyBlocksToFragment } from "../features/notes/common/services/applyNoteBodyToYjs";
+import {
+    applyBlocksToFragment,
+    noteDocumentName,
+} from "../features/notes/common/services/applyNoteBodyToYjs";
 
 const readBlocks = (fragment: Y.XmlFragment) =>
     yXmlFragmentToBlocks(reader, fragment).map((b) => ({
@@ -80,5 +83,16 @@ describe("applyBlocksToFragment", () => {
         expect(blocks).toHaveLength(1);
         expect(blocks[0].type).toBe("paragraph");
         expect(blocks[0].text ?? "").toBe("");
+    });
+});
+
+// The editors' room names; genos-collab and genos-api use the same three.
+describe("noteDocumentName", () => {
+    it.each([
+        ["personal", "my-note:7"],
+        ["task", "task-note:7"],
+        ["chat", "chat-note:7"],
+    ] as const)("%s notes live in %s", (type, name) => {
+        expect(noteDocumentName(type, 7)).toBe(name);
     });
 });
