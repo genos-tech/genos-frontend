@@ -223,6 +223,41 @@ describe("NoteWritePreview (create_note / update_note approvals)", () => {
         expect(webLink?.getAttribute("href")).toBe("https://developer.mozilla.org");
     });
 
+    it("renders a team create in its Team Notes folder", () => {
+        renderCard("create_note", {
+            note_type: "team",
+            title: "Onboarding",
+            folder_id: "Handbook",
+        });
+        expect(screen.getByText("New note in Team Notes")).toBeTruthy();
+        expect(screen.getByText("Folder: Handbook")).toBeTruthy();
+    });
+
+    it("renders a chat create naming the chat, and a thread when there is one", () => {
+        renderCard("create_note", {
+            note_type: "chat",
+            title: "Decisions",
+            chat_id: "0f0e4a51-4a43-4e57-9d07-6d1f3b0a8c11",
+            // Friendly-ized server-side to the chat's title.
+            chat_name: "Design",
+            thread_id: "6a4d3f7e-3b1e-4c0f-9a52-2f1f0f2c9b10",
+        });
+        expect(screen.getByText("New chat note")).toBeTruthy();
+        expect(screen.getByText("Chat: Design")).toBeTruthy();
+        expect(screen.getByText("Thread")).toBeTruthy();
+    });
+
+    it("leaves the thread chip off a note on the whole chat", () => {
+        renderCard("create_note", {
+            note_type: "chat",
+            title: "Decisions",
+            chat_id: "0f0e4a51-4a43-4e57-9d07-6d1f3b0a8c11",
+            chat_name: "Design",
+        });
+        expect(screen.getByText("Chat: Design")).toBeTruthy();
+        expect(screen.queryByText("Thread")).toBeNull();
+    });
+
     it("renders an update with the resolved note title and changed-field chips", () => {
         renderCard("update_note", {
             note_id: 42,

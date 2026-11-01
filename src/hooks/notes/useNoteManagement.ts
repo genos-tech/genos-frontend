@@ -103,6 +103,13 @@ import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
 import { cacheFetchedNote, fillNoteCache, getCachedNote, upsertNoteCache } from "./useNoteData";
 import { NoteBucket, NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
+// The note families the agent's write tools report (`note_type` on a
+// create_note / update_note result). Team and shared notes come back as
+// "personal": they are personal-table rows.
+type AgentWrittenNoteType = "personal" | "task" | "chat";
+const isAgentWrittenNoteType = (t: unknown): t is AgentWrittenNoteType =>
+    t === "personal" || t === "task" || t === "chat";
+
 /** Optional overrides for the create-note handlers. Used by markdown
  *  import: `title` replaces the auto-numbered "New … Note (n)" name and
  *  `body` seeds the note with parsed blocks instead of the empty
@@ -961,10 +968,10 @@ export const useNoteManagement = (
     // open editor writes the fresh body into Yjs itself on reconnect.
     const applyAgentNoteUpdate = async (ref: {
         note_id: number;
-        note_type: "personal" | "task";
+        note_type: AgentWrittenNoteType;
     }) => {
         if (!accessToken) return;
-        const typeCode = ref.note_type === "task" ? 2 : 1;
+        const typeCode = ref.note_type === "task" ? 2 : ref.note_type === "chat" ? 3 : 1;
         const fetched = await loadSpecificNote(myself, typeCode, ref.note_id, accessToken);
         if (!fetched || fetched.error) return;
         addNote(typeCode, fetched);
@@ -972,10 +979,17 @@ export const useNoteManagement = (
         const isCurrent =
             typeCode === 1
                 ? currentMyNote?.noteId === ref.note_id
-                : currentTaskNote?.noteId === ref.note_id;
+                : typeCode === 2
+                  ? currentTaskNote?.noteId === ref.note_id
+                  : currentChatNote?.noteId === ref.note_id;
         if (isCurrent) {
             if (typeCode === 1) setCurrentMyNote(fetched as MyNoteProps);
-            else setCurrentTaskNote(fetched as TaskNoteProps);
+            else if (typeCode === 2) setCurrentTaskNote(fetched as TaskNoteProps);
+            else setCurrentChatNote(fetched as ChatNoteProps);
+        }
+        // The chat page's notes panel keeps its own copy of the open note.
+        if (typeCode === 3 && chatPanelApi.note?.noteId === ref.note_id) {
+            chatPanelApi.setNote(fetched as ChatNoteProps);
         }
         // Loaded on demand — this is a rare, already-async path (an
         // approved agent note write), so paying a chunk fetch here is
@@ -1004,6 +1018,10 @@ export const useNoteManagement = (
     getMyNoteMetaRef.current = getMyNoteMeta;
     const getTaskNoteMetaRef = useRef(getTaskNoteMeta);
     getTaskNoteMetaRef.current = getTaskNoteMeta;
+    const getChatNoteMetaRef = useRef(getChatNoteMeta);
+    getChatNoteMetaRef.current = getChatNoteMeta;
+    // Assigned below, after `getTeamNoteMeta` is declared.
+    const getTeamNoteMetaRef = useRef<() => Promise<void>>(async () => {});
     const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
     applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
 
@@ -1039,12 +1057,14 @@ export const useNoteManagement = (
         const handler = (e: Event) => {
             void getMyNoteMetaRef.current();
             void getTaskNoteMetaRef.current();
+            void getChatNoteMetaRef.current();
+            void getTeamNoteMetaRef.current();
             const ref = (e as CustomEvent).detail as
                 | { note_id?: number; note_type?: string; changed_fields?: string[] }
                 | undefined;
             if (
                 ref?.note_id &&
-                (ref.note_type === "personal" || ref.note_type === "task") &&
+                isAgentWrittenNoteType(ref.note_type) &&
                 Array.isArray(ref.changed_fields) &&
                 ref.changed_fields.includes("body")
             ) {
@@ -1651,6 +1671,7 @@ export const useNoteManagement = (
         const loaded = await loadTeamNotesMeta(myself, accessToken);
         setTeamNoteMeta((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
+    getTeamNoteMetaRef.current = getTeamNoteMeta;
 
     const createTeamNoteFolderAction = async (
         input: CreateTeamFolderInput

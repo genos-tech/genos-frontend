@@ -102,6 +102,7 @@ import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
+import { spotlightNotePath } from "./utils/spotlightNotePath";
 
 import { fmt, getMessages, I18nProvider } from "./i18n";
 import { ColorThemeProvider } from "./theme/ColorThemeProvider";
@@ -1045,73 +1046,7 @@ const AppBody = () => {
             }
 
             if (r.entity_type === "note" && r.note_id) {
-                if (r.note_type === "personal") {
-                    navigate(`/workspace/notes/my/${r.note_id}`);
-                    return;
-                }
-                if (r.note_type === "task") {
-                    // Need project_id + task_id to deep-link. project_id
-                    // has been on the chunk for a while; task_id is new
-                    // (chunker only just started writing it). For pre-fix
-                    // chunks the task_id only exists inside
-                    // `related_entity_ids` as "task:N" — parse it from
-                    // there so old data works without a reindex.
-                    const projectId: string | null = r.project_id;
-                    let taskId: string | null = r.task_id;
-                    if (!taskId) {
-                        for (const rel of r.related_entity_ids || []) {
-                            if (rel.startsWith("task:")) {
-                                taskId = rel.slice("task:".length) || null;
-                                break;
-                            }
-                        }
-                    }
-                    if (projectId && taskId) {
-                        navigate(
-                            `/workspace/notes/task/project/${projectId}` +
-                                `/task/${taskId}/note/${r.note_id}`
-                        );
-                        return;
-                    }
-                    // No project/task coordinates anywhere — fall
-                    // through to notes home.
-                }
-                if (r.note_type === "chat") {
-                    // Chat notes need chat_type + chat_id + thread_id
-                    // to deep-link. New chunks carry them as top-level
-                    // fields; older chunks (pre-routing-fix) only have
-                    // them inside `related_entity_ids` as strings like
-                    // "dm:5" or "pm:1:thread:3". Parse from there as a
-                    // fallback so old data works without a reindex.
-                    let chatType: typeof r.chat_type = r.chat_type;
-                    let chatId: string | null = r.chat_id;
-                    let threadId: string | null = r.thread_id;
-                    if (!chatType || !chatId || !threadId) {
-                        for (const rel of r.related_entity_ids || []) {
-                            const parts = rel.split(":");
-                            const t = parts[0];
-                            if (t === "dm" || t === "gm" || t === "pm" || t === "mdm") {
-                                if (!chatType) chatType = t;
-                                if (!chatId) chatId = parts[1] ?? null;
-                                if (!threadId && parts[2] === "thread") {
-                                    threadId = parts[3] ?? null;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    if (chatType && chatId && threadId) {
-                        navigate(
-                            `/workspace/notes/chat/${chatType}` +
-                                `/${chatId}/thread/${threadId}/note/${r.note_id}`
-                        );
-                        return;
-                    }
-                    // Chat note without a deep-link URL (no thread_id
-                    // available anywhere): fall through to notes home.
-                }
-                // Fallback when note metadata is incomplete.
-                navigate("/workspace/notes");
+                navigate(spotlightNotePath(r, noteScopes));
                 return;
             }
 
@@ -1173,7 +1108,7 @@ const AppBody = () => {
         // so including it would just churn the callback identity on
         // every render with no behavior change.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [spotlight, navigate, useCM, useTM, usePM]
+        [spotlight, navigate, useCM, useTM, usePM, noteScopes]
     );
 
     // Quick-look preview. Opens the existing UrlLinkModal (the same
