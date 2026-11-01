@@ -6,6 +6,7 @@ import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
@@ -88,6 +89,7 @@ import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
 import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
+import { FavoriteFolderItem } from "./FavoriteFolderItem";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
 import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
@@ -1675,8 +1677,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         const hasSharedNotes = favSharedNotes.length > 0;
         const hasTaskNotes = useNM.favoriteNotes.taskNotes.length > 0;
         const hasChatNotes = useNM.favoriteNotes.chatNotes.length > 0;
+        const favFolders = useNM.favoriteNotes.folders ?? [];
+        const hasFolders = favFolders.length > 0;
 
         if (
+            !hasFolders &&
             !hasPersonalNotes &&
             !hasTeamNotes &&
             !hasSharedNotes &&
@@ -1700,6 +1705,28 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
         return (
             <Box>
+                {hasFolders && (
+                    <FavoriteNoteSection
+                        defaultExpanded={true}
+                        groupKey="fav-folders"
+                        groupLabel={t.notes.sidebar.favoriteFolders}
+                        icon={<FolderRoundedIcon sx={{ fontSize: 14 }} />}
+                    >
+                        {favFolders.map((folder) => (
+                            <FavoriteFolderItem
+                                key={`fav-folder-${folder.folderId}`}
+                                folder={folder}
+                                isDark={isDark}
+                                spaceLabel={
+                                    folder.scope === "team"
+                                        ? t.notes.sidebar.teamNotes
+                                        : t.notes.sidebar.myNotes
+                                }
+                                useNM={useNM}
+                            />
+                        ))}
+                    </FavoriteNoteSection>
+                )}
                 {hasPersonalNotes && (
                     <FavoriteNoteSection
                         defaultExpanded={true}

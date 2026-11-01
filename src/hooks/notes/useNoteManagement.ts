@@ -22,6 +22,7 @@ import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSh
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
+import { folderChain } from "../../features/notes/common/utils/folderChain";
 import { isNotePaneVisible } from "../../features/notes/common/utils/notePaneVisibility";
 import {
     bucketFromNoteType,
@@ -33,6 +34,7 @@ import {
     FavoriteNotesMetaResponse,
     loadFavoriteNotesMeta,
     removeNoteFavorite,
+    setFolderFavorite,
 } from "../../features/notes/favorite-notes/services";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
 import { createMyNoteFolder as createMyNoteFolderApi } from "../../features/notes/my-notes/services/createMyNoteFolder";
@@ -210,6 +212,12 @@ export interface NoteManagementState {
     setFavoriteNotes: (notes: FavoriteNotesMetaResponse | null) => void;
     favoriteNoteIds: Set<string>;
     getFavoriteNotesMeta: () => Promise<void>;
+    // Starred note folders (MIP-747).
+    isFolderFavorited: (folderId: number) => boolean;
+    toggleFolderFavorite: (folderId: number) => Promise<void>;
+    // Open a folder's sidebar space, unfold its ancestors and flash it.
+    revealFolder: (folderId: number, space: "my" | "team") => void;
+    highlightedFolderId: number | null;
     toggleFavorite: (noteId: number, noteType: number) => Promise<boolean>;
     isNoteFavorited: (noteId: number, noteType: number) => boolean;
 
@@ -1460,6 +1468,46 @@ export const useNoteManagement = (
         }
     };
 
+    const favoriteFolderIds = useMemo(
+        () => new Set((favoriteNotes?.folders ?? []).map((f) => f.folderId)),
+        [favoriteNotes]
+    );
+    const isFolderFavorited = (folderId: number): boolean => favoriteFolderIds.has(folderId);
+
+    const toggleFolderFavorite = async (folderId: number): Promise<void> => {
+        if (!accessToken) return;
+        const result = await setFolderFavorite(
+            myself,
+            folderId,
+            !favoriteFolderIds.has(folderId),
+            accessToken
+        );
+        // The meta carries the folder's name and space, which the star
+        // alone doesn't know.
+        if (result !== null) await getFavoriteNotesMeta();
+    };
+
+    const [highlightedFolderId, setHighlightedFolderId] = useState<number | null>(null);
+    const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const revealFolder = (folderId: number, space: "my" | "team") => {
+        for (const id of folderChain(
+            folderId,
+            space === "team" ? teamNoteFolders : myNoteFolders
+        )) {
+            expandFolder(id);
+        }
+        setCurrentNoteType(space === "team" ? 8 : 1);
+        setHighlightedFolderId(folderId);
+        if (highlightTimer.current) clearTimeout(highlightTimer.current);
+        highlightTimer.current = setTimeout(() => setHighlightedFolderId(null), 2500);
+        // After the section and the ancestors have rendered open.
+        setTimeout(() => {
+            document
+                .querySelector(`[data-note-folder-id="${folderId}"]`)
+                ?.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 200);
+    };
+
     // Favorites are keyed by the BACKEND note type. The sidebar hands us
     // a bucket code, so 4 (shared) and 8 (team) must be normalized first
     // — otherwise a team note's star writes an unknown `note_type: 8`
@@ -2375,6 +2423,10 @@ export const useNoteManagement = (
         favoriteNotes,
         setFavoriteNotes,
         favoriteNoteIds,
+        isFolderFavorited,
+        toggleFolderFavorite,
+        revealFolder,
+        highlightedFolderId,
         getFavoriteNotesMeta,
         toggleFavorite,
         isNoteFavorited,

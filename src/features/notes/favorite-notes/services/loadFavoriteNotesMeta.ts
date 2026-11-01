@@ -4,10 +4,23 @@ import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 
+// A starred note folder (MIP-747). `scope` says which sidebar space it
+// lives in; a folder shared from another team (`isExternal`) is listed
+// under Team Notes.
+export interface FavoriteFolderMeta {
+    folderId: number;
+    name: string;
+    scope: "personal" | "team";
+    parentFolderId: number | null;
+    isExternal: boolean;
+}
+
 export interface FavoriteNotesMetaResponse {
     personalNotes: MyNoteMetaProps[];
     taskNotes: TaskNoteMetaProps[];
     chatNotes: ChatNoteMetaProps[];
+    // Absent against an older backend.
+    folders?: FavoriteFolderMeta[];
 }
 
 export const loadFavoriteNotesMeta = async (

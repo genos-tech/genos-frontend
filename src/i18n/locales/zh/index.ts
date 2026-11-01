@@ -2153,6 +2153,7 @@ export const zh: DeepPartial<Messages> = {
             chatNotes: "聊天笔记",
             sharedNotes: "共享笔记",
             teamNotes: "团队笔记",
+            favoriteFolders: "文件夹",
             noFavorites: "暂无收藏。点击星标可加入这里。",
             noRecents: "暂无最近笔记。",
             soonBadge: "敬请期待",

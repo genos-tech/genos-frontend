@@ -17,6 +17,10 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { MyNoteFolderTreeNode, MyNoteMetaTreeNode } from "../../../../types/notes";
 import {
+    FolderFavoriteStar,
+    highlightedFolderSx,
+} from "../../common/components/FolderFavoriteStar";
+import {
     DraggableNoteRow,
     DroppableHeader,
     DroppableNoteList,
@@ -63,8 +67,11 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
 
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 
+    const isHighlighted = useNM.highlightedFolderId === folder.folderId;
+
     const headerRow = (isDraggingOver: boolean) => (
         <ListItemButton
+            data-note-folder-id={folder.folderId}
             sx={{
                 borderRadius: "8px",
                 py: 0.5,
@@ -84,6 +91,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                 outlineColor: isDark
                     ? "rgba(var(--gp-brandalt-400-rgb), 0.7)"
                     : "rgba(var(--gp-brand-700-rgb), 0.5)",
+                ...(isHighlighted && !isDraggingOver ? highlightedFolderSx(isDark) : {}),
                 // Hover-only on real pointers — sticky :hover on touch
                 // eats the first tap (folder won't expand until tap #2).
                 "@media (hover: hover) and (pointer: fine)": {
@@ -143,6 +151,8 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                     {folder.name}
                 </Typography>
             </ListItemContent>
+
+            <FolderFavoriteStar folderId={folder.folderId} isDark={isDark} useNM={useNM} />
 
             {/* Hover-revealed folder actions; always visible on touch. */}
             <Box
