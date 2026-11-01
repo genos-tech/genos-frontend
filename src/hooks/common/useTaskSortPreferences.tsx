@@ -21,6 +21,14 @@ import { isSortDirection, isSortField, SortTier } from "../../features/tasks/uti
  * migrated — the schema change is large enough that resetting to
  * sensible defaults is cleaner than guessing at a translation.
  *
+ * The table additionally has a **temporary override** (`tableSortOverride`)
+ * set by clicking a column header. It lives only in memory here (never
+ * persisted, gone on reload), is stamped with the project it was made in so it
+ * ends when the user switches project, and is cleared whenever the Task sort
+ * modal saves (`setTableSortTiers`). The saved `tableSortTiers` is never
+ * touched by a header click. It sits in the provider, not table state,
+ * because the table unmounts while hidden (e.g. creating a task).
+ *
  * Pattern matches `useThemePreference` / `useBubbleStylePreference` —
  * Context + Provider mounted near the App root. Consumed via the
  * `useTaskSortPreferences()` hook; when the provider isn't mounted
@@ -90,8 +98,22 @@ interface TaskSortPreferencesContextValue {
     sprintBoardSortTiers: SortTier[];
     setSprintBoardSortTiers: (tiers: SortTier[]) => void;
     tableSortTiers: SortTier[];
+    /** Saved table sort (what the Task sort modal edits). */
     setTableSortTiers: (tiers: SortTier[]) => void;
+    /** Temporary header-click sort, or null. See `tableSortOverrideFor`. */
+    tableSortOverride: TableSortOverride | null;
+    /** Set (tiers + the project it applies to) or clear (null) the override. */
+    setTableSortOverride: (tiers: SortTier[] | null, projectId: number | null) => void;
 }
+
+/** In-memory header-click sort, valid only for the project it was made in. */
+export type TableSortOverride = { tiers: SortTier[]; projectId: number | null };
+
+/** The override's tiers if it applies to `projectId`, else null. */
+export const tableSortOverrideFor = (
+    override: TableSortOverride | null,
+    projectId: number | null
+): SortTier[] | null => (override && override.projectId === projectId ? override.tiers : null);
 
 const TaskSortPreferencesContext = createContext<TaskSortPreferencesContextValue | null>(null);
 
@@ -101,6 +123,19 @@ export const TaskSortPreferencesProvider = ({ children }: { children: ReactNode 
     );
     const [tableSortTiers, setTableSortTiersState] = useState<SortTier[]>(() =>
         readTiers(TABLE_STORAGE_KEY, DEFAULT_TABLE_TIERS)
+    );
+
+    const [tableSortOverride, setTableSortOverrideState] = useState<TableSortOverride | null>(
+        null
+    );
+
+    const setTableSortOverride = useCallback(
+        (tiers: SortTier[] | null, projectId: number | null) => {
+            setTableSortOverrideState(
+                tiers == null ? null : { tiers: sanitizeTiers(tiers), projectId }
+            );
+        },
+        []
     );
 
     const setSprintBoardSortTiers = useCallback((tiers: SortTier[]) => {
@@ -118,6 +153,9 @@ export const TaskSortPreferencesProvider = ({ children }: { children: ReactNode 
     const setTableSortTiers = useCallback((tiers: SortTier[]) => {
         const sanitized = sanitizeTiers(tiers);
         setTableSortTiersState(sanitized);
+        // Saving from the modal is an explicit choice: it replaces any
+        // temporary header-click sort.
+        setTableSortOverrideState(null);
         if (typeof window !== "undefined") {
             try {
                 window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(sanitized));
@@ -134,6 +172,8 @@ export const TaskSortPreferencesProvider = ({ children }: { children: ReactNode 
                 setSprintBoardSortTiers,
                 tableSortTiers,
                 setTableSortTiers,
+                tableSortOverride,
+                setTableSortOverride,
             }}
         >
             {children}
@@ -152,6 +192,8 @@ export const useTaskSortPreferences = (): TaskSortPreferencesContextValue => {
             setSprintBoardSortTiers: () => {},
             tableSortTiers: DEFAULT_TABLE_TIERS,
             setTableSortTiers: () => {},
+            tableSortOverride: null,
+            setTableSortOverride: () => {},
         };
     }
     return ctx;
