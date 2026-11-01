@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
 
 // Note type constants
 const NOTE_TYPE_MAP: Record<string, number> = {
@@ -43,7 +44,7 @@ type UseNoteRoutingProps = {
     isActiveRoute: boolean;
 };
 
-type NoteRouteInfo = {
+export type NoteRouteInfo = {
     noteType: string | undefined;
     noteId: number | undefined;
     // For task notes
@@ -53,6 +54,103 @@ type NoteRouteInfo = {
     chatType: string | undefined;
     chatId: number | undefined;
     threadId: number | undefined;
+};
+
+// Expected formats:
+// - My notes:     /workspace/notes/my/:noteId
+// - Shared notes: /workspace/notes/shared/:noteId
+// - Team notes:   /workspace/notes/team/:noteId
+// - Task notes:   /workspace/notes/task/project/:projectId/task/:taskId/note/:noteId
+// - Chat notes:   /workspace/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
+export const parseNoteRoute = (pathname: string): NoteRouteInfo => {
+    const pathParts = pathname.split("/").filter(Boolean);
+
+    const result: NoteRouteInfo = {
+        noteType: undefined,
+        noteId: undefined,
+        projectId: undefined,
+        taskId: undefined,
+        chatType: undefined,
+        chatId: undefined,
+        threadId: undefined,
+    };
+
+    const notesIndex = pathParts.indexOf("notes");
+    if (notesIndex === -1) return result;
+
+    const noteTypeStr = pathParts[notesIndex + 1];
+    if (noteTypeStr && NOTE_TYPE_MAP[noteTypeStr] !== undefined) {
+        result.noteType = noteTypeStr;
+    }
+
+    if (noteTypeStr === "my" || noteTypeStr === "shared" || noteTypeStr === "team") {
+        if (pathParts[notesIndex + 2]) {
+            result.noteId = Number(pathParts[notesIndex + 2]);
+        }
+    } else if (noteTypeStr === "task") {
+        const projectIndex = pathParts.indexOf("project");
+        if (projectIndex !== -1 && pathParts[projectIndex + 1]) {
+            result.projectId = Number(pathParts[projectIndex + 1]);
+        }
+        const taskIndex = pathParts.indexOf("task", projectIndex);
+        if (taskIndex !== -1 && pathParts[taskIndex + 1]) {
+            result.taskId = Number(pathParts[taskIndex + 1]);
+        }
+        const noteIndex = pathParts.indexOf("note");
+        if (noteIndex !== -1 && pathParts[noteIndex + 1]) {
+            result.noteId = Number(pathParts[noteIndex + 1]);
+        }
+    } else if (noteTypeStr === "chat") {
+        if (pathParts[notesIndex + 2]) {
+            result.chatType = pathParts[notesIndex + 2];
+        }
+        if (pathParts[notesIndex + 3]) {
+            result.chatId = Number(pathParts[notesIndex + 3]);
+        }
+        const threadIndex = pathParts.indexOf("thread");
+        if (threadIndex !== -1 && pathParts[threadIndex + 1]) {
+            result.threadId = Number(pathParts[threadIndex + 1]);
+        }
+        const noteIndex = pathParts.indexOf("note");
+        if (noteIndex !== -1 && pathParts[noteIndex + 1]) {
+            result.noteId = Number(pathParts[noteIndex + 1]);
+        }
+    }
+
+    return result;
+};
+
+type OpenNoteState = Pick<
+    NoteManagementState,
+    "currentNoteType" | "currentMyNote" | "currentTaskNote" | "currentChatNote"
+>;
+
+// The URL for whatever note is open, or null when none is (or the open
+// note has no URL shape). My (1), Shared (4) and Team (8) are all the
+// same personal-note slot; the sidebar bucket picks the segment.
+export const notePathForOpenNote = (state: OpenNoteState): string | null => {
+    const { currentNoteType, currentMyNote, currentTaskNote, currentChatNote } = state;
+    if (currentNoteType === 1 && currentMyNote) {
+        return `/workspace/notes/my/${currentMyNote.noteId}`;
+    }
+    if (currentNoteType === 4 && currentMyNote) {
+        return `/workspace/notes/shared/${currentMyNote.noteId}`;
+    }
+    if (currentNoteType === 8 && currentMyNote) {
+        return `/workspace/notes/team/${currentMyNote.noteId}`;
+    }
+    if (currentNoteType === 2 && currentTaskNote) {
+        const { projectId, taskId, noteId } = currentTaskNote;
+        return `/workspace/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`;
+    }
+    if (currentNoteType === 3 && currentChatNote) {
+        const { chatType, chatId, threadId, noteId } = currentChatNote;
+        const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
+        if (chatTypePath) {
+            return `/workspace/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`;
+        }
+    }
+    return null;
 };
 
 export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) => {
@@ -81,72 +179,10 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
     const hasHandledInitialUrl = useRef(false);
 
     // Parse the current URL to extract note routing info
-    const parseCurrentRoute = useCallback((): NoteRouteInfo => {
-        const pathParts = location.pathname.split("/").filter(Boolean);
-        // Expected formats:
-        // - My notes: /workspace/notes/my/:noteId
-        // - Task notes: /workspace/notes/task/project/:projectId/task/:taskId/note/:noteId
-        // - Chat notes: /workspace/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
-
-        const result: NoteRouteInfo = {
-            noteType: undefined,
-            noteId: undefined,
-            projectId: undefined,
-            taskId: undefined,
-            chatType: undefined,
-            chatId: undefined,
-            threadId: undefined,
-        };
-
-        const notesIndex = pathParts.indexOf("notes");
-        if (notesIndex === -1) return result;
-
-        // Get note type (my, task, chat)
-        const noteTypeStr = pathParts[notesIndex + 1];
-        if (noteTypeStr && NOTE_TYPE_MAP[noteTypeStr] !== undefined) {
-            result.noteType = noteTypeStr;
-        }
-
-        if (noteTypeStr === "my" || noteTypeStr === "shared") {
-            // My notes:     /workspace/notes/my/:noteId
-            // Shared notes: /workspace/notes/shared/:noteId
-            if (pathParts[notesIndex + 2]) {
-                result.noteId = Number(pathParts[notesIndex + 2]);
-            }
-        } else if (noteTypeStr === "task") {
-            // Task notes: /workspace/notes/task/project/:projectId/task/:taskId/note/:noteId
-            const projectIndex = pathParts.indexOf("project");
-            if (projectIndex !== -1 && pathParts[projectIndex + 1]) {
-                result.projectId = Number(pathParts[projectIndex + 1]);
-            }
-            const taskIndex = pathParts.indexOf("task", projectIndex);
-            if (taskIndex !== -1 && pathParts[taskIndex + 1]) {
-                result.taskId = Number(pathParts[taskIndex + 1]);
-            }
-            const noteIndex = pathParts.indexOf("note");
-            if (noteIndex !== -1 && pathParts[noteIndex + 1]) {
-                result.noteId = Number(pathParts[noteIndex + 1]);
-            }
-        } else if (noteTypeStr === "chat") {
-            // Chat notes: /workspace/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
-            if (pathParts[notesIndex + 2]) {
-                result.chatType = pathParts[notesIndex + 2];
-            }
-            if (pathParts[notesIndex + 3]) {
-                result.chatId = Number(pathParts[notesIndex + 3]);
-            }
-            const threadIndex = pathParts.indexOf("thread");
-            if (threadIndex !== -1 && pathParts[threadIndex + 1]) {
-                result.threadId = Number(pathParts[threadIndex + 1]);
-            }
-            const noteIndex = pathParts.indexOf("note");
-            if (noteIndex !== -1 && pathParts[noteIndex + 1]) {
-                result.noteId = Number(pathParts[noteIndex + 1]);
-            }
-        }
-
-        return result;
-    }, [location.pathname]);
+    const parseCurrentRoute = useCallback(
+        (): NoteRouteInfo => parseNoteRoute(location.pathname),
+        [location.pathname]
+    );
 
     // Navigate to notes home
     const navigateToNotes = useCallback(() => {
@@ -224,31 +260,22 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
 
         // Load specific note if noteId is in URL
         if (routeInfo.noteId) {
-            // Determine internal note type (1 = my, 2 = task, 3 = chat, 4 = shared)
-            let internalNoteType: number;
-            if (routeInfo.noteType === "my") {
-                internalNoteType = 1;
-            } else if (routeInfo.noteType === "task") {
-                internalNoteType = 2;
-            } else if (routeInfo.noteType === "chat") {
-                internalNoteType = 3;
-            } else if (routeInfo.noteType === "shared") {
-                internalNoteType = 4;
-            } else {
+            // Internal note type: 1 = my, 2 = task, 3 = chat, 4 = shared, 8 = team.
+            const internalNoteType = noteTypeNum;
+            if (internalNoteType === undefined) {
                 hasHandledInitialUrl.current = true;
                 return;
             }
 
             // If the active tab already matches the URL, the rehydrate
             // (or a previous open) has us covered — just mark handled
-            // and bail. Shared notes (type 4) reuse the "my" tab kind
-            // since the backend serves them from the same endpoint.
+            // and bail. Shared (4) and team (8) notes reuse the "my" tab
+            // kind since the backend serves them from the same endpoint.
             const active = useNM.tabsApi.activeTab;
             const alreadyOpen =
                 active &&
                 active.noteId === routeInfo.noteId &&
-                ((internalNoteType === 1 && active.kind === "my") ||
-                    (internalNoteType === 4 && active.kind === "my") ||
+                ((isPersonalNoteBucket(internalNoteType) && active.kind === "my") ||
                     (internalNoteType === 2 && active.kind === "task") ||
                     (internalNoteType === 3 && active.kind === "chat"));
 
@@ -279,27 +306,7 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
             return;
         }
 
-        let newPath: string | null = null;
-
-        // Check which note is currently open
-        if (useNM.currentNoteType === 1 && useNM.currentMyNote) {
-            // My note
-            newPath = `/workspace/notes/my/${useNM.currentMyNote.noteId}`;
-        } else if (useNM.currentNoteType === 4 && useNM.currentMyNote) {
-            // Shared note (backed by the same personal note slot)
-            newPath = `/workspace/notes/shared/${useNM.currentMyNote.noteId}`;
-        } else if (useNM.currentNoteType === 2 && useNM.currentTaskNote) {
-            // Task note
-            const { projectId, taskId, noteId } = useNM.currentTaskNote;
-            newPath = `/workspace/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`;
-        } else if (useNM.currentNoteType === 3 && useNM.currentChatNote) {
-            // Chat note
-            const { chatType, chatId, threadId, noteId } = useNM.currentChatNote;
-            const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
-            if (chatTypePath) {
-                newPath = `/workspace/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`;
-            }
-        }
+        const newPath = notePathForOpenNote(useNM);
 
         if (newPath && newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
             lastNavigatedPath.current = newPath;
