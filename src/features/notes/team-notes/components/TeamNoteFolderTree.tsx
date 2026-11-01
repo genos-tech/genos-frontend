@@ -21,6 +21,10 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
+import {
+    FolderFavoriteStar,
+    highlightedFolderSx,
+} from "../../common/components/FolderFavoriteStar";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
 import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
 
@@ -176,6 +180,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         <Box>
             <ListItem nested>
                 <ListItemButton
+                    data-note-folder-id={folder.folderId}
                     sx={{
                         borderRadius: "8px",
                         py: 0.5,
@@ -185,6 +190,9 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         minHeight: 32,
                         transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                         backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+                        ...(useNM.highlightedFolderId === folder.folderId
+                            ? highlightedFolderSx(isDark)
+                            : {}),
                         // Hover-only on real pointers — sticky :hover on
                         // touch eats the first tap (folder won't expand
                         // until tap #2).
@@ -317,6 +325,8 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                             }
                         />
                     ) : null}
+
+                    <FolderFavoriteStar folderId={folder.folderId} isDark={isDark} useNM={useNM} />
 
                     <Box
                         className="folder-menu-btn"

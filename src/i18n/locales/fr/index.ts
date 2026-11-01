@@ -2240,6 +2240,7 @@ export const fr: DeepPartial<Messages> = {
             chatNotes: "Notes de conversation",
             sharedNotes: "Notes partagées",
             teamNotes: "Notes d'équipe",
+            favoriteFolders: "Dossiers",
             noFavorites:
                 "Aucun favori pour le moment. Mettez des notes en favori pour les ajouter ici.",
             noRecents: "Aucune note récente pour le moment.",

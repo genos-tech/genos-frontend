@@ -2526,6 +2526,7 @@ export const ar: DeepPartial<Messages> = {
             taskNotes: "ملاحظات المهام",
             chatNotes: "ملاحظات المحادثات",
             sharedNotes: "الملاحظات المشتركة",
+            favoriteFolders: "المجلدات",
             noFavorites: "لا توجد مفضلة بعد. ضع نجمة على الملاحظات لإضافتها هنا.",
             noRecents: "لا توجد ملاحظات حديثة بعد.",
             soonBadge: "قريبًا",

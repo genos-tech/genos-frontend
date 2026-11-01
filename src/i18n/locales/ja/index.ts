@@ -2214,6 +2214,7 @@ export const ja: DeepPartial<Messages> = {
             chatNotes: "チャットノート",
             sharedNotes: "共有ノート",
             teamNotes: "チームノート",
+            favoriteFolders: "フォルダ",
             noFavorites:
                 "お気に入りはまだありません。ノートにスターを付けてここに追加しましょう。",
             noRecents: "最近開いたノートはまだありません。",
