@@ -154,6 +154,19 @@ export const entitySubtitle = (
     return "";
 };
 
+// The row's subtitle: a task or milestone also shows its id ("Task ·
+// MIP-739"), the handle people search and `#`-mention it by (MIP-739).
+// Row-only — the source chips reuse `entitySubtitle` as a prefix.
+export const rowSubtitle = (
+    r: SpotlightResult,
+    ts: SpotlightMessages,
+    noteScopes?: ReadonlyMap<number, "shared" | "team">
+): string => {
+    const subtitle = entitySubtitle(r, ts, noteScopes);
+    const isTask = r.entity_type === "task" || r.entity_type === "milestone";
+    return isTask && r.task_display_id ? `${subtitle} · ${r.task_display_id}` : subtitle;
+};
+
 // Short uppercase tag rendered next to the subtitle when the matched
 // chunk wasn't a top-level message/title. Returns null when the hit
 // is "plain" (main-channel chat, task title/body, non-thread note).
@@ -398,7 +411,7 @@ const SpotlightResultItemInner = ({
                             flexShrink: 0,
                         }}
                     >
-                        {entitySubtitle(result, t.spotlight, noteScopes)}
+                        {rowSubtitle(result, t.spotlight, noteScopes)}
                     </Typography>
                     {(() => {
                         const badge = badgeFor(result);

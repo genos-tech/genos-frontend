@@ -212,6 +212,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     openSearch={openSearch}
                     setOpenSearch={setOpenSearch}
                     setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                    accessToken={accessToken}
+                    myself={myself}
                     teamTaskSearchOptions={teamTaskSearchOptions}
                     useTM={useTM}
                 />

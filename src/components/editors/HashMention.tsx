@@ -6,6 +6,7 @@ import {
 } from "@blocknote/react";
 import { Box } from "@mui/joy";
 
+import { useOptionalAccessToken } from "../../context/AuthContext";
 import {
     HashMentionData,
     HashNoteEntry,
@@ -13,6 +14,13 @@ import {
 } from "../../context/HashMentionDataContext";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { TaskStatusChip } from "../../features/tasks/components/TaskStatusChip";
+import { lookupTaskByDisplayId } from "../../features/tasks/services/lookupTaskByDisplayId";
+import {
+    displayIdEquals,
+    fullDisplayIdIn,
+    hashTaskLabel,
+    pickedByDisplayId,
+} from "../../features/tasks/utils/taskDisplayId";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { fmt, getMessages } from "../../i18n";
 import { AllChatProps } from "../../types/chat";
@@ -102,7 +110,9 @@ const HashChip = ({
 // strings so the payload round-trips through the backend untouched, the
 // same wire convention as the `mentionGroup` node.
 
-// Task — chip shows "#PRJ-12 · <title>" (preview id AND title).
+// Task — chip shows "#PRJ-12 · <title>" (preview id AND title), or just
+// "#PRJ-12" when it was picked by its id (`labelMode: "id"`, MIP-739); the
+// hover card shows the title either way.
 export const CreateHashTaskSpec = () =>
     createReactInlineContentSpec(
         {
@@ -112,14 +122,15 @@ export const CreateHashTaskSpec = () =>
                 taskId: { default: "" },
                 displayId: { default: "" },
                 title: { default: "" },
+                labelMode: { default: "" },
             },
             content: "none",
         },
         {
             render: (props) => {
-                const { projectId, taskId, displayId, title } = props.inlineContent.props;
-                const idText = displayId || taskId;
-                const label = title ? `${idText} · ${title}` : idText;
+                const { projectId, taskId, displayId, title, labelMode } =
+                    props.inlineContent.props;
+                const label = hashTaskLabel({ taskId, displayId, title, labelMode });
                 const href = entityRefToHref({ entityType: "task", projectId, taskId });
                 return (
                     <AppTooltip
@@ -128,7 +139,7 @@ export const CreateHashTaskSpec = () =>
                         surface="none"
                         title={
                             <TaskMentionHoverCard
-                                displayId={idText}
+                                displayId={displayId || taskId}
                                 projectId={projectId}
                                 taskId={taskId}
                                 title={title}
@@ -308,6 +319,95 @@ type MentionableTask = {
     isMilestone: boolean;
 };
 
+const teamTaskRow = (
+    t: SearchTeamTasksResponse,
+    projectNameById: Map<string, string>
+): MentionableTask => ({
+    projectId: String(t.projectId),
+    taskId: String(t.taskId),
+    displayId: t.displayId || "",
+    title: t.title || "",
+    projectName: projectNameById.get(String(t.projectId)) || t.projectName || "",
+    status: t.status?.status || "",
+    isMilestone: Boolean(t.isMilestone),
+});
+
+// What the user typed after `#` when they picked a row, per editor: a task
+// found by its id is inserted as a compact `#PRJ-12` chip (MIP-739).
+const lastHashQuery = new WeakMap<object, string>();
+export const rememberHashQuery = (editor: object, query: string) =>
+    lastHashQuery.set(editor, query);
+
+const taskSuggestionItem = (
+    editor: any,
+    t: MentionableTask,
+    copy: ReturnType<typeof getMessages>["common"]["editor"]
+): DefaultReactSuggestionItem => {
+    const { projectId, taskId } = t;
+    const displayId = t.displayId || taskId;
+    const title = t.title;
+    // A milestone is a task under the hood (it inserts the same
+    // `hashTask` chip and deep-links the same way), but its
+    // suggestion row wears the milestone icon, colour and
+    // subtitle so it doesn't read as a plain task.
+    const projectTpl = t.isMilestone ? copy.hashMilestoneProject : copy.hashTaskProject;
+    const plainTpl = t.isMilestone ? copy.hashMilestone : copy.hashTask;
+    return {
+        title: displayId,
+        // The id without its hyphen too, so "mip739" finds MIP-739.
+        aliases: [...(title ? [title] : []), displayId.replace(/-/g, "")],
+        onItemClick: () => {
+            const query = lastHashQuery.get(editor) ?? "";
+            editor.insertInlineContent([
+                {
+                    type: "hashTask",
+                    props: {
+                        projectId,
+                        taskId,
+                        displayId: t.displayId,
+                        title,
+                        labelMode: pickedByDisplayId(query, t.displayId, title) ? "id" : "",
+                    },
+                },
+                " ",
+            ]);
+        },
+        icon: menuRow(
+            t.isMilestone ? MENTION_ICONS.milestone : MENTION_ICONS.task,
+            t.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE,
+            title || displayId,
+            t.projectName
+                ? fmt(projectTpl, {
+                      id: displayId,
+                      project: t.projectName,
+                  })
+                : fmt(plainTpl, { id: displayId }),
+            // The canonical dashboard status chip, so a status
+            // reads identically here and in the task surfaces.
+            t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
+        ),
+    };
+};
+
+/** The `#` row for a task looked up by its exact id (MIP-739): the menu's
+ *  lists hold open work only, so this is how a closed task is offered. */
+export const lookedUpTaskItem = (
+    editor: any,
+    row: SearchTeamTasksResponse,
+    projects: ProjectProps[]
+): DefaultReactSuggestionItem => {
+    const projectNameById = new Map<string, string>(
+        projects
+            .filter((p) => p.projectId != null)
+            .map((p) => [String(p.projectId), p.projectName || ""])
+    );
+    return taskSuggestionItem(
+        editor,
+        teamTaskRow(row, projectNameById),
+        getMessages().common.editor
+    );
+};
+
 interface HashMenuCacheEntry {
     tasks: TaskTableProps[];
     teamTasks: SearchTeamTasksResponse[];
@@ -370,15 +470,7 @@ export const HashMentionMenuItems = (
             })),
         ...data.teamTasks
             .filter((t) => t.taskId != null && t.projectId != null)
-            .map((t) => ({
-                projectId: String(t.projectId),
-                taskId: String(t.taskId),
-                displayId: t.displayId || "",
-                title: t.title || "",
-                projectName: projectNameById.get(String(t.projectId)) || t.projectName || "",
-                status: t.status?.status || "",
-                isMilestone: Boolean(t.isMilestone),
-            })),
+            .map((t) => teamTaskRow(t, projectNameById)),
     ];
     const seenTaskKeys = new Set<string>();
     const taskItems: DefaultReactSuggestionItem[] = taskRows
@@ -388,44 +480,7 @@ export const HashMentionMenuItems = (
             seenTaskKeys.add(key);
             return true;
         })
-        .map((t) => {
-            const { projectId, taskId } = t;
-            const displayId = t.displayId || taskId;
-            const title = t.title;
-            // A milestone is a task under the hood (it inserts the same
-            // `hashTask` chip and deep-links the same way), but its
-            // suggestion row wears the milestone icon, colour and
-            // subtitle so it doesn't read as a plain task.
-            const projectTpl = t.isMilestone ? copy.hashMilestoneProject : copy.hashTaskProject;
-            const plainTpl = t.isMilestone ? copy.hashMilestone : copy.hashTask;
-            return {
-                title: displayId,
-                aliases: title ? [title] : [],
-                onItemClick: () => {
-                    editor.insertInlineContent([
-                        {
-                            type: "hashTask",
-                            props: { projectId, taskId, displayId: t.displayId, title },
-                        },
-                        " ",
-                    ]);
-                },
-                icon: menuRow(
-                    t.isMilestone ? MENTION_ICONS.milestone : MENTION_ICONS.task,
-                    t.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE,
-                    title || displayId,
-                    t.projectName
-                        ? fmt(projectTpl, {
-                              id: displayId,
-                              project: t.projectName,
-                          })
-                        : fmt(plainTpl, { id: displayId }),
-                    // The canonical dashboard status chip, so a status
-                    // reads identically here and in the task surfaces.
-                    t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
-                ),
-            };
-        });
+        .map((t) => taskSuggestionItem(editor, t, copy));
 
     const noteItems: DefaultReactSuggestionItem[] = data.notes
         .filter((n) => n.noteId != null)
@@ -542,6 +597,7 @@ export const HashMentionMenuItems = (
 // floats the exact match to the top.
 export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
     const data = useHashMentionData();
+    const accessToken = useOptionalAccessToken();
     return (
         <SuggestionMenuController
             minQueryLength={2}
@@ -560,7 +616,20 @@ export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
                 // it here means the fetch lands while the user is still
                 // typing the name, so the next keystroke shows the item.
                 data.refresh();
-                return filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query);
+                rememberHashQuery(editor, query);
+                const items = filterAndRankSuggestionItems(
+                    HashMentionMenuItems(editor, data),
+                    query
+                );
+                // A whole id that matches no listed task may be a closed
+                // one: ask for it (MIP-739). Awaited, unlike the refresh
+                // above — it's one row, and only for an exact id.
+                const id = fullDisplayIdIn(query);
+                if (id && data.myself && !items.some((item) => displayIdEquals(id, item.title))) {
+                    const row = await lookupTaskByDisplayId(data.myself, id, accessToken);
+                    if (row) return [lookedUpTaskItem(editor, row, data.projects), ...items];
+                }
+                return items;
             }}
         />
     );

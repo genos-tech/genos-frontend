@@ -38,6 +38,7 @@ import { UserProfile } from "../../features/admin/components/modals/ModalUserPro
 import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
+import { hashTaskLabel } from "../../features/tasks/utils/taskDisplayId";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -314,7 +315,12 @@ const InlineContent = ({
             if (type === "hashTask") {
                 const p = item.props ?? {};
                 const idText = p.displayId || p.taskId || "";
-                const label = p.title ? `${idText} · ${p.title}` : idText;
+                const label = hashTaskLabel({
+                    taskId: p.taskId ?? "",
+                    displayId: p.displayId,
+                    title: p.title,
+                    labelMode: p.labelMode,
+                });
                 const href = entityRefToHref({
                     entityType: "task",
                     projectId: p.projectId ?? "",

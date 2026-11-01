@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
@@ -11,7 +12,10 @@ import { alpha } from "@mui/system";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { lookupTaskByDisplayId } from "../../services/lookupTaskByDisplayId";
+import { displayIdEquals, displayIdMatches, fullDisplayIdIn } from "../../utils/taskDisplayId";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 
@@ -22,7 +26,36 @@ type TaskSidebarSearchBoxProps = {
     setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
     useTM: TaskManagementState;
+    // For finding a closed task by its exact id (the options hold open work).
+    myself?: Pick<UserProps, "teamId">;
+    accessToken?: string | null;
 };
+
+// A task matches by title or by display id ("MIP-739", "mip739", "739").
+export const filterTaskSearchOptions = (
+    options: SearchTeamTasksResponse[],
+    input: string
+): SearchTeamTasksResponse[] => {
+    const q = input.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(
+        (o) => (o.title ?? "").toLowerCase().includes(q) || displayIdMatches(q, o.displayId)
+    );
+};
+
+// Put a looked-up task beside its project's other tasks: the list is
+// grouped by project, and a group split in two shows its header twice.
+const withLookedUpTask = (
+    options: SearchTeamTasksResponse[],
+    row: SearchTeamTasksResponse | null
+): SearchTeamTasksResponse[] => {
+    if (!row || options.some((o) => o.taskId === row.taskId)) return options;
+    const at = options.findIndex((o) => o.projectId === row.projectId);
+    return at === -1 ? [...options, row] : [...options.slice(0, at), row, ...options.slice(at)];
+};
+
+// How long typing must pause before an exact id is looked up.
+const LOOKUP_DELAY_MS = 250;
 
 export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     const {
@@ -32,10 +65,42 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
         setTeamTaskSearchOptions,
         loading,
         useTM,
+        myself,
+        accessToken,
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const [inputValue, setInputValue] = useState("");
+    const [lookedUp, setLookedUp] = useState<SearchTeamTasksResponse | null>(null);
+
+    // A whole id that matches no listed task may be a closed one.
+    useEffect(() => {
+        const id = fullDisplayIdIn(inputValue);
+        if (
+            !id ||
+            !myself ||
+            teamTaskSearchOptions.some((o) => displayIdEquals(id, o.displayId))
+        ) {
+            setLookedUp(null);
+            return;
+        }
+        let live = true;
+        const timer = setTimeout(() => {
+            void lookupTaskByDisplayId(myself, id, accessToken ?? null).then((row) => {
+                if (live) setLookedUp(row);
+            });
+        }, LOOKUP_DELAY_MS);
+        return () => {
+            live = false;
+            clearTimeout(timer);
+        };
+    }, [inputValue, teamTaskSearchOptions, myself, accessToken]);
+
+    const options = useMemo(
+        () => withLookedUpTask(teamTaskSearchOptions, lookedUp),
+        [teamTaskSearchOptions, lookedUp]
+    );
 
     function onChangeHandler(value: any) {
         if (value !== null) {
@@ -49,12 +114,13 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
         <Autocomplete
             key={`ac-project-tags-${useTM.currentPreviewTaskId}`}
             aria-label={t.tasks.sidebar.searchAriaLabel}
+            filterOptions={(opts, state) => filterTaskSearchOptions(opts, state.inputValue)}
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
             loading={loading}
             open={openSearch}
-            options={teamTaskSearchOptions}
+            options={options}
             placeholder={t.tasks.sidebar.searchPlaceholder}
             size="sm"
             endDecorator={
@@ -170,6 +236,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                 },
             }}
             onChange={(event, value) => onChangeHandler(value)}
+            onInputChange={(_event, value) => setInputValue(value)}
             onClose={() => {
                 setOpenSearch(false);
             }}

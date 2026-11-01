@@ -88,7 +88,7 @@ describe("HashMentionMenuItems — task sources", () => {
 
         expect(items).toHaveLength(2);
         // The open-project copy wins: it's the fresher of the two.
-        expect(items[0].aliases).toEqual(["Open project task"]);
+        expect(items[0].aliases).toEqual(["Open project task", "GEN1"]);
     });
 
     it("does not confuse tasks with the same id in different projects", () => {

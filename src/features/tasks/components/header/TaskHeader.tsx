@@ -230,6 +230,8 @@ export const TaskHeader = ({
                         openSearch={openSearch}
                         setOpenSearch={setOpenSearch}
                         setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                        accessToken={accessToken}
+                        myself={myself}
                         teamTaskSearchOptions={teamTaskSearchOptions}
                         useTM={useTM}
                     />

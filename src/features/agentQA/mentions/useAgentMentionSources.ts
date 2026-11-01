@@ -16,15 +16,17 @@
 //                  Project one-to-one, so the Project candidate stands in
 //                  for it (a PM row would just duplicate the project).
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
+import { useOptionalAccessToken } from "../../../context/AuthContext";
 import { useHashMentionData, type HashNoteEntry } from "../../../context/HashMentionDataContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import type { MentionGroup } from "../../../services/mentionGroupsApi";
 import type { UserProps } from "../../../types/admin";
 import type { AllChatProps, TodoGroupProps } from "../../../types/chat";
 import { chatTypeCodeToSlug, entityRefToHref } from "../../../utils/entityHref";
+import { lookupTaskByDisplayId } from "../../tasks/services/lookupTaskByDisplayId";
 import { mentionKey, type AgentMentionCandidate, type AgentMentionRef } from "./types";
 
 // HashNoteEntry kind → NoteContext integer code. "shared" is the UI
@@ -120,13 +122,11 @@ export interface UseAgentMentionSourcesArgs {
      * Also offer `teamTasks` — every active task in the team — merged with
      * the open project's rows, the way the BlockNote "#" menu does.
      *
-     * Off by default because the agent surfaces have always been
-     * open-project-scoped, and because the list is fetched lazily: a
-     * surface opting in should call `useHashMentionData().refresh()` when
-     * a "#" trigger opens, or it will only see whatever another surface
-     * already pulled. Surfaces that live outside the tasks area (the
-     * to-do pane, which sits in chat) need this — with no project open,
-     * `tasks` is empty and "#" would offer no tasks at all.
+     * The list is loaded at sign-in and refreshed with the other `#`
+     * data (App.tsx). Spotlight, the Ask modals and the to-do pane all opt
+     * in: open-project rows alone made every other project's tasks
+     * unmentionable (MIP-788), and with no project open "#" offered no
+     * tasks at all.
      */
     includeTeamTasks?: boolean;
 }
@@ -157,7 +157,56 @@ export const todoCandidateItems = (
 export interface AgentMentionSources {
     members: AgentMentionCandidate[];
     entities: AgentMentionCandidate[];
+    /** One task by its exact display id, any status (MIP-739). */
+    lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
 }
+
+type TaskRow = {
+    taskId: number;
+    projectId: number | null | undefined;
+    title: string;
+    displayId: string | null | undefined;
+    isMilestone: boolean | null | undefined;
+    projectName: string;
+    status: string;
+};
+
+const taskCandidate = (
+    t: TaskRow,
+    projectNameById: Map<number, string>
+): AgentMentionCandidate => {
+    // A task deep-link — and a task hover card — is project-scoped;
+    // a row with no project can't be linked or previewed, only
+    // mentioned. One condition drives both, so a chip that offers a
+    // card can always fill it. `== null` rather than falsy: guard
+    // the absent case without also rejecting a real id.
+    const projectId =
+        t.projectId == null || !Number.isFinite(t.projectId) ? undefined : t.projectId;
+    return {
+        ...candidate(
+            // `isMilestone` is display-only (see AgentMentionRef) —
+            // the row reads "Milestone" but still resolves as a task.
+            {
+                kind: "task",
+                taskId: t.taskId,
+                label: t.title,
+                isMilestone: Boolean(t.isMilestone),
+            },
+            "#",
+            t.displayId ?? undefined,
+            projectId == null
+                ? undefined
+                : entityRefToHref({
+                      entityType: "task",
+                      projectId: String(projectId),
+                      taskId: String(t.taskId),
+                  })
+        ),
+        projectId,
+        projectName: (projectId == null ? "" : projectNameById.get(projectId)) || t.projectName,
+        status: t.status,
+    };
+};
 
 export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): AgentMentionSources => {
     const hash = useHashMentionData();
@@ -258,38 +307,7 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             if (!t.title || !Number.isFinite(t.taskId)) continue;
             if (seenTaskIds.has(t.taskId)) continue;
             seenTaskIds.add(t.taskId);
-            // A task deep-link — and a task hover card — is project-scoped;
-            // a row with no project can't be linked or previewed, only
-            // mentioned. One condition drives both, so a chip that offers a
-            // card can always fill it. `== null` rather than falsy: guard
-            // the absent case without also rejecting a real id.
-            const projectId =
-                t.projectId == null || !Number.isFinite(t.projectId) ? undefined : t.projectId;
-            out.push({
-                ...candidate(
-                    // `isMilestone` is display-only (see AgentMentionRef) —
-                    // the row reads "Milestone" but still resolves as a task.
-                    {
-                        kind: "task",
-                        taskId: t.taskId,
-                        label: t.title,
-                        isMilestone: Boolean(t.isMilestone),
-                    },
-                    "#",
-                    t.displayId ?? undefined,
-                    projectId == null
-                        ? undefined
-                        : entityRefToHref({
-                              entityType: "task",
-                              projectId: String(projectId),
-                              taskId: String(t.taskId),
-                          })
-                ),
-                projectId,
-                projectName:
-                    (projectId == null ? "" : projectNameById.get(projectId)) || t.projectName,
-                status: t.status,
-            });
+            out.push(taskCandidate({ ...t, title: t.title }, projectNameById));
         }
         for (const n of hash.notes) {
             const noteType = NOTE_KIND_TO_TYPE[n.kind];
@@ -352,5 +370,34 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
         includeTeamTasks,
     ]);
 
-    return useMemo(() => ({ members, entities }), [members, entities]);
+    const accessToken = useOptionalAccessToken();
+    const myself = hash.myself;
+    const projects = hash.projects;
+    const lookupTask = useCallback(
+        async (displayId: string): Promise<AgentMentionCandidate | null> => {
+            if (!myself) return null;
+            const row = await lookupTaskByDisplayId(myself, displayId, accessToken);
+            if (!row?.title) return null;
+            const projectNameById = new Map<number, string>(
+                projects
+                    .filter((p) => p.projectId != null)
+                    .map((p) => [Number(p.projectId), p.projectName || ""])
+            );
+            return taskCandidate(
+                {
+                    taskId: Number(row.taskId),
+                    projectId: row.projectId,
+                    title: row.title,
+                    displayId: row.displayId,
+                    isMilestone: row.isMilestone,
+                    projectName: row.projectName || "",
+                    status: row.status?.status || "",
+                },
+                projectNameById
+            );
+        },
+        [myself, accessToken, projects]
+    );
+
+    return useMemo(() => ({ members, entities, lookupTask }), [members, entities, lookupTask]);
 };

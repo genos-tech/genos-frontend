@@ -677,6 +677,21 @@ describe("hash mentions render as inline styled text", () => {
         expect(span?.textContent).toBe("#PRJ-12 · Ship it");
     });
 
+    it("a compact #task chip shows its id alone (MIP-739)", () => {
+        const content = para({
+            type: "hashTask",
+            props: {
+                projectId: "7",
+                taskId: "12",
+                displayId: "PRJ-12",
+                title: "Ship it",
+                labelMode: "id",
+            },
+        });
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.querySelector("p.bn-inline-content > span")?.textContent).toBe("#PRJ-12");
+    });
+
     it("renders a #note chip that opens the note href", async () => {
         await clickHashAndExpectHref(
             { type: "hashNote", props: { noteKind: "my", noteId: "9", title: "Ideas" } },
