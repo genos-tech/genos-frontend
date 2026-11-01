@@ -1,5 +1,5 @@
 import { fmt, Messages } from "../../../../i18n";
-import { ChatNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { ChatNoteMetaProps, MyNoteFolderProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 
 /**
@@ -96,7 +96,7 @@ export const buildTaskNoteDestinations = (
     );
 };
 
-const chatTypeLabel = (chatType: number, t: Messages): string => {
+export const chatTypeLabel = (chatType: number, t: Messages): string => {
     switch (chatType) {
         // 4 (MDM) shares the DM bucket, same as the sidebar grouping.
         case 1:
@@ -145,4 +145,34 @@ export const buildChatNoteDestinations = (
     return Array.from(byKey.values()).sort((a, b) =>
         a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
     );
+};
+
+/** One searchable row in the destination picker. */
+export type DestinationOption = { key: string; label: string };
+
+// Flatten the folder forest into full-path rows ("Work › Clients › Acme"),
+// name-sorted per level. Paths rather than the indentation ModalMoveToFolder
+// uses, because these rows are SEARCHED: typing a parent folder's name has
+// to surface everything under it.
+export const flattenFolders = (folders: MyNoteFolderProps[]): DestinationOption[] => {
+    const byParent = new Map<number | null, MyNoteFolderProps[]>();
+    for (const f of folders) {
+        const key = f.parentFolderId ?? null;
+        const bucket = byParent.get(key) ?? [];
+        bucket.push(f);
+        byParent.set(key, bucket);
+    }
+    const rows: DestinationOption[] = [];
+    const walk = (parentId: number | null, prefix: string) => {
+        const kids = [...(byParent.get(parentId) ?? [])].sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
+        for (const f of kids) {
+            const label = prefix ? `${prefix} › ${f.name}` : f.name;
+            rows.push({ key: String(f.folderId), label });
+            walk(f.folderId, label);
+        }
+    };
+    walk(null, "");
+    return rows;
 };

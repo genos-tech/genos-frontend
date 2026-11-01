@@ -1801,7 +1801,14 @@ const AppBody = () => {
                                                                                                                             <RouteLoadingFallback />
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <V3ChatShell />
+                                                                                                                        <V3ChatShell
+                                                                                                                            myself={
+                                                                                                                                myself
+                                                                                                                            }
+                                                                                                                            useNM={
+                                                                                                                                useNM
+                                                                                                                            }
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 }
                                                                                                             />
@@ -1813,7 +1820,14 @@ const AppBody = () => {
                                                                                                                             <RouteLoadingFallback />
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <V3ChatShell />
+                                                                                                                        <V3ChatShell
+                                                                                                                            myself={
+                                                                                                                                myself
+                                                                                                                            }
+                                                                                                                            useNM={
+                                                                                                                                useNM
+                                                                                                                            }
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 }
                                                                                                             />
@@ -1825,7 +1839,14 @@ const AppBody = () => {
                                                                                                                             <RouteLoadingFallback />
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <V3ChatShell />
+                                                                                                                        <V3ChatShell
+                                                                                                                            myself={
+                                                                                                                                myself
+                                                                                                                            }
+                                                                                                                            useNM={
+                                                                                                                                useNM
+                                                                                                                            }
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 }
                                                                                                             />

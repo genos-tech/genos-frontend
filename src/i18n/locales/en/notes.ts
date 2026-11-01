@@ -235,6 +235,22 @@ export const notes = {
         resultFailures: "{count} pages failed and were skipped.",
         resultCancelled: "Stopped early. Everything created up to that point was kept.",
         resultDone: "Done",
+        // Importing a markdown/text ATTACHMENT (chat message or task) — the
+        // destination can be any kind of note, not just where it was opened.
+        importAsNote: "Import as note",
+        fileActionsAria: "File actions for {name}",
+        readingFile: "Reading {name}…",
+        kindLabel: "Import into",
+        kindMy: "My Notes",
+        kindTeam: "Team Notes",
+        kindTask: "Task note",
+        kindChat: "Chat note",
+        teamFolderLabel: "Team folder",
+        taskLabel: "Task",
+        chatLabel: "Chat",
+        loadingDestinations: "Loading…",
+        noDestinations: "Nothing to import into here.",
+        importedTo: "Imported as a note in {where}.",
     },
     // Batch export of a folder tree — the mirror of importMd's folder
     // half, and deliberately laid out so its zip can be imported back.

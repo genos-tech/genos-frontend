@@ -17,18 +17,27 @@ import Autocomplete, { createFilterOptions } from "@mui/joy/Autocomplete";
 
 import { useOptionalAccessToken } from "../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { resolveUploadLimitBytes } from "../../../../services/uploadLimit";
 import { UserProps } from "../../../../types/admin";
-import { MyNoteFolderProps, TaskNoteProps } from "../../../../types/notes";
+import { TaskNoteProps } from "../../../../types/notes";
+import { decodeTextBytes } from "../../../../utils/decodeText";
+import { fetchMediaText } from "../../../../utils/downloadUtils";
 import {
     buildChatNoteDestinations,
     buildTaskNoteDestinations,
     chatDestinationKey,
+    flattenFolders,
     taskDestinationKey,
+    type DestinationOption,
 } from "../services/noteImportDestinations";
 import { markdownToNoteBlocks, titleFromFilename } from "../services/noteMarkdown";
 import type { ImportDestination } from "../services/runFolderImport";
+import {
+    AttachmentDestination,
+    AttachmentDestinationPicker,
+    AttachmentDestinationSelection,
+} from "./AttachmentDestinationPicker";
 import { FolderImportPanel } from "./FolderImportPanel";
 
 /** Where the imported note gets created — mirrors the surface the ⋮ menu
@@ -43,6 +52,17 @@ export type ImportMarkdownContext =
           isThread: boolean;
           threadId: number;
       };
+
+/** A file that is already uploaded somewhere (a chat message or a task
+ *  attachment) and should be imported without a local file pick. */
+export type ImportInitialFile = {
+    /** Where to fetch the text from (authenticated, see `fetchMediaText`). */
+    url: string;
+    /** Original file name: the default note title comes from it. */
+    name: string;
+    /** Preselected destination in the picker. Omitted = My Notes. */
+    defaultDestination?: AttachmentDestination;
+};
 
 interface Props {
     open: boolean;
@@ -66,40 +86,15 @@ interface Props {
     skipOpenTab?: boolean;
     /** Task context only: called with the note once it exists. */
     onTaskNoteCreated?: (note: TaskNoteProps) => void;
+    /** Import an already-uploaded file (an attachment). The file chooser
+     *  and folder mode are replaced by a destination picker that offers
+     *  every kind of note (My, Team folder, Task, Chat). Seeded inside
+     *  the `[open]` effect so it survives the per-open reset. */
+    initialFile?: ImportInitialFile | null;
 }
-
-/** One searchable row in the destination picker. */
-type DestinationOption = { key: string; label: string };
 
 /** Value of the my-notes "unfiled" row. */
 const MY_ROOT_KEY = "root";
-
-// Flatten the folder forest into full-path rows ("Work › Clients › Acme"),
-// name-sorted per level. Paths rather than the indentation ModalMoveToFolder
-// uses, because these rows are SEARCHED: typing a parent folder's name has
-// to surface everything under it.
-const flattenFolders = (folders: MyNoteFolderProps[]): DestinationOption[] => {
-    const byParent = new Map<number | null, MyNoteFolderProps[]>();
-    for (const f of folders) {
-        const key = f.parentFolderId ?? null;
-        const bucket = byParent.get(key) ?? [];
-        bucket.push(f);
-        byParent.set(key, bucket);
-    }
-    const rows: DestinationOption[] = [];
-    const walk = (parentId: number | null, prefix: string) => {
-        const kids = [...(byParent.get(parentId) ?? [])].sort((a, b) =>
-            a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-        );
-        for (const f of kids) {
-            const label = prefix ? `${prefix} › ${f.name}` : f.name;
-            rows.push({ key: String(f.folderId), label });
-            walk(f.folderId, label);
-        }
-    };
-    walk(null, "");
-    return rows;
-};
 
 // Cap the rendered rows — the popper has no virtualization, and a big
 // workspace can have thousands of tasks. Typing narrows it; the cap only
@@ -128,6 +123,7 @@ export const ModalImportMarkdown = ({
     allowDestinationChange = false,
     skipOpenTab = false,
     onTaskNoteCreated,
+    initialFile = null,
 }: Props) => {
     const { t } = useTranslation();
     // Optional rather than `useAuth`: this dialog is rendered from the
@@ -139,7 +135,8 @@ export const ModalImportMarkdown = ({
 
     // Only my-notes (personal and team alike) have folders to recreate a
     // tree in; a task or chat note has exactly one home.
-    const canImportFolder = context.kind === "my" && accessToken != null;
+    const attachmentMode = initialFile != null;
+    const canImportFolder = context.kind === "my" && accessToken != null && !attachmentMode;
     const [mode, setMode] = useState<"file" | "folder">("file");
     // Resolved once the folder tab is opened, so oversize images are
     // skipped locally instead of each one costing a 413.
@@ -155,6 +152,13 @@ export const ModalImportMarkdown = ({
     const [destinationKey, setDestinationKey] = useState<string | null>(null);
     const [importing, setImporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Attachment mode: the picked destination, and the "where" text of a
+    // finished import (shown instead of closing, so it is not silent).
+    const [attachmentPick, setAttachmentPick] = useState<AttachmentDestinationSelection | null>(
+        null
+    );
+    const [importedTo, setImportedTo] = useState<string | null>(null);
+    const [fileLoading, setFileLoading] = useState(false);
 
     // Fresh state per open, seeded from `context`.
     //
@@ -186,8 +190,38 @@ export const ModalImportMarkdown = ({
             setImporting(false);
             setError(null);
             setMode("file");
+            setImportedTo(null);
+            setAttachmentPick(null);
+            // An attachment is seeded HERE, after the wipe above: the
+            // reset would otherwise clear it on the very render that
+            // opens the dialog.
+            if (initialFile) {
+                setFileName(initialFile.name);
+                setTitle(titleFromFilename(initialFile.name));
+            }
         }
     }, [open]);
+
+    // Fetch the attachment's text once per open.
+    useEffect(() => {
+        if (!open || !initialFile) return;
+        let live = true;
+        setFileLoading(true);
+        void fetchMediaText(initialFile.url)
+            .then((text) => {
+                if (live) setFileText(text);
+            })
+            .catch(() => {
+                if (live) setError(t.notes.importMd.readError);
+            })
+            .finally(() => {
+                if (live) setFileLoading(false);
+            });
+        return () => {
+            live = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, initialFile?.url]);
 
     useEffect(() => {
         if (mode !== "folder") return;
@@ -216,7 +250,7 @@ export const ModalImportMarkdown = ({
     // from a sidebar folder row the row IS the destination, for every
     // kind, so my-notes doesn't get a picker there either.
     const destinationOptions = useMemo<DestinationOption[]>(() => {
-        if (!allowDestinationChange) return [];
+        if (!allowDestinationChange || attachmentMode) return [];
         if (context.kind === "my") {
             return [
                 { key: MY_ROOT_KEY, label: t.notes.importMd.rootFolder },
@@ -226,6 +260,7 @@ export const ModalImportMarkdown = ({
         return context.kind === "task" ? taskDestinations : chatDestinations;
     }, [
         allowDestinationChange,
+        attachmentMode,
         context.kind,
         useNM.myNoteFolders,
         taskDestinations,
@@ -263,7 +298,8 @@ export const ModalImportMarkdown = ({
     const handleFilePicked = async (file: File) => {
         setError(null);
         try {
-            const text = await file.text();
+            // UTF-8, with a Shift-JIS fallback for legacy Japanese .txt files.
+            const text = decodeTextBytes(await file.arrayBuffer());
             setFileName(file.name);
             setFileText(text);
             // Default the note title to the file name; keep any name the
@@ -281,6 +317,55 @@ export const ModalImportMarkdown = ({
         try {
             const body = await markdownToNoteBlocks(fileText);
             const opts = { title: title.trim(), body };
+            if (attachmentMode) {
+                if (!attachmentPick) return;
+                const dest = attachmentPick.destination;
+                if (dest.kind === "my" || dest.kind === "team") {
+                    // `handleCreateNewMyNote` files the note in the team
+                    // space when the folder is in the team list.
+                    if (!(await useNM.handleCreateNewMyNote(null, dest.folderId, opts))) {
+                        throw new Error("note was not created");
+                    }
+                } else if (dest.kind === "task") {
+                    // The task host (modal-hosted preview) shows the note
+                    // itself, but only for ITS task: any other task opens
+                    // the usual notes tab.
+                    const onHostTask =
+                        context.kind === "task" &&
+                        context.projectId === dest.projectId &&
+                        context.taskId === dest.taskId;
+                    const created = await useNM.handleCreateNewTaskNote(
+                        null,
+                        dest.projectId,
+                        dest.taskId,
+                        undefined,
+                        skipOpenTab && onHostTask ? { ...opts, skipOpenTab: true } : opts
+                    );
+                    if (!created) throw new Error("task note was not created");
+                    if (onHostTask) {
+                        // The host takes the user to the note itself.
+                        onTaskNoteCreated?.(created);
+                        onClose();
+                        return;
+                    }
+                } else {
+                    // The API keys chat notes on the v3 channel UUID and
+                    // derives the kind from the channel; the legacy
+                    // numeric typing of these args is not what travels.
+                    const created = await useNM.handleCreateNewChatNote(
+                        null,
+                        dest.chatType,
+                        dest.channelId as unknown as number,
+                        false,
+                        0,
+                        undefined,
+                        opts
+                    );
+                    if (!created) throw new Error("chat note was not created");
+                }
+                setImportedTo(attachmentPick.label);
+                return;
+            }
             if (context.kind === "my") {
                 // `destinationKey` holds a folder id, or MY_ROOT_KEY for
                 // unfiled. It was seeded from `context.folderId`, so an
@@ -395,7 +480,64 @@ export const ModalImportMarkdown = ({
                     </FormControl>
                 )}
 
-                {mode === "folder" && accessToken ? (
+                {attachmentMode && initialFile ? (
+                    importedTo != null ? (
+                        <Stack spacing={2} sx={{ mt: 2 }}>
+                            <Typography level="body-md">
+                                {fmt(t.notes.importMd.importedTo, { where: importedTo })}
+                            </Typography>
+                            <Stack direction="row" justifyContent="flex-end">
+                                <Button onClick={onClose}>{t.common.actions.close}</Button>
+                            </Stack>
+                        </Stack>
+                    ) : (
+                        <Stack spacing={0} sx={{ mt: 1 }}>
+                            <Typography level="body-sm" sx={{ wordBreak: "break-all" }}>
+                                {fileLoading
+                                    ? fmt(t.notes.importMd.readingFile, { name: initialFile.name })
+                                    : initialFile.name}
+                            </Typography>
+                            {error && (
+                                <Typography level="body-sm" sx={{ color: "danger.500", mt: 1 }}>
+                                    {error}
+                                </Typography>
+                            )}
+                            <AttachmentDestinationPicker
+                                accessToken={accessToken}
+                                defaultDestination={initialFile.defaultDestination}
+                                myself={myself}
+                                useNM={useNM}
+                                onChange={setAttachmentPick}
+                            />
+                            <FormControl sx={{ mt: 1.5 }} required>
+                                <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
+                                <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                            </FormControl>
+                            <Stack
+                                direction="row"
+                                justifyContent="flex-end"
+                                spacing={1}
+                                sx={{ mt: 2 }}
+                            >
+                                <Button disabled={importing} variant="plain" onClick={onClose}>
+                                    {t.common.actions.cancel}
+                                </Button>
+                                <Button
+                                    loading={importing}
+                                    disabled={
+                                        importing ||
+                                        fileText == null ||
+                                        !title.trim() ||
+                                        attachmentPick == null
+                                    }
+                                    onClick={handleImport}
+                                >
+                                    {t.notes.importMd.importButton}
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    )
+                ) : mode === "folder" && accessToken ? (
                     <FolderImportPanel
                         accessToken={accessToken}
                         destination={folderDestination}

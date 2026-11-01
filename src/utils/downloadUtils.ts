@@ -1,3 +1,4 @@
+import { decodeTextBytes } from "./decodeText";
 import { mediaAuthHeaders, resolveProtectedMediaUrl } from "./mediaAuth";
 
 /**
@@ -104,4 +105,26 @@ export const downloadFile = async (rawUrl: string, filename?: string): Promise<v
         link.click();
         document.body.removeChild(link);
     }
+};
+
+/**
+ * Fetch an attachment as TEXT, through the same authenticated path as
+ * `downloadFile` (`serve_media` gates each file per user; its forced
+ * `Content-Disposition: attachment` header does not affect `fetch`).
+ *
+ * Decodes UTF-8 and falls back to Shift-JIS for files that are not valid
+ * UTF-8 (see `decodeTextBytes`). Unlike `downloadFile` this THROWS on
+ * failure: there is no sensible "open it in a tab" fallback for a read,
+ * and the caller needs to tell the user the import could not start.
+ */
+export const fetchMediaText = async (rawUrl: string): Promise<string> => {
+    const url = upgradeInsecureUrl(rawUrl);
+    // Local object URLs (a not-yet-uploaded attachment) carry no session.
+    const isLocal = url.startsWith("blob:") || url.startsWith("data:");
+    const response = await fetch(
+        url,
+        isLocal ? undefined : { credentials: "include", headers: mediaAuthHeaders() }
+    );
+    if (!response.ok) throw new Error(`Could not read the file (${response.status})`);
+    return decodeTextBytes(await response.arrayBuffer());
 };

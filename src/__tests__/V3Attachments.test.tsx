@@ -10,6 +10,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { formatSize, MessageAttachments } from "../features/channel/components/MessageAttachments";
@@ -413,5 +414,61 @@ describe("MessagesPaneV3 attachments integration", () => {
         );
         render(<MessagesPaneV3 channelId="c-1" />);
         expect(screen.queryByTestId("message-attachments-m-1")).toBeNull();
+    });
+});
+
+describe("MessageAttachments: Import as note", () => {
+    const named = (id: string, fileName: string, mime = "application/octet-stream") => ({
+        ...fakeAttachment(id, `${API_HOST}/media/chats/c/m/${"ab12".repeat(8)}.bin`, mime, 100),
+        fileName,
+    });
+
+    it("offers the menu on .md / .markdown / .txt (extension, any case, any mime)", () => {
+        const atts = [
+            named("a-md", "README.md"),
+            named("a-mkd", "notes.MARKDOWN"),
+            named("a-txt", "todo.txt", "text/plain"),
+        ];
+        render(
+            <MessageAttachments attachments={atts} messageId="m-1" onImportAsNote={() => {}} />
+        );
+        expect(screen.getAllByRole("button", { name: /File actions for/ })).toHaveLength(3);
+    });
+
+    it("does not offer it on other files, a bare '.md' or without the callback", () => {
+        const atts = [
+            named("a-pdf", "spec.pdf", "application/pdf"),
+            named("a-png", "shot.png", "image/png"),
+            named("a-bare", ".md"),
+            named("a-mdx", "page.md.bak"),
+        ];
+        const { rerender } = render(
+            <MessageAttachments attachments={atts} messageId="m-1" onImportAsNote={() => {}} />
+        );
+        expect(screen.queryByRole("button", { name: /File actions for/ })).toBeNull();
+        // A real markdown file, but the surface has no notes wiring.
+        rerender(
+            <MessageAttachments attachments={[named("a-md", "README.md")]} messageId="m-1" />
+        );
+        expect(screen.queryByRole("button", { name: /File actions for/ })).toBeNull();
+    });
+
+    it("Import as note hands over the stored url and the uploader's name; the chip still downloads", async () => {
+        const onImport = vi.fn();
+        const user = userEvent.setup();
+        const att = named("a-md", "README.md");
+        render(
+            <MessageAttachments attachments={[att]} messageId="m-1" onImportAsNote={onImport} />
+        );
+
+        await user.click(screen.getByRole("button", { name: /File actions for README.md/ }));
+        await user.click(await screen.findByRole("menuitem", { name: "Import as note" }));
+
+        expect(onImport).toHaveBeenCalledWith({ url: att.fileUrl, name: "README.md" });
+        // Clicking the chip itself is still a download, never an import.
+        expect(screen.getByTestId("message-attachment-link-a-md")).toHaveAttribute(
+            "download",
+            "README.md"
+        );
     });
 });
