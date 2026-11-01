@@ -2,7 +2,11 @@ import { act } from "react";
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useIdleAutoReload } from "../../hooks/common/useIdleAutoReload";
+import {
+    DEFAULT_IDLE_THRESHOLD_MS,
+    resolveIdleThresholdMs,
+    useIdleAutoReload,
+} from "../../hooks/common/useIdleAutoReload";
 
 // Guards the automatic page reload that closes the "laptop slept overnight,
 // the app acts weird until I hit reload" class of bug. Everything here is
@@ -230,5 +234,87 @@ describe("useIdleAutoReload", () => {
         unmount();
         advance(THRESHOLD_MS * 2);
         expect(reload).not.toHaveBeenCalled();
+    });
+});
+
+// MIP-790: "close the laptop at night, open it the next morning, and the app
+// behaves weird". The default used to be 12h, so an 8-10h night never counted.
+describe("useIdleAutoReload default threshold (MIP-790)", () => {
+    const HOUR = 60 * 60 * 1000;
+    let reload: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        reload = vi.fn();
+        Object.defineProperty(window, "location", {
+            configurable: true,
+            writable: true,
+            value: { ...window.location, reload },
+        });
+        Object.defineProperty(document, "visibilityState", {
+            configurable: true,
+            get: () => "visible",
+        });
+        Object.defineProperty(navigator, "onLine", { configurable: true, get: () => true });
+        window.sessionStorage.clear();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        window.sessionStorage.clear();
+    });
+
+    const advance = (ms: number) => {
+        act(() => {
+            vi.advanceTimersByTime(ms);
+        });
+    };
+
+    it("is 8 hours", () => {
+        expect(DEFAULT_IDLE_THRESHOLD_MS).toBe(8 * HOUR);
+        expect(resolveIdleThresholdMs(undefined)).toBe(8 * HOUR);
+    });
+
+    it("reloads after an overnight sleep of 9 hours", () => {
+        renderHook(() => useIdleAutoReload());
+        // The lid closes: no timer runs while the machine is suspended, then
+        // the clock has moved on by 9h when it wakes.
+        act(() => {
+            vi.setSystemTime(Date.now() + 9 * HOUR);
+            vi.advanceTimersByTime(HEARTBEAT_MS);
+        });
+        advance(2000);
+        expect(reload).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not reload after a 7 hour sleep", () => {
+        renderHook(() => useIdleAutoReload());
+        act(() => {
+            vi.setSystemTime(Date.now() + 7 * HOUR);
+            vi.advanceTimersByTime(HEARTBEAT_MS);
+        });
+        advance(5000);
+        expect(reload).not.toHaveBeenCalled();
+    });
+
+    it("an untouched open page reloads at 8 hours, not before", () => {
+        renderHook(() => useIdleAutoReload());
+        advance(8 * HOUR - 2 * HEARTBEAT_MS);
+        expect(reload).not.toHaveBeenCalled();
+        advance(3 * HEARTBEAT_MS + 2000);
+        expect(reload).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("resolveIdleThresholdMs", () => {
+    it("takes a positive number of hours", () => {
+        expect(resolveIdleThresholdMs("6")).toBe(6 * 60 * 60 * 1000);
+        expect(resolveIdleThresholdMs("0.5")).toBe(30 * 60 * 1000);
+    });
+
+    it("falls back to the default for anything unusable", () => {
+        for (const bad of [undefined, null, "", "  ", "abc", "0", "-3", "NaN", "Infinity"]) {
+            expect(resolveIdleThresholdMs(bad)).toBe(DEFAULT_IDLE_THRESHOLD_MS);
+        }
     });
 });
