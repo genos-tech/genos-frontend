@@ -174,7 +174,6 @@ export const SignInForm = () => {
             // Demo-specific: pre-set the team so we can skip /jointeam.
             localStorage.setItem("teamId", res.team_id);
             localStorage.setItem("teamName", res.team_name);
-            localStorage.setItem("isDemoUser", "yes");
 
             // Arms the demo funnel and emits `demo_started`. Deliberately
             // here rather than beside the POST: only a signin that actually

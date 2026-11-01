@@ -40,7 +40,6 @@ const KEYS_TO_CLEAR = [
     "lastOpenChatNoteId",
     "lastOpenTaskNoteId",
     "currentMainChatId",
-    "isDemoUser",
 ];
 
 /**

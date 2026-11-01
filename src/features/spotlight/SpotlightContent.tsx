@@ -182,6 +182,9 @@ export interface SpotlightContentProps {
     // button and Enter shortcut are disabled with an explanatory
     // tooltip and Spotlight stays a pure search overlay.
     aiAnswersEnabled: boolean;
+    // The signed-in user is a demo account (server flag). Only the Genos
+    // page's starter questions read it (MIP-837); absent means not demo.
+    isDemoUser?: boolean;
     // ----- History panel (Phase ~4.6) -----
     // When `historyMode !== "closed"` the conversation panel slot
     // renders a read-only archive instead of the live `turns`/`ask`.
@@ -281,6 +284,7 @@ export const SpotlightContent = ({
     ask,
     turns,
     aiAnswersEnabled,
+    isDemoUser = false,
     historyMode,
     historySessions,
     historyDetail,
@@ -994,6 +998,11 @@ export const SpotlightContent = ({
                         worse than absent. (Contrast the service chips
                         below, which stay visible-but-disabled: those
                         describe a *selection* that still exists.)
+                      - `isDemoUser`: the starters are for demo visitors,
+                        who land in a sandbox with no idea what to ask. A
+                        real user has their own work to ask about. It is
+                        the server's `is_demo` flag, false until the profile
+                        loads, so a real user never sees the row flash in.
 
                     `onAsk(item)` and not `setQuery` + submit: `overrideQuery`
                     is exactly the "ask this, never mind the input" path the
@@ -1004,6 +1013,7 @@ export const SpotlightContent = ({
                 !inAgentMode &&
                 !hasQuery &&
                 aiAnswersEnabled &&
+                isDemoUser &&
                 starters.length > 0 && (
                     <Box
                         aria-label={t.spotlight.starters.label}

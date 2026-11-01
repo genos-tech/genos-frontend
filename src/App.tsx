@@ -1876,6 +1876,9 @@ const AppBody = () => {
                                                                                                                         teamId={
                                                                                                                             useTEM.currentTeamId
                                                                                                                         }
+                                                                                                                        userId={
+                                                                                                                            myself.userId
+                                                                                                                        }
                                                                                                                         onOpenSettings={() =>
                                                                                                                             setSpotlightSettingsOpen(
                                                                                                                                 true
