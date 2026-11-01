@@ -56,6 +56,10 @@ export interface SpotlightResult {
     // e.g. "PRJ-42"). Always shown to end users in place of the raw
     // task_id. Null on legacy rows or when the task lacks a project.
     task_display_id: string | null;
+    // Where a note lives, outermost first: the folder chain, or
+    // project › milestone › task, or the chat's name (MIP-839). Present
+    // only when the viewer may see those names (the server decides).
+    context_path?: string[] | null;
     // Task status name ("Open" / "WIP" / "Blocked" / "Pending" /
     // "Closed"), projected onto task and milestone rows so the result
     // row can render the status chip. Optional on purpose — it is

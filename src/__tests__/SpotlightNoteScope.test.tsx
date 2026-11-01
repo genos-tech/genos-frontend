@@ -175,3 +175,59 @@ describe("personalNoteScopes", () => {
         expect(personalNoteScopes([], []).size).toBe(0);
     });
 });
+
+// MIP-839: where a note lives. Two notes with one title were
+// indistinguishable; the server now sends the container path (only to a
+// viewer who may see those names) and the row prints it.
+describe("Spotlight note-result container path", () => {
+    it("shows the folder path after the space", () => {
+        renderResults(
+            [noteResult("42", { context_path: ["Design", "Specs"] })],
+            personalNoteScopes([{ noteId: 42 }], [])
+        );
+        expect(screen.getByText("Team note · Design › Specs")).toBeTruthy();
+    });
+
+    it("tells two same-titled notes apart", () => {
+        renderResults([
+            noteResult("1", { title: "Meeting notes", context_path: ["Sales"] }),
+            noteResult("2", { title: "Meeting notes", context_path: ["Engineering", "Weekly"] }),
+        ]);
+        expect(screen.getByText("My note · Sales")).toBeTruthy();
+        expect(screen.getByText("My note · Engineering › Weekly")).toBeTruthy();
+    });
+
+    it("shows a task note's project, milestone and task, and a chat note's chat", () => {
+        renderResults([
+            noteResult("7", {
+                note_type: "task",
+                entity_id: "note:task:7",
+                context_path: ["Genos", "Launch", "Search by id"],
+            }),
+            noteResult("8", {
+                note_type: "chat",
+                entity_id: "note:chat:8",
+                context_path: ["Design"],
+            }),
+        ]);
+        expect(screen.getByText(/Genos › Launch › Search by id/)).toBeTruthy();
+        expect(screen.getByText(/· Design$/)).toBeTruthy();
+    });
+
+    it("prints nothing extra when the viewer wasn't sent a path", () => {
+        renderResults([noteResult("42"), noteResult("43", { context_path: [] })]);
+        expect(screen.getAllByText("My note")).toHaveLength(2);
+    });
+
+    it("keeps the full path in the tooltip when the row truncates it", () => {
+        renderResults([noteResult("42", { context_path: ["A", "B", "C", "D"] })]);
+        expect(screen.getByTitle("A › B › C › D")).toBeTruthy();
+    });
+
+    it("ignores a path on a result that is not a note", () => {
+        renderResults([
+            noteResult("9", { entity_type: "task", entity_id: "task:9", context_path: ["Nope"] }),
+        ]);
+        expect(screen.queryByText(/Nope/)).toBeNull();
+    });
+});
