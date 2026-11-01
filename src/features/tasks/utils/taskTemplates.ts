@@ -171,6 +171,14 @@ export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
                 "⚠️ Risks & dependencies",
                 placeholder("What could derail this? Who/what are we waiting on?")
             ),
+            // Dependencies say what blocks what, not where to begin (MIP-782).
+            ...section(
+                "🧭 Order of work",
+                placeholder("Which task do we take first, and what comes next?"),
+                bullet("Step 1: the first task."),
+                bullet("Step 2: what it unblocks. Note tasks that can run in parallel."),
+                bullet("Gates, when each parent task closes, and the critical path.")
+            ),
         ],
     },
 };
