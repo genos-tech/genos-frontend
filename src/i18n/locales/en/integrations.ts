@@ -87,12 +87,49 @@ export const integrations = {
             stepPayload: "Payload URL: paste the URL above. Content type:",
             contentTypeLabel: "application/json",
             stepSecret:
-                "Secret: enter any value (GitHub requires one). The hook does nothing until someone with GitHub connected links a PR or branch from this repo; Genos then gives it a secret of its own.",
+                "Secret: enter any value (GitHub requires one). The hook does nothing until the repo is registered (next steps); Genos then gives it a secret of its own.",
             stepEventsPrefix: "Events: select",
             eventSelectionLabel: '"Let me select individual events"',
-            stepEventsSuffix: "→ check only",
-            pullRequestsLabel: "Pull requests",
+            stepEventsList:
+                "→ check Pull requests, Issue comments and Pull request review comments (all three).",
             saveSuffix: "Save.",
+            stepRegister:
+                "Then register the repo with the button above (or link any PR from it to a task). Until you do, the hook is not tied to a team, so it links nothing.",
+        },
+        register: {
+            title: "Register a repository",
+            intro: "Install the webhook on a repo, or take over one a repo admin added by hand. You need admin access to the repo on GitHub.",
+            placeholder: "owner/repo or a GitHub URL",
+            button: "Register",
+            invalid: "Enter a repo as owner/repo, or paste its GitHub URL.",
+            success: {
+                created:
+                    "Registered {repo}. PRs and branches linked to tasks will sync from now on.",
+                adopted:
+                    "Took over the existing webhook on {repo} and fixed its events. PRs and branches will sync from now on.",
+                already_registered: "{repo} is already registered.",
+            },
+            reasons: {
+                no_admin:
+                    "Your GitHub account isn't an admin of that repo, so it can't add the webhook. Ask a repo admin to register it here.",
+                repo_not_found:
+                    "GitHub can't see that repo with your account. Check the name, and that its organization has granted Genos access (see Repository access).",
+                not_connected: "Connect GitHub first.",
+                token_unavailable: "Your GitHub connection expired. Re-authorize GitHub below.",
+                adopt_failed:
+                    "That repo already has a webhook GitHub wouldn't let us replace, and none of its hooks points at Genos. Remove the old webhook on GitHub, then register again.",
+                encryption_unavailable: "Genos can't store the webhook's secret right now.",
+                github_unreachable: "Couldn't reach GitHub. Try again in a moment.",
+                github_error: "GitHub refused the request. Try again in a moment.",
+                invalid_repo: "That doesn't look like a GitHub repo.",
+                request_failed: "Something went wrong. Try again.",
+            },
+            unknownTitle: "Repos sending events Genos can't use yet",
+            unknownIntro:
+                "These repos have a webhook pointing at Genos, but none registered to a team, so their PRs link to nothing. Register them to start syncing.",
+            events: "{count, plural, one {# event} other {# events}}",
+            lastEvent: "last: {event}",
+            needsAdmin: "Needs admin on the repo",
         },
         repoAccess: {
             title: "Repository access",

@@ -36,6 +36,7 @@ import { useNavigate } from "react-router-dom";
 import { CalendarEventModal } from "./components/CalendarEventModal";
 import { ConnectionsSection } from "./components/ConnectionsSection";
 import { GithubRepoAccessSection } from "./components/GithubRepoAccessSection";
+import { GithubRepoRegistration } from "./components/GithubRepoRegistration";
 import { ReconnectGoogleCalendarButton } from "./components/ReconnectGoogleCalendarButton";
 import { CalendarEvent, deleteEvent, listEventsAggregate } from "./services/calendar";
 import {
@@ -381,11 +382,13 @@ const CalendarTab = ({
 // user lacks repo-admin and an org admin needs to wire it up by hand.
 //
 // The secret step says "enter any value": a hook made by hand has no
-// registration row, so it delivers nothing until someone with GitHub
-// connected links a PR or branch from the repo. Adopting it replaces the
-// secret with one of its own (genos-api `_adopt_existing_hook` → `rekey_hook`,
-// MIP-618). The shared `GITHUB_WEBHOOK_SECRET` is being retired and is not
-// shown here.
+// registration row, so it delivers nothing until the repo is registered (the
+// "Register a repository" panel above, or linking a PR or branch from it).
+// Adopting it replaces the secret with one of its own (genos-api
+// `_adopt_existing_hook` → `rekey_hook`, MIP-618). The shared
+// `GITHUB_WEBHOOK_SECRET` is being retired and is not shown here. The events
+// step lists all three events the server subscribes to (`_HOOK_EVENTS`): with
+// only Pull requests ticked, PR comments never reach the activity feed.
 const WebhookSetup = () => {
     const { t } = useTranslation();
     const djangoUrl =
@@ -517,11 +520,13 @@ const WebhookSetup = () => {
                                         <strong>
                                             {t.integrations.github.webhook.eventSelectionLabel}
                                         </strong>{" "}
-                                        {t.integrations.github.webhook.stepEventsSuffix}{" "}
-                                        <strong>
-                                            {t.integrations.github.webhook.pullRequestsLabel}
-                                        </strong>
-                                        . {t.integrations.github.webhook.saveSuffix}
+                                        {t.integrations.github.webhook.stepEventsList}{" "}
+                                        {t.integrations.github.webhook.saveSuffix}
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        {t.integrations.github.webhook.stepRegister}
                                     </Typography>
                                 </li>
                             </Stack>
@@ -644,6 +649,8 @@ const GithubTab = ({
             )}
 
             <GithubRepoAccessSection accessToken={accessToken} />
+
+            <GithubRepoRegistration accessToken={accessToken} />
 
             <WebhookSetup />
         </Stack>

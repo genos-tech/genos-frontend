@@ -4240,8 +4240,6 @@ export const ar: DeepPartial<Messages> = {
                     "Secret: أدخل أي قيمة (يشترطها GitHub). لا يفعل الـ webhook شيئًا إلى أن يربط عضو متصل بـ GitHub طلب سحب (PR) أو فرعًا من هذا المستودع؛ وعندئذٍ يمنحه Genos سرًّا خاصًا به.",
                 stepEventsPrefix: "الأحداث: اختر",
                 eventSelectionLabel: '"Let me select individual events"',
-                stepEventsSuffix: "← ثم حدّد فقط",
-                pullRequestsLabel: "طلبات السحب",
                 saveSuffix: "حفظ.",
             },
             repoAccess: {

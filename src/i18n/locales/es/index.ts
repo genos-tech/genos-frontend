@@ -3725,8 +3725,6 @@ export const es: DeepPartial<Messages> = {
                     "Secret: introduce cualquier valor (GitHub exige uno). El webhook no hace nada hasta que alguien con GitHub conectado vincule un PR o una rama de este repositorio; entonces Genos le asigna un secreto propio.",
                 stepEventsPrefix: "Events: selecciona",
                 eventSelectionLabel: '"Déjame seleccionar eventos individuales"',
-                stepEventsSuffix: "→ marca solo",
-                pullRequestsLabel: "Pull requests",
                 saveSuffix: "Guarda.",
             },
             repoAccess: {
