@@ -3013,8 +3013,6 @@ export const hi: DeepPartial<Messages> = {
                     "Secret: कोई भी मान दर्ज करें (GitHub इसे अनिवार्य मानता है)। जब तक GitHub से जुड़ा कोई सदस्य इस रिपॉज़िटरी का PR या ब्रांच लिंक नहीं करता, यह वेबहुक कुछ नहीं करता; उसके बाद Genos इसे अपना अलग secret दे देता है।",
                 stepEventsPrefix: "घटनाएँ: चुनें",
                 eventSelectionLabel: '"मुझे व्यक्तिगत इवेंट चुनने दीजिए"',
-                stepEventsSuffix: "→ केवल जांचें",
-                pullRequestsLabel: "Pull requests",
                 saveSuffix: "सेव करें।",
             },
             repoAccess: {

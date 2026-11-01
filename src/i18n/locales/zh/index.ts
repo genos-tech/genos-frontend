@@ -1921,8 +1921,6 @@ export const zh: DeepPartial<Messages> = {
                     "Secret：填写任意值（GitHub 要求必填）。在已连接 GitHub 的成员关联此仓库的 PR 或分支之前，此 Webhook 不会执行任何操作；关联后，Genos 会为其生成专用的 Secret。",
                 stepEventsPrefix: "Events：选择",
                 eventSelectionLabel: '"Let me select individual events"',
-                stepEventsSuffix: "→ 仅勾选",
-                pullRequestsLabel: "Pull requests",
                 saveSuffix: "保存。",
             },
             repoAccess: {

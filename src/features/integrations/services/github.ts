@@ -128,6 +128,84 @@ export const listAccessibleRepos = async (
     }
 };
 
+/** A repo that sends Genos webhook events but is not registered (MIP-755). */
+export interface UnregisteredRepo {
+    owner: string;
+    repo: string;
+    event_count: number;
+    last_event: string;
+    last_seen_at: string;
+    can_admin: boolean;
+}
+
+/**
+ * Repos that have sent events Genos could not use, limited by the server to
+ * the ones this user's own GitHub token can read. `null` on any failure: the
+ * list is a hint, never worth an error banner.
+ */
+export const listUnregisteredRepos = async (
+    accessToken: string
+): Promise<{ repos: UnregisteredRepo[]; connected: boolean } | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return null;
+        const res = await api.get<{ repos: UnregisteredRepo[]; connected: boolean }>(
+            "/github/unregistered-repos/",
+            noSharedToast
+        );
+        return res.data;
+    } catch {
+        return null;
+    }
+};
+
+export type RegisterRepoResult = { ok: true; reason: string } | { ok: false; reason: string };
+
+/**
+ * Register Genos's webhook on `owner/repo` with the signed-in user's GitHub
+ * connection, or adopt a hook someone added by hand. The server answers a
+ * specific reason when it cannot (`no_admin`, `repo_not_found`, ...), which the
+ * page turns into something to do about it.
+ */
+export const registerGithubRepo = async (
+    accessToken: string,
+    owner: string,
+    repo: string
+): Promise<RegisterRepoResult> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return { ok: false, reason: "request_failed" };
+        const res = await api.post<{ reason: string }>(
+            "/github/register-repo/",
+            { owner, repo },
+            noSharedToast
+        );
+        return { ok: true, reason: res.data?.reason ?? "created" };
+    } catch (error) {
+        const detail = axios.isAxiosError(error)
+            ? (error.response?.data as { detail?: string } | undefined)?.detail
+            : undefined;
+        return { ok: false, reason: detail || "request_failed" };
+    }
+};
+
+/**
+ * "owner/repo", or a GitHub URL for a repo or one of its pages, to
+ * `[owner, repo]`. Mirrors the server's name rules so an obvious typo is
+ * caught before a round trip; the server still decides.
+ */
+export const parseRepoInput = (input: string): [string, string] | null => {
+    const cleaned = input
+        .trim()
+        .replace(/^https?:\/\/(www\.)?github\.com\//i, "")
+        .replace(/\.git$/i, "");
+    const [owner, repo] = cleaned.split("/");
+    if (!owner || !repo) return null;
+    if (!/^[A-Za-z0-9_-]{1,39}$/.test(owner)) return null;
+    if (!/^[A-Za-z0-9_.-]{1,100}$/.test(repo) || repo === "." || repo === "..") return null;
+    return [owner, repo];
+};
+
 export const getPullDetail = async (
     accessToken: string,
     owner: string,

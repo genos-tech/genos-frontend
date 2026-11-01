@@ -1982,9 +1982,49 @@ export const ja: DeepPartial<Messages> = {
                     "Secret: 任意の値を入力します(GitHub では必須です)。GitHub を連携しているメンバーがこのリポジトリの PR またはブランチをリンクするまで、このフックは何も行いません。リンクされると、Genos がフック専用の Secret に置き換えます。",
                 stepEventsPrefix: "イベント: 選択",
                 eventSelectionLabel: "「個別のイベントを選択させてください」",
-                stepEventsSuffix: "→チェックのみ",
-                pullRequestsLabel: "プルリクエスト",
+                stepEventsList:
+                    "→ プルリクエスト、Issue コメント、プルリクエストのレビューコメントの3つすべてにチェックを入れます。",
                 saveSuffix: "保存。",
+                stepRegister:
+                    "その後、上のボタンでこのリポジトリを登録します(またはこのリポジトリのPRをタスクにリンクします)。登録するまでフックはチームと結びついておらず、何もリンクしません。",
+            },
+            register: {
+                title: "リポジトリを登録",
+                intro: "リポジトリに Webhook をインストールするか、管理者が手動で追加したものを引き継ぎます。GitHub 上でそのリポジトリの管理者権限が必要です。",
+                placeholder: "owner/repo または GitHub の URL",
+                button: "登録",
+                invalid: "owner/repo の形式で入力するか、GitHub の URL を貼り付けてください。",
+                success: {
+                    created:
+                        "{repo} を登録しました。タスクにリンクされた PR とブランチが同期されます。",
+                    adopted:
+                        "{repo} の既存の Webhook を引き継ぎ、イベントを修正しました。PR とブランチが同期されます。",
+                    already_registered: "{repo} はすでに登録されています。",
+                },
+                reasons: {
+                    no_admin:
+                        "お使いの GitHub アカウントはこのリポジトリの管理者ではないため、Webhook を追加できません。リポジトリ管理者にここから登録してもらってください。",
+                    repo_not_found:
+                        "お使いのアカウントでは GitHub 上でそのリポジトリが見えません。名前と、組織が Genos にアクセスを許可しているか(「リポジトリへのアクセス」参照)を確認してください。",
+                    not_connected: "先に GitHub を連携してください。",
+                    token_unavailable:
+                        "GitHub の連携の有効期限が切れました。下で GitHub を再認可してください。",
+                    adopt_failed:
+                        "このリポジトリには GitHub が置き換えを許可しない Webhook があり、Genos を指すフックもありません。GitHub で古い Webhook を削除してから、もう一度登録してください。",
+                    encryption_unavailable: "現在、Webhook のシークレットを保存できません。",
+                    github_unreachable:
+                        "GitHub に接続できませんでした。しばらくしてからもう一度お試しください。",
+                    github_error:
+                        "GitHub がリクエストを拒否しました。しばらくしてからもう一度お試しください。",
+                    invalid_repo: "GitHub のリポジトリとして認識できません。",
+                    request_failed: "問題が発生しました。もう一度お試しください。",
+                },
+                unknownTitle: "Genos がまだ使えないイベントを送っているリポジトリ",
+                unknownIntro:
+                    "これらのリポジトリには Genos を指す Webhook がありますが、どのチームにも登録されていないため、PR は何にもリンクされません。登録すると同期が始まります。",
+                events: "{count, plural, one {# 件のイベント} other {# 件のイベント}}",
+                lastEvent: "最後: {event}",
+                needsAdmin: "リポジトリの管理者権限が必要です",
             },
             repoAccess: {
                 title: "リポジトリへのアクセス",
