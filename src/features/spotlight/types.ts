@@ -20,6 +20,8 @@ export type EntityType =
     | "task"
     | "milestone"
     | "note"
+    // A note folder (MIP-841): My Notes, Team Notes or cross-team shared.
+    | "note_folder"
     | "project"
     | "todo"
     | "spotlight_answer";
@@ -60,6 +62,9 @@ export interface SpotlightResult {
     // project › milestone › task, or the chat's name (MIP-839). Present
     // only when the viewer may see those names (the server decides).
     context_path?: string[] | null;
+    // `note_folder` rows: the folder to open, and its sidebar space.
+    folder_id?: string | null;
+    folder_scope?: "personal" | "team" | null;
     // Task status name ("Open" / "WIP" / "Blocked" / "Pending" /
     // "Closed"), projected onto task and milestone rows so the result
     // row can render the status chip. Optional on purpose — it is

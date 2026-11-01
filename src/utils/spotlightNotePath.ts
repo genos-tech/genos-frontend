@@ -1,5 +1,12 @@
 import type { SpotlightResult } from "../features/spotlight/types";
 
+/** The route that opens a folder result in the notes sidebar (MIP-841),
+ *  or null when the result has no folder id. */
+export const spotlightFolderPath = (r: SpotlightResult): string | null =>
+    r.entity_type === "note_folder" && r.folder_id
+        ? `/workspace/notes/folder/${r.folder_id}`
+        : null;
+
 // The full-page route for a note result (a search hit or an agent's note
 // chip), or the notes home when the result lacks the coordinates to
 // deep-link.

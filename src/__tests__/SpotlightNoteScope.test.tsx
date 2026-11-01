@@ -231,3 +231,36 @@ describe("Spotlight note-result container path", () => {
         expect(screen.queryByText(/Nope/)).toBeNull();
     });
 });
+
+// MIP-841: a note folder is a result of its own.
+describe("Spotlight folder results", () => {
+    const folder = (id: string, over: Partial<SpotlightResult> = {}): SpotlightResult => ({
+        ...noteResult(id),
+        entity_type: "note_folder",
+        entity_id: `note_folder:${id}`,
+        title: `Folder ${id}`,
+        note_id: null,
+        note_type: null,
+        folder_id: id,
+        folder_scope: "personal",
+        ...over,
+    });
+
+    it("names the space and the parents it sits in", () => {
+        renderResults([
+            folder("7", { folder_scope: "team", context_path: ["Company", "Design"] }),
+        ]);
+        expect(screen.getByText("Team folder · Company › Design")).toBeTruthy();
+    });
+
+    it("tells a My Notes folder apart, with no path for a top-level one", () => {
+        renderResults([folder("8")]);
+        expect(screen.getByText("My folder")).toBeTruthy();
+    });
+
+    it("is not captioned as a note", () => {
+        renderResults([folder("9", { folder_scope: "team" })]);
+        expect(screen.queryByText("My note")).toBeNull();
+        expect(screen.queryByText("Team note")).toBeNull();
+    });
+});

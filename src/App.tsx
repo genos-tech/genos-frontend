@@ -102,7 +102,7 @@ import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
-import { spotlightNotePath } from "./utils/spotlightNotePath";
+import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
 
 import { fmt, getMessages, I18nProvider } from "./i18n";
 import { ColorThemeProvider } from "./theme/ColorThemeProvider";
@@ -1057,6 +1057,13 @@ const AppBody = () => {
 
             if (r.entity_type === "note" && r.note_id) {
                 navigate(spotlightNotePath(r, noteScopes));
+                return;
+            }
+
+            // A folder opens in the notes sidebar (MIP-841).
+            const folderPath = spotlightFolderPath(r);
+            if (folderPath) {
+                navigate(folderPath);
                 return;
             }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SpotlightResult } from "../features/spotlight/types";
-import { spotlightNotePath } from "../utils/spotlightNotePath";
+import { spotlightFolderPath, spotlightNotePath } from "../utils/spotlightNotePath";
 
 const note = (overrides: Partial<SpotlightResult>): SpotlightResult =>
     ({
@@ -62,5 +62,22 @@ describe("spotlightNotePath", () => {
     it("falls back to the notes home without coordinates", () => {
         expect(spotlightNotePath(note({ note_type: "chat" }), new Map())).toBe("/workspace/notes");
         expect(spotlightNotePath(note({ note_type: "task" }), new Map())).toBe("/workspace/notes");
+    });
+});
+
+describe("spotlightFolderPath", () => {
+    it("opens a folder result at its folder URL", () => {
+        expect(
+            spotlightFolderPath(
+                note({ entity_type: "note_folder", folder_id: "7", note_id: null })
+            )
+        ).toBe("/workspace/notes/folder/7");
+    });
+
+    it("has no path for a folder result without an id, or for anything else", () => {
+        expect(
+            spotlightFolderPath(note({ entity_type: "note_folder", folder_id: null }))
+        ).toBeNull();
+        expect(spotlightFolderPath(note({}))).toBeNull();
     });
 });

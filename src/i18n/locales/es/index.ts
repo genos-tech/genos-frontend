@@ -2999,6 +2999,8 @@ export const es: DeepPartial<Messages> = {
             project: "Proyecto",
             notePersonal: "Mi nota",
             noteTeam: "Nota de equipo",
+            noteFolderTeam: "Carpeta de equipo",
+            noteFolderPersonal: "Mi carpeta",
             noteShared: "Nota compartida",
             noteTask: "Nota de tarea",
             noteChat: "Nota de chat",

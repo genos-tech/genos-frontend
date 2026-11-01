@@ -54,9 +54,13 @@ export type NoteRouteInfo = {
     chatType: string | undefined;
     chatId: number | undefined;
     threadId: number | undefined;
+    // `/workspace/notes/folder/:folderId` opens a folder in the sidebar
+    // rather than a note (MIP-841).
+    folderId: number | undefined;
 };
 
 // Expected formats:
+// - Folders:      /workspace/notes/folder/:folderId
 // - My notes:     /workspace/notes/my/:noteId
 // - Shared notes: /workspace/notes/shared/:noteId
 // - Team notes:   /workspace/notes/team/:noteId
@@ -73,10 +77,17 @@ export const parseNoteRoute = (pathname: string): NoteRouteInfo => {
         chatType: undefined,
         chatId: undefined,
         threadId: undefined,
+        folderId: undefined,
     };
 
     const notesIndex = pathParts.indexOf("notes");
     if (notesIndex === -1) return result;
+
+    if (pathParts[notesIndex + 1] === "folder") {
+        const id = Number(pathParts[notesIndex + 2]);
+        if (Number.isInteger(id) && id > 0) result.folderId = id;
+        return result;
+    }
 
     const noteTypeStr = pathParts[notesIndex + 1];
     if (noteTypeStr && NOTE_TYPE_MAP[noteTypeStr] !== undefined) {
@@ -295,6 +306,35 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
             hasHandledInitialUrl.current = true;
         }
     }, [location.pathname]);
+
+    // `/workspace/notes/folder/:id` (a Spotlight folder result, or a link
+    // to one): open that folder's space, unfold its ancestors and flash it.
+    // The folder lists load after the route does, so wait for the folder to
+    // appear in one of them; once per URL, or the periodic list refresh
+    // would scroll the sidebar back every minute. A folder in neither list
+    // (not yours to see) is simply not revealed.
+    const revealedFolderId = useRef<number | null>(null);
+    const folderIdInUrl = parseNoteRoute(location.pathname).folderId;
+    useEffect(() => {
+        if (!isActiveRoute) return;
+        if (folderIdInUrl === undefined) {
+            revealedFolderId.current = null;
+            return;
+        }
+        if (revealedFolderId.current === folderIdInUrl) return;
+        const inTeam = useNM.teamNoteFolders.some((f) => f.folderId === folderIdInUrl);
+        const inMy = useNM.myNoteFolders.some((f) => f.folderId === folderIdInUrl);
+        if (!inTeam && !inMy) return;
+        revealedFolderId.current = folderIdInUrl;
+        // Revealing switches the sidebar space, which the effect below
+        // would answer by rewriting the URL to whatever note is open: the
+        // folder URL would not survive. Same guard the URL→note effect
+        // uses, set only when the type will actually change (the guard
+        // is cleared by that effect running).
+        if (useNM.currentNoteType !== (inTeam ? 8 : 1)) isNavigatingFromUrl.current = true;
+        useNM.revealFolder(folderIdInUrl, inTeam ? "team" : "my");
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- reveal once per URL
+    }, [folderIdInUrl, useNM.teamNoteFolders, useNM.myNoteFolders, isActiveRoute]);
 
     // Update URL when current note changes
     useEffect(() => {

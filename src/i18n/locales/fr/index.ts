@@ -3367,6 +3367,8 @@ export const fr: DeepPartial<Messages> = {
             todoWithDate: "À faire · {date}",
             notePersonal: "Ma note",
             noteTeam: "Note d'équipe",
+            noteFolderTeam: "Dossier d'équipe",
+            noteFolderPersonal: "Mon dossier",
             noteShared: "Note partagée",
             noteTask: "Note de tâche",
             noteChat: "Note de conversation",

@@ -2959,6 +2959,8 @@ export const ar: DeepPartial<Messages> = {
             project: "مشروع",
             notePersonal: "ملاحظاتي",
             noteTeam: "ملاحظة الفريق",
+            noteFolderTeam: "مجلد الفريق",
+            noteFolderPersonal: "مجلدي",
             noteShared: "ملاحظة مشتركة",
             noteTask: "ملاحظة مهمة",
             noteChat: "ملاحظة محادثة",
