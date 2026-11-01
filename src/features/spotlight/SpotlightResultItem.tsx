@@ -154,8 +154,14 @@ export const entitySubtitle = (
     return "";
 };
 
+/** A note's container path as one label: "Design › Specs". */
+export const contextPathLabel = (r: SpotlightResult): string =>
+    r.entity_type === "note" && r.context_path?.length ? r.context_path.join(" › ") : "";
+
 // The row's subtitle: a task or milestone also shows its id ("Task ·
-// MIP-739"), the handle people search and `#`-mention it by (MIP-739).
+// MIP-739"), the handle people search and `#`-mention it by (MIP-739); a
+// note shows where it lives ("Team · Design › Specs", MIP-839), which is
+// what tells two same-titled notes apart.
 // Row-only — the source chips reuse `entitySubtitle` as a prefix.
 export const rowSubtitle = (
     r: SpotlightResult,
@@ -164,7 +170,9 @@ export const rowSubtitle = (
 ): string => {
     const subtitle = entitySubtitle(r, ts, noteScopes);
     const isTask = r.entity_type === "task" || r.entity_type === "milestone";
-    return isTask && r.task_display_id ? `${subtitle} · ${r.task_display_id}` : subtitle;
+    if (isTask && r.task_display_id) return `${subtitle} · ${r.task_display_id}`;
+    const where = contextPathLabel(r);
+    return where ? `${subtitle} · ${where}` : subtitle;
 };
 
 // Short uppercase tag rendered next to the subtitle when the matched
@@ -408,8 +416,19 @@ const SpotlightResultItemInner = ({
                         sx={{
                             opacity: isDark ? 1 : 0.55,
                             color: isDark ? DARK_TEXT_SOFT : undefined,
-                            flexShrink: 0,
+                            // A deep folder path must not push the title out.
+                            ...(contextPathLabel(result)
+                                ? {
+                                      flexShrink: 1,
+                                      minWidth: 0,
+                                      maxWidth: "55%",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                  }
+                                : { flexShrink: 0 }),
                         }}
+                        title={contextPathLabel(result) || undefined}
                     >
                         {rowSubtitle(result, t.spotlight, noteScopes)}
                     </Typography>
