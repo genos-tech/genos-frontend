@@ -2559,6 +2559,7 @@ export const es: DeepPartial<Messages> = {
             taskNotes: "Notas de tareas",
             chatNotes: "Notas de chat",
             sharedNotes: "Notas compartidas",
+            favoriteFolders: "Carpetas",
             noFavorites: "Aún no hay favoritos. Marca notas con estrella para añadirlas aquí.",
             noRecents: "Aún no hay notas recientes.",
             soonBadge: "Pronto",

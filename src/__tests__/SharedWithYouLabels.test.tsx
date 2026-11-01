@@ -119,6 +119,9 @@ const folder = (extra: Partial<TeamNoteFolderTreeNode>) =>
 const folderDeps = {
     useNM: {
         isFolderExpanded: () => false,
+        isFolderFavorited: () => false,
+        toggleFolderFavorite: async () => {},
+        highlightedFolderId: null,
         toggleFolderExpanded: vi.fn(),
     } as unknown as NoteManagementState,
     actions: {
