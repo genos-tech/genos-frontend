@@ -70,3 +70,34 @@ export const personalNoteScopes = (
     for (const note of teamNoteMeta) scopes.set(note.noteId, "team");
     return scopes;
 };
+
+// Which space's header a personal-backed note gets (MIP-830).
+//
+// My, Shared and Team notes are one component (`MyNoteMain`) and one note
+// type, so the header is chosen by bucket. The bucket used to come only from
+// the ACTIVE TAB, which is wrong wherever the open note isn't the active tab:
+// a note in the note modal, over whichever note the page has open, took that
+// tab's bucket and a team note read "My Notes". So, in order:
+//   1. the meta lists, which are the data (team wins a note in both);
+//   2. the active tab, when it is this note's own tab;
+//   3. the `currentNoteType` the host set for this note (the modal sets 4/8).
+export const resolvePersonalBucket = ({
+    noteId,
+    scopes,
+    activeTab,
+    currentNoteType,
+}: {
+    noteId: number | null | undefined;
+    scopes: ReadonlyMap<number, "shared" | "team">;
+    activeTab: { kind: string; noteId?: number; bucket?: "my" | "shared" | "team" } | null;
+    currentNoteType: number;
+}): "my" | "shared" | "team" => {
+    if (noteId != null) {
+        const known = scopes.get(noteId);
+        if (known) return known;
+    }
+    if (activeTab?.kind === "my" && (noteId == null || activeTab.noteId === noteId)) {
+        return activeTab.bucket ?? "my";
+    }
+    return bucketFromNoteType(currentNoteType);
+};

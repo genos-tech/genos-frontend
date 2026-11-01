@@ -15,7 +15,11 @@ import { UserProps } from "../../../../types/admin";
 import { EmptyState } from "../../common/components/EmptyState";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
-import { noteTypeFromBucket } from "../../common/utils/noteTypeAlias";
+import {
+    noteTypeFromBucket,
+    personalNoteScopes,
+    resolvePersonalBucket,
+} from "../../common/utils/noteTypeAlias";
 import { TeamNoteHeader } from "../../team-notes/components/TeamNoteHeader";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
@@ -67,19 +71,21 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const { t } = useTranslation();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
-    // Which personal-backed space the open note belongs to. Read off the
-    // active tab because it can't be re-derived — My / Shared / Team are
-    // all note_type 1. Falls back to the sidebar's current section while
-    // a tab is still settling.
-    const activeTab = useNM.tabsApi.activeTab;
-    const activeBucket =
-        activeTab?.kind === "my"
-            ? (activeTab.bucket ?? "my")
-            : useNM.currentNoteType === 8
-              ? "team"
-              : useNM.currentNoteType === 4
-                ? "shared"
-                : "my";
+    // Which personal-backed space the open note belongs to. My / Shared /
+    // Team are all note_type 1, so it is resolved from the meta lists first
+    // (the data), then the active tab if it is this note's own, then the
+    // host's note type. The tab alone was wrong in the note modal, whose
+    // note is not the page's active tab (MIP-830).
+    const personalScopes = useMemo(
+        () => personalNoteScopes(useNM.teamNoteMeta, useNM.sharedNoteMeta),
+        [useNM.teamNoteMeta, useNM.sharedNoteMeta]
+    );
+    const activeBucket = resolvePersonalBucket({
+        noteId: useNM.currentMyNote?.noteId,
+        scopes: personalScopes,
+        activeTab: useNM.tabsApi.activeTab,
+        currentNoteType: useNM.currentNoteType,
+    });
 
     // In task-page mode MyNoteMain renders standalone — the editor pool
     // lives in `NoteContentRenderer`, which is only mounted on
