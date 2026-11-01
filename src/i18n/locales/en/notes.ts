@@ -206,6 +206,7 @@ export const notes = {
     },
     importMd: {
         heading: "Import Markdown",
+        importNote: "Import note",
         chooseFile: "Choose a .md file…",
         titleLabel: "Note title",
         folderLabel: "Folder",

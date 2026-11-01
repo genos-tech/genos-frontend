@@ -8,6 +8,7 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import {
     Box,
     IconButton,
@@ -50,6 +51,7 @@ import {
 } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
+import { ModalImportMarkdown } from "../../../../notes/common/components/ModalImportMarkdown";
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
@@ -317,9 +319,69 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         },
     ];
 
+    // Shared look of the two buttons under the task's notes list.
+    const addNoteButtonSx = {
+        borderRadius: "10px",
+        px: 2,
+        py: 1,
+        justifyContent: "center",
+        gap: 1,
+        background: isDark
+            ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
+            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
+        border: "1px solid",
+        borderColor: isDark
+            ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
+            : "rgba(var(--gp-brand-700-rgb), 0.15)",
+        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+        fontWeight: 600,
+        transition: "all 0.2s ease",
+        "&:hover": {
+            background: isDark
+                ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)"
+                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
+            borderColor: isDark
+                ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
+                : "rgba(var(--gp-brand-700-rgb), 0.25)",
+        },
+    } as const;
+
+    const [importNoteOpen, setImportNoteOpen] = useState(false);
+    // The imported note is already created and (outside a modal-hosted
+    // preview) open in a notes-page tab. Bring the notes page up like the
+    // New Note button does, or re-target the hosting modal at the note.
+    const handleImportedNote = (note: TaskNoteProps) => {
+        if (isModalHosted && urlLinkModal) {
+            urlLinkModal.openModalByHref(
+                `/workspace/notes/task/project/${note.projectId}/task/${note.taskId}/note/${note.noteId}`
+            );
+            return;
+        }
+        if (useNM.setIsTaskNoteVisible) {
+            useTM.setIsTaskTableVisible(false);
+            useNM.setIsTaskNoteVisible(true);
+        }
+    };
+
     return (
         <Box sx={{ flexGrow: 1, overflowX: "hidden" }}>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            {taskContent.project && (
+                <ModalImportMarkdown
+                    hostZIndex={hostZIndex}
+                    myself={myself}
+                    open={importNoteOpen}
+                    skipOpenTab={isModalHosted}
+                    useNM={useNM}
+                    context={{
+                        kind: "task",
+                        projectId: taskContent.project.projectId,
+                        taskId: Number(taskContent.id),
+                    }}
+                    onClose={() => setImportNoteOpen(false)}
+                    onTaskNoteCreated={handleImportedNote}
+                />
+            )}
             <Tabs
                 aria-label={t.tasks.tabs.ariaLabel}
                 value={tabIndex}
@@ -428,6 +490,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             Attachments behaviour rather than vanishing. */}
                         <Box
                             sx={{ position: "relative" }}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                if (e.dataTransfer?.types?.includes("Files")) {
+                                    e.dataTransfer.dropEffect = "copy";
+                                }
+                            }}
                             onDrop={(e) => {
                                 if (!pmChannel) {
                                     handleDroppedFiles(e);
@@ -457,12 +525,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     ).values()
                                 );
                                 if (files.length > 0) setPendingCommentFiles(files);
-                            }}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                if (e.dataTransfer?.types?.includes("Files")) {
-                                    e.dataTransfer.dropEffect = "copy";
-                                }
                             }}
                         >
                             <TaskCommentList
@@ -612,34 +674,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     the dialog, which looked like a dead
                                     click — the reason this button used to
                                     be hidden there entirely. */}
-                                <ListItem sx={{ p: 0, mt: 0.5 }}>
+                                <ListItem sx={{ p: 0, mt: 0.5, gap: 1 }}>
                                     <ListItemButton
                                         sx={{
-                                            borderRadius: "10px",
-                                            px: 2,
-                                            py: 1,
-                                            justifyContent: "center",
-                                            gap: 1,
-                                            background: isDark
-                                                ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
-                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
-                                            border: "1px solid",
-                                            borderColor: isDark
-                                                ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                                            color: isDark
-                                                ? "var(--gp-brandalt-400)"
-                                                : "var(--gp-brand-700)",
-                                            fontWeight: 600,
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                background: isDark
-                                                    ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)"
-                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
-                                                borderColor: isDark
-                                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                                                    : "rgba(var(--gp-brand-700-rgb), 0.25)",
-                                            },
+                                            ...addNoteButtonSx,
+                                            flex: 1,
                                         }}
                                         onClick={async () => {
                                             if (!taskContent.project) return;
@@ -678,6 +717,20 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <AddRoundedIcon sx={{ fontSize: 18 }} />
                                         <Typography level="body-sm" sx={{ fontWeight: 600 }}>
                                             New Note
+                                        </Typography>
+                                    </ListItemButton>
+                                    {/* Import a markdown file as a new note on this
+                                        task (MIP-850). Same dialog as the notes
+                                        header's "Import Markdown…". */}
+                                    <ListItemButton
+                                        sx={{ ...addNoteButtonSx, flex: 1 }}
+                                        onClick={() => {
+                                            if (taskContent.project) setImportNoteOpen(true);
+                                        }}
+                                    >
+                                        <UploadFileRoundedIcon sx={{ fontSize: 18 }} />
+                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                            {t.notes.importMd.importNote}
                                         </Typography>
                                     </ListItemButton>
                                 </ListItem>
@@ -1080,11 +1133,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <TaskActivityFeed
                             activities={taskActivities}
                             allTasks={useTM.allTasks}
-                            taskId={taskContent.id ?? null}
                             isLoading={isLoadingTaskActivities}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            taskId={taskContent.id ?? null}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}

@@ -2341,6 +2341,7 @@ export const ja: DeepPartial<Messages> = {
         },
         importMd: {
             heading: "Markdownをインポート",
+            importNote: "ノートをインポート",
             chooseFile: ".mdファイルを選択…",
             titleLabel: "ノートのタイトル",
             folderLabel: "フォルダ",

@@ -32,6 +32,12 @@ vi.mock("../features/tasks/components/contents/base/sub/TaskActivityFeed", () =>
 }));
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "tok" }),
+    useOptionalAccessToken: () => "tok",
+}));
+// The real converter boots a headless BlockNote editor; not what's under test.
+vi.mock("../features/notes/common/services/noteMarkdown", () => ({
+    markdownToNoteBlocks: vi.fn().mockResolvedValue([{ type: "paragraph" }]),
+    titleFromFilename: (name: string) => name.replace(/\.md$/, ""),
 }));
 vi.mock("../components/ui/feedback/useFileSizeGuard", () => ({
     useFileSizeGuard: () => ({
@@ -64,6 +70,10 @@ const renderBlock = ({
         handleCreateNewTaskNote,
         setIsTaskNoteVisible,
         tabsApi: { openTab: vi.fn() },
+        taskNoteMeta: [],
+        chatNoteMeta: [],
+        myNoteFolders: [],
+        teamNoteFolders: [],
     } as unknown as NoteManagementState;
     const useTM = {
         setIsTaskTableVisible: vi.fn(),
@@ -155,5 +165,75 @@ describe("TaskTabBlock — New Note in the modal-hosted preview", () => {
         );
         expect(setIsTaskNoteVisible).toHaveBeenCalledWith(true);
         expect(openModalByHref).not.toHaveBeenCalled();
+    });
+});
+
+describe("TaskTabBlock — Import note (MIP-850)", () => {
+    const pickAndImport = async () => {
+        fireEvent.click(screen.getByText("Import note"));
+        const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+        const file = Object.assign(new File(["# Plan"], "plan.md"), {
+            text: async () => "# Plan",
+        });
+        fireEvent.change(input, { target: { files: [file] } });
+        // The title defaults to the file name once the file is read.
+        await waitFor(() => expect(screen.getByDisplayValue("plan")).toBeInTheDocument());
+        fireEvent.click(screen.getByRole("button", { name: "Import" }));
+    };
+
+    it("sits next to New Note and imports the file as a note on this task", async () => {
+        const handleCreateNewTaskNote = vi
+            .fn()
+            .mockResolvedValue({ noteType: 2, noteId: 99, projectId: 7, taskId: 42 });
+        const setIsTaskNoteVisible = vi.fn();
+        const openModalByHref = vi.fn();
+
+        const { useTM } = renderBlock({
+            handleCreateNewTaskNote,
+            setIsTaskNoteVisible,
+            openModalByHref,
+        });
+        expect(screen.getByText("New Note")).toBeInTheDocument();
+
+        await pickAndImport();
+
+        await waitFor(() => expect(handleCreateNewTaskNote).toHaveBeenCalledTimes(1));
+        expect(handleCreateNewTaskNote).toHaveBeenCalledWith(null, 7, 42, undefined, {
+            title: "plan",
+            body: [{ type: "paragraph" }],
+        });
+        // Page-hosted: the notes page comes up, as for New Note.
+        await waitFor(() => expect(setIsTaskNoteVisible).toHaveBeenCalledWith(true));
+        expect(useTM.setIsTaskTableVisible).toHaveBeenCalledWith(false);
+        expect(openModalByHref).not.toHaveBeenCalled();
+    });
+
+    it("in the modal-hosted preview creates without a page tab and re-targets the modal", async () => {
+        const handleCreateNewTaskNote = vi
+            .fn()
+            .mockResolvedValue({ noteType: 2, noteId: 99, projectId: 7, taskId: 42 });
+        const setIsTaskNoteVisible = vi.fn();
+        const openModalByHref = vi.fn();
+
+        renderBlock({
+            hostZIndex: 10020,
+            handleCreateNewTaskNote,
+            setIsTaskNoteVisible,
+            openModalByHref,
+        });
+
+        await pickAndImport();
+
+        await waitFor(() =>
+            expect(openModalByHref).toHaveBeenCalledWith(
+                "/workspace/notes/task/project/7/task/42/note/99"
+            )
+        );
+        expect(handleCreateNewTaskNote).toHaveBeenCalledWith(null, 7, 42, undefined, {
+            title: "plan",
+            body: [{ type: "paragraph" }],
+            skipOpenTab: true,
+        });
+        expect(setIsTaskNoteVisible).not.toHaveBeenCalled();
     });
 });
