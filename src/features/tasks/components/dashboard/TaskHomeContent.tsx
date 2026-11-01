@@ -238,6 +238,14 @@ const formatRelativeTime = (dateStr: string | null): string => {
     return `${weeks} weeks ago`;
 };
 
+// Last-update time by numeric task id, for the velocity chart to skip tasks
+// with nothing in its window (see `TaskVelocitySection`'s `taskUpdatedAt`).
+const taskUpdatedAtById = (tasks: EffectiveTask[]): Record<number, string | null | undefined> => {
+    const out: Record<number, string | null | undefined> = {};
+    for (const t of tasks) out[Number(t.id)] = t.updatedAt;
+    return out;
+};
+
 // KPI rollup for one person's tasks (active/closed/overdue/completion, …).
 // Extracted so the "My Tasks" tab, its tab badge, and the "Member's Tasks"
 // tab all compute the same numbers for whichever user is in focus.
@@ -642,6 +650,16 @@ export const TaskHomeContent = ({
             .filter((n) => Number.isFinite(n) && n > 0);
     }, [effectiveTasks, selectedSprint?.sprintId]);
 
+    const sprintTaskUpdatedAt = useMemo(
+        () =>
+            taskUpdatedAtById(
+                effectiveTasks.filter((t) =>
+                    selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+                )
+            ),
+        [effectiveTasks, selectedSprint?.sprintId]
+    );
+
     // Per-assignee task-id subsets for the velocity chart's "by member"
     // picker (assignee lens). Distinct assignees of the sprint's tasks,
     // each carrying their own valid numeric task ids; unassigned rows are
@@ -856,6 +874,7 @@ export const TaskHomeContent = ({
         () => focusTasks.map((t) => Number(t.id)).filter((n) => Number.isFinite(n) && n > 0),
         [focusTasks]
     );
+    const focusTaskUpdatedAt = useMemo(() => taskUpdatedAtById(focusTasks), [focusTasks]);
     const focusStats = useMemo(() => computeAssigneeStats(focusTasks), [focusTasks]);
     const focusUpNext = useMemo(
         () => computeUpNext(focusTasks, upNextSort),
@@ -1986,6 +2005,7 @@ export const TaskHomeContent = ({
                                         isDark={isDark}
                                         members={sprintMembers}
                                         taskIds={sprintTaskIds}
+                                        taskUpdatedAt={sprintTaskUpdatedAt}
                                         teamId={myself.teamId}
                                         textMuted={textMuted}
                                         textPrimary={textPrimary}
@@ -2658,6 +2678,7 @@ export const TaskHomeContent = ({
                                             <TaskVelocitySection
                                                 isDark={isDark}
                                                 taskIds={focusTaskIds}
+                                                taskUpdatedAt={focusTaskUpdatedAt}
                                                 teamId={myself.teamId}
                                                 textMuted={textMuted}
                                                 textPrimary={textPrimary}

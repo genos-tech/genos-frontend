@@ -133,6 +133,33 @@ describe("TaskVelocitySection", () => {
         expect(loadMock.mock.calls[1][0]).toEqual([3]);
     });
 
+    it("skips tasks last updated before the window when update times are given", async () => {
+        renderSection({
+            taskIds: [1, 2, 3, 4],
+            windowStart: "2026-06-01",
+            windowEnd: "2026-06-14",
+            taskUpdatedAt: {
+                1: "2026-05-01T00:00:00Z", // long before the window
+                2: "2026-06-05T10:00:00Z", // inside it
+                3: "2026-05-31T12:00:00Z", // inside the one-day slack
+                // 4 is unknown: kept
+            },
+        });
+        await waitFor(() => expect(loadMock).toHaveBeenCalledTimes(1));
+        expect(loadMock.mock.calls[0][0]).toEqual([2, 3, 4]);
+    });
+
+    it("shows the empty state without a fetch when every task predates the window", async () => {
+        renderSection({
+            taskIds: [1],
+            windowStart: "2026-06-01",
+            windowEnd: "2026-06-14",
+            taskUpdatedAt: { 1: "2026-01-01T00:00:00Z" },
+        });
+        await screen.findByText(/No task activity in this window/);
+        expect(loadMock).not.toHaveBeenCalled();
+    });
+
     it("does not render the member picker when no members are provided", () => {
         renderSection();
         expect(screen.queryByText("Member")).not.toBeInTheDocument();
