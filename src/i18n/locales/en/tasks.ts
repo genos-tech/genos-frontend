@@ -303,6 +303,29 @@ export const tasks = {
         sharedByAnotherTeam: "Shared with your team by another team",
     },
 
+    // Milestone folders (MIP-847).
+    folders: {
+        noFolder: "No folder",
+        newFolder: "New folder",
+        renameFolder: "Rename folder",
+        deleteFolder: "Delete folder",
+        moveToFolder: "Move to folder",
+        moveActions: "Milestone actions",
+        folderActions: "Folder actions",
+        namePlaceholder: "Folder name",
+        createTitle: "New folder",
+        renameTitle: "Rename folder",
+        deleteTitle: "Delete folder",
+        deleteBody: 'The milestones in "{name}" are not deleted. They move out of the folder.',
+        save: "Save",
+        create: "Create",
+        delete: "Delete",
+        cancel: "Cancel",
+        nameTaken: "A folder with that name already exists, or the name is empty.",
+        saveFailed: "Could not save the folder. Try a different name.",
+        unfiled: "Not in a folder",
+    },
+
     picker: {
         noSprintLabel: "No sprint",
         noMilestoneLabel: "No milestone",
@@ -525,6 +548,7 @@ export const tasks = {
         sprint: "Sprint",
         noSprint: "No Sprint",
         milestone: "Milestone",
+        folder: "Folder",
         dependencies: "Dependencies",
     },
     customFields: {

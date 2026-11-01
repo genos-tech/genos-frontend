@@ -13,6 +13,9 @@ export type CreateMilestoneInput = {
     chatId?: string | null;
     threadId?: string | null;
     sprintId?: number | null;
+    // Grouping folder (MIP-847). Omit / null for unfiled. Must belong to
+    // `projectId`.
+    folderId?: number | null;
     description?: unknown;
     status?: string;
     statusCode?: number | null;
@@ -49,6 +52,7 @@ export const createMilestone = async (
                 chat_id: input.chatId ?? null,
                 thread_id: input.threadId ?? null,
                 sprint_id: input.sprintId ?? null,
+                folder_id: input.folderId ?? null,
                 description: input.description ?? null,
                 status: input.status ?? "Open",
                 status_code: input.statusCode ?? null,

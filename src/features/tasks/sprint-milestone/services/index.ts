@@ -18,3 +18,9 @@ export type { UpdateSprintInput } from "./updateSprint";
 export { updateSprint } from "./updateSprint";
 export type { SprintConfigInput } from "./upsertSprintConfig";
 export { upsertSprintConfig } from "./upsertSprintConfig";
+export {
+    createMilestoneFolder,
+    deleteMilestoneFolder,
+    loadMilestoneFolders,
+    updateMilestoneFolder,
+} from "./milestoneFolders";
