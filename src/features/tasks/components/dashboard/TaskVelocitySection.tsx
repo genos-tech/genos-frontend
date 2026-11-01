@@ -36,7 +36,15 @@ type Props = {
     // the chart to one member's tasks. Omitted on My Tasks (already
     // personal).
     members?: VelocityMember[];
+    // Last-update time per task id. A task with no activity inside the
+    // window can't add to the chart, so ids last updated before it aren't
+    // requested (a long-lived project holds thousands of closed tasks).
+    // Every audit row is written when the task row is saved, so `updatedAt`
+    // is never older than the newest activity. Ids missing here are kept.
+    taskUpdatedAt?: Record<number, string | null | undefined>;
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const toIso = (d: Date): string => {
     const y = d.getFullYear();
@@ -70,6 +78,7 @@ export const TaskVelocitySection = ({
     windowStart,
     windowEnd,
     members,
+    taskUpdatedAt,
 }: Props) => {
     const { t } = useTranslation();
     const v = t.tasks.dashboard.velocity;
@@ -95,26 +104,37 @@ export const TaskVelocitySection = ({
         return members?.find((m) => m.id === selectedMemberId)?.taskIds ?? taskIds;
     }, [selectedMemberId, members, taskIds]);
 
-    // Stable primitive so the effect doesn't refetch on a fresh-array
-    // identity every render.
-    const idsKey = useMemo(
-        () => [...activeTaskIds].sort((a, b) => a - b).join(","),
-        [activeTaskIds]
-    );
-
     const { start, end } = useMemo(() => {
         if (windowStart && windowEnd) return { start: windowStart, end: windowEnd };
         return defaultWindow(granularity);
     }, [windowStart, windowEnd, granularity]);
 
+    // The ids worth asking about: those touched since the window opened. A
+    // day of slack covers the server stamping in UTC and the window in
+    // local time.
+    const loadIds = useMemo(() => {
+        if (!taskUpdatedAt) return activeTaskIds;
+        const from = new Date(`${start}T00:00:00`).getTime() - DAY_MS;
+        return activeTaskIds.filter((id) => {
+            const at = taskUpdatedAt[id];
+            if (!at) return true;
+            const ms = new Date(at).getTime();
+            return Number.isNaN(ms) || ms >= from;
+        });
+    }, [activeTaskIds, taskUpdatedAt, start]);
+
+    // Stable primitive so the effect doesn't refetch on a fresh-array
+    // identity every render.
+    const idsKey = useMemo(() => [...loadIds].sort((a, b) => a - b).join(","), [loadIds]);
+
     useEffect(() => {
-        if (activeTaskIds.length === 0) {
+        if (loadIds.length === 0) {
             setData([]);
             return;
         }
         let cancelled = false;
         setLoading(true);
-        void loadTaskVelocity(activeTaskIds, start, end, granularity, teamId, accessToken).then(
+        void loadTaskVelocity(loadIds, start, end, granularity, teamId, accessToken).then(
             (res) => {
                 if (cancelled) return;
                 setData(res ?? []);
@@ -124,7 +144,7 @@ export const TaskVelocitySection = ({
         return () => {
             cancelled = true;
         };
-        // `idsKey` stands in for `activeTaskIds` (stable across identity-only
+        // `idsKey` stands in for `loadIds` (stable across identity-only
         // changes); start/end already fold in granularity + window.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idsKey, start, end, granularity, teamId, accessToken]);
