@@ -51,7 +51,9 @@ import {
 } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
+import { AttachmentActionsMenu } from "../../../../notes/common/components/AttachmentActionsMenu";
 import { ModalImportMarkdown } from "../../../../notes/common/components/ModalImportMarkdown";
+import { isImportableTextFile } from "../../../../notes/common/services/importableAttachment";
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
@@ -347,6 +349,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     } as const;
 
     const [importNoteOpen, setImportNoteOpen] = useState(false);
+    // A markdown/text attachment being imported as a note (its menu on the
+    // attachment tile). Shares the dialog with the header-style import.
+    const [importAttachment, setImportAttachment] = useState<{ url: string; name: string } | null>(
+        null
+    );
     // The imported note is already created and (outside a modal-hosted
     // preview) open in a notes-page tab. Bring the notes page up like the
     // New Note button does, or re-target the hosting modal at the note.
@@ -370,7 +377,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 <ModalImportMarkdown
                     hostZIndex={hostZIndex}
                     myself={myself}
-                    open={importNoteOpen}
+                    open={importNoteOpen || importAttachment != null}
                     skipOpenTab={isModalHosted}
                     useNM={useNM}
                     context={{
@@ -378,7 +385,22 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         projectId: taskContent.project.projectId,
                         taskId: Number(taskContent.id),
                     }}
-                    onClose={() => setImportNoteOpen(false)}
+                    initialFile={
+                        importAttachment
+                            ? {
+                                  ...importAttachment,
+                                  defaultDestination: {
+                                      kind: "task",
+                                      projectId: taskContent.project.projectId,
+                                      taskId: Number(taskContent.id),
+                                  },
+                              }
+                            : null
+                    }
+                    onClose={() => {
+                        setImportNoteOpen(false);
+                        setImportAttachment(null);
+                    }}
                     onTaskNoteCreated={handleImportedNote}
                 />
             )}
@@ -933,6 +955,25 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         >
                                             {name}
                                         </Typography>
+                                        {isImportableTextFile(name) && taskContent.project && (
+                                            // Beside the tile, not on it: clicking
+                                            // the tile still downloads.
+                                            <Box sx={{ position: "absolute", top: 2, left: 2 }}>
+                                                <AttachmentActionsMenu
+                                                    disabled={isUploading}
+                                                    name={name}
+                                                    onDownload={() => {
+                                                        void downloadFile(preview.url, name);
+                                                    }}
+                                                    onImportAsNote={() =>
+                                                        setImportAttachment({
+                                                            url: preview.url,
+                                                            name,
+                                                        })
+                                                    }
+                                                />
+                                            </Box>
+                                        )}
                                         <UploadingTileBadge open={isUploading} />
                                     </Box>
                                 );

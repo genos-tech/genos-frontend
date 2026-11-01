@@ -25,10 +25,19 @@ import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useProtectedMediaSrc } from "../../../hooks/common/useProtectedMediaSrc";
 import type { MessageAttachment } from "../../../types/channel";
 import { downloadFile } from "../../../utils/downloadUtils";
+import { AttachmentActionsMenu } from "../../notes/common/components/AttachmentActionsMenu";
+import { isImportableTextFile } from "../../notes/common/services/importableAttachment";
+
+/** The bits of an attachment the "Import as note" flow needs. */
+export type ImportableAttachment = { url: string; name: string };
 
 interface MessageAttachmentsProps {
     messageId: string;
     attachments: readonly MessageAttachment[];
+    /** When set, `.md` / `.markdown` / `.txt` attachments get a menu with
+     *  "Import as note" next to the chip. Omitted (e.g. a surface with no
+     *  notes wiring) = no menu, behaviour unchanged. */
+    onImportAsNote?: (attachment: ImportableAttachment) => void;
 }
 
 const STRIP_STYLE: CSSProperties = {
@@ -61,12 +70,21 @@ const PREVIEW_STYLE: CSSProperties = {
     marginBottom: 4,
 };
 
-export function MessageAttachments({ messageId, attachments }: MessageAttachmentsProps) {
+export function MessageAttachments({
+    messageId,
+    attachments,
+    onImportAsNote,
+}: MessageAttachmentsProps) {
     if (!attachments || attachments.length === 0) return null;
     return (
         <div data-testid={`message-attachments-${messageId}`} style={STRIP_STYLE}>
             {attachments.map((a) => (
-                <AttachmentChip key={a.id} attachment={a} messageId={messageId} />
+                <AttachmentChip
+                    key={a.id}
+                    attachment={a}
+                    messageId={messageId}
+                    onImportAsNote={onImportAsNote}
+                />
             ))}
         </div>
     );
@@ -75,9 +93,10 @@ export function MessageAttachments({ messageId, attachments }: MessageAttachment
 interface AttachmentChipProps {
     messageId: string;
     attachment: MessageAttachment;
+    onImportAsNote?: (attachment: ImportableAttachment) => void;
 }
 
-function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
+function AttachmentChip({ messageId, attachment, onImportAsNote }: AttachmentChipProps) {
     const isImage = (attachment.mime || "").startsWith("image/");
     const filename = attachment.fileName || extractFilename(attachment.fileUrl);
     const sizeLabel = formatSize(attachment.sizeBytes);
@@ -96,36 +115,49 @@ function AttachmentChip({ messageId, attachment }: AttachmentChipProps) {
                     style={PREVIEW_STYLE}
                 />
             )}
-            <AppTooltip title={`${filename} — ${sizeLabel}`}>
-                <a
-                    data-testid={`message-attachment-link-${attachment.id}`}
-                    download={filename}
-                    href={attachment.fileUrl}
-                    rel="noreferrer"
-                    style={CHIP_STYLE}
-                    target="_blank"
-                    onClick={(e) => {
-                        // Same credential problem, one step worse: a plain
-                        // navigation would replace the tab with the API's
-                        // JSON error. `downloadFile` carries the session
-                        // token. `href` stays for copy-link / middle-click.
-                        e.preventDefault();
-                        void downloadFile(attachment.fileUrl, filename);
-                    }}
-                >
-                    <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>
-                    <span
-                        style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+            <div
+                style={{ display: "inline-flex", alignItems: "center", gap: 2, maxWidth: "100%" }}
+            >
+                <AppTooltip title={`${filename} — ${sizeLabel}`}>
+                    <a
+                        data-testid={`message-attachment-link-${attachment.id}`}
+                        download={filename}
+                        href={attachment.fileUrl}
+                        rel="noreferrer"
+                        style={CHIP_STYLE}
+                        target="_blank"
+                        onClick={(e) => {
+                            // Same credential problem, one step worse: a plain
+                            // navigation would replace the tab with the API's
+                            // JSON error. `downloadFile` carries the session
+                            // token. `href` stays for copy-link / middle-click.
+                            e.preventDefault();
+                            void downloadFile(attachment.fileUrl, filename);
                         }}
                     >
-                        {filename}
-                    </span>
-                    <span style={{ opacity: 0.6, flexShrink: 0 }}>{sizeLabel}</span>
-                </a>
-            </AppTooltip>
+                        <span aria-hidden="true">{isImage ? "🖼️" : "📎"}</span>
+                        <span
+                            style={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {filename}
+                        </span>
+                        <span style={{ opacity: 0.6, flexShrink: 0 }}>{sizeLabel}</span>
+                    </a>
+                </AppTooltip>
+                {onImportAsNote && isImportableTextFile(filename) && (
+                    <AttachmentActionsMenu
+                        name={filename}
+                        onDownload={() => void downloadFile(attachment.fileUrl, filename)}
+                        onImportAsNote={() =>
+                            onImportAsNote({ url: attachment.fileUrl, name: filename })
+                        }
+                    />
+                )}
+            </div>
         </div>
     );
 }

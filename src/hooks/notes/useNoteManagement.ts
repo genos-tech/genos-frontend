@@ -345,7 +345,7 @@ export interface NoteManagementState {
         parentNoteId: number | null,
         folderId?: number | null,
         opts?: NoteCreateOverrides
-    ) => Promise<void>;
+    ) => Promise<boolean>;
 
     // Note loading function
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
@@ -804,8 +804,8 @@ export const useNoteManagement = (
         parentNoteId: number | null,
         folderId: number | null = null,
         opts?: NoteCreateOverrides
-    ) => {
-        if (!accessToken) return;
+    ): Promise<boolean> => {
+        if (!accessToken) return false;
 
         // Which sidebar space the note belongs to. A folder id alone
         // can't tell us — a My Notes folder id and a Team Notes folder
@@ -875,9 +875,12 @@ export const useNoteManagement = (
                     setMyNoteMeta((prev) => [metaRow, ...prev]);
                 }
                 if (folderId != null) expandFolder(folderId);
+                return true;
             }
+            return false;
         } catch (error) {
             console.error("Error creating my note:", error);
+            return false;
         }
     };
 

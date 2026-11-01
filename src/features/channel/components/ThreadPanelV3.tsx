@@ -18,7 +18,7 @@ import { channelService, ChannelServiceError } from "../../../services/channel/c
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { useChannelThread } from "../hooks/useChannelThread";
 import { candidatesFromMessages, useMentionDraft } from "../hooks/useMentionDraft";
-import { MessageAttachments } from "./MessageAttachments";
+import { MessageAttachments, type ImportableAttachment } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { PendingAttachmentStrip } from "./PendingAttachmentStrip";
 
@@ -26,9 +26,16 @@ interface ThreadPanelV3Props {
     channelId: string;
     rootMessageId: string;
     onClose: () => void;
+    /** Optional: enables "Import as note" on markdown/text attachments. */
+    onImportAsNote?: (attachment: ImportableAttachment) => void;
 }
 
-export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanelV3Props) {
+export function ThreadPanelV3({
+    channelId,
+    rootMessageId,
+    onClose,
+    onImportAsNote,
+}: ThreadPanelV3Props) {
     const { t } = useTranslation();
     const { root, replies, replyInThread, isLoading } = useChannelThread(channelId, rootMessageId);
     const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
@@ -186,6 +193,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                 <MessageAttachments
                                     attachments={root.attachments}
                                     messageId={root.id}
+                                    onImportAsNote={onImportAsNote}
                                 />
                             )}
                         </div>
@@ -259,6 +267,7 @@ export function ThreadPanelV3({ channelId, rootMessageId, onClose }: ThreadPanel
                                         <MessageAttachments
                                             attachments={r.attachments}
                                             messageId={r.id}
+                                            onImportAsNote={onImportAsNote}
                                         />
                                     )}
                                 </li>

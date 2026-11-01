@@ -12,15 +12,18 @@
  * is dormant.
  */
 
-import { useCallback, useEffect } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { ChannelListV3 } from "./components/ChannelListV3";
+import type { ImportableAttachment } from "./components/MessageAttachments";
 import { MessagesPaneV3 } from "./components/MessagesPaneV3";
 import { ThreadPanelV3 } from "./components/ThreadPanelV3";
 
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import type { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { channelService } from "../../services/channel/channelService";
+import type { UserProps } from "../../types/admin";
 
 // The rollout gates (`isV3ChatEnabled` / `useIsV3ChatEnabled` /
 // `useV3ChatEnabledForKind`) used to live here; they moved to
@@ -29,7 +32,30 @@ import { channelService } from "../../services/channel/channelService";
 // composer and the whole BlockNote editor stack — into the initial
 // entry chunk. Import flags from there; this module is loaded lazily.
 
-export function V3ChatShell() {
+// The import dialog pulls in the markdown converter (and with it
+// `@blocknote/core`), so it is fetched only once someone actually asks to
+// import an attachment, not with the shell.
+const ModalImportMarkdown = lazy(() =>
+    import("../notes/common/components/ModalImportMarkdown").then((m) => ({
+        default: m.ModalImportMarkdown,
+    }))
+);
+
+interface V3ChatShellProps {
+    /** The signed-in user and the notes state, for "Import as note" on a
+     *  markdown/text attachment. Without them the menu is simply absent. */
+    myself?: UserProps;
+    useNM?: NoteManagementState;
+}
+
+export function V3ChatShell({ myself, useNM }: V3ChatShellProps = {}) {
+    // The attachment being imported, with the channel it came from (the
+    // default destination is that channel's chat note).
+    const [importing, setImporting] = useState<{
+        file: ImportableAttachment;
+        channelId: string;
+    } | null>(null);
+    const canImport = myself != null && useNM != null;
     // Channel + thread selection live in the URL so they survive
     // reloads and the browser back button does the right thing.
     const { channelId, rootMessageId } = useParams<{
@@ -46,6 +72,13 @@ export function V3ChatShell() {
             navigate(`/workspace/v3/${id}`);
         },
         [navigate]
+    );
+
+    const importAsNote = useCallback(
+        (file: ImportableAttachment) => {
+            if (selected) setImporting({ file, channelId: selected });
+        },
+        [selected]
     );
 
     const closeThread = useCallback(() => {
@@ -111,6 +144,29 @@ export function V3ChatShell() {
     // The bottom padding mirrors the mobile Homes: the BottomTabBar is
     // fixed at the viewport bottom, and without the reservation it sits
     // on top of the composer.
+    const importDialog =
+        canImport && importing ? (
+            <Suspense fallback={null}>
+                <ModalImportMarkdown
+                    key={importing.file.url}
+                    context={{ kind: "my" }}
+                    myself={myself}
+                    open={true}
+                    useNM={useNM}
+                    initialFile={{
+                        url: importing.file.url,
+                        name: importing.file.name,
+                        defaultDestination: {
+                            kind: "chat",
+                            channelId: importing.channelId,
+                            chatType: 0,
+                        },
+                    }}
+                    onClose={() => setImporting(null)}
+                />
+            </Suspense>
+        ) : null;
+
     if (isMobile) {
         return (
             <div
@@ -131,14 +187,17 @@ export function V3ChatShell() {
                         channelId={selected}
                         rootMessageId={openThread}
                         onClose={closeThread}
+                        onImportAsNote={canImport ? importAsNote : undefined}
                     />
                 ) : (
                     <MessagesPaneV3
                         channelId={selected}
                         onBack={() => navigate("/workspace/v3")}
+                        onImportAsNote={canImport ? importAsNote : undefined}
                         onOpenThread={openThreadFor}
                     />
                 )}
+                {importDialog}
             </div>
         );
     }
@@ -164,7 +223,11 @@ export function V3ChatShell() {
                                 minWidth: 0,
                             }}
                         >
-                            <MessagesPaneV3 channelId={selected} onOpenThread={openThreadFor} />
+                            <MessagesPaneV3
+                                channelId={selected}
+                                onImportAsNote={canImport ? importAsNote : undefined}
+                                onOpenThread={openThreadFor}
+                            />
                         </div>
                         {openThread && (
                             <div
@@ -179,6 +242,7 @@ export function V3ChatShell() {
                                     channelId={selected}
                                     rootMessageId={openThread}
                                     onClose={closeThread}
+                                    onImportAsNote={canImport ? importAsNote : undefined}
                                 />
                             </div>
                         )}
@@ -189,6 +253,7 @@ export function V3ChatShell() {
                     </div>
                 )}
             </main>
+            {importDialog}
         </div>
     );
 }

@@ -24,7 +24,7 @@ import { channelService, ChannelServiceError } from "../../../services/channel/c
 import type { Message } from "../../../types/channel";
 import { isV3Uuid } from "../../../utils/legacyId";
 import { useChannel } from "../hooks/useChannel";
-import { MessageAttachments } from "./MessageAttachments";
+import { MessageAttachments, type ImportableAttachment } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { MessageComposerV3 } from "./MessageComposerV3";
 import { MessageRowHoverToolbar, useCopyMessageLink } from "./MessageRowHoverToolbar";
@@ -42,13 +42,21 @@ interface MessagesPaneV3Props {
      *  it only in the mobile single-pane stack, where the channel list
      *  isn't visible beside the pane. */
     onBack?: () => void;
+    /** Optional: enables "Import as note" on markdown/text attachments.
+     *  Supplied by the shell, which owns the (lazy) import dialog. */
+    onImportAsNote?: (attachment: ImportableAttachment) => void;
 }
 
 /** Common emojis for the quick-react row. Kept short so it doesn't
  *  overwhelm the proof-of-life UI. */
 const QUICK_EMOJI = ["👍", "❤️", "🎉", "🤔", "😄"];
 
-export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPaneV3Props) {
+export function MessagesPaneV3({
+    channelId,
+    onOpenThread,
+    onBack,
+    onImportAsNote,
+}: MessagesPaneV3Props) {
     const { t } = useTranslation();
     const { channel, messages, readCursor, isLoading } = useChannel(channelId);
     // Separate subscription for the flag index so each row knows
@@ -154,6 +162,7 @@ export function MessagesPaneV3({ channelId, onOpenThread, onBack }: MessagesPane
                         isFlagged={snapshot.flagByMessageId.has(m.id)}
                         message={m}
                         onError={setError}
+                        onImportAsNote={onImportAsNote}
                         onOpenThread={onOpenThread}
                     />
                 ))}
@@ -197,6 +206,7 @@ interface MessageRowProps {
     /** Forwarded from the pane. When set, each row renders a thread
      *  entry-point button + a reply-count chip when `replyCount > 0`. */
     onOpenThread?: (rootMessageId: string) => void;
+    onImportAsNote?: (attachment: ImportableAttachment) => void;
 }
 
 /** Per-message row. Owns the edit-mode toggle, the inline editor, and
@@ -209,6 +219,7 @@ function MessageRow({
     isFlagged,
     onError,
     onOpenThread,
+    onImportAsNote,
 }: MessageRowProps) {
     const { t } = useTranslation();
     const [editing, setEditing] = useState(false);
@@ -487,7 +498,11 @@ function MessageRow({
                 </div>
             )}
             {!message.deletedAt && message.attachments.length > 0 && (
-                <MessageAttachments attachments={message.attachments} messageId={message.id} />
+                <MessageAttachments
+                    attachments={message.attachments}
+                    messageId={message.id}
+                    onImportAsNote={onImportAsNote}
+                />
             )}
             {message.reactions.length > 0 && !message.deletedAt && (
                 <ReactionChips
