@@ -135,6 +135,8 @@ export const spotlight = {
         // Same backend type as notePersonal — the space comes from the
         // sidebar, not the note. See `personalNoteScopes`.
         noteTeam: "Team note",
+        noteFolderTeam: "Team folder",
+        noteFolderPersonal: "My folder",
         noteShared: "Shared note",
         noteTask: "Task note",
         noteChat: "Chat note",

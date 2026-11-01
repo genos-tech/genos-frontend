@@ -3378,6 +3378,8 @@ export const ja: DeepPartial<Messages> = {
             todoWithDate: "To-Do · {date}",
             notePersonal: "マイノート",
             noteTeam: "チームノート",
+            noteFolderTeam: "チームフォルダ",
+            noteFolderPersonal: "マイフォルダ",
             noteShared: "共有ノート",
             noteTask: "タスクノート",
             noteChat: "チャットノート",

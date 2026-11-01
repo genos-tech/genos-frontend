@@ -34,10 +34,14 @@ describe("entityTypesForFilter", () => {
         expect(entityTypesForFilter([])).toBeUndefined();
     });
 
-    it("maps chat/note/todo one-to-one", () => {
+    it("maps chat/todo one-to-one", () => {
         expect(entityTypesForFilter(["chat"])).toEqual(["chat"]);
-        expect(entityTypesForFilter(["note"])).toEqual(["note"]);
         expect(entityTypesForFilter(["todo"])).toEqual(["todo"]);
+    });
+
+    it("expands the notes service to notes + folders (MIP-841)", () => {
+        // A "Notes" filter that hid folder hits would read as a bug.
+        expect(entityTypesForFilter(["note"])).toEqual(["note", "note_folder"]);
     });
 
     it("expands the task service to task + milestone", () => {

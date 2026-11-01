@@ -25,7 +25,8 @@ const SERVICE_ENTITY_TYPES: Record<SpotlightFilterService, EntityType[]> = {
     // Milestones are part of the task service — a "Tasks" filter that
     // silently hid milestone hits would read as a bug.
     task: ["task", "milestone"],
-    note: ["note"],
+    // Folders are found through the Notes chip (MIP-841).
+    note: ["note", "note_folder"],
     todo: ["todo"],
     // "Previous answers" — the collected past-Genos-answer lane. Like
     // every chip, this narrows typeahead ONLY; the filter never scopes

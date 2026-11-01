@@ -3195,6 +3195,8 @@ export const hi: DeepPartial<Messages> = {
             todoWithDate: "कार्य · {date}",
             notePersonal: "मेरा नोट",
             noteTeam: "टीम नोट",
+            noteFolderTeam: "टीम फ़ोल्डर",
+            noteFolderPersonal: "मेरा फ़ोल्डर",
             noteShared: "शेयर किया गया नोट",
             noteTask: "टास्क नोट",
             noteChat: "चैट नोट",

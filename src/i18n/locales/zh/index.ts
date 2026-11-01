@@ -3210,6 +3210,8 @@ export const zh: DeepPartial<Messages> = {
             todoWithDate: "都都·{date}",
             notePersonal: "我的笔记",
             noteTeam: "团队笔记",
+            noteFolderTeam: "团队文件夹",
+            noteFolderPersonal: "我的文件夹",
             noteShared: "共享笔记",
             noteTask: "任务笔记",
             noteChat: "聊天笔记",

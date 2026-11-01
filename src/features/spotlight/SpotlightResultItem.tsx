@@ -8,6 +8,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import FolderSpecialRoundedIcon from "@mui/icons-material/FolderSpecialRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
@@ -68,6 +69,7 @@ const ENTITY_ICON = {
     task: AssignmentRoundedIcon,
     milestone: FlagRoundedIcon,
     note: NoteAltRoundedIcon,
+    note_folder: FolderSpecialRoundedIcon,
     project: FolderRoundedIcon,
     todo: TaskAltRoundedIcon,
     // A collected past Spotlight answer — sparkle signals "AI answer".
@@ -81,6 +83,7 @@ const ENTITY_ICON_GRADIENT: Record<string, string> = {
     // the task diagram's milestone node border).
     milestone: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
+    note_folder: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
     project: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
     todo: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
     // Distinct violet→pink so a "Previous answer" row reads differently
@@ -125,6 +128,11 @@ export const entitySubtitle = (
                 return ts.entitySubtitle.chatFallback;
         }
     }
+    if (r.entity_type === "note_folder") {
+        return r.folder_scope === "team"
+            ? ts.entitySubtitle.noteFolderTeam
+            : ts.entitySubtitle.noteFolderPersonal;
+    }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
     if (r.entity_type === "milestone") return ts.entitySubtitle.milestone;
     if (r.entity_type === "project") return ts.entitySubtitle.project;
@@ -156,7 +164,9 @@ export const entitySubtitle = (
 
 /** A note's container path as one label: "Design › Specs". */
 export const contextPathLabel = (r: SpotlightResult): string =>
-    r.entity_type === "note" && r.context_path?.length ? r.context_path.join(" › ") : "";
+    (r.entity_type === "note" || r.entity_type === "note_folder") && r.context_path?.length
+        ? r.context_path.join(" › ")
+        : "";
 
 // The row's subtitle: a task or milestone also shows its id ("Task ·
 // MIP-739"), the handle people search and `#`-mention it by (MIP-739); a
