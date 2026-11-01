@@ -72,6 +72,7 @@ import {
     CustomTaskTemplate,
     customTemplateValue,
     parseCustomTemplateValue,
+    stripUntouchedPrompts,
     TASK_TEMPLATE_OPTIONS,
     TASK_TEMPLATES,
     taskContentTemplate,
@@ -210,6 +211,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         }
         return body;
     }, [body]);
+
+    // What gets saved: the live body without the template prompts the author
+    // left alone, so a task never carries "Why does this matter?" as content
+    // (MIP-825). Drafts keep the full body, so reopening the form still shows
+    // the scaffold.
+    const getSubmitBody = useCallback(
+        (): PartialBlock[] => stripUntouchedPrompts(getLiveBody()),
+        [getLiveBody]
+    );
 
     // Seed the editor's body with `blocks` and remember which picker option
     // is active. Shared by the built-in and custom-template paths.
@@ -925,7 +935,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // Live editor content, not the debounced `body` state — see
             // `getLiveBody`. Cmd/Ctrl+Enter never blurs the editor, so the
             // state can lag the last keystrokes at submit time.
-            description: getLiveBody(),
+            description: getSubmitBody(),
             // Thread origin (milestone created from a DM/GM/MDM thread).
             // Persisted on the backing task row server-side; drives the
             // milestone preview's "Check thread" button.
@@ -1679,7 +1689,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             <TaskCreateFooter
                                 ref={taskFooterRef}
                                 accessToken={accessToken}
-                                getLatestBody={getLiveBody}
+                                getLatestBody={getSubmitBody}
                                 isCreatingTask={isCreatingTask}
                                 isDirty={isDirty}
                                 missingRequiredFields={missingFieldLabels}

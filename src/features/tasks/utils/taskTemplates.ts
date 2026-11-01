@@ -228,3 +228,106 @@ export const parseCustomTemplateValue = (value: string): number | null => {
 // createQuickTask service — both want a fresh task to land with the same
 // scaffold so the body editor never feels empty on first open.
 export const taskContentTemplate: PartialBlock[] = TASK_TEMPLATES.default.blocks;
+
+// ---------------------------------------------------------------------------
+// Untouched template prompts (MIP-825)
+// ---------------------------------------------------------------------------
+//
+// A template's prompts ("Why does this matter?", "First condition…") are real
+// blocks, so an author who never fills a section saved them as the task's
+// content, and a reader (a person or an agent) had to work out which lines
+// were instructions. At submit the create form drops the ones left alone.
+//
+// A block is an untouched prompt only if BOTH hold: its text is exactly one of
+// the built-in prompts AND it still carries the prompt styling (italic, gray).
+// Typing into a prompt replaces its text, and a line the author wrote that
+// happens to repeat a prompt doesn't have the styling, so neither is touched.
+// Custom project templates aren't covered: their text isn't a known prompt.
+
+type InlineLike = { type?: string; text?: string; styles?: Record<string, unknown> };
+type BlockLike = {
+    type?: string;
+    content?: unknown;
+    children?: unknown[];
+};
+
+const isPromptStyle = (styles: Record<string, unknown> | undefined): boolean =>
+    styles?.italic === true && styles?.textColor === "gray";
+
+// The one text run of a prompt block, or null if it isn't a single styled run.
+const promptRun = (block: BlockLike): InlineLike | null => {
+    if (block.type !== "paragraph" && block.type !== "bulletListItem") return null;
+    if (block.children && block.children.length > 0) return null;
+    const content = block.content;
+    if (!Array.isArray(content) || content.length !== 1) return null;
+    const run = content[0] as InlineLike;
+    return run?.type === "text" && typeof run.text === "string" ? run : null;
+};
+
+const BUILT_IN_PROMPTS: ReadonlySet<string> = new Set(
+    Object.values(TASK_TEMPLATES).flatMap((tpl) =>
+        (tpl.blocks as BlockLike[])
+            .map(promptRun)
+            .filter((run): run is InlineLike => run != null && isPromptStyle(run.styles))
+            .map((run) => run.text as string)
+    )
+);
+
+const isUntouchedPrompt = (block: unknown): boolean => {
+    const run = promptRun(block as BlockLike);
+    return run != null && isPromptStyle(run.styles) && BUILT_IN_PROMPTS.has(run.text as string);
+};
+
+const isBlankParagraph = (block: unknown): boolean => {
+    const b = block as BlockLike;
+    return (
+        b.type === "paragraph" &&
+        (!b.children || b.children.length === 0) &&
+        (!Array.isArray(b.content) ||
+            b.content.every((r) => (r as InlineLike)?.type === "text" && !(r as InlineLike).text))
+    );
+};
+
+/**
+ * `blocks` without the template prompts the author left alone, and without a
+ * heading (and the blank line after it) that is then left with nothing under
+ * it. Anything before the first heading is kept as it is. A body that ends up
+ * with no content at all becomes one empty paragraph, which the editor needs.
+ */
+export const stripUntouchedPrompts = <T>(blocks: T[]): T[] => {
+    const out: T[] = [];
+    let section: T[] = [];
+    let sectionHeading: T | null = null;
+    let sectionHasContent = false;
+
+    const flush = () => {
+        if (sectionHeading != null && !sectionHasContent) {
+            // Nothing under it: drop the heading and its blank separators.
+        } else {
+            if (sectionHeading != null) out.push(sectionHeading);
+            out.push(...section);
+        }
+        section = [];
+        sectionHeading = null;
+        sectionHasContent = false;
+    };
+
+    for (const block of blocks) {
+        if ((block as BlockLike).type === "heading") {
+            flush();
+            sectionHeading = block;
+            continue;
+        }
+        if (isUntouchedPrompt(block)) continue;
+        if (sectionHeading == null) {
+            out.push(block);
+            continue;
+        }
+        section.push(block);
+        if (!isBlankParagraph(block)) sectionHasContent = true;
+    }
+    flush();
+
+    const hasContent = out.some((b) => !isBlankParagraph(b));
+    return hasContent ? out : ([blank()] as unknown as T[]);
+};
