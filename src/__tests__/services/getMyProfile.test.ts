@@ -39,6 +39,7 @@ describe("getMyProfile", () => {
             isOfflineForced: true,
             customStatus: "🏝 OOO",
             customStatusExpiry: "2026-08-11T09:00:00Z",
+            isDemo: false,
         });
     });
 
@@ -50,7 +51,17 @@ describe("getMyProfile", () => {
             isOfflineForced: false,
             customStatus: "",
             customStatusExpiry: null,
+            isDemo: false,
         });
+    });
+
+    it("maps is_demo, and treats an absent flag as not demo", async () => {
+        const get = vi.fn().mockResolvedValue({ data: { is_demo: true } });
+        asMock(authApi).mockReturnValue({ get });
+        expect((await getMyProfile("tok"))?.isDemo).toBe(true);
+
+        get.mockResolvedValue({ data: {} });
+        expect((await getMyProfile("tok"))?.isDemo).toBe(false);
     });
 
     it("preserves an explicit null expiry as null (not coerced to '')", async () => {

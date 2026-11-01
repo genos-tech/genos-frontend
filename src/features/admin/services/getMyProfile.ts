@@ -1,11 +1,12 @@
 import { authApi } from "../../../services/api";
 
 /** The subset of `GET /api/v2/user/me/` (UserInfoView → UserSerializer) the
- *  self-echo reconciler reads back as authority. Snake_case = server wire. */
+ *  self-echo reconciler reads back as authority, plus `is_demo`. Snake_case = server wire. */
 interface MyProfileWire {
     is_offline_forced?: boolean;
     custom_status?: string | null;
     custom_status_expiry?: string | null;
+    is_demo?: boolean;
 }
 
 /** The mapped self-profile — the authoritative current values for the fields
@@ -18,6 +19,8 @@ export interface MyProfile {
      *  `useSelfEchoReconcile`. Preserved as null (not "") because a datetime
      *  and an empty string are not interchangeable downstream. */
     customStatusExpiry: string | null;
+    /** A demo account (server flag, read-only). Gates demo-only UI. */
+    isDemo: boolean;
 }
 
 /**
@@ -38,6 +41,7 @@ export const getMyProfile = async (
             isOfflineForced: res.data.is_offline_forced === true,
             customStatus: res.data.custom_status ?? "",
             customStatusExpiry: res.data.custom_status_expiry ?? null,
+            isDemo: res.data.is_demo === true,
         };
     } catch (err) {
         console.warn("[presence] getMyProfile failed", err);

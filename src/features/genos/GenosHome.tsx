@@ -22,6 +22,7 @@ import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
@@ -39,6 +40,8 @@ interface GenosHomeProps {
     // (this page + the Cmd-K overlay).
     spotlight: UseSpotlightReturn;
     accessToken: string | null;
+    // The signed-in user's id; keys the demo-account lookup (MIP-837).
+    userId?: string | null;
     teamId: string | null | undefined;
     // Same prop bundle the overlay gets (see App.tsx) so SpotlightContent
     // keeps one code path across hosts.
@@ -57,6 +60,7 @@ const SIDEBAR_WIDTH = 268;
 export const GenosHome = ({
     spotlight,
     accessToken,
+    userId,
     teamId,
     mentionMembers,
     mentionGroups,
@@ -74,6 +78,7 @@ export const GenosHome = ({
     // borders, and hero gradient all follow the active color theme.
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isMobile = useIsMobile();
+    const isDemoUser = useIsDemoUser(accessToken, userId);
     // Mobile: the session sidebar is an overlay drawer, toggled from a
     // floating history button. Desktop always shows it.
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -303,6 +308,7 @@ export const GenosHome = ({
                         historyIsLoading={spotlight.historyIsLoading}
                         historyMode={spotlight.historyMode}
                         historySessions={spotlight.historySessions}
+                        isDemoUser={isDemoUser}
                         isLoading={spotlight.isLoading}
                         mentionGroups={mentionGroups}
                         mentionMembers={mentionMembers}

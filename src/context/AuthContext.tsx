@@ -55,7 +55,6 @@ export const AUTH_LOCAL_STORAGE_KEYS = [
     "lastOpenChatNoteId",
     "lastOpenTaskNoteId",
     "currentMainChatId",
-    "isDemoUser",
 ];
 
 // Device-level UI preferences that belong to "this browser for this person"
