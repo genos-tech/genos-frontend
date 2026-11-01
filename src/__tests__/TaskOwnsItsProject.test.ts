@@ -1,17 +1,15 @@
 /**
  * Who may change a task's project.
  *
- * Only a milestone or a ROOT task — one with no parent task. Everything
- * filed underneath belongs to the project of what it sits in and travels
- * when that moves; moved alone it kept a parent in the project it left,
- * and the destination's table nests rows under their parent, so the row
- * was invisible in both places.
+ * A milestone, a ROOT task (no parent) and a task living DIRECTLY in a
+ * milestone (MIP-786). Everything filed under an ORDINARY task belongs to that
+ * task's project and travels when it moves: moved alone it would keep a parent
+ * in the project it came from, and the destination's table nests rows under
+ * their parent, so the row would be invisible in both places.
  *
- * The case this exists to hold: a task living directly in a milestone.
- * It reads as `"task"` to `getTaskKind` — deliberately, because it still
- * picks a milestone and a sprint, which a sub-task does not — so the
- * first version of this rule keyed off the kind and left the project
- * picker live for exactly those rows.
+ * The parent being a milestone is not on the task, so the rule reads the
+ * project's task table; the kind alone can't tell a task in a milestone from a
+ * root task (both are `"task"`).
  */
 import { describe, expect, it } from "vitest";
 
@@ -35,34 +33,38 @@ const task = (over: Partial<TaskProps> = {}): TaskProps =>
 
 describe("ownsItsProject", () => {
     it("lets a root task change project", () => {
-        expect(ownsItsProject(task())).toBe(true);
+        expect(ownsItsProject(task(), allTasks)).toBe(true);
     });
 
-    it("refuses a task filed in a milestone", () => {
-        // The reported bug: this one was editable.
-        expect(ownsItsProject(task({ parentTaskId: MILESTONE_TASK_ID }))).toBe(false);
+    it("lets a task filed directly in a milestone change project", () => {
+        expect(ownsItsProject(task({ parentTaskId: MILESTONE_TASK_ID }), allTasks)).toBe(true);
     });
 
     it("refuses a sub-task of an ordinary task", () => {
-        expect(ownsItsProject(task({ parentTaskId: 20 }))).toBe(false);
+        expect(ownsItsProject(task({ parentTaskId: 20 }), allTasks)).toBe(false);
+    });
+
+    it("refuses a task whose parent is not in the table yet", () => {
+        // Locked until the hierarchy can be resolved: the safe side.
+        expect(ownsItsProject(task({ parentTaskId: MILESTONE_TASK_ID }), [])).toBe(false);
     });
 
     it("lets a milestone change project", () => {
         // MilestonePreview synthesizes `parentTaskId: null` for the
         // milestone's own row, and the milestone endpoint is what moves
         // it — resetting the sprint on the way.
-        expect(ownsItsProject(task({ isMilestone: true }))).toBe(true);
+        expect(ownsItsProject(task({ isMilestone: true }), allTasks)).toBe(true);
     });
 
     it("cannot be derived from the task's kind", () => {
-        // Both of these are `"task"`, and only one may move. Keying the
-        // lock off the kind is what let a milestone's task change
-        // project on its own.
+        // A task in a milestone and a root task are both `"task"`; a sub-task
+        // of an ordinary task is the one that stays locked.
         const inMilestone = task({ parentTaskId: MILESTONE_TASK_ID });
         const root = task();
+        const sub = task({ parentTaskId: 20 });
         expect(getTaskKind(inMilestone, allTasks)).toBe("task");
         expect(getTaskKind(root, allTasks)).toBe("task");
-        expect(ownsItsProject(inMilestone)).toBe(false);
-        expect(ownsItsProject(root)).toBe(true);
+        expect(getTaskKind(sub, allTasks)).toBe("subtask");
+        expect(ownsItsProject(sub, allTasks)).toBe(false);
     });
 });

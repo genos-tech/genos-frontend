@@ -1550,8 +1550,6 @@ export const ar: DeepPartial<Messages> = {
             addStartDate: "إضافة تاريخ البدء",
             subTaskProjectLocked:
                 "تنتمي المهمة الفرعية إلى مشروع مهمتها الأصلية. انقل المهمة الرئيسية لتنقلها معها.",
-            milestoneTaskProjectLocked:
-                "تنتمي المهمة الموجودة داخل مرحلة إلى مشروع تلك المرحلة. انقل المرحلة لتنقلها معها.",
             openTaskGraph: "فتح الرسم البياني للمهمة",
             openTaskGraphWithShortcut: "فتح الرسم البياني للمهمة ({shortcut})",
         },

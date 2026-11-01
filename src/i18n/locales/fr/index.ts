@@ -3522,8 +3522,6 @@ export const fr: DeepPartial<Messages> = {
             addStartDate: "Ajouter une date de début",
             subTaskProjectLocked:
                 "Une sous-tâche appartient au projet de sa tâche parente. Déplacez la tâche de premier niveau pour l'emmener avec elle.",
-            milestoneTaskProjectLocked:
-                "Une tâche d'un jalon appartient au projet de ce jalon. Déplacez le jalon pour l'emmener avec lui.",
             openTaskGraph: "Ouvrir le graphique des tâches",
             openTaskGraphWithShortcut: "Ouvrir le graphique des tâches ({shortcut})",
         },

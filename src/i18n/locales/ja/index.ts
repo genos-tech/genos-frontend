@@ -3534,8 +3534,6 @@ export const ja: DeepPartial<Messages> = {
             addStartDate: "開始日を追加",
             subTaskProjectLocked:
                 "サブタスクは親タスクのプロジェクトに属します。移動するには親のトップレベルタスクを移動してください。",
-            milestoneTaskProjectLocked:
-                "マイルストーン内のタスクはマイルストーンのプロジェクトに属します。一緒に移動するにはマイルストーンを移動してください。",
             openTaskGraph: "タスクグラフを開く",
             openTaskGraphWithShortcut: "タスク図を開く ({shortcut})",
         },
