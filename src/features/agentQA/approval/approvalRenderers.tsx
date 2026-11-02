@@ -22,6 +22,7 @@ import { CreateTaskPreview } from "./CreateTaskPreview";
 import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
+import { DeleteSprintPreview, ManageSprintPreview } from "./SprintWritePreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
 import { UpdateTaskPreview } from "./UpdateTaskPreview";
@@ -49,6 +50,10 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     delete_todo_item: DeleteTodoPreview,
     manage_milestone: ManageMilestonePreview,
     delete_milestone: DeleteMilestonePreview,
+    // The same split for sprints: one card for the tool that branches on its
+    // `action`, one for its delete.
+    manage_sprint: ManageSprintPreview,
+    delete_sprint: DeleteSprintPreview,
     // One component for both note writes — it branches on the presence
     // of `note_id` in the args (only updates have one).
     create_note: NoteWritePreview,

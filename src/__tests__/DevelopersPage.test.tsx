@@ -211,6 +211,8 @@ describe("DevelopersPage", () => {
             "delete_calendar_event",
             "manage_milestone",
             "delete_milestone",
+            "manage_sprint",
+            "delete_sprint",
         ],
     };
 

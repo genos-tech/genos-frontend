@@ -852,6 +852,92 @@ describe("Milestone previews (manage_milestone / delete_milestone approvals)", (
     });
 });
 
+describe("Sprint previews (manage_sprint / delete_sprint approvals)", () => {
+    it("renders a new sprint with its name, project and dates", () => {
+        renderCard("manage_sprint", {
+            action: "create",
+            project_id: "Website Redesign",
+            name: "Sprint 13",
+            start_date: "2026-11-09",
+            end_date: "2026-11-20",
+        });
+        expect(screen.getByText("New sprint")).toBeTruthy();
+        expect(screen.getByText("Sprint 13")).toBeTruthy();
+        expect(screen.getByText("Project: Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Start: 2026-11-09")).toBeTruthy();
+        expect(screen.getByText("End: 2026-11-20")).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("action:")).toBeNull();
+        expect(screen.queryByText("project_id:")).toBeNull();
+        expect(screen.queryByText("start_date:")).toBeNull();
+    });
+
+    it("reads ending a sprint today as an end-date change and lists nothing else", () => {
+        renderCard("manage_sprint", {
+            action: "update",
+            sprint_id: "Sprint 12",
+            end_date: "2026-11-02",
+        });
+        expect(screen.getByText("Update sprint: Sprint 12")).toBeTruthy();
+        expect(screen.getByText("End: 2026-11-02")).toBeTruthy();
+        expect(screen.queryByText(/^Name:/)).toBeNull();
+        expect(screen.queryByText(/^Start:/)).toBeNull();
+        expect(screen.queryByText(/^Project:/)).toBeNull();
+        expect(screen.queryByText("end_date:")).toBeNull();
+    });
+
+    it("lists a rename on its own, and every field when all three change", () => {
+        const { unmount } = renderCard("manage_sprint", {
+            action: "update",
+            sprint_id: "Sprint 12",
+            name: "Sprint 12 (extended)",
+        });
+        expect(screen.getByText("Name: Sprint 12 (extended)")).toBeTruthy();
+        expect(screen.queryByText(/^Start:/)).toBeNull();
+        expect(screen.queryByText(/^End:/)).toBeNull();
+        unmount();
+
+        renderCard("manage_sprint", {
+            action: "update",
+            sprint_id: "Sprint 12",
+            name: "Sprint 12b",
+            start_date: "2026-11-03",
+            end_date: "2026-11-17",
+        });
+        expect(screen.getByText("Name: Sprint 12b")).toBeTruthy();
+        expect(screen.getByText("Start: 2026-11-03")).toBeTruthy();
+        expect(screen.getByText("End: 2026-11-17")).toBeTruthy();
+    });
+
+    it("does not show the project on an update, and names the sprint by its id when it can't be named", () => {
+        renderCard("manage_sprint", {
+            action: "update",
+            sprint_id: "42",
+            project_id: "Website Redesign",
+            start_date: "2026-11-03",
+        });
+        expect(screen.getByText("Update sprint: 42")).toBeTruthy();
+        expect(screen.queryByText(/^Project:/)).toBeNull();
+    });
+
+    it("says a delete is of that sprint, can't be undone, and keeps its milestones and tasks", () => {
+        renderCard("delete_sprint", { sprint_id: "Sprint 12" });
+        expect(screen.getByText("Delete sprint: Sprint 12")).toBeTruthy();
+        expect(screen.getByText("This action cannot be undone")).toBeTruthy();
+        expect(
+            screen.getByText(
+                "Its milestones and their tasks are kept. They just no longer belong to a sprint."
+            )
+        ).toBeTruthy();
+        expect(screen.queryByText("sprint_id:")).toBeNull();
+    });
+
+    it("names the sprint by its id when the caller may not read its name", () => {
+        renderCard("delete_sprint", { sprint_id: 42 });
+        expect(screen.getByText("Delete sprint: 42")).toBeTruthy();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -864,6 +950,11 @@ describe("getToolLabel", () => {
         expect(getToolLabel("delete_milestone", en)).toBe("Deleting a milestone");
         expect(getToolLabel("delete_todo_item", en)).toBe("Deleting a to-do");
         expect(getToolLabel("list_my_chats", en)).toBe("Finding your chats");
+    });
+
+    it("labels the sprint create-or-change and sprint delete tools", () => {
+        expect(getToolLabel("manage_sprint", en)).toBe("Managing a sprint");
+        expect(getToolLabel("delete_sprint", en)).toBe("Deleting a sprint");
     });
 
     it("labels the comment edit, comment delete and description restore tools", () => {

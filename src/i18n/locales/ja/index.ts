@@ -464,6 +464,16 @@ export const ja: DeepPartial<Messages> = {
         deleteMilestone: "マイルストーンを削除: {milestone}",
         milestoneTasksKept: "タスク {count} 件はプロジェクトに残り、マイルストーンから外れます",
         folderUnfiles: "マイルストーン {count} 件がフォルダから外れます",
+        newSprint: "新しいスプリント",
+        updateSprint: "スプリントを更新: {sprint}",
+        deleteSprint: "スプリントを削除: {sprint}",
+        sprintFieldLabels: {
+            name: "名前",
+            start_date: "開始日",
+            end_date: "終了日",
+        },
+        sprintMilestonesKept:
+            "マイルストーンとそのタスクは残ります。スプリントには属さなくなります。",
         cleared: "なし",
         unset: "—",
     },
