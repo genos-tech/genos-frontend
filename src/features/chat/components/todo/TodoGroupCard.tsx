@@ -14,6 +14,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoGroupProps, TodoReminderProps } from "../../../../types/chat";
 import { getLocalCurrentDate, getLocalTomorrowDate } from "../../../../utils/dateUtils";
+import { NO_TAG, TagFilterKey } from "../../utils/todoTagFilter";
 import { TodoCategorySection } from "./TodoCategorySection";
 
 // Each color is carried twice: the plain value for opaque use and an
@@ -51,6 +52,8 @@ const COLORS = {
 interface TodoGroupCardProps {
     group: TodoGroupProps;
     categories: TodoCategoryProps[];
+    // The pane's tag filter (MIP-584). Empty / absent = no filter.
+    tagFilter?: ReadonlySet<TagFilterKey>;
     // Deep-link target item; forwarded to sections/rows for the highlight.
     highlightItemId?: number;
     onAddItem: (localDate: string, title: string, categoryId: number | null) => Promise<void>;
@@ -78,6 +81,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
     const {
         group,
         categories,
+        tagFilter,
         highlightItemId,
         onAddItem,
         onAddSubitem,
@@ -115,8 +119,13 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
             arr.push(i);
             byCategory.set(i.categoryId, arr);
         }
+        // With a tag filter on, the card shows the picked tags' sections even when
+        // they are empty (so there is somewhere to add), and drops the rest.
+        const filtering = tagFilter !== undefined && tagFilter.size > 0;
         const categoryEntries = categories
-            .filter((c) => byCategory.has(c.categoryId))
+            .filter((c) =>
+                filtering ? tagFilter.has(c.categoryId) : byCategory.has(c.categoryId)
+            )
             .map((c) => ({
                 title: c.name,
                 categoryId: c.categoryId as number | null,
@@ -126,14 +135,18 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         // Always include an uncategorized section (even when empty) so
         // the user always has somewhere to drop a new item that isn't
         // assigned a tag yet.
-        result.push({
-            title: t.chat.todoPane.general,
-            categoryId: null as number | null,
-            items: uncategorized,
-        });
+        // A new item added to a section that the filter hides would vanish the
+        // moment it is created, so General is only offered when "No tag" is picked.
+        if (!filtering || tagFilter.has(NO_TAG)) {
+            result.push({
+                title: t.chat.todoPane.general,
+                categoryId: null as number | null,
+                items: uncategorized,
+            });
+        }
         result.push(...categoryEntries);
         return result;
-    }, [group.items, categories, t.chat.todoPane.general]);
+    }, [group.items, categories, tagFilter, t.chat.todoPane.general]);
 
     const completedCount = group.items.filter((i) => i.isCompleted).length;
     const totalCount = group.items.length;
