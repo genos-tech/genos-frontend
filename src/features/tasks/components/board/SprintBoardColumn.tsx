@@ -9,6 +9,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { SprintBoardCard } from "./SprintBoardCard";
+import { BOARD_DRAGGING_ATTR } from "./useBoardDragScrollLock";
 
 // Column configuration. `title` is an English fallback for code paths
 // that haven't been i18n'd yet; the rendered string is resolved via
@@ -31,21 +32,30 @@ export const COLUMN_MIN_WIDTH = 280;
 
 // Style helpers
 //
-// NOTE on scrolling: the column is deliberately NOT a scroll container.
-// The board is the single scrollport for both axes (see
-// `getBoardContainerStyles`), because @hello-pangea/dnd supports only one
-// scroll parent per Droppable — a per-column `overflow-y: auto` nested
-// inside the board's `overflow: auto` is the "unsupported nested scroll
-// container" case, and dnd would refuse to auto-scroll the board sideways
-// mid-drag (making off-screen columns unreachable while holding a card).
-// So: no `overflow` and no `height` here. The grid row stretches the
-// column to the board's height when content is short and grows past it
-// when content is tall; the header below pins with `position: sticky`
-// against the board's scrollport.
+// NOTE on scrolling (MIP-900): each column scrolls its OWN cards, under a
+// header that stays put, and the board scrolls only sideways. That is two
+// nested scroll containers, which @hello-pangea/dnd refuses (a Droppable
+// gets exactly one scroll parent), so mid-drag it would not scroll the
+// board sideways and the columns past the edge could not take a drop (the
+// MIP-674 problem). So the board flips `data-sprint-board-dragging` for
+// the length of a drag (`useBoardDragScrollLock`) and the card list drops
+// to `overflow: hidden` while it is set. dnd reads the scroll parent when
+// the drag starts, so during it the board is the only scroller; scroll
+// positions survive the flip.
+//
+// The Droppable itself is the scroller. Wrapping it in a scrolling div (so
+// the Droppable is as tall as its cards) looks equivalent, but dnd then
+// drops the card with no destination whenever the target column is already
+// scrolled (checked in headless Chrome).
 const getColumnStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
     display: "flex",
     flexDirection: "column",
     minWidth: 0,
+    // The column is exactly as tall as the board (one grid row); the card
+    // list inside is what scrolls. Clipping here also keeps the rounded
+    // corners on the header and the card list.
+    minHeight: 0,
+    overflow: "hidden",
     backgroundColor: mode === "dark" ? "#16161e" : "#ffffff",
     borderRadius: 10,
     boxShadow: mode === "dark" ? "0 2px 8px rgba(0, 0, 0, 0.3)" : "0 2px 8px rgba(0, 0, 0, 0.06)",
@@ -60,23 +70,12 @@ const getColumnHeaderStyles = (
     justifyContent: "space-between",
     padding: "10px 14px",
     flexShrink: 0,
-    // Pinned so the status + count stay readable while the board scrolls
-    // vertically past a long column. `top: 0` resolves against the
-    // board's padding box, so it parks just inside the board's padding.
-    position: "sticky",
-    top: 0,
-    zIndex: 3,
-    // OPAQUE, unlike the old translucent overlay: cards now scroll
-    // UNDER this header, so a see-through background would show them
-    // bleeding through. These are the former rgba overlays
-    // pre-composited onto the column background above (#16161e + 2%
-    // white, #ffffff + 1% black).
+    // Opaque: the former rgba overlays pre-composited onto the column
+    // background above (#16161e + 2% white, #ffffff + 1% black).
     backgroundColor: mode === "dark" ? "#1b1b22" : "#fcfcfc",
     borderBottom:
         mode === "dark" ? "1px solid rgba(255, 255, 255, 0.05)" : "1px solid rgba(0, 0, 0, 0.05)",
-    // The column's status accent. Lives on the (sticky) header rather
-    // than the column box so it stays on screen while scrolling instead
-    // of sliding away with the column's top edge.
+    // The column's status accent.
     borderTop: `3px solid ${color}`,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
@@ -120,7 +119,7 @@ const SprintBoardColumnImpl = ({
 
     return (
         <div style={getColumnStyles(mode)}>
-            {/* Column Header — sticky against the board's scrollport. */}
+            {/* Column Header — outside the scrolling card list, so it stays put. */}
             <div style={getColumnHeaderStyles(column.color, mode)}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                     <Typography
@@ -155,7 +154,7 @@ const SprintBoardColumnImpl = ({
                 </span>
             </div>
 
-            {/* Droppable Area */}
+            {/* Droppable Area — also the column's scrolling card list. */}
             <Droppable
                 direction="vertical"
                 droppableId={column.id}
@@ -188,28 +187,24 @@ const SprintBoardColumnImpl = ({
                     return (
                         <Box
                             ref={provided.innerRef}
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             {...provided.droppableProps}
                             sx={{
                                 position: "relative",
-                                // Grows with its cards instead of scrolling
-                                // itself; the board scrolls. `flex: 1` keeps
-                                // the drop target filling the column when the
+                                // The column's scroller. `flex: 1` keeps the
+                                // drop target filling the column when the
                                 // cards don't reach the bottom, so dropping
                                 // into empty space below the last card still
-                                // registers. No `overflow` — see the
-                                // scrolling note at the top of this file.
+                                // registers. `scrollbarGutter` keeps the
+                                // cards' width the same when scrolling is
+                                // switched off during a drag.
                                 flex: 1,
                                 padding: 1,
                                 minHeight: 100,
-                                // The column can no longer clip with
-                                // `overflow: hidden` (that would trap the
-                                // sticky header), so the bottom corners are
-                                // rounded here — on the last child — to keep
-                                // the column's rounded silhouette. The drop
-                                // pulse/shimmer paint inside this box, so
-                                // they stay within the rounding too.
-                                borderBottomLeftRadius: 10,
-                                borderBottomRightRadius: 10,
+                                overflowX: "hidden",
+                                overflowY: "auto",
+                                scrollbarGutter: "stable",
+                                [`[${BOARD_DRAGGING_ATTR}="true"] &`]: { overflowY: "hidden" },
                                 transition: "background-color 150ms ease",
                                 ...(isOver && {
                                     animation: "sprintColumnPulse 1.1s ease-in-out infinite",
