@@ -20,6 +20,7 @@ import { BulkUpdatePreview } from "./BulkUpdatePreview";
 import { DeleteCommentPreview, UpdateCommentPreview } from "./CommentWritePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
 import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
+import { FavoriteNotePreview, ManageNoteFolderPreview } from "./NoteFolderWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
 import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWritePreview";
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
@@ -63,6 +64,10 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // of `note_id` in the args (only updates have one).
     create_note: NoteWritePreview,
     update_note: NoteWritePreview,
+    // Note folders and favorites: a card for the folder tool (it branches on
+    // its `action`) and one for starring or unstarring a note or a folder.
+    manage_note_folder: ManageNoteFolderPreview,
+    favorite_note: FavoriteNotePreview,
 };
 
 export const getApprovalRenderer = (toolName: string): FC<ApprovalPreviewProps> | undefined =>

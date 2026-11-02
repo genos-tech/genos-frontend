@@ -469,6 +469,18 @@ const MCP_TOOLS: McpTool[] = [
         meaning:
             "Add a teammate to a project, who also gets the project's chat, or change a member's role. Needs a key that also has the destructive opt-in, because it changes who has access.",
     },
+    {
+        name: "manage_note_folder",
+        type: "write",
+        meaning:
+            "Create a folder for notes, in My Notes or Team Notes, or rename one. The action argument picks which. A new top-level Team Notes folder is private to you. It cannot move or delete a folder.",
+    },
+    {
+        name: "favorite_note",
+        type: "write",
+        meaning:
+            "Star or unstar a note, or a note folder, in your own sidebar. A note is named by its url, or by its id with its note_type. Nothing else changes.",
+    },
 ];
 
 const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");
