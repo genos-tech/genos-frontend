@@ -57,8 +57,8 @@ import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { taskMetaLabel } from "../../../utils/taskMeta";
-import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
+import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
 
 type TaskTitleBlockProps = {
     myself: UserProps;
@@ -444,24 +444,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 Complete Task
                             </Button>
                         )}
-                        <CopyableTaskIdChip
+                        <PreviewTaskIdChip
                             key={`task-title-block-${taskContent.id}`}
-                            fallback="N/A"
-                            size="md"
+                            isDark={isDark}
                             task={taskContent}
-                            variant="soft"
-                            sx={{
-                                borderRadius: "8px",
-                                fontWeight: 700,
-                                fontSize: "0.75rem",
-                                px: 1.5,
-                                background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.06)",
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
-                            }}
                         />
                         <Chip
                             key={`task-title-block-status-${taskContent.status.status}`}
@@ -988,13 +974,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // node. The stored `rootTaskId` is deliberately not
                     // used — it can still hold the root from before an
                     // ancestor changed milestone.
-                    rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${
-                        taskContent.title || t.tasks.diagram.untitled
-                    }`}
                     rootTaskId={Number(taskContent.id)}
                     usePM={usePM}
                     useSM={useSM}
                     useTM={useTM}
+                    rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${
+                        taskContent.title || t.tasks.diagram.untitled
+                    }`}
                     onClose={() => setOpenTaskDiagram(false)}
                 />
             )}
