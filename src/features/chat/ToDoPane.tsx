@@ -14,11 +14,20 @@ import { ModalManageTodoTags } from "./components/todo/ModalManageTodoTags";
 import { ModalScheduledTodos } from "./components/todo/ModalScheduledTodos";
 import { TodoMentionsProvider } from "./components/todo/titleMentions";
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
+import { TodoTagFilterBar } from "./components/todo/TodoTagFilterBar";
 import {
     countCompletedToday,
     isCompletedToday,
     selectCompletedToday,
 } from "./utils/todoCompletion";
+import {
+    filterGroupsByTags,
+    itemTagKey,
+    pruneTagFilter,
+    readTagFilter,
+    TagFilterKey,
+    writeTagFilter,
+} from "./utils/todoTagFilter";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -149,14 +158,45 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // day you can still add to. Without it, starting tomorrow's list and
     // then completing the placeholder would make the whole card disappear
     // from the Incomplete tab, taking the only place to add to it with it.
+    // The tag filter (MIP-584) narrows the items first, so the chips below it
+    // (All / Incomplete / Completed today) each apply to what the tags left.
+    // Their counts stay the whole list's, like a filter row's usually do.
+    const [tagFilter, setTagFilterState] = useState<Set<TagFilterKey>>(readTagFilter);
+    const setTagFilter = (next: Set<TagFilterKey>) => {
+        setTagFilterState(next);
+        writeTagFilter(next);
+    };
+    // A tag deleted since the filter was saved can't be un-picked from the bar,
+    // so it would filter the list for ever. Dropped as soon as the tags load.
+    useEffect(() => {
+        if (categories.length === 0) return;
+        setTagFilterState((prev) => {
+            const pruned = pruneTagFilter(prev, categories);
+            if (pruned.size === prev.size) return prev;
+            writeTagFilter(pruned);
+            return pruned;
+        });
+    }, [categories]);
+    const toggleTag = (key: TagFilterKey) => {
+        const next = new Set(tagFilter);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        setTagFilter(next);
+    };
+
+    const tagFilteredGroups = useMemo(
+        () => filterGroupsByTags(groups, tagFilter),
+        [groups, tagFilter]
+    );
+
     const displayGroups = useMemo(() => {
-        if (showCompletedToday) return selectCompletedToday(groups);
-        if (!useCM.showOnlyInCompleteTodos) return groups;
+        if (showCompletedToday) return selectCompletedToday(tagFilteredGroups);
+        if (!useCM.showOnlyInCompleteTodos) return tagFilteredGroups;
         const openDays = new Set([getLocalCurrentDate(), getLocalTomorrowDate()]);
-        return groups
+        return tagFilteredGroups
             .map((g) => ({ ...g, items: g.items.filter((i) => !i.isCompleted) }))
             .filter((g) => g.items.length > 0 || openDays.has(g.localDate));
-    }, [groups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
+    }, [tagFilteredGroups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
 
     const totalItems = useMemo(() => groups.reduce((a, g) => a + g.items.length, 0), [groups]);
     const completedItems = totalItems - incompleteCount;
@@ -240,6 +280,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         // so the highlight is actually reachable.
         if (showCompletedToday && !isCompletedToday(item)) {
             setShowCompletedToday(false);
+        }
+        // And on a tag filter that hides it: the jump must not land on nothing.
+        if (tagFilter.size > 0 && !tagFilter.has(itemTagKey(item, groups))) {
+            setTagFilter(new Set());
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [focusTarget, groups, useCM.showOnlyInCompleteTodos]);
@@ -513,6 +557,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             </Chip>
                         </Stack>
                     </Stack>
+                    <TodoTagFilterBar
+                        categories={categories}
+                        isDark={isDark}
+                        selected={tagFilter}
+                        onClear={() => setTagFilter(new Set())}
+                        onToggle={toggleTag}
+                    />
                 </Box>
 
                 {/* Group list */}
@@ -538,6 +589,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         reminderByItemId={reminderByItemId}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        tagFilter={tagFilter}
                                         useCM={useCM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
