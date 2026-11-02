@@ -518,6 +518,16 @@ export const tasks = {
         sortDefault: "Default",
         sortDueDate: "Due date",
         sortPriority: "Priority",
+        // Create-a-task card in the Open column.
+        quickAddTooltip: "Create a task",
+        quickAddPlaceholder: "Task title…",
+        quickAddPriority: "Priority",
+        quickAddTags: "Tags",
+        quickAddCreate: "Create",
+        quickAddCancel: "Cancel",
+        quickAddHiddenByFilters: "Created {id}, but your current filters hide it.",
+        quickAddOpen: "Open",
+        quickAddDismiss: "Dismiss",
     },
 
     // Sub-tasks block.

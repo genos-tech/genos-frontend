@@ -1,10 +1,13 @@
 import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import Box from "@mui/joy/Box";
+import IconButton from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -97,6 +100,12 @@ type SprintBoardColumnProps = {
     selectedTaskId?: number;
     selectedMilestoneId?: number | null;
     isMilestonePreviewActive?: boolean;
+    // Shows a "+" in the header (the Open column only) that calls this.
+    onQuickAddClick?: () => void;
+    // Rendered between the header and the card list, outside the Droppable:
+    // the quick-add card, which takes no drag index and stays in view while
+    // the list scrolls.
+    quickAddSlot?: React.ReactNode;
 };
 
 const SprintBoardColumnImpl = ({
@@ -109,6 +118,8 @@ const SprintBoardColumnImpl = ({
     selectedTaskId,
     selectedMilestoneId,
     isMilestonePreviewActive,
+    onQuickAddClick,
+    quickAddSlot,
 }: SprintBoardColumnProps) => {
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
@@ -135,24 +146,47 @@ const SprintBoardColumnImpl = ({
                         {columnTitle}
                     </Typography>
                 </Box>
-                <span
-                    style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minWidth: 22,
-                        height: 20,
-                        padding: "0 6px",
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        fontSize: "0.65rem",
-                        backgroundColor: column.color,
-                        color: "#fff",
-                    }}
-                >
-                    {tasks.length}
-                </span>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                    {onQuickAddClick && (
+                        <AppTooltip title={t.tasks.board.quickAddTooltip}>
+                            <IconButton
+                                aria-label={t.tasks.board.quickAddTooltip}
+                                size="sm"
+                                variant="plain"
+                                // 20px, the count badge's height, so the Open
+                                // column's header isn't taller than the rest.
+                                sx={{
+                                    "--IconButton-size": "20px",
+                                    minHeight: 20,
+                                    color: column.color,
+                                }}
+                                onClick={onQuickAddClick}
+                            >
+                                <AddRoundedIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                        </AppTooltip>
+                    )}
+                    <span
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minWidth: 22,
+                            height: 20,
+                            padding: "0 6px",
+                            borderRadius: 10,
+                            fontWeight: 700,
+                            fontSize: "0.65rem",
+                            backgroundColor: column.color,
+                            color: "#fff",
+                        }}
+                    >
+                        {tasks.length}
+                    </span>
+                </Box>
             </div>
+
+            {quickAddSlot}
 
             {/* Droppable Area — also the column's scrolling card list. */}
             <Droppable

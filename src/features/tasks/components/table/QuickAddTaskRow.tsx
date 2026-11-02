@@ -24,6 +24,7 @@ import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { QuickAddDraft } from "../../utils/quickAddDraft";
 import {
     applyRuleDefaults,
     getQuickAddBlockingFields,
@@ -39,20 +40,7 @@ import {
 } from "./DraggableTaskRow";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
-// Draft the quick-add row hands back on submit. Every field the table
-// can edit inline is here plus tags (quick-add grew its own tag editor
-// for the project field-rules feature); sprint remains absent (not
-// table-editable, and a child inherits it from the parent chain anyway).
-export type QuickAddDraft = {
-    title: string;
-    assigneeId: string | null;
-    status: string;
-    priority: string | null;
-    effortLevel: string | null;
-    // "YYYY-MM-DD"
-    dueDate: string | null;
-    tags: TagListProps[];
-};
+export type { QuickAddDraft };
 
 type QuickAddTaskRowProps = {
     parentTask: TaskTableProps;
