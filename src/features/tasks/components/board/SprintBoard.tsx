@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import Button from "@mui/joy/Button";
 import Stack from "@mui/joy/Stack";
 import { useColorScheme } from "@mui/joy/styles";
 import Switch from "@mui/joy/Switch";
@@ -13,12 +14,17 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
+import { createQuickTask } from "../../services/createQuickTask";
+import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
+import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
+import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
 import { buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
@@ -26,9 +32,15 @@ import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
+import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
 
 const materialTheme = createTheme({ cssVariables: true });
+
+const NO_TAGS: TagListProps[] = [];
+// After a quick-add create, how long the filter pipeline gets to put the new
+// card on the board before we conclude the active filters hide it.
+const QUICK_ADD_VISIBILITY_CHECK_MS = 800;
 
 // Sort tiers (priority/due-date/etc. ranking, comparator builder) now
 // live in features/tasks/utils/sortTask.ts so the sprint board and the
@@ -546,6 +558,107 @@ export const SprintBoard = (props: SprintBoardProps) => {
         ]
     );
 
+    // ---- Create a task from the Open column (MIP-901) --------------------
+    const projectId = usePM.currentProject?.projectId ?? null;
+    const projectTags = usePM.currentProject?.projectTags ?? NO_TAGS;
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+    const toggleQuickAdd = useCallback(() => setIsQuickAddOpen((open) => !open), []);
+    const closeQuickAdd = useCallback(() => setIsQuickAddOpen(false), []);
+    // Set when the active filters hide the task that was just created.
+    const [hiddenCreatedTask, setHiddenCreatedTask] = useState<TaskTableProps | null>(null);
+    const hiddenCheckTimerRef = useRef<number | null>(null);
+    const boardTasksRef = useRef(boardTasks);
+    boardTasksRef.current = boardTasks;
+
+    // A half-open card or a stale notice points at the wrong project.
+    useEffect(() => {
+        setIsQuickAddOpen(false);
+        setHiddenCreatedTask(null);
+    }, [projectId]);
+    useEffect(
+        () => () => {
+            if (hiddenCheckTimerRef.current != null) {
+                window.clearTimeout(hiddenCheckTimerRef.current);
+            }
+        },
+        []
+    );
+
+    // The milestone the board is looking at, if exactly one: a new task is
+    // filed under it (see `pickScopedMilestoneId`).
+    const [selectedMilestoneIds, setSelectedMilestoneIdsState] = useState<number[]>([]);
+    const setSelectedMilestoneIds = useCallback((ids: number[]) => {
+        setSelectedMilestoneIdsState((prev) =>
+            prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids
+        );
+    }, []);
+    const scopedMilestoneId = pickScopedMilestoneId(
+        useTM.tableMilestoneFilterId,
+        selectedMilestoneIds
+    );
+
+    const quickAddFieldRules = useMemo(
+        () =>
+            useTM.taskFieldRules?.projectId === projectId
+                ? (useTM.taskFieldRules?.rules ?? null)
+                : null,
+        [useTM.taskFieldRules, projectId]
+    );
+    const teamMemberIds = useMemo(() => teamMembers.map((m) => m.userId), [teamMembers]);
+
+    // Errors are deliberately not caught here: the card shows its inline
+    // error (including the plan-limit message) and keeps the typed draft.
+    const handleQuickAddSubmit = async (draft: QuickAddDraft) => {
+        if (projectId == null) throw new Error("Quick add: no project selected");
+        const parent = quickAddParentFor(useTM.allTasks, scopedMilestoneId);
+        const { taskId, displayId } = await createQuickTask({
+            myself,
+            accessToken,
+            projectId: Number(projectId),
+            title: draft.title,
+            parentTaskId: parent ? Number(parent.id) : null,
+            rootTaskId: parent ? (parent.rootTaskId ?? Number(parent.id)) : null,
+            milestoneId: parent?.milestoneId ?? null,
+            assigneeId: draft.assigneeId,
+            status: draft.status,
+            priority: draft.priority,
+            effortLevel: draft.effortLevel,
+            dueDate: draft.dueDate,
+            tags: draft.tags,
+        });
+        if (taskId == null) return;
+        const optimistic = buildOptimisticQuickTask({
+            taskId,
+            displayId,
+            draft,
+            parent,
+            projectId: Number(projectId),
+            teamId: myself.teamId,
+            assignee: teamMembers.find((m) => m.userId === draft.assigneeId),
+        });
+        // Duplicate-guarded against the background reload landing first.
+        useTM.setAllTasks((prev) =>
+            prev.some((task) => String(task.id) === String(optimistic.id))
+                ? prev
+                : [...prev, optimistic]
+        );
+        if (parent) emitTaskTouched(Number(parent.id), "children");
+        useTM.setIsNewTaskCreated(true);
+
+        // Tag, member and sprint filters can hide the card that was just
+        // made, which reads as "nothing happened". Once the filter pipeline
+        // has had its turn, say so instead.
+        setHiddenCreatedTask(null);
+        if (hiddenCheckTimerRef.current != null) window.clearTimeout(hiddenCheckTimerRef.current);
+        hiddenCheckTimerRef.current = window.setTimeout(() => {
+            hiddenCheckTimerRef.current = null;
+            const shown = Object.values(boardTasksRef.current).some((column) =>
+                column.some((task) => String(task.id) === String(optimistic.id))
+            );
+            if (!shown) setHiddenCreatedTask(optimistic);
+        }, QUICK_ADD_VISIBILITY_CHECK_MS);
+    };
+
     return (
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -556,6 +669,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     setCurrentDisplayingTasks={setFilteredTasks}
                     setIsMemberFilterActive={setIsMemberFilterActive}
                     setIsMilestoneFilterActive={setIsMilestoneFilterActive}
+                    setSelectedMilestoneIds={setSelectedMilestoneIds}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     teamMembers={teamMembers}
                     useSM={useSM}
@@ -603,6 +717,38 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             </Typography>
                         </Stack>
                     </AppTooltip>
+                )}
+                {hiddenCreatedTask && (
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        role="status"
+                        spacing={1}
+                        sx={{ px: 1.5, py: 0.5, flexShrink: 0 }}
+                    >
+                        <Typography level="body-sm">
+                            {fmt(t.tasks.board.quickAddHiddenByFilters, {
+                                id: formatTaskDisplayId(hiddenCreatedTask),
+                            })}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="soft"
+                            onClick={() => {
+                                handleTaskClick(hiddenCreatedTask);
+                                setHiddenCreatedTask(null);
+                            }}
+                        >
+                            {t.tasks.board.quickAddOpen}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            onClick={() => setHiddenCreatedTask(null)}
+                        >
+                            {t.tasks.board.quickAddDismiss}
+                        </Button>
+                    </Stack>
                 )}
                 <DragDropContext
                     onBeforeCapture={lockColumnScroll}
@@ -656,8 +802,28 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                     selectedTaskId={selectedTaskId}
                                     tasks={boardTasks[column.id] || []}
                                     teamMemberProfiles={teamMemberProfiles}
+                                    quickAddSlot={
+                                        column.id === "open" && isQuickAddOpen ? (
+                                            <SprintBoardQuickAddCard
+                                                creatorUserId={myself.userId}
+                                                fieldRules={quickAddFieldRules}
+                                                projectTags={projectTags}
+                                                teamMemberIds={teamMemberIds}
+                                                projectId={
+                                                    projectId != null ? Number(projectId) : null
+                                                }
+                                                onClose={closeQuickAdd}
+                                                onSubmit={handleQuickAddSubmit}
+                                            />
+                                        ) : null
+                                    }
                                     onOpenDiagram={handleOpenDiagram}
                                     onTaskClick={handleTaskClick}
+                                    onQuickAddClick={
+                                        column.id === "open" && projectId != null
+                                            ? toggleQuickAdd
+                                            : undefined
+                                    }
                                 />
                             );
                         })}
@@ -678,9 +844,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
-                            diagramTask.title || t.tasks.diagram.untitled
-                        }`}
                         rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
@@ -688,6 +851,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         projectId={Number(
                             diagramTask.projectId ?? usePM.currentProject?.projectId
                         )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
+                            diagramTask.title || t.tasks.diagram.untitled
+                        }`}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

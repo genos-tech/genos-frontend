@@ -1,7 +1,7 @@
 import { DragDropContext } from "@hello-pangea/dnd";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { act, render, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { COLUMNS } from "../features/tasks/components/board/SprintBoard";
 import { SprintBoardColumn } from "../features/tasks/components/board/SprintBoardColumn";
@@ -55,5 +55,44 @@ describe("column scroll lock while dragging", () => {
         expect(getComputedStyle(droppable).overflowY).toBe("hidden");
         board.removeAttribute(BOARD_DRAGGING_ATTR);
         expect(getComputedStyle(droppable).overflowY).toBe("auto");
+    });
+});
+
+// MIP-901. The Open column's header gets a "+" that opens the quick-add card;
+// the card renders outside the Droppable.
+describe("column quick-add affordance", () => {
+    const renderColumn = (props: Partial<Parameters<typeof SprintBoardColumn>[0]> = {}) =>
+        render(
+            <CssVarsProvider>
+                <DragDropContext onDragEnd={() => {}}>
+                    <SprintBoardColumn
+                        column={COLUMNS[0]}
+                        myself={{} as UserProps}
+                        tasks={[]}
+                        teamMemberProfiles={{}}
+                        {...props}
+                    />
+                </DragDropContext>
+            </CssVarsProvider>
+        );
+
+    it("shows a + only when the board passes a handler", () => {
+        const none = renderColumn();
+        expect(none.queryByLabelText("Create a task")).toBeNull();
+        none.unmount();
+
+        const onQuickAddClick = vi.fn();
+        const withButton = renderColumn({ onQuickAddClick });
+        fireEvent.click(withButton.getByLabelText("Create a task"));
+        expect(onQuickAddClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders the quick-add slot outside the droppable card list", () => {
+        const { getByTestId, container } = renderColumn({
+            quickAddSlot: <div data-testid="slot" />,
+        });
+        const droppable = container.querySelector("[data-rfd-droppable-id]") as HTMLElement;
+        expect(getByTestId("slot")).toBeTruthy();
+        expect(droppable.contains(getByTestId("slot"))).toBe(false);
     });
 });

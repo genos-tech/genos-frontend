@@ -37,6 +37,7 @@ import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascad
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
+import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
@@ -1265,40 +1266,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         });
 
         if (taskId != null) {
-            const member = teamMembers.find((m) => m.userId === draft.assigneeId);
-            const nowIso = new Date().toISOString();
-            const optimistic: TaskTableProps = {
-                id: String(taskId),
-                // Render the friendly "<code>-<n>" id straight away when the
-                // backend returned it; otherwise formatTaskDisplayId falls
-                // back to "#<id>" until the background reload reconciles.
+            const optimistic = buildOptimisticQuickTask({
+                taskId,
                 displayId,
-                title: draft.title,
-                priority: draft.priority,
-                effortLevel: draft.effortLevel,
-                createdDate: nowIso,
-                updatedAt: nowIso,
-                dueDate: draft.dueDate,
-                daysLeft: draft.dueDate
-                    ? dayjs(draft.dueDate).startOf("day").diff(dayjs().startOf("day"), "day")
-                    : null,
-                status: draft.status,
-                assigneeId: draft.assigneeId,
-                assigneeEmail: member?.userEmail ?? null,
-                assigneeName: member?.userName ?? null,
-                assigneeImgPath: member?.avatarImgPath ?? null,
-                parentTaskId: String(parent.id),
-                rootTaskId: parent.rootTaskId ?? Number(parent.id),
-                threadId: null,
-                tags: draft.tags,
-                concatTags:
-                    draft.tags.length > 0 ? draft.tags.map((tag) => tag.tagName).join(",") : null,
-                teamId: myself.teamId ?? null,
+                draft,
+                parent,
                 projectId: Number(projectId),
-                isMilestone: false,
-                milestoneId: parent.milestoneId ?? null,
-                sprintId: parent.sprintId ?? null,
-            };
+                teamId: myself.teamId,
+                assignee: teamMembers.find((m) => m.userId === draft.assigneeId),
+            });
             // Duplicate-guarded against the race where the background
             // reload lands before this insert.
             useTM.setAllTasks((prev) =>
@@ -1885,9 +1861,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
-                            diagramTask.title || t.tasks.diagram.untitled
-                        }`}
                         rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
@@ -1895,6 +1868,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         projectId={Number(
                             diagramTask.projectId ?? usePM.currentProject?.projectId
                         )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
+                            diagramTask.title || t.tasks.diagram.untitled
+                        }`}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

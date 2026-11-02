@@ -168,6 +168,10 @@ type TaskFilterMenuProps = {
     // The board uses this to hide its "Show child tasks" toggle when
     // a milestone is already in scope (children are already showing).
     setIsMilestoneFilterActive?: (active: boolean) => void;
+    // Optional: which milestones the dropdown has picked (empty = none). The
+    // board's quick-add needs the id, not just the boolean, to file a new task
+    // under the milestone it is looking at.
+    setSelectedMilestoneIds?: (ids: number[]) => void;
     // Optional: the team's members, source for the Member multi-select.
     // When omitted (or empty) the Member filter is not rendered — the
     // legacy `ProjectTaskTable` call site doesn't pass it.
@@ -220,6 +224,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setCurrentDisplayingTasks,
         setVisibleChildTaskIds,
         setIsMilestoneFilterActive,
+        setSelectedMilestoneIds,
         teamMembers,
         setIsMemberFilterActive,
         hideStatusFilter,
@@ -1558,6 +1563,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         if (setIsMilestoneFilterActive) {
             setIsMilestoneFilterActive(milestoneFilterActive);
+        }
+
+        if (setSelectedMilestoneIds) {
+            setSelectedMilestoneIds(Array.from(milestoneIdSet));
         }
 
         if (setIsMemberFilterActive) {
