@@ -69,11 +69,12 @@ export const settings = {
             // Only keys made before expiry became mandatory say this.
             neverExpires: "Never expires — replace it with a new key",
             // Write keys only, off by default. It covers what can't be undone
-            // (deleting a calendar event, a milestone or a sprint) and what
-            // changes who has access (adding someone to a project), and an
-            // instruction hidden in a task or a web page can ask for any of it.
+            // (deleting a calendar event, a milestone, a sprint, a note or a
+            // note folder) and what changes who has access (adding someone to
+            // a project, sharing a note), and an instruction hidden in a task
+            // or a web page can ask for any of it.
             allowDestructive:
-                "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones and sprints, adding people to projects)",
+                "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones, sprints, notes and note folders; adding people to projects; sharing notes)",
             destructiveChip: "Can delete",
         },
         // Owner-only. Lists every live key bound to the team, including

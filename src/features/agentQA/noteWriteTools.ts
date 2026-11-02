@@ -1,5 +1,5 @@
 // Agent write tools whose approval changes what the notes sidebar shows: a
-// note, a note folder, or the Favorites list. The tool-result handlers in
+// note, a note folder (made, renamed or deleted), or the Favorites list. The tool-result handlers in
 // useAgentQA / useSpotlight dispatch the `noteChanged` window event for
 // exactly this set, and useNoteManagement re-reads the note meta, the folder
 // lists and Favorites on it. Kept here (next to neither hook) so the two
@@ -9,4 +9,6 @@ export const NOTE_SIDEBAR_TOOLS: ReadonlySet<string> = new Set([
     "update_note",
     "manage_note_folder",
     "favorite_note",
+    "delete_note",
+    "delete_note_folder",
 ]);

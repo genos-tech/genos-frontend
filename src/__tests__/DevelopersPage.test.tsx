@@ -178,6 +178,7 @@ describe("DevelopersPage", () => {
             "list_project_tags",
             "list_task_dependencies",
             "list_note_folders",
+            "list_note_access",
             "list_uncompleted_todos",
             "list_today_todos",
             "list_calendar_events",
@@ -229,6 +230,9 @@ describe("DevelopersPage", () => {
             "manage_project_members",
             "manage_note_folder",
             "favorite_note",
+            "delete_note",
+            "delete_note_folder",
+            "manage_note_sharing",
         ],
     };
 

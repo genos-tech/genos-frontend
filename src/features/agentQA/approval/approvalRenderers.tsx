@@ -20,6 +20,11 @@ import { BulkUpdatePreview } from "./BulkUpdatePreview";
 import { DeleteCommentPreview, UpdateCommentPreview } from "./CommentWritePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
 import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
+import {
+    DeleteNoteFolderPreview,
+    DeleteNotePreview,
+    ManageNoteSharingPreview,
+} from "./NoteDeleteSharePreview";
 import { FavoriteNotePreview, ManageNoteFolderPreview } from "./NoteFolderWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
 import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWritePreview";
@@ -68,6 +73,11 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // its `action`) and one for starring or unstarring a note or a folder.
     manage_note_folder: ManageNoteFolderPreview,
     favorite_note: FavoriteNotePreview,
+    // The note writes that can't be taken back or that change who has access:
+    // two deletes, and one card for sharing that branches on its `action`.
+    delete_note: DeleteNotePreview,
+    delete_note_folder: DeleteNoteFolderPreview,
+    manage_note_sharing: ManageNoteSharingPreview,
 };
 
 export const getApprovalRenderer = (toolName: string): FC<ApprovalPreviewProps> | undefined =>
