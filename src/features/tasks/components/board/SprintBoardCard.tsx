@@ -16,17 +16,9 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { deriveDaysLeft } from "../../utils/daysLeft";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { priorityChipColors, taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdText } from "../CopyableTaskId";
 import { ProjectTagChip } from "../ProjectTagChip";
-
-// Priority colors
-const priorityColors: Record<string, { bg: string; text: string }> = {
-    Critical: { bg: "#dc2626", text: "#fff" },
-    High: { bg: "#ea580c", text: "#fff" },
-    Medium: { bg: "#ca8a04", text: "#fff" },
-    Low: { bg: "#16a34a", text: "#fff" },
-};
 
 // Style helpers
 const getCardStyles = (
@@ -138,7 +130,9 @@ const SprintBoardCardImpl = ({
         return fmt(t.tasks.board.daysLeft, { count: daysLeft });
     };
 
-    const priorityStyle = task.priority ? priorityColors[task.priority] : null;
+    // Same colours as the task table's priority chip (MIP-926: a local map
+    // here had "Medium", which isn't a priority, and no Normal or Minimal).
+    const priorityStyle = priorityChipColors(task.priority, mode === "dark");
 
     return (
         <Draggable draggableId={task.id?.toString() || ""} index={index} isDragDisabled={false}>

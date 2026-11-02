@@ -1,3 +1,5 @@
+import { alpha } from "@mui/system";
+
 import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../../types/tasks";
 
 export const statuses: TaskStatusProps[] = [
@@ -18,6 +20,25 @@ export const priorities: TaskPriorityProps[] = [
     { code: 0, priority: "High", color: "#F59E0B", textColor: "white" },
     { code: 0, priority: "Critical", color: "#EF4444", textColor: "white" },
 ];
+
+/**
+ * Fill and label colour for a priority chip, derived from `priorities` the
+ * same way the task table draws its priority chip: the priority's colour at
+ * 75% (50% in dark mode) with its own label colour on top. The cards that
+ * show a priority chip (sprint-board card, Assigned Milestones card) call
+ * this instead of keeping a colour map of their own, so they cannot drift
+ * from the table. Returns null for a value that is not one of `priorities`
+ * (none set, or a legacy label such as "Medium"): the table shows no chip
+ * for those either.
+ */
+export const priorityChipColors = (
+    priority: string | null | undefined,
+    isDark: boolean
+): { bg: string; text: string } | null => {
+    const meta = priorities.find((p) => p.priority === priority);
+    if (!meta?.color) return null;
+    return { bg: alpha(meta.color, isDark ? 0.5 : 0.75), text: meta.textColor ?? "white" };
+};
 
 export const effortLevels: TaskEffortLevelProps[] = [
     { code: 0, level: "Minimal", color: "#9CA3AF", textColor: "white" },

@@ -11,5 +11,7 @@ builder = "NIXPACKS"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npx serve -s dist -l $PORT"
+# `exec` + the local binary, not `npx`: npm sat between Railway and `serve` and logged
+# "npm error signal SIGTERM" on every deploy (MIP-921). `serve` is a dependency.
+startCommand = "exec ./node_modules/.bin/serve -s dist -l $PORT"
 restartPolicyType = "ON_FAILURE"
