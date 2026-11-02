@@ -580,7 +580,7 @@ describe("Todo previews (update / create / delete_todo_item approvals)", () => {
         expect(screen.getByText("Update to-do: Call Sam")).toBeTruthy();
         expect(screen.getByText("Day: 2026-11-05 → 2026-11-06")).toBeTruthy();
         expect(
-            screen.getByText("Reminder: 2026-11-05 09:00 → 2026-11-06T09:00 (Asia/Tokyo)")
+            screen.getByText("Reminder: 2026-11-05 09:00 → 2026-11-06 09:00 (Asia/Tokyo)")
         ).toBeTruthy();
         // Structured — the raw key:value fallback must NOT render.
         expect(screen.queryByText("item_id:")).toBeNull();

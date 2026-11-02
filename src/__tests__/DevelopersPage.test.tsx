@@ -246,4 +246,12 @@ describe("DevelopersPage", () => {
         expect(document.body.textContent).toMatch(/Over MCP none of them do/);
         expect(document.body.textContent).toMatch(/there is no undo/);
     });
+
+    it("warns that a read-scoped key reaches the owner's chats, direct messages included", () => {
+        renderPage();
+        const text = document.body.textContent ?? "";
+        expect(text).toMatch(/read your own chats, direct messages included/);
+        expect(text).toMatch(/a read-scoped key can call both/);
+        expect(text).toMatch(/A key handed to an outside agent\s+exposes all of them/);
+    });
 });

@@ -82,7 +82,9 @@ const NotesBody = ({ text, isDark }: { text: string; isDark: boolean }) => {
 const useProposedReminder = (args: Record<string, unknown>) => {
     const { t } = useTranslation();
     if (args.cancel_reminder === true) return { proposed: "" as unknown };
-    const at = asString(args.remind_at);
+    // Printed the way the present reminder is (`2026-11-05 09:00`), so the two
+    // sides of "old → new" read alike.
+    const at = asString(args.remind_at)?.replace("T", " ");
     if (at) {
         const zone = asString(args.time_zone);
         return { proposed: zone ? fmt(t.agentApproval.reminderZone, { time: at, zone }) : at };

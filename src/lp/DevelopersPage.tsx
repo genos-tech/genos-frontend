@@ -636,6 +636,12 @@ export default function DevelopersPage() {
                         trusted from the key, because a key goes on naming its team after its owner
                         has been removed from that team.
                     </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Chats are the widest thing a key reaches. <Code>list_my_chats</Code> and{" "}
+                        <Code>get_chat_thread</Code> read your own chats, direct messages included,
+                        and a read-scoped key can call both. A key handed to an outside agent
+                        exposes all of them.
+                    </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
                         Naming a task
