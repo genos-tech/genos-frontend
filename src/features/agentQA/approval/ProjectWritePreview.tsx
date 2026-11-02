@@ -29,6 +29,9 @@ import { asString, MetaChip, placeValue } from "./previewHelpers";
 
 const UPDATE_FIELDS = ["name", "code"] as const;
 
+const isPrivate = (v: unknown): boolean =>
+    v === true || (typeof v === "string" && v.trim().toLowerCase() === "true");
+
 export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
     const palette = isDark ? purplePalette.dark : purplePalette.light;
@@ -45,10 +48,14 @@ export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
             chips.push(`${labels[field]}: ${placeValue(proposed, t.agentApproval.cleared)}`);
         }
     } else {
-        // Only a boolean the model actually sent: with none, the card does not
-        // guess what the project will be.
-        if (args.is_private === true) chips.push(t.agentApproval.projectPrivate);
-        else if (args.is_private === false) chips.push(t.agentApproval.projectPublic);
+        // The API makes a project public unless `is_private` says otherwise,
+        // so a missing value reads as Public. A true boolean or the string
+        // "true" is private; false, "false" and anything else is public.
+        chips.push(
+            isPrivate(args.is_private)
+                ? t.agentApproval.projectPrivate
+                : t.agentApproval.projectPublic
+        );
         if (Array.isArray(args.member_ids)) people = args.member_ids.map(String);
     }
 

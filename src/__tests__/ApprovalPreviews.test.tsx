@@ -981,13 +981,38 @@ describe("Project previews (manage_project / manage_project_members approvals)",
         ).toBeTruthy();
     });
 
-    it("does not list people, or guess a visibility, when the model sent neither", () => {
+    it("reads a create with no is_private as Public, the API's default, and lists no people", () => {
         renderCard("manage_project", { action: "create", name: "Solo" });
         expect(screen.getByText("Solo")).toBeTruthy();
+        expect(screen.getByText("Public")).toBeTruthy();
         expect(screen.queryByText("Private")).toBeNull();
-        expect(screen.queryByText("Public")).toBeNull();
         expect(screen.queryByText(/^Adding/)).toBeNull();
         expect(screen.queryByText("none")).toBeNull();
+    });
+
+    it('reads is_private sent as the string "true" or "false" the same as a boolean', () => {
+        const { unmount } = renderCard("manage_project", {
+            action: "create",
+            name: "Stringly",
+            is_private: "true",
+        });
+        expect(screen.getByText("Private")).toBeTruthy();
+        expect(screen.queryByText("Public")).toBeNull();
+        unmount();
+
+        renderCard("manage_project", {
+            action: "create",
+            name: "Stringly",
+            is_private: "false",
+        });
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
+    });
+
+    it("reads a null is_private as Public", () => {
+        renderCard("manage_project", { action: "create", name: "Nully", is_private: null });
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
     });
 
     it("does not list people when the list is empty", () => {
