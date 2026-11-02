@@ -329,6 +329,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         // shrink below its label (which ellipsises, see the labels below).
         flex: "1 1 0",
         minWidth: 0,
+        // Joy gives a ListItemButton inside a ListItem negative margins (12px
+        // each side, and -4px on top of the first) so it can bleed into the
+        // item's padding. With two side by side that is what made them
+        // overlap and the first one taller.
+        m: 0,
         borderRadius: "10px",
         px: 1.5,
         py: 1,
