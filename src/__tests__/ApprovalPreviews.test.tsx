@@ -567,6 +567,61 @@ describe("AddCommentPreview (add_comment approval)", () => {
     });
 });
 
+describe("Comment previews (update_comment / delete_comment approvals)", () => {
+    it("says an update replaces one of your comments, and shows the whole new text", () => {
+        renderCard("update_comment", {
+            task_id: "WRD-5",
+            comment_id: 3,
+            body_text: "Confirmed on staging.\nClosing after the PR merges.",
+        });
+        expect(screen.getByText("Replace your comment #3 on WRD-5")).toBeTruthy();
+        expect(screen.getByText(/Confirmed on staging\./)).toBeTruthy();
+        expect(screen.getByText(/Closing after the PR merges\./)).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("body_text:")).toBeNull();
+        expect(screen.queryByText("comment_id:")).toBeNull();
+    });
+
+    it("still names the comment when the new text is empty", () => {
+        renderCard("update_comment", { task_id: "WRD-5", comment_id: 3 });
+        expect(screen.getByText("Replace your comment #3 on WRD-5")).toBeTruthy();
+    });
+
+    it("says a delete is of your own comment, on which task, and can't be undone", () => {
+        renderCard("delete_comment", { task_id: "WRD-5", comment_id: 3 });
+        expect(screen.getByText("Delete your comment #3 on WRD-5")).toBeTruthy();
+        expect(screen.getByText("This action cannot be undone")).toBeTruthy();
+        expect(screen.queryByText("task_id:")).toBeNull();
+        expect(screen.queryByText("comment_id:")).toBeNull();
+    });
+
+    it("names the task by its friendly name when that is what arrives", () => {
+        renderCard("delete_comment", { task_id: "Ship the public API", comment_id: "12" });
+        expect(screen.getByText("Delete your comment #12 on Ship the public API")).toBeTruthy();
+    });
+});
+
+describe("RestoreTaskBodyPreview (restore_task_body approval)", () => {
+    it("says the description is replaced by an earlier version, which entry, and that it can be undone", () => {
+        renderCard("restore_task_body", { task_id: "WRD-5", activity_id: 481 });
+        expect(screen.getByText("Restore the previous description of WRD-5")).toBeTruthy();
+        expect(screen.getByText("History entry #481")).toBeTruthy();
+        expect(
+            screen.getByText(
+                "This replaces the description as it is now with the one it had before this edit. You can undo it: the description you replace is kept in this history too."
+            )
+        ).toBeTruthy();
+        expect(screen.queryByText("activity_id:")).toBeNull();
+        expect(screen.queryByText("task_id:")).toBeNull();
+    });
+
+    it("leaves the entry chip off when the event carries no activity_id", () => {
+        renderCard("restore_task_body", { task_id: "WRD-5" });
+        expect(screen.getByText("Restore the previous description of WRD-5")).toBeTruthy();
+        expect(screen.queryByText(/History entry/)).toBeNull();
+    });
+});
+
 describe("Todo previews (update / create / delete_todo_item approvals)", () => {
     it("shows the day and the reminder as old → new, with the zone it is read in", () => {
         renderCard("update_todo_item", {
@@ -810,6 +865,13 @@ describe("getToolLabel", () => {
         expect(getToolLabel("delete_todo_item", en)).toBe("Deleting a to-do");
         expect(getToolLabel("list_my_chats", en)).toBe("Finding your chats");
     });
+
+    it("labels the comment edit, comment delete and description restore tools", () => {
+        expect(getToolLabel("update_comment", en)).toBe("Replacing one of your comments");
+        expect(getToolLabel("delete_comment", en)).toBe("Deleting one of your comments");
+        expect(getToolLabel("restore_task_body", en)).toBe("Restoring a task's description");
+    });
+
     it("falls back to the raw tool_name for an unmapped tool", () => {
         expect(getToolLabel("some_future_tool", en)).toBe("some_future_tool");
     });

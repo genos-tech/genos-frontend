@@ -25,6 +25,13 @@ export const agentApproval = {
     newTask: "New task",
     updateTask: "Update task: {task}",
     commentOn: "Comment on {task}",
+    updateComment: "Replace your comment #{comment} on {task}",
+    deleteComment: "Delete your comment #{comment} on {task}",
+    restoreTaskBody: "Restore the previous description of {task}",
+    historyEntry: "History entry #{entry}",
+    cannotUndo: "This action cannot be undone",
+    restoreKeepsCurrent:
+        "This replaces the description as it is now with the one it had before this edit. You can undo it: the description you replace is kept in this history too.",
     task: "Task",
     folder: "Folder",
     changesTitle: "Title",
@@ -108,6 +115,9 @@ export const agentApproval = {
         update_tasks_bulk: "Updating several tasks",
         assign_task: "Assigning a task",
         add_comment: "Adding a comment",
+        update_comment: "Replacing one of your comments",
+        delete_comment: "Deleting one of your comments",
+        restore_task_body: "Restoring a task's description",
         add_task_delivery: "Linking a pull request to a task",
         update_task_dependencies: "Linking task dependencies",
         // projects

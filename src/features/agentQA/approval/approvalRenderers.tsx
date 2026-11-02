@@ -17,9 +17,11 @@ import type { FC } from "react";
 
 import { AddCommentPreview } from "./AddCommentPreview";
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
+import { DeleteCommentPreview, UpdateCommentPreview } from "./CommentWritePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
 import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
+import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
 import { UpdateTaskPreview } from "./UpdateTaskPreview";
@@ -35,6 +37,11 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     update_task: UpdateTaskPreview,
     update_tasks_bulk: BulkUpdatePreview,
     add_comment: AddCommentPreview,
+    // The two writes on a comment of the caller's own, and the description
+    // restore (which is also reversible).
+    update_comment: UpdateCommentPreview,
+    delete_comment: DeleteCommentPreview,
+    restore_task_body: RestoreTaskBodyPreview,
     // One card per to-do write, and one for the milestone tool (it branches
     // on its `action`) plus one for its delete.
     update_todo_item: UpdateTodoPreview,
