@@ -42,7 +42,6 @@ export interface UseSendUpdatedTaskParams {
     setTaskStatusUpdated?: (value: boolean) => void;
     setTaskBodyEdited?: (value: boolean) => void;
     setStartIntervalUpdatingTask?: (value: boolean) => void;
-    setTaskTitle?: (value: string) => void;
 
     // Option 2: Provide consolidated state (recommended)
     taskEditState?: TaskEditStateManagement;
@@ -85,7 +84,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const setTaskBodyEdited = taskEditState?.setTaskBodyEdited ?? params.setTaskBodyEdited!;
     const setStartIntervalUpdatingTask =
         taskEditState?.setStartIntervalUpdatingTask ?? params.setStartIntervalUpdatingTask!;
-    const setTaskTitle = taskEditState?.setTaskTitle ?? params.setTaskTitle;
 
     const bodyRef = params.bodyRef;
     const onStoredTaskRestored = params.onStoredTaskRestored;
@@ -182,18 +180,28 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                         accessToken
                     );
                     if (storedTask && Number(shownTaskIdRef.current) === Number(storedTask.id)) {
-                        // Metadata only. The body belongs to the collaborative
-                        // editor (body autosaves come through here too, and a
-                        // revert would eat what was typed), and the attachment
-                        // list keeps its persisted rows and any newer drop.
+                        // Picked values only. The body belongs to the
+                        // collaborative editor (body autosaves come through
+                        // here too, and a revert would eat what was typed),
+                        // and the attachment list keeps its persisted rows and
+                        // any newer drop. The TITLE is the person's own words,
+                        // not a pick from a list, and the refusal is almost
+                        // never about it, so it stays as typed (Ken's call on
+                        // MIP-925). It goes into the working copy and the
+                        // preview task as well as the input: TaskPreview's
+                        // same-task sync copies the preview task's title back
+                        // into the input once its 5 s local-edit window has
+                        // passed, which would put the stored title back anyway.
+                        // `baseTaskContent.title` is what was sent: the typed
+                        // title, or the old one if the box was emptied.
                         const putBack = (prev: TaskProps): TaskProps => ({
                             ...storedTask,
+                            title: baseTaskContent.title,
                             body: prev.body,
                             attachments: prev.attachments,
                         });
                         setTmpCurrentTaskContent((prev) => putBack(prev));
                         setCurrentPreviewTask((prev) => (prev ? putBack(prev) : prev));
-                        setTaskTitle?.(storedTask.title);
                         onStoredTaskRestored?.(storedTask);
                     }
                 }
@@ -310,7 +318,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             setTaskStatusUpdated,
             setTaskBodyEdited,
             setStartIntervalUpdatingTask,
-            setTaskTitle,
             onStoredTaskRestored,
             taskEditState,
         ]
