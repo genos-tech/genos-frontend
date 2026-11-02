@@ -457,6 +457,18 @@ const MCP_TOOLS: McpTool[] = [
         meaning:
             "Delete a sprint. Its milestones and their tasks are kept, outside any sprint. Needs a key that also has the destructive opt-in.",
     },
+    {
+        name: "manage_project",
+        type: "write",
+        meaning:
+            "Create a project, or rename one or change its code, the prefix of its task ids. The action argument picks which.",
+    },
+    {
+        name: "manage_project_members",
+        type: "write",
+        meaning:
+            "Add a teammate to a project, who also gets the project's chat, or change a member's role. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
 ];
 
 const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");

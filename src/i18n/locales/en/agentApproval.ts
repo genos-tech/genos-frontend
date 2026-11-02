@@ -89,6 +89,21 @@ export const agentApproval = {
     },
     sprintMilestonesKept:
         "Its milestones and their tasks are kept. They just no longer belong to a sprint.",
+    newProject: "New project",
+    updateProject: "Update project: {project}",
+    projectFieldLabels: {
+        name: "Name",
+        code: "Code",
+    },
+    projectPrivate: "Private",
+    projectPublic: "Public",
+    projectPeopleAdded: "Adding {count, plural, one {# person} other {# people}}: {people}",
+    projectCodeHint: "The code is the prefix of the project's task ids.",
+    addProjectMember: "Add {person} to {project}",
+    projectMemberGetsChat: "They also get the project's chat.",
+    makeProjectEditor: "Make {person} an editor of {project}",
+    makeProjectViewer: "Make {person} a viewer of {project}",
+    changeProjectRole: "Change {person}'s role in {project}",
     cleared: "none",
     unset: "—",
     // Friendly, non-technical labels for every agent tool, keyed by the
@@ -176,6 +191,9 @@ export const agentApproval = {
         // sprints
         manage_sprint: "Managing a sprint",
         delete_sprint: "Deleting a sprint",
+        // projects
+        manage_project: "Managing a project",
+        manage_project_members: "Managing project members",
         // to-dos
         list_today_todos: "Checking today's to-dos",
         list_uncompleted_todos: "Checking open to-dos",

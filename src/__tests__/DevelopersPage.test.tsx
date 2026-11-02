@@ -225,6 +225,8 @@ describe("DevelopersPage", () => {
             "delete_milestone",
             "manage_sprint",
             "delete_sprint",
+            "manage_project",
+            "manage_project_members",
         ],
     };
 
