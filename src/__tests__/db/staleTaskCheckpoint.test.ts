@@ -51,7 +51,7 @@ const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 afterAll(() => warnSpy.mockRestore());
 
 const PROJECT_ID = 7;
-const KEY = `tasks:${PROJECT_ID}`;
+const KEY = `tasks:v2:${PROJECT_ID}`;
 
 // The guest's own team. The shared project's tasks are filed under the
 // HOST team, which is exactly what used to get them filtered away.
@@ -94,6 +94,50 @@ const sinceOfCall = (call: number): string | null =>
 
 const storedIds = async () =>
     (await new TaskRepository().getTasksByProject(PROJECT_ID)).map((r) => r.id).sort();
+
+describe('a row cached with parentTaskId as the text "null" (MIP-943)', () => {
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        await deleteDB(DB_NAME);
+    });
+
+    it("is rewritten once, although it is older than the old checkpoint", async () => {
+        // What an affected browser holds: the bad row, and a checkpoint under
+        // the old key that is past the save, so no delta would ever send it.
+        await new TaskRepository().batchInsertTasks([
+            { ...hostTask(1), parentTaskId: "null" } as unknown as TaskTableProps,
+        ]);
+        await new CheckpointRepository().setCheckpoint(`tasks:${PROJECT_ID}`, "T1");
+
+        vi.mocked(loadProjectTasksFromApi).mockResolvedValueOnce(
+            full([{ ...hostTask(1), parentTaskId: null } as unknown as TaskTableProps], "T2")
+        );
+        await load();
+
+        // The whole list was asked for, not the changes since T1.
+        expect(sinceOfCall(0)).toBeNull();
+        const [row] = await new TaskRepository().getTasksByProject(PROJECT_ID);
+        expect(row.parentTaskId).toBeNull();
+        expect(await new CheckpointRepository().getCheckpoint(KEY)).toBe("T2");
+    });
+
+    it("costs one full load: the next sync asks for changes again", async () => {
+        vi.mocked(loadProjectTasksFromApi).mockResolvedValueOnce(full([hostTask(1)], "T2"));
+        await load();
+        vi.mocked(loadProjectTasksFromApi).mockResolvedValueOnce(changes([], "T3", 1));
+        await load();
+
+        expect(sinceOfCall(1)).toBe("T2");
+    });
+
+    it("the team-wide reload still forgets the new key", async () => {
+        await new CheckpointRepository().setCheckpoint(KEY, "T1");
+        vi.mocked(loadTeamTasks).mockResolvedValueOnce([hostTask(1)]);
+        await tasksHandlers.loadTeamTasks({ myself: guest, accessToken: "token" } as never);
+
+        expect(await new CheckpointRepository().getCheckpoint(KEY)).toBeNull();
+    });
+});
 
 describe("a project whose rows never arrived heals itself", () => {
     beforeEach(async () => {

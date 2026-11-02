@@ -293,7 +293,14 @@ export const sendUpdatedSpecificTask = async (
                     assigneeEmail: updatedTask.assignee?.userEmail ?? null,
                     assigneeName: updatedTask.assignee?.userName ?? null,
                     assigneeImgPath: updatedTask.assignee?.avatarImgPath ?? null,
-                    parentTaskId: String(updatedTask.parentTaskId),
+                    // Null stays null: `String(null)` is the text "null", and
+                    // the table finds root rows with `parentTaskId == null`, so
+                    // that row showed nowhere until a sync replaced it. A sync
+                    // that ran while this PUT was in flight has already moved
+                    // the checkpoint past the save, so none ever would
+                    // (MIP-943).
+                    parentTaskId:
+                        updatedTask.parentTaskId != null ? String(updatedTask.parentTaskId) : null,
                     threadId: updatedTask.threadId,
                     tags: updatedTask.tags,
                     concatTags: updatedTask.concatTags || null,
