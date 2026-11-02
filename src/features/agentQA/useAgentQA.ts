@@ -28,6 +28,7 @@ import {
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
+import { NOTE_SIDEBAR_TOOLS } from "./noteWriteTools";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
@@ -241,9 +242,9 @@ export const useAgentQA = ({
                     // Cross-feature invalidator: a note written by the
                     // agent (thread/note Q&A shares the write tools) won't
                     // show in the note sidebar until a reload. Nudge
-                    // useNoteManagement to refetch its meta. Mirrors the
-                    // Spotlight overlay's handler.
-                    if (tool_name === "create_note" || tool_name === "update_note") {
+                    // useNoteManagement to refetch its meta, folder lists
+                    // and Favorites. Mirrors the Spotlight overlay's handler.
+                    if (NOTE_SIDEBAR_TOOLS.has(tool_name)) {
                         // detail carries the backend's note ref (id/type/
                         // changed_fields) so useNoteManagement can also
                         // push a body update into the note's Yjs doc;

@@ -248,6 +248,16 @@ describe("DevelopersPage", () => {
         ]);
     });
 
+    it("describes list_note_folders as the My Notes and Team Notes folders", () => {
+        renderPage();
+        const row = [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === "list_note_folders"
+        );
+        expect(row?.textContent).toContain("The note folders in your My Notes and in Team Notes.");
+        // "Personal note" is retired from the UI: the space is My Notes.
+        expect(row?.textContent).not.toMatch(/personal/i);
+    });
+
     it("states counts that agree with the tool table", () => {
         renderPage();
         const { read, write } = MCP_CATALOG;

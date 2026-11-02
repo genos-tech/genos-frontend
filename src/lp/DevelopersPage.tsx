@@ -240,7 +240,11 @@ const MCP_TOOLS: McpTool[] = [
         type: "read",
         meaning: "Every blocker → blocked edge in a project or milestone, in one call.",
     },
-    { name: "list_note_folders", type: "read", meaning: "Your personal notes' folders." },
+    {
+        name: "list_note_folders",
+        type: "read",
+        meaning: "The note folders in your My Notes and in Team Notes.",
+    },
     {
         name: "list_uncompleted_todos",
         type: "read",

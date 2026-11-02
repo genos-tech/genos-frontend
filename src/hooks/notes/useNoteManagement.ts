@@ -1031,8 +1031,11 @@ export const useNoteManagement = (
     getTaskNoteMetaRef.current = getTaskNoteMeta;
     const getChatNoteMetaRef = useRef(getChatNoteMeta);
     getChatNoteMetaRef.current = getChatNoteMeta;
-    // Assigned below, after `getTeamNoteMeta` is declared.
+    // Assigned below, after each of them is declared.
     const getTeamNoteMetaRef = useRef<() => Promise<void>>(async () => {});
+    const getMyNoteFoldersRef = useRef<() => Promise<void>>(async () => {});
+    const getTeamNoteFoldersRef = useRef<() => Promise<void>>(async () => {});
+    const getFavoriteNotesMetaRef = useRef<() => Promise<void>>(async () => {});
     const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
     applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
 
@@ -1070,6 +1073,14 @@ export const useNoteManagement = (
             void getTaskNoteMetaRef.current();
             void getChatNoteMetaRef.current();
             void getTeamNoteMetaRef.current();
+            // The folder lists and the Favorites list are separate calls
+            // from the note meta, and the agent's folder and favorite tools
+            // (manage_note_folder, favorite_note) change only those. A
+            // sidebar click updates them from its own response, so nothing
+            // else re-reads them after an approved agent write.
+            void getMyNoteFoldersRef.current();
+            void getTeamNoteFoldersRef.current();
+            void getFavoriteNotesMetaRef.current();
             const ref = (e as CustomEvent).detail as
                 | { note_id?: number; note_type?: string; changed_fields?: string[] }
                 | undefined;
@@ -1097,6 +1108,7 @@ export const useNoteManagement = (
         const loaded = await loadMyNoteFolders(myself, accessToken);
         setMyNoteFolders(loaded);
     };
+    getMyNoteFoldersRef.current = getMyNoteFolders;
 
     const createMyNoteFolderAction = async (name: string, parentFolderId: number | null) => {
         if (!accessToken) return;
@@ -1470,6 +1482,7 @@ export const useNoteManagement = (
             setFavoriteNoteIds(ids);
         }
     };
+    getFavoriteNotesMetaRef.current = getFavoriteNotesMeta;
 
     const favoriteFolderIds = useMemo(
         () => new Set((favoriteNotes?.folders ?? []).map((f) => f.folderId)),
@@ -1717,6 +1730,7 @@ export const useNoteManagement = (
         const loaded = await loadTeamNoteFolders(myself, accessToken);
         setTeamNoteFolders((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
+    getTeamNoteFoldersRef.current = getTeamNoteFolders;
 
     const getTeamNoteMeta = async () => {
         const loaded = await loadTeamNotesMeta(myself, accessToken);
