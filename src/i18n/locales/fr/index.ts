@@ -644,8 +644,6 @@ export const fr: DeepPartial<Messages> = {
             general: "Général",
             newTagPlaceholder: "Nouvelle balise",
             delete: "Supprimer",
-            spotlightTip:
-                "Demandez à l'agent : \"que reste-t-il aujourd'hui ?\" ou « créer une tâche : … » – Spotlight peut lire, ajouter et basculer directement vos éléments.",
             completedTodayEmptyTitle: "Rien n'est encore terminé aujourd'hui",
             completedTodayEmptySubtitle:
                 "Les éléments que vous terminez aujourd'hui s'afficheront ici.",
@@ -665,8 +663,6 @@ export const fr: DeepPartial<Messages> = {
             noTodosYet: "Aucune tâche pour le moment",
             allCompletedSubtitle: "Vous avez terminé toutes vos tâches",
             createFirstSubtitle: "Créez votre première tâche pour commencer",
-            proTip: "Astuce",
-            proTipBody: "Double-cliquez sur un message pour l'ajouter à vos tâches à faire",
             save: "Enregistrer",
             saved: "Enregistré",
             copyLink: "Copier le lien",

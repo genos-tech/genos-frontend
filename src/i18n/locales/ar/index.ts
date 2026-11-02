@@ -962,8 +962,6 @@ export const ar: DeepPartial<Messages> = {
             noTodosYet: "لا توجد مهام بعد",
             allCompletedSubtitle: "لقد أكملت جميع مهامك",
             createFirstSubtitle: "أنشئ مهمتك الأولى للبدء",
-            proTip: "نصيحة احترافية",
-            proTipBody: "انقر مرتين على رسالة لإضافتها إلى قائمة مهامك",
             save: "حفظ",
             saved: "تم الحفظ",
             startToday: "ابدأ اليوم",
@@ -989,8 +987,6 @@ export const ar: DeepPartial<Messages> = {
             general: "عام",
             newTagPlaceholder: "علامة جديدة",
             delete: "يمسح",
-            spotlightTip:
-                'اسأل الوكيل: "ماذا بقي اليوم؟" أو "إنشاء مهمة: ..." — Spotlight يمكنه قراءة العناصر الخاصة بك وإضافتها وتبديلها مباشرةً.',
             completedTodayEmptyTitle: "لا شيء انتهى بعد اليوم",
             completedTodayEmptySubtitle: "العناصر التي أكملتها اليوم ستظهر هنا.",
             incompleteEmptySubtitle: "لا توجد عناصر غير مكتملة في مجموعاتك المرئية.",

@@ -19,7 +19,6 @@ interface SubChatPanelProps {
     useTEM: TeamManagementState;
     myself: UserProps;
     currentSubChatId: number;
-    currentWindowHeight: number;
     subChatPanelSize: number;
     setSubChatPanelSize: (size: number) => void;
     incompleteTodoCount: number;
@@ -41,7 +40,6 @@ export const SubChatPanel = ({
     useTEM,
     myself,
     currentSubChatId,
-    currentWindowHeight,
     subChatPanelSize,
     setSubChatPanelSize,
     incompleteTodoCount,
@@ -66,7 +64,6 @@ export const SubChatPanel = ({
             >
                 <MessagesSubPane
                     currentSubChatId={currentSubChatId}
-                    currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
                     isToDoVisible={isToDoVisible}
                     myself={myself}

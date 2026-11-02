@@ -986,8 +986,6 @@ export const hi: DeepPartial<Messages> = {
             general: "सामान्य",
             newTagPlaceholder: "नया टैग",
             delete: "मिटाना",
-            spotlightTip:
-                'एजेंट से पूछें: "आज क्या बचा है?" या "एक कार्य बनाएं:..." - स्पॉटलाइट आपके आइटम को सीधे पढ़ सकता है, जोड़ सकता है और टॉगल कर सकता है।',
             completedTodayEmptyTitle: "आज तक कुछ भी ख़त्म नहीं हुआ",
             completedTodayEmptySubtitle: "आपके द्वारा आज पूर्ण किए गए आइटम यहां दिखाई देंगे.",
             incompleteEmptySubtitle: "आपके दृश्यमान समूहों में कोई भी अपूर्ण आइटम नहीं है.",
@@ -1006,8 +1004,6 @@ export const hi: DeepPartial<Messages> = {
             noTodosYet: "अभी कोई टू-डू नहीं",
             allCompletedSubtitle: "आपने अपने सभी टास्क पूरे कर लिए हैं",
             createFirstSubtitle: "शुरू करने के लिए अपना पहला टू-डू बनाएँ",
-            proTip: "प्रो टिप",
-            proTipBody: "किसी मेसेज पर डबल क्लिक करके उसे अपने टू-डू में जोड़ें",
             save: "सेव करें",
             saved: "सेव हो गया",
             copyLink: "लिंक की प्रतिलिपि करें",

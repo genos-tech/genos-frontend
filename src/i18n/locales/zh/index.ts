@@ -611,8 +611,6 @@ export const zh: DeepPartial<Messages> = {
             general: "常规",
             newTagPlaceholder: "新标签",
             delete: "删除",
-            spotlightTip:
-                "问 Genos：“今天还剩什么？”或“创建待办：…”——Spotlight 可以直接读取、添加和切换待办。",
             completedTodayEmptyTitle: "今天还没完事",
             completedTodayEmptySubtitle: "你今天完成的项目将显示在此处。",
             incompleteEmptySubtitle: "可见组中没有不完整的项目。",
@@ -631,8 +629,6 @@ export const zh: DeepPartial<Messages> = {
             noTodosYet: "还没有待办",
             allCompletedSubtitle: "你已完成所有任务",
             createFirstSubtitle: "创建第一项待办来开始",
-            proTip: "小贴士",
-            proTipBody: "双击消息可将其加入待办",
             save: "保存",
             saved: "已保存",
             copyLink: "复制链接",
