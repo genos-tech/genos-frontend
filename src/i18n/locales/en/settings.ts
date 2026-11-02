@@ -469,6 +469,13 @@ export const settings = {
         slotTooltip: "Change this emoji",
         reset: "Reset",
     },
+    messageActions: {
+        heading: "Message actions",
+        description:
+            "Actions to keep on the hover toolbar of chat messages and thread replies instead of behind the … menu. Task comments are not affected.",
+        limit: "Pick up to {max}. The rest stay in the … menu.",
+        reset: "Reset",
+    },
     quickAddRequiredFields: {
         heading: "Quick task creation",
         description:

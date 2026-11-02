@@ -72,6 +72,7 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
     // leaving it here would carry the dead key across every user switch
     // forever; omitted, the `localStorage.clear()` below sweeps it.
     "genos-bubble-style-preference-v2",
+    "genos-bubble-pinned-actions-v1",
     "genos-locale",
     "genos-spotlight-preferences:v1",
     "genos-analytics-preferences:v1",

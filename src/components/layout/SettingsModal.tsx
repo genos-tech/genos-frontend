@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
@@ -14,19 +18,23 @@ import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
+import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import TerminalRoundedIcon from "@mui/icons-material/TerminalRounded";
 import ViewSidebarRoundedIcon from "@mui/icons-material/ViewSidebarRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
+import WrapTextIcon from "@mui/icons-material/WrapText";
 import {
     Box,
     Button,
+    Checkbox,
     Divider,
     IconButton,
     Modal,
@@ -59,6 +67,12 @@ import { redirectToOAuthConnect } from "../../features/integrations/services/oau
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
 import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
+import {
+    MAX_PINNED_BUBBLE_ACTIONS,
+    PINNABLE_BUBBLE_ACTIONS,
+    PinnableBubbleAction,
+    useBubbleActionsPreference,
+} from "../../hooks/common/useBubbleActionsPreference";
 import {
     BubbleStyle,
     useBubbleStylePreference,
@@ -558,6 +572,94 @@ const QuickReactionsSection = () => {
                     }}
                 />
             )}
+        </Sheet>
+    );
+};
+
+/**
+ * Which message actions sit on the hover toolbar instead of behind the "…"
+ * menu (MIP-803). The checklist is in the menu's own order, which is also the
+ * toolbar's; once the limit is reached the unticked rows turn off rather than
+ * silently dropping an earlier pick.
+ */
+const MessageActionsSection = () => {
+    const { pinned, setPinned, reset } = useBubbleActionsPreference();
+    const { t } = useTranslation();
+    const labels: Record<PinnableBubbleAction, { icon: ReactNode; label: string }> = {
+        copyLink: {
+            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.copyMessageLink,
+        },
+        delete: {
+            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.deleteMessage,
+        },
+        edit: {
+            icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.editMessage,
+        },
+        flag: {
+            icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.flagForLater,
+        },
+        remindMe: {
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
+            // The menu label ends in "…" because it opens a picker; a settings
+            // row is not that.
+            label: t.chat.messageActions.remindMe.replace(/…$/, ""),
+        },
+        reply: {
+            icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.replyInThread,
+        },
+        unwrapAll: {
+            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.unwrapAll,
+        },
+    };
+    const atLimit = pinned.length >= MAX_PINNED_BUBBLE_ACTIONS;
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <BoltRoundedIcon />
+                <Typography level="title-md">{t.settings.messageActions.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.messageActions.description}
+            </Typography>
+            <Stack spacing={1}>
+                {PINNABLE_BUBBLE_ACTIONS.map((id) => {
+                    const checked = pinned.includes(id);
+                    return (
+                        <Checkbox
+                            key={id}
+                            checked={checked}
+                            disabled={!checked && atLimit}
+                            label={
+                                <Stack alignItems="center" direction="row" spacing={1}>
+                                    {labels[id].icon}
+                                    <span>{labels[id].label}</span>
+                                </Stack>
+                            }
+                            size="sm"
+                            onChange={(e) => setPinned(id, e.target.checked)}
+                        />
+                    );
+                })}
+            </Stack>
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                sx={{ mt: 1.5 }}
+            >
+                <Typography level="body-xs">
+                    {fmt(t.settings.messageActions.limit, { max: MAX_PINNED_BUBBLE_ACTIONS })}
+                </Typography>
+                <Button disabled={pinned.length === 0} size="sm" variant="plain" onClick={reset}>
+                    {t.settings.messageActions.reset}
+                </Button>
+            </Stack>
         </Sheet>
     );
 };
@@ -1843,6 +1945,7 @@ export const SettingsModal = ({
                         <Stack spacing={2}>
                             <MessageLayoutSection />
                             <QuickReactionsSection />
+                            <MessageActionsSection />
                             <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
