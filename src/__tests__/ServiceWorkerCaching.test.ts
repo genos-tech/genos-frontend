@@ -291,43 +291,6 @@ describe("sw.js — lifecycle", () => {
         expect(self.clients.claim).toHaveBeenCalled();
     });
 
-    it("sets the app-icon badge from the server count on push", async () => {
-        const { listeners, self } = loadWorker(vi.fn());
-
-        listeners.get("push")!({
-            data: { json: () => ({ title: "Hi", body: "b", badge_count: 7 }) },
-            waitUntil: (p: Promise<unknown>) => p,
-        });
-
-        expect(self.navigator.setAppBadge).toHaveBeenCalledWith(7);
-    });
-
-    it("increments the badge locally when the server sends no count", async () => {
-        const { listeners, self } = loadWorker(vi.fn());
-        const push = () =>
-            listeners.get("push")!({
-                data: { json: () => ({ title: "Hi", body: "b" }) },
-                waitUntil: (p: Promise<unknown>) => p,
-            });
-
-        push();
-        push();
-
-        expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(1, 1);
-        expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(2, 2);
-    });
-
-    it("clears the badge when a notification is opened", async () => {
-        const { listeners, self } = loadWorker(vi.fn());
-
-        listeners.get("notificationclick")!({
-            notification: { close: vi.fn(), data: { url: "/workspace/chat" } },
-            waitUntil: (p: Promise<unknown>) => p,
-        });
-
-        expect(self.navigator.setAppBadge).toHaveBeenCalledWith(0);
-    });
-
     it("still shows a push notification (caching must not break push)", async () => {
         const { listeners, self } = loadWorker(vi.fn());
 
@@ -344,6 +307,253 @@ describe("sw.js — lifecycle", () => {
             "Hi",
             expect.objectContaining({ body: "You were mentioned" })
         );
+    });
+});
+
+/**
+ * The app-icon badge (the counter chip on the installed app).
+ *
+ * Two writers share it, and the rule is "whoever is on screen owns it": the
+ * page (`useAppBadge`) while the app is open, this worker while it is not.
+ * The reported failure was the worker breaking that rule: a push that arrived
+ * while the app was open (or a notification click on an open app) overwrote the
+ * page's correct number with the server's, and the page, whose own count had
+ * not changed, never wrote it back. So the worker writes only when no window of
+ * the app is visible, and never zeroes the icon on a click.
+ *
+ * The count is updated synchronously, before the worker has looked at any
+ * window; only the WRITE waits for that look. Two pushes in quick succession
+ * must therefore still count 1 then 2, and whichever write lands last must
+ * carry the newest number.
+ */
+describe("sw.js — app-icon badge", () => {
+    /** Fire a push and hand back the promise the worker gave `waitUntil`. It is
+     *  not awaited here, so a case can let two pushes overlap. */
+    const firePush = (listeners: Map<string, Handler>, data: Record<string, unknown>) => {
+        let waited: Promise<unknown> = Promise.resolve();
+        listeners.get("push")!({
+            data: { json: () => data },
+            waitUntil: (p: Promise<unknown>) => {
+                waited = p;
+            },
+        });
+        return waited;
+    };
+
+    const visibleTab = () => makeClient(`${ORIGIN}/workspace`, "visible");
+    const hiddenTab = () => makeClient(`${ORIGIN}/workspace`, "hidden");
+
+    describe("while no window of the app is on screen", () => {
+        it("sets the icon to the server's count", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+
+            await firePush(listeners, { title: "Hi", body: "b", badge_count: 7 });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledTimes(1);
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(7);
+        });
+
+        it("sets the icon to 0 when the server says 0, rather than ignoring it", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+
+            await firePush(listeners, { title: "Hi", badge_count: 0 });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(0);
+        });
+
+        it("increments locally when the server sends no count", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+
+            await firePush(listeners, { title: "Hi", body: "b" });
+            await firePush(listeners, { title: "Hi", body: "b" });
+
+            expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(1, 1);
+            expect(self.navigator.setAppBadge).toHaveBeenNthCalledWith(2, 2);
+        });
+
+        it("counts two pushes that overlap as 2, not 1 twice", async () => {
+            // Both pushes start before either window lookup has finished.
+            const { listeners, self } = loadWorker(vi.fn());
+
+            await Promise.all([
+                firePush(listeners, { title: "A" }),
+                firePush(listeners, { title: "B" }),
+            ]);
+
+            // A count that was read before the lookup and written back after
+            // it would have both pushes read 0 and leave the icon on 1.
+            const writes = self.navigator.setAppBadge.mock.calls.map((c) => c[0]);
+            expect(writes.at(-1)).toBe(2);
+        });
+
+        it("leaves the NEWEST count on the icon when the window lookups finish out of order", async () => {
+            // The first push's lookup is slow, the second's is quick. The
+            // newer push is the one whose number is right, so it must win
+            // whether the count is taken after the lookup (the older number
+            // would be taken last) or captured at push time and written then
+            // (the older number would be written last).
+            const { listeners, self } = loadWorker(vi.fn());
+            let releaseFirst: (tabs: FakeClient[]) => void = () => {};
+            self.clients.matchAll
+                .mockImplementationOnce(
+                    () =>
+                        new Promise<FakeClient[]>((resolve) => {
+                            releaseFirst = resolve;
+                        })
+                )
+                .mockImplementationOnce(async () => []);
+
+            const first = firePush(listeners, { title: "A", badge_count: 5 });
+            const second = firePush(listeners, { title: "B", badge_count: 6 });
+            await second;
+            releaseFirst([]);
+            await first;
+
+            const writes = self.navigator.setAppBadge.mock.calls.map((c) => c[0]);
+            expect(writes.at(-1)).toBe(6);
+        });
+
+        it("still writes when the windows cannot be listed", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockRejectedValue(new Error("no clients"));
+
+            await firePush(listeners, { title: "Hi", badge_count: 4 });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(4);
+            expect(self.registration.showNotification).toHaveBeenCalled();
+        });
+
+        it("writes when the only window is hidden", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockResolvedValue([hiddenTab()]);
+
+            await firePush(listeners, { title: "Hi", badge_count: 7 });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(7);
+        });
+
+        it("treats a window that does not report its visibility as not on screen", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockResolvedValue([makeClient()]);
+
+            await firePush(listeners, { title: "Hi", badge_count: 7 });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(7);
+        });
+
+        it("does not let a failing Badging API break the notification", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.navigator.setAppBadge.mockRejectedValue(new Error("not allowed"));
+
+            await expect(firePush(listeners, { title: "Hi", body: "b" })).resolves.not.toThrow();
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledTimes(1);
+            expect(self.registration.showNotification).toHaveBeenCalledWith(
+                "Hi",
+                expect.objectContaining({ body: "b" })
+            );
+        });
+
+        it("copes with a browser that has no Badging API", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            delete (self.navigator as { setAppBadge?: unknown }).setAppBadge;
+
+            await expect(firePush(listeners, { title: "Hi" })).resolves.not.toThrow();
+
+            expect(self.registration.showNotification).toHaveBeenCalled();
+        });
+    });
+
+    describe("while a window of the app is on screen", () => {
+        it("leaves the icon to the page, whatever number the server sent", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockResolvedValue([visibleTab()]);
+
+            await firePush(listeners, { title: "Hi", badge_count: 7 });
+
+            expect(self.navigator.setAppBadge).not.toHaveBeenCalled();
+        });
+
+        it("leaves it to the page when only one of several windows is visible", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockResolvedValue([hiddenTab(), visibleTab()]);
+
+            await firePush(listeners, { title: "Hi", badge_count: 7 });
+
+            expect(self.navigator.setAppBadge).not.toHaveBeenCalled();
+        });
+
+        it("still shows the notification and tells the tab", async () => {
+            // Only the badge is the page's to own; everything else about a
+            // push is unchanged.
+            const { listeners, self } = loadWorker(vi.fn());
+            const tab = visibleTab();
+            self.clients.matchAll.mockResolvedValue([tab]);
+
+            await firePush(listeners, { title: "Hi", body: "b", badge_count: 7, tag: "x:1" });
+
+            expect(self.registration.showNotification).toHaveBeenCalled();
+            expect(tab.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ type: "push-received", tag: "x:1" })
+            );
+        });
+
+        it("remembers the server's count, so a later write continues from it", async () => {
+            // The icon isn't touched here, but the number is still the best
+            // the worker knows. When the app is later closed and a push comes
+            // without a count, +1 should build on it rather than on 0.
+            const { listeners, self } = loadWorker(vi.fn());
+            self.clients.matchAll.mockResolvedValueOnce([visibleTab()]);
+            await firePush(listeners, { title: "Hi", badge_count: 7 });
+            expect(self.navigator.setAppBadge).not.toHaveBeenCalled();
+
+            self.clients.matchAll.mockResolvedValue([]);
+            await firePush(listeners, { title: "Hi" });
+
+            expect(self.navigator.setAppBadge).toHaveBeenCalledTimes(1);
+            expect(self.navigator.setAppBadge).toHaveBeenCalledWith(8);
+        });
+    });
+
+    describe("opening a notification", () => {
+        const click = (listeners: Map<string, Handler>) => {
+            let waited: Promise<unknown> = Promise.resolve();
+            listeners.get("notificationclick")!({
+                notification: { close: vi.fn(), data: { url: "/workspace/chat" } },
+                waitUntil: (p: Promise<unknown>) => {
+                    waited = p;
+                },
+            });
+            return waited;
+        };
+
+        it("does not touch the icon: opening one notification reads nothing else", async () => {
+            // It used to zero the icon. With the app already open and visible,
+            // focusing the tab fires no visibility change, so the page never
+            // wrote its real count back and a 0 stood while items were unread.
+            // With the app closed, the page writes its real count on launch.
+            const { listeners, self } = loadWorker(vi.fn());
+            const tab = visibleTab();
+            self.clients.matchAll.mockResolvedValue([tab]);
+
+            await click(listeners);
+
+            expect(self.navigator.setAppBadge).not.toHaveBeenCalled();
+            // The navigation itself is unchanged.
+            expect(tab.focus).toHaveBeenCalled();
+            expect(tab.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ type: "notification-click" })
+            );
+        });
+
+        it("does not touch the icon when it has to open a new window either", async () => {
+            const { listeners, self } = loadWorker(vi.fn());
+
+            await click(listeners);
+
+            expect(self.clients.openWindow).toHaveBeenCalled();
+            expect(self.navigator.setAppBadge).not.toHaveBeenCalled();
+        });
     });
 });
 

@@ -138,17 +138,36 @@ self.addEventListener("fetch", (event) => {
     }
 });
 
-// App-icon badge (the counter chip on the installed app). The page owns
-// this while it's open; the worker keeps it moving while the app is
-// closed, which is the only time it can't be maintained in-app. The
-// server sends `badge_count` when it knows the number; absent that we
-// increment locally so the chip still reflects "something new".
+// App-icon badge (the counter chip on the installed app). Whoever is on
+// screen owns it: the page (`useAppBadge`) while the app is open, this worker
+// while it is not, which is the only time the page can't maintain it. So the
+// worker WRITES the badge only when no window of the app is visible. A write
+// made over an open app replaces the page's correct number with the server's,
+// and the page, whose own count has not changed, has no reason to write it
+// back; that was the "badge keeps climbing / stays wrong until the next
+// notification" report. When the app comes back the page re-applies its own
+// count (`useAppBadge` listens for the return).
+//
+// The server sends `badge_count` when it knows the number; absent that we
+// increment locally so the chip still reflects "something new". That local
+// count lives in worker memory, so it restarts from 0 whenever the browser
+// stops the worker; it is a fallback, not a source of truth.
+//
+// Two steps on purpose. `rememberBadge` is synchronous and runs first in the
+// push handler, so the count follows PUSH order: the newest push's number (the
+// server's, or the local +1) is the one that stands, however the window
+// lookups happen to finish. Only the write (`showBadge`) waits for the lookup,
+// and it writes the CURRENT count rather than one captured at push time, so a
+// slow lookup for an older push can't put the older number on the icon.
 let localBadgeCount = 0;
 
-const setBadge = (count) => {
+const rememberBadge = (count) => {
+    localBadgeCount = Math.max(0, count);
+};
+
+const showBadge = () => {
     if (typeof self.navigator === "undefined") return;
     if (typeof self.navigator.setAppBadge !== "function") return;
-    localBadgeCount = Math.max(0, count);
     // Unsupported surfaces reject; never let that break push handling.
     self.navigator.setAppBadge(localBadgeCount).catch(() => {});
 };
@@ -265,6 +284,13 @@ const deliverPush = async (data, title, options) => {
         // No tab open is the normal case for a push; carry on and show a card.
         clientsList = [];
     }
+
+    // The page owns the icon while any window is on screen (see the badge
+    // block above). Written ahead of the card, so the icon never waits on
+    // it. An unreported `visibilityState` counts as not visible, as it does
+    // for the announce handshake below.
+    if (!clientsList.some((client) => client.visibilityState === "visible")) showBadge();
+
     const message = {
         type: "push-received",
         tag: data.tag || "",
@@ -303,7 +329,9 @@ self.addEventListener("push", (event) => {
     } catch (e) {
         data = {};
     }
-    setBadge(typeof data.badge_count === "number" ? data.badge_count : localBadgeCount + 1);
+    // Counted here, synchronously; written in `deliverPush` once we know
+    // whether a window is on screen.
+    rememberBadge(typeof data.badge_count === "number" ? data.badge_count : localBadgeCount + 1);
     const title = data.title || "New notification";
     const options = {
         body: data.body || "",
@@ -379,10 +407,12 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
-    // Opening the app hands badge ownership back to the page, which
-    // recomputes it from real unread counts on mount (`useAppBadge`).
-    // Clearing here avoids a stale number during the launch window.
-    setBadge(0);
+    // The badge is deliberately left alone. Opening ONE notification does
+    // not read everything else, so zeroing it showed 0 over unread items.
+    // And with the app already open and visible, focusing the tab fires no
+    // visibility change, so the page never wrote its real count back and the
+    // 0 stayed. The page re-applies its own count when the app opens or
+    // returns (`useAppBadge`).
     const rawUrl = (event.notification.data && event.notification.data.url) || "/";
     const targetUrl = new URL(rawUrl, self.location.origin).href;
 
