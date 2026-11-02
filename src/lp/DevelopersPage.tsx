@@ -335,6 +335,27 @@ const MCP_TOOLS: McpTool[] = [
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
     {
+        name: "update_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Replace the text of one of your own comments on a task. The new text is the whole comment.",
+    },
+    {
+        name: "delete_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Delete one of your own comments on a task. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "restore_task_body",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Put a task's description back to what it was before an earlier edit. The text it replaces is kept, so a restore can itself be undone.",
+    },
+    {
         name: "add_task_delivery",
         type: "write",
         taskRef: true,

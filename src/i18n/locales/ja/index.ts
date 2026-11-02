@@ -437,6 +437,13 @@ export const ja: DeepPartial<Messages> = {
             target_date: "日付",
             reminder_at: "リマインド",
         },
+        updateComment: "自分のコメントを置き換え: {task} の #{comment}",
+        deleteComment: "自分のコメントを削除: {task} の #{comment}",
+        restoreTaskBody: "以前の説明に戻す: {task}",
+        historyEntry: "履歴 #{entry}",
+        cannotUndo: "この操作は取り消せません",
+        restoreKeepsCurrent:
+            "現在の説明を、この編集の前の説明に置き換えます。元に戻すこともできます。置き換えられる説明もこの履歴に残ります。",
         category: "カテゴリ",
         updateTodo: "To-Do を更新: {item}",
         newTodo: "新しい To-Do",

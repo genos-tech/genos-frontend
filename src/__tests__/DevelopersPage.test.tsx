@@ -203,6 +203,9 @@ describe("DevelopersPage", () => {
         write: [
             "update_task",
             "add_comment",
+            "update_comment",
+            "delete_comment",
+            "restore_task_body",
             "add_task_delivery",
             "remove_task_delivery",
             "update_task_dependencies",
