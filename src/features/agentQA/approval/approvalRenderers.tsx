@@ -18,8 +18,10 @@ import type { FC } from "react";
 import { AddCommentPreview } from "./AddCommentPreview";
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
+import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
+import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
 import { UpdateTaskPreview } from "./UpdateTaskPreview";
 
 export interface ApprovalPreviewProps {
@@ -33,6 +35,13 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     update_task: UpdateTaskPreview,
     update_tasks_bulk: BulkUpdatePreview,
     add_comment: AddCommentPreview,
+    // One card per to-do write, and one for the milestone tool (it branches
+    // on its `action`) plus one for its delete.
+    update_todo_item: UpdateTodoPreview,
+    create_todo_item: CreateTodoPreview,
+    delete_todo_item: DeleteTodoPreview,
+    manage_milestone: ManageMilestonePreview,
+    delete_milestone: DeleteMilestonePreview,
     // One component for both note writes — it branches on the presence
     // of `note_id` in the args (only updates have one).
     create_note: NoteWritePreview,

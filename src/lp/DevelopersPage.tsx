@@ -143,7 +143,8 @@ const MCP_TOOLS: McpTool[] = [
         meaning: (
             <>
                 One task in full. Read <Code>content_markdown</Code> for the description — it keeps
-                headings, checklists and code fences.
+                headings, checklists and code fences. Also its start date, sprint, collaborators,
+                links and custom fields (by name).
             </>
         ),
     },
@@ -161,7 +162,7 @@ const MCP_TOOLS: McpTool[] = [
         name: "list_tasks",
         type: "read",
         meaning:
-            "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, status, priority, assignee or overdue.",
+            "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, sprint, parent task, status, priority, tag, assignee (or unassigned), a due-date range or overdue.",
     },
     {
         name: "list_projects",
@@ -174,6 +175,12 @@ const MCP_TOOLS: McpTool[] = [
         type: "read",
         meaning: "A milestone and the tasks under it.",
     },
+    {
+        name: "list_sprints",
+        type: "read",
+        meaning: "A project's sprints, with the ids that list_tasks filters by.",
+    },
+    { name: "get_sprint_summary", type: "read", meaning: "A sprint and the work in it." },
     {
         name: "get_task_blockers",
         type: "read",
@@ -198,17 +205,43 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "Search across tasks, notes, chat and todos.",
     },
     { name: "get_note", type: "read", meaning: "A note's body." },
+    {
+        name: "list_my_chats",
+        type: "read",
+        meaning:
+            "Your own direct, group and project chats, newest activity first. Find one by name.",
+    },
+    {
+        name: "get_chat_thread",
+        type: "read",
+        meaning: "Read a chat, or one thread of it, paging back through older messages.",
+    },
+    { name: "list_my_mentions", type: "read", meaning: "Chat messages that @mention you." },
+    { name: "list_channel_members", type: "read", meaning: "Who is in one chat." },
     { name: "get_current_user", type: "read", meaning: "Who the key acts as." },
     { name: "get_team_members", type: "read", meaning: "Who is in the team, for assigning." },
     { name: "list_project_members", type: "read", meaning: "Who is in one project." },
+    {
+        name: "list_project_tags",
+        type: "read",
+        meaning: "A project's tags, custom fields and saved filters.",
+    },
     {
         name: "list_task_dependencies",
         type: "read",
         meaning: "Every blocker → blocked edge in a project or milestone, in one call.",
     },
     { name: "list_note_folders", type: "read", meaning: "Your personal notes' folders." },
-    { name: "list_uncompleted_todos", type: "read", meaning: "Your open to-dos." },
-    { name: "list_today_todos", type: "read", meaning: "Your to-dos for today." },
+    {
+        name: "list_uncompleted_todos",
+        type: "read",
+        meaning: "Your open to-dos, with any pending reminder.",
+    },
+    {
+        name: "list_today_todos",
+        type: "read",
+        meaning: "Your to-dos for today, with any pending reminder.",
+    },
     {
         name: "list_calendar_events",
         type: "read",
@@ -233,7 +266,7 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Status, title, description, priority, effort, due date, milestone, parent task or project. A new description replaces the whole body.",
+            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators or custom fields. A new description replaces the whole body.",
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
     {
@@ -242,6 +275,12 @@ const MCP_TOOLS: McpTool[] = [
         taskRef: true,
         meaning:
             "Record the branch and PR delivering a task. Writing the same link twice updates it.",
+    },
+    {
+        name: "remove_task_delivery",
+        type: "write",
+        taskRef: true,
+        meaning: "Take back a branch or PR link that was recorded by hand.",
     },
     {
         name: "update_task_dependencies",
@@ -255,7 +294,7 @@ const MCP_TOOLS: McpTool[] = [
         meaning: (
             <>
                 Needs a project id from <Code>list_projects</Code>. Can be filed under a parent
-                task.
+                task, and can set a start date, collaborators and custom fields.
             </>
         ),
     },
@@ -268,7 +307,8 @@ const MCP_TOOLS: McpTool[] = [
     {
         name: "update_tasks_bulk",
         type: "write",
-        meaning: "Priority, due date, status, effort or milestone on many tasks in one call.",
+        meaning:
+            "Priority, due date, start date, status, effort, tags or milestone on many tasks in one call.",
     },
     {
         name: "create_task_plan",
@@ -283,14 +323,41 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "A new note, optionally attached to a task.",
     },
     { name: "update_note", type: "write", meaning: "A note's title or body, or its folder." },
-    { name: "create_todo_item", type: "write", meaning: "A personal to-do." },
-    { name: "update_todo_item", type: "write", meaning: "Tick off or edit a to-do." },
+    {
+        name: "create_todo_item",
+        type: "write",
+        meaning: "A personal to-do, optionally with a reminder.",
+    },
+    {
+        name: "update_todo_item",
+        type: "write",
+        meaning:
+            "Tick off or edit a to-do, move it to another day, or set or cancel its reminder.",
+    },
+    {
+        name: "delete_todo_item",
+        type: "write",
+        meaning:
+            "Permanently delete a to-do with its sub-items and reminders. Needs a key that also has the destructive opt-in.",
+    },
     { name: "create_calendar_event", type: "write", meaning: "An event on your Google Calendar." },
     { name: "update_calendar_event", type: "write", meaning: "Change a calendar event." },
     {
         name: "delete_calendar_event",
         type: "write",
         meaning: "Delete a calendar event. Nothing on this side can bring it back.",
+    },
+    {
+        name: "manage_milestone",
+        type: "write",
+        meaning:
+            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which.",
+    },
+    {
+        name: "delete_milestone",
+        type: "write",
+        meaning:
+            "Delete a milestone. Its tasks are kept, outside any milestone. Needs a key that also has the destructive opt-in.",
     },
 ];
 
