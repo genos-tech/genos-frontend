@@ -207,7 +207,10 @@ export const MilestonesListItem = ({
                 }
             >
                 <ListItemButton
-                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
+                    // `endAction` is absolutely positioned at the right edge, so
+                    // the content has to stop short of it (a 2rem button): else
+                    // the progress chip and the assignee avatars sit under it.
+                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5, mr: canFile ? 4 : 0 }}
                     selected={
                         useTM.currentPreviewKind === "milestone" &&
                         useTM.currentPreviewMilestoneId === m.milestoneId
@@ -481,7 +484,8 @@ const MilestoneTreeFolder = ({
         <>
             <ListItem endAction={actions} sx={{ pl: 0, pr: actions ? 1 : undefined }}>
                 <ListItemButton
-                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5 }}
+                    // Same as the milestone row: stop short of the "..." menu.
+                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5, mr: actions ? 4 : 0 }}
                     onClick={() => setOpen((prev) => !prev)}
                 >
                     {icon}
@@ -492,7 +496,10 @@ const MilestoneTreeFolder = ({
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                fontWeight: 600,
+                                // As strong as a milestone title (the muted grey made the
+                                // folders read as disabled).
+                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
                             }}
                         >
                             {label}

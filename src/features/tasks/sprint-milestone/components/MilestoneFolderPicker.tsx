@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef } from "react";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import { Autocomplete, Stack, Typography } from "@mui/joy";
+import { Autocomplete, Chip, Stack, Typography } from "@mui/joy";
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { OPTION_LISTBOX_SLOT_PROPS } from "./SprintMilestonePicker";
 
-type FolderOption = { id: number | null; label: string };
+type FolderOption = { id: number | null; label: string; count: number };
 
 type Props = {
     projectId: number | undefined;
@@ -48,8 +49,19 @@ export const MilestoneFolderPicker = ({
         void loadFoldersForProject(projectId);
     }, [projectId, projectFolders, loadFoldersForProject]);
 
+    // How many of the project's milestones sit in each folder, shown on the
+    // option the way the milestone picker shows task progress.
+    const { projectMilestones } = useSM;
+    const countByFolder = useMemo(() => {
+        const counts = new Map<number, number>();
+        for (const m of projectId ? (projectMilestones[projectId] ?? []) : []) {
+            if (m.folderId != null) counts.set(m.folderId, (counts.get(m.folderId) ?? 0) + 1);
+        }
+        return counts;
+    }, [projectId, projectMilestones]);
+
     const noFolder = useMemo<FolderOption>(
-        () => ({ id: null, label: t.tasks.folders.noFolder }),
+        () => ({ id: null, label: t.tasks.folders.noFolder, count: 0 }),
         [t]
     );
     const options = useMemo<FolderOption[]>(
@@ -57,9 +69,13 @@ export const MilestoneFolderPicker = ({
             noFolder,
             ...[...folders]
                 .sort((a, b) => a.sortOrder - b.sortOrder || a.folderId - b.folderId)
-                .map((f) => ({ id: f.folderId, label: f.name })),
+                .map((f) => ({
+                    id: f.folderId,
+                    label: f.name,
+                    count: countByFolder.get(f.folderId) ?? 0,
+                })),
         ],
-        [folders, noFolder]
+        [folders, noFolder, countByFolder]
     );
     // A folder id this project does not have (picked before a project switch)
     // reads as "No folder" instead of a stale name.
@@ -72,20 +88,31 @@ export const MilestoneFolderPicker = ({
             isOptionEqualToValue={(a, b) => a.id === b.id}
             options={options}
             size={size}
+            slotProps={OPTION_LISTBOX_SLOT_PROPS}
             sx={{ flex: 1, minWidth: 0 }}
             value={selected}
             renderOption={(props, option) => (
                 <li {...stripOwnerState(props)} key={`f-${option.id ?? "none"}`}>
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        {option.id != null && (
-                            <FolderRoundedIcon sx={{ fontSize: 14, opacity: 0.7 }} />
-                        )}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                        sx={{ width: "100%", py: 0.25 }}
+                    >
+                        <FolderRoundedIcon
+                            sx={{ fontSize: 14, opacity: option.id == null ? 0.4 : 0.7 }}
+                        />
                         <Typography
                             level="body-sm"
-                            sx={{ fontWeight: option.id == null ? 400 : 600 }}
+                            sx={{ fontWeight: 600, flex: 1, opacity: option.id == null ? 0.7 : 1 }}
                         >
                             {option.label}
                         </Typography>
+                        {option.id != null && (
+                            <Chip size="sm" variant="soft">
+                                {option.count}
+                            </Chip>
+                        )}
                     </Stack>
                 </li>
             )}

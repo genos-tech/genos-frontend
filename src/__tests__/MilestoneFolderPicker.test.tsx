@@ -19,11 +19,20 @@ const folder = (folderId: number, name: string, sortOrder = folderId): Milestone
 const setup = (opts: {
     folderId: number | null;
     projectFolders: Record<number, MilestoneFolder[]>;
+    // Folder id of each milestone the project has, to count per folder.
+    milestoneFolderIds?: (number | null)[];
     projectId?: number;
 }) => {
     const onChangeFolder = vi.fn();
     const loadFoldersForProject = vi.fn().mockResolvedValue([]);
-    const useSM = { projectFolders: opts.projectFolders, loadFoldersForProject };
+    const projectMilestones = {
+        [opts.projectId ?? 1]: (opts.milestoneFolderIds ?? []).map((folderId) => ({ folderId })),
+    };
+    const useSM = {
+        projectFolders: opts.projectFolders,
+        projectMilestones,
+        loadFoldersForProject,
+    };
     render(
         <CssVarsProvider>
             <MilestoneFolderPicker
@@ -59,10 +68,12 @@ describe("MilestoneFolderPicker", () => {
         const { onChangeFolder } = setup({
             folderId: null,
             projectFolders: { 1: [folder(2, "B", 2), folder(1, "A", 1)] },
+            milestoneFolderIds: [1, 1, 2, null],
         });
         fireEvent.mouseDown(screen.getByRole("combobox"));
         const options = await screen.findAllByRole("option");
-        expect(options.map((o) => o.textContent)).toEqual(["No folder", "A", "B"]);
+        // Each folder carries how many milestones are in it; "No folder" has no count.
+        expect(options.map((o) => o.textContent)).toEqual(["No folder", "A2", "B1"]);
         fireEvent.click(options[2]);
         expect(onChangeFolder).toHaveBeenCalledWith(2);
     });

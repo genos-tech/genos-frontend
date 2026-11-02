@@ -89,7 +89,7 @@ const MILESTONE_STATUS_COLOR: Record<string, "primary" | "warning" | "success" |
 // feedback). This pads each option, separates them slightly, rounds the
 // corners, and adds a real hover/selected colour that adapts to dark
 // and light mode via Joy palette CSS variables.
-const OPTION_LISTBOX_SLOT_PROPS = {
+export const OPTION_LISTBOX_SLOT_PROPS = {
     listbox: {
         sx: {
             py: 0.5,
