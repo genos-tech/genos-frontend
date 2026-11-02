@@ -89,11 +89,15 @@ describe("PrivacyPage", () => {
         expect(en).toMatch(/Signing in with Google.*calendar/);
     });
 
-    it("describes the analytics truthfully, including the team name", () => {
+    it("describes the analytics truthfully: team ID, not the team name, and not anonymous", () => {
         const { container } = renderPage();
         const { ja, en } = splitText(container.textContent ?? "");
-        expect(ja).toMatch(/PostHog：プロダクト分析.*チーム名/);
-        expect(en).toMatch(/PostHog: Product analytics.*team name/);
+        expect(ja).toMatch(/PostHog：プロダクト分析。ユーザー ID、チーム ID、役割/);
+        expect(en).toMatch(/PostHog: Product analytics\. Your user ID, team ID, role/);
+        expect(ja).toContain("チーム名は送信しません");
+        expect(en).toContain("The team name is not sent");
+        // The data is tied to the user id, so the page must not call it anonymous.
+        expect(en).toMatch(/PostHog: Product analytics[^]*?\(not anonymous\)/);
         // The opt-out path matches the Settings UI (General → Privacy & analytics).
         expect(ja).toContain("「設定 → 一般 → プライバシーと分析」");
         expect(en).toContain("Settings → General → Privacy & analytics");

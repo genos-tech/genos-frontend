@@ -62,8 +62,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "PostHog",
-        ja: "プロダクト分析。ユーザー ID、チーム ID、チーム名、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベントが送信され、ユーザー ID とチーム名が結び付けられます。クリックの自動取得とセッション録画は行っていません。この分析は初期状態で有効で、「設定 → 一般 → プライバシーと分析」からそのブラウザでの送信を停止できます。",
-        en: "Product analytics. Your user ID, team ID, team name, role, the path of the pages you view (without query strings) and demo started / completed / failed events are sent, and your user ID is linked to your team name. Click auto-capture and session recording are not used. Analytics is on by default; you can stop it for that browser in Settings → General → Privacy & analytics.",
+        ja: "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベントが送信され、ユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。この分析は初期状態で有効で、「設定 → 一般 → プライバシーと分析」からそのブラウザでの送信を停止できます。",
+        en: "Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings) and demo started / completed / failed events are sent, tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. Analytics is on by default; you can stop it for that browser in Settings → General → Privacy & analytics.",
     },
     {
         name: "GIPHY",

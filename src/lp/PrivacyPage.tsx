@@ -40,9 +40,10 @@ import { PROCESSORS } from "./privacyProcessors";
  *   cross-border-transfer wording, vendor retention, signed DPAs,
  *   compliance regimes, retention periods, how long the security audit
  *   log is kept.
- * TODO(owner): MIP-767 (does Stripe need the customer email?) and
- *   MIP-864 (PostHog identifying users with team name) may change the
- *   Stripe and PostHog entries below.
+ * Decided (owner): MIP-767 Stripe keeps the customer email (needed for
+ *   receipts and Checkout); MIP-864 PostHog stays on by default with the
+ *   opt-out, and receives the team ID, not the team name (genos-frontend
+ *   #573). Merge #573 before this page ships, so the PostHog entry is true.
  */
 
 const CONTACT_EMAIL = "genos.support@genosai.dev";
