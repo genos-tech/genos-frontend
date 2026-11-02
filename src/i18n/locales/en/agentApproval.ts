@@ -79,6 +79,16 @@ export const agentApproval = {
     deleteMilestone: "Delete milestone: {milestone}",
     milestoneTasksKept: "{count} task(s) stay in the project, outside any milestone",
     folderUnfiles: "{count} milestone(s) leave the folder",
+    newSprint: "New sprint",
+    updateSprint: "Update sprint: {sprint}",
+    deleteSprint: "Delete sprint: {sprint}",
+    sprintFieldLabels: {
+        name: "Name",
+        start_date: "Start",
+        end_date: "End",
+    },
+    sprintMilestonesKept:
+        "Its milestones and their tasks are kept. They just no longer belong to a sprint.",
     cleared: "none",
     unset: "—",
     // Friendly, non-technical labels for every agent tool, keyed by the
@@ -163,6 +173,9 @@ export const agentApproval = {
         // milestones
         manage_milestone: "Managing a milestone",
         delete_milestone: "Deleting a milestone",
+        // sprints
+        manage_sprint: "Managing a sprint",
+        delete_sprint: "Deleting a sprint",
         // to-dos
         list_today_todos: "Checking today's to-dos",
         list_uncompleted_todos: "Checking open to-dos",

@@ -445,6 +445,18 @@ const MCP_TOOLS: McpTool[] = [
         meaning:
             "Delete a milestone. Its tasks are kept, outside any milestone. Needs a key that also has the destructive opt-in.",
     },
+    {
+        name: "manage_sprint",
+        type: "write",
+        meaning:
+            "Create a sprint, or change a sprint's name or dates. The action argument picks which. Ending a sprint early is setting its end date.",
+    },
+    {
+        name: "delete_sprint",
+        type: "write",
+        meaning:
+            "Delete a sprint. Its milestones and their tasks are kept, outside any sprint. Needs a key that also has the destructive opt-in.",
+    },
 ];
 
 const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");
