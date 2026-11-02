@@ -676,7 +676,9 @@ export const useNoteManagement = (
 
     const getChatNoteMeta = async () => {
         const loadedNotes: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
+        // The loader resolves undefined when the request fails (or there is no
+        // token), so a failed refresh keeps the list it has instead of throwing.
+        if (Array.isArray(loadedNotes) && loadedNotes.length > 0) {
             setChatNoteMeta(loadedNotes);
         }
     };
@@ -783,7 +785,8 @@ export const useNoteManagement = (
 
     const getTaskNoteMeta = async () => {
         const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
+        // See getChatNoteMeta: undefined on a failed request.
+        if (Array.isArray(loadedNotes) && loadedNotes.length > 0) {
             setTaskNoteMeta(loadedNotes);
         }
     };
@@ -951,7 +954,8 @@ export const useNoteManagement = (
 
     const getMyNoteMeta = async () => {
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
+        // See getChatNoteMeta: undefined on a failed request.
+        if (Array.isArray(loadedNotes) && loadedNotes.length > 0) {
             setMyNoteMeta(loadedNotes);
         }
     };

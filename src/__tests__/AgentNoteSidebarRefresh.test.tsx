@@ -12,9 +12,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NOTE_SIDEBAR_TOOLS } from "../features/agentQA/noteWriteTools";
 import { useAgentQA } from "../features/agentQA/useAgentQA";
+import { loadChatNoteMeta } from "../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadFavoriteNotesMeta } from "../features/notes/favorite-notes/services";
 import { loadMyNoteFolders } from "../features/notes/my-notes/services/loadMyNoteFolders";
+import { loadMyNoteMeta } from "../features/notes/my-notes/services/loadMyNoteMeta";
+import { loadTaskNoteMeta } from "../features/notes/task-notes/services/loadTaskNoteMeta";
 import { loadTeamNoteFolders } from "../features/notes/team-notes/services/loadTeamNoteFolders";
+import { loadTeamNotesMeta } from "../features/notes/team-notes/services/loadTeamNotesMeta";
 import { useSpotlight } from "../features/spotlight/useSpotlight";
 import { useNoteManagement } from "../hooks/notes/useNoteManagement";
 import { askAgentStream } from "../services/agentApi";
@@ -47,7 +51,32 @@ vi.mock("../features/notes/team-notes/services/loadTeamNoteFolders", () => ({
 
 vi.mock("../features/notes/favorite-notes/services", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../features/notes/favorite-notes/services")>()),
-    loadFavoriteNotesMeta: vi.fn(async () => undefined),
+    loadFavoriteNotesMeta: vi.fn(async () => ({
+        personalNotes: [],
+        taskNotes: [],
+        chatNotes: [],
+        folders: [],
+    })),
+}));
+
+// Every loader the `noteChanged` listener calls is mocked, because a real one
+// goes to axios, and an axios failure that lands after the test has finished
+// (CI is slower than a laptop, so it does there) is an unhandled error that
+// fails the whole run.
+vi.mock("../features/notes/my-notes/services/loadMyNoteMeta", () => ({
+    loadMyNoteMeta: vi.fn(async () => []),
+}));
+
+vi.mock("../features/notes/task-notes/services/loadTaskNoteMeta", () => ({
+    loadTaskNoteMeta: vi.fn(async () => []),
+}));
+
+vi.mock("../features/notes/chat-notes/services/loadChatNoteMeta", () => ({
+    loadChatNoteMeta: vi.fn(async () => []),
+}));
+
+vi.mock("../features/notes/team-notes/services/loadTeamNotesMeta", () => ({
+    loadTeamNotesMeta: vi.fn(async () => []),
 }));
 
 const NOTE_CHANGED = "noteChanged";
@@ -158,5 +187,57 @@ describe("useNoteManagement answers noteChanged", () => {
             expect(loadTeamNoteFolders).toHaveBeenCalledTimes(1);
             expect(loadFavoriteNotesMeta).toHaveBeenCalledTimes(1);
         });
+    });
+
+    it("also re-reads the note meta, as before", async () => {
+        renderHook(() => useNoteManagement(myself, "test-token"));
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        for (const loader of [
+            loadMyNoteMeta,
+            loadTaskNoteMeta,
+            loadChatNoteMeta,
+            loadTeamNotesMeta,
+        ])
+            vi.mocked(loader).mockClear();
+
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent(NOTE_CHANGED));
+        });
+
+        await waitFor(() => {
+            expect(loadMyNoteMeta).toHaveBeenCalledTimes(1);
+            expect(loadTaskNoteMeta).toHaveBeenCalledTimes(1);
+            expect(loadChatNoteMeta).toHaveBeenCalledTimes(1);
+            expect(loadTeamNotesMeta).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    it("survives the note-meta loaders failing, which they report as undefined", async () => {
+        // loadMyNoteMeta, loadTaskNoteMeta and loadChatNoteMeta resolve undefined when the
+        // request fails or there is no token. The refresh is fire-and-forget, so a throw
+        // there is an unhandled rejection, not a failed call.
+        const unhandled: unknown[] = [];
+        const onUnhandled = (reason: unknown) => unhandled.push(reason);
+        process.on("unhandledRejection", onUnhandled);
+        try {
+            renderHook(() => useNoteManagement(myself, "test-token"));
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            });
+            // The refresh below gets undefined from all three.
+            vi.mocked(loadMyNoteMeta).mockResolvedValueOnce(undefined);
+            vi.mocked(loadTaskNoteMeta).mockResolvedValueOnce(undefined);
+            vi.mocked(loadChatNoteMeta).mockResolvedValueOnce(undefined);
+
+            await act(async () => {
+                window.dispatchEvent(new CustomEvent(NOTE_CHANGED));
+                await new Promise((resolve) => setTimeout(resolve, 50));
+            });
+        } finally {
+            process.off("unhandledRejection", onUnhandled);
+        }
+        expect(unhandled).toEqual([]);
     });
 });
