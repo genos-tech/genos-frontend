@@ -3,6 +3,7 @@ import { Socket } from "socket.io-client";
 
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
 import { addTask } from "../../features/tasks/services/addTask";
+import { emitTaskMetadataSaved } from "../../features/tasks/services/taskEvents";
 import {
     addMilestoneAssignee,
     createMilestone,
@@ -465,6 +466,8 @@ export const useSprintMilestoneManagement = (
                 // (+ their table sync) when their editing session goes idle.
                 if (!opts?.deferStateSync) {
                     applyMilestoneToState(res.milestone);
+                    // Deferred saves are the body autosave, not a status change.
+                    emitTaskMetadataSaved();
                 }
             }
             return res?.milestone ?? null;

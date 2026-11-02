@@ -1,5 +1,10 @@
 import { SearchTeamTasksResponse } from "../../../types/tasks";
 
+// Every status: the point of Recents includes checking a task right after
+// closing or deleting it. Finished tasks count towards the per-project limit.
+export const RECENTS_STATUSES = "open,wip,blocked,pending,closed,deleted";
+export const RECENTS_PER_PROJECT = 20;
+
 export type RecentTaskGroup = {
     projectId: number;
     projectName: string;

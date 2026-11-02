@@ -9,7 +9,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadTeamTaskList } from "../features/tasks/services/loadTaskSearchList";
-import { groupRecentTasks } from "../features/tasks/utils/groupRecentTasks";
+import {
+    groupRecentTasks,
+    RECENTS_PER_PROJECT,
+    RECENTS_STATUSES,
+} from "../features/tasks/utils/groupRecentTasks";
 import { UserProps } from "../types/admin";
 import { SearchTeamTasksResponse } from "../types/tasks";
 
@@ -51,6 +55,18 @@ describe("loadTeamTaskList top_n_per_project", () => {
     it("omits it by default so other callers keep the global cap", async () => {
         await loadTeamTaskList(myself, -1, "open", -1, "tok", false);
         expect(get.mock.calls[0][0]).not.toContain("top_n_per_project");
+    });
+});
+
+describe("what Recents asks for", () => {
+    it("includes finished tasks, so one can be checked right after closing it", () => {
+        expect(RECENTS_STATUSES.split(",").sort()).toEqual(
+            ["blocked", "closed", "deleted", "open", "pending", "wip"].sort()
+        );
+    });
+
+    it("keeps the per-project limit", () => {
+        expect(RECENTS_PER_PROJECT).toBe(20);
     });
 });
 
