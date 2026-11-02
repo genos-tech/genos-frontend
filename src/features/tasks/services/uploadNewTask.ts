@@ -272,7 +272,9 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     assigneeEmail: taskContent.assignee?.userEmail ?? null,
                     assigneeName: taskContent.assignee?.userName ?? null,
                     assigneeImgPath: taskContent.assignee?.avatarImgPath ?? null,
-                    parentTaskId: String(taskContent.parentTaskId),
+                    // Null stays null, see `sendUpdatedSpecificTask` (MIP-943).
+                    parentTaskId:
+                        taskContent.parentTaskId != null ? String(taskContent.parentTaskId) : null,
                     threadId: taskContent.threadId,
                     tags: taskContent.tags,
                     concatTags: taskContent.concatTags || null,

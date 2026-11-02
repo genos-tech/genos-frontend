@@ -29,7 +29,13 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // doing so would wipe sibling projects' tasks. This matches the
         // pre-incremental behavior (append-only); incremental loads now
         // additionally evict server-side soft-deletes.
-        const key = `tasks:${projectId}`;
+        //
+        // "v2" (MIP-943): saves used to cache root rows with `parentTaskId`
+        // as the text "null", which hid them from the table, and a row older
+        // than its checkpoint is never sent again. A new key makes every
+        // browser fetch each project in full once, which rewrites those rows.
+        // Keep the "tasks:" prefix: `loadTeamTasks` forgets checkpoints by it.
+        const key = `tasks:v2:${projectId}`;
         // How many rows the server says we should end up with. Only an
         // incremental answer carries it, so it stays null on a full load —
         // which needs no check, being the whole truth by definition.
