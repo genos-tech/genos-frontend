@@ -2965,9 +2965,9 @@ export const zh: DeepPartial<Messages> = {
         privacy: {
             heading: "隐私与分析",
             description: "帮助我们了解哪些功能被使用，以便专注于真正重要的部分。",
-            shareLabel: "分享匿名使用数据",
+            shareLabel: "分享使用数据",
             shareHelper:
-                "发送你的用户 ID、团队和角色，以及你访问的页面。不会记录消息内容或点击行为。关闭可完全停止。",
+                "默认开启。发送你的用户 ID、团队 ID 和角色，以及你访问的页面，并与你的账号关联。不会记录消息内容或点击行为。关闭可完全停止。",
         },
         shortcuts: {
             heading: "键盘快捷键",

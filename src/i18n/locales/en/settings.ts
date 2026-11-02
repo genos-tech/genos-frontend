@@ -569,9 +569,9 @@ export const settings = {
         heading: "Privacy & analytics",
         description:
             "Helps us understand which features get used so we can focus on the right things.",
-        shareLabel: "Share anonymous usage data",
+        shareLabel: "Share usage data",
         shareHelper:
-            "Sends your user ID, team, and role plus the pages you visit. No message content, no clicks tracked. Turn off to opt out completely.",
+            "On by default. Sends your user ID, team ID and role plus the pages you visit, linked to your account. No message content, no clicks tracked. Turn off to opt out completely.",
     },
     shortcuts: {
         heading: "Keyboard shortcuts",

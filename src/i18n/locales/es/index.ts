@@ -694,9 +694,9 @@ export const es: DeepPartial<Messages> = {
             heading: "Privacidad y analíticas",
             description:
                 "Nos ayuda a entender qué funciones se usan para poder enfocarnos en lo correcto.",
-            shareLabel: "Compartir datos de uso anónimos",
+            shareLabel: "Compartir datos de uso",
             shareHelper:
-                "Envía tu ID de usuario, equipo y rol, junto con las páginas que visitas. No se registra el contenido de los mensajes ni los clics. Desactívalo para no participar.",
+                "Activado de forma predeterminada. Envía tu ID de usuario, el ID del equipo y tu rol, junto con las páginas que visitas, vinculados a tu cuenta. No se registra el contenido de los mensajes ni los clics. Desactívalo para no participar.",
         },
         shortcuts: {
             heading: "Atajos de teclado",

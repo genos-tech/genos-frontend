@@ -19,7 +19,6 @@ const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
 type IdentityTraits = {
     teamId?: string;
-    teamName?: string;
     role?: string;
 };
 
