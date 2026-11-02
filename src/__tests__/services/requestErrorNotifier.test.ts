@@ -35,6 +35,13 @@ const capture = () => {
     return { seen, unsub };
 };
 
+// The same bus, keeping the optional text a `serverMessage` event carries.
+const captureWithText = () => {
+    const seen: Array<[RequestErrorKind, string | undefined]> = [];
+    const unsub = subscribeRequestErrors((k, text) => seen.push([k, text]));
+    return { seen, unsub };
+};
+
 describe("requestErrorNotifier bus", () => {
     it("delivers an emitted kind to subscribers", () => {
         const { seen, unsub } = capture();
@@ -60,6 +67,36 @@ describe("requestErrorNotifier bus", () => {
         now += 5_000;
         emitRequestError("serverError");
         expect(seen).toEqual(["serverError", "permissionDenied", "serverError"]);
+        unsub();
+    });
+});
+
+describe("requestErrorNotifier server text (MIP-925)", () => {
+    it("delivers the text alongside the kind, and nothing for a kind that has none", () => {
+        const { seen, unsub } = captureWithText();
+        emitRequestError("serverMessage", "assignee 'u9' is not on project 1.");
+        emitRequestError("serverError");
+        expect(seen).toEqual([
+            ["serverMessage", "assignee 'u9' is not on project 1."],
+            ["serverError", undefined],
+        ]);
+        unsub();
+    });
+
+    it("de-dups on kind AND text: the same sentence collapses, a different one does not", () => {
+        const { seen, unsub } = captureWithText();
+        emitRequestError("serverMessage", "first reason");
+        emitRequestError("serverMessage", "first reason"); // same text -> collapsed
+        emitRequestError("serverMessage", "second reason"); // other text -> delivered
+        expect(seen.map(([, text]) => text)).toEqual(["first reason", "second reason"]);
+        // Once the window elapses the same sentence is shown again.
+        now += 5_000;
+        emitRequestError("serverMessage", "first reason");
+        expect(seen.map(([, text]) => text)).toEqual([
+            "first reason",
+            "second reason",
+            "first reason",
+        ]);
         unsub();
     });
 });
