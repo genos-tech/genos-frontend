@@ -169,7 +169,16 @@ const MCP_TOOLS: McpTool[] = [
         type: "read",
         meaning: "The projects you belong to, with the ids and short codes other tools take.",
     },
-    { name: "list_milestones", type: "read", meaning: "Milestones in a project, with progress." },
+    {
+        name: "list_milestones",
+        type: "read",
+        meaning: (
+            <>
+                Milestones in a project, with progress. For the milestones you are on, pass your
+                own id from <Code>get_current_user</Code> as <Code>assignee_id</Code>.
+            </>
+        ),
+    },
     {
         name: "get_milestone_summary",
         type: "read",
@@ -248,6 +257,62 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "Your Google Calendar events in a date range.",
     },
     { name: "list_calendars", type: "read", meaning: "Your Google Calendars." },
+    {
+        name: "get_my_blockers",
+        type: "read",
+        meaning: "What blocks you, and who you are holding up.",
+    },
+    {
+        name: "list_my_inbox",
+        type: "read",
+        meaning: "Your inbox: notifications, and the requests waiting on you.",
+    },
+    {
+        name: "get_my_throughput",
+        type: "read",
+        meaning: "How many tasks you created and closed lately.",
+    },
+    {
+        name: "get_workload_distribution",
+        type: "read",
+        meaning: "Open work per assignee, with what is overdue.",
+    },
+    {
+        name: "get_top_task_closers",
+        type: "read",
+        meaning: "Who closed the most tasks in a period.",
+    },
+    {
+        name: "get_task_throughput_stats",
+        type: "read",
+        meaning: "Tasks created and closed over a period, optionally by day or week.",
+    },
+    {
+        name: "get_stale_tasks",
+        type: "read",
+        meaning: "Open tasks nobody has touched for a while.",
+    },
+    {
+        name: "get_team_task_summary",
+        type: "read",
+        meaning: "A task rollup across every project you are in.",
+    },
+    {
+        name: "get_project_activity_ranking",
+        type: "read",
+        meaning: "Your projects ranked by tasks, open tasks or task notes.",
+    },
+    {
+        name: "get_milestone_assignee_counts",
+        type: "read",
+        meaning: "How many milestones each person is assigned to.",
+    },
+    { name: "get_project_summary", type: "read", meaning: "Task counts for one project." },
+    {
+        name: "get_my_task_summary",
+        type: "read",
+        meaning: "Your own task numbers: status, priority, overdue, due soon.",
+    },
     {
         name: "get_pr",
         type: "read",
