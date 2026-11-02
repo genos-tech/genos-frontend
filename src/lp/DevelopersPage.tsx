@@ -252,6 +252,12 @@ const MCP_TOOLS: McpTool[] = [
             "Who can open a note and with what role (owner, editor or viewer), and whether you may change it. A note is named by its url, or by its id with its note_type.",
     },
     {
+        name: "get_note_history",
+        type: "read",
+        meaning:
+            "A note's saved versions, newest first, with who saved each, when, and a short preview, or one version in full when you pass version_no. A note is named by its url, or by its id with its note_type.",
+    },
+    {
         name: "list_uncompleted_todos",
         type: "read",
         meaning: "Your open to-dos, with any pending reminder.",
@@ -508,6 +514,12 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         meaning:
             "Share a note with a teammate as an editor or a viewer, or stop sharing it. Only its owner may, and the person is not notified. A note is named by its url, or by its id with its note_type. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "restore_note_version",
+        type: "write",
+        meaning:
+            "Put an earlier version of a note back, title and body. What the note says now is kept as a version first, so a restore can itself be undone. If the live editor could not be updated, the result says so. A note is named by its url, or by its id with its note_type.",
     },
 ];
 

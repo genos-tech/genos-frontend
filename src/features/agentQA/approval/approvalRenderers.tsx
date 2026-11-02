@@ -29,6 +29,7 @@ import { FavoriteNotePreview, ManageNoteFolderPreview } from "./NoteFolderWriteP
 import { NoteWritePreview } from "./NoteWritePreview";
 import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWritePreview";
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
+import { RestoreNoteVersionPreview } from "./RestoreNoteVersionPreview";
 import { DeleteSprintPreview, ManageSprintPreview } from "./SprintWritePreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
@@ -78,6 +79,9 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     delete_note: DeleteNotePreview,
     delete_note_folder: DeleteNoteFolderPreview,
     manage_note_sharing: ManageNoteSharingPreview,
+    // Putting an earlier version of a note back (the current text is kept as a
+    // version first, so it can be undone).
+    restore_note_version: RestoreNoteVersionPreview,
 };
 
 export const getApprovalRenderer = (toolName: string): FC<ApprovalPreviewProps> | undefined =>
