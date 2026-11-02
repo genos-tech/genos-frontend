@@ -16,6 +16,10 @@ import { Socket } from "socket.io-client";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import {
+    PinnableBubbleAction,
+    useBubbleActionsPreference,
+} from "../../../../hooks/common/useBubbleActionsPreference";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -26,6 +30,7 @@ import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
+import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
 
 type BubbleMoreMenuProps = {
     accessToken: string | null;
@@ -56,6 +61,15 @@ type BubbleMoreMenuProps = {
      *  mounted for as long as this is `true`; see `overlayOpen` below. */
     onMenuOpenChange?: (open: boolean) => void;
 };
+
+const toPinnedAction = (item: MoreMenuItem): PinnedBubbleAction => ({
+    active: item.active,
+    danger: item.danger,
+    icon: item.icon,
+    id: item.id as PinnableBubbleAction,
+    label: item.label,
+    onClick: item.onClick,
+});
 
 // Chat type to URL path mapping
 const CHAT_TYPE_PATH: Record<number, string> = {
@@ -96,6 +110,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
+    const { pinned } = useBubbleActionsPreference();
 
     // This menu — and the dialogs below it — live inside the bubble's
     // hover toolbar, which the parent unmounts as soon as the cursor
@@ -262,13 +277,22 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         },
     ];
 
+    // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
+    // "…"; the rest stay in it. The dialogs below belong to this component,
+    // not to the menu, so a pinned Delete / Remind me opens the same ones.
+    const { pinnedItems, menuItems } = splitPinned(items, pinned);
+
     return (
-        <Box sx={{ position: "relative" }}>
-            <MoreMenu
-                items={items}
-                placement={isSent ? "bottom-end" : "bottom-start"}
-                onOpenChange={setMenuOpen}
-            />
+        <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.5 }}>
+            <BubblePinnedActions actions={pinnedItems.map(toPinnedAction)} />
+            {/* Nothing left to put in the menu (every offered action is pinned). */}
+            {menuItems.length > 0 && (
+                <MoreMenu
+                    items={menuItems}
+                    placement={isSent ? "bottom-end" : "bottom-start"}
+                    onOpenChange={setMenuOpen}
+                />
+            )}
 
             <ModalDeleteMessage
                 accessToken={accessToken}

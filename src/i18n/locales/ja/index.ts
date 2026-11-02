@@ -3116,6 +3116,13 @@ export const ja: DeepPartial<Messages> = {
             slotTooltip: "この絵文字を変更",
             reset: "リセット",
         },
+        messageActions: {
+            heading: "メッセージのアクション",
+            description:
+                "チャットのメッセージとスレッドの返信で、「…」メニューの中ではなくホバー時のツールバーに常に表示するアクションを選びます。タスクコメントには適用されません。",
+            limit: "最大{max}個まで選べます。残りは「…」メニューに入ります。",
+            reset: "リセット",
+        },
         quickAddRequiredFields: {
             heading: "クイックタスク作成",
             description:
