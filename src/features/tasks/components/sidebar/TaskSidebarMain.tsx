@@ -16,16 +16,19 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
+import { useOnTaskMetadataSaved } from "../../hooks/useOnTaskMetadataSaved";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
+import { RECENTS_PER_PROJECT, RECENTS_STATUSES } from "../../utils/groupRecentTasks";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
 import { SprintBoardListItem } from "./SprintBoardListItem";
 import { TaskTableListItem } from "./TaskTableListItem";
 
-const RECENTS_PER_PROJECT = 20;
-const RECENTS_STATUSES = "open,wip,blocked,pending";
+// A batch of status changes (several table edits, a run of drags) reloads
+// Recents once.
+const RECENTS_RELOAD_DEBOUNCE_MS = 500;
 
 type TaskSidebarProps = {
     myself: UserProps;
@@ -110,7 +113,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     const updateRecentTasks = () => {
         // 20 per PROJECT, not 20 in total. The server returns them sorted by
         // project, so there must be no client-side slice here: it would keep
-        // only the first project or two. Blocked is still live work.
+        // only the first project or two.
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
@@ -130,6 +133,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     useEffect(() => {
         updateRecentTasks();
     }, [useTM.currentPreviewTaskId]);
+
+    // Changing the status of the task you have open doesn't change the
+    // previewed id, so the effect above alone would leave its row showing the
+    // old status.
+    useOnTaskMetadataSaved(updateRecentTasks, RECENTS_RELOAD_DEBOUNCE_MS);
 
     // Refresh tags whenever the active project changes, or a tag is created /
     // renamed / deleted anywhere in the app (`useTM.tagsRevision`).

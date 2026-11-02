@@ -9,7 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
-import { emitTasksBulkChanged } from "./taskEvents";
+import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
 
 export const sendUpdatedSpecificTask = async (
@@ -180,6 +180,7 @@ export const sendUpdatedSpecificTask = async (
             // `uploadTaskAttachments` was skipped, then `useSendUpdatedTask`'s
             // post-save merge stripped the now-orphaned negative-id rows.
             if (res && syncCard) {
+                emitTaskMetadataSaved();
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 // Rewrite the PM task-card header so the status / title /
                 // priority / assignee change fans out to every viewer of the
