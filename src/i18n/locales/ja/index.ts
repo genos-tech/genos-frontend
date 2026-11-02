@@ -681,8 +681,6 @@ export const ja: DeepPartial<Messages> = {
                     "変更を保存できませんでした。名前がすでに使われている可能性があります。",
             },
             delete: "消去",
-            spotlightTip:
-                "エージェントに「今日は何が残っていますか?」と尋ねます。または「To-Do を作成する: …」 — Spotlight は項目を直接読み取り、追加し、切り替えることができます。",
             completedTodayEmptyTitle: "今日はまだ何も終わっていない",
             completedTodayEmptySubtitle: "今日完了したアイテムがここに表示されます。",
             incompleteEmptySubtitle: "表示されているグループに不完全な項目はありません。",
@@ -701,8 +699,6 @@ export const ja: DeepPartial<Messages> = {
             noTodosYet: "まだ To-Do はありません",
             allCompletedSubtitle: "すべてのタスクを完了しました",
             createFirstSubtitle: "最初の To-Do を作成して始めましょう",
-            proTip: "ヒント",
-            proTipBody: "メッセージをダブルクリックすると To-Do に追加できます",
             save: "保存",
             saved: "保存済み",
             copyLink: "リンクをコピー",

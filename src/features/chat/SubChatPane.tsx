@@ -61,7 +61,6 @@ const EMPTY_CHAT: ChatProps = {
 
 type MessagesPaneProps = {
     useTEM: TeamManagementState;
-    currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -84,7 +83,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const {
         useCM,
         currentSubChatId,
-        currentWindowHeight,
         incompleteTodoCount,
         isToDoVisible,
         myself,
@@ -190,7 +188,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     useCM.currentSubChat.dmPartnerUser.userId === myself.userId &&
                     useTG && (
                         <ToDoPane
-                            currentWindowHeight={currentWindowHeight}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}

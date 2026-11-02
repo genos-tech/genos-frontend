@@ -178,7 +178,6 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
     return (
         <Box sx={{ height: "100%", overflow: "hidden", width: "100%" }}>
             <ToDoPane
-                currentWindowHeight={window.innerHeight}
                 focusTarget={{ itemId: target.itemId, localDate: target.localDate }}
                 myself={myself}
                 setMyself={setMyself}

@@ -977,8 +977,6 @@ export const es: DeepPartial<Messages> = {
             noTodosYet: "Aún no hay pendientes",
             allCompletedSubtitle: "Has completado todas tus tareas",
             createFirstSubtitle: "Crea tu primer pendiente para empezar",
-            proTip: "Consejo",
-            proTipBody: "Haz doble clic en un mensaje para añadirlo a tus pendientes",
             save: "Guardar",
             saved: "Guardado",
             startToday: "Empieza hoy",
@@ -1004,8 +1002,6 @@ export const es: DeepPartial<Messages> = {
             general: "General",
             newTagPlaceholder: "Nueva etiqueta",
             delete: "Borrar",
-            spotlightTip:
-                'Pregúntale al agente: "¿qué queda hoy?" o "crear una tarea pendiente:...": Spotlight puede leer, agregar y alternar sus elementos directamente.',
             completedTodayEmptyTitle: "Nada terminado todavía hoy",
             completedTodayEmptySubtitle: "Los elementos que completes hoy aparecerán aquí.",
             incompleteEmptySubtitle: "No hay elementos incompletos en tus grupos visibles.",

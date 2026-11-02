@@ -59,8 +59,6 @@ export const chat = {
             updateFailed: "Could not save that change. The name may already be in use.",
         },
         delete: "Delete",
-        spotlightTip:
-            'Ask the agent: "what’s left today?" or "create a to-do: …" — Spotlight can read, add, and toggle your items directly.',
         completedTodayEmptyTitle: "Nothing finished yet today",
         completedTodayEmptySubtitle: "Items you complete today will show up here.",
         incompleteEmptySubtitle: "No incomplete items in your visible groups.",
@@ -79,8 +77,6 @@ export const chat = {
         noTodosYet: "No todos yet",
         allCompletedSubtitle: "You've completed all your tasks",
         createFirstSubtitle: "Create your first todo to get started",
-        proTip: "Pro Tip",
-        proTipBody: "Double click on a message to add it to your todo",
         save: "Save",
         saved: "Saved",
         copyLink: "Copy link",

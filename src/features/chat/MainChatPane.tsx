@@ -32,7 +32,6 @@ import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
     useTEM: TeamManagementState;
-    currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -56,7 +55,6 @@ type MessagesPaneProps = {
 export const MessagesPane = (props: MessagesPaneProps) => {
     const {
         currentMainChatId,
-        currentWindowHeight,
         incompleteTodoCount,
         isToDoVisible,
         myself,
@@ -184,7 +182,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         useCM.currentMainChat?.dmPartnerUser.userId === myself.userId &&
                         useTG && (
                             <ToDoPane
-                                currentWindowHeight={currentWindowHeight}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}

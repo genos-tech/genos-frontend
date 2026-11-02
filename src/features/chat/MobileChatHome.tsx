@@ -184,7 +184,6 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 <Box sx={{ height: "100%", width: "100%" }}>
                     <MessagesPane
                         currentMainChatId={currentMainChatId}
-                        currentWindowHeight={currentWindowHeight}
                         incompleteTodoCount={incompleteTodoCount}
                         isToDoVisible={isToDoVisible}
                         myself={myself}
