@@ -52,8 +52,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "Stripe",
-        ja: "決済・請求。メールアドレス、ユーザー名、内部 ID、プラン、チームの課金ではチーム名とチームのメールアドレスが送信されます。クレジットカード番号は Stripe のページで直接入力され、当サービスのサーバーには届きません。",
-        en: "Payments and billing. Your email address, username, internal IDs and plan are sent, and for team billing the team name and team email. Card numbers are entered on Stripe's own page and never reach our servers.",
+        ja: "決済・請求。メールアドレス、ユーザー名、内部 ID、プラン、チームの課金ではチーム名とチームのメールアドレスが送信されます。クレジットカード番号は Stripe のページで直接入力され、当サービスのサーバーには届きません。アカウントを削除しても、Stripe 上の顧客情報と請求履歴は削除されず、保持されます。",
+        en: "Payments and billing. Your email address, username, internal IDs and plan are sent, and for team billing the team name and team email. Card numbers are entered on Stripe's own page and never reach our servers. Deleting your account does not delete your customer record or billing history at Stripe; they are kept.",
     },
     {
         name: "Resend",
