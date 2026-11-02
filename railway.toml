@@ -3,7 +3,12 @@
 # without this Railway auto-detects it and switches off Nixpacks — which breaks
 # this service's `serve` startCommand. Railway must keep using Nixpacks here.
 builder = "NIXPACKS"
-buildCommand = "npm install --no-audit --no-fund && npm run build"
+# Nixpacks' install phase already ran `npm ci` (exactly the lock, cached on
+# ~/.npm). Do not add `npm install` here: it can resolve versions the lock does
+# not name (MIP-752). The cache mount Nixpacks adds for this phase is on
+# node_modules/.cache, not node_modules, so there is no EBUSY (commit 74450ef7
+# was about Railpack).
+buildCommand = "npm run build"
 
 [deploy]
 startCommand = "npx serve -s dist -l $PORT"
