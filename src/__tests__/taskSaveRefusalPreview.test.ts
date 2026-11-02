@@ -160,7 +160,7 @@ const useHarness = (initial: TaskProps) => {
         onStoredTaskRestored: restoredFn,
     });
     useTaskSaveTriggers(state, send);
-    return { state, preview, send };
+    return { state, preview, setPreview, send };
 };
 
 const mount = (initial: TaskProps) => {
@@ -173,13 +173,23 @@ const mount = (initial: TaskProps) => {
 // tab does (working copy + file list + save request together).
 const saveAndSettle = async (hook: ReturnType<typeof mount>, dropFile?: number) => {
     act(() => {
-        const { state } = hook.result.current;
+        const { state, setPreview } = hook.result.current;
         if (dropFile !== undefined) {
             state.setTmpCurrentTaskContent((prev) => ({
                 ...prev,
                 attachments: [...(prev.attachments ?? []), unsent(dropFile)],
             }));
             state.setUploadedFiles((prev) => [...prev, unsent(dropFile)] as never);
+            // TaskPreview mirrors the working copy into the preview task on
+            // every change, so the preview task holds the file too.
+            setPreview((prev) =>
+                prev
+                    ? ({
+                          ...prev,
+                          attachments: [...(prev.attachments ?? []), unsent(dropFile)],
+                      } as TaskProps)
+                    : prev
+            );
         }
         state.setTaskUpdated(true);
     });
@@ -253,6 +263,11 @@ describe("a refused save from the task preview", () => {
             false
         );
         expect(state.uploadedFiles.some((a) => a.attachment_id < 0)).toBe(false);
+        // The preview task too: TaskPreview's same-task sync copies it back into
+        // the working copy once the 5 s local-edit window has passed.
+        expect(hook.result.current.preview?.attachments?.some((a) => a.attachment_id < 0)).toBe(
+            false
+        );
     });
 
     it("keeps settling when the refusal is about what is STORED, every full save repeats it", async () => {
@@ -356,6 +371,10 @@ describe("a refused save from the task preview", () => {
                 (a) => a.attachment_id < 0
             )
         ).toBe(false);
+        // Nothing was reloaded here, so only the early drop can clear the preview task.
+        expect(hook.result.current.preview?.attachments?.some((a) => a.attachment_id < 0)).toBe(
+            false
+        );
     });
 });
 

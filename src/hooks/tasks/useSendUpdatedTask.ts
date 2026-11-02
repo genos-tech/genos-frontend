@@ -157,11 +157,23 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     // and stay for the next one.
                     const withoutSent = <T extends { attachment_id: number }>(rows: T[]): T[] =>
                         rows.filter((a) => !sentNegativeIds.has(a.attachment_id));
+                    //
+                    // The preview task too, not just the working copy: the
+                    // host mirrors the working copy into it on every change,
+                    // so it holds the same rows, and TaskPreview's same-task
+                    // sync (no longer suppressed once the round trip has taken
+                    // more than 5 s) copies the preview task BACK into the
+                    // working copy, which would resurrect the file. Done here,
+                    // before the awaited reload, so it also covers a reload
+                    // that fails.
                     setUploadedFiles((prev) => withoutSent(prev));
                     setTmpCurrentTaskContent((prev) => ({
                         ...prev,
                         attachments: withoutSent(prev.attachments ?? []),
                     }));
+                    setCurrentPreviewTask((prev) =>
+                        prev ? { ...prev, attachments: withoutSent(prev.attachments ?? []) } : prev
+                    );
 
                     const storedTask = await reloadStoredTask(
                         myself,
