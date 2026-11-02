@@ -655,11 +655,15 @@ export const useChatManagement = (
             // `a || (0+b) || (0+c) || 0` — an OR-chain that returned the
             // first truthy DM/GM/PM count instead of their sum. Each
             // `(count || 0)` now coalesces before the additions run.
+            // `unReadActivityMessageCounts` is -1 until the Activity feed has
+            // loaded (and again after a team switch). That is a marker, not a
+            // count: summed as-is it took one off the total, and with nothing
+            // else unread made the app badge read -1.
             setUnReadChatAndActivityCounts(
                 (unReadChatCounts[1] || 0) +
                     (unReadChatCounts[2] || 0) +
                     (unReadChatCounts[3] || 0) +
-                    unReadActivityMessageCounts
+                    Math.max(unReadActivityMessageCounts, 0)
             );
         }
     }, [unReadChatCounts, unReadActivityMessageCounts]);
