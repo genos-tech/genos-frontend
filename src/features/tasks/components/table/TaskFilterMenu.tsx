@@ -46,6 +46,7 @@ import {
     predefinedStatusFilters,
     taskTypes,
 } from "../../types/TaskTableTypes";
+import { selectClosedByAncestor } from "../../utils/closedByAncestor";
 import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
@@ -1322,8 +1323,20 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         const filteredTop: TaskTableProps[] = [];
         const childIdSet = new Set<string>();
+        // A Closed parent closes what is under it, whatever those rows say.
+        const closedByAncestor = selectClosedByAncestor(useTM.allTasks);
 
         for (const task of useTM.allTasks) {
+            // Narrowing to a milestone asks to see its contents, so the rule
+            // steps aside there: a closed milestone still lists its tasks.
+            const openedOnPurpose =
+                milestoneScopeActive ||
+                (task.milestoneId != null && milestoneIdSet.has(task.milestoneId));
+            const effectiveStatus =
+                !openedOnPurpose && task.id != null && closedByAncestor.has(String(task.id))
+                    ? "Closed"
+                    : task.status;
+
             // Outdated milestones (Closed + ended sprint) and everything under
             // them are hidden EVERYWHERE, UNLESS the user opts in: by scoping to
             // that one milestone via the sidebar's "Past milestones" folder
@@ -1346,7 +1359,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 memberFilterActive &&
                 !milestoneScopeActive &&
                 task.isMilestone !== true &&
-                (task.status === "Closed" || task.status === "Deleted")
+                (effectiveStatus === "Closed" || effectiveStatus === "Deleted")
             ) {
                 continue;
             }
@@ -1361,7 +1374,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     task.milestoneId != null &&
                     milestoneIdSet.has(task.milestoneId));
             if (!bypassStatus) {
-                if (statusStringFilter !== null && !statusStringFilter.has(task.status ?? "")) {
+                if (
+                    statusStringFilter !== null &&
+                    !statusStringFilter.has(effectiveStatus ?? "")
+                ) {
                     continue;
                 }
                 if (requireExpired) {
