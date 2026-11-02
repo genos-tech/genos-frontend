@@ -41,6 +41,8 @@ export const agentApproval = {
         status: "Status",
         due_date: "Due",
         milestone_id: "Milestone",
+        parent_task_id: "Parent",
+        project_id: "Project",
     },
     cleared: "none",
     unset: "—",
