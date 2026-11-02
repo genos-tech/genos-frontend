@@ -195,11 +195,13 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const isProjectChat = chat.chatType === 3;
     const canDelete = message.numReplies < 2 && isOwnMessage;
 
-    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`. Display
+    // order comes from `kind` (via `splitPinned`), not from this array.
     const items: MoreMenuItem[] = [
         {
             icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             id: "openTask",
+            kind: "openTask",
             label: t.chat.messageActions.openTask,
             onClick: handleOpenTaskClick,
             visible: isProjectChat && isSystemMessage && message.taskId !== null,
@@ -207,6 +209,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "reply",
+            kind: "reply",
             label: isProjectChat
                 ? t.chat.messageActions.addCommentToTask
                 : t.chat.messageActions.replyInThread,
@@ -216,6 +219,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: isFlagged,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             id: "flag",
+            kind: "flag",
             label: isFlagged
                 ? t.chat.messageActions.removeFlag
                 : t.chat.messageActions.flagForLater,
@@ -229,6 +233,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: reminder !== null,
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
             id: "remindMe",
+            kind: "remindMe",
             label: reminder
                 ? fmt(t.chat.messageActions.reminderSetFor, {
                       time: formatReminderTime(new Date(reminder.remindAt), locale),
@@ -243,6 +248,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "copyLink",
+            kind: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
             onClick: handleCopyLinkClick,
         },
@@ -250,6 +256,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: unwrapAll,
             icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             id: "unwrapAll",
+            kind: "unwrapAll",
             label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
             onClick: () => setUnwrapAll(!unwrapAll),
         },
@@ -263,6 +270,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             id: "edit",
+            kind: "edit",
             label: t.chat.messageActions.editMessage,
             onClick: handleEditClick,
             visible: isOwnMessage,
@@ -271,6 +279,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             danger: true,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             id: "delete",
+            kind: "delete",
             label: t.chat.messageActions.deleteMessage,
             onClick: handleDeleteClick,
             visible: canDelete,

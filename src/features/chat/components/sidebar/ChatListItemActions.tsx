@@ -173,6 +173,30 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
                     }}
                 >
+                    {/* Split View Option — opening leads (moreMenuOrder.ts). Members and
+                        Tags below never both show, so their relative order is moot. */}
+                    <MenuItem
+                        sx={{
+                            borderRadius: "6px",
+                            mx: 0.5,
+                            gap: 1.5,
+                            fontSize: "0.85rem",
+                            py: 1,
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSplitClick(e as unknown as React.MouseEvent);
+                        }}
+                    >
+                        <SplitscreenIcon
+                            sx={{
+                                fontSize: 18,
+                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                            }}
+                        />
+                        {t.chat.listItem.openInSplitView}
+                    </MenuItem>
+
                     {/* Add Members Option (for DM and MDM chats) */}
                     {showAddMembers && (
                         <MenuItem
@@ -226,29 +250,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             {t.chat.listItem.manageTagsMenu}
                         </MenuItem>
                     )}
-
-                    {/* Split View Option */}
-                    <MenuItem
-                        sx={{
-                            borderRadius: "6px",
-                            mx: 0.5,
-                            gap: 1.5,
-                            fontSize: "0.85rem",
-                            py: 1,
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSplitClick(e as unknown as React.MouseEvent);
-                        }}
-                    >
-                        <SplitscreenIcon
-                            sx={{
-                                fontSize: 18,
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                            }}
-                        />
-                        {t.chat.listItem.openInSplitView}
-                    </MenuItem>
                 </Menu>
             </Dropdown>
         </Stack>

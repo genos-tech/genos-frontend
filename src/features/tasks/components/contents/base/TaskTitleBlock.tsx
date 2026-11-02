@@ -619,6 +619,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             const items: MoreMenuItem[] = [
                                 {
                                     id: "copyTaskLink",
+                                    kind: "copyLink",
                                     label: t.tasks.titleBlock.menu.copyTaskLink,
                                     icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: async () => {
@@ -634,6 +635,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "openThread",
+                                    kind: "openThread",
                                     label: t.tasks.titleBlock.menu.openThread,
                                     icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible:
@@ -654,6 +656,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 // state, so they're page-hosted only.
                                 {
                                     id: "newTask",
+                                    kind: "newTask",
                                     label: t.tasks.titleBlock.menu.newTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
@@ -663,6 +666,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newSubTask",
+                                    kind: "newSubTask",
                                     label: t.tasks.titleBlock.menu.newSubTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
@@ -689,6 +693,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "openNote",
+                                    kind: "openNote",
                                     label: t.tasks.titleBlock.menu.openNote,
                                     icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
@@ -724,6 +729,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newTag",
+                                    kind: "newTag",
                                     label: t.tasks.titleBlock.menu.newTag,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
@@ -733,6 +739,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newProject",
+                                    kind: "newProject",
                                     label: t.tasks.titleBlock.menu.newProject,
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
@@ -742,6 +749,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "muteTask",
+                                    kind: "mute",
                                     label:
                                         notifCtx &&
                                         taskContent.id != null &&
@@ -775,6 +783,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "deleteTask",
+                                    kind: "delete",
                                     label: t.tasks.titleBlock.menu.deleteTask,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                     // ModalDeleteTask sits at z 10010 — BELOW

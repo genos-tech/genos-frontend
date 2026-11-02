@@ -86,7 +86,7 @@ describe("useBubbleActionsPreference", () => {
 
         // "reply" sorts BEFORE all four; a naive cap would keep it and drop unwrapAll.
         act(() => result.current.setPinned("reply", true));
-        expect(result.current.pinned).toEqual(["flag", "remindMe", "copyLink", "unwrapAll"]);
+        expect(result.current.pinned).toEqual(["copyLink", "flag", "remindMe", "unwrapAll"]);
     });
 
     it("reset unpins everything", () => {

@@ -2327,6 +2327,7 @@ const MilestonePreviewInner = ({
                             const items: MoreMenuItem[] = [
                                 {
                                     id: "copyMilestoneLink",
+                                    kind: "copyLink",
                                     label: t.tasks.preview.menu.copyMilestoneLink,
                                     icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: async () => {
@@ -2342,6 +2343,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newTask",
+                                    kind: "newTask",
                                     label: t.tasks.preview.menu.newTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2358,6 +2360,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "openNote",
+                                    kind: "openNote",
                                     label: t.tasks.preview.menu.openNote,
                                     icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2394,6 +2397,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newTag",
+                                    kind: "newTag",
                                     label: t.tasks.preview.menu.newTag,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2402,6 +2406,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newProject",
+                                    kind: "newProject",
                                     label: t.tasks.preview.menu.newProject,
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2414,6 +2419,7 @@ const MilestonePreviewInner = ({
                                     // + their fan-out live) — same targetType
                                     // /store the task header's mute uses.
                                     id: "muteMilestone",
+                                    kind: "mute",
                                     label:
                                         notifCtx &&
                                         milestone.taskId != null &&
@@ -2447,6 +2453,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "deleteMilestone",
+                                    kind: "delete",
                                     label: t.tasks.preview.menu.deleteMilestone,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                     danger: true,

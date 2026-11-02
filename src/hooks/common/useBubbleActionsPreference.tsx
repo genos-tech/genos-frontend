@@ -20,12 +20,12 @@ import { useUiSettings } from "./useUiSettings";
  * persist the default on mount and pin everyone to it.
  */
 
-/** In the order the menu lists them. */
+/** In the order the menu lists them (the shared order in `moreMenuOrder.ts`). */
 export const PINNABLE_BUBBLE_ACTIONS = [
     "reply",
+    "copyLink",
     "flag",
     "remindMe",
-    "copyLink",
     "unwrapAll",
     "edit",
     "delete",

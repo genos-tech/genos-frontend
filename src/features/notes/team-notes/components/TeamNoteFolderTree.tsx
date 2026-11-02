@@ -96,24 +96,28 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         menuItems.push(
             {
                 id: "new-note-here",
+                kind: "newNote",
                 label: t.notes.folders.newNoteHere,
                 icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onCreateNoteHere(folder.folderId),
             },
             {
                 id: "import-note-here",
+                kind: "import",
                 label: t.notes.header.importMarkdown,
                 icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onImportNoteHere(folder.folderId),
             },
             {
                 id: "new-subfolder",
+                kind: "newSubfolder",
                 label: t.notes.folders.newSubfolder,
                 icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onCreateSubfolder(folder),
             },
             {
                 id: "members",
+                kind: "members",
                 label: isExternal ? t.notes.teamNotes.viewAccess : t.notes.teamNotes.manageAccess,
                 icon: <GroupRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onManageMembers(folder),
@@ -127,6 +131,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         if (!isExternal) {
             menuItems.push({
                 id: "tags",
+                kind: "tags",
                 label: t.notes.teamNotes.editTags,
                 icon: <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onEditTags(folder),
@@ -135,6 +140,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         if (!isExternal || isOwner) {
             menuItems.push({
                 id: "rename",
+                kind: "rename",
                 label: t.notes.folders.rename,
                 icon: <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onRenameFolder(folder),
@@ -143,6 +149,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         if (!isExternal) {
             menuItems.push({
                 id: "move",
+                kind: "move",
                 label: t.notes.folders.moveFolder,
                 icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onMoveFolder(folder),
@@ -152,6 +159,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
         // A viewer can still see who else has access.
         menuItems.push({
             id: "members",
+            kind: "members",
             label: t.notes.teamNotes.viewAccess,
             icon: <GroupRoundedIcon sx={{ fontSize: 16 }} />,
             onClick: () => actions.onManageMembers(folder),
@@ -162,6 +170,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     // someone wants their own copy.
     menuItems.push({
         id: "export-folder",
+        kind: "export",
         label: t.notes.exportZip.menuItem,
         icon: <FolderZipRoundedIcon sx={{ fontSize: 16 }} />,
         onClick: () => actions.onExportFolder(folder),
@@ -169,6 +178,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     if (isOwner) {
         menuItems.push({
             id: "delete",
+            kind: "delete",
             label: t.notes.folders.deleteFolder,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
             danger: true,
