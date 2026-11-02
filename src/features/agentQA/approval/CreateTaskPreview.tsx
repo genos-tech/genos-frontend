@@ -29,12 +29,15 @@ export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const title = asString(args.title);
     const body = asString(args.content_text);
     const projectLabel = asString(args.project_id);
+    // Arrives friendly-ized to the parent's display id.
+    const parentLabel = asString(args.parent_task_id);
     const priority = asString(args.priority);
     const effort = asString(args.effort_level);
     const dueDate = asString(args.due_date);
 
     const chips: string[] = [];
     if (projectLabel) chips.push(`${t.agentApproval.project}: ${projectLabel}`);
+    if (parentLabel) chips.push(`${t.agentApproval.fieldLabels.parent_task_id}: ${parentLabel}`);
     if (priority) chips.push(priority);
     if (effort) chips.push(effort);
     if (dueDate) chips.push(`${t.agentApproval.due} ${dueDate}`);

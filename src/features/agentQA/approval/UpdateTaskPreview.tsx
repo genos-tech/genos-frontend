@@ -7,10 +7,11 @@
 //
 // Unlike `update_tasks_bulk`, the pending event carries no `current`
 // snapshot for a single update, so this shows the proposed value only
-// (no old → new diff) — except for a milestone move, where the backend
-// adds `current.milestone_id` (the task's present milestone title, null =
-// in none) so the chip reads "Milestone: old → new". `due_date: ''` /
-// `content_text: ''` / `milestone_id: ''` are the tool's "clear this
+// (no old → new diff) — except for a move (milestone, parent, project),
+// where the backend adds `current.<field>` (the task's present milestone
+// title, parent display id or project name, null = none) so the chip reads
+// "Milestone: old → new". `due_date: ''` / `content_text: ''` /
+// `milestone_id: ''` / `parent_task_id: ''` are the tool's "clear this
 // field" sentinels and render as a clear rather than a blank.
 
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -22,6 +23,10 @@ import type { ApprovalPreviewProps } from "./approvalRenderers";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];
+
+// Fields that PLACE the task. null is the tool's "no move", not a detach;
+// only '' clears.
+const MOVE_FIELDS = ["milestone_id", "parent_task_id", "project_id"] as const;
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
@@ -51,18 +56,17 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
         const shown = value === "" || value === null ? t.agentApproval.cleared : String(value);
         chips.push(`${t.agentApproval.fieldLabels[field]}: ${shown}`);
     }
-    // null is the tool's "no move", not a detach — only '' detaches.
-    const milestone = args.milestone_id;
-    if (milestone !== undefined && milestone !== null) {
-        const asMilestone = (v: unknown) =>
-            v === "" || v === null ? t.agentApproval.cleared : String(v);
-        const current = (args.current as { milestone_id?: string | null } | undefined)
-            ?.milestone_id;
+    const asPlace = (v: unknown) => (v === "" || v === null ? t.agentApproval.cleared : String(v));
+    const currents = args.current as Record<string, unknown> | undefined;
+    for (const field of MOVE_FIELDS) {
+        const proposed = args[field];
+        if (proposed === undefined || proposed === null) continue;
+        const current = currents?.[field];
         const shown =
             current === undefined
-                ? asMilestone(milestone)
-                : `${asMilestone(current)} → ${asMilestone(milestone)}`;
-        chips.push(`${t.agentApproval.fieldLabels.milestone_id}: ${shown}`);
+                ? asPlace(proposed)
+                : `${asPlace(current)} → ${asPlace(proposed)}`;
+        chips.push(`${t.agentApproval.fieldLabels[field]}: ${shown}`);
     }
     if (bodyProposed && !body)
         chips.push(`${t.agentApproval.changesBody}: ${t.agentApproval.cleared}`);

@@ -426,6 +426,8 @@ export const ja: DeepPartial<Messages> = {
             status: "ステータス",
             due_date: "締切",
             milestone_id: "マイルストーン",
+            parent_task_id: "親タスク",
+            project_id: "プロジェクト",
         },
         cleared: "なし",
         unset: "—",

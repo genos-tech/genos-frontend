@@ -233,7 +233,7 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Status, title, description, priority, effort, due date or milestone. A new description replaces the whole body.",
+            "Status, title, description, priority, effort, due date, milestone, parent task or project. A new description replaces the whole body.",
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
     {
@@ -254,7 +254,8 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         meaning: (
             <>
-                Needs a project id from <Code>list_projects</Code>.
+                Needs a project id from <Code>list_projects</Code>. Can be filed under a parent
+                task.
             </>
         ),
     },

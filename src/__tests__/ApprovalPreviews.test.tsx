@@ -295,6 +295,16 @@ describe("CreateTaskPreview (create_task approval)", () => {
         expect(screen.queryByText("project_id:")).toBeNull();
         expect(screen.queryByText("content_text:")).toBeNull();
     });
+
+    it("shows the parent the new task is filed under", () => {
+        renderCard("create_task", {
+            title: "A sub-task",
+            project_id: "Website Redesign",
+            // Friendly-ized server-side to the parent's display id.
+            parent_task_id: "WRD-8",
+        });
+        expect(screen.getByText("Parent: WRD-8")).toBeTruthy();
+    });
 });
 
 describe("UpdateTaskPreview (update_task approval)", () => {
@@ -356,6 +366,62 @@ describe("UpdateTaskPreview (update_task approval)", () => {
     it("still shows the target when the event has no current snapshot", () => {
         renderCard("update_task", { task_id: "WRD-5", milestone_id: "v2.0" });
         expect(screen.getByText("Milestone: v2.0")).toBeTruthy();
+    });
+
+    it("shows a parent change as old → new, by display id", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            parent_task_id: "WRD-9",
+            current: { parent_task_id: "WRD-2" },
+        });
+        expect(screen.getByText("Parent: WRD-2 → WRD-9")).toBeTruthy();
+    });
+
+    it("shows making a task top-level as the parent cleared", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            parent_task_id: "",
+            current: { parent_task_id: "WRD-2" },
+        });
+        expect(screen.getByText("Parent: WRD-2 → none")).toBeTruthy();
+    });
+
+    it("shows a task given a first parent as coming from none", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            parent_task_id: "WRD-9",
+            current: { parent_task_id: null },
+        });
+        expect(screen.getByText("Parent: none → WRD-9")).toBeTruthy();
+    });
+
+    it("shows a project move as old → new, by project name", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            project_id: "Other",
+            current: { project_id: "Website Redesign" },
+        });
+        expect(screen.getByText("Project: Website Redesign → Other")).toBeTruthy();
+    });
+
+    it("shows a parent and a project change side by side, and none for a null", () => {
+        const { unmount } = renderCard("update_task", {
+            task_id: "WRD-5",
+            parent_task_id: "",
+            project_id: "Other",
+            current: { parent_task_id: "WRD-2", project_id: "Website Redesign" },
+        });
+        expect(screen.getByText("Parent: WRD-2 → none")).toBeTruthy();
+        expect(screen.getByText("Project: Website Redesign → Other")).toBeTruthy();
+        unmount();
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            parent_task_id: null,
+            project_id: null,
+            priority: "High",
+        });
+        expect(screen.queryByText(/Parent:/)).toBeNull();
+        expect(screen.queryByText(/Project:/)).toBeNull();
     });
 });
 
