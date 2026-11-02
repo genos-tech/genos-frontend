@@ -57,6 +57,7 @@ import {
     CreateHashTaskSpec,
     HashSuggestionMenuController,
 } from "../../../components/editors/HashMention";
+import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { useTranslation } from "../../../i18n";
@@ -188,6 +189,7 @@ export function MessageComposerV3({
     }, [currentUserId]);
 
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {

@@ -76,6 +76,7 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -182,6 +183,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const dictionary = useBlockNoteDictionary();
     const initialContent: any[] = message.content;
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
