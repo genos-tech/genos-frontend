@@ -220,7 +220,15 @@ export function useCollaborativeBlockNote({
             }
         };
 
-        const reconnect = createCollabReconnect(() => hocuspocusProvider);
+        const reconnect = createCollabReconnect(
+            () => hocuspocusProvider,
+            // The last reconnect went unanswered: where a refusal would have
+            // left us, with the offline copy.
+            () => {
+                safeSetConnectionStatus("disconnected");
+                trySeedFallback();
+            }
+        );
 
         const hocuspocusProvider = new HocuspocusProvider({
             url: COLLAB_URL,
@@ -228,10 +236,7 @@ export function useCollaborativeBlockNote({
             document: yjsDoc,
             token: accessToken,
             onConnect: () => safeSetConnectionStatus("connected"),
-            onAuthenticated: () => {
-                reconnect.settle();
-                safeSetCollabScope(hocuspocusProvider.authorizedScope);
-            },
+            onAuthenticated: () => safeSetCollabScope(hocuspocusProvider.authorizedScope),
             onDisconnect: () => {
                 safeSetConnectionStatus("disconnected");
                 // If we disconnected before ever syncing, seed immediately

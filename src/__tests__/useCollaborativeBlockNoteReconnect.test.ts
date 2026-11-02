@@ -16,7 +16,11 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as Y from "yjs";
 
-import { ACCESS_CHECK_UNAVAILABLE, RECONNECT_DELAYS_MS } from "../hooks/common/collabReconnect";
+import {
+    ACCESS_CHECK_UNAVAILABLE,
+    RECONNECT_ATTEMPT_TIMEOUT_MS,
+    RECONNECT_DELAYS_MS,
+} from "../hooks/common/collabReconnect";
 import { useCollaborativeBlockNote } from "../hooks/common/useCollaborativeBlockNote";
 
 type Configuration = {
@@ -222,21 +226,97 @@ describe("reconnecting after the collab server could not check access", () => {
         expect(editor.replaceBlocks).toHaveBeenCalledWith(editor.document, REST_COPY);
     });
 
-    it("once the retry is authenticated the refusal is over: a drop before the sync is an ordinary one", async () => {
+    it("a drop between re-authentication and the sync doesn't seed either", async () => {
         mount();
         const provider = providers.at(-1)!;
 
         refuse(provider, ACCESS_CHECK_UNAVAILABLE);
         await wait(1000);
         act(() => provider.configuration.onAuthenticated());
-        // The socket goes before the document syncs: as on any open, the
-        // offline copy is what there is to show.
+        // The socket goes before the document syncs, and the provider
+        // reconnects it by itself: a seed now would land beside the
+        // server's body when that syncs.
         act(() => provider.configuration.onDisconnect({ event: { code: 1006 } }));
         await wait(0);
-        expect(editor.replaceBlocks).toHaveBeenCalledTimes(1);
+        expect(editor.replaceBlocks).not.toHaveBeenCalled();
+
+        reconnectSucceeds(provider);
+        await wait(0);
+        expect(editor.replaceBlocks).not.toHaveBeenCalled();
     });
 
-    it("a sync ends the retries even if no authentication event came first", async () => {
+    it("a reconnect nobody answers counts as a failed attempt, and the attempts run out", async () => {
+        // Collab restarting, or the device offline: the provider retries the
+        // socket for ever and reports nothing, so without a deadline the
+        // editor would wait, empty, for ever.
+        const { result } = mount();
+        const provider = providers.at(-1)!;
+        const socket = provider.configuration.websocketProvider;
+
+        refuse(provider, ACCESS_CHECK_UNAVAILABLE);
+        await wait(0);
+        // From here on there is no open socket to close, so closing reports
+        // nothing: giving up must not depend on the provider's close event.
+        socket.disconnect.mockImplementation(() => undefined);
+        for (const [i, delay] of RECONNECT_DELAYS_MS.entries()) {
+            await wait(delay);
+            expect(provider.connect, `attempt ${i + 1}`).toHaveBeenCalledTimes(i + 1);
+            expect(editor.replaceBlocks).not.toHaveBeenCalled();
+            await wait(RECONNECT_ATTEMPT_TIMEOUT_MS - 1);
+            expect(socket.disconnect, `still waiting on attempt ${i + 1}`).toHaveBeenCalledTimes(
+                i + 1
+            );
+            await wait(1);
+            // Unanswered: the socket is closed, so the provider's own
+            // reconnecting can't bring it back behind our back.
+            expect(socket.disconnect, `gave up on attempt ${i + 1}`).toHaveBeenCalledTimes(i + 2);
+        }
+        // (A timer started from inside a timer runs a millisecond later.)
+        await wait(1);
+        expect(result.current.connectionStatus).toBe("disconnected");
+        expect(editor.replaceBlocks).toHaveBeenCalledTimes(1);
+        expect(editor.replaceBlocks).toHaveBeenCalledWith(editor.document, REST_COPY);
+
+        await wait(10 * 60_000);
+        expect(provider.connect).toHaveBeenCalledTimes(RECONNECT_DELAYS_MS.length);
+        expect(socket.disconnect).toHaveBeenCalledTimes(RECONNECT_DELAYS_MS.length + 1);
+    });
+
+    it("a sync takes the deadline away", async () => {
+        const { result } = mount();
+        const provider = providers.at(-1)!;
+        const socket = provider.configuration.websocketProvider;
+
+        refuse(provider, ACCESS_CHECK_UNAVAILABLE);
+        await wait(1000);
+        await wait(5000);
+        reconnectSucceeds(provider);
+        const closes = socket.disconnect.mock.calls.length;
+
+        await wait(10 * 60_000);
+        expect(socket.disconnect).toHaveBeenCalledTimes(closes);
+        expect(provider.connect).toHaveBeenCalledTimes(1);
+        expect(result.current.connectionStatus).toBe("connected");
+        expect(editor.replaceBlocks).not.toHaveBeenCalled();
+    });
+
+    it("unmounting takes the deadline away too", async () => {
+        const { unmount } = mount();
+        const provider = providers.at(-1)!;
+        const socket = provider.configuration.websocketProvider;
+
+        refuse(provider, ACCESS_CHECK_UNAVAILABLE);
+        await wait(1000);
+        unmount();
+        const closes = socket.disconnect.mock.calls.length;
+
+        await wait(10 * 60_000);
+        expect(socket.disconnect).toHaveBeenCalledTimes(closes);
+        expect(provider.connect).toHaveBeenCalledTimes(1);
+        expect(editor.replaceBlocks).not.toHaveBeenCalled();
+    });
+
+    it("a sync ends the retries", async () => {
         mount();
         const provider = providers.at(-1)!;
 

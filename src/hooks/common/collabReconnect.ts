@@ -16,15 +16,24 @@ export const ACCESS_CHECK_UNAVAILABLE = "access-check-unavailable";
  * How long to wait before each reconnect after a refusal for that reason,
  * one entry per attempt. The wait before the first is 1 s, and it doubles;
  * after the last the editor stays in the state a refusal always left it in.
- * With collab's own 3 s of asking per attempt, this covers about 45 s.
  */
 export const RECONNECT_DELAYS_MS: readonly number[] = [1000, 2000, 4000, 8000, 16000];
 
+/**
+ * How long a reconnect has to be answered, counted from `connect()`. Collab
+ * asks the api for up to 15 s in the worst case (a hung api) before it
+ * answers a refusal, so this leaves some slack on top. An attempt nobody
+ * answers (collab itself is restarting, or the device is offline: the
+ * provider keeps retrying the socket for ever, and says nothing meanwhile)
+ * counts as refused, so the attempts still run out.
+ */
+export const RECONNECT_ATTEMPT_TIMEOUT_MS = 20_000;
+
 export type CollabReconnect = {
     /**
-     * True from a refusal that is being retried until the connection is up
-     * again or the retries run out. The editor must not seed its offline copy
-     * while this holds: see `useCollaborativeBlockNote`.
+     * True from a refusal that is being retried until the document has synced
+     * or the retries run out. The editor must not seed its offline copy while
+     * this holds: see `useCollaborativeBlockNote`.
      */
     readonly pending: boolean;
     /**
@@ -33,7 +42,7 @@ export type CollabReconnect = {
      * otherwise the refusal is final and `pending` is false afterwards.
      */
     refused(reason: string): void;
-    /** Authenticated or synced: forget the attempts made so far. */
+    /** The document synced: the retries are over, forget the attempts made. */
     settle(): void;
     /** The provider is going away (unmount, another document): no more attempts. */
     cancel(): void;
@@ -50,12 +59,20 @@ export type CollabReconnect = {
  * provider takes as final and never retries. So the refused socket is
  * closed straight away (before that timeout can fire in the middle of a
  * wait) and `connect()` opens a new one when the wait is over.
+ *
+ * `onGiveUp` runs when the last attempt goes unanswered. (A last attempt that
+ * is refused is reported through `authenticationFailed` like the first, and
+ * the caller handles it there.)
  */
 export function createCollabReconnect(
     // A function because the provider's own callbacks need this object, so
     // it is made first.
     getProvider: () => Pick<HocuspocusProvider, "connect" | "configuration">,
-    delaysMs: readonly number[] = RECONNECT_DELAYS_MS
+    onGiveUp: () => void,
+    {
+        delaysMs = RECONNECT_DELAYS_MS,
+        attemptTimeoutMs = RECONNECT_ATTEMPT_TIMEOUT_MS,
+    }: { delaysMs?: readonly number[]; attemptTimeoutMs?: number } = {}
 ): CollabReconnect {
     let attempts = 0;
     let pending = false;
@@ -65,6 +82,35 @@ export function createCollabReconnect(
     const clearTimer = () => {
         if (timer !== undefined) clearTimeout(timer);
         timer = undefined;
+    };
+
+    // The socket is closed in every case, so that the provider's own
+    // reconnect loop can't bring it back later and sync the server's body
+    // on top of an offline copy seeded in the meantime.
+    const retryOrGiveUp = () => {
+        clearTimer();
+        const exhausted = attempts >= delaysMs.length;
+        // Before the socket closes, so its close event already finds the
+        // wait in place.
+        pending = !exhausted;
+        getProvider().configuration.websocketProvider.disconnect();
+        if (exhausted) return false;
+        const delay = delaysMs[attempts++];
+        timer = setTimeout(() => {
+            if (cancelled) return;
+            getProvider()
+                .connect()
+                .catch(() => {
+                    // A failed attempt surfaces as a refusal, a close event
+                    // or the deadline below; there is nobody to tell here.
+                });
+            timer = setTimeout(() => {
+                timer = undefined;
+                if (cancelled) return;
+                if (!retryOrGiveUp()) onGiveUp();
+            }, attemptTimeoutMs);
+        }, delay);
+        return true;
     };
 
     return {
@@ -77,23 +123,7 @@ export function createCollabReconnect(
                 pending = false;
                 return;
             }
-            const exhausted = attempts >= delaysMs.length;
-            // Before the socket closes, so its close event already finds the
-            // wait in place.
-            pending = !exhausted;
-            getProvider().configuration.websocketProvider.disconnect();
-            if (exhausted) return;
-            const delay = delaysMs[attempts++];
-            timer = setTimeout(() => {
-                timer = undefined;
-                if (cancelled) return;
-                getProvider()
-                    .connect()
-                    .catch(() => {
-                        // A failed attempt surfaces as another refusal or a
-                        // close event; there is nobody to tell here.
-                    });
-            }, delay);
+            retryOrGiveUp();
         },
         settle() {
             clearTimer();
