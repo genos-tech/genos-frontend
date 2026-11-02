@@ -496,10 +496,10 @@ const MilestoneTreeFolder = ({
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
-                                fontWeight: 600,
-                                // As strong as a milestone title (the muted grey made the
-                                // folders read as disabled).
-                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
+                                fontWeight: 500,
+                                // The same weight and colour as the sidebar's "Projects" and
+                                // "Recents" headings, so a folder reads as a peer of those.
+                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                             }}
                         >
                             {label}
