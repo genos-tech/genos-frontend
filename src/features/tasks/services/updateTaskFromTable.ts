@@ -5,6 +5,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { loadSpecificTask } from "./loadSpecificTask";
 import { sendUpdatedSpecificTask } from "./sendUpdatedSpecificTask";
+import { TaskSaveRefusedError } from "./taskSaveRefusedError";
 
 /**
  * Updates a task from table edits
@@ -14,6 +15,10 @@ import { sendUpdatedSpecificTask } from "./sendUpdatedSpecificTask";
  * @param accessToken - Authentication token
  * @param teamMembers - List of team members for assignee lookup
  * @returns Promise<TaskTableProps> - The updated task table data
+ * @throws TaskSaveRefusedError when the server refuses the save (HTTP 400).
+ *   The reason has already been shown to the person; the caller must put its
+ *   own copy of the row back, because nothing was stored. This is the only
+ *   rejection: every other failure still resolves with the edited row.
  */
 export const updateTaskFromTable = async (
     updatedRow: TaskTableProps,
@@ -132,6 +137,10 @@ export const updateTaskFromTable = async (
             dueDate: dueDateStr,
         };
     } catch (error) {
+        // Let the refusal through. Returning the edited row here made a
+        // refused save look like a stored one: the table kept the new value
+        // and the board's rollback (a `catch` around this call) never ran.
+        if (error instanceof TaskSaveRefusedError) throw error;
         console.error("Error updating task from table:", error);
         return updatedRow;
     }

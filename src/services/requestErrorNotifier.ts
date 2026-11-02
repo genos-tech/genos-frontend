@@ -23,17 +23,30 @@ export type RequestErrorKind =
     | "requestFailed" // API other 4xx
     | "limitReached" // API 429/413 with limit_reached — plan quota / file-size cap
     | "actionFailed" // v3 socket user-action emit failed (reaction / edit)
-    | "messageSendFailed"; // chat message send failed (the composer)
+    | "messageSendFailed" // chat message send failed (the composer)
+    | "serverMessage"; // the server's own sentence, carried as `text` (a refused task save)
 
-type RequestErrorListener = (kind: RequestErrorKind) => void;
+/**
+ * The kinds whose wording is a translated `t.app.snackbar.*` string. Every
+ * kind but `serverMessage`, which carries its own text and has no catalog
+ * entry.
+ */
+export type TranslatedRequestErrorKind = Exclude<RequestErrorKind, "serverMessage">;
+
+type RequestErrorListener = (kind: RequestErrorKind, text?: string) => void;
 
 const listeners = new Set<RequestErrorListener>();
 
 // Collapse a burst of identical failures — e.g. a boot that fires five
 // requests which all 500 — into one toast per kind. Without this the host
 // would surface five identical messages back-to-back.
+//
+// The key is the kind PLUS the text when there is one: two different
+// refusals ("assignee is not on the project", "custom field 7 must be a
+// number") are two different things to read, so the second must not be
+// swallowed just because the first fired a moment ago.
 const DEDUP_WINDOW_MS = 4000;
-const lastEmittedAt = new Map<RequestErrorKind, number>();
+const lastEmittedAt = new Map<string, number>();
 
 export const subscribeRequestErrors = (listener: RequestErrorListener): (() => void) => {
     listeners.add(listener);
@@ -42,14 +55,16 @@ export const subscribeRequestErrors = (listener: RequestErrorListener): (() => v
     };
 };
 
-export const emitRequestError = (kind: RequestErrorKind): void => {
+export const emitRequestError = (kind: RequestErrorKind, text?: string): void => {
     const now = Date.now();
-    const last = lastEmittedAt.get(kind);
+    const key = text === undefined ? kind : `${kind}\u0000${text}`;
+    const last = lastEmittedAt.get(key);
     if (last !== undefined && now - last < DEDUP_WINDOW_MS) return;
-    lastEmittedAt.set(kind, now);
+    lastEmittedAt.set(key, now);
     for (const listener of listeners) {
         try {
-            listener(kind);
+            if (text === undefined) listener(kind);
+            else listener(kind, text);
         } catch {
             /* a listener threw — non-fatal; keep notifying the rest */
         }

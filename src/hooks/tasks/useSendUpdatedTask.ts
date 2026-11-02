@@ -1,9 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
+import { reloadStoredTask } from "../../features/tasks/services/reloadStoredTask";
 import { sendUpdatedSpecificTask } from "../../features/tasks/services/sendUpdatedSpecificTask";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
+import { TaskSaveRefusedError } from "../../features/tasks/services/taskSaveRefusedError";
 import { UserProps } from "../../types/admin";
 import { TaskEditStateManagement } from "../../types/taskEditState";
 import { AttachmentFileProps, TaskProps } from "../../types/tasks";
@@ -40,6 +42,7 @@ export interface UseSendUpdatedTaskParams {
     setTaskStatusUpdated?: (value: boolean) => void;
     setTaskBodyEdited?: (value: boolean) => void;
     setStartIntervalUpdatingTask?: (value: boolean) => void;
+    setTaskTitle?: (value: string) => void;
 
     // Option 2: Provide consolidated state (recommended)
     taskEditState?: TaskEditStateManagement;
@@ -50,6 +53,12 @@ export interface UseSendUpdatedTaskParams {
      *  write re-rendered the whole preview subtree on every sync while
      *  typing), so the PUT must read the ref for the freshest content. */
     bodyRef?: { current: PartialBlock[] };
+
+    /** Called with the task as the server holds it after a REFUSED save has
+     *  put the working copy back to it, so a host that keeps a mirror of some
+     *  fields outside the edit state (TaskPreview's assignee / reporter chips)
+     *  can re-read them. Not called for a save fired while switching tasks. */
+    onStoredTaskRestored?: (task: TaskProps) => void;
 }
 
 /**
@@ -76,8 +85,19 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const setTaskBodyEdited = taskEditState?.setTaskBodyEdited ?? params.setTaskBodyEdited!;
     const setStartIntervalUpdatingTask =
         taskEditState?.setStartIntervalUpdatingTask ?? params.setStartIntervalUpdatingTask!;
+    const setTaskTitle = taskEditState?.setTaskTitle ?? params.setTaskTitle;
 
     const bodyRef = params.bodyRef;
+    const onStoredTaskRestored = params.onStoredTaskRestored;
+
+    // The id of the task the preview shows RIGHT NOW. A refused save puts the
+    // working copy back only after an awaited reload, and the person may have
+    // opened another task by then; the closure's `tmpCurrentTaskContent` is
+    // from when the save started, so it cannot answer that.
+    const shownTaskIdRef = useRef<number | undefined>(undefined);
+    useEffect(() => {
+        shownTaskIdRef.current = tmpCurrentTaskContent?.id;
+    }, [tmpCurrentTaskContent?.id]);
 
     const sendUpdatedTask = useCallback(
         // `syncCard` = "this is a metadata save; rebuild the PM task-card +
@@ -102,13 +122,88 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     .map((a) => a.attachment_id)
             );
 
-            const uploadAttachments = await sendUpdatedSpecificTask(
-                socket,
-                myself,
-                baseTaskContent,
-                syncCard,
-                accessToken
-            );
+            let uploadAttachments: Awaited<ReturnType<typeof sendUpdatedSpecificTask>>;
+            try {
+                uploadAttachments = await sendUpdatedSpecificTask(
+                    socket,
+                    myself,
+                    baseTaskContent,
+                    syncCard,
+                    accessToken
+                );
+            } catch (error) {
+                if (!(error instanceof TaskSaveRefusedError)) throw error;
+
+                // The server refused this save (the reason is already on
+                // screen). Nothing was stored, so the working copy now holds
+                // values that exist nowhere else: put it back to what the
+                // server holds. This must NOT mark the task dirty
+                // (`setTaskUpdated(true)`): the save effects would send the
+                // same refused values again and loop for as long as the
+                // preview is open. It must not reject either: callers fire
+                // this without awaiting it (a switch save) or close the pane
+                // after it (the close save).
+                //
+                // A save fired while SWITCHING away is the outgoing task's;
+                // the incoming one is already on screen (see the note on
+                // `taskSwitched` below), so the reason is all there is to do.
+                if (!taskSwitched) {
+                    // Files that were never uploaded (the upload runs only
+                    // after the PUT succeeds) cannot stay in the list: the
+                    // pending-attachment effect would re-send them as soon as
+                    // the flag below falls, and a refusal about the STORED
+                    // task would then repeat forever. Files dropped while
+                    // this save was in flight are not in `sentNegativeIds`
+                    // and stay for the next one.
+                    const withoutSent = <T extends { attachment_id: number }>(rows: T[]): T[] =>
+                        rows.filter((a) => !sentNegativeIds.has(a.attachment_id));
+                    //
+                    // The preview task too, not just the working copy: the
+                    // host mirrors the working copy into it on every change,
+                    // so it holds the same rows, and TaskPreview's same-task
+                    // sync (no longer suppressed once the round trip has taken
+                    // more than 5 s) copies the preview task BACK into the
+                    // working copy, which would resurrect the file. Done here,
+                    // before the awaited reload, so it also covers a reload
+                    // that fails.
+                    setUploadedFiles((prev) => withoutSent(prev));
+                    setTmpCurrentTaskContent((prev) => ({
+                        ...prev,
+                        attachments: withoutSent(prev.attachments ?? []),
+                    }));
+                    setCurrentPreviewTask((prev) =>
+                        prev ? { ...prev, attachments: withoutSent(prev.attachments ?? []) } : prev
+                    );
+
+                    const storedTask = await reloadStoredTask(
+                        myself,
+                        Number(baseTaskContent.id),
+                        baseTaskContent.project?.projectId,
+                        accessToken
+                    );
+                    if (storedTask && Number(shownTaskIdRef.current) === Number(storedTask.id)) {
+                        // Metadata only. The body belongs to the collaborative
+                        // editor (body autosaves come through here too, and a
+                        // revert would eat what was typed), and the attachment
+                        // list keeps its persisted rows and any newer drop.
+                        const putBack = (prev: TaskProps): TaskProps => ({
+                            ...storedTask,
+                            body: prev.body,
+                            attachments: prev.attachments,
+                        });
+                        setTmpCurrentTaskContent((prev) => putBack(prev));
+                        setCurrentPreviewTask((prev) => (prev ? putBack(prev) : prev));
+                        setTaskTitle?.(storedTask.title);
+                        onStoredTaskRestored?.(storedTask);
+                    }
+                }
+                // Same resets as a finished save, minus "saved".
+                setTaskUpdated(false);
+                setTaskStatusUpdated(false);
+                setTaskBodyEdited(false);
+                setStartIntervalUpdatingTask(false);
+                return;
+            }
 
             // The PUT wrote new activity rows (field/description edits) —
             // tell the open preview to refresh its Activity feed. Scoped
@@ -215,6 +310,8 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             setTaskStatusUpdated,
             setTaskBodyEdited,
             setStartIntervalUpdatingTask,
+            setTaskTitle,
+            onStoredTaskRestored,
             taskEditState,
         ]
     );

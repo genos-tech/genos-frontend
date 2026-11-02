@@ -36,6 +36,7 @@ import { useSendUpdatedTask } from "../../../../hooks/tasks/useSendUpdatedTask";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../types/admin";
@@ -255,6 +256,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // signal comment block further down explains the ref's role.
     const currentBodyRef = useRef<PartialBlock[]>([]);
 
+    // After the server REFUSES a save, `useSendUpdatedTask` puts the working
+    // copy back to what is stored. The assignee / reporter chips keep their own
+    // copies (the mirror effect below only re-reads them while
+    // `isTaskUpdated` is false), so tell them directly.
+    const handleStoredTaskRestored = useCallback(
+        (storedTask: TaskProps) => {
+            setAssignee(storedTask.assignee ?? null);
+            setReporter(storedTask.reporter || myself);
+        },
+        [myself]
+    );
+
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
         myself,
@@ -264,47 +277,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskEditState,
         // Live body source — see `handleEditorBodySync`.
         bodyRef: currentBodyRef,
+        onStoredTaskRestored: handleStoredTaskRestored,
     });
 
-    useEffect(() => {
-        // Save updated task (title, assignee, status, ..., but not task body).
-        // `syncCard = true`: this is the metadata-save path, so rebuild the PM
-        // task-card header + broadcast it so every PM viewer's card updates
-        // live (the body autosave / switch / close saves pass false).
-        //
-        // Keyed on `taskUpdateSeq`, NOT on the `taskUpdated` boolean. React
-        // coalesces `setTaskUpdated(true)` while the flag is already true, so
-        // an edit made while a previous save was still in flight produced no
-        // state change and this effect never re-ran — the edit was applied to
-        // local state (so the preview looked right) but never PUT. That is
-        // the intermittent "status reverts in the table, and on reopen":
-        // nothing had reverted, the change was simply never saved. The
-        // counter changes on every save request, so none can be swallowed.
-        // The same coalescing hazard is documented for attachments in the
-        // effect below, which worked around it for that one field only.
-        if (taskEditState.taskUpdated === true) {
-            sendUpdatedTask(false, true);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [taskEditState.taskUpdateSeq]);
-
-    // Re-trigger the save when the attachment list still contains
-    // negative-id rows after a save just completed. This handles the
-    // case where the user dropped file B *during* file A's POST: the
-    // duplicate `setTaskUpdated(true)` call gets coalesced by React
-    // while the flag is already true, so B would otherwise sit pending
-    // forever until something else flipped the flag. After A's save
-    // flips the flag back to false, this effect notices B's negative
-    // id and kicks off the next save.
-    useEffect(() => {
-        if (taskEditState.taskUpdated) return;
-        const hasPending = (taskEditState.tmpCurrentTaskContent?.attachments ?? []).some(
-            (a) => a.attachment_id < 0
-        );
-        if (hasPending) {
-            taskEditState.setTaskUpdated(true);
-        }
-    }, [taskEditState.taskUpdated, taskEditState.tmpCurrentTaskContent?.attachments]);
+    // The two effects that turn an edit into a metadata PUT (the seq-keyed
+    // save and the pending-attachment re-trigger). Their reasoning lives in
+    // `useTaskSaveTriggers`.
+    useTaskSaveTriggers(taskEditState, sendUpdatedTask);
 
     useEffect(() => {
         if (taskEditState.startIntervalUpdatingTask) {

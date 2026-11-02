@@ -5,12 +5,58 @@ import { cacheFullTask, invalidateCachedFullTask } from "../../../db/services/ta
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { channelService } from "../../../services/channel/channelService";
+import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
+import { TaskSaveRefusedError } from "./taskSaveRefusedError";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
+
+// PUT the task. The server's HTTP 400 is a REFUSAL: it read the request and
+// declined it, so nothing was stored and any copy of the task that already
+// shows the new value is wrong. That is the one outcome the callers cannot
+// ignore, so it leaves here as a `TaskSaveRefusedError` after the reason has
+// been shown. Scoped to this one call on purpose: a 400 from anything later
+// in the save (the attachment upload, the PM card sync) says nothing about
+// whether the task was stored.
+//
+// What the person reads, in order of preference:
+//   1. the translated sub-task message, for that one `code` (kept from
+//      before: it explains the rule better than the raw sentence);
+//   2. the server's own `error` sentence, shown as-is (English, whatever the
+//      UI language: it names the exact field and id, which is what makes it
+//      useful);
+//   3. nothing extra, when the body has no single sentence (the serializer's
+//      field -> [messages] map). The response interceptor has already raised
+//      the generic "couldn't complete" toast for every 400, so they are not
+//      left without a signal, and the caller still puts its state back.
+// A reason is emitted AFTER that generic toast, and the snackbar keeps only
+// the newest, so the reason is what stays on screen.
+const putTask = async (
+    api: NonNullable<ReturnType<typeof authApi>>,
+    body: Record<string, unknown>,
+    setErrorMessage?: (value: string) => void
+) => {
+    try {
+        return await api.put("/task/", body);
+    } catch (error: unknown) {
+        if (!axios.isAxiosError(error) || error.response?.status !== 400) throw error;
+        console.error("HTTP 400 error:", error.response?.data);
+        const data = error.response?.data as { error?: unknown; code?: unknown } | undefined;
+        const code = typeof data?.code === "string" ? data.code : null;
+        const serverText = typeof data?.error === "string" && data.error ? data.error : null;
+        const reason =
+            code === "subtask_project_move_forbidden"
+                ? getMessages().tasks.errors.subTaskProjectMoveForbidden
+                : serverText;
+        if (reason) emitRequestError("serverMessage", reason);
+        // A 400 with nothing to say keeps the callback's old fallback text.
+        setErrorMessage?.(reason ?? getMessages().tasks.errors.messageIdExists);
+        throw new TaskSaveRefusedError(reason, code);
+    }
+};
 
 export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
@@ -48,7 +94,7 @@ export const sendUpdatedSpecificTask = async (
         const api = authApi(accessToken);
 
         if (api) {
-            const res = await api.put("/task/", {
+            const taskBody = {
                 task_id: updatedTask.id,
                 team: myself.teamId,
                 project: updatedTask.project.projectId,
@@ -113,7 +159,8 @@ export const sendUpdatedSpecificTask = async (
                 ...(updatedTask.collaborators != null
                     ? { collaborators: updatedTask.collaborators.map((c) => c.userId) }
                     : {}),
-            });
+            };
+            const res = await putTask(api, taskBody, setErrorMessage);
 
             if (res) {
                 // Mirror the freshly-PUT task into the full-task IDB
@@ -310,20 +357,14 @@ export const sendUpdatedSpecificTask = async (
             }
         }
     } catch (error: unknown) {
+        // The refusal has been reported (see `putTask`); callers put their
+        // own state back.
+        if (error instanceof TaskSaveRefusedError) throw error;
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    // The server rejects a project change on a sub-task —
-                    // the picker is read-only there, so this only fires for
-                    // a client that predates the rule or a non-picker
-                    // caller. Naming the reason beats the generic 400 text,
-                    // which claims a duplicate message id.
-                    setErrorMessage(
-                        error.response?.data?.code === "subtask_project_move_forbidden"
-                            ? errMsgs.subTaskProjectMoveForbidden
-                            : errMsgs.messageIdExists
-                    );
+                    setErrorMessage(errMsgs.messageIdExists);
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);

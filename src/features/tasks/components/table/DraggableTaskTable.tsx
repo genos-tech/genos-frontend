@@ -31,9 +31,14 @@ import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
+import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
-import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascadeTreePosition";
+import {
+    applyTreePositionToDescendants,
+    collectDescendantIds,
+    TreePosition,
+} from "../../utils/cascadeTreePosition";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
@@ -962,6 +967,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 dragged.id ?? "",
                 position
             );
+        // What the move is about to change, for putting it back if the server
+        // refuses it: the dragged row and everything under it, as each list
+        // holds them now. Only those rows go back, so an edit that landed
+        // elsewhere in the table while the request was in flight survives.
+        const priorPreview = useTM.currentPreviewTask;
+        const movedIds = new Set([
+            String(dragged.id),
+            ...collectDescendantIds(useTM.allTasks, dragged.id ?? ""),
+        ]);
+        const revertMoveIn = (before: TaskTableProps[]) => {
+            const priorRows = new Map(
+                before.filter((t) => movedIds.has(String(t.id))).map((t) => [String(t.id), t])
+            );
+            return (rows: TaskTableProps[]): TaskTableProps[] =>
+                rows.map((t) => priorRows.get(String(t.id)) ?? t);
+        };
+        const revertDisplayed = revertMoveIn(currentDisplayingTasks);
+        const revertAll = revertMoveIn(useTM.allTasks);
         setCurrentDisplayingTasks(applyMove);
         useTM.setAllTasks(applyMove);
 
@@ -996,6 +1019,26 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             await updateTaskFromTable(updated, myself, socket || null, accessToken, teamMembers);
         } catch (error) {
             console.error("Error reparenting task:", error);
+            // The server refused the move (the reason is on screen). Nothing
+            // was stored, so the optimistic move above would otherwise stay on
+            // screen as if it had been. Any other failure keeps the old
+            // log-only behaviour.
+            if (error instanceof TaskSaveRefusedError) {
+                setCurrentDisplayingTasks(revertDisplayed);
+                useTM.setAllTasks(revertAll);
+                if (priorPreview && String(priorPreview.id) === draggedId) {
+                    useTM.setCurrentPreviewTask((prev) =>
+                        prev && String(prev.id) === draggedId
+                            ? {
+                                  ...prev,
+                                  parentTaskId: priorPreview.parentTaskId,
+                                  milestoneId: priorPreview.milestoneId,
+                                  rootTaskId: priorPreview.rootTaskId,
+                              }
+                            : prev
+                    );
+                }
+            }
         }
     };
 
@@ -1224,6 +1267,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             return result;
         } catch (error) {
             console.error("Error updating row:", error);
+            // A refused save stored nothing, and every state write above comes
+            // after the await, so nothing optimistic landed: hand back the row
+            // as the table still holds it, not the edited copy.
+            if (error instanceof TaskSaveRefusedError) {
+                return currentDisplayingTasks.find((t) => t.id === updatedRow.id) ?? updatedRow;
+            }
             return updatedRow;
         }
     };
