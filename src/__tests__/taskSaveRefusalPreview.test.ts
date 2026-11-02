@@ -312,7 +312,7 @@ describe("a refused save from the task preview", () => {
         ]);
     });
 
-    it("puts the title back too, but leaves the body to the editor", async () => {
+    it("keeps the typed title, puts the picked values back, and leaves the body to the editor", async () => {
         respondWith(400, { error: reason });
         const body = [{ type: "paragraph", content: "typed since the last save" }];
         const hook = mount(edited({ body: body as never }));
@@ -320,10 +320,56 @@ describe("a refused save from the task preview", () => {
 
         await saveAndSettle(hook);
 
+        // Vacuity guard: the typed title really was in the refused save.
         expect(putBody().title).toBe("Typed title");
-        expect(hook.result.current.state.taskTitle).toBe("A task");
+        const { state, preview } = hook.result.current;
+        // The title stays as typed in the input, the working copy AND the
+        // preview task (TaskPreview's same-task sync copies the preview task's
+        // title back into the input, so all three have to agree).
+        expect(state.taskTitle).toBe("Typed title");
+        expect(state.tmpCurrentTaskContent.title).toBe("Typed title");
+        expect(preview?.title).toBe("Typed title");
+        // The picked values still went back.
+        expect(state.tmpCurrentTaskContent.status.status).toBe("Open");
+        expect(preview?.assignee?.userId).toBe("u1");
         // The body is the collaborative editor's; reverting it would eat typing.
-        expect(hook.result.current.state.tmpCurrentTaskContent.body).toEqual(body);
+        expect(state.tmpCurrentTaskContent.body).toEqual(body);
+    });
+
+    it("does not re-send the kept title by itself, and sends it with the next save", async () => {
+        respondWith(400, { error: reason });
+        const hook = mount(edited());
+        act(() => hook.result.current.state.setTaskTitle("Typed title"));
+
+        await saveAndSettle(hook);
+        await letLoopsRun();
+
+        // Kept, not retried: one PUT, one toast, and nothing marked dirty.
+        expect(adapter).toHaveBeenCalledTimes(1);
+        expect(hook.result.current.state.taskUpdated).toBe(false);
+        expect(bus.filter(([kind]) => kind === "serverMessage")).toHaveLength(1);
+
+        // The person fixes the picked value and saves again: the kept title
+        // goes up with it.
+        respondWith(200, {});
+        await act(async () => {
+            hook.result.current.state.setTaskUpdated(true);
+        });
+        await waitFor(() => expect(adapter).toHaveBeenCalledTimes(2));
+        expect(putBody(1).title).toBe("Typed title");
+    });
+
+    it("falls back to the stored title when the box was emptied", async () => {
+        respondWith(400, { error: reason });
+        const hook = mount(edited());
+        act(() => hook.result.current.state.setTaskTitle(""));
+
+        await saveAndSettle(hook);
+
+        // An empty title is never sent: the old one stands in for it.
+        expect(putBody().title).toBe("A task");
+        expect(hook.result.current.state.tmpCurrentTaskContent.title).toBe("A task");
+        expect(hook.result.current.preview?.title).toBe("A task");
     });
 
     it("leaves a task the person switched to meanwhile alone", async () => {
