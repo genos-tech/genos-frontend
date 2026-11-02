@@ -3111,9 +3111,9 @@ export const fr: DeepPartial<Messages> = {
             heading: "Confidentialité et analyses",
             description:
                 "Nous aide à comprendre quelles fonctionnalités sont utilisées afin de mieux les améliorer.",
-            shareLabel: "Partager les données d'utilisation anonymes",
+            shareLabel: "Partager les données d'utilisation",
             shareHelper:
-                "Envoie votre ID utilisateur, votre équipe et votre rôle ainsi que les pages que vous visitez. Aucun contenu de message ni clic n'est enregistré. Désactivez pour vous désinscrire totalement.",
+                "Activé par défaut. Envoie votre ID utilisateur, l'ID de votre équipe et votre rôle ainsi que les pages que vous visitez, rattachés à votre compte. Aucun contenu de message ni clic n'est enregistré. Désactivez pour vous désinscrire totalement.",
         },
         shortcuts: {
             heading: "Raccourcis clavier",
