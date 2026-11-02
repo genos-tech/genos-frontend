@@ -512,18 +512,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuItem>
                             )}
 
-                            {/* Self-DM only: ToDo lives in the visible icon
-                                slot above, so mute is surfaced here in the
-                                overflow instead. Other chats keep mute as
-                                their visible icon and don't need this. */}
-                            {isYou === true && (
-                                <MuteMenuItem
-                                    chatType={chat.chatType}
-                                    chatId={chat.chatId}
-                                    chatName={muteLabel}
-                                />
-                            )}
-
                             {isYou === true && calendarModal && (
                                 <MenuItem onClick={calendarModal.open}>
                                     <CalendarMonthRoundedIcon
@@ -549,6 +537,18 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     />
                                     {t.chat.headers.addMembers}
                                 </MenuItem>
+                            )}
+
+                            {/* Self-DM only: ToDo lives in the visible icon
+                                slot above, so mute is surfaced here in the
+                                overflow instead. Other chats keep mute as
+                                their visible icon and don't need this. */}
+                            {isYou === true && (
+                                <MuteMenuItem
+                                    chatType={chat.chatType}
+                                    chatId={chat.chatId}
+                                    chatName={muteLabel}
+                                />
                             )}
                         </Menu>
                     </Dropdown>

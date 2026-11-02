@@ -478,14 +478,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             />
                             {t.threadAsk.headerButton.label}
                         </MenuItem>
-                        {chatType !== 3 && (
-                            <MenuItem onClick={copyThreadLink}>
-                                <ContentCopyRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
-                                {t.chat.headers.copyThreadLink}
-                            </MenuItem>
-                        )}
+                        {/* Same order as the desktop MoreMenu (moreMenuOrder.ts). */}
                         {hasTask && (
                             <MenuItem onClick={openTaskHandler}>
                                 <AssignmentRoundedIcon
@@ -494,18 +487,26 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 {t.chat.headers.openTask}
                             </MenuItem>
                         )}
-                        {!hasTask && chatType !== 3 && (
-                            <MenuItem onClick={createTaskHandler}>
-                                <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
-                                {t.chat.headers.threadTaskMenuItem}
-                            </MenuItem>
-                        )}
                         {chatType !== 3 && (
                             <MenuItem onClick={openNoteHandler}>
                                 <NoteAltRoundedIcon
                                     sx={{ fontSize: 18, color: styles.accentColor }}
                                 />
                                 {t.chat.headers.threadNoteMenuItem}
+                            </MenuItem>
+                        )}
+                        {chatType !== 3 && (
+                            <MenuItem onClick={copyThreadLink}>
+                                <ContentCopyRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.copyThreadLink}
+                            </MenuItem>
+                        )}
+                        {!hasTask && chatType !== 3 && (
+                            <MenuItem onClick={createTaskHandler}>
+                                <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+                                {t.chat.headers.threadTaskMenuItem}
                             </MenuItem>
                         )}
                     </Menu>
@@ -713,6 +714,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             items={[
                                 {
                                     id: "copy-thread-link",
+                                    kind: "copyLink",
                                     label: t.chat.headers.copyThreadLink,
                                     icon: (
                                         <ContentCopyRoundedIcon
@@ -724,6 +726,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 },
                                 {
                                     id: "create-task",
+                                    kind: "newTask",
                                     label: t.chat.headers.threadTaskMenuItem,
                                     icon: (
                                         <AddTaskRoundedIcon
@@ -735,6 +738,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 },
                                 {
                                     id: "open-note",
+                                    kind: "openNote",
                                     label: t.chat.headers.threadNoteMenuItem,
                                     icon: (
                                         <NoteAltRoundedIcon

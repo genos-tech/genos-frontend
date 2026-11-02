@@ -12,6 +12,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 import { Socket } from "socket.io-client";
 
+import { MoreMenuKind } from "../../../../components/ui/moreMenuOrder";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import {
     PinnableBubbleAction,
@@ -55,6 +56,7 @@ type BubbleThreadMoreMenuProps = {
 
 type MenuItemConfig = {
     id: string;
+    kind: MoreMenuKind;
     label: string;
     icon: React.ReactNode;
     onClick: () => void;
@@ -306,9 +308,11 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     // edit=cyan). The `delete` action is the only generic destructive
     // affordance and uses palette.dangerTint instead of red. The `flag` red
     // is also a cross-file functional carve-out (see chatListItemForFlagMessages).
+    // Display order comes from `kind` (via `splitPinned`), not from this array.
     const menuItems: MenuItemConfig[] = [
         {
             id: "copyLink",
+            kind: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
@@ -319,6 +323,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "unwrapAll",
+            kind: "unwrapAll",
             label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
             icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             onClick: () => {
@@ -333,6 +338,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "unwrapCode",
+            kind: "unwrapCode",
             label: unwrapCode ? t.chat.messageActions.wrapCode : t.chat.messageActions.unwrapCode,
             icon: <CodeIcon sx={{ fontSize: 18 }} />,
             onClick: () => {
@@ -347,6 +353,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "flag",
+            kind: "flag",
             label: isFlagged
                 ? t.chat.messageActions.removeFlag
                 : t.chat.messageActions.flagForLater,
@@ -370,6 +377,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             // once something is, because then it is a promise the app has
             // made rather than an action on offer.
             id: "remindMe",
+            kind: "remindMe",
             label: reminder
                 ? fmt(t.chat.messageActions.reminderSetFor, {
                       time: formatReminderTime(new Date(reminder.remindAt), locale),
@@ -390,6 +398,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "edit",
+            kind: "edit",
             label: t.chat.messageActions.editMessage,
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
@@ -400,6 +409,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "delete",
+            kind: "delete",
             label: t.chat.messageActions.deleteMessage,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,

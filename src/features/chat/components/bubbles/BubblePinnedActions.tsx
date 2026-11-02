@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { IconButton, useColorScheme } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MoreMenuKind, orderMoreMenuItems } from "../../../../components/ui/moreMenuOrder";
 import { PinnableBubbleAction } from "../../../../hooks/common/useBubbleActionsPreference";
 
 /** One action the user pinned onto the hover toolbar (MIP-803). */
@@ -21,11 +22,15 @@ export type PinnedBubbleAction = {
  * not offer for this message (`visible: false`, e.g. Edit on someone else's)
  * is in neither list.
  */
-export const splitPinned = <T extends { id: string; visible?: boolean }>(
+export const splitPinned = <
+    T extends { id: string; kind?: MoreMenuKind; danger?: boolean; visible?: boolean },
+>(
     all: T[],
     pinned: readonly string[]
 ): { pinnedItems: T[]; menuItems: T[] } => {
-    const shown = all.filter((item) => item.visible !== false);
+    // Ordered here, not left to `MoreMenu`: the pinned buttons never reach it,
+    // and the thread bubble's menu is not a `MoreMenu`.
+    const shown = orderMoreMenuItems(all);
     return {
         // Pinned buttons follow the menu's own order, whatever order was stored.
         pinnedItems: shown.filter((item) => pinned.includes(item.id)),
