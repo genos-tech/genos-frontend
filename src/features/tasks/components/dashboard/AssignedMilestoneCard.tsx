@@ -8,20 +8,11 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TagListProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { priorityChipColors, taskMetaLabel } from "../../utils/taskMeta";
 import { milestoneHasGoal } from "../../utils/taskTemplates";
 import { ProjectTagChip } from "../ProjectTagChip";
 import { SprintChip } from "../SprintChip";
 import { TaskStatusChip } from "../TaskStatusChip";
-
-// Same priority swatch the board card uses (SprintBoardCard.tsx) so a
-// milestone's priority chip reads identically across the two surfaces.
-const priorityColors: Record<string, { bg: string; text: string }> = {
-    Critical: { bg: "#dc2626", text: "#fff" },
-    High: { bg: "#ea580c", text: "#fff" },
-    Medium: { bg: "#ca8a04", text: "#fff" },
-    Low: { bg: "#16a34a", text: "#fff" },
-};
 
 // Milestone.tags is a JSONField (`unknown`); narrow it to the shared tag
 // shape at the edge, exactly like the task table does.
@@ -59,7 +50,8 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
     const { t } = useTranslation();
 
     const tags = asTags(milestone.tags);
-    const priorityStyle = milestone.priority ? priorityColors[milestone.priority] : null;
+    // Same colours as the board card and the task table (see priorityChipColors).
+    const priorityStyle = priorityChipColors(milestone.priority, isDark);
     const total = milestone.tasksTotal ?? 0;
     const closed = milestone.tasksClosed ?? 0;
     const pct = total > 0 ? Math.round((closed / total) * 100) : 0;

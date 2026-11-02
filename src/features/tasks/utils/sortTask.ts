@@ -39,9 +39,9 @@ export const PRIORITY_RANK: Record<string, number> = {
     Critical: 5,
     High: 4,
     Normal: 3,
-    // "Medium" is a legacy alias still referenced in the sprint-board
-    // card's priorityColors map. Same rank as Normal so a task labelled
-    // either way orders correctly.
+    // "Medium" is a legacy alias for Normal (no longer a product priority;
+    // the board cards no longer draw a chip for it). Same rank as Normal so
+    // a task still labelled that way orders correctly.
     Medium: 3,
     Low: 2,
     Minimal: 1,
