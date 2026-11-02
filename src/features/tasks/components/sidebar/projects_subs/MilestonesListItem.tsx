@@ -41,7 +41,6 @@ import {
 import { taskMetaLabel } from "../../../utils/taskMeta";
 import { FolderMenu, MilestoneRowMenu } from "./MilestoneFolderMenus";
 import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
-import { milestoneHasGoal } from "../../../utils/taskTemplates";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -264,16 +263,6 @@ export const MilestonesListItem = ({
                                     </Chip>
                                 );
                             })()}
-                            {!milestoneHasGoal(m.description) && (
-                                <Chip
-                                    color="warning"
-                                    size="sm"
-                                    title={t.tasks.sidebar.noGoalHint}
-                                    variant="outlined"
-                                >
-                                    {t.tasks.sidebar.noGoal}
-                                </Chip>
-                            )}
                             <Box sx={{ flex: 1 }} />
                             <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
                                 {m.assignees.slice(0, 4).map((a) => {
