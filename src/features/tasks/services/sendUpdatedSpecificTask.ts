@@ -27,7 +27,14 @@ export const sendUpdatedSpecificTask = async (
     // metadata edit after opening a task (the "PM card stays stale" bug).
     syncCard: boolean,
     accessToken: string | null,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    options?: {
+        // False when this save does not edit the start date (a table / board
+        // inline edit), so the PUT must not mention it at all. Defaults to
+        // true: a save from the open task sends whatever the working copy
+        // holds (see `start_date` below).
+        sendStartDate?: boolean;
+    }
 ) => {
     const errMsgs = getMessages().tasks.errors;
     try {
@@ -57,14 +64,22 @@ export const sendUpdatedSpecificTask = async (
                 status: updatedTask.status.status !== null ? updatedTask.status.status : null,
                 content: updatedTask.body.length !== 0 ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
-                // Always include `start_date` so a fresh value lands
-                // on the row and an explicit clear (null) survives the
-                // backend's None-strip via partial=True. Without this,
-                // the "+ Start Date" affordance on TaskMainBlock never
-                // persisted — the PUT payload omitted the field
-                // entirely so the next refetch wiped the optimistic
-                // local update.
-                start_date: updatedTask.startDate ?? null,
+                // Three states, and the server treats them differently:
+                //   - a date string  -> set it;
+                //   - `null`         -> the user CLEARED it, and the PUT
+                //                       clears the stored date (MIP-912);
+                //   - `undefined`    -> this object does not carry the
+                //                       field (a pre-field IndexedDB entry,
+                //                       a partial task): OMIT the key so
+                //                       the stored date is left alone.
+                // This used to be `startDate ?? null`, which sent null for
+                // both of the last two. That was harmless only while the
+                // backend dropped every null; now that a null clears the
+                // date, collapsing "cleared" and "not loaded" would wipe a
+                // real date on any save from an object that never had it.
+                ...(options?.sendStartDate !== false && updatedTask.startDate !== undefined
+                    ? { start_date: updatedTask.startDate }
+                    : {}),
                 links: updatedTask.links,
                 tags: updatedTask.tags,
                 // Always send `milestone` (even when null) so the

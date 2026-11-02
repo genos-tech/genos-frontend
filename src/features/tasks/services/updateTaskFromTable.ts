@@ -110,7 +110,14 @@ export const updateTaskFromTable = async (
             updatedTask,
             true, // syncCard: a table inline edit is a metadata change (status/
             // assignee/due) → rewrite the PM task card + broadcast.
-            accessToken
+            accessToken,
+            undefined,
+            // An inline edit never changes the start date, and `fullTask`
+            // may be an IndexedDB snapshot that lags the server (no
+            // freshness check above). Re-sending its start date would clear
+            // a date set since (a cached `null`) or revert one (a stale
+            // string), so leave the field out of this PUT altogether.
+            { sendStartDate: false }
         );
 
         return {
