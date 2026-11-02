@@ -124,6 +124,13 @@ describe("PrivacyPage", () => {
         // Honest about what in-app deletion does NOT reach.
         expect(ja).toContain("自動的には削除されません");
         expect(en).toContain("not deleted automatically");
+        // Stripe keeps the customer record after account deletion (MIP-874).
+        expect(ja).toMatch(
+            /Stripe[^]*?アカウントを削除しても、Stripe 上の顧客情報と請求履歴は削除されず/
+        );
+        expect(en).toMatch(
+            /Stripe[^]*?does not delete your customer record or billing history at Stripe/
+        );
     });
 
     it("does not make claims that are unverified or placeholders", () => {
