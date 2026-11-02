@@ -70,6 +70,7 @@ import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
@@ -2133,7 +2134,15 @@ const MilestonePreviewInner = ({
             }
             header={
                 <>
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                    {/* Wraps: with the id chip added the row is wider than a
+                        narrow preview pane (the pane can be as small as 30%
+                        of the window), which clipped the action icons on
+                        the right. */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        sx={{ mb: 1.5, flexWrap: "wrap", gap: 1 }}
+                    >
                         <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
                         <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                             Milestone
@@ -2206,6 +2215,11 @@ const MilestonePreviewInner = ({
                                 Complete Milestone
                             </Button>
                         )}
+                        <PreviewTaskIdChip
+                            key={`milestone-id-${milestone.milestoneId}`}
+                            isDark={isDark}
+                            task={{ displayId: milestone.displayId, id: milestone.taskId }}
+                        />
                         <Chip
                             key={`milestone-status-${milestone.status}`}
                             size="md"
