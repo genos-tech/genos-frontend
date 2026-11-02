@@ -7,12 +7,15 @@
 //
 // Unlike `update_tasks_bulk`, the pending event carries no `current`
 // snapshot for a single update, so this shows the proposed value only
-// (no old → new diff) — except for a move (milestone, parent, project),
-// where the backend adds `current.<field>` (the task's present milestone
-// title, parent display id or project name, null = none) so the chip reads
-// "Milestone: old → new". `due_date: ''` / `content_text: ''` /
-// `milestone_id: ''` / `parent_task_id: ''` are the tool's "clear this
-// field" sentinels and render as a clear rather than a blank.
+// (no old → new diff) — except for a move (milestone, parent, project) and
+// for the start date, collaborators and custom fields, where the backend adds
+// `current.<field>` (the present milestone title, parent display id, project
+// name, ISO date, usernames; null = none) so the chip reads
+// "Milestone: old → new". Custom fields are a list of `{name, value | values}`
+// and their present values arrive in `current.custom_fields`, keyed by that
+// same name. `due_date: ''` / `content_text: ''` / `milestone_id: ''` /
+// `parent_task_id: ''` / `start_date: ''` / `collaborators: []` are the tool's
+// "clear this field" sentinels and render as a clear rather than a blank.
 
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Chip, Typography } from "@mui/joy";
@@ -20,13 +23,26 @@ import { Box, Chip, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
+import { diffValue } from "./previewHelpers";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];
 
 // Fields that PLACE the task. null is the tool's "no move", not a detach;
 // only '' clears.
-const MOVE_FIELDS = ["milestone_id", "parent_task_id", "project_id"] as const;
+const MOVE_FIELDS = [
+    "milestone_id",
+    "parent_task_id",
+    "project_id",
+    "start_date",
+    "collaborators",
+] as const;
+
+interface CustomFieldEntry {
+    name?: string;
+    value?: unknown;
+    values?: unknown;
+}
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
@@ -56,17 +72,30 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
         const shown = value === "" || value === null ? t.agentApproval.cleared : String(value);
         chips.push(`${t.agentApproval.fieldLabels[field]}: ${shown}`);
     }
-    const asPlace = (v: unknown) => (v === "" || v === null ? t.agentApproval.cleared : String(v));
     const currents = args.current as Record<string, unknown> | undefined;
     for (const field of MOVE_FIELDS) {
         const proposed = args[field];
         if (proposed === undefined || proposed === null) continue;
-        const current = currents?.[field];
-        const shown =
-            current === undefined
-                ? asPlace(proposed)
-                : `${asPlace(current)} → ${asPlace(proposed)}`;
-        chips.push(`${t.agentApproval.fieldLabels[field]}: ${shown}`);
+        chips.push(
+            `${t.agentApproval.fieldLabels[field]}: ${diffValue(
+                proposed,
+                currents?.[field],
+                t.agentApproval.cleared
+            )}`
+        );
+    }
+    // Custom fields are matched to their present value by the name the call used.
+    const presentCustom = currents?.custom_fields as Record<string, unknown> | undefined;
+    const customEntries = Array.isArray(args.custom_fields)
+        ? (args.custom_fields as CustomFieldEntry[])
+        : [];
+    for (const entry of customEntries) {
+        const name = asString(entry.name);
+        if (!name) continue;
+        const proposed = entry.values !== undefined ? entry.values : entry.value;
+        chips.push(
+            `${name}: ${diffValue(proposed, presentCustom?.[name], t.agentApproval.cleared)}`
+        );
     }
     if (bodyProposed && !body)
         chips.push(`${t.agentApproval.changesBody}: ${t.agentApproval.cleared}`);

@@ -271,6 +271,40 @@ describe("NoteWritePreview (create_note / update_note approvals)", () => {
         expect(screen.queryByText("Title")).toBeNull();
         expect(screen.getByText("Rewritten")).toBeTruthy();
     });
+    it("shows a start-date change and a tag replacement, and a clear of each", () => {
+        renderCard("update_tasks_bulk", {
+            updates: [
+                {
+                    task_id: 7,
+                    display_id: "WRD-2",
+                    title: "Implementation",
+                    current: { start_date: "2026-11-01", tags: ["api", "perf"] },
+                    start_date: "2026-11-05",
+                    tags: ["api"],
+                    rationale: "Starts after the review.",
+                },
+                {
+                    task_id: 8,
+                    display_id: "WRD-3",
+                    title: "Docs",
+                    current: { start_date: "2026-11-02", tags: ["docs"] },
+                    start_date: "",
+                    tags: [],
+                    rationale: "Not scheduled yet.",
+                },
+            ],
+        });
+        expect(screen.queryByText("(no field changes)")).toBeNull();
+        expect(screen.getAllByText(/Start:/).map((el) => el.textContent)).toEqual([
+            "Start: 2026-11-01 → 2026-11-05",
+            "Start: 2026-11-02 → none",
+        ]);
+        // An empty list is a clear, never a blank.
+        expect(screen.getAllByText(/Tags:/).map((el) => el.textContent)).toEqual([
+            "Tags: api, perf → api",
+            "Tags: docs → none",
+        ]);
+    });
 });
 
 describe("CreateTaskPreview (create_task approval)", () => {
@@ -304,6 +338,33 @@ describe("CreateTaskPreview (create_task approval)", () => {
             parent_task_id: "WRD-8",
         });
         expect(screen.getByText("Parent: WRD-8")).toBeTruthy();
+    });
+    it("shows the start date, collaborators and custom-field values", () => {
+        renderCard("create_task", {
+            title: "Ship the perf fix",
+            project_id: "Website Redesign",
+            start_date: "2026-11-05",
+            // Usernames, or the raw id for someone the caller can't name.
+            collaborators: ["alice", "42"],
+            custom_fields: [
+                { name: "Estimate", value: 3 },
+                { name: "Platforms", values: ["ios", "web"] },
+                { name: "Notes", value: "" },
+            ],
+        });
+        expect(screen.getByText("Start 2026-11-05")).toBeTruthy();
+        expect(screen.getByText("Collaborators: alice, 42")).toBeTruthy();
+        expect(screen.getByText("Estimate: 3")).toBeTruthy();
+        expect(screen.getByText("Platforms: ios, web")).toBeTruthy();
+        // '' is the clear sentinel.
+        expect(screen.getByText("Notes: none")).toBeTruthy();
+        expect(screen.queryByText("custom_fields:")).toBeNull();
+    });
+
+    it("leaves the new chips off when none of them is proposed", () => {
+        renderCard("create_task", { title: "Ship the perf fix", priority: "High" });
+        expect(screen.queryByText(/^Start /)).toBeNull();
+        expect(screen.queryByText(/Collaborators:/)).toBeNull();
     });
 });
 
@@ -423,6 +484,73 @@ describe("UpdateTaskPreview (update_task approval)", () => {
         expect(screen.queryByText(/Parent:/)).toBeNull();
         expect(screen.queryByText(/Project:/)).toBeNull();
     });
+    it("shows a start-date change as old → new, a clear, and none for a null", () => {
+        const { unmount } = renderCard("update_task", {
+            task_id: "WRD-5",
+            start_date: "2026-11-05",
+            current: { start_date: "2026-11-01" },
+        });
+        expect(screen.getByText("Start: 2026-11-01 → 2026-11-05")).toBeTruthy();
+        unmount();
+        const second = renderCard("update_task", {
+            task_id: "WRD-5",
+            start_date: "",
+            current: { start_date: "2026-11-01" },
+        });
+        expect(screen.getByText("Start: 2026-11-01 → none")).toBeTruthy();
+        second.unmount();
+        renderCard("update_task", { task_id: "WRD-5", start_date: null, priority: "High" });
+        expect(screen.queryByText(/Start:/)).toBeNull();
+    });
+
+    it("shows collaborators as old → new, and an empty list as cleared", () => {
+        const { unmount } = renderCard("update_task", {
+            task_id: "WRD-5",
+            collaborators: ["alice", "bob"],
+            current: { collaborators: ["alice"] },
+        });
+        expect(screen.getByText("Collaborators: alice → alice, bob")).toBeTruthy();
+        unmount();
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            collaborators: [],
+            current: { collaborators: ["alice", "bob"] },
+        });
+        expect(screen.getByText("Collaborators: alice, bob → none")).toBeTruthy();
+    });
+
+    it("pairs each custom field with its present value by name", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            custom_fields: [
+                { name: "Estimate", value: 5 },
+                { name: "Platforms", values: ["ios", "web"] },
+                { name: "Owner team", value: "" },
+                { name: "Risk", value: "High" },
+            ],
+            current: {
+                custom_fields: {
+                    Estimate: 3,
+                    Platforms: ["ios"],
+                    "Owner team": "Platform",
+                    Risk: null,
+                },
+            },
+        });
+        expect(screen.getByText("Estimate: 3 → 5")).toBeTruthy();
+        expect(screen.getByText("Platforms: ios → ios, web")).toBeTruthy();
+        expect(screen.getByText("Owner team: Platform → none")).toBeTruthy();
+        // A field with no value yet reads as coming from none.
+        expect(screen.getByText("Risk: none → High")).toBeTruthy();
+    });
+
+    it("shows a custom field's new value alone when the event has no snapshot", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            custom_fields: [{ name: "Estimate", value: 5 }],
+        });
+        expect(screen.getByText("Estimate: 5")).toBeTruthy();
+    });
 });
 
 describe("AddCommentPreview (add_comment approval)", () => {
@@ -439,6 +567,236 @@ describe("AddCommentPreview (add_comment approval)", () => {
     });
 });
 
+describe("Todo previews (update / create / delete_todo_item approvals)", () => {
+    it("shows the day and the reminder as old → new, with the zone it is read in", () => {
+        renderCard("update_todo_item", {
+            // Friendly-ized server-side to the to-do's title.
+            item_id: "Call Sam",
+            target_date: "2026-11-06",
+            remind_at: "2026-11-06T09:00",
+            time_zone: "Asia/Tokyo",
+            current: { target_date: "2026-11-05", reminder_at: "2026-11-05T09:00:00+09:00" },
+        });
+        expect(screen.getByText("Update to-do: Call Sam")).toBeTruthy();
+        expect(screen.getByText("Day: 2026-11-05 → 2026-11-06")).toBeTruthy();
+        expect(
+            screen.getByText("Reminder: 2026-11-05 09:00 → 2026-11-06 09:00 (Asia/Tokyo)")
+        ).toBeTruthy();
+        // Structured — the raw key:value fallback must NOT render.
+        expect(screen.queryByText("item_id:")).toBeNull();
+    });
+
+    it("reads a relative reminder in minutes, coming from none", () => {
+        renderCard("update_todo_item", {
+            item_id: "Call Sam",
+            remind_in_minutes: 30,
+            current: { target_date: "2026-11-05", reminder_at: null },
+        });
+        expect(screen.getByText("Reminder: none → in 30 min")).toBeTruthy();
+        // The day is not being changed, so it gets no chip.
+        expect(screen.queryByText(/Day:/)).toBeNull();
+    });
+
+    it("shows cancelling a reminder as cleared, with the old time", () => {
+        renderCard("update_todo_item", {
+            item_id: "Call Sam",
+            cancel_reminder: true,
+            current: { reminder_at: "2026-11-05T09:00:00+09:00" },
+        });
+        expect(screen.getByText("Reminder: 2026-11-05 09:00 → none")).toBeTruthy();
+    });
+
+    it("shows done / reopen and the category, and no day for an empty target_date", () => {
+        const { unmount } = renderCard("update_todo_item", {
+            item_id: "Call Sam",
+            is_completed: true,
+            category: "Work",
+            // '' is "no move" to the tool: a to-do's day can't be cleared.
+            target_date: "",
+        });
+        expect(screen.getByText("Mark done")).toBeTruthy();
+        expect(screen.getByText("Category: Work")).toBeTruthy();
+        expect(screen.queryByText(/Day:/)).toBeNull();
+        unmount();
+        renderCard("update_todo_item", { item_id: "Call Sam", is_completed: false });
+        expect(screen.getByText("Reopen")).toBeTruthy();
+        expect(screen.queryByText("Mark done")).toBeNull();
+    });
+
+    it("shows a new to-do with its day and the reminder it will carry", () => {
+        renderCard("create_todo_item", {
+            title: "Send the invoice",
+            target_date: "2026-11-06",
+            remind_in_minutes: 45,
+            notes_text: "Use the November template.",
+        });
+        expect(screen.getByText("New to-do")).toBeTruthy();
+        expect(screen.getByText("Send the invoice")).toBeTruthy();
+        expect(screen.getByText("Day: 2026-11-06")).toBeTruthy();
+        expect(screen.getByText("Reminder: in 45 min")).toBeTruthy();
+        expect(screen.getByText("Use the November template.")).toBeTruthy();
+    });
+
+    it("gives a new to-do no reminder chip when none is proposed", () => {
+        renderCard("create_todo_item", { title: "Send the invoice" });
+        expect(screen.queryByText(/Reminder:/)).toBeNull();
+        expect(screen.queryByText(/Day:/)).toBeNull();
+    });
+
+    it("says what a delete takes with it", () => {
+        renderCard("delete_todo_item", {
+            item_id: "Call Sam",
+            current: {
+                target_date: "2026-11-05",
+                reminder_at: "2026-11-05T09:00:00+09:00",
+                sub_items: 2,
+            },
+        });
+        expect(screen.getByText("Delete to-do: Call Sam")).toBeTruthy();
+        expect(screen.getByText("Day: 2026-11-05")).toBeTruthy();
+        expect(screen.getByText("also deletes 2 sub-item(s)")).toBeTruthy();
+        expect(screen.getByText("its reminder is dropped")).toBeTruthy();
+    });
+
+    it("shows a bare delete when the event has no snapshot", () => {
+        renderCard("delete_todo_item", { item_id: "Call Sam" });
+        expect(screen.getByText("Delete to-do: Call Sam")).toBeTruthy();
+        expect(screen.queryByText(/sub-item/)).toBeNull();
+        expect(screen.queryByText("its reminder is dropped")).toBeNull();
+    });
+});
+
+describe("Milestone previews (manage_milestone / delete_milestone approvals)", () => {
+    it("renders a new milestone with its project, fields and markdown body", () => {
+        renderCard("manage_milestone", {
+            action: "create",
+            project_id: "Website Redesign",
+            title: "Beta launch",
+            status: "Open",
+            due_date: "2026-12-01",
+            tags: ["launch"],
+            assignee_ids: ["alice", "bob"],
+            description_markdown: "Ship to the first ten customers.",
+        });
+        expect(screen.getByText("New milestone")).toBeTruthy();
+        expect(screen.getByText("Project: Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Beta launch")).toBeTruthy();
+        expect(screen.getByText("Status: Open")).toBeTruthy();
+        expect(screen.getByText("Due: 2026-12-01")).toBeTruthy();
+        expect(screen.getByText("Tags: launch")).toBeTruthy();
+        expect(screen.getByText("Assignees: alice, bob")).toBeTruthy();
+        expect(screen.getByText("Ship to the first ten customers.")).toBeTruthy();
+        expect(screen.queryByText("action:")).toBeNull();
+    });
+
+    it("shows an update as old → new, with the title change and cleared fields", () => {
+        renderCard("manage_milestone", {
+            action: "update",
+            milestone_id: "v1.0",
+            title: "v1.0 (final)",
+            status: "Closed",
+            due_date: "",
+            tags: [],
+            milestone_folder_id: "Releases",
+            sprint_id: "",
+            current: {
+                title: "v1.0",
+                status: "Open",
+                due_date: "2026-12-01",
+                tags: ["launch"],
+                milestone_folder_id: null,
+                sprint_id: "Sprint 12",
+            },
+        });
+        expect(screen.getByText("Update milestone: v1.0")).toBeTruthy();
+        expect(screen.getByText("Status: Open → Closed")).toBeTruthy();
+        expect(screen.getByText("Due: 2026-12-01 → none")).toBeTruthy();
+        expect(screen.getByText("Tags: launch → none")).toBeTruthy();
+        expect(screen.getByText("Folder: none → Releases")).toBeTruthy();
+        expect(screen.getByText("Sprint: Sprint 12 → none")).toBeTruthy();
+        // The old title is struck through, in its own span, next to the new one.
+        const oldTitle = screen.getByText("v1.0");
+        expect(oldTitle.tagName).toBe("SPAN");
+        expect(oldTitle.parentElement?.textContent).toBe("v1.0 → v1.0 (final)");
+    });
+
+    it("prints a title alone when it did not change", () => {
+        renderCard("manage_milestone", {
+            action: "update",
+            milestone_id: "v1.0",
+            title: "v1.0",
+            current: { title: "v1.0" },
+        });
+        expect(screen.queryByText(/→/)).toBeNull();
+    });
+
+    it("shows only the fields an update proposes", () => {
+        renderCard("manage_milestone", {
+            action: "update",
+            milestone_id: "v1.0",
+            status: "Closed",
+            due_date: null,
+            tags: null,
+        });
+        expect(screen.getByText("Status: Closed")).toBeTruthy();
+        expect(screen.queryByText(/Due:/)).toBeNull();
+        expect(screen.queryByText(/Tags:/)).toBeNull();
+    });
+
+    it("renders the three folder actions", () => {
+        const first = renderCard("manage_milestone", {
+            action: "create_folder",
+            project_id: "Website Redesign",
+            folder_name: "Releases",
+        });
+        expect(screen.getByText("New milestone folder")).toBeTruthy();
+        expect(screen.getByText("Folder: Releases")).toBeTruthy();
+        first.unmount();
+
+        const second = renderCard("manage_milestone", {
+            action: "rename_folder",
+            milestone_folder_id: "Releases",
+            folder_name: "Launches",
+            current: { folder_name: "Releases" },
+        });
+        expect(screen.getByText("Rename milestone folder")).toBeTruthy();
+        expect(screen.getByText("Folder: Releases → Launches")).toBeTruthy();
+        second.unmount();
+
+        renderCard("manage_milestone", {
+            action: "delete_folder",
+            milestone_folder_id: "Launches",
+            current: { folder_name: "Launches", milestones: 3 },
+        });
+        expect(screen.getByText("Delete milestone folder")).toBeTruthy();
+        expect(screen.getByText("Folder: Launches")).toBeTruthy();
+        expect(screen.getByText("3 milestone(s) leave the folder")).toBeTruthy();
+    });
+
+    it("falls back to the raw folder id for a folder the caller can't name", () => {
+        renderCard("manage_milestone", { action: "delete_folder", milestone_folder_id: "17" });
+        expect(screen.getByText("Folder: 17")).toBeTruthy();
+        expect(screen.queryByText(/leave the folder/)).toBeNull();
+    });
+
+    it("says a milestone delete keeps its tasks", () => {
+        renderCard("delete_milestone", {
+            milestone_id: "v1.0",
+            current: { title: "v1.0 launch", tasks: 4 },
+        });
+        expect(screen.getByText("Delete milestone: v1.0 launch")).toBeTruthy();
+        expect(
+            screen.getByText("4 task(s) stay in the project, outside any milestone")
+        ).toBeTruthy();
+    });
+
+    it("names the milestone by its id when the event has no snapshot", () => {
+        renderCard("delete_milestone", { milestone_id: "v1.0" });
+        expect(screen.getByText("Delete milestone: v1.0")).toBeTruthy();
+        expect(screen.queryByText(/stay in the project/)).toBeNull();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -446,6 +804,12 @@ describe("getToolLabel", () => {
         expect(getToolLabel("create_task", en)).toBe("Creating a task");
     });
 
+    it("labels the todo, milestone and chat tools added with the capability work", () => {
+        expect(getToolLabel("manage_milestone", en)).toBe("Managing a milestone");
+        expect(getToolLabel("delete_milestone", en)).toBe("Deleting a milestone");
+        expect(getToolLabel("delete_todo_item", en)).toBe("Deleting a to-do");
+        expect(getToolLabel("list_my_chats", en)).toBe("Finding your chats");
+    });
     it("falls back to the raw tool_name for an unmapped tool", () => {
         expect(getToolLabel("some_future_tool", en)).toBe("some_future_tool");
     });

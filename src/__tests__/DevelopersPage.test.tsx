@@ -161,14 +161,21 @@ describe("DevelopersPage", () => {
             "list_projects",
             "list_milestones",
             "get_milestone_summary",
+            "list_sprints",
+            "get_sprint_summary",
             "get_task_blockers",
             "get_task_history",
             "find_task_by_delivery",
             "search_workspace",
             "get_note",
+            "list_my_chats",
+            "get_chat_thread",
+            "list_my_mentions",
+            "list_channel_members",
             "get_current_user",
             "get_team_members",
             "list_project_members",
+            "list_project_tags",
             "list_task_dependencies",
             "list_note_folders",
             "list_uncompleted_todos",
@@ -185,6 +192,7 @@ describe("DevelopersPage", () => {
             "update_task",
             "add_comment",
             "add_task_delivery",
+            "remove_task_delivery",
             "update_task_dependencies",
             "create_task",
             "assign_task",
@@ -194,9 +202,12 @@ describe("DevelopersPage", () => {
             "update_note",
             "create_todo_item",
             "update_todo_item",
+            "delete_todo_item",
             "create_calendar_event",
             "update_calendar_event",
             "delete_calendar_event",
+            "manage_milestone",
+            "delete_milestone",
         ],
     };
 
@@ -234,5 +245,13 @@ describe("DevelopersPage", () => {
         expect(screen.getByText("No confirmation step")).toBeTruthy();
         expect(document.body.textContent).toMatch(/Over MCP none of them do/);
         expect(document.body.textContent).toMatch(/there is no undo/);
+    });
+
+    it("warns that a read-scoped key reaches the owner's chats, direct messages included", () => {
+        renderPage();
+        const text = document.body.textContent ?? "";
+        expect(text).toMatch(/read your own chats, direct messages included/);
+        expect(text).toMatch(/a read-scoped key can call both/);
+        expect(text).toMatch(/A key handed to an outside agent\s+exposes all of them/);
     });
 });

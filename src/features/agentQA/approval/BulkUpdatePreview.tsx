@@ -12,8 +12,17 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
+import { placeValue } from "./previewHelpers";
 
-const DIFF_FIELDS = ["priority", "effort_level", "status", "due_date", "milestone_id"] as const;
+const DIFF_FIELDS = [
+    "priority",
+    "effort_level",
+    "status",
+    "due_date",
+    "milestone_id",
+    "start_date",
+    "tags",
+] as const;
 type DiffField = (typeof DIFF_FIELDS)[number];
 
 interface BulkUpdateRow {
@@ -21,13 +30,17 @@ interface BulkUpdateRow {
     display_id?: string;
     title?: string;
     rationale?: string;
-    current?: Partial<Record<DiffField, string | null>>;
+    current?: Partial<Record<DiffField, string | string[] | null>>;
     priority?: string;
     effort_level?: string;
     status?: string;
     due_date?: string;
     // A title, or the raw id when it didn't resolve.
     milestone_id?: string | number;
+    // '' clears the start date.
+    start_date?: string;
+    // Tag names that replace the task's tags; [] clears them.
+    tags?: string[];
 }
 
 export const BulkUpdatePreview = ({ args, isDark }: ApprovalPreviewProps) => {
@@ -35,10 +48,9 @@ export const BulkUpdatePreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const updates = (Array.isArray(args.updates) ? args.updates : []) as BulkUpdateRow[];
 
-    const renderValue = (v: string | number | null | undefined): string => {
-        if (v === "" || v === null) return t.agentApproval.cleared;
+    const renderValue = (v: string | number | string[] | null | undefined): string => {
         if (v === undefined) return t.agentApproval.unset;
-        return String(v);
+        return placeValue(v, t.agentApproval.cleared);
     };
 
     return (
