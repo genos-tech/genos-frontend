@@ -78,6 +78,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
@@ -218,6 +219,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,

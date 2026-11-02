@@ -53,6 +53,7 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnTodoPreviewProps = {
     useTEM: TeamManagementState;
@@ -125,12 +126,13 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeBlockEnterShortcut, tabStaysInEditor],
         dictionary,
         initialContent: body,
     });

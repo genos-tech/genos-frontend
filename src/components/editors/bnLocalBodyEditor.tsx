@@ -74,6 +74,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnLocalBodyEditorProps = {
     useTEM: TeamManagementState;
@@ -150,10 +151,11 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
         withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeBlockEnterShortcut, tabStaysInEditor],
         dictionary,
     });
 

@@ -10,6 +10,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../../components/editors/sub/tabIndent";
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
@@ -359,10 +360,13 @@ export function useCollaborativeBlockNote({
     // (see `bnMyNoteEditor`, `bnChatNoteEditor`, `bnTaskNoteEditor`,
     // `bnTaskPreview`).
     const editorOptions = useMemo(() => {
-        const extraExtensions = extensionsRef.current ?? [];
+        // Every document-style editor (notes, task bodies) indents with Tab and
+        // keeps the key when there is nothing to indent (MIP-664).
+        const extraExtensions = [...(extensionsRef.current ?? []), tabStaysInEditor];
 
         if (!provider) {
             const opts: Record<string, any> = {
+                ...TAB_INDENT_OPTIONS,
                 schema,
                 resolveFileUrl: resolveInsecureFileUrl,
                 dictionary,
@@ -376,6 +380,7 @@ export function useCollaborativeBlockNote({
         }
 
         const opts: Record<string, any> = {
+            ...TAB_INDENT_OPTIONS,
             schema,
             dictionary,
             uploadFile,

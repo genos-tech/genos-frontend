@@ -66,6 +66,7 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -171,6 +172,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const dictionary = useBlockNoteDictionary();
     const initialContent: any[] = targetComment.commentBody;
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         // `codeBlockEnterShortcut` augments the built-in
