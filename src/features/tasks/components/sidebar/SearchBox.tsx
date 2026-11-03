@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
@@ -10,7 +10,6 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
@@ -18,6 +17,7 @@ import { lookupTaskByDisplayId } from "../../services/lookupTaskByDisplayId";
 import { displayIdEquals, displayIdMatches, fullDisplayIdIn } from "../../utils/taskDisplayId";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { TaskIdentityRow } from "../TaskIdentityRow";
+import type { SidebarSearchTM } from "./useSidebarSlices";
 
 type TaskSidebarSearchBoxProps = {
     openSearch: boolean;
@@ -25,7 +25,9 @@ type TaskSidebarSearchBoxProps = {
     teamTaskSearchOptions: SearchTeamTasksResponse[];
     setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
-    useTM: TaskManagementState;
+    // What the box reads from `useTM` (MIP-971). The sidebar hands it a slice; the
+    // task header, which holds the whole manager, passes that: it satisfies this.
+    useTM: SidebarSearchTM;
     // For finding a closed task by its exact id (the options hold open work).
     myself?: Pick<UserProps, "teamId">;
     accessToken?: string | null;
@@ -57,7 +59,9 @@ const withLookedUpTask = (
 // How long typing must pause before an exact id is looked up.
 const LOOKUP_DELAY_MS = 250;
 
-export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
+export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
+    props: TaskSidebarSearchBoxProps
+) {
     const {
         openSearch,
         setOpenSearch,
@@ -247,4 +251,4 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
             }}
         />
     );
-};
+});

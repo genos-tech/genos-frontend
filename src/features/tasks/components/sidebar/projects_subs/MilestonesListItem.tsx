@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { memo, ReactNode, useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import DirectionsRunRoundedIcon from "@mui/icons-material/DirectionsRunRounded";
@@ -19,15 +19,8 @@ import {
 } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
-import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
-import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
-import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { Milestone, MilestoneFolder } from "../../../sprint-milestone/types";
@@ -39,36 +32,38 @@ import {
     selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
+import type {
+    SidebarTreePM,
+    SidebarTreeSM,
+    SidebarTreeTEM,
+    SidebarTreeTM,
+} from "../useSidebarSlices";
 import { FolderMenu, MilestoneRowMenu } from "./MilestoneFolderMenus";
 import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
+// The managers arrive as slices (MIP-971): TypeScript forbids reading a member
+// outside them, and `memo` skips the render of an `AppBody` pass that changed
+// none of the values below. Every prop must therefore be referentially stable
+// from the parent: slices from `useSidebarSlices`, `myself` and the id.
 type Props = {
     currentProjectId: number;
-    usePM: ProjectManagementState;
-    useSM: SprintMilestoneManagementState;
-    useTM: TaskManagementState;
-    useTEM: TeamManagementState;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
+    usePM: SidebarTreePM;
+    useSM: SidebarTreeSM;
+    useTM: SidebarTreeTM;
+    useTEM: SidebarTreeTEM;
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
-    socket: Socket | null;
 };
 
-export const MilestonesListItem = ({
+export const MilestonesListItem = memo(function MilestonesListItem({
     currentProjectId,
     usePM,
     useSM,
     useTM,
     useTEM,
-    useCM,
-    useUISM,
     myself,
-    setMyself,
-    socket,
-}: Props) => {
+}: Props) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -282,11 +277,7 @@ export const MilestonesListItem = ({
                                             avatarUser={profile}
                                             isYou={String(myself.userId) === userIdKey}
                                             myself={myself}
-                                            setMyself={setMyself}
                                             showPulseDot={false}
-                                            socket={socket}
-                                            useCM={useCM}
-                                            useUISM={useUISM}
                                         />
                                     ) : (
                                         <Avatar
@@ -447,7 +438,7 @@ export const MilestonesListItem = ({
             />
         </List>
     );
-};
+});
 
 // Generic collapsible folder used for every level of the "Past milestones"
 // tree (Past milestones → year → sprint). Defaults collapsed — it's an

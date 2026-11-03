@@ -1,16 +1,18 @@
+import { memo } from "react";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import { Box, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import type { SidebarTableViewTM } from "./useSidebarSlices";
 
 type TaskTableListItemProps = {
-    useTM: TaskManagementState;
+    // Its own flag and the three view setters (MIP-971), not the whole manager.
+    useTM: SidebarTableViewTM;
 };
 
-export const TaskTableListItem = (props: TaskTableListItemProps) => {
+export const TaskTableListItem = memo(function TaskTableListItem(props: TaskTableListItemProps) {
     const { useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -84,4 +86,4 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
             </ListItemButton>
         </ListItem>
     );
-};
+});
