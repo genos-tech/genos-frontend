@@ -790,12 +790,18 @@ describe("localStorage persistence", () => {
             lastAsk().onDelta("fresh answer");
             lastAsk().onDone("sess-saved", "run-new");
         });
-        // LATENT BUG ON MAIN (fixed by the state-machine merge): hydration
-        // restores turn ids 1..2 but leaves the turn counter at 0, so the
-        // new turn is id 1 -- already "promoted" -- and is never moved into
-        // `turns`; it just sits in the live slot and the next ask drops it.
-        expect(result.current.turns.map((t) => t.askedQuery)).toEqual(["q1", "q2"]);
-        expect(result.current.ask.answer).toBe("fresh answer");
+        // History: before the state machine was shared, hydration restored
+        // turn ids 1..2 but left the turn counter at 0, so the new turn was
+        // id 1 -- already "promoted" -- and never reached `turns`: it sat in
+        // the live slot and the next ask dropped it. Restoring through the
+        // shared `reset` seeds the counter from the restored ids.
+        expect(result.current.turns.map((t) => t.askedQuery)).toEqual([
+            "q1",
+            "q2",
+            "after reload",
+        ]);
+        expect(result.current.ask.answer).toBe("");
+        expect(result.current.ask.turnId).toBe(3);
     });
 
     it("ignores an entry older than 4 hours", () => {
