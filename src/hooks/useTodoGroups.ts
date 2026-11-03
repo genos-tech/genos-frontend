@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TodoService } from "../db/services/todo.service";
+import { TODO_CHANGED_EVENT } from "../features/agentQA/todoWriteTools";
 import { parseRecurrence } from "../features/calendar/utils/rrule";
 import { loadTodoGroups } from "../features/chat/components/todo/services/loadTodoGroups";
 import {
@@ -686,15 +687,16 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     }, [accessToken, myself]);
 
     // External invalidator: anything that mutates todos outside the
-    // hook (currently the Spotlight agent's create/update_todo_item
-    // tools) dispatches `window` event `todoChanged` so the pane
-    // catches up without a manual reload.
+    // hook (currently the agent's to-do write tools, from Spotlight and
+    // from the thread/note ask — see TODO_WRITE_TOOLS) dispatches
+    // `window` event `todoChanged` so the pane catches up without a
+    // manual reload.
     useEffect(() => {
         const handler = () => {
             void refresh();
         };
-        window.addEventListener("todoChanged", handler);
-        return () => window.removeEventListener("todoChanged", handler);
+        window.addEventListener(TODO_CHANGED_EVENT, handler);
+        return () => window.removeEventListener(TODO_CHANGED_EVENT, handler);
     }, [refresh]);
 
     return {

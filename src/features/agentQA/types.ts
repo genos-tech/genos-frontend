@@ -128,18 +128,21 @@ export interface AgentQALabels {
         copyAnswer: string;
         copied: string;
         retry: string;
-        // 👍/👎 feedback (F1). Optional so existing locale label sets
-        // don't break; the component falls back to plain English titles.
-        feedbackUp?: string;
-        feedbackDown?: string;
+        // 👍/👎 feedback (F1). Required: these were optional once, with
+        // an English fallback in FeedbackThumbs, and the thread and note
+        // label sets simply never passed them, so every locale read
+        // "Good answer / Needs work". A missing key is now a type error.
+        // Spotlight's own keys (`spotlight.actions.feedbackUp/Down`) are
+        // the translated source for surfaces with no copy of their own.
+        feedbackUp: string;
+        feedbackDown: string;
     };
     states: {
         streaming: string;
         thinking: string;
         // "Answered in {duration}" template for the per-turn total time
-        // footnote. Optional so existing label sets don't break; the
-        // conversation falls back to plain English.
-        answeredIn?: string;
+        // footnote. Required for the same reason as the feedback labels.
+        answeredIn: string;
     };
     approval: {
         // ICU-template-ish string with `{toolName}` placeholder.

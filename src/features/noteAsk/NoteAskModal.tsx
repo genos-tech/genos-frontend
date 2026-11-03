@@ -77,6 +77,10 @@ const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels =
         copyAnswer: t.noteAsk.actions.copyAnswer,
         copied: t.noteAsk.actions.copied,
         retry: t.noteAsk.actions.retry,
+        // The thumbs have no noteAsk-specific copy; they are the same
+        // buttons as Spotlight's, so they read Spotlight's translations.
+        feedbackUp: t.spotlight.actions.feedbackUp,
+        feedbackDown: t.spotlight.actions.feedbackDown,
     },
     states: {
         streaming: t.noteAsk.states.streaming,
