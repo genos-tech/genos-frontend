@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -100,6 +101,12 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     const { t } = useTranslation();
     const { target, onClose, onOpenFullPage, zIndex, useTG, ...rest } = props;
     const effectiveZIndex = zIndex ?? 10020;
+    // A task / milestone preview on a phone takes the whole screen. As a
+    // centred card (88vh x 92vw, 20px corners) it left a strip of backdrop above
+    // and below it and 20px at each side, on a screen that has none to spare.
+    // The other views (chat, notes, to-do) keep the card.
+    const isMobile = useIsMobile();
+    const fullScreen = isMobile && (target?.kind === "task" || target?.kind === "milestone");
 
     const renderBody = () => {
         if (!target) return null;
@@ -205,23 +212,40 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         >
             <ModalDialog
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                // `fullscreen` pins the dialog to all four edges of the modal
+                // root, so no height / width / centring transform is set for it.
+                layout={fullScreen ? "fullscreen" : "center"}
                 sx={(theme) => ({
-                    border: "1px solid",
-                    borderColor:
-                        theme.palette.mode === "dark"
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
-                    borderRadius: "20px",
-                    boxShadow:
-                        theme.palette.mode === "dark"
-                            ? "0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)"
-                            : "0 24px 60px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)",
                     display: "flex",
                     flexDirection: "column",
-                    height: "min(900px, 88vh)",
                     overflow: "hidden",
                     p: 0,
-                    width: "min(1200px, 92vw)",
+                    ...(fullScreen
+                        ? {
+                              // The card's border, radius and shadow only read as a card
+                              // when something shows around it. Joy's fullscreen layout
+                              // already zeroes border and radius; the shadow is ours.
+                              boxShadow: "none",
+                              // Joy modals paint over the tab bar and the keyboard: keep
+                              // the content off the home indicator, and off the keyboard
+                              // when it is up (iOS doesn't resize the layout viewport).
+                              paddingBottom:
+                                  "max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))",
+                          }
+                        : {
+                              border: "1px solid",
+                              borderColor:
+                                  theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.08)"
+                                      : "rgba(0, 0, 0, 0.06)",
+                              borderRadius: "20px",
+                              boxShadow:
+                                  theme.palette.mode === "dark"
+                                      ? "0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)"
+                                      : "0 24px 60px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)",
+                              height: "min(900px, 88vh)",
+                              width: "min(1200px, 92vw)",
+                          }),
                 })}
             >
                 {/* Both labels open BELOW their button: this chrome is

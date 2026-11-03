@@ -11,11 +11,9 @@ type MobileOverlayProps = {
 
 /**
  * Full-screen shell for the mobile panes that have no URL of their own —
- * task preview, create-task form, task notes. Reserves the bottom strip
- * (`--mobile-bottom-inset`) so nothing sits under the tab bar or the
- * keyboard.
+ * task preview, create-task form, task notes.
  *
- * Two decisions carry the height budget, and both were bugs before:
+ * Three decisions carry the height budget, and each was a bug before:
  *
  * 1. **Close is a flex item in a real header row**, not an absolutely
  *    positioned floater. The floating version had to be kept clear of the
@@ -30,10 +28,20 @@ type MobileOverlayProps = {
  *    second one, so the preview rendered as a short card — pinned by its
  *    desktop `minHeight: 500` — inside a tall empty overlay.
  *
+ * 3. **The bottom reserves the home indicator and the on-screen keyboard,
+ *    not the tab bar.** This shell is `position: fixed` at z-index 1300 and
+ *    the tab bar is at 1200, so the shell always paints OVER the bar. It
+ *    used to reserve `--mobile-bottom-inset` (the bar's height) anyway,
+ *    which left a 60px band of bare gradient where the bar would have been:
+ *    the bar was hidden by it and the pane stopped short of the screen.
+ *    The pane now runs to the bottom edge. `--keyboard-inset` still wins
+ *    when the keyboard is up (iOS doesn't resize the layout viewport, so the
+ *    shell has to leave the keyboard's height free itself), and
+ *    `safe-area-inset-bottom` keeps content off the home indicator.
+ *
  * `MobileChatHome` and `MobileNoteHome` still carry their own older copies
- * of this shell. Folding them in is a deliberate follow-up: it changes the
- * layout of surfaces (chat notes, the note-page task preview) beyond the
- * one this was written for, and there's no browser here to check them.
+ * of this shell for their create-task / chat-note overlays; only their TASK
+ * PREVIEW overlays use this one.
  */
 export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
     const { mode } = useColorScheme();
@@ -50,7 +58,9 @@ export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 display: "flex",
                 flexDirection: "column",
-                paddingBottom: "var(--mobile-bottom-inset, 60px)",
+                // See (3) in the doc comment: home indicator, or the keyboard when it
+                // is up, and NOT the tab bar this shell paints over.
+                paddingBottom: "max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))",
             }}
         >
             <Stack
@@ -59,7 +69,7 @@ export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
                     alignItems: "center",
                     justifyContent: "flex-end",
                     px: 0.5,
-                    py: 0.5,
+                    py: 0.25,
                     flexShrink: 0,
                     borderBottom: "1px solid",
                     borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
