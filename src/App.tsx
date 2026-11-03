@@ -101,6 +101,7 @@ import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
+import { keepIfEqual } from "./utils/keepIfEqual";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
@@ -337,7 +338,9 @@ const AppBody = () => {
             accessToken,
             false
         );
-        if (Array.isArray(teamTasks)) setHashTeamTasks(teamTasks);
+        // Keep the previous array when nothing changed: this runs on the
+        // 60 s refresh, and a new identity re-renders every `#` consumer.
+        if (Array.isArray(teamTasks)) setHashTeamTasks((prev) => keepIfEqual(prev, teamTasks));
     };
     const loadHashTeamTasksRef = useRef(loadHashTeamTasks);
     loadHashTeamTasksRef.current = loadHashTeamTasks;
