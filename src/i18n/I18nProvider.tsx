@@ -1,4 +1,12 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import {
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
 import { getLoadedMessages, loadLocale } from "./localeLoaders";
 import { en } from "./locales/en";
@@ -77,9 +85,12 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
         applyDocumentLocale(locale);
     }, [locale]);
 
-    return (
-        <I18nContext.Provider value={{ t, locale, setLocale }}>{children}</I18nContext.Provider>
-    );
+    // Memoized: a fresh `{ t, locale, setLocale }` on every render re-rendered
+    // every consumer whenever this provider's parent did, and the top of each
+    // screen reads it (MIP-958).
+    const value = useMemo(() => ({ t, locale, setLocale }), [t, locale, setLocale]);
+
+    return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };
 
 export const useTranslation = (): I18nContextValue => {
