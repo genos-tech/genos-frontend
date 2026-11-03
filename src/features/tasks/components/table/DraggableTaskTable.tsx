@@ -13,6 +13,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import {
     tableSortOverrideFor,
@@ -49,6 +50,7 @@ import {
 } from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
+import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
 import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
@@ -1342,38 +1344,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     };
 
     // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:
-    // each preview switch fans out ~13 TaskPreview fetches, so clicking
+    // each preview switch fans out a chain of TaskPreview fetches, so clicking
     // many rows in quick succession (id-cell single click or row
     // double-click) used to peg the backend and break the highlight
     // mid-flight. Decouple instant visual selection from the heavy
     // preview load by holding `pendingTaskId` / `pendingMilestoneId`
-    // locally and debouncing the real setters by 150 ms — the rapid
-    // sequence collapses into a single fetch for the final row.
+    // locally. The load itself is LEADING-edge debounced: a click with no
+    // other click in the last 150 ms opens at once, and a rapid sequence
+    // collapses to the first row plus the row the user lands on.
     const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
     const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
-    const previewSwitchTimerRef = useRef<number | null>(null);
-
-    useEffect(() => {
-        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
-            setPendingTaskId(null);
-        }
-    }, [pendingTaskId, useTM.currentPreviewTaskId]);
-    useEffect(() => {
-        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
-            setPendingMilestoneId(null);
-        }
-    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
-
-    useEffect(() => {
-        return () => {
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-                previewSwitchTimerRef.current = null;
-            }
-        };
-    }, []);
-
-    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
 
     const {
         setIsTaskPreviewVisible: setIsTaskPreviewVisibleRow,
@@ -1381,6 +1361,28 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         setCurrentPreviewMilestoneId: setCurrentPreviewMilestoneIdRow,
         setCurrentPreviewTaskId: setCurrentPreviewTaskIdRow,
     } = useTM;
+
+    // The heavy half of a click: the writes that start the preview load. The
+    // pending highlight is dropped in the same batch (one commit), because
+    // the real preview state now says the same thing.
+    const switchPreview = useCallback(
+        (task: TaskTableProps) => {
+            if (task.isMilestone === true && task.milestoneId != null) {
+                setCurrentPreviewKindRow("milestone");
+                setCurrentPreviewMilestoneIdRow(task.milestoneId);
+                setPendingMilestoneId(null);
+            } else if (task.id != null) {
+                setCurrentPreviewKindRow("task");
+                setCurrentPreviewTaskIdRow(Number(task.id));
+                setPendingTaskId(null);
+            }
+        },
+        [setCurrentPreviewKindRow, setCurrentPreviewMilestoneIdRow, setCurrentPreviewTaskIdRow]
+    );
+    const { call: scheduleSwitchPreview } = useLeadingDebouncedCallback(
+        switchPreview,
+        PREVIEW_SWITCH_DEBOUNCE_MS
+    );
 
     const requestPreview = useCallback(
         (task: TaskTableProps) => {
@@ -1397,29 +1399,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             }
             setIsTaskPreviewVisibleRow(true);
 
-            // Step 2: debounce the fetch cascade. Successive rapid
-            // clicks coalesce into a single TaskPreview load for the
-            // last row the user landed on.
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-            }
-            previewSwitchTimerRef.current = window.setTimeout(() => {
-                previewSwitchTimerRef.current = null;
-                if (isMile) {
-                    setCurrentPreviewKindRow("milestone");
-                    setCurrentPreviewMilestoneIdRow(task.milestoneId as number);
-                } else if (task.id != null) {
-                    setCurrentPreviewKindRow("task");
-                    setCurrentPreviewTaskIdRow(Number(task.id));
-                }
-            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+            // Step 2: start the load. The first click does it now; successive
+            // rapid clicks coalesce into a single load for the last row.
+            scheduleSwitchPreview(task);
         },
-        [
-            setIsTaskPreviewVisibleRow,
-            setCurrentPreviewKindRow,
-            setCurrentPreviewMilestoneIdRow,
-            setCurrentPreviewTaskIdRow,
-        ]
+        [setIsTaskPreviewVisibleRow, scheduleSwitchPreview]
     );
 
     // Resolve "is this row the selected/previewed one" HERE rather than

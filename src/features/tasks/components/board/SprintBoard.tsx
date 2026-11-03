@@ -10,6 +10,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
+import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
@@ -24,6 +25,7 @@ import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
+import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
 import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
 import { buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
@@ -466,44 +468,37 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setCurrentPreviewTaskId,
     } = useTM;
 
-    // Rapid card-click coalescing. Each click fans out ~13 TaskPreview
-    // network requests (4× activity, 2× childTasks, 2× meta, 2× tag…).
-    // Clicking 10 cards in a second pegged the backend at >100 requests
-    // and broke card selection mid-flight. The fix decouples *visual*
-    // selection (immediate) from the *preview load* (debounced 150 ms),
-    // so a rapid sequence collapses into a single fetch for the last
-    // card the user landed on while the highlight still tracks every
-    // click in real time.
+    // Rapid card-click coalescing. Each click fans out a chain of TaskPreview
+    // network requests; clicking 10 cards in a second pegged the backend and
+    // broke card selection mid-flight. The fix decouples *visual* selection
+    // (immediate: the pending ids below) from the *preview load*, which is
+    // LEADING-edge debounced: a click with no other click in the last 150 ms
+    // opens at once, and a rapid sequence collapses to the first card plus the
+    // card the user lands on, while the highlight still tracks every click.
     const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
     const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
-    const previewSwitchTimerRef = useRef<number | null>(null);
 
-    // Drop the pending highlight once the real preview state has caught
-    // up (timer fired, fetch kicked off). The row equality check stays
-    // honest: `selectedTaskId` below reads from useTM after this clears.
-    useEffect(() => {
-        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
-            setPendingTaskId(null);
-        }
-    }, [pendingTaskId, useTM.currentPreviewTaskId]);
-    useEffect(() => {
-        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
-            setPendingMilestoneId(null);
-        }
-    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
-
-    // Clean up any in-flight timer on unmount so we don't write into a
-    // dead component.
-    useEffect(() => {
-        return () => {
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-                previewSwitchTimerRef.current = null;
+    // The heavy half of a click: the writes that start the preview load. The
+    // pending highlight is dropped in the same batch (one commit), because
+    // the real preview state now says the same thing.
+    const switchPreview = useCallback(
+        (task: TaskTableProps) => {
+            if (task.isMilestone === true && task.milestoneId != null) {
+                setCurrentPreviewKind("milestone");
+                setCurrentPreviewMilestoneId(task.milestoneId);
+                setPendingMilestoneId(null);
+            } else if (task.id) {
+                setCurrentPreviewKind("task");
+                setCurrentPreviewTaskId(parseInt(task.id));
+                setPendingTaskId(null);
             }
-        };
-    }, []);
-
-    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
+        },
+        [setCurrentPreviewKind, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId]
+    );
+    const { call: scheduleSwitchPreview } = useLeadingDebouncedCallback(
+        switchPreview,
+        PREVIEW_SWITCH_DEBOUNCE_MS
+    );
 
     // Card whose task graph is open (null = diagram closed). One shared
     // ModalTaskDiagram at the board level; cards request it through the
@@ -534,28 +529,11 @@ export const SprintBoard = (props: SprintBoardProps) => {
             }
             setIsTaskPreviewVisible(true);
 
-            // Step 2: debounce the heavy state switch that triggers the
-            // TaskPreview fetch cascade.
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-            }
-            previewSwitchTimerRef.current = window.setTimeout(() => {
-                previewSwitchTimerRef.current = null;
-                if (isMile) {
-                    setCurrentPreviewKind("milestone");
-                    setCurrentPreviewMilestoneId(task.milestoneId as number);
-                } else if (task.id) {
-                    setCurrentPreviewKind("task");
-                    setCurrentPreviewTaskId(parseInt(task.id));
-                }
-            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+            // Step 2: start the load. The first click does it now; successive
+            // rapid clicks coalesce into a single load for the last card.
+            scheduleSwitchPreview(task);
         },
-        [
-            setIsTaskPreviewVisible,
-            setCurrentPreviewKind,
-            setCurrentPreviewMilestoneId,
-            setCurrentPreviewTaskId,
-        ]
+        [setIsTaskPreviewVisible, scheduleSwitchPreview]
     );
 
     // ---- Create a task from the Open column (MIP-901) --------------------
