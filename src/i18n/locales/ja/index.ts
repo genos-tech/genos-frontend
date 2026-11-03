@@ -474,6 +474,21 @@ export const ja: DeepPartial<Messages> = {
         },
         sprintMilestonesKept:
             "マイルストーンとそのタスクは残ります。スプリントには属さなくなります。",
+        newProject: "新しいプロジェクト",
+        updateProject: "プロジェクトを更新: {project}",
+        projectFieldLabels: {
+            name: "名前",
+            code: "コード",
+        },
+        projectPrivate: "プライベート",
+        projectPublic: "パブリック",
+        projectPeopleAdded: "{count} 人を追加: {people}",
+        projectCodeHint: "コードは、プロジェクトのタスク ID の接頭辞です。",
+        addProjectMember: "{person} を {project} に追加",
+        projectMemberGetsChat: "プロジェクトのチャットにも参加します。",
+        makeProjectEditor: "{person} を {project} の編集者にする",
+        makeProjectViewer: "{person} を {project} の閲覧者にする",
+        changeProjectRole: "{person} の {project} での役割を変更",
         cleared: "なし",
         unset: "—",
     },
@@ -2821,7 +2836,8 @@ export const ja: DeepPartial<Messages> = {
                 expiryDays: "{count}日",
                 expiresOn: "{date} に期限切れ",
                 neverExpires: "無期限 — 新しいキーへの切り替えをおすすめします",
-                allowDestructive: "取り消せない操作（カレンダーの予定の削除）も許可する",
+                allowDestructive:
+                    "取り消せない操作や、アクセス権を変更する操作（カレンダーの予定・マイルストーン・スプリントの削除、プロジェクトへのメンバー追加）も許可する",
                 destructiveChip: "削除可",
             },
             teamKeys: {

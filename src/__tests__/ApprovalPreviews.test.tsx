@@ -938,6 +938,202 @@ describe("Sprint previews (manage_sprint / delete_sprint approvals)", () => {
     });
 });
 
+describe("Project previews (manage_project / manage_project_members approvals)", () => {
+    it("renders a new private project with its name, visibility and the people added", () => {
+        renderCard("manage_project", {
+            action: "create",
+            name: "Website Redesign",
+            is_private: true,
+            member_ids: ["alice", "bob"],
+        });
+        expect(screen.getByText("New project")).toBeTruthy();
+        expect(screen.getByText("Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Private")).toBeTruthy();
+        expect(screen.queryByText("Public")).toBeNull();
+        expect(screen.getByText("Adding 2 people: alice, bob")).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("action:")).toBeNull();
+        expect(screen.queryByText("is_private:")).toBeNull();
+        expect(screen.queryByText("member_ids:")).toBeNull();
+    });
+
+    it("renders a public project, and shows a lone person in the singular", () => {
+        renderCard("manage_project", {
+            action: "create",
+            name: "Open Roadmap",
+            is_private: false,
+            member_ids: ["alice"],
+        });
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
+        expect(screen.getByText("Adding 1 person: alice")).toBeTruthy();
+    });
+
+    it("shows a count plus whatever arrives when names and raw ids are mixed", () => {
+        renderCard("manage_project", {
+            action: "create",
+            name: "Mixed",
+            is_private: true,
+            member_ids: ["alice", "c54505c5-d24a-4f1a-bf23-ddd135645b88", 42],
+        });
+        expect(
+            screen.getByText("Adding 3 people: alice, c54505c5-d24a-4f1a-bf23-ddd135645b88, 42")
+        ).toBeTruthy();
+    });
+
+    it("reads a create with no is_private as Public, the API's default, and lists no people", () => {
+        renderCard("manage_project", { action: "create", name: "Solo" });
+        expect(screen.getByText("Solo")).toBeTruthy();
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
+        expect(screen.queryByText(/^Adding/)).toBeNull();
+        expect(screen.queryByText("none")).toBeNull();
+    });
+
+    it('reads is_private sent as the string "true" or "false" the same as a boolean', () => {
+        const { unmount } = renderCard("manage_project", {
+            action: "create",
+            name: "Stringly",
+            is_private: "true",
+        });
+        expect(screen.getByText("Private")).toBeTruthy();
+        expect(screen.queryByText("Public")).toBeNull();
+        unmount();
+
+        renderCard("manage_project", {
+            action: "create",
+            name: "Stringly",
+            is_private: "false",
+        });
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
+    });
+
+    it("reads a null is_private as Public", () => {
+        renderCard("manage_project", { action: "create", name: "Nully", is_private: null });
+        expect(screen.getByText("Public")).toBeTruthy();
+        expect(screen.queryByText("Private")).toBeNull();
+    });
+
+    it("does not list people when the list is empty", () => {
+        renderCard("manage_project", {
+            action: "create",
+            name: "Solo",
+            is_private: true,
+            member_ids: [],
+        });
+        expect(screen.queryByText(/^Adding/)).toBeNull();
+        expect(screen.queryByText("none")).toBeNull();
+    });
+
+    it("lists a rename on its own and nothing else", () => {
+        renderCard("manage_project", {
+            action: "update",
+            project_id: "Website Redesign",
+            name: "Website Relaunch",
+        });
+        expect(screen.getByText("Update project: Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Name: Website Relaunch")).toBeTruthy();
+        expect(screen.queryByText(/^Code:/)).toBeNull();
+        expect(screen.queryByText("The code is the prefix of the project's task ids.")).toBeNull();
+        expect(screen.queryByText("project_id:")).toBeNull();
+    });
+
+    it("lists a code change on its own, with what the code is", () => {
+        renderCard("manage_project", {
+            action: "update",
+            project_id: "Website Redesign",
+            code: "WEB",
+        });
+        expect(screen.getByText("Code: WEB")).toBeTruthy();
+        expect(screen.queryByText(/^Name:/)).toBeNull();
+        expect(screen.getByText("The code is the prefix of the project's task ids.")).toBeTruthy();
+    });
+
+    it("lists both fields when both change, and names the project by its id when it can't be named", () => {
+        renderCard("manage_project", {
+            action: "update",
+            project_id: "7",
+            name: "Website Relaunch",
+            code: "WEB",
+        });
+        expect(screen.getByText("Update project: 7")).toBeTruthy();
+        expect(screen.getByText("Name: Website Relaunch")).toBeTruthy();
+        expect(screen.getByText("Code: WEB")).toBeTruthy();
+    });
+
+    it("shows no visibility, people or new-project heading on an update", () => {
+        renderCard("manage_project", {
+            action: "update",
+            project_id: "Website Redesign",
+            code: "WEB",
+            is_private: true,
+            member_ids: ["alice"],
+        });
+        expect(screen.queryByText("Private")).toBeNull();
+        expect(screen.queryByText(/^Adding/)).toBeNull();
+        expect(screen.queryByText("New project")).toBeNull();
+    });
+
+    it("reads adding a person as adding them to the project, and says they get its chat", () => {
+        renderCard("manage_project_members", {
+            action: "add",
+            project_id: "Website Redesign",
+            user_id: "alice",
+        });
+        expect(screen.getByText("Add alice to Website Redesign")).toBeTruthy();
+        expect(screen.getByText("They also get the project's chat.")).toBeTruthy();
+        expect(screen.queryByText("user_id:")).toBeNull();
+        expect(screen.queryByText("project_id:")).toBeNull();
+    });
+
+    it("names the person by their id when the caller may not see them", () => {
+        renderCard("manage_project_members", {
+            action: "add",
+            project_id: "Website Redesign",
+            user_id: "c54505c5-d24a-4f1a-bf23-ddd135645b88",
+        });
+        expect(
+            screen.getByText("Add c54505c5-d24a-4f1a-bf23-ddd135645b88 to Website Redesign")
+        ).toBeTruthy();
+    });
+
+    it("reads a role change to editor and to viewer, without the chat line", () => {
+        const { unmount } = renderCard("manage_project_members", {
+            action: "set_role",
+            project_id: "Website Redesign",
+            user_id: "alice",
+            role: "editor",
+        });
+        expect(screen.getByText("Make alice an editor of Website Redesign")).toBeTruthy();
+        expect(screen.queryByText("They also get the project's chat.")).toBeNull();
+        expect(screen.queryByText("role:")).toBeNull();
+        unmount();
+
+        renderCard("manage_project_members", {
+            action: "set_role",
+            project_id: "Website Redesign",
+            user_id: "alice",
+            role: "viewer",
+        });
+        expect(screen.getByText("Make alice a viewer of Website Redesign")).toBeTruthy();
+        expect(screen.queryByText("They also get the project's chat.")).toBeNull();
+    });
+
+    it("does not read a role it does not know as an editor or a viewer", () => {
+        renderCard("manage_project_members", {
+            action: "set_role",
+            project_id: "Website Redesign",
+            user_id: "alice",
+            role: "owner",
+        });
+        expect(screen.getByText("Change alice's role in Website Redesign")).toBeTruthy();
+        expect(screen.getByText("owner")).toBeTruthy();
+        expect(screen.queryByText(/an editor of/)).toBeNull();
+        expect(screen.queryByText(/a viewer of/)).toBeNull();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -950,6 +1146,11 @@ describe("getToolLabel", () => {
         expect(getToolLabel("delete_milestone", en)).toBe("Deleting a milestone");
         expect(getToolLabel("delete_todo_item", en)).toBe("Deleting a to-do");
         expect(getToolLabel("list_my_chats", en)).toBe("Finding your chats");
+    });
+
+    it("labels the project create-or-change and project member tools", () => {
+        expect(getToolLabel("manage_project", en)).toBe("Managing a project");
+        expect(getToolLabel("manage_project_members", en)).toBe("Managing project members");
     });
 
     it("labels the sprint create-or-change and sprint delete tools", () => {
