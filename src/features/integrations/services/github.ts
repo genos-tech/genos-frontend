@@ -255,50 +255,99 @@ export interface LinkedPullsResponse {
     pulls: LinkedPull[];
 }
 
+// The two task-linked lookups below ask the server, which asks GitHub, so
+// they are slow (about a second) and the answer rarely changes between a task
+// open and the next window focus. They share a short client memo (MIP-967):
+// opening a task again, or coming back to the window, within the TTL sends
+// nothing. On top of the server's own 60 s cache that bounds how stale a new
+// branch or PR can look to about three minutes; the refresh icon passes
+// `bypassCache` for an immediate answer.
+//
+// Keyed by the access token as well as the task, so a different sign-in in
+// the same tab never reads another user's answer (GitHub visibility is per
+// user). A failed request is never memoized (`createRequestCache` drops
+// rejections), so the next call retries.
+const LINKED_MEMO_TTL_MS = 120_000;
+const linkedBranchesMemo = createRequestCache<LinkedBranch[]>({ ttlMs: LINKED_MEMO_TTL_MS });
+const linkedPullsMemo = createRequestCache<LinkedPull[]>({ ttlMs: LINKED_MEMO_TTL_MS });
+
 // Fetch branches whose names match the task's display ID (e.g. branches
-// containing "GEN-42"). Returns an empty list silently on any failure —
-// the calling UI hides the section when there's nothing to show, so a
-// dropped request is indistinguishable from no matches by design.
+// containing "GEN-42"). Resolves to `null` when the lookup failed, which is
+// different from `[]` ("looked, found none"): a caller that already shows
+// branches keeps them on a failure instead of blanking them.
+export const tryLoadLinkedBranches = async (
+    accessToken: string | null,
+    taskId: number | string,
+    options?: { bypassCache?: boolean }
+): Promise<LinkedBranch[] | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        return await linkedBranchesMemo.get(
+            `branches:${accessToken}:${taskId}`,
+            async () => {
+                const params: Record<string, string | number> = { task_id: taskId };
+                if (options?.bypassCache) params.fresh = "1";
+                const res = await api.get<LinkedBranchesResponse>("/github/branches/for-task/", {
+                    ...noSharedToast,
+                    params,
+                });
+                return res.data.branches ?? [];
+            },
+            { forceRefresh: options?.bypassCache }
+        );
+    } catch {
+        return null;
+    }
+};
+
+// Same lookup, returning an empty list silently on any failure — the calling
+// UI hides the section when there's nothing to show, so a dropped request is
+// indistinguishable from no matches by design.
 export const loadLinkedBranches = async (
     accessToken: string | null,
     taskId: number | string,
     options?: { bypassCache?: boolean }
-): Promise<LinkedBranch[]> => {
+): Promise<LinkedBranch[]> => (await tryLoadLinkedBranches(accessToken, taskId, options)) ?? [];
+
+// PRs whose head branch matches the task's display ID. Drives the task
+// table's PR column and the task's Links section. `null` on failure, as above.
+export const tryLoadLinkedPulls = async (
+    accessToken: string | null,
+    taskId: number | string,
+    options?: { bypassCache?: boolean }
+): Promise<LinkedPull[] | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
     try {
-        const api = authApi(accessToken);
-        if (!api) return [];
-        const params: Record<string, string | number> = { task_id: taskId };
-        if (options?.bypassCache) params.fresh = "1";
-        const res = await api.get<LinkedBranchesResponse>("/github/branches/for-task/", {
-            ...noSharedToast,
-            params,
-        });
-        return res.data.branches ?? [];
+        return await linkedPullsMemo.get(
+            `pulls:${accessToken}:${taskId}`,
+            async () => {
+                const params: Record<string, string | number> = { task_id: taskId };
+                if (options?.bypassCache) params.fresh = "1";
+                const res = await api.get<LinkedPullsResponse>("/github/pulls/for-task/", {
+                    ...noSharedToast,
+                    params,
+                });
+                return res.data.pulls ?? [];
+            },
+            { forceRefresh: options?.bypassCache }
+        );
     } catch {
-        return [];
+        return null;
     }
 };
 
-// PRs whose head branch matches the task's display ID. Drives the
-// task table's PR column. Server-side cached for 60s.
 export const loadLinkedPulls = async (
     accessToken: string | null,
     taskId: number | string,
     options?: { bypassCache?: boolean }
-): Promise<LinkedPull[]> => {
-    try {
-        const api = authApi(accessToken);
-        if (!api) return [];
-        const params: Record<string, string | number> = { task_id: taskId };
-        if (options?.bypassCache) params.fresh = "1";
-        const res = await api.get<LinkedPullsResponse>("/github/pulls/for-task/", {
-            ...noSharedToast,
-            params,
-        });
-        return res.data.pulls ?? [];
-    } catch {
-        return [];
-    }
+): Promise<LinkedPull[]> => (await tryLoadLinkedPulls(accessToken, taskId, options)) ?? [];
+
+// Test seam: drop the memo so each test starts cold.
+export const resetLinkedGithubMemo = (): void => {
+    linkedBranchesMemo.clear();
+    linkedPullsMemo.clear();
 };
 
 // ── Batched pulls-for-task collector ──────────────────────────────

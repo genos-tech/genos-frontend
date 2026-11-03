@@ -20,10 +20,11 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
+import { keepIfEqual } from "../../../../../utils/keepIfEqual";
 import {
     LinkedBranch,
-    loadLinkedBranches,
-    loadLinkedPulls,
+    tryLoadLinkedBranches,
+    tryLoadLinkedPulls,
 } from "../../../../integrations/services/github";
 import { getCachedOrFetchPrStatus } from "../../../../integrations/services/prStatusCache";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
@@ -292,9 +293,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             const token = ++branchesFetchTokenRef.current;
             if (opts?.bypassCache) setBranchesRefreshing(true);
             try {
-                const branches = await loadLinkedBranches(accessToken, taskContent.id, opts);
+                const branches = await tryLoadLinkedBranches(accessToken, taskContent.id, opts);
                 if (token !== branchesFetchTokenRef.current) return;
-                setLinkedBranches(branches);
+                // A failed lookup keeps what is on screen; only a real answer
+                // replaces it, and an identical one is not a state write.
+                if (branches === null) return;
+                setLinkedBranches((prev) => keepIfEqual(prev, branches));
             } finally {
                 if (token === branchesFetchTokenRef.current && opts?.bypassCache) {
                     setBranchesRefreshing(false);
@@ -310,9 +314,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     // Refetch when the user returns to the window — typical workflow is
     // create a branch on GitHub → alt-tab back → expect to see it here.
-    // The server still caches for 60s, so a bare focus doesn't bypass
-    // the cache; users can click the refresh icon for an immediate fresh
-    // fetch.
+    // A bare focus goes through the short client memo in `github.ts` (and
+    // the server's own 60 s cache), so coming back within a couple of
+    // minutes sends nothing; users can click the refresh icon for an
+    // immediate fresh fetch.
     useEffect(() => {
         const onFocus = () => {
             void fetchLinkedBranches();
@@ -365,9 +370,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         const token = ++pullsFetchTokenRef.current;
         if (opts?.bypassCache) setPullsRefreshing(true);
         try {
-            const pulls = await loadLinkedPulls(accessToken, taskContent.id, opts);
+            const pulls = await tryLoadLinkedPulls(accessToken, taskContent.id, opts);
             if (token !== pullsFetchTokenRef.current) return;
-            if (pulls.length === 0) return;
+            if (pulls === null || pulls.length === 0) return;
             const existingLinks = taskContent.links ?? [];
             const existingByUrl = new Map(existingLinks.map((l) => [l.url, l]));
 
@@ -433,9 +438,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     // Refetch when the user returns to the window — covers "open a PR
     // on GitHub for an already-linked branch → alt-tab back → expect to
-    // see the PR card here". Server cache is respected on focus; the
-    // refresh icon next to the "Links" label bypasses it for an
-    // immediate fresh fetch.
+    // see the PR card here". The client memo and the server cache are
+    // respected on focus; the refresh icon next to the "Links" label
+    // bypasses both for an immediate fresh fetch.
     useEffect(() => {
         const onFocus = () => {
             void fetchLinkedPullsRef.current();
