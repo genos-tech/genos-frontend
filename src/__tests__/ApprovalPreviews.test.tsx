@@ -1563,6 +1563,285 @@ describe("RestoreNoteVersionPreview (restore_note_version approval)", () => {
     });
 });
 
+describe("Project tag and label previews (add_project_tag / manage_project_labels approvals)", () => {
+    // The tag chip draws its color as `alpha(color, 0.8)` on the border in
+    // light mode; the rgb part is what says which color it got.
+    const GREY_RGB = "128, 128, 128";
+    const BLUE_RGB = "59, 130, 246";
+    const REFUSED = (color: string) =>
+        `“${color}” is not a hex color like #3b82f6, so it will be refused.`;
+    const chipRoot = (label: string) => screen.getByText(label).closest(".MuiChip-root");
+
+    it("renders a tag as the app's tag chip in its color, on the project", () => {
+        renderCard("add_project_tag", {
+            project_id: "Website Redesign",
+            tag_name: "urgent",
+            color: "#3b82f6",
+        });
+        expect(screen.getByText("Add tag")).toBeTruthy();
+        const chip = screen.getByText("urgent") as HTMLElement;
+        expect(chip.style.borderColor).toContain(BLUE_RGB);
+        expect(screen.getByText("on Website Redesign")).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("tag_name:")).toBeNull();
+        expect(screen.queryByText("color:")).toBeNull();
+        expect(screen.queryByText(/is not a hex color/)).toBeNull();
+    });
+
+    it("draws a tag with no color in the tool's default grey", () => {
+        renderCard("add_project_tag", { project_id: "Website Redesign", tag_name: "later" });
+        expect((screen.getByText("later") as HTMLElement).style.borderColor).toContain(GREY_RGB);
+        expect(screen.queryByText(/is not a hex color/)).toBeNull();
+    });
+
+    it("accepts an upper-case #RRGGBB, as the API does", () => {
+        renderCard("add_project_tag", {
+            project_id: "Website Redesign",
+            tag_name: "urgent",
+            color: "#3B82F6",
+        });
+        expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(BLUE_RGB);
+        expect(screen.queryByText(/is not a hex color/)).toBeNull();
+    });
+
+    it.each(["blue", "#ABC", "3b82f6", "#3b82f6ff"])(
+        "does not crash on the color %j: draws the default and says it will be refused",
+        (color) => {
+            renderCard("add_project_tag", {
+                project_id: "Website Redesign",
+                tag_name: "urgent",
+                color,
+            });
+            expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(
+                GREY_RGB
+            );
+            expect(screen.getByText(REFUSED(color))).toBeTruthy();
+        }
+    );
+
+    it("does not crash on a color that is not a string", () => {
+        renderCard("add_project_tag", {
+            project_id: "Website Redesign",
+            tag_name: "urgent",
+            color: 255,
+        });
+        expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(GREY_RGB);
+        expect(screen.getByText(REFUSED("255"))).toBeTruthy();
+    });
+
+    it("prints a project it could not name as the raw id", () => {
+        renderCard("add_project_tag", { project_id: 42, tag_name: "urgent" });
+        expect(screen.getByText("on 42")).toBeTruthy();
+    });
+
+    it("renders a new label as the project list's chip, with the whole-team line", () => {
+        renderCard("manage_project_labels", {
+            action: "create",
+            project_id: "Website Redesign",
+            name: "Client Work",
+            color: "#0044c2",
+        });
+        expect(screen.getByText("New project label")).toBeTruthy();
+        const chip = chipRoot("Client Work") as HTMLElement;
+        expect(chip).toBeTruthy();
+        // Solid fill, as in the sidebar; dark blue reads with white text.
+        expect(getComputedStyle(chip).backgroundColor).toBe("rgb(0, 68, 194)");
+        expect(getComputedStyle(chip).color).toBe("rgb(255, 255, 255)");
+        expect(screen.getByText("Visible to the whole team.")).toBeTruthy();
+        // A label is not a tag: it names no project here, and the raw args do not render.
+        expect(screen.queryByText(/^Put labels on/)).toBeNull();
+        expect(screen.queryByText("action:")).toBeNull();
+        expect(screen.queryByText("project_id:")).toBeNull();
+    });
+
+    it("picks black text on a light label, by the picker's luminance rule", () => {
+        renderCard("manage_project_labels", {
+            action: "create",
+            project_id: "Website Redesign",
+            name: "Q3",
+            color: "#ffd93b",
+        });
+        const chip = chipRoot("Q3") as HTMLElement;
+        expect(getComputedStyle(chip).backgroundColor).toBe("rgb(255, 217, 59)");
+        expect(getComputedStyle(chip).color).toBe("rgb(0, 0, 0)");
+    });
+
+    it("draws a label with no color in the tool's default purple with white text", () => {
+        renderCard("manage_project_labels", {
+            action: "create",
+            project_id: "Website Redesign",
+            name: "Internal",
+        });
+        const chip = chipRoot("Internal") as HTMLElement;
+        expect(getComputedStyle(chip).backgroundColor).toBe("rgb(124, 58, 237)");
+        expect(getComputedStyle(chip).color).toBe("rgb(255, 255, 255)");
+        expect(screen.queryByText(/is not a hex color/)).toBeNull();
+    });
+
+    it("does not crash on a label color the API would refuse", () => {
+        renderCard("manage_project_labels", {
+            action: "create",
+            project_id: "Website Redesign",
+            name: "Internal",
+            color: "purple",
+        });
+        expect(getComputedStyle(chipRoot("Internal") as HTMLElement).backgroundColor).toBe(
+            "rgb(124, 58, 237)"
+        );
+        expect(screen.getByText(REFUSED("purple"))).toBeTruthy();
+    });
+
+    it("reads an assign as the label names and the project they go on", () => {
+        renderCard("manage_project_labels", {
+            action: "assign",
+            project_id: "Website Redesign",
+            label_ids: ["Client Work", "Q3"],
+        });
+        expect(screen.getByText("Put labels on Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Client Work")).toBeTruthy();
+        expect(screen.getByText("Q3")).toBeTruthy();
+        expect(screen.queryByText("Visible to the whole team.")).toBeNull();
+        expect(screen.queryByText("label_ids:")).toBeNull();
+    });
+
+    it("reads an unassign as taking labels off, and prints an id it could not name", () => {
+        renderCard("manage_project_labels", {
+            action: "unassign",
+            project_id: "Website Redesign",
+            label_ids: ["Client Work", 7],
+        });
+        expect(screen.getByText("Take labels off Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Client Work")).toBeTruthy();
+        expect(screen.getByText("7")).toBeTruthy();
+    });
+
+    it("falls back to a neutral heading for an action it does not know", () => {
+        renderCard("manage_project_labels", {
+            action: "rename",
+            project_id: "Website Redesign",
+            label_ids: ["Client Work"],
+        });
+        expect(screen.getByText("Change labels on Website Redesign")).toBeTruthy();
+        expect(screen.queryByText(/^Put labels on/)).toBeNull();
+        expect(screen.queryByText(/^Take labels off/)).toBeNull();
+    });
+});
+
+describe("Join request previews (approve_join_request / decline_join_request approvals)", () => {
+    const APPROVE_EFFECT =
+        "They are added to the project and told. They can then see and edit it.";
+    const DECLINE_EFFECT = "The request is closed and they are told it was declined.";
+
+    it("says plainly that an approved person is added and can then see and edit the project", () => {
+        renderCard("approve_join_request", { inbox_item_id: "Sam → Website Redesign" });
+        expect(screen.getByText("Approve join request: Sam → Website Redesign")).toBeTruthy();
+        expect(screen.getByText(APPROVE_EFFECT)).toBeTruthy();
+        expect(screen.queryByText(DECLINE_EFFECT)).toBeNull();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("inbox_item_id:")).toBeNull();
+    });
+
+    it("says a declined request is closed, and does not claim anyone is added", () => {
+        renderCard("decline_join_request", { inbox_item_id: "Sam → Website Redesign" });
+        expect(screen.getByText("Decline join request: Sam → Website Redesign")).toBeTruthy();
+        expect(screen.getByText(DECLINE_EFFECT)).toBeTruthy();
+        expect(screen.queryByText(APPROVE_EFFECT)).toBeNull();
+        expect(screen.queryByText("inbox_item_id:")).toBeNull();
+    });
+
+    it("names a request it could not read by its number, whether it arrives as a number or digits", () => {
+        const { unmount } = renderCard("approve_join_request", { inbox_item_id: 12 });
+        expect(screen.getByText("Approve join request #12")).toBeTruthy();
+        unmount();
+
+        const second = renderCard("decline_join_request", { inbox_item_id: "12" });
+        expect(screen.getByText("Decline join request #12")).toBeTruthy();
+        second.unmount();
+
+        renderCard("approve_join_request", {});
+        expect(screen.getByText("Approve join request")).toBeTruthy();
+    });
+});
+
+describe("DeleteProjectPreview (delete_project approval, in the app only)", () => {
+    const d = en.tasks.modals.deleteProject;
+
+    it("names the project and lists what is destroyed in the page dialog's own words", () => {
+        renderCard("delete_project", {
+            project_id: "Website Redesign",
+            project_name: "Website Redesign",
+        });
+        expect(screen.getByText("Delete project Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Name given: Website Redesign")).toBeTruthy();
+        // The same strings `ModalDeleteProject` renders, not copies of them.
+        for (const line of [
+            d.destroyedTitle,
+            d.destroyedMilestones,
+            d.destroyedTasks,
+            d.destroyedSprints,
+            d.destroyedMembersTags,
+            d.chatNote,
+        ]) {
+            expect(screen.getByText(line)).toBeTruthy();
+        }
+        expect(screen.getByText("This action cannot be undone")).toBeTruthy();
+        expect(screen.queryByText(/not the project's name/)).toBeNull();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("project_id:")).toBeNull();
+        expect(screen.queryByText("project_name:")).toBeNull();
+    });
+
+    it("is drawn as a destructive card: the delete icon is in the danger color", () => {
+        renderCard("delete_project", {
+            project_id: "Website Redesign",
+            project_name: "Website Redesign",
+        });
+        expect(document.querySelector('[data-testid="DeleteOutlineRoundedIcon"]')).toBeTruthy();
+    });
+
+    it("shows the name as typed and warns when it is not the project's name", () => {
+        renderCard("delete_project", {
+            project_id: "Website Redesign",
+            project_name: "website redesign",
+        });
+        // The heading is the project the id resolved to; the echo is verbatim.
+        expect(screen.getByText("Delete project Website Redesign")).toBeTruthy();
+        expect(screen.getByText("Name given: website redesign")).toBeTruthy();
+        expect(
+            screen.getByText(
+                "That is not the project's name. The project is only deleted if the name matches exactly."
+            )
+        ).toBeTruthy();
+        // It still lists what a delete destroys.
+        expect(screen.getByText(d.destroyedTasks)).toBeTruthy();
+    });
+
+    it("does not warn about a project name with spaces around it that the echo repeats", () => {
+        renderCard("delete_project", {
+            project_id: " Website Redesign ",
+            project_name: " Website Redesign ",
+        });
+        expect(screen.queryByText(/not the project's name/)).toBeNull();
+    });
+
+    it("names a project the caller can't read by the echoed name, without comparing", () => {
+        renderCard("delete_project", { project_id: 42, project_name: "Website Redesign" });
+        expect(screen.getByText("Delete project Website Redesign")).toBeTruthy();
+        expect(screen.queryByText(/^Name given/)).toBeNull();
+        expect(screen.queryByText(/not the project's name/)).toBeNull();
+    });
+
+    it("falls back to the id, then to a neutral phrase", () => {
+        const { unmount } = renderCard("delete_project", { project_id: 42 });
+        expect(screen.getByText("Delete this project (#42)")).toBeTruthy();
+        unmount();
+
+        renderCard("delete_project", {});
+        expect(screen.getByText("Delete this project")).toBeTruthy();
+        expect(screen.getByText(d.destroyedTitle)).toBeTruthy();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -1580,6 +1859,18 @@ describe("getToolLabel", () => {
     it("labels the project create-or-change and project member tools", () => {
         expect(getToolLabel("manage_project", en)).toBe("Managing a project");
         expect(getToolLabel("manage_project_members", en)).toBe("Managing project members");
+    });
+
+    it("labels the project tag, project label, join request and project delete tools", () => {
+        expect(getToolLabel("add_project_tag", en)).toBe("Adding a project tag");
+        expect(getToolLabel("manage_project_labels", en)).toBe("Managing project labels");
+        expect(getToolLabel("approve_join_request", en)).toBe(
+            "Approving a request to join a project"
+        );
+        expect(getToolLabel("decline_join_request", en)).toBe(
+            "Declining a request to join a project"
+        );
+        expect(getToolLabel("delete_project", en)).toBe("Deleting a project");
     });
 
     it("labels the note folder and favorite tools", () => {

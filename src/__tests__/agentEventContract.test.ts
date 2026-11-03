@@ -217,6 +217,26 @@ describe("agent NDJSON event contract", () => {
         expect(handlers.onDone).not.toHaveBeenCalled();
     });
 
+    it("passes the delete_project ref through tool_call_result", async () => {
+        // The parser copies the payload field by field, so a key it doesn't
+        // name is dropped before any hook sees it. The ref is how the browser
+        // learns the server already deleted the project.
+        const project = { project_id: 42, deleted: true };
+        const handlers = await streamEvents([
+            {
+                type: "tool_call_result",
+                step: 1,
+                tool_name: "delete_project",
+                summary: "ok",
+                project,
+            },
+            DONE,
+        ]);
+        expect(handlers.onToolResult).toHaveBeenCalledWith(
+            expect.objectContaining({ tool_name: "delete_project", project })
+        );
+    });
+
     it("dispatchLine case labels equal the canonical vocabulary", () => {
         // cwd-relative (vitest runs from the repo root): under the jsdom
         // environment `import.meta.url` is not a file:// URL.
