@@ -10,10 +10,11 @@
 //
 // NDJSON event types:
 //   {"type": "tool_call_start", "step", "tool_name", "arguments"}
-//   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?}
+//   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?,
+//        "edited"?, "edited_arguments"?}
 //   {"type": "tool_call_error",  "step", "tool_name", "error", "duration_ms"?}
 //   {"type": "tool_call_pending_approval",
-//        "step", "tool_name", "arguments", "approval_token", "run_id"}
+//        "step", "tool_name", "arguments", "editable"?, "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
 //   {"type": "done", "session_id": "...", "elapsed_ms"?}   ← session_id added in Phase 8
@@ -79,6 +80,12 @@ export interface ToolCallResultPayload {
     step: number;
     tool_name: string;
     summary: string;
+    // An approved write the person edited first (genos-api #570): `edited` is
+    // true and `edited_arguments` holds `{path: value}` for what they typed,
+    // the values that actually ran. Both are absent on a plain approve, on
+    // every read, and against older backends.
+    edited?: boolean;
+    edited_arguments?: Record<string, unknown>;
     note?: ToolResultNoteRef;
     note_folder?: ToolResultNoteFolderRef;
     // Server-measured execution time for THIS call. The client can't
@@ -103,8 +110,23 @@ export interface PendingApprovalPayload {
     step: number;
     tool_name: string;
     arguments: Record<string, unknown>;
+    // The argument paths the person may change before approving
+    // (`title`, `updates[3].priority`): exactly the paths /decide/ accepts in
+    // `edited_args`, in display order. `[]` for a tool with nothing editable.
+    // Absent against older backends, which read the same as `[]`. At these
+    // paths `arguments` already holds the value as the tool will receive it.
+    editable?: string[];
     approval_token: string;
     run_id: string;
+}
+
+// What a 422 from /decide/ says: the person's edits cannot be applied. The
+// approval was NOT spent, the run is still awaiting it, and the same token
+// still works. `fieldErrors` maps each offending path (as the client sent it)
+// to a sentence for a person (English, from the server).
+export interface EditsRejected {
+    message: string;
+    fieldErrors: Record<string, string>;
 }
 
 export type AgentEvent =
@@ -210,8 +232,19 @@ export interface DecideAgentArgs extends BaseStreamHandlers {
     runId: string;
     approvalToken: string;
     decision: "approve" | "reject";
+    // The edits made on the card: a flat `{path: new value}` patch carrying
+    // ONLY what changed. Sent on an approve and never on a reject (the server
+    // answers 400 to that); an empty patch is a plain approve and is left off
+    // the wire.
+    editedArgs?: Record<string, unknown>;
     accessToken: string | null;
     signal?: AbortSignal;
+    // Called INSTEAD of `onError` when the server refuses the edits with a 422
+    // `{error, field_errors}`. That is not a stream and not a failure of the
+    // run: nothing was approved or run, and the card still works. No other
+    // handler is called. Without this handler a 422 falls through to `onError`
+    // like any other non-OK answer.
+    onEditsRejected?: (rejection: EditsRejected) => void;
 }
 
 // One quota dimension's snapshot — `null` limit means unlimited for
@@ -858,18 +891,39 @@ export async function decideAgent(args: DecideAgentArgs): Promise<void> {
         args.onError(getMessages().services.agent.notSignedIn);
         return;
     }
+    // Edits ride only on an approve, and only when there is something in them:
+    // the server treats an absent / null / `{}` patch as a plain approve, and a
+    // reject that carries one as a 400 that consumes nothing.
+    const edits =
+        args.decision === "approve" && args.editedArgs && Object.keys(args.editedArgs).length > 0
+            ? args.editedArgs
+            : undefined;
     await runNdjsonStream(
         `${API_BASE}/agent/decide/`,
         {
             run_id: args.runId,
             approval_token: args.approvalToken,
             decision: args.decision,
+            ...(edits ? { edited_args: edits } : {}),
         },
         args.accessToken,
         args.signal,
-        args
+        args,
+        args.onEditsRejected
     );
 }
+
+// `field_errors` as the card can use it: an object of `{path: sentence}`.
+// Entries that are not text are dropped; no object at all (not a 422 from the
+// edit check) is null, so the caller treats the response as any other failure.
+const asFieldErrors = (raw: unknown): Record<string, string> | null => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const out: Record<string, string> = {};
+    for (const [path, message] of Object.entries(raw)) {
+        if (typeof message === "string") out[path] = message;
+    }
+    return out;
+};
 
 // Shared NDJSON consumer. Used by both /ask/ and /decide/ — the wire
 // protocol is identical, only the request body differs.
@@ -878,7 +932,8 @@ async function runNdjsonStream(
     body: unknown,
     accessToken: string,
     signal: AbortSignal | undefined,
-    handlers: BaseStreamHandlers
+    handlers: BaseStreamHandlers,
+    onEditsRejected?: (rejection: EditsRejected) => void
 ): Promise<void> {
     let resp: Response;
     try {
@@ -903,9 +958,14 @@ async function runNdjsonStream(
 
     if (!resp.ok) {
         let message = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
+        let fieldErrors: Record<string, string> | null = null;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            // /decide/ answers 422 `{error, field_errors}` when the person's
+            // edits cannot be applied. Plain JSON, not an NDJSON stream, and
+            // not a failed run: hand it to the caller, who restores the card.
+            if (resp.status === 422) fieldErrors = asFieldErrors(data?.field_errors);
         } catch {
             try {
                 const txt = await resp.text();
@@ -913,6 +973,10 @@ async function runNdjsonStream(
             } catch {
                 // ignore
             }
+        }
+        if (fieldErrors && onEditsRejected) {
+            onEditsRejected({ message, fieldErrors });
+            return;
         }
         handlers.onError(message);
         return;
@@ -1019,6 +1083,8 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 summary: evt.summary,
+                edited: evt.edited,
+                edited_arguments: evt.edited_arguments,
                 note: evt.note,
                 note_folder: evt.note_folder,
                 duration_ms: evt.duration_ms,
@@ -1038,6 +1104,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 arguments: evt.arguments,
+                editable: evt.editable,
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
             });

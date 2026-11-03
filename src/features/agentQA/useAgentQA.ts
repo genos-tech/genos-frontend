@@ -51,6 +51,15 @@ import {
     type UseAgentQAReturn,
 } from "./types";
 
+// An edit patch worth sending: a plain `{path: value}` object with at least one
+// entry. (Not an event, an array or null: see `decide`.)
+const isEditPatch = (v: unknown): v is Record<string, unknown> =>
+    v !== null &&
+    typeof v === "object" &&
+    !Array.isArray(v) &&
+    Object.getPrototypeOf(v) === Object.prototype &&
+    Object.keys(v).length > 0;
+
 // Soft-capped append: the UI keeps the last MAX_TURNS_IN_HISTORY turns.
 const appendTurn = (turns: CompletedTurn[], turn: CompletedTurn): CompletedTurn[] => {
     const next = [...turns, turn];
@@ -246,6 +255,8 @@ export const useAgentQA = ({
                     step,
                     tool_name,
                     summary,
+                    edited,
+                    edited_arguments,
                     note,
                     note_folder,
                     duration_ms,
@@ -254,6 +265,8 @@ export const useAgentQA = ({
                     step: number;
                     tool_name: string;
                     summary: string;
+                    edited?: boolean;
+                    edited_arguments?: Record<string, unknown>;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
                     note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
                     duration_ms?: number;
@@ -267,7 +280,18 @@ export const useAgentQA = ({
                                 te.step === step &&
                                 te.tool_name === tool_name &&
                                 te.status === "pending"
-                                    ? { ...te, status: "done" as const, summary, duration_ms }
+                                    ? {
+                                          ...te,
+                                          status: "done" as const,
+                                          summary,
+                                          duration_ms,
+                                          // Only an approve the person edited
+                                          // carries these; the card of a plain
+                                          // one stays exactly as it was.
+                                          ...(edited === true && edited_arguments
+                                              ? { edited: true, edited_arguments }
+                                              : {}),
+                                      }
                                     : te
                             ),
                         };
@@ -341,6 +365,10 @@ export const useAgentQA = ({
                                   // waiting-for-user state.
                                   isStreaming: false,
                                   pendingApproval: payload,
+                                  // A new pause starts clean: errors and a
+                                  // draft belong to the card they came from.
+                                  approvalFieldErrors: null,
+                                  approvalEdits: null,
                               }
                             : prev
                     );
@@ -403,6 +431,8 @@ export const useAgentQA = ({
                 askError: null,
                 toolEvents: [],
                 pendingApproval: null,
+                approvalFieldErrors: null,
+                approvalEdits: null,
                 sessionId: ask.sessionId,
                 turnId: askedTurnId,
                 runId: null,
@@ -484,14 +514,32 @@ export const useAgentQA = ({
     // only sees the pending approval as of the last render: two clicks in
     // the same tick would both read it. (The old in-updater version got
     // this dedupe for free from the updater queue.)
+    //
+    // EDIT BEFORE APPROVE. An approve may carry `editedArgs`: only the fields
+    // the person changed, as `{path: value}`. A reject never does (the server
+    // answers 400 and consumes nothing), whatever the caller hands in. The
+    // server checks the edits BEFORE it spends the approval, and a bad one is
+    // a 422 `{error, field_errors}`, not a stream: nothing was approved or run
+    // and the same token still works. That answer must give the card back, so:
+    //   - the card was already swapped for the spinner on click, so a 422
+    //     restores the SAME pending approval, with the sentence per path and
+    //     the patch that was refused (the card reopens on what was typed);
+    //   - the dedupe is released, or the person could never fix the typo and
+    //     approve again;
+    //   - a 422 that arrives after Cancel, a reset or a newer decision is
+    //     dropped (that request was aborted or superseded).
     const decidedApprovalTokenRef = useRef<string | null>(null);
     const decide = useCallback(
-        (decision: "approve" | "reject") => {
+        (decision: "approve" | "reject", editedArgs?: Record<string, unknown>) => {
             const payload = ask.pendingApproval;
             if (!payload) return;
             if (decidedApprovalTokenRef.current === payload.approval_token) return;
             decidedApprovalTokenRef.current = payload.approval_token;
             const askedTurnId = ask.turnId;
+            // Only a plain object with something in it is an edit: a card that
+            // wires `onClick={onApprove}` hands over the click event instead.
+            const edits =
+                decision === "approve" && isEditPatch(editedArgs) ? editedArgs : undefined;
 
             // Reuse the abort handle — the new request supersedes
             // anything older.
@@ -504,7 +552,13 @@ export const useAgentQA = ({
             // pending row (deduped via buildStreamHandlers).
             setAsk((prev) =>
                 prev.turnId === askedTurnId && prev.pendingApproval
-                    ? { ...prev, pendingApproval: null, isStreaming: true }
+                    ? {
+                          ...prev,
+                          pendingApproval: null,
+                          isStreaming: true,
+                          approvalFieldErrors: null,
+                          approvalEdits: null,
+                      }
                     : prev
             );
 
@@ -512,15 +566,37 @@ export const useAgentQA = ({
                 runId: payload.run_id,
                 approvalToken: payload.approval_token,
                 decision,
+                ...(edits ? { editedArgs: edits } : {}),
                 accessToken,
                 signal: controller.signal,
                 ...buildStreamHandlers(askedTurnId),
+                onEditsRejected: ({ fieldErrors }) => {
+                    if (askAbortRef.current !== controller || controller.signal.aborted) return;
+                    if (decidedApprovalTokenRef.current === payload.approval_token) {
+                        decidedApprovalTokenRef.current = null;
+                    }
+                    setAsk((prev) =>
+                        prev.turnId === askedTurnId && prev.pendingApproval === null
+                            ? {
+                                  ...prev,
+                                  isStreaming: false,
+                                  pendingApproval: payload,
+                                  approvalFieldErrors: fieldErrors,
+                                  approvalEdits: edits ?? null,
+                              }
+                            : prev
+                    );
+                },
             });
         },
         [ask.pendingApproval, ask.turnId, accessToken, buildStreamHandlers]
     );
 
-    const onApprove = useCallback(() => decide("approve"), [decide]);
+    const onApprove = useCallback(
+        (editedArgs?: Record<string, unknown>) => decide("approve", editedArgs),
+        [decide]
+    );
+    // Takes no edits: a reject that carried any would be a 400.
     const onReject = useCallback(() => decide("reject"), [decide]);
 
     // ---- Cancel the in-flight answer. ----
