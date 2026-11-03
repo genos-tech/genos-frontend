@@ -1240,7 +1240,6 @@ const AppBody = () => {
         myself: myself,
         notificationManager: useNotif.manager,
         setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
-        setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
         useCM: useCM,
         useTEM: useTEM,

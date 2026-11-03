@@ -12,6 +12,7 @@ import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
+import { forgetInFlightTask } from "./taskLoadInFlight";
 import { TaskSaveRefusedError } from "./taskSaveRefusedError";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
 
@@ -197,6 +198,9 @@ export const sendUpdatedSpecificTask = async (
                     ...(savedAt ? { updatedAt: savedAt } : {}),
                 };
                 await cacheFullTask(cacheableTask);
+                // A `getTask` still running from before this save holds the
+                // pre-save task: nobody arriving from now on may join it.
+                if (cacheableTask.id != null) forgetInFlightTask(cacheableTask.id);
             }
 
             if (res) {
@@ -351,6 +355,7 @@ export const sendUpdatedSpecificTask = async (
                 // try to re-upload them.
                 if (uploadAttachments.length > 0) {
                     await invalidateCachedFullTask(updatedTask.id);
+                    forgetInFlightTask(updatedTask.id);
                 }
 
                 // A project move rewrote more than the row above: the task's

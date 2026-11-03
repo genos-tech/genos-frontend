@@ -90,12 +90,15 @@ export const useProjectTaskManagement = ({
         })();
     }, [usePM.isNewProjectCreated]);
 
-    // Load updated task when preview changes
+    // A task was just created: load it and upsert its row into the table.
+    // Only for that. Opening or switching a task is the job of the "auto-load"
+    // effect further down; running this one on every preview change as well
+    // made every click fetch the same task twice more (MIP-968).
     useEffect(() => {
-        if (usePM.currentProject) {
+        if (usePM.currentProject && useTM.isNewTaskCreated === true) {
             useTM.loadUpdatedTask(usePM.currentProject.projectId);
         }
-    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
+    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated]);
 
     // Freshness strategy. Two pieces working together:
     //
@@ -104,7 +107,8 @@ export const useProjectTaskManagement = ({
     //       the *trigger*: it makes `allTasks` authoritative.
     //   (B) `allTasks`-watch effect below → when the open preview's row
     //       in `allTasks` has a newer `updatedAt` than what
-    //       `currentPreviewTask` currently shows, re-run
+    //       `currentPreviewTask` currently shows (and that IS the open task),
+    //       re-run
     //       `loadUpdatedTask`. `loadSpecificTask` then compares against
     //       the IDB cache: cache up-to-date → instant hit, no API call;
     //       cache stale → API refetch. Either way the preview lands on
@@ -186,8 +190,15 @@ export const useProjectTaskManagement = ({
     // the preview is showing. Triggered by focus refresh, by PM-channel
     // updates that update `allTasks`, by initial app mount — anything
     // that puts fresh `updatedAt`s in the table.
+    //
+    // Only when `currentPreviewTask` already IS the requested task. During a
+    // switch it still holds the OUTGOING task until the new one lands, so
+    // comparing the new row against it "found" a newer row on nearly every
+    // first open or switch and loaded the task a second time, alongside the
+    // main load below (MIP-968).
     useEffect(() => {
         if (!usePM.currentProject || useTM.currentPreviewTaskId === -1) return;
+        if (String(useTM.currentPreviewTask?.id) !== String(useTM.currentPreviewTaskId)) return;
         const row = useTM.allTasks.find(
             (t) => t.id != null && String(t.id) === String(useTM.currentPreviewTaskId)
         );
