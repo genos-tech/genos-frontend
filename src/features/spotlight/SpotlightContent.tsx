@@ -1761,6 +1761,8 @@ const ConversationPanel = memo(
                             <AgentTurn
                                 answer={ask.answer}
                                 answerSources={ask.answerSources}
+                                approvalEdits={ask.approvalEdits}
+                                approvalFieldErrors={ask.approvalFieldErrors}
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
