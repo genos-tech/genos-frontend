@@ -9,6 +9,10 @@
  * (keyframes names included), so an equal class name means an equal rule: any
  * change to the dots, the caption, the fade or the surface changes a hash and
  * fails here.
+ *
+ * The surface (Sheet) hashes were re-captured after the mobile frame change
+ * (full-screen preview, no corners/border/shadow on small screens); the dots and
+ * caption hashes are unchanged, which is what this test is for.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render } from "@testing-library/react";
@@ -30,19 +34,19 @@ const html = (props: { isDark: boolean; label: string; fadeInDelayMs?: number })
 describe("TaskPaneLoading markup (unchanged by the LoadingIndicator extraction)", () => {
     it("default variant: whole pane slides in, dots and caption not delayed", () => {
         expect(html({ isDark: false, label: "L" })).toBe(
-            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-agj7mr-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-dtg2nl"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-18718ga-JoyTypography-root">L</p></div>'
+            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-sh022c-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-dtg2nl"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-18718ga-JoyTypography-root">L</p></div>'
         );
     });
 
     it("switch variant (light): surface immediate, dots and caption fade in after the delay", () => {
         expect(html({ isDark: false, label: "L", fadeInDelayMs: 150 })).toBe(
-            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-dpyon1-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-2w2c6o"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-17qfgcn-JoyTypography-root">L</p></div>'
+            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-18erzzc-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-2w2c6o"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-17qfgcn-JoyTypography-root">L</p></div>'
         );
     });
 
     it("switch variant (dark)", () => {
         expect(html({ isDark: true, label: "L", fadeInDelayMs: 150 })).toBe(
-            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-uc0tbx-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-2w2c6o"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-1pc4u9j-JoyTypography-root">L</p></div>'
+            '<div aria-busy="true" aria-label="L" role="status" class="MuiSheet-root MuiSheet-variantPlain MuiSheet-colorNeutral css-cxvpm2-JoySheet-root"><div class="MuiBox-root css-o8qa57"></div><div class="MuiBox-root css-2w2c6o"><div class="MuiBox-root css-1wlap4s"></div><div class="MuiBox-root css-1c05keo"></div><div class="MuiBox-root css-17t0vub"></div></div><p class="MuiTypography-root MuiTypography-body-sm css-1pc4u9j-JoyTypography-root">L</p></div>'
         );
     });
 });
