@@ -21,8 +21,8 @@
  *     and forth, dozens of whole-pane renders per click;
  *   - the chips always show the people of the working copy that arrived.
  */
-import { act, render, renderHook } from "@testing-library/react";
 import { useEffect, useState } from "react";
+import { act, render, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
@@ -318,13 +318,19 @@ describe("usePreviewEditMirror with two previews on one host slot", () => {
             const [slot, setSlot] = useState<TaskProps | undefined>(shown);
             return (
                 <>
-                    <Preview name="tasks" slot={slot} setSlot={setSlot} initial={shown} pushes={pushes} />
                     <Preview
-                        name="other"
-                        slot={slot}
-                        setSlot={setSlot}
-                        initial={{} as TaskProps}
+                        initial={shown}
+                        name="tasks"
                         pushes={pushes}
+                        setSlot={setSlot}
+                        slot={slot}
+                    />
+                    <Preview
+                        initial={{} as TaskProps}
+                        name="other"
+                        pushes={pushes}
+                        setSlot={setSlot}
+                        slot={slot}
                     />
                 </>
             );
