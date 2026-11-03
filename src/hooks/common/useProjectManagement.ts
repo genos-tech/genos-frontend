@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     PROJECT_DELETED_EVENT,
@@ -8,6 +8,7 @@ import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
+import { keepIfEqual } from "../../utils/keepIfEqual";
 
 export interface ProjectManagementState {
     teamProjects: ProjectProps[];
@@ -32,7 +33,19 @@ export const useProjectManagement = (
     accessToken: string | null,
     currentTeamId: string
 ): ProjectManagementState => {
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
+    const [teamProjects, setTeamProjectsRaw] = useState<ProjectProps[]>([]);
+    // The one write path for the project list. A caller that re-fetches the
+    // list on a timer (the `#`-mention refresh in App.tsx) hands in a new
+    // array every time, even when the server's answer is unchanged, and a new
+    // identity re-renders the project sidebar, dashboard and routing effects.
+    // Handing back `prev` for an equal list makes that write a no-op; any
+    // real change (add / join / rename / delete / reorder) still lands as a
+    // new array. Stable identity, because it is threaded into services and
+    // memoized props.
+    const setTeamProjects = useCallback(
+        (projects: ProjectProps[]) => setTeamProjectsRaw((prev) => keepIfEqual(prev, projects)),
+        []
+    );
     const [openCreateProject, setOpenCreateProject] = useState(false);
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -194,7 +207,7 @@ export const useProjectManagement = (
             const projectId = (event as CustomEvent<ProjectDeletedDetail>).detail?.projectId;
             if (typeof projectId !== "number") return;
             setCurrentProject((current) => (current?.projectId === projectId ? null : current));
-            setTeamProjects((projects) => projects.filter((p) => p.projectId !== projectId));
+            setTeamProjectsRaw((projects) => projects.filter((p) => p.projectId !== projectId));
         };
         window.addEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);
         return () => window.removeEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);

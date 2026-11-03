@@ -90,6 +90,7 @@ import {
     TeamNoteFolderProps,
     TeamNoteMetaProps,
 } from "../../types/notes";
+import { keepIfEqual } from "../../utils/keepIfEqual";
 import {
     buildChatNoteTree,
     buildMyNoteFolderForest,
@@ -363,18 +364,6 @@ export interface NoteManagementState {
     resetNoteStates: () => void;
     popInitialNote: () => Promise<void>;
 }
-
-// Cheap structural equality for the meta/folder arrays a background
-// refresh re-fetches. They're small, flat, and serialized in a stable
-// server-side order, so JSON comparison is both correct and far cheaper
-// than the re-render it avoids.
-const sameJson = (a: unknown, b: unknown): boolean => {
-    try {
-        return JSON.stringify(a) === JSON.stringify(b);
-    } catch {
-        return false;
-    }
-};
 
 export const useNoteManagement = (
     myself: UserProps,
@@ -690,8 +679,11 @@ export const useNoteManagement = (
         // load (team + user only, no `since` checkpoint), so [] means "no notes".
         // A `length > 0` guard here left the last note in the sidebar after its
         // delete (it dates from a first version that read `loadedNotes[0]`).
+        // The write keeps the previous array for an equal answer: this runs on
+        // the 60 s `#`-mention refresh, and a fresh identity rebuilds the meta
+        // tree and re-renders the whole sidebar for nothing.
         if (Array.isArray(loadedNotes)) {
-            setChatNoteMeta(loadedNotes);
+            setChatNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
         }
     };
 
@@ -799,7 +791,7 @@ export const useNoteManagement = (
         const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
         if (Array.isArray(loadedNotes)) {
-            setTaskNoteMeta(loadedNotes);
+            setTaskNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
         }
     };
 
@@ -968,7 +960,7 @@ export const useNoteManagement = (
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
         if (Array.isArray(loadedNotes)) {
-            setMyNoteMeta(loadedNotes);
+            setMyNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
         }
     };
 
@@ -1842,7 +1834,7 @@ export const useNoteManagement = (
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team folders") and empties it.
         if (!Array.isArray(loaded)) return;
-        setTeamNoteFolders((prev) => (sameJson(prev, loaded) ? prev : loaded));
+        setTeamNoteFolders((prev) => keepIfEqual(prev, loaded));
     };
     getTeamNoteFoldersRef.current = getTeamNoteFolders;
 
@@ -1851,7 +1843,7 @@ export const useNoteManagement = (
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team notes") and empties it.
         if (!Array.isArray(loaded)) return;
-        setTeamNoteMeta((prev) => (sameJson(prev, loaded) ? prev : loaded));
+        setTeamNoteMeta((prev) => keepIfEqual(prev, loaded));
     };
     getTeamNoteMetaRef.current = getTeamNoteMeta;
 
@@ -1971,7 +1963,7 @@ export const useNoteManagement = (
         const loaded = await loadSharedNotesMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list.
         if (Array.isArray(loaded)) {
-            setSharedNoteMeta(loaded);
+            setSharedNoteMeta((prev) => keepIfEqual(prev, loaded));
         }
     };
 

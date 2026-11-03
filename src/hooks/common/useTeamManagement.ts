@@ -5,6 +5,14 @@ import { findTeam } from "../../features/admin/services/findTeam";
 import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
 import { popTeamMembers } from "../../features/admin/services/popTeamMembers";
 import { FindTeamResponse, Team, UserProps } from "../../types/admin";
+import { keepIfEqual } from "../../utils/keepIfEqual";
+
+// Heartbeats rewrite every online member's `tsLastSeen` once a minute, so the
+// roster read below differs from the previous one on every tick even when
+// nobody changed anything anyone can see. The UI never renders the timestamp
+// (presence is the `isOnline` flag the worker derives from it, which IS
+// compared), so it must not count as a change.
+const ROSTER_IGNORED_KEYS = ["tsLastSeen"] as const;
 
 export interface TeamManagementState {
     currentTeamId: string;
@@ -43,7 +51,9 @@ export const useTeamManagement = (
     const funcSetTeamMembers = async () => {
         const teamMembers: UserProps[] = await popTeamMembers(myself);
         if (teamMembers) {
-            setTeamMembers(teamMembers);
+            // Same identity guard as the 60 s poll below: the boot / wake
+            // refresh re-reads the roster, and an equal one is not a change.
+            setTeamMembers((prev) => keepIfEqual(prev, teamMembers, ROSTER_IGNORED_KEYS));
         }
     };
 
@@ -91,10 +101,21 @@ export const useTeamManagement = (
                         return;
                     }
                     const record = data as Record<string, UserProps>;
-                    setTeamMemberProfiles(record);
+                    // This runs every 60 s and the worker rebuilds the record
+                    // from IndexedDB each time, so an unchanged roster comes
+                    // back as a new object and a new array. Keep the previous
+                    // references when the content is equal: the task table's
+                    // row memos compare `teamMembers` by reference, so a fresh
+                    // array re-rendered every visible row once a minute. A
+                    // real change (a new member, a new avatar, a status or
+                    // presence flip) still produces a new reference; the
+                    // heartbeat timestamp alone does not.
+                    setTeamMemberProfiles((prev) =>
+                        keepIfEqual(prev, record, ROSTER_IGNORED_KEYS)
+                    );
                     const members = Object.values(record);
                     if (members.length > 0) {
-                        setTeamMembers(members);
+                        setTeamMembers((prev) => keepIfEqual(prev, members, ROSTER_IGNORED_KEYS));
                     }
                 })
                 .catch((err) => {
