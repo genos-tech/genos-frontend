@@ -1353,7 +1353,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // mid-flight. Decouple instant visual selection from the heavy
     // preview load by holding `pendingTaskId` / `pendingMilestoneId`
     // locally. The load itself is LEADING-edge debounced: a click with no
-    // other click in the last 150 ms opens at once, and a rapid sequence
+    // other click in the last 150 ms opens right after the next painted frame
+    // (the highlight and the pane paint first), and a rapid sequence
     // collapses to the first row plus the row the user lands on.
     const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
     const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
@@ -1402,8 +1403,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             }
             setIsTaskPreviewVisibleRow(true);
 
-            // Step 2: start the load. The first click does it now; successive
-            // rapid clicks coalesce into a single load for the last row.
+            // Step 2: start the load. The first click does it after the next
+            // painted frame, not in this batch; successive rapid clicks
+            // coalesce into a single load for the last row.
             scheduleSwitchPreview(task);
         },
         [setIsTaskPreviewVisibleRow, scheduleSwitchPreview]
