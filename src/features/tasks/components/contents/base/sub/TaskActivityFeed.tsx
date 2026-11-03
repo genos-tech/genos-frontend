@@ -620,6 +620,37 @@ const formatRelative = (iso: string, messages: ActivityMessages): string => {
 // is stringified.
 const RELATION_ID_FIELDS = new Set(["parent_task_id", "milestone_id", "sprint_id", "project_id"]);
 
+// A stored value that is not a string / number: an object or a list. We know
+// the shapes of the few the backend writes on purpose (tags, a custom field's
+// labels, the `created` row - handled where they are drawn); this is the net
+// under every other one, so a payload added later shows up as words and not as
+// `{"key":"value"}`. Strings and numbers are kept, in the order they appear;
+// booleans and nulls say nothing without their key, and an object nested more
+// than two levels deep is not worth chasing.
+const MAX_READABLE_DEPTH = 2;
+const readableParts = (value: unknown, depth = 0): string[] => {
+    if (typeof value === "string") return value.trim() === "" ? [] : [value];
+    if (typeof value === "number") return Number.isFinite(value) ? [String(value)] : [];
+    if (value == null || typeof value !== "object" || depth >= MAX_READABLE_DEPTH) return [];
+    const items = Array.isArray(value) ? value : Object.values(value);
+    return items.flatMap((item) => readableParts(item, depth + 1));
+};
+
+// The value of a `created` row. The backend records the task's starting state
+// as `{ title, status, is_milestone }` (a row written before that was a bare
+// string). The title is the task's own title and already on screen, so only
+// the status and the milestone flag are used. Null for anything that is not a
+// plain object, which keeps rendering through `formatValue` as before.
+type CreatedSummary = { status: string | null; isMilestone: boolean };
+const readCreatedValue = (value: unknown): CreatedSummary | null => {
+    if (value == null || typeof value !== "object" || Array.isArray(value)) return null;
+    const { status, is_milestone: isMilestone } = value as Record<string, unknown>;
+    return {
+        status: typeof status === "string" && status.trim() !== "" ? status : null,
+        isMilestone: isMilestone === true,
+    };
+};
+
 const formatValue = (
     value: unknown,
     fieldName: string | null,
@@ -696,11 +727,9 @@ const formatValue = (
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
         return { label: String(value), isUser: false };
     }
-    try {
-        return { label: JSON.stringify(value), isUser: false };
-    } catch {
-        return { label: String(value), isUser: false };
-    }
+    // Any other object or list: what a person can read out of it, never its
+    // JSON (MIP-947). Nothing readable in it reads as "None".
+    return { label: readableParts(value).join(", ") || noneLabel, isUser: false };
 };
 
 // Diff-style actions whose verb expects both an old and a new chip
@@ -995,7 +1024,14 @@ export const TaskActivityFeed = ({
                 // the prior value was unset (e.g. priority None → High).
                 const isDiffAction = DIFF_ACTIONS.has(row.actionType);
                 const showOldChip = isDiffAction || (row.oldValue != null && row.oldValue !== "");
-                const showNewChip = isDiffAction || (row.newValue != null && row.newValue !== "");
+                // The "created" row of a task carries its starting state as an
+                // object (MIP-947): one status chip, plus a "Milestone" word
+                // when that is what was created. No status, no chip.
+                const created =
+                    row.actionType === "created" ? readCreatedValue(row.newValue) : null;
+                const showNewChip = created
+                    ? created.status != null
+                    : isDiffAction || (row.newValue != null && row.newValue !== "");
 
                 // Prefer the team-member profile (richer presence /
                 // online status) over `row.actor`, which carries only
@@ -1093,11 +1129,26 @@ export const TaskActivityFeed = ({
                                         →
                                     </Typography>
                                 )}
+                                {created?.isMilestone && (
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.5)"
+                                                : "rgba(0,0,0,0.45)",
+                                        }}
+                                    >
+                                        {t.tasks.fields.milestone}
+                                    </Typography>
+                                )}
                                 {showNewChip && (
                                     <ValueChip
-                                        fieldName={row.fieldName}
+                                        // The row has no field_name, but this
+                                        // chip IS a status: name it so it gets
+                                        // the status colours and translation.
+                                        fieldName={created ? "status" : row.fieldName}
                                         isDark={isDark}
-                                        label={newFmt.label}
+                                        label={created?.status ?? newFmt.label}
                                     />
                                 )}
                                 <Box sx={{ flexGrow: 1 }} />
