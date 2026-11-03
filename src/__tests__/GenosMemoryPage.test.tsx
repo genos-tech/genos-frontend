@@ -388,8 +388,18 @@ describe("the sharing switch", () => {
         await user.click(sw);
         const dialog = await screen.findByRole("alertdialog");
         expect(within(dialog).getByText(/removed from your teams right away/)).toBeTruthy();
-        // Not a promise the backend does not keep: older answers may not come back.
-        expect(within(dialog).getByText(/older ones may not come back/)).toBeTruthy();
+        // Turning it back on re-shares the recent answers shortly afterward
+        // (the server re-collects them in the background), and an answer the
+        // person stopped sharing one by one stays stopped. The copy must not
+        // promise answers older than the recent ones, so it says "recent",
+        // and the old line about older answers not coming back must be gone.
+        expect(
+            within(dialog).getByText(/your recent answers are shared again shortly afterward/)
+        ).toBeTruthy();
+        expect(
+            within(dialog).getByText(/Answers you stopped sharing one by one stay stopped/)
+        ).toBeTruthy();
+        expect(within(dialog).queryByText(/older ones may not come back/)).toBeNull();
         expect(apiPatch).not.toHaveBeenCalled();
         // The switch has not moved ahead of the server.
         expect(sw.checked).toBe(true);

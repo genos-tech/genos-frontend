@@ -528,7 +528,7 @@ export const settings = {
             toggleFailed: "Couldn't change this setting. Please try again.",
             offTitle: "Stop sharing your answers?",
             offBody:
-                "Your existing answers will be removed from your teams right away, and new ones won't be shared. The conversations themselves stay. If you turn sharing back on later, it only applies to answers from then on; older ones may not come back.",
+                "Your existing answers will be removed from your teams right away, and new ones won't be shared. The conversations themselves stay. If you turn sharing back on later, your recent answers are shared again shortly afterward. Answers you stopped sharing one by one stay stopped.",
             offConfirm: "Turn off sharing",
             loading: "Loading shared answers…",
             loadFailed: "Couldn't load your shared answers.",

@@ -3074,7 +3074,7 @@ export const fr: DeepPartial<Messages> = {
                 toggleFailed: "Impossible de modifier ce réglage. Veuillez réessayer.",
                 offTitle: "Arrêter de partager vos réponses ?",
                 offBody:
-                    "Vos réponses existantes seront retirées de vos équipes immédiatement et les nouvelles ne seront pas partagées. Les conversations elles-mêmes sont conservées. Si vous réactivez le partage plus tard, il ne concernera que les réponses à partir de ce moment-là ; les plus anciennes pourraient ne pas revenir.",
+                    "Vos réponses existantes seront retirées de vos équipes immédiatement et les nouvelles ne seront pas partagées. Les conversations elles-mêmes sont conservées. Si vous réactivez le partage plus tard, vos réponses récentes seront de nouveau partagées peu après. Les réponses dont vous avez arrêté le partage une par une resteront non partagées.",
                 offConfirm: "Désactiver le partage",
                 loading: "Chargement des réponses partagées…",
                 loadFailed: "Impossible de charger vos réponses partagées.",
