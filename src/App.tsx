@@ -17,6 +17,7 @@ import {
 } from "./context/MentionGroupModalContext";
 import { MentionGroupsProvider } from "./context/MentionGroupsContext";
 import { TeamEmojiProvider } from "./context/TeamEmojiContext";
+import { useHashMentionData } from "./context/useHashMentionData";
 import { SessionSupersededOverlay } from "./components/common/SessionSupersededOverlay";
 import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar";
@@ -417,46 +418,23 @@ const AppBody = () => {
         };
     }, [refreshHashMentionData]);
 
-    // Backing data for the "#" mention menu (tasks / notes / GM chats /
-    // projects), fed to every editor's `HashSuggestionMenuController` via
-    // `HashMentionDataProvider`. Memoized so the four arrays keep stable
-    // refs across renders — the menu builder's per-editor WeakMap cache
-    // only hits while these references are unchanged, so without this each
-    // keystroke would re-merge the lists. Notes are merged into one list,
-    // each row tagged with its kind so the chip can rebuild the right
-    // deep-link URL; chats are pre-filtered to GM (chatType === 2).
-    const hashMentionData = useMemo(
-        () => ({
-            tasks: useTM.allTasks,
-            teamTasks: hashTeamTasks,
-            notes: [
-                ...useNM.myNoteMeta.map((m) => ({ kind: "my" as const, ...m })),
-                ...useNM.taskNoteMeta.map((m) => ({ kind: "task" as const, ...m })),
-                ...useNM.chatNoteMeta.map((m) => ({ kind: "chat" as const, ...m })),
-                ...useNM.sharedNoteMeta.map((m) => ({ kind: "shared" as const, ...m })),
-                ...useNM.teamNoteMeta.map((m) => ({ kind: "team" as const, ...m })),
-            ],
-            chats: useCM.allChats.filter((c) => c.chatType === 2),
-            allChats: useCM.allChats,
-            projects: usePM.teamProjects,
-            todoGroups: useTG.groups,
-            myself,
-            refresh: refreshHashMentionData,
-        }),
-        [
-            useTM.allTasks,
-            hashTeamTasks,
-            useNM.myNoteMeta,
-            useNM.taskNoteMeta,
-            useNM.chatNoteMeta,
-            useNM.sharedNoteMeta,
-            useCM.allChats,
-            usePM.teamProjects,
-            useTG.groups,
-            myself,
-            refreshHashMentionData,
-        ]
-    );
+    // Backing data for the "#" mention menu, fed to every editor's
+    // `HashSuggestionMenuController` via `HashMentionDataProvider`. See
+    // `useHashMentionData` for why it is memoized.
+    const hashMentionData = useHashMentionData({
+        allChats: useCM.allChats,
+        chatNoteMeta: useNM.chatNoteMeta,
+        myNoteMeta: useNM.myNoteMeta,
+        myself,
+        projects: usePM.teamProjects,
+        refresh: refreshHashMentionData,
+        sharedNoteMeta: useNM.sharedNoteMeta,
+        tasks: useTM.allTasks,
+        taskNoteMeta: useNM.taskNoteMeta,
+        teamNoteMeta: useNM.teamNoteMeta,
+        teamTasks: hashTeamTasks,
+        todoGroups: useTG.groups,
+    });
 
     // Team roster for the Spotlight ask-input's `@` mention menu. The
     // overlay mounts above AvatarContext, so it can't read
