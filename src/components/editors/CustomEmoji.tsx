@@ -2,6 +2,7 @@ import { createReactInlineContentSpec } from "@blocknote/react";
 
 import { getTeamEmojiByName } from "../../services/teamEmojiStore";
 import { CUSTOM_EMOJI_SHORTCODE_RE, CustomEmojiImg } from "./CustomEmojiImg";
+import { CUSTOM_EMOJI_SPEC_CONFIG } from "./schemaSpecConfigs";
 
 // Team custom emoji as a BlockNote inline token (sibling of the mention
 // specs). Props bake BOTH the shortcode name and the absolute image URL
@@ -21,24 +22,14 @@ import { CUSTOM_EMOJI_SHORTCODE_RE, CustomEmojiImg } from "./CustomEmojiImg";
 // missed — an unregistered inline type makes BlockNote reject entire
 // bodies with "node type not found in schema" (see bnChatPreview).
 export const CreateCustomEmojiSpec = () =>
-    createReactInlineContentSpec(
-        {
-            type: "customEmoji",
-            propSchema: {
-                name: { default: "" },
-                url: { default: "" },
-            },
-            content: "none",
-        },
-        {
-            render: (props) => (
-                <CustomEmojiImg
-                    name={props.inlineContent.props.name}
-                    url={props.inlineContent.props.url}
-                />
-            ),
-        }
-    );
+    createReactInlineContentSpec(CUSTOM_EMOJI_SPEC_CONFIG, {
+        render: (props) => (
+            <CustomEmojiImg
+                name={props.inlineContent.props.name}
+                url={props.inlineContent.props.url}
+            />
+        ),
+    });
 
 // Picker-selection insert helper. The emoji picker flattens every
 // selection to a string (unicode glyph for standard emoji, ":name:" for

@@ -32,6 +32,7 @@ import {
     USER_SELF_PALETTE,
     type MentionPalette,
 } from "./mentionPalettes";
+import { MENTION_SPEC_CONFIG, mentionGroupSpecConfig } from "./schemaSpecConfigs";
 
 // Palettes now live in the BlockNote-free `mentionPalettes` module (so
 // the Spotlight bundle can read them without importing this file's
@@ -75,63 +76,49 @@ export const CreateMentionSpec = (
     useUISM: UIStateManagementState,
     useCM: ChatManagementState
 ) =>
-    createReactInlineContentSpec(
-        {
-            type: "mention",
-            propSchema: {
-                userName: {
-                    default: "N/A",
-                },
-                userId: {
-                    default: "N/A",
-                },
-            },
-            content: "none",
-        },
-        {
-            render: (props) => {
-                const userName = props.inlineContent.props.userName;
-                const userId = props.inlineContent.props.userId;
-                // Resolve the mentioned user's CURRENT name (the name baked
-                // into the mention when it was typed goes stale on rename).
-                const displayName = useResolvedUserName(userId, userName);
+    createReactInlineContentSpec(MENTION_SPEC_CONFIG, {
+        render: (props) => {
+            const userName = props.inlineContent.props.userName;
+            const userId = props.inlineContent.props.userId;
+            // Resolve the mentioned user's CURRENT name (the name baked
+            // into the mention when it was typed goes stale on rename).
+            const displayName = useResolvedUserName(userId, userName);
 
-                const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
+            const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
-                const palette = myself.userId === userId ? USER_SELF_PALETTE : USER_OTHER_PALETTE;
-                return (
-                    <>
-                        <Box
-                            sx={mentionChipSx(palette)}
-                            onClick={() => {
-                                setOpenUserProfile(true);
-                            }}
+            const palette = myself.userId === userId ? USER_SELF_PALETTE : USER_OTHER_PALETTE;
+            return (
+                <>
+                    <Box
+                        sx={mentionChipSx(palette)}
+                        onClick={() => {
+                            setOpenUserProfile(true);
+                        }}
+                    >
+                        <Typography
+                            fontWeight={"bold"}
+                            level="body-sm"
+                            sx={{ color: palette.text }}
                         >
-                            <Typography
-                                fontWeight={"bold"}
-                                level="body-sm"
-                                sx={{ color: palette.text }}
-                            >
-                                @{displayName}
-                            </Typography>
-                        </Box>
+                            @{displayName}
+                        </Typography>
+                    </Box>
 
-                        <UserProfile
-                            isYou={myself.userId === userId ? true : false}
-                            myself={myself}
-                            openUserProfile={openUserProfile}
-                            setMyself={setMyself}
-                            setOpenUserProfile={setOpenUserProfile}
-                            socket={socket}
-                            useCM={useCM}
-                            user={teamMemberProfiles[userId]}
-                            useUISM={useUISM}
-                        />
-                    </>
-                );
-            },
-        }
-    );
+                    <UserProfile
+                        isYou={myself.userId === userId ? true : false}
+                        myself={myself}
+                        openUserProfile={openUserProfile}
+                        setMyself={setMyself}
+                        setOpenUserProfile={setOpenUserProfile}
+                        socket={socket}
+                        useCM={useCM}
+                        user={teamMemberProfiles[userId]}
+                        useUISM={useUISM}
+                    />
+                </>
+            );
+        },
+    });
 
 // The MentionGroup inline content — Slack-style @group token. Renders
 // as a distinct green chip so users can tell at a glance that the
@@ -140,15 +127,7 @@ export const CreateMentionSpec = (
 // wire a popover listing members, but a quiet token reads cleaner.
 export const CreateMentionGroupSpec = () =>
     createReactInlineContentSpec(
-        {
-            type: "mentionGroup",
-            propSchema: {
-                groupName: { default: getMessages().common.editor.mentionGroupFallback },
-                groupId: { default: "0" },
-                memberCount: { default: "0" },
-            },
-            content: "none",
-        },
+        mentionGroupSpecConfig(getMessages().common.editor.mentionGroupFallback),
         {
             render: (props) => {
                 const groupName = props.inlineContent.props.groupName;
