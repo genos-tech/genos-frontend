@@ -113,8 +113,8 @@ export const spotlight = {
         readOnlyHint: "Read-only — start a new conversation to ask a follow-up.",
     },
     settings: {
-        title: "Spotlight settings",
-        openTooltip: "Spotlight settings — AI effort & answers",
+        title: "Genos settings",
+        openTooltip: "Genos settings — AI effort & answers",
     },
     approval: {
         titleWithTool: "Approval required: {toolName}",

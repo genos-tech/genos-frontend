@@ -53,6 +53,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
+import { GenosSettingsPanel } from "../../features/genos/memory/GenosSettingsPanel";
 import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
 import { GithubRepoAccessSection } from "../../features/integrations/components/GithubRepoAccessSection";
 import { ReconnectGoogleCalendarButton } from "../../features/integrations/components/ReconnectGoogleCalendarButton";
@@ -1683,7 +1684,8 @@ const KeyboardShortcutsSection = () => {
  *
  *   1. Appearance       – theme mode (light / dark / system).
  *   2. Message layout   – bubble vs compact rendering of chat messages.
- *   3. Spotlight        – AI answers + web search toggles.
+ *   3. Genos            – model/effort, AI answers + web search, and the
+ *                         "What Genos remembers" page.
  *   4. Privacy          – analytics opt-out.
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
@@ -1936,10 +1938,22 @@ export const SettingsModal = ({
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="spotlight"
                     >
-                        <Stack spacing={2}>
+                        {/* The "Genos" tab. The panel adds the "What Genos
+                            remembers" sub-view; its language button can
+                            jump to General because this dialog owns the
+                            tab state. */}
+                        <GenosSettingsPanel
+                            teamId={
+                                useTEM?.currentTeamId ||
+                                myself?.teamId ||
+                                localStorage.getItem("teamId") ||
+                                ""
+                            }
+                            onOpenLanguageSettings={() => setTab("general")}
+                        >
                             <LlmModelSection />
                             <SpotlightSection />
-                        </Stack>
+                        </GenosSettingsPanel>
                     </TabPanel>
                     <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="chat">
                         <Stack spacing={2}>

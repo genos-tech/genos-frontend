@@ -30,8 +30,10 @@ import {
 } from "../../services/notifications/agentRunNotice";
 import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
 import {
+    deletionCoversSession,
     sessionTurnToCompleted,
     useAgentQA,
+    useAgentSessionsDeleted,
     type AgentRunResult,
     type CompletedTurn,
     type ToolEvent,
@@ -149,6 +151,20 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
             },
             [notifications]
         ),
+    });
+
+    // ---- This conversation was permanently deleted (Settings -> What
+    // Genos remembers). ----
+    //
+    // The transcript outlives `close()` on purpose, so without this a
+    // reopened modal would show a conversation whose server-side session is
+    // gone, and the next follow-up would start a new one without its context.
+    // Wipe it the way switching to another entity does; the summary stays,
+    // since it describes the entity, not the person's conversation.
+    useAgentSessionsDeleted((detail) => {
+        if (deletionCoversSession(detail, agentQA.sessionId, teamId)) {
+            agentQA.reset({ sessionId: null, turns: [] });
+        }
     });
 
     // ---- Load / refresh the summary. Shared by `open` and `refreshSummary`. ----

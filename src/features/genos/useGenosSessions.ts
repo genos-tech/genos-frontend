@@ -15,6 +15,11 @@
 // reach past that: `search`, which filters server-side across every
 // question in a session, and `togglePin`, which keeps a session at the
 // top regardless of age.
+//
+// Deletes happen elsewhere (Settings -> What Genos remembers) and arrive as
+// an `agentSessionsDeleted` event. Every instance of this hook — the page's
+// sidebar and the settings panel's own list — drops the deleted rows on it,
+// so neither needs to know the other exists and neither has to refetch.
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,6 +28,7 @@ import {
     setAgentSessionPin,
     type AgentSessionSummary,
 } from "../../services/agentApi";
+import { deletionCoversSession, useAgentSessionsDeleted } from "../agentQA";
 
 // Long enough that a typed word is one request rather than five, short
 // enough that the list feels like it's tracking the box.
@@ -100,6 +106,12 @@ export const useGenosSessions = ({
         // the spinner decision for the fetch the other deps triggered.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accessToken, teamId, refreshKey, committedSearch, pinRefreshKey]);
+
+    useAgentSessionsDeleted((detail) => {
+        setSessions((prev) =>
+            prev.filter((s) => !deletionCoversSession(detail, s.session_id, teamId))
+        );
+    });
 
     const togglePin = useCallback(
         (sessionId: string) => {

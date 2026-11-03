@@ -62,10 +62,12 @@ import type { NotificationManager } from "../../services/notifications/notificat
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
+    deletionCoversSession,
     emitProjectToolResult,
     MAX_TURNS_IN_HISTORY,
     sessionTurnToCompleted,
     toWireMentions,
+    useAgentSessionsDeleted,
     type AgentMentionRef,
     type AskState,
     type CompletedTurn,
@@ -1214,6 +1216,42 @@ export const useSpotlight = ({
             }
         }
     }, [teamId]);
+
+    // ---- A conversation was permanently deleted (Settings -> What Genos
+    // remembers). ----
+    //
+    // The delete runs in a panel that cannot reach this hook, so it announces
+    // itself (`agentSessionsDeleted`) and every surface that could be showing
+    // the conversation reacts. For this hook that means three things:
+    //   1. The History list drops the rows, so a deleted conversation cannot
+    //      be clicked into a 404.
+    //   2. A History detail view of a deleted session closes back to the list.
+    //   3. If the LIVE conversation is a deleted one, it is reset exactly the
+    //      way "New conversation" resets it. Leaving it up would show a
+    //      transcript whose server-side context is gone, and the next
+    //      follow-up would silently fork a new session without it.
+    // The ids are read through refs: the handler is invoked outside React's
+    // render and must see the conversation that is open NOW.
+    const liveSessionIdRef = useRef<string | null>(ask.sessionId);
+    useEffect(() => {
+        liveSessionIdRef.current = ask.sessionId;
+    }, [ask.sessionId]);
+    const historyDetailSessionIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        historyDetailSessionIdRef.current = historyDetail?.session_id ?? null;
+    }, [historyDetail]);
+    useAgentSessionsDeleted((detail) => {
+        setHistorySessions((prev) =>
+            prev.filter((s) => !deletionCoversSession(detail, s.session_id, teamId))
+        );
+        if (deletionCoversSession(detail, historyDetailSessionIdRef.current, teamId)) {
+            setHistoryDetail(null);
+            setHistoryMode((mode) => (mode === "detail" ? "list" : mode));
+        }
+        if (deletionCoversSession(detail, liveSessionIdRef.current, teamId)) {
+            onNewConversation();
+        }
+    });
 
     // ---- Resume a past session from the server archive (Genos page). ----
     //

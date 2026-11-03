@@ -1,12 +1,12 @@
-// Spotlight-scoped settings modal.
+// Genos settings modal (the gear on the Spotlight bar, next to History).
 //
-// Opened from the gear icon on the Spotlight bar (next to History) so a
-// user can switch LLM model (Gemini / Claude) and toggle AI answers /
-// web search without leaving Spotlight and hunting through the full
-// app Settings modal. It reuses the exact same section components the
-// main SettingsModal renders on its "Spotlight" tab — `LlmModelSection`
-// (the must-have model picker) and `SpotlightSection` (AI answers + web
-// search) — both self-contained, so there are no props to thread.
+// Opened from the gear icon so a user can switch the AI effort / model and
+// toggle AI answers / web search without leaving Spotlight and hunting
+// through the full app Settings modal. It reuses the exact same pieces the
+// main SettingsModal renders on its "Genos" tab: `LlmModelSection` (the
+// model / effort picker), `SpotlightSection` (AI answers + web search) and,
+// through `GenosSettingsPanel`, the "What Genos remembers" sub-view. The
+// two sections are self-contained; only the panel needs the team.
 //
 // z-index: the Spotlight overlay sits at 13100 and stays open behind
 // this modal, so the dialog is pinned above it (13200). Joy's default
@@ -19,13 +19,17 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { LlmModelSection, SpotlightSection } from "../../components/layout/SettingsModal";
 import { useTranslation } from "../../i18n";
+import { GenosSettingsPanel } from "../genos/memory/GenosSettingsPanel";
 
 interface Props {
     open: boolean;
     onClose: () => void;
+    // The team the workspace is showing; "What Genos remembers" lists and
+    // deletes within it.
+    teamId: string;
 }
 
-export const SpotlightSettingsModal = ({ open, onClose }: Props) => {
+export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -70,10 +74,10 @@ export const SpotlightSettingsModal = ({ open, onClose }: Props) => {
                     </IconButton>
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
-                <Stack spacing={2}>
+                <GenosSettingsPanel teamId={teamId}>
                     <LlmModelSection />
                     <SpotlightSection />
-                </Stack>
+                </GenosSettingsPanel>
             </ModalDialog>
         </Modal>
     );

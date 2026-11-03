@@ -2830,7 +2830,7 @@ export const ja: DeepPartial<Messages> = {
             planUsage: "プランと使用状況",
             chat: "チャット",
             tasks: "タスク",
-            spotlight: "スポットライト",
+            spotlight: "Genos",
             notifications: "通知",
             mentionGroups: "メンショングループ",
             customEmoji: "カスタム絵文字",
@@ -3114,25 +3114,6 @@ export const ja: DeepPartial<Messages> = {
             benefitNotes: "ノート作成 月 {n} 件",
             benefitNotesUnlimited: "ノート作成が無制限",
             benefitUpload: "ファイルあたり最大 {mb} MB",
-            capAgencyRead: "Genos が質問に答える",
-            capAgencyAct: "Genos が承認つきで実行まで行う",
-            capAgencyOrganize: "Genos がまとめて整理 — 一括変更も 1 回の承認で",
-            capDepthQuick: "クイックな回答",
-            capDepthThorough: "じっくり考えた回答",
-            capDepthDeep: "深い推論",
-            capDepthAdaptive: "深い推論（質問ごとに自動調整）",
-            capMemoryNone: "現在の会話を記憶",
-            capMemoryOwn: "あなたの過去の会話を記憶",
-            capMemoryTeam: "チームの知見も記憶",
-            capGenosHistoryDays: "Genos の会話履歴 {days} 日分",
-            capGenosHistoryUnlimited: "Genos の会話履歴が無制限",
-            capReachWeb: "ウェブ検索",
-            capReachCalendar: "Google カレンダー連携",
-            capReachGithub: "GitHub 連携",
-            capMcp: "AI コーディング エージェント (MCP) を接続する",
-            capDigestNone: "Genos からのダイジェスト配信",
-            capDigestWeekly: "Genos から週次ダイジェスト",
-            capDigestDaily: "Genos から日次ダイジェスト + アラート",
             creditsPacksHeading: "さらにクレジットが必要ですか?",
             creditsPacksBlurb:
                 "ワンオフパックを購入します。毎月のクレジットが最初に使用され、購入したクレジットが期限切れになることはありません。",
@@ -3255,20 +3236,91 @@ export const ja: DeepPartial<Messages> = {
                 "オフにすると、ダブルクリックでテキストを選択できます。チャット、スレッド、タスクコメントに適用されます。",
         },
         spotlight: {
-            heading: "Spotlight",
+            heading: "Genosの回答",
             description:
-                "Spotlight は常にチャット、タスク、ノートを検索します。以下のトグルは、1日の質問上限を消費するLLMによる回答の有効・無効を切り替えます。",
+                "Spotlight検索では、チャット、タスク、ノートを常に検索します。以下のスイッチは、GenosがAIによる回答を作成したり、ウェブを参照したりできるかどうかを切り替えます。",
             aiAnswersLabel: "AIによる回答",
             aiAnswersHelper:
-                "「質問する」ボタンでクエリをエージェントに送れるようになります。オフの場合、Spotlight は検索結果のみを返します。",
+                "「質問する」ボタンからGenosに質問を送れるようになります。オフの場合、Spotlightは検索結果のみを表示します。",
             webSearchLabel: "ウェブ検索",
             webSearchHelper:
                 "回答時にエージェントがウェブを参照できるようにします。AIによる回答が有効である必要があります。",
         },
+        genosMemory: {
+            entryHeading: "Genosが記憶していること",
+            entryDescription:
+                "Genosが回答に利用するものを確認し、会話を削除し、チームと共有する内容を選べます。",
+            entryOpen: "開く",
+            backToSettings: "Genos設定",
+            title: "Genosが記憶していること",
+            intro: "Genosは「記憶」を別に保存しているわけではありません。回答するときは、下の3つを参照します。ここで内容を確認し、残したくないものを削除できます。",
+            conversations: {
+                heading: "Genosとの会話",
+                description:
+                    "Genosは、いま進めている会話のそれまでのやり取りと、それより古いやり取りの短い要約を読みます。質問に必要なときは、過去の会話をさかのぼって参照することもあります。これらはすべてあなたがGenosに尋ねた質問から作られており、会話を削除するとすべて削除されます。",
+                listNote: "この一覧には、最近の会話が表示されます。",
+                loading: "会話を読み込み中…",
+                empty: "このチームにはGenosとの会話がありません。",
+                deleteTooltip: "この会話を削除",
+                deleteAria: "会話を削除: {question}",
+                deleteTitle: "この会話を削除しますか？",
+                deleteBody:
+                    "この会話と、そこからGenosが記憶している内容がすべて完全に削除されます。この操作は元に戻せません。",
+                deleteConfirm: "会話を削除",
+                deleteAll: "すべての会話を削除",
+                deleteAllTitle: "Genosとのすべての会話を削除しますか？",
+                deleteAllBody:
+                    "このチームにあるGenosとの会話をすべて完全に削除します。スレッドやノートから始めた会話や、この一覧に表示されていない古い会話も含まれ、そこからGenosが記憶している内容もすべて削除されます。ほかのチームの会話には影響しません。この操作は元に戻せません。",
+                deleteAllAck: "元に戻せないことを理解しました",
+                deleteAllConfirm: "すべて削除",
+                deletedAll: "このチームのGenosとの会話をすべて削除しました。",
+                inFlight:
+                    "回答中の会話があります。完了するまで待ってから、もう一度お試しください。",
+                failed: "削除できませんでした。もう一度お試しください。",
+            },
+            shared: {
+                heading: "チームに共有している回答",
+                switchLabel: "自分の回答でチームメイトを助ける",
+                switchHelper:
+                    "オンにすると、完了した最初の質問への回答が、そのすべての情報源を見られるチームメイトに、匿名の「前の回答」として表示されることがあります。すべてのチームに適用されます。",
+                toggleFailed: "設定を変更できませんでした。もう一度お試しください。",
+                offTitle: "回答の共有を停止しますか？",
+                offBody:
+                    "共有済みの回答は、すべてのチームからただちに削除され、今後の回答も共有されなくなります。会話そのものは残ります。後で再びオンにしても、対象になるのはそれ以降の回答のみで、以前の回答は戻らない場合があります。",
+                offConfirm: "共有をオフにする",
+                loading: "共有された回答を読み込み中…",
+                loadFailed: "共有している回答を読み込めませんでした。",
+                empty: "現在、チームメイトに共有されている回答はありません。",
+                emptyOff: "共有がオフなので、共有されている回答はありません。",
+                audienceOnlyYou: "あなただけが見られます",
+                audienceMany: "あなたを含む{count}人が見られます",
+                stop: "この回答の共有を停止",
+                stopTitle: "この回答の共有を停止しますか？",
+                stopBody:
+                    "チームメイトには「前の回答」として表示されなくなります。会話は履歴に残り、この回答が再び共有されることはありません。",
+                stopConfirm: "共有を停止",
+                stopFailed: "この回答の共有を停止できませんでした。もう一度お試しください。",
+                hasMore:
+                    "最新の{count}件の共有回答を表示しています。この一覧に表示されていない回答もあります。",
+            },
+            settingsUsed: {
+                heading: "Genosが使う設定",
+                description: "Genosは回答するとき、この2つの設定を参照します。",
+                timezoneLabel: "タイムゾーン",
+                timezoneHelper:
+                    "「今日」や「今週」がいつを指すかを判断するために使われます。お使いのデバイスから検出され、自動的に更新されます。変更するには、デバイスのタイムゾーンを変更してください。",
+                timezoneUnknown: "まだ検出されていません",
+                languageLabel: "回答の言語",
+                languageHelper:
+                    "質問のたびにアプリの言語が送信され、Genosはその言語で返信します。",
+                changeLanguage: "言語を変更",
+                languagePath: "{settings} › {tab} › {section} で変更できます。",
+            },
+        },
         llmModel: {
             heading: "AIモデル",
             description:
-                "Spotlight エージェントが使用する LLM を選択します。各モデルには個別の日次割り当てがあり、UTC 午前 0 時にリセットされます。",
+                "Genosが使用する LLM を選択します。各モデルには個別の日次割り当てがあり、UTC 午前 0 時にリセットされます。",
             providerLabel: "プロバイダー",
             providerHelper: "あなたの質問に答えるAIサービスを選択してください。",
             modelLabel: "モデル",
@@ -3549,8 +3601,8 @@ export const ja: DeepPartial<Messages> = {
             readOnlyHint: "読み取り専用 — 新しい会話を開始してフォローアップを求めます。",
         },
         settings: {
-            title: "スポットライト設定",
-            openTooltip: "スポットライト設定 — モデルとAI回答",
+            title: "Genos設定",
+            openTooltip: "Genos設定 — AIのEffortと回答",
         },
         approval: {
             titleWithTool: "承認が必要：{toolName}",

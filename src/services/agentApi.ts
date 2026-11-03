@@ -608,6 +608,171 @@ export async function fetchAgentSessionDetail(args: {
     }
 }
 
+// ---------------------------------------------------------------------------
+// "What Genos remembers": delete conversations, list and withdraw the
+// answers shared with the team.
+//
+//   DELETE /agent/sessions/<id>/             one of the caller's conversations
+//   DELETE /agent/sessions/?team_id=         ALL of the caller's, in that team
+//   GET    /agent/shared-answers/?team_id=   the answers teammates may see
+//   DELETE /agent/shared-answers/<run_id>/   stop sharing one answer
+//
+// Unlike the best-effort helpers above, these return a result the caller
+// MUST branch on: a destructive request that silently "worked" (or didn't)
+// is worse than none. Each outcome the UI words differently has its own
+// `kind`, and nothing here throws.
+// ---------------------------------------------------------------------------
+
+export type AgentDeleteResult =
+    | { kind: "deleted"; deletedSessions: number; deletedRuns: number }
+    // 404: already gone, or never the caller's. Same outcome as success for
+    // the list (the row has to go), so callers treat it that way.
+    | { kind: "gone" }
+    // 409 `run_in_flight`: a conversation is still answering. The server
+    // deletes NOTHING in that case (all-or-nothing), so the caller keeps
+    // its list and asks the person to wait.
+    | { kind: "in_flight" }
+    | { kind: "error" };
+
+const readDeleteCounts = async (
+    resp: Response
+): Promise<{ deletedSessions: number; deletedRuns: number }> => {
+    try {
+        const data = (await resp.json()) as {
+            deleted_sessions?: number;
+            deleted_runs?: number;
+        };
+        return {
+            deletedSessions: Number(data.deleted_sessions) || 0,
+            deletedRuns: Number(data.deleted_runs) || 0,
+        };
+    } catch {
+        return { deletedSessions: 0, deletedRuns: 0 };
+    }
+};
+
+const classifyDelete = async (resp: Response): Promise<AgentDeleteResult> => {
+    if (resp.ok) return { kind: "deleted", ...(await readDeleteCounts(resp)) };
+    if (resp.status === 404) return { kind: "gone" };
+    if (resp.status === 409) return { kind: "in_flight" };
+    return { kind: "error" };
+};
+
+// Permanently delete one of the caller's own conversations: the session,
+// all of its turns, and the copies Genos recalls them from.
+export async function deleteAgentSession(args: {
+    accessToken: string;
+    sessionId: string;
+}): Promise<AgentDeleteResult> {
+    if (!args.accessToken || !args.sessionId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/${encodeURIComponent(args.sessionId)}/`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        return await classifyDelete(resp);
+    } catch {
+        return { kind: "error" };
+    }
+}
+
+// Permanently delete ALL of the caller's conversations in one team,
+// including ones the History list doesn't show (older than its cap, hidden
+// by the plan's history window, or started from a thread or note). The team
+// is required by the server and deliberately never defaulted: a delete-all
+// that quietly reached into the person's other teams would be the worst way
+// to get this wrong.
+export async function deleteAllAgentSessions(args: {
+    accessToken: string;
+    teamId: string;
+}): Promise<AgentDeleteResult> {
+    if (!args.accessToken || !args.teamId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/?team_id=${encodeURIComponent(args.teamId)}`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        return await classifyDelete(resp);
+    } catch {
+        return { kind: "error" };
+    }
+}
+
+// One answer the caller currently has shared with teammates. `audience_size`
+// counts the people who could be shown it, the caller included, so 1 means
+// only them. `session_id` is null for a standalone ask.
+export interface SharedAnswer {
+    run_id: string;
+    session_id: string | null;
+    team_id: string;
+    question: string;
+    answer_snippet: string;
+    started_at: string;
+    audience_size: number;
+}
+
+export interface SharedAnswersResponse {
+    // The account-wide preference; when false the server sends no answers.
+    share_answers_with_team: boolean;
+    answers: SharedAnswer[];
+    // True when the list was cut short (the server returns at most 50 and
+    // only audits a bounded number of candidates).
+    has_more: boolean;
+}
+
+// `null` on any failure, so the caller can tell "couldn't load" from "nothing
+// shared" and say so — an empty list that is really an outage would read as
+// "your answers are not shared", which is exactly the claim this page makes.
+export async function fetchSharedAnswers(args: {
+    accessToken: string;
+    teamId: string;
+}): Promise<SharedAnswersResponse | null> {
+    if (!args.accessToken || !args.teamId) return null;
+    try {
+        // Always team-scoped: omitting `team_id` returns every team's, which
+        // would show another team's answers in this team's shell.
+        const resp = await fetch(
+            `${API_BASE}/agent/shared-answers/?team_id=${encodeURIComponent(args.teamId)}`,
+            { headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (!resp.ok) return null;
+        const data = (await resp.json()) as Partial<SharedAnswersResponse>;
+        return {
+            share_answers_with_team: data.share_answers_with_team !== false,
+            answers: Array.isArray(data.answers) ? data.answers : [],
+            has_more: Boolean(data.has_more),
+        };
+    } catch {
+        return null;
+    }
+}
+
+export type WithdrawSharedAnswerResult =
+    | { kind: "withdrawn" }
+    // 404: missing or not the caller's. The row has to go either way.
+    | { kind: "gone" }
+    | { kind: "error" };
+
+// Stop sharing ONE answer. One-way on the server: the conversation stays,
+// but that answer is never collected for the team again.
+export async function withdrawSharedAnswer(args: {
+    accessToken: string;
+    runId: string;
+}): Promise<WithdrawSharedAnswerResult> {
+    if (!args.accessToken || !args.runId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/shared-answers/${encodeURIComponent(args.runId)}/`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (resp.ok) return { kind: "withdrawn" };
+        if (resp.status === 404) return { kind: "gone" };
+        return { kind: "error" };
+    } catch {
+        return { kind: "error" };
+    }
+}
+
 // F1 — record 👍/👎 on an answer (SPOTLIGHT_QUALITY_ARCHITECTURE.md §Q0).
 // `rating`: 1 = up, -1 = down, 0 = cleared. Best-effort: returns true on a
 // 2xx, false otherwise; never throws (feedback must not break the UI).

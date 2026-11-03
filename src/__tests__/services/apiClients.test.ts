@@ -3,12 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     askAgentStream,
     decideAgent,
+    deleteAgentSession,
+    deleteAllAgentSessions,
     fetchAgentFeatures,
     fetchAgentModels,
     fetchAgentSessionDetail,
     fetchAgentSessions,
     fetchNoteSummary,
+    fetchSharedAnswers,
     fetchThreadSummary,
+    withdrawSharedAnswer,
 } from "../../services/agentApi";
 import { authApi } from "../../services/api";
 import {
@@ -528,6 +532,207 @@ describe("agentApi GET helpers", () => {
             expect(
                 await fetchAgentSessionDetail({ accessToken: "tok", teamId: "t", sessionId: "s" })
             ).toBeNull();
+        });
+    });
+});
+
+// ===========================================================================
+// agentApi — "What Genos remembers": delete conversations, shared answers
+// ===========================================================================
+describe("agentApi conversation delete + shared answers", () => {
+    const DELETE_INIT = { method: "DELETE", headers: { Authorization: "Bearer tok" } };
+
+    describe("deleteAgentSession", () => {
+        it("DELETEs /agent/sessions/<id>/ with no team_id and reports the counts", async () => {
+            const fetchMock = vi
+                .fn()
+                .mockResolvedValue(jsonResponse({ deleted_sessions: 1, deleted_runs: 4 }));
+            vi.stubGlobal("fetch", fetchMock);
+
+            const result = await deleteAgentSession({ accessToken: "tok", sessionId: "sess/1" });
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                `${API_BASE}/agent/sessions/sess%2F1/`,
+                DELETE_INIT
+            );
+            expect(result).toEqual({ kind: "deleted", deletedSessions: 1, deletedRuns: 4 });
+        });
+
+        it("tells the outcomes apart: 404 gone, 409 in flight, anything else an error", async () => {
+            const call = (status: number, body: unknown = {}) => {
+                vi.stubGlobal(
+                    "fetch",
+                    vi.fn().mockResolvedValue(jsonResponse(body, { ok: false, status }))
+                );
+                return deleteAgentSession({ accessToken: "tok", sessionId: "s" });
+            };
+            expect(await call(404, { error: "Session not found." })).toEqual({ kind: "gone" });
+            expect(await call(409, { error: "x", code: "run_in_flight" })).toEqual({
+                kind: "in_flight",
+            });
+            expect(await call(500)).toEqual({ kind: "error" });
+            expect(await call(401)).toEqual({ kind: "error" });
+        });
+
+        it("is an error when the request itself fails, and never sends without a token or id", async () => {
+            vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+            expect(await deleteAgentSession({ accessToken: "tok", sessionId: "s" })).toEqual({
+                kind: "error",
+            });
+
+            const fetchMock = vi.fn();
+            vi.stubGlobal("fetch", fetchMock);
+            expect(await deleteAgentSession({ accessToken: "", sessionId: "s" })).toEqual({
+                kind: "error",
+            });
+            expect(await deleteAgentSession({ accessToken: "tok", sessionId: "" })).toEqual({
+                kind: "error",
+            });
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("deleteAllAgentSessions", () => {
+        it("DELETEs /agent/sessions/?team_id=<id> for exactly that team", async () => {
+            const fetchMock = vi
+                .fn()
+                .mockResolvedValue(jsonResponse({ deleted_sessions: 3, deleted_runs: 9 }));
+            vi.stubGlobal("fetch", fetchMock);
+
+            const result = await deleteAllAgentSessions({ accessToken: "tok", teamId: "team a" });
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                `${API_BASE}/agent/sessions/?team_id=team%20a`,
+                DELETE_INIT
+            );
+            expect(result).toEqual({ kind: "deleted", deletedSessions: 3, deletedRuns: 9 });
+        });
+
+        it("refuses to send without a team: there is no 'all teams' form", async () => {
+            const fetchMock = vi.fn();
+            vi.stubGlobal("fetch", fetchMock);
+            expect(await deleteAllAgentSessions({ accessToken: "tok", teamId: "" })).toEqual({
+                kind: "error",
+            });
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it("maps 409 to in flight and treats a 200 with zeros as deleted", async () => {
+            vi.stubGlobal(
+                "fetch",
+                vi
+                    .fn()
+                    .mockResolvedValue(
+                        jsonResponse({ code: "run_in_flight" }, { ok: false, status: 409 })
+                    )
+            );
+            expect(await deleteAllAgentSessions({ accessToken: "tok", teamId: "t" })).toEqual({
+                kind: "in_flight",
+            });
+
+            vi.stubGlobal(
+                "fetch",
+                vi.fn().mockResolvedValue(jsonResponse({ deleted_sessions: 0, deleted_runs: 0 }))
+            );
+            expect(await deleteAllAgentSessions({ accessToken: "tok", teamId: "t" })).toEqual({
+                kind: "deleted",
+                deletedSessions: 0,
+                deletedRuns: 0,
+            });
+        });
+    });
+
+    describe("fetchSharedAnswers", () => {
+        it("GETs /agent/shared-answers/?team_id=<id> (always team-scoped) and returns the body", async () => {
+            const body = {
+                share_answers_with_team: true,
+                answers: [{ run_id: "r1", audience_size: 2 }],
+                has_more: true,
+            };
+            const fetchMock = vi.fn().mockResolvedValue(jsonResponse(body));
+            vi.stubGlobal("fetch", fetchMock);
+
+            const result = await fetchSharedAnswers({ accessToken: "tok", teamId: "team a" });
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                `${API_BASE}/agent/shared-answers/?team_id=team%20a`,
+                { headers: { Authorization: "Bearer tok" } }
+            );
+            expect(result).toEqual(body);
+        });
+
+        it("is null on any failure, so 'could not load' never reads as 'nothing shared'", async () => {
+            vi.stubGlobal(
+                "fetch",
+                vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status: 500 }))
+            );
+            expect(await fetchSharedAnswers({ accessToken: "tok", teamId: "t" })).toBeNull();
+
+            vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("x")));
+            expect(await fetchSharedAnswers({ accessToken: "tok", teamId: "t" })).toBeNull();
+
+            const fetchMock = vi.fn();
+            vi.stubGlobal("fetch", fetchMock);
+            expect(await fetchSharedAnswers({ accessToken: "tok", teamId: "" })).toBeNull();
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it("defaults a thin body to an empty list with sharing on", async () => {
+            vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({})));
+            expect(await fetchSharedAnswers({ accessToken: "tok", teamId: "t" })).toEqual({
+                share_answers_with_team: true,
+                answers: [],
+                has_more: false,
+            });
+        });
+
+        it("keeps an explicit false preference", async () => {
+            vi.stubGlobal(
+                "fetch",
+                vi.fn().mockResolvedValue(
+                    jsonResponse({
+                        share_answers_with_team: false,
+                        answers: [],
+                        has_more: false,
+                    })
+                )
+            );
+            const result = await fetchSharedAnswers({ accessToken: "tok", teamId: "t" });
+            expect(result?.share_answers_with_team).toBe(false);
+        });
+    });
+
+    describe("withdrawSharedAnswer", () => {
+        it("DELETEs /agent/shared-answers/<run_id>/", async () => {
+            const fetchMock = vi
+                .fn()
+                .mockResolvedValue(jsonResponse({ run_id: "r1", shared: false }));
+            vi.stubGlobal("fetch", fetchMock);
+
+            expect(await withdrawSharedAnswer({ accessToken: "tok", runId: "r1" })).toEqual({
+                kind: "withdrawn",
+            });
+            expect(fetchMock).toHaveBeenCalledWith(
+                `${API_BASE}/agent/shared-answers/r1/`,
+                DELETE_INIT
+            );
+        });
+
+        it("maps 404 to gone and everything else to an error", async () => {
+            const call = (status: number) => {
+                vi.stubGlobal(
+                    "fetch",
+                    vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status }))
+                );
+                return withdrawSharedAnswer({ accessToken: "tok", runId: "r1" });
+            };
+            expect(await call(404)).toEqual({ kind: "gone" });
+            expect(await call(500)).toEqual({ kind: "error" });
+
+            vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("x")));
+            expect(await withdrawSharedAnswer({ accessToken: "tok", runId: "r1" })).toEqual({
+                kind: "error",
+            });
         });
     });
 });
