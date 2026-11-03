@@ -53,6 +53,7 @@ export {
     type CompletedTurn,
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
+    type StaticAnswer,
     type ToolEvent,
     type ToolEventStatus,
     type UseAgentQAArgs,

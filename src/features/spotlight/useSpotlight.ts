@@ -13,17 +13,20 @@
 // AbortController. When the user types fast we abort prior in-flight
 // requests so older responses can never overwrite newer ones in the UI.
 //
-// Phase 12 invariants:
-//   - Each ask gets a fresh monotonically-increasing `turnId`. Stream
-//     handlers gate on `prev.turnId === askedTurnId` so a late event
-//     from a superseded turn can't corrupt the current one. (The old
-//     `askedQuery`-based gate failed when a user re-asked identical
-//     text after an error.)
-//   - On `onDone` or `onError` the current `ask` is *promoted* into
-//     the `turns` array (idempotent via `promotedTurnIdsRef`) and
-//     `ask` is reset to empty (preserving `sessionId` and `turnId`).
-//   - `decide` does NOT bump `turnId` — approve/reject is a
-//     continuation of the same turn, completed by the resumed stream.
+// This hook is a thin wrapper. The ask/answer state machine (turn ids, the
+// live `ask` slot, promotion into `turns`, approve/reject, cancel, stream
+// handlers) is `useAgentQA` — the same machine the thread and note asks
+// run on, so there is exactly one of it. What stays here is Spotlight's
+// own: the combined search+ask input and typeahead, filters, the History
+// panel and Genos-page sessions, localStorage persistence of the
+// conversation, the AI-answers setting, the demo funnel and the
+// open/close state of the overlay.
+//
+// Conversation invariants (enforced by `useAgentQA`):
+//   - Each ask gets a fresh monotonically-increasing `turnId`; a late
+//     event from a superseded turn can't corrupt the current one.
+//   - On done / error the live `ask` is *promoted* into `turns` once.
+//   - Approve/reject does NOT bump `turnId` — it continues the same turn.
 //   - Closing the overlay preserves `{ sessionId, turns }` so an
 //     accidental Escape doesn't lose the conversation. Only the
 //     explicit "New conversation" button clears them. The unsent draft
@@ -44,14 +47,10 @@ import axios, { CanceledError } from "axios";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { useTranslation } from "../../i18n";
 import {
-    askAgentStream,
-    decideAgent,
     fetchAgentSessionDetail,
     fetchAgentSessions,
-    submitAgentFeedback,
     type AgentSessionDetail,
     type AgentSessionSummary,
-    type PendingApprovalPayload,
 } from "../../services/agentApi";
 import { markDemoCompleted } from "../../services/demoFunnel";
 import {
@@ -63,19 +62,16 @@ import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
     deletionCoversSession,
-    emitProjectToolResult,
     MAX_TURNS_IN_HISTORY,
     sessionTurnToCompleted,
-    toWireMentions,
     useAgentSessionsDeleted,
     type AgentMentionRef,
+    type AgentRunResult,
     type AskState,
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
-import { emitNoteChanged } from "../agentQA/noteWriteTools";
-import { emitTodoChanged } from "../agentQA/todoWriteTools";
-import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
+import { useAgentQA } from "../agentQA/useAgentQA";
 import {
     effectiveFilterServices,
     entityTypesForFilter,
@@ -126,6 +122,13 @@ const MAX_STORED_TURNS = 10; // lower cap than in-memory to limit storage size
  * it (see `services/demoFunnel`).
  */
 export type SpotlightAskOrigin = "typed" | "starter" | "retry";
+
+// `origin` travels through `useAgentQA` as the ask's opaque `meta` and comes
+// back on `AgentRunResult.meta`; this is the narrowing on the way out.
+const askOriginOf = (meta: unknown): SpotlightAskOrigin => {
+    const origin = (meta as { origin?: SpotlightAskOrigin } | null | undefined)?.origin;
+    return origin === "starter" || origin === "retry" ? origin : "typed";
+};
 
 export interface UseSpotlightArgs {
     accessToken: string | null;
@@ -228,18 +231,6 @@ export interface UseSpotlightReturn {
     registerPageInputFocus: (fn: (() => void) | null) => void;
 }
 
-const EMPTY_ASK_STATE: AskState = {
-    isStreaming: false,
-    askedQuery: "",
-    answer: "",
-    answerSources: [],
-    askError: null,
-    toolEvents: [],
-    pendingApproval: null,
-    sessionId: null,
-    turnId: 0,
-};
-
 export const useSpotlight = ({
     accessToken,
     teamId,
@@ -256,8 +247,6 @@ export const useSpotlight = ({
     const [filterServices, setFilterServices] = useState<SpotlightFilterService[]>([]);
     // Project filter (search mode only). Empty = every project.
     const [filterProjectIds, setFilterProjectIds] = useState<number[]>([]);
-    const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
-    const [turns, setTurns] = useState<CompletedTurn[]>([]);
     // ----- History panel state (Phase ~4.6) -----
     // historyMode flips the conversation panel into a read-only archive
     // view. historySessions is the list, historyDetail is the selected
@@ -293,13 +282,6 @@ export const useSpotlight = ({
     // user typed" (debounce) apart from "same query, different filter"
     // (fire immediately — a chip click should feel instant).
     const lastSearchedQueryRef = useRef<string | null>(null);
-    // Separate abort handle for the Ask stream so a new search doesn't
-    // cancel an in-progress answer.
-    const askAbortRef = useRef<AbortController | null>(null);
-    // Phase 12: tracks which turn ids have already been snapshotted
-    // into `turns`. Makes the `onDone` / `onError` promote step
-    // idempotent — whichever event arrives second is a no-op.
-    const promotedTurnIdsRef = useRef<Set<number>>(new Set());
     // Read latest open state from inside the global keydown listener
     // without re-registering it on every render.
     const isOpenRef = useRef(isOpen);
@@ -318,81 +300,63 @@ export const useSpotlight = ({
         pageInputFocusRef.current = fn;
     }, []);
 
-    // ---- Backgrounded-run completion notice. ----
+    // ---- What happens when a run finishes (`useAgentQA`'s onRunComplete). ----
     //
-    // Closing the overlay deliberately leaves an in-flight ask streaming
-    // (see the close effect below), so an answer can land minutes after
-    // the user has moved on. `liveRunRef` mirrors the in-flight turn
-    // because the stream handlers can't read fresh `ask` state — updaters
-    // run at commit time, so a handler closure only sees a stale
-    // snapshot.
+    // Fires once per turn at a terminal state (clean finish or error) and
+    // never for an explicit Cancel or a conversation that was reset, which
+    // is exactly when neither a notice nor a demo conversion should happen.
     //
-    // It has a second consumer: the demo funnel's `demo_completed`, which
-    // also fires from `onDone` and needs the same two things the notice
-    // needs — "is this turn still the live one?" and per-turn facts a
-    // commit-time updater can't hand back. Sharing the ref rather than
-    // adding a parallel one is deliberate: its lifecycle is the part
-    // that's easy to get wrong (cancel and "New conversation" both null
-    // it, which is exactly when neither a notice nor a conversion should
-    // fire), and one ref means one place that can be got right.
-    const liveRunRef = useRef<{
-        turnId: number;
-        askedQuery: string;
-        // Where the question came from. Funnel-only; the notice ignores it.
-        origin: SpotlightAskOrigin;
-        // Citation count, mirrored from `onSources` because `onDone` lands
-        // before the sources state commit is readable here.
-        sourceCount: number;
-    } | null>(null);
-    // At most one notice per turn. Kept separate from
-    // `promotedTurnIdsRef` because Cancel also promotes, and a run the
-    // user stopped on purpose must not announce itself.
-    const notifiedTurnIdsRef = useRef<Set<number>>(new Set());
+    // 1. Demo funnel: the visitor's first answered ask is the demo's payoff
+    //    moment (see `services/demoFunnel`). Only a CLEAN finish counts — a
+    //    visitor who saw a failure did not get the answer the demo exists
+    //    to show. No-ops entirely outside a demo session.
+    // 2. Backgrounded-run notice: closing the overlay deliberately leaves an
+    //    in-flight ask streaming, so an answer can land minutes after the
+    //    user moved on. Notify unless they are looking at it (overlay open
+    //    OR the Genos page showing the conversation full-page, in a tab they
+    //    are actually viewing).
     const notificationManagerRef = useRef(notificationManager);
     useEffect(() => {
         notificationManagerRef.current = notificationManager;
     }, [notificationManager]);
 
-    const notifyRunFinished = useCallback(
-        (turnId: number, runId: string | null, error: string | null) => {
-            const live = liveRunRef.current;
-            if (!live || live.turnId !== turnId) return;
-            // User watched it finish — overlay open OR the Genos page
-            // showing the same conversation full-page, in a tab they
-            // are actually looking at.
-            if (isRunBeingWatched(isOpenRef.current || isPageActiveRef.current)) return;
-            if (notifiedTurnIdsRef.current.has(turnId)) return;
-            notifiedTurnIdsRef.current.add(turnId);
-            notifyAgentRunComplete(notificationManagerRef.current, {
-                surface: "spotlight",
-                askedQuery: live.askedQuery,
-                runId,
-                turnId,
-                error,
-                onOpen: () => setIsOpen(true),
+    const handleRunComplete = useCallback((run: AgentRunResult) => {
+        if (run.error === null) {
+            markDemoCompleted({
+                origin: askOriginOf(run.meta),
+                ...(typeof run.elapsedMs === "number" ? { elapsedMs: run.elapsedMs } : {}),
+                sourceCount: run.sourceCount,
             });
-        },
-        []
-    );
-
-    // ---- Demo funnel: the visitor's first answered ask. ----
-    //
-    // This is the demo's payoff moment, so it's the second half of the
-    // funnel — see `services/demoFunnel` for why arrival in the workspace
-    // isn't. Called only from the clean-finish path: `onError` and Cancel
-    // must not count, because a visitor who saw a failure or stopped the
-    // stream did not get the answer the demo exists to show.
-    //
-    // No-ops entirely outside a demo session, which is every normal user.
-    const maybeCompleteDemoFunnel = useCallback((turnId: number, elapsedMs?: number) => {
-        const live = liveRunRef.current;
-        if (!live || live.turnId !== turnId) return;
-        markDemoCompleted({
-            origin: live.origin,
-            ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
-            sourceCount: live.sourceCount,
+        }
+        if (isRunBeingWatched(isOpenRef.current || isPageActiveRef.current)) return;
+        notifyAgentRunComplete(notificationManagerRef.current, {
+            surface: "spotlight",
+            askedQuery: run.askedQuery,
+            runId: run.runId,
+            turnId: run.turnId,
+            error: run.error,
+            onOpen: () => setIsOpen(true),
         });
     }, []);
+
+    // ---- The conversation: one shared ask/answer state machine. ----
+    //
+    // Nothing the typing path touches lives in here — `query`, the typeahead
+    // and the filters stay in this hook's own state, so a keystroke renders
+    // exactly as often as it did when the machine was a private copy.
+    //
+    // Options: the message for an ask with no team (Spotlight is reachable
+    // before a team is picked, so it shows the problem rather than ignoring
+    // the click), and `resume` on follow-ups to a transcript the user can
+    // see (restored from History or localStorage).
+    const qa = useAgentQA({
+        accessToken,
+        teamId,
+        onRunComplete: handleRunComplete,
+        noTeamError: t.spotlight.errors.noTeam,
+        resumeVisibleSession: true,
+    });
+    const { ask, turns, sessionId, reset: resetConversation } = qa;
 
     // ---- Global keyboard shortcut: Cmd-K / Ctrl-K toggles. ----
     useEffect(() => {
@@ -454,15 +418,14 @@ export const useSpotlight = ({
             if (Date.now() - stored.savedAt > STORAGE_TTL_MS) return;
             const restoredTurns = stored.turns ?? [];
             if (restoredTurns.length === 0 && !stored.sessionId) return;
-            setTurns(restoredTurns);
-            setAsk((prev) => ({ ...prev, sessionId: stored.sessionId ?? null }));
-            // Seed promotedTurnIdsRef so stale handlers can't double-promote
-            // a turn that was already snapshotted in a prior page session.
-            restoredTurns.forEach((t) => promotedTurnIdsRef.current.add(t.id));
+            // `reset` seeds the shared machine's promoted-turn set AND its
+            // turn counter from the restored ids, so the first ask after a
+            // reload is promoted as the next turn.
+            resetConversation({ sessionId: stored.sessionId ?? null, turns: restoredTurns });
         } catch {
             // Ignore corrupt / missing localStorage entries.
         }
-    }, [teamId]);
+    }, [teamId, resetConversation]);
 
     // ---- Overlay close: clear transient results, preserve the draft
     // query, the conversation, AND any in-flight answer. ----
@@ -530,7 +493,7 @@ export const useSpotlight = ({
                     JSON.stringify({
                         version: 1,
                         savedAt: Date.now(),
-                        sessionId: ask.sessionId,
+                        sessionId,
                         turns: toStore,
                     })
                 );
@@ -539,7 +502,7 @@ export const useSpotlight = ({
             }
         }, 500);
         return () => window.clearTimeout(timer);
-    }, [turns, ask.sessionId, teamId]);
+    }, [turns, sessionId, teamId]);
 
     // ---- Debounced search on query change while the surface shows
     // (overlay open OR the Genos page active). ----
@@ -685,466 +648,51 @@ export const useSpotlight = ({
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
 
-    // ---- Promote the current `ask` into the `turns` history. ----
-    //
-    // Idempotent: the same `turnId` will only be promoted once even
-    // if both `onDone` and `onError` fire (the runNdjsonStream
-    // consumer doesn't stop on error). After promotion, the live
-    // `ask` slot is reset to empty so the next `onAsk` starts clean,
-    // preserving only `sessionId` (conversation continuity) and
-    // `turnId` (so the next `onAsk` can bump it from a known base).
-    const promoteCurrentTurn = useCallback((turnId: number) => {
-        if (promotedTurnIdsRef.current.has(turnId)) return;
-        promotedTurnIdsRef.current.add(turnId);
-        setAsk((prev) => {
-            // Defense: if a stale handler fires after a newer turn
-            // has already replaced `ask`, leave `prev` alone.
-            if (prev.turnId !== turnId) return prev;
-            // Don't snapshot an empty turn — happens when an error
-            // fires before any answer/tool/source content. Even an
-            // empty error turn is worth showing though, so we promote
-            // when `askError` is set.
-            const hasContent =
-                Boolean(prev.answer) ||
-                prev.toolEvents.length > 0 ||
-                prev.answerSources.length > 0 ||
-                Boolean(prev.askError);
-            if (hasContent) {
-                const snapshot: CompletedTurn = {
-                    id: prev.turnId,
-                    askedQuery: prev.askedQuery,
-                    answer: prev.answer,
-                    answerSources: prev.answerSources,
-                    toolEvents: prev.toolEvents,
-                    askError: prev.askError,
-                    runId: prev.runId ?? null,
-                    mentions: prev.askedMentions,
-                    elapsedMs: prev.elapsedMs ?? null,
-                };
-                setTurns((prevTurns) => {
-                    const next = [...prevTurns, snapshot];
-                    return next.length > MAX_TURNS_IN_HISTORY
-                        ? next.slice(next.length - MAX_TURNS_IN_HISTORY)
-                        : next;
-                });
-            }
-            return {
-                ...EMPTY_ASK_STATE,
-                sessionId: prev.sessionId,
-                turnId: prev.turnId,
-            };
-        });
-    }, []);
-
-    // Builds the shared callback set used by both `askAgentStream`
-    // (fresh /ask/) and `decideAgent` (resume). Both flows update the
-    // same `ask` state, so the UI sees one continuous answer panel
-    // even when a pause + resume happens in the middle.
-    //
-    // Phase 12: parameter is the turn id (monotonic int), not the
-    // user's query text. `stillCurrent` now gates on identity rather
-    // than string equality, so re-asking the same query never crosses
-    // wires.
-    const buildStreamHandlers = useCallback(
-        (askedTurnId: number) => {
-            const stillCurrent = (prev: AskState) => prev.turnId === askedTurnId;
-            return {
-                onSources: (sources: SpotlightResult[]) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
-                    );
-                    // Mirror the count for the funnel: `onDone` runs before
-                    // this state update is readable from a handler closure,
-                    // so reading `ask.answerSources` there would report 0 on
-                    // every answer.
-                    const live = liveRunRef.current;
-                    if (live && live.turnId === askedTurnId) {
-                        live.sourceCount = sources.length;
-                    }
-                },
-                onDelta: (text: string) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
-                    );
-                },
-                onDone: (sessionId?: string, runId?: string, elapsedMs?: number) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? {
-                                  ...prev,
-                                  isStreaming: false,
-                                  ...(sessionId !== undefined ? { sessionId } : {}),
-                                  // run_id keys the 👍/👎 feedback POST (F1);
-                                  // without it the thumbs stay hidden.
-                                  ...(runId ? { runId } : {}),
-                                  // Total response time for the "Answered
-                                  // in Xs" line (absent on old backends).
-                                  ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
-                              }
-                            : prev
-                    );
-                    // Before `promoteCurrentTurn` — nothing there clears the
-                    // mirror today, but ordering the read first means a
-                    // future cleanup added to promotion can't silently zero
-                    // the conversion rate.
-                    maybeCompleteDemoFunnel(askedTurnId, elapsedMs);
-                    promoteCurrentTurn(askedTurnId);
-                    notifyRunFinished(askedTurnId, runId ?? null, null);
-                },
-                onError: (message: string) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? { ...prev, isStreaming: false, askError: message }
-                            : prev
-                    );
-                    promoteCurrentTurn(askedTurnId);
-                    notifyRunFinished(askedTurnId, null, message);
-                },
-                onToolStart: ({
-                    step,
-                    tool_name,
-                    arguments: args,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    arguments: Record<string, unknown>;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        // If the same (step, tool_name) is already in
-                        // the list as `pending` it's the resume call
-                        // re-announcing the previously-paused tool —
-                        // don't duplicate the row.
-                        const dup = prev.toolEvents.some(
-                            (te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                        );
-                        if (dup) return prev;
-                        const next: ToolEvent = {
-                            step,
-                            tool_name,
-                            arguments: args,
-                            status: "pending",
-                        };
-                        return { ...prev, toolEvents: [...prev.toolEvents, next] };
-                    });
-                },
-                onToolResult: ({
-                    step,
-                    tool_name,
-                    summary,
-                    note,
-                    note_folder,
-                    duration_ms,
-                    project,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    summary: string;
-                    note?: import("../../services/agentApi").ToolResultNoteRef;
-                    note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
-                    duration_ms?: number;
-                    project?: import("../../services/agentApi").ToolResultProjectRef;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        return {
-                            ...prev,
-                            toolEvents: prev.toolEvents.map((te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                                    ? { ...te, status: "done" as const, summary, duration_ms }
-                                    : te
-                            ),
-                        };
-                    });
-                    // Cross-feature invalidator: the chat-side ToDoPane
-                    // owns its own state and won't see these writes
-                    // unless we nudge it. useTodoGroups listens for
-                    // this event and refetches. useAgentQA emits it through
-                    // the same helper, so a to-do written from a thread or
-                    // note ask refreshes the pane too.
-                    emitTodoChanged(tool_name);
-                    // Same idea for notes: the note sidebar's meta, folder
-                    // lists and Favorites (useNoteManagement) won't reflect
-                    // an agent-written note, folder or star until a manual
-                    // reload. Nudge it to refetch.
-                    // The refs carry what changed (id/type/changed_fields,
-                    // `deleted`, a folder delete's ids) so useNoteManagement
-                    // can push a body into the note's Yjs doc or drop what
-                    // the server removed; undefined on older backends keeps
-                    // the plain meta refetch.
-                    emitNoteChanged(tool_name, note, note_folder);
-                    // And for tasks/milestones: an approved agent write
-                    // (create_task_plan, update_tasks_bulk, ...) mutates
-                    // rows outside the task UI's flows — nudge
-                    // useProjectTaskManagement to re-run the same refresh
-                    // the window-focus handler uses.
-                    if (TASK_WRITE_TOOLS.has(tool_name)) {
-                        emitTasksBulkChanged();
-                    }
-                    // A deleted project leaves the sidebar, and an answered
-                    // join request changes its inbox row on the server.
-                    emitProjectToolResult(tool_name, project);
-                },
-                onToolError: ({
-                    step,
-                    tool_name,
-                    error,
-                    duration_ms,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    error: string;
-                    duration_ms?: number;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        return {
-                            ...prev,
-                            toolEvents: prev.toolEvents.map((te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                                    ? { ...te, status: "error" as const, error, duration_ms }
-                                    : te
-                            ),
-                        };
-                    });
-                },
-                onPendingApproval: (payload: PendingApprovalPayload) => {
-                    // No promotion here — the turn isn't done yet.
-                    // The user must approve or reject, and the
-                    // resumed stream's `onDone` is what promotes.
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? {
-                                  ...prev,
-                                  // Stream is "paused" not "ended". The UI
-                                  // shows an Approve/Reject card; spinner
-                                  // text changes from "streaming…" to a
-                                  // waiting-for-user state.
-                                  isStreaming: false,
-                                  pendingApproval: payload,
-                              }
-                            : prev
-                    );
-                },
-            };
-        },
-        [promoteCurrentTurn, notifyRunFinished, maybeCompleteDemoFunnel]
-    );
-
     // ---- Enter / Ask button handler: stream the agent's answer. ----
-    // `overrideQuery` is supplied by the retry button on past turns so
-    // it can bypass the query input state without a render cycle.
-    // `mentions` are the structured @/# refs from the overlay's picker;
-    // retry re-sends the refs stored on the turn (CompletedTurn.mentions),
-    // so a re-ask keeps its references block + search boost.
+    // `overrideQuery` is supplied by the retry button on past turns and the
+    // starter chips so they can bypass the query input state without a
+    // render cycle. `mentions` are the structured @/# refs from the
+    // overlay's picker; retry re-sends the refs stored on the turn
+    // (CompletedTurn.mentions), so a re-ask keeps its references block +
+    // search boost.
+    //
+    // The Spotlight filters — service chips AND the project dropdown — are
+    // a SEARCH-ONLY feature: they scope the typeahead, never the agent. An
+    // ask is intentionally unscoped so Genos always answers from the full
+    // workspace — the user narrowing what they browse must not silently
+    // narrow what the assistant can reason over. (Scoping the ask by
+    // filter was tried and reverted: fe #177 / api #122.) Nothing derived
+    // from `filterServices` / `filterProjectIds` may be added to this call.
+    const { onAsk: qaOnAsk } = qa;
     const onAsk = useCallback(
         (
             overrideQuery?: string,
             mentions?: AgentMentionRef[],
             origin: SpotlightAskOrigin = "typed"
         ) => {
-            const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
-            if (!trimmed) return;
-            // Defense: never start a new ask while the previous one is
-            // still streaming or awaiting approval. The UI also disables
-            // the Ask button + Enter in these states.
-            if (ask.isStreaming || ask.pendingApproval !== null) return;
             // AI answers disabled in Settings — silently ignore. The UI
             // also disables the Ask button + Enter, so reaching here
             // would only happen via a stale handler or programmatic call.
+            // (Spotlight-only: the thread and note asks have no such gate.)
             if (!aiAnswers) return;
-            if (!teamId) {
-                setAsk({
-                    ...EMPTY_ASK_STATE,
-                    sessionId: ask.sessionId,
-                    turnId: ask.turnId + 1,
-                    askedQuery: trimmed,
-                    askError: t.spotlight.errors.noTeam,
-                });
-                return;
-            }
-
-            // Cancel any prior in-flight Ask before starting a new one.
-            askAbortRef.current?.abort();
-            const controller = new AbortController();
-            askAbortRef.current = controller;
-
-            // Read turnId and sessionId directly from the current `ask`
-            // value — NOT from inside a setAsk updater. In React 18,
-            // updater functions run during the commit phase (after the
-            // synchronous event handler returns), so any variable assigned
-            // inside the updater is still at its initial value when the
-            // code below runs. If askedTurnId stayed 0 here while the
-            // state update set turnId:1, every `stillCurrent` check in the
-            // stream handlers would return false and all events would be
-            // silently dropped, leaving `isStreaming` stuck at true forever.
-            const askedTurnId = ask.turnId + 1;
-
-            setAsk({
-                isStreaming: true,
-                askedQuery: trimmed,
-                answer: "",
-                answerSources: [],
-                askError: null,
-                toolEvents: [],
-                pendingApproval: null,
-                sessionId: ask.sessionId,
-                turnId: askedTurnId,
-                askedMentions: mentions?.length ? mentions : undefined,
-            });
-
-            // Mirror for the completion notice (see `notifyRunFinished`) and
-            // the demo funnel (see `maybeCompleteDemoFunnel`). `sourceCount`
-            // starts at 0 and is filled in by `onSources`; an answer that
-            // cites nothing legitimately leaves it there.
-            liveRunRef.current = {
-                turnId: askedTurnId,
-                askedQuery: trimmed,
-                origin,
-                sourceCount: 0,
-            };
-
-            // The Spotlight filters — service chips AND the project
-            // dropdown — are a SEARCH-ONLY feature: they scope the
-            // typeahead, never the agent. An ask is intentionally
-            // unscoped so Genos always answers from the full workspace —
-            // the user narrowing what they browse must not silently narrow
-            // what the assistant can reason over. (Scoping the ask by
-            // filter was tried and reverted: fe #177 / api #122.)
-            // Nothing derived from `filterServices` / `filterProjectIds`
-            // may be added to this call.
-            void askAgentStream({
-                query: trimmed,
-                teamId,
-                accessToken,
-                sessionId: ask.sessionId ?? undefined,
-                // Continuing a conversation the user can SEE (there are
-                // completed turns under a live session) → tell the
-                // backend so an idle-expired session is resumed rather
-                // than silently forked. First-ever asks omit it.
-                ...(turns.length > 0 && ask.sessionId ? { resume: true } : {}),
-                signal: controller.signal,
-                ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
-                ...buildStreamHandlers(askedTurnId),
-            });
-
+            // The draft is this hook's, not the shared machine's, so the
+            // text is always passed in explicitly.
+            const started = qaOnAsk(
+                overrideQuery !== undefined ? overrideQuery : query,
+                mentions,
+                { origin }
+            );
             // Clear the input immediately after submitting. The question is
             // already captured in `ask.askedQuery` and visible in the
             // conversation history, so the input is ready for the next one.
-            setQuery("");
+            // An ask that did not start (empty, busy, no team) keeps the draft.
+            if (started) setQuery("");
         },
-        [
-            query,
-            teamId,
-            accessToken,
-            buildStreamHandlers,
-            ask.isStreaming,
-            ask.pendingApproval,
-            ask.turnId,
-            ask.sessionId,
-            turns.length,
-            aiAnswers,
-            t,
-        ]
+        [aiAnswers, query, qaOnAsk]
     );
 
-    // ---- Approve / Reject handlers for the pending write tool. ----
-    //
-    // Note: `decide` does NOT bump `turnId`. Approve/reject is a
-    // continuation of the same turn — the resumed stream's `onDone`
-    // is what promotes the now-completed turn into history.
-    const decide = useCallback(
-        (decision: "approve" | "reject") => {
-            setAsk((prev) => {
-                if (!prev.pendingApproval) return prev;
-                const payload = prev.pendingApproval;
-                const askedTurnId = prev.turnId;
-
-                // Mark the pending tool's row as transitioning. The
-                // resume stream will fire tool_call_start (deduped via
-                // buildStreamHandlers) followed by result/error to fill
-                // it in properly.
-                const next: AskState = {
-                    ...prev,
-                    pendingApproval: null,
-                    isStreaming: true,
-                };
-
-                // Reuse the same abort controller bucket; new request
-                // supersedes anything older.
-                askAbortRef.current?.abort();
-                const controller = new AbortController();
-                askAbortRef.current = controller;
-
-                void decideAgent({
-                    runId: payload.run_id,
-                    approvalToken: payload.approval_token,
-                    decision,
-                    accessToken,
-                    signal: controller.signal,
-                    ...buildStreamHandlers(askedTurnId),
-                });
-
-                return next;
-            });
-        },
-        [accessToken, buildStreamHandlers]
-    );
-
-    const onApprove = useCallback(() => decide("approve"), [decide]);
-    const onReject = useCallback(() => decide("reject"), [decide]);
-
-    // ---- Cancel: stop the in-flight stream and clean up. ----
-    //
-    // Aborting the fetch throws AbortError which is silently swallowed
-    // by `runNdjsonStream` — it returns without calling any handler.
-    // So we must manually promote (or discard) the partial turn here,
-    // otherwise `ask.isStreaming` would stay true forever.
-    const onCancel = useCallback(() => {
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
-        // The user stopped this on purpose — drop the mirror so no
-        // "your answer is ready" notice fires for it.
-        liveRunRef.current = null;
-        setAsk((prev) => {
-            if (!prev.isStreaming && prev.pendingApproval === null) return prev;
-            const turnId = prev.turnId;
-            if (!promotedTurnIdsRef.current.has(turnId)) {
-                promotedTurnIdsRef.current.add(turnId);
-                // Keep whatever partial content arrived before cancel.
-                const hasContent =
-                    Boolean(prev.answer) ||
-                    prev.toolEvents.length > 0 ||
-                    prev.answerSources.length > 0;
-                if (hasContent) {
-                    const snapshot: CompletedTurn = {
-                        id: turnId,
-                        askedQuery: prev.askedQuery,
-                        answer: prev.answer,
-                        answerSources: prev.answerSources,
-                        toolEvents: prev.toolEvents,
-                        askError: prev.askError,
-                        runId: prev.runId ?? null,
-                        mentions: prev.askedMentions,
-                    };
-                    setTurns((prevTurns) => {
-                        const next = [...prevTurns, snapshot];
-                        return next.length > MAX_TURNS_IN_HISTORY
-                            ? next.slice(next.length - MAX_TURNS_IN_HISTORY)
-                            : next;
-                    });
-                }
-            }
-            return { ...EMPTY_ASK_STATE, sessionId: prev.sessionId, turnId: prev.turnId };
-        });
-    }, []);
+    // Approve / reject / cancel / feedback are the shared machine's.
+    const { onApprove, onReject, onCancel, submitFeedback } = qa;
 
     // ---- History panel handlers (Phase ~4.6) ----
     //
@@ -1222,16 +770,12 @@ export const useSpotlight = ({
     // ---- New Conversation: clears the session AND prior turns so
     // the next ask starts fresh with no prior-turn context injected. ----
     const onNewConversation = useCallback(() => {
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
-        // `turnId` restarts at 0 with EMPTY_ASK_STATE, so the notified
-        // set has to be cleared alongside the promoted one — a stale id
-        // would otherwise mute the first turn of the new conversation.
-        liveRunRef.current = null;
-        notifiedTurnIdsRef.current.clear();
-        promotedTurnIdsRef.current.clear();
-        setTurns([]);
-        setAsk(EMPTY_ASK_STATE);
+        // Aborts a live stream, drops turns + session, restarts the turn
+        // counter and forgets which runs were announced. Not
+        // `clearConversation`: that also asks the backend for a brand-new
+        // session on the next ask, which Spotlight never did (it just stops
+        // sending the session id).
+        resetConversation({ sessionId: null, turns: [] });
         // Close any open history view too — otherwise "New conversation"
         // would clear the live session but leave the panel showing a
         // past archive, which is incoherent. A stale resume error is
@@ -1248,7 +792,7 @@ export const useSpotlight = ({
                 /* ignore */
             }
         }
-    }, [teamId]);
+    }, [teamId, resetConversation]);
 
     // ---- A conversation was permanently deleted (Settings -> What Genos
     // remembers). ----
@@ -1265,10 +809,10 @@ export const useSpotlight = ({
     //      follow-up would silently fork a new session without it.
     // The ids are read through refs: the handler is invoked outside React's
     // render and must see the conversation that is open NOW.
-    const liveSessionIdRef = useRef<string | null>(ask.sessionId);
+    const liveSessionIdRef = useRef<string | null>(sessionId);
     useEffect(() => {
-        liveSessionIdRef.current = ask.sessionId;
-    }, [ask.sessionId]);
+        liveSessionIdRef.current = sessionId;
+    }, [sessionId]);
     const historyDetailSessionIdRef = useRef<string | null>(null);
     useEffect(() => {
         historyDetailSessionIdRef.current = historyDetail?.session_id ?? null;
@@ -1316,26 +860,18 @@ export const useSpotlight = ({
                         setResumeError(t.spotlight.history.loadFailed);
                         return;
                     }
-                    // The restored session replaces whatever was live.
-                    askAbortRef.current?.abort();
-                    askAbortRef.current = null;
-                    liveRunRef.current = null;
-                    notifiedTurnIdsRef.current.clear();
-                    promotedTurnIdsRef.current.clear();
-                    // Slice BEFORE mapping so restored ids stay 1..n and
-                    // the next turn id (n+1) can never collide with a
-                    // seeded promoted id.
+                    // The restored session replaces whatever was live: `reset`
+                    // aborts a stream in flight and clears the notice state.
+                    // Slice BEFORE mapping so restored ids stay 1..n and the
+                    // next turn id (n+1) can never collide with a seeded
+                    // promoted id; the machine seeds its turn counter from
+                    // the last restored id. Error turns restore too (they're
+                    // part of the transcript), so the transcript matches what
+                    // the detail view would have shown.
                     const recent = (detail.turns || []).slice(-MAX_TURNS_IN_HISTORY);
-                    const restored = recent.map(sessionTurnToCompleted);
-                    restored.forEach((turn) => promotedTurnIdsRef.current.add(turn.id));
-                    setTurns(restored);
-                    // Error turns restore too (they're part of the
-                    // transcript), so the transcript matches what the
-                    // detail view would have shown.
-                    setAsk({
-                        ...EMPTY_ASK_STATE,
+                    resetConversation({
                         sessionId: detail.session_id,
-                        turnId: restored.length,
+                        turns: recent.map(sessionTurnToCompleted),
                     });
                     setHistoryMode("closed");
                     setHistoryDetail(null);
@@ -1350,7 +886,7 @@ export const useSpotlight = ({
                     if (seq === resumeSeqRef.current) setResumeIsLoading(false);
                 });
         },
-        [accessToken, teamId, t]
+        [accessToken, teamId, t, resetConversation]
     );
 
     // ---- View a collected past answer (entity_type "spotlight_answer")
@@ -1359,34 +895,18 @@ export const useSpotlight = ({
     // so we just inject them as a completed (non-streaming) turn. Reset like
     // "New conversation" first so the past answer stands alone rather than
     // appending to an unrelated live conversation. ----
-    const showStoredAnswer = useCallback((result: SpotlightResult) => {
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
-        promotedTurnIdsRef.current.clear();
-        setTurns([]);
-        setHistoryMode("closed");
-        setHistoryDetail(null);
-        setAsk((prev) => ({
-            ...EMPTY_ASK_STATE,
-            turnId: prev.turnId + 1,
-            askedQuery: result.title || "",
-            answer: result.answer_text || "",
-            answerSources: result.answer_sources || [],
-        }));
-    }, []);
-
-    // ---- Record 👍/👎 on a finished turn (F1). ----
-    // Fire-and-forget: the answer is already shown, so a feedback POST
-    // failing must never surface to the user. The FeedbackThumbs
-    // component owns the optimistic button state; this just persists
-    // the signal. Mirrors useAgentQA.submitFeedback so both agent
-    // surfaces feed the same AgentRunFeedback signal.
-    const submitFeedback = useCallback(
-        (runId: string, rating: number) => {
-            if (!runId || !accessToken) return;
-            void submitAgentFeedback({ runId, rating, accessToken });
+    const { showStaticAnswer } = qa;
+    const showStoredAnswer = useCallback(
+        (result: SpotlightResult) => {
+            showStaticAnswer({
+                askedQuery: result.title || "",
+                answer: result.answer_text || "",
+                answerSources: result.answer_sources || [],
+            });
+            setHistoryMode("closed");
+            setHistoryDetail(null);
         },
-        [accessToken]
+        [showStaticAnswer]
     );
 
     return {
