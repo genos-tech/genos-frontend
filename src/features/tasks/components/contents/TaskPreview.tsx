@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { useAdoptableTitleDraft } from "./utils/useAdoptableTitleDraft";
 import { useInitialTabIndex } from "./utils/useInitialTabIndex";
+import { usePreviewEditMirror } from "./utils/usePreviewEditMirror";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
@@ -274,8 +275,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // After the server REFUSES a save, `useSendUpdatedTask` puts the working
     // copy back to what is stored. The assignee / reporter chips keep their own
-    // copies (the mirror effect below only re-reads them while
-    // `isTaskUpdated` is false), so tell them directly.
+    // copies (`usePreviewEditMirror` below re-reads them when the working copy
+    // changes), so tell them directly.
     const handleStoredTaskRestored = useCallback(
         (storedTask: TaskProps) => {
             setAssignee(storedTask.assignee ?? null);
@@ -523,14 +524,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         reportFileCount(taskEditState.uploadedFiles.length);
     }, [taskEditState.uploadedFiles.length, reportFileCount]);
 
-    useEffect(() => {
-        if (useTM.isTaskUpdated === false) {
-            useTM.setCurrentPreviewTask(taskEditState.tmpCurrentTaskContent);
-            useTM.setIsTaskUpdated(true);
-            setAssignee(taskEditState.tmpCurrentTaskContent?.assignee ?? null);
-            setReporter(taskEditState.tmpCurrentTaskContent?.reporter || myself);
-        }
-    }, [taskEditState.tmpCurrentTaskContent]);
+    // Hand the working copy to the host's slot and the table row on each EDIT,
+    // and keep the assignee / reporter chips on the people of the copy that
+    // arrived (loads included). A load pushes nothing: see the hook.
+    usePreviewEditMirror({
+        working: taskEditState.tmpCurrentTaskContent,
+        preview: useTM.currentPreviewTask,
+        myself,
+        setPreview: useTM.setCurrentPreviewTask,
+        syncRow: useTM.syncPreviewEdit,
+        setAssignee,
+        setReporter,
+    });
 
     // Get Task Notes. Cancelled-flag guard ensures a slow response
     // for an old taskId can't overwrite the fresh task's notes — the

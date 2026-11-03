@@ -151,7 +151,7 @@ const usePreviewTM = () => {
             tableMilestoneFilterId: null,
             currentPreviewTask: undefined,
             setCurrentPreviewTask: vi.fn(),
-            setIsTaskUpdated: vi.fn(),
+            syncPreviewEdit: vi.fn(),
             isLoadingTasks: false,
             currentPreviewTaskId,
             currentPreviewMilestoneId,

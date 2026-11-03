@@ -259,8 +259,11 @@ export interface TaskManagementState {
     // Task state management
     isNewTaskCreated: boolean;
     setIsNewTaskCreated: (created: boolean) => void;
-    isTaskUpdated: boolean;
-    setIsTaskUpdated: (updated: boolean) => void;
+    // Push an EDITED copy of a task onto its row in `allTasks` (the table, the
+    // board and the dashboards read the row, not the preview). Called by the
+    // task preview for each edit; a load or an unchanged copy leaves
+    // `allTasks` untouched (same array identity). Stable across renders.
+    syncPreviewEdit: (task: TaskProps) => void;
 
     // Task lists
     allTasks: TaskTableProps[];
@@ -553,7 +556,6 @@ export const useTaskManagement = (
 
     // Task state management
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
-    const [isTaskUpdated, setIsTaskUpdated] = useState(false);
 
     // Task lists
     const taskTypes: TaskTypesProps = {
@@ -594,7 +596,6 @@ export const useTaskManagement = (
     // Initialize task states
     const initializeTaskStates = () => {
         setIsNewTaskCreated(false);
-        setIsTaskUpdated(false);
         setAllTasks([]);
         // Clear `taskMeta`; `taskMetaTree` is derived and will refresh.
         setTaskMeta([]);
@@ -909,82 +910,76 @@ export const useTaskManagement = (
     // taskMetaTree is derived from taskMeta via useMemo above; the redundant
     // effect that mirrored it into local state has been removed.
 
-    useEffect(() => {
-        // Update an ongoing task. We spread the existing row first so
-        // milestone-only fields (`isMilestone`, `milestoneId`, `sprintId`)
-        // — which `currentPreviewTask` doesn't always carry — survive the
-        // patch. Without this, clicking a milestone backing row would
-        // strip those fields and break TaskFilterMenu's milestone-scope
-        // filter (the chip falls back to "Milestone: #<id>" and the row
-        // disappears from a scoped SprintBoard).
-        //
-        // Identity discipline: this effect fires on every task OPEN, not
-        // just on a real edit (TaskPreview flips `isTaskUpdated` as part of
-        // its mount/sync cycle). The patch below is then a no-op — it
-        // rewrites the row to the values it already had. The old `.map`
-        // nonetheless allocated a fresh array every time, and a new
-        // `allTasks` identity is expensive downstream: TaskFilterMenu
-        // re-runs `applyFilters` (O(N)) plus a sort (O(N log N)), the table
-        // rebuilds `childrenByParent` / `displayRows`, and the sprint board
-        // re-runs its column-organizing effect. That whole cascade ran on
-        // every task open and scaled with the project's task count — the
-        // shared half of the task-switch jank.
-        //
-        // So: patch in place, and when nothing actually changed return the
-        // PREVIOUS array so its identity is preserved and the cascade never
-        // starts. A real edit still produces a new array exactly as before.
-        if (isTaskUpdated && currentPreviewTask) {
+    // Push an edited task onto its row in `allTasks`. We spread the existing
+    // row first so milestone-only fields (`isMilestone`, `milestoneId`,
+    // `sprintId`) — which the edited copy doesn't always carry — survive the
+    // patch. Without this, clicking a milestone backing row would strip those
+    // fields and break TaskFilterMenu's milestone-scope filter (the chip falls
+    // back to "Milestone: #<id>" and the row disappears from a scoped
+    // SprintBoard).
+    //
+    // Replaces the `isTaskUpdated` flag loop (MIP-968). TaskPreview used to set
+    // the flag and an effect here patched the row and reset it: that ran on
+    // every task OPEN (two extra commits, plus a `/task/meta/` request), and an
+    // edit that landed while the flag was still set was dropped. Now the preview
+    // calls this once per edit, with the edited task itself.
+    //
+    // Identity discipline: the patch below is a no-op when the row already has
+    // these values, and a new `allTasks` identity is expensive downstream:
+    // TaskFilterMenu re-runs `applyFilters` (O(N)) plus a sort (O(N log N)), the
+    // table rebuilds `childrenByParent` / `displayRows`, and the sprint board
+    // re-runs its column-organizing effect, all scaling with the project's task
+    // count. So: patch in place, and when nothing actually changed return the
+    // PREVIOUS array so its identity is preserved and the cascade never starts.
+    // A real edit still produces a new array.
+    const syncPreviewEdit = useCallback(
+        (edited: TaskProps) => {
+            // The empty working copy a preview mounts with has no id.
+            if (edited?.id == null) return;
             setAllTasks((prevTasks) => {
-                const targetId = String(currentPreviewTask.id);
+                const targetId = String(edited.id);
                 const idx = prevTasks.findIndex((task) => task.id === targetId);
                 if (idx === -1) return prevTasks;
                 const task = prevTasks[idx];
                 const patched: TaskTableProps = {
                     ...task,
-                    id: String(currentPreviewTask.id) || task.id,
-                    title: currentPreviewTask.title || task.title,
-                    priority: currentPreviewTask.priority.priority || task.priority,
-                    effortLevel: currentPreviewTask.effortLevel.level || task.effortLevel,
-                    createdDate:
-                        currentPreviewTask.createdDate ||
-                        task.createdDate ||
-                        getLocalCurrentDate(),
-                    updatedAt: currentPreviewTask.updatedAt || getLocalCurrentTimestamp(),
-                    dueDate: currentPreviewTask.dueDate ?? task.dueDate,
-                    daysLeft: currentPreviewTask.daysLeft ?? task.daysLeft,
-                    status: currentPreviewTask.status.status || task.status,
-                    assigneeId: currentPreviewTask.assignee?.userId ?? task.assigneeId,
-                    assigneeEmail: currentPreviewTask.assignee?.userEmail ?? task.assigneeEmail,
-                    assigneeName: currentPreviewTask.assignee?.userName ?? task.assigneeName,
-                    assigneeImgPath:
-                        currentPreviewTask.assignee?.avatarImgPath ?? task.assigneeImgPath,
-                    parentTaskId: currentPreviewTask.parentTaskId
-                        ? String(currentPreviewTask.parentTaskId)
-                        : null,
-                    rootTaskId: currentPreviewTask.rootTaskId ?? task.rootTaskId,
-                    threadId: currentPreviewTask.threadId ?? task.threadId,
-                    tags: currentPreviewTask.tags || task.tags,
-                    concatTags: currentPreviewTask.concatTags || task.concatTags,
+                    id: String(edited.id) || task.id,
+                    title: edited.title || task.title,
+                    priority: edited.priority.priority || task.priority,
+                    effortLevel: edited.effortLevel.level || task.effortLevel,
+                    createdDate: edited.createdDate || task.createdDate || getLocalCurrentDate(),
+                    updatedAt: edited.updatedAt || getLocalCurrentTimestamp(),
+                    dueDate: edited.dueDate ?? task.dueDate,
+                    daysLeft: edited.daysLeft ?? task.daysLeft,
+                    status: edited.status.status || task.status,
+                    assigneeId: edited.assignee?.userId ?? task.assigneeId,
+                    assigneeEmail: edited.assignee?.userEmail ?? task.assigneeEmail,
+                    assigneeName: edited.assignee?.userName ?? task.assigneeName,
+                    assigneeImgPath: edited.assignee?.avatarImgPath ?? task.assigneeImgPath,
+                    parentTaskId: edited.parentTaskId ? String(edited.parentTaskId) : null,
+                    rootTaskId: edited.rootTaskId ?? task.rootTaskId,
+                    threadId: edited.threadId ?? task.threadId,
+                    tags: edited.tags || task.tags,
+                    concatTags: edited.concatTags || task.concatTags,
                     teamId: myself.teamId || task.teamId,
-                    projectId: currentPreviewTask.project?.projectId ?? task.projectId,
+                    projectId: edited.project?.projectId ?? task.projectId,
                     // Carry milestone metadata through. Prefer the
-                    // value from `currentPreviewTask` so a task->
+                    // value from `edited` so a task->
                     // milestone promotion still propagates, but
                     // fall back to the existing row when the
                     // preview payload doesn't include it.
-                    isMilestone: currentPreviewTask.isMilestone ?? task.isMilestone ?? false,
-                    milestoneId: currentPreviewTask.milestoneId ?? task.milestoneId ?? null,
-                    sprintId: currentPreviewTask.sprintId ?? task.sprintId ?? null,
+                    isMilestone: edited.isMilestone ?? task.isMilestone ?? false,
+                    milestoneId: edited.milestoneId ?? task.milestoneId ?? null,
+                    sprintId: edited.sprintId ?? task.sprintId ?? null,
                 };
                 if (isSameTableRow(task, patched)) return prevTasks;
                 const next = prevTasks.slice();
                 next[idx] = patched;
                 return next;
             });
-            getTaskMeta();
-            setIsTaskUpdated(false);
-        }
-    }, [isTaskUpdated, currentPreviewTask]);
+        },
+        [myself.teamId]
+    );
 
     return {
         // Task preview state
@@ -1058,8 +1053,7 @@ export const useTaskManagement = (
         // Task state management
         isNewTaskCreated,
         setIsNewTaskCreated,
-        isTaskUpdated,
-        setIsTaskUpdated,
+        syncPreviewEdit,
 
         // Task lists
         allTasks,

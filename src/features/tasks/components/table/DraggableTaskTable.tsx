@@ -27,7 +27,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
@@ -1234,8 +1234,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             );
 
             // Update preview task if it's the current one
+            let editedPreview: TaskProps | undefined;
             if (useTM.currentPreviewTask && useTM.currentPreviewTask.id === Number(result.id)) {
-                useTM.setCurrentPreviewTask({
+                editedPreview = {
                     ...useTM.currentPreviewTask,
                     title: result.title || useTM.currentPreviewTask.title,
                     tags: result.tags || useTM.currentPreviewTask.tags,
@@ -1254,7 +1255,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             (effortLevel) => effortLevel.level === result.effortLevel
                         ) || useTM.currentPreviewTask.effortLevel,
                     dueDate: result.dueDate || useTM.currentPreviewTask.dueDate,
-                });
+                };
+                useTM.setCurrentPreviewTask(editedPreview);
             }
 
             // Update allTasks
@@ -1263,9 +1265,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             );
             useTM.setAllTasks(updatedAllTasks);
 
-            // Trigger task update
-            if (useTM.currentPreviewTask && useTM.currentPreviewTask.id === Number(result.id)) {
-                useTM.setIsTaskUpdated(true);
+            // The open preview's row also takes the preview's own values (after
+            // the write above, as the flag loop did).
+            if (editedPreview) {
+                useTM.syncPreviewEdit(editedPreview);
             }
 
             return result;

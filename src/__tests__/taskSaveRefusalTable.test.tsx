@@ -248,7 +248,7 @@ const Host = () => {
                 setCurrentPreviewTaskSpy(update);
                 setPreviewState(update as never);
             },
-            setIsTaskUpdated: vi.fn(),
+            syncPreviewEdit: vi.fn(),
             isLoadingTasks: false,
         }),
         [allTasks, currentPreviewTask]
