@@ -586,6 +586,9 @@ export const ja: DeepPartial<Messages> = {
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
             idleReload: "一定時間操作がなかったため、ページを更新しています…",
         },
+        serviceSwitch: {
+            loading: "データを読み込み中…",
+        },
         meetClipboard: {
             eventTitle: "Meet リンク (自動削除されたイベント)",
             generating: "Meet リンクを生成しています…",

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
 import { isMac } from "../../utils/platform";
 
 // Ordered list of services. The array index doubles as the service id,
@@ -195,7 +196,9 @@ export const useGlobalServiceShortcut = (
             const serviceId = mruOrderRef.current[positionInMru];
             const target = SERVICES_BY_ID[serviceId];
             if (!target) return;
-            navigate(target.path);
+            // Cmd+Tab-style commit: shows the "Loading data…" page first when
+            // the service changes (MIP-965).
+            switchService(navigate, target.path);
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {

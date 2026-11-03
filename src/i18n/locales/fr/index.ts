@@ -477,6 +477,9 @@ export const fr: DeepPartial<Messages> = {
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
+        serviceSwitch: {
+            loading: "Chargement des données…",
+        },
         meetClipboard: {
             eventTitle: "Lien Meet (événement supprimé automatiquement)",
             generating: "Génération du lien Meet…",

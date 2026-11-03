@@ -36,6 +36,8 @@ import {
 } from "./components/layout/QuickMeetClipboardHost";
 import { RequestErrorSnackbar } from "./components/layout/RequestErrorSnackbar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
+import { ServiceSwitchLoader } from "./components/layout/ServiceSwitchLoader";
+import { ServiceSwitchReady } from "./components/layout/ServiceSwitchReady";
 import { Sidebar } from "./components/layout/sidebar";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
@@ -103,6 +105,7 @@ import { NotificationIntent } from "./services/notifications/types";
 import { startPerfRecorder, type PerfRecorder } from "./services/perf/startPerfRecorder";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
+import { switchService } from "./services/serviceSwitch/serviceSwitchStore";
 import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { keepIfEqual } from "./utils/keepIfEqual";
@@ -763,16 +766,20 @@ const AppBody = () => {
             onOpenCalendarModal: calendarModal.open,
             onOpenHistory: openHistory,
             onOpenNotesAndCreate: () => {
-                navigate("/workspace/notes");
-                void useNM.handleCreateNewMyNote(null);
+                // The create runs right after the navigation, as before: a real
+                // switch navigates a frame later (see `switchService`).
+                switchService(navigate, "/workspace/notes", () => {
+                    void useNM.handleCreateNewMyNote(null);
+                });
             },
             onOpenTaskDiagram: () => {
                 if (!taskDiagramTarget) return;
                 setTaskDiagramOpen(true);
             },
             onOpenTasksAndCreate: () => {
-                navigate("/workspace/tasks");
-                useTM.handleCreateTask();
+                switchService(navigate, "/workspace/tasks", () => {
+                    useTM.handleCreateTask();
+                });
             },
             onOpenTodo: openTodo,
             onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
@@ -953,7 +960,7 @@ const AppBody = () => {
     // stays reachable everywhere via Cmd/Ctrl-K).
     const openGenosPage = useCallback(() => {
         spotlightClose();
-        navigate("/workspace/genos");
+        switchService(navigate, "/workspace/genos");
     }, [spotlightClose, navigate]);
     // Spotlight-scoped settings modal (LLM model picker + AI-answer
     // toggles), opened from the gear icon on the Spotlight bar. Local
@@ -1398,6 +1405,7 @@ const AppBody = () => {
                                                             }
                                                             onOpenIntent={openIntent}
                                                         />
+                                                        <ServiceSwitchLoader />
                                                         <ServiceSwitcherOverlay
                                                             mruOrder={serviceSwitcherMruOrder}
                                                             previewIndex={
@@ -1803,6 +1811,10 @@ const AppBody = () => {
                                                                                                                             useUISM
                                                                                                                         }
                                                                                                                     />
+                                                                                                                    <ServiceSwitchReady
+                                                                                                                        service="inbox"
+                                                                                                                        active
+                                                                                                                    />
                                                                                                                 </Suspense>
                                                                                                             }
                                                                                                         />
@@ -1977,6 +1989,10 @@ const AppBody = () => {
                                                                                                                                 handleSpotlightSelect
                                                                                                                             }
                                                                                                                         />
+                                                                                                                        <ServiceSwitchReady
+                                                                                                                            service="genos"
+                                                                                                                            active
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 </FeatureErrorBoundary>
                                                                                                             }
@@ -2041,6 +2057,13 @@ const AppBody = () => {
                                                                                                                                 useTG
                                                                                                                             }
                                                                                                                         />
+                                                                                                                        <ServiceSwitchReady
+                                                                                                                            service="chat"
+                                                                                                                            active={
+                                                                                                                                activeService ===
+                                                                                                                                "chat"
+                                                                                                                            }
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 </FeatureErrorBoundary>
                                                                                                             </FreezeWhenHidden>
@@ -2084,6 +2107,13 @@ const AppBody = () => {
                                                                                                                                 "tasks"
                                                                                                                             }
                                                                                                                         />
+                                                                                                                        <ServiceSwitchReady
+                                                                                                                            service="tasks"
+                                                                                                                            active={
+                                                                                                                                activeService ===
+                                                                                                                                "tasks"
+                                                                                                                            }
+                                                                                                                        />
                                                                                                                     </Suspense>
                                                                                                                 </FeatureErrorBoundary>
                                                                                                             </FreezeWhenHidden>
@@ -2123,6 +2153,13 @@ const AppBody = () => {
                                                                                                                         <NoteHome
                                                                                                                             {...homeManagers}
                                                                                                                             isActiveRoute={
+                                                                                                                                activeService ===
+                                                                                                                                "notes"
+                                                                                                                            }
+                                                                                                                        />
+                                                                                                                        <ServiceSwitchReady
+                                                                                                                            service="notes"
+                                                                                                                            active={
                                                                                                                                 activeService ===
                                                                                                                                 "notes"
                                                                                                                             }

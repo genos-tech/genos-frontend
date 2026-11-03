@@ -329,6 +329,9 @@ export const es: DeepPartial<Messages> = {
         collaboration: {
             unknownUser: "Usuario desconocido",
         },
+        serviceSwitch: {
+            loading: "Cargando datos…",
+        },
         meetClipboard: {
             eventTitle: "Enlace de Meet (evento eliminado automáticamente)",
             generating: "Generando enlace de Meet...",

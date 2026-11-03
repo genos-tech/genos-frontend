@@ -323,6 +323,9 @@ export const ar: DeepPartial<Messages> = {
         collaboration: {
             unknownUser: "مستخدم غير معروف",
         },
+        serviceSwitch: {
+            loading: "جارٍ تحميل البيانات…",
+        },
         meetClipboard: {
             eventTitle: "رابط Meet (حدث تم حذفه تلقائيًا)",
             generating: "جارٍ إنشاء رابط Meet…",
