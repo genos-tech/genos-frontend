@@ -40,7 +40,13 @@ import {
     TreePosition,
 } from "../../utils/cascadeTreePosition";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
-import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
+import {
+    DND_ACTIVE_ATTR,
+    installFamilyFocusStyles,
+    onFamilyFocusPointerLeave,
+    onFamilyFocusPointerOver,
+    TASK_BODY_CLASS,
+} from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
@@ -706,16 +712,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         depthMap,
     ]);
 
-    // Hover family-focus stylesheet. Rebuilt only when the visible tree
-    // changes — hovering itself runs entirely in the browser's selector engine
-    // (see `familyFocusCss.ts` for why this isn't React state).
-    const familyFocusCss = useMemo(
-        () => buildFamilyFocusCss(familyKeyByRow.values()),
-        // `displayRows` is the signal: `familyKeyByRow` is a stable Map
-        // mutated in place by the walk above, so its identity never changes.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [displayRows, familyKeyByRow]
-    );
+    // Hover family-focus: two static rules, added to the document once. The
+    // hover itself is a delegated pointer handler on the table body (see
+    // `familyFocusCss.ts` for why it is neither React state nor `:has()`).
+    useEffect(() => {
+        installFamilyFocusStyles();
+    }, []);
 
     // Close a pristine quick-add row whose anchor row left the visible
     // tree (filtered out, ancestor collapsed, project switch). A dirty
@@ -1740,14 +1742,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                     </div>
 
-                    {/* Hover family-focus rules for the families currently in
-                        view. Inline rather than a static .css file because the
-                        selectors name the visible root ids; empty (and so
-                        omitted) whenever fewer than two families are on screen.
-                        Kept OUTSIDE the Droppable so it never appears as a
-                        sibling among the Draggables that dnd measures. */}
-                    {familyFocusCss !== "" && <style>{familyFocusCss}</style>}
-
                     {/* Draggable Table Body */}
                     <DragDropContext
                         onDragEnd={handleDragEnd}
@@ -1772,11 +1766,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    // Scope for the hover family-focus rules:
-                                    // they match `.task-table-body:has(<row>:hover)`,
-                                    // so the class must sit on the rows' common
-                                    // parent. The drag attribute disables them
-                                    // wholesale while a row is in flight.
+                                    // Scope for the hover family-focus rules and the
+                                    // element their pointer handlers read rows
+                                    // from, so the class must sit on the rows'
+                                    // common parent. The drag attribute disables
+                                    // the rules wholesale while a row is in flight.
                                     className={TASK_BODY_CLASS}
                                     {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
                                     style={{
@@ -1791,6 +1785,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             : "transparent",
                                         transition: "background-color 0.25s ease",
                                     }}
+                                    onPointerLeave={onFamilyFocusPointerLeave}
+                                    onPointerOver={onFamilyFocusPointerOver}
                                 >
                                     <TaskTableRows
                                         childrenByParent={childrenByParentEffective}
