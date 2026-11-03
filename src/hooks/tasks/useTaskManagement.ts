@@ -320,9 +320,8 @@ export interface TaskManagementState {
 export const useTaskManagement = (
     myself: UserProps,
     accessToken: string | null,
-    /** The workspace's active project id. Optional: instances built
-     *  outside the task workspace (see `useServiceInitialization`) have
-     *  no project context and simply never invalidate the milestone
+    /** The workspace's active project id. Optional: an instance built
+     *  without project context simply never invalidates the milestone
      *  scope. */
     currentProjectId?: number | null
 ): TaskManagementState => {

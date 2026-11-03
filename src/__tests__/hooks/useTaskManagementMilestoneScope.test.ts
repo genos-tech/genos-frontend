@@ -109,8 +109,8 @@ describe("useTaskManagement — milestone scope is project-scoped", () => {
     });
 
     it("never invalidates for a useTM built without project context", () => {
-        // `useServiceInitialization` builds one of these; it has no
-        // project and must not have its state second-guessed.
+        // An instance built without project context has no project and
+        // must not have its state second-guessed.
         const { result } = renderWithProject(undefined);
 
         act(() =>
