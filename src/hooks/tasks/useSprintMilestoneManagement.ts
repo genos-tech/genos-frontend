@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
 import { addTask } from "../../features/tasks/services/addTask";
 import { emitTaskMetadataSaved } from "../../features/tasks/services/taskEvents";
+import { forgetInFlightTask } from "../../features/tasks/services/taskLoadInFlight";
 import {
     addMilestoneAssignee,
     createMilestone,
@@ -62,6 +63,7 @@ import { upsertMilestoneInList } from "../../features/tasks/sprint-milestone/uti
 const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
     if (milestone.taskId == null) return;
     void invalidateCachedFullTask(milestone.taskId);
+    forgetInFlightTask(milestone.taskId);
     const firstAssignee = milestone.assignees?.[0];
     const reporter = milestone.reporter ?? null;
     void addTask({
@@ -107,6 +109,7 @@ const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
 const removeMilestoneBackingTaskCaches = (taskId: number | null | undefined): void => {
     if (taskId == null) return;
     void invalidateCachedFullTask(taskId);
+    forgetInFlightTask(taskId);
 };
 
 export interface SprintMilestoneManagementState {

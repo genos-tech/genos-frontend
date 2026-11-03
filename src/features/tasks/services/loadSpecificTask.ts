@@ -4,6 +4,7 @@ import { cacheFullTask, getCachedFullTask } from "../../../db/services/task-full
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { inFlightTaskKey, inFlightTaskLoads } from "./taskLoadInFlight";
 
 // Defensive scrub for stale cache entries: strip any negative-id
 // "in-flight" attachment that leaked into IDB before the
@@ -16,7 +17,24 @@ const scrubInFlightAttachments = (task: TaskProps): TaskProps => ({
     attachments: (task.attachments ?? []).filter((a) => a.attachment_id >= 0),
 });
 
-export const loadSpecificTask = async (
+// Concurrent callers for the same task share ONE load (the IndexedDB read, the
+// request and the IndexedDB write), see `taskLoadInFlight`. The result is shared
+// too: callers must treat the returned array and task as read-only.
+// `forceRefresh` never joins a running load (it asks for the server's copy).
+export const loadSpecificTask = (
+    myself: UserProps,
+    projectId: number,
+    taskId: number,
+    accessToken: string | null,
+    options?: { forceRefresh?: boolean; expectedMinUpdatedAt?: string | null }
+) =>
+    inFlightTaskLoads.get(
+        inFlightTaskKey(taskId, myself?.teamId, projectId, options?.expectedMinUpdatedAt),
+        () => fetchSpecificTask(myself, projectId, taskId, accessToken, options),
+        { forceRefresh: options?.forceRefresh }
+    );
+
+const fetchSpecificTask = async (
     myself: UserProps,
     projectId: number,
     taskId: number,

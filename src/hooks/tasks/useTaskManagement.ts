@@ -261,8 +261,6 @@ export interface TaskManagementState {
     setIsNewTaskCreated: (created: boolean) => void;
     isTaskUpdated: boolean;
     setIsTaskUpdated: (updated: boolean) => void;
-    isTaskUpdatedBySomeone: boolean;
-    setIsTaskUpdatedBySomeone: (updated: boolean) => void;
 
     // Task lists
     allTasks: TaskTableProps[];
@@ -555,7 +553,6 @@ export const useTaskManagement = (
     // Task state management
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
-    const [isTaskUpdatedBySomeone, setIsTaskUpdatedBySomeone] = useState(false);
 
     // Task lists
     const taskTypes: TaskTypesProps = {
@@ -679,19 +676,16 @@ export const useTaskManagement = (
 
             // setIsTaskPreviewVisible(true);
 
-            // Upsert the row in `allTasks`. This branch fires both when a
-            // brand-new task arrives (`isNewTaskCreated`) AND when an
-            // existing task is updated by someone else
-            // (`isTaskUpdatedBySomeone` — pushed via socket). Previously
-            // we unconditionally appended, which silently duplicated the
-            // same id every time a teammate edited a task — corrupting
+            // Upsert the row in `allTasks` when a brand-new task arrives
+            // (`isNewTaskCreated`). Previously we unconditionally appended,
+            // which silently duplicated the same id on a repeat — corrupting
             // every dashboard metric that reads `allTasks`. Match by id
             // first; replace if found, otherwise append.
             //
             // Milestone-related fields are included so a freshly-merged
             // row doesn't bypass TaskFilterMenu's milestone-scope filter
             // or the chip's title lookup.
-            if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
+            if (isNewTaskCreated === true) {
                 const nextRow: TaskTableProps = {
                     id: String(loadedTask[0].id) || null,
                     // Carry the backend displayId ("TP-1110") onto the
@@ -734,7 +728,6 @@ export const useTaskManagement = (
                 });
             }
             setIsNewTaskCreated(false);
-            setIsTaskUpdatedBySomeone(false);
         }
     };
 
@@ -1066,8 +1059,6 @@ export const useTaskManagement = (
         setIsNewTaskCreated,
         isTaskUpdated,
         setIsTaskUpdated,
-        isTaskUpdatedBySomeone,
-        setIsTaskUpdatedBySomeone,
 
         // Task lists
         allTasks,
