@@ -86,6 +86,13 @@ export interface TaskManagementState {
     // Task preview state
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (visible: boolean) => void;
+    /**
+     * How many times `isTaskPreviewVisible` has gone true -> false. Lives here,
+     * above the keep-alive screens, because a hidden screen is frozen and never
+     * sees the close; `useSurfaceTaskPreviewVisible` compares it on coming back
+     * to learn that the preview was closed (and maybe reopened) while away.
+     */
+    previewCloseCount: number;
     isTaskTableVisible: boolean;
     setIsTaskTableVisible: (visible: boolean) => void;
     isTaskDashboardVisible: boolean;
@@ -342,6 +349,14 @@ export const useTaskManagement = (
 ): TaskManagementState => {
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
+    const [previewCloseCount, setPreviewCloseCount] = useState(0);
+    const wasPreviewVisibleRef = useRef(false);
+    useEffect(() => {
+        if (wasPreviewVisibleRef.current && !isTaskPreviewVisible) {
+            setPreviewCloseCount((n) => n + 1);
+        }
+        wasPreviewVisibleRef.current = isTaskPreviewVisible;
+    }, [isTaskPreviewVisible]);
     const [isTaskTableVisible, _setIsTaskTableVisible] = useState(true);
     const [isTaskDashboardVisible, _setIsTaskDashboardVisible] = useState(false);
     const [isSprintBoardVisible, _setIsSprintBoardVisible] = useState(false);
@@ -1039,6 +1054,7 @@ export const useTaskManagement = (
         // Task preview state
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
+        previewCloseCount,
         isTaskTableVisible,
         setIsTaskTableVisible,
         isTaskDashboardVisible,
