@@ -145,6 +145,13 @@ export interface TaskManagementState {
 
     // Current task state
     currentPreviewTaskId: number;
+    /** Set when the by-id `loadTask` for the CURRENTLY selected task finished
+     *  without producing that task (empty, errored, or a different task came
+     *  back — e.g. a cross-project id the current project can't serve). Lets
+     *  a host that hides the outgoing task during a switch give up waiting
+     *  instead of showing a permanent loader. Cleared when the next load
+     *  starts; only ever meaningful compared against `currentPreviewTaskId`. */
+    previewLoadFailedTaskId: number | null;
     setCurrentPreviewTaskId: (id: number) => void;
     currentPreviewTask: TaskProps | undefined;
     setCurrentPreviewTask: (
@@ -376,6 +383,7 @@ export const useTaskManagement = (
 
     // Current task state
     const [currentPreviewTaskId, _setCurrentPreviewTaskId] = useState<number>(-1);
+    const [previewLoadFailedTaskId, setPreviewLoadFailedTaskId] = useState<number | null>(null);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
     const [currentPreviewKind, setCurrentPreviewKind] = useState<"task" | "milestone">("task");
     const [currentPreviewMilestoneId, _setCurrentPreviewMilestoneId] = useState<number>(-1);
@@ -416,6 +424,12 @@ export const useTaskManagement = (
     // freeze the pane on a stale entity (was the root cause of the
     // "stuck on milestone, can't open another task" bug).
     const setCurrentPreviewTaskId = (id: number) => {
+        // A genuinely new selection forgets an earlier failed load, so the
+        // pane can't flash a stale task for one render before `loadTask`
+        // starts. A same-id re-click must NOT clear it: no load re-runs for an
+        // unchanged id, and clearing would turn a failed load into a permanent
+        // loader.
+        if (id !== currentPreviewTaskIdRef.current) setPreviewLoadFailedTaskId(null);
         currentPreviewTaskIdRef.current = id;
         _setCurrentPreviewTaskId(id);
         if (id !== -1) {
@@ -602,6 +616,17 @@ export const useTaskManagement = (
 
     // Load specific task
     const loadTask = async (projectId: number, taskId: number) => {
+        // A new attempt: forget the previous failure so a retry of the same id
+        // (URL re-entry) shows the loader again instead of the stale task.
+        setPreviewLoadFailedTaskId(null);
+        // Record "the selected task did not load". Only for the task that is
+        // STILL selected — a stale load for a task the user already left says
+        // nothing about the current selection.
+        const markFailedIfSelected = () => {
+            if (String(taskId) === String(currentPreviewTaskIdRef.current)) {
+                setPreviewLoadFailedTaskId(taskId);
+            }
+        };
         try {
             const loadedTask: TaskProps[] = await loadSpecificTask(
                 myself,
@@ -621,9 +646,12 @@ export const useTaskManagement = (
                 String(loadedTask[0].id) === String(currentPreviewTaskIdRef.current)
             ) {
                 setCurrentPreviewTask(loadedTask[0]);
+            } else {
+                markFailedIfSelected();
             }
         } catch (error) {
             console.error("Error loading task:", error);
+            markFailedIfSelected();
         }
     };
 
@@ -986,6 +1014,7 @@ export const useTaskManagement = (
 
         // Current task state
         currentPreviewTaskId,
+        previewLoadFailedTaskId,
         setCurrentPreviewTaskId,
         currentPreviewTask,
         setCurrentPreviewTask,

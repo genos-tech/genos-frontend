@@ -71,12 +71,14 @@ import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
 import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskPaneLoading } from "./base/TaskPaneLoading";
 import { TaskPreviewLayout } from "./base/TaskPreviewLayout";
+import { TaskPreviewSwitchGate } from "./base/TaskPreviewSwitchGate";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
@@ -177,6 +179,19 @@ type TaskPreviewProps = {
      *  in sync (e.g. NoteHome), which must keep rendering off the working
      *  copy alone. */
     guardStaleTaskId?: boolean;
+    /** Task-page hosts (TaskHomeLayout, MobileTaskHome). Same "mismatch =
+     *  still loading" rule as `guardStaleTaskId`, tuned for a pane the user
+     *  switches tasks in all day:
+     *   - the OUTGOING task stays mounted (hidden) under the loader, so its
+     *     unsaved body / pending saves behave exactly as when it simply stayed
+     *     on screen (unmounting cancels the editor's debounced sync);
+     *   - the loader fades in after ~150 ms (CSS only), so a cache-hit swap
+     *     that lands within a frame never blinks;
+     *   - if the by-id load for the requested task FAILS (no access, deleted,
+     *     cross-project the current project can't serve) the guard lets go and
+     *     the previously loaded task shows, as before — never a permanent
+     *     spinner. Implies the guard; do not combine with `guardStaleTaskId`. */
+    holdSwitchWithLoader?: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -194,6 +209,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTodoFromMessageBubble,
         hostZIndex,
         guardStaleTaskId,
+        holdSwitchWithLoader,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -817,23 +833,29 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         );
     }
 
-    // With `guardStaleTaskId`, treat a working-copy/requested-id mismatch as
-    // "still loading" so we never render the previously-loaded (stale) task
-    // during a switch or after a failed cross-project load. The switch effect
-    // (Effect ~341) syncs `tmpCurrentTaskContent` to the incoming task once
-    // `loadTask` lands, closing this window — usually within a frame on an
-    // IDB cache hit. Hosts that don't set the flag render off the working
-    // copy alone (unchanged behavior).
-    const previewIdMatchesRequested =
-        !guardStaleTaskId ||
-        useTM.currentPreviewTaskId == null ||
-        useTM.currentPreviewTaskId === -1 ||
-        String(taskEditState.tmpCurrentTaskContent?.id ?? "") ===
-            String(useTM.currentPreviewTaskId);
+    // `guardStaleTaskId` / `holdSwitchWithLoader`: treat a working-copy /
+    // requested-id mismatch as "still loading" so we never render the
+    // previously-loaded (stale) task under the new selection. The switch
+    // effect (Effect ~341) syncs `tmpCurrentTaskContent` to the incoming task
+    // once `loadTask` lands, closing the window — within a frame on an IDB
+    // cache hit, 1-2 s cold. Hosts that set neither flag render off the
+    // working copy alone (unchanged). See `getTaskPreviewPaneState`.
+    const paneState = getTaskPreviewPaneState({
+        workingCopyId: taskEditState.tmpCurrentTaskContent?.id,
+        requestedId: useTM.currentPreviewTaskId,
+        guard: !!guardStaleTaskId || !!holdSwitchWithLoader,
+        releaseOnLoadFailure: !!holdSwitchWithLoader,
+        loadFailedTaskId: useTM.previewLoadFailedTaskId,
+    });
 
     return (
-        <>
-            {taskEditState.tmpCurrentTaskContent?.id && previewIdMatchesRequested ? (
+        <TaskPreviewSwitchGate
+            holdOutgoing={!!holdSwitchWithLoader}
+            isDark={isDark}
+            loadingLabel={t.tasks.preview.loadingTask}
+            state={paneState}
+        >
+            {() => (
                 <TaskPreviewLayout
                     ref={sheetRef}
                     isDark={isDark}
@@ -965,7 +987,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                     setTaskBodyEdited={taskEditState.setTaskBodyEdited}
                                     setTaskBodySaved={taskEditState.setTaskBodySaved}
                                     socket={socket}
-                                    taskId={taskEditState.tmpCurrentTaskContent.id}
+                                    // Non-empty: this view only renders when the pane state has a working copy.
+                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
@@ -1022,10 +1045,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         />
                     }
                 />
-            ) : useTM.currentPreviewTaskId != null && useTM.currentPreviewTaskId !== -1 ? (
-                <TaskPaneLoading isDark={isDark} label={t.tasks.preview.loadingTask} />
-            ) : null}
-        </>
+            )}
+        </TaskPreviewSwitchGate>
     );
 };
 
