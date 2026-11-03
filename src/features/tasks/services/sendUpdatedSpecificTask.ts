@@ -8,6 +8,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
@@ -162,6 +163,11 @@ export const sendUpdatedSpecificTask = async (
             };
             const res = await putTask(api, taskBody, setErrorMessage);
 
+            // The save's own updated time, in the form the caches use. The
+            // working copy's `updatedAt` is from BEFORE the save, so it is
+            // only the fallback for an answer that carries no readable time.
+            const savedAt = toServerTimestamp(res?.data?.task?.ts_updated_at);
+
             if (res) {
                 // Mirror the freshly-PUT task into the full-task IDB
                 // cache so the next `loadSpecificTask` reflects the
@@ -185,6 +191,10 @@ export const sendUpdatedSpecificTask = async (
                     attachments: (updatedTask.attachments ?? []).filter(
                         (a) => a.attachment_id >= 0
                     ),
+                    // The time the server stamped on THIS save (MIP-948);
+                    // `updatedTask.updatedAt` is from when the task was
+                    // opened. Both caches below carry the same one.
+                    ...(savedAt ? { updatedAt: savedAt } : {}),
                 };
                 await cacheFullTask(cacheableTask);
             }
@@ -280,7 +290,7 @@ export const sendUpdatedSpecificTask = async (
                     priority: updatedTask.priority.priority,
                     effortLevel: updatedTask.effortLevel.level,
                     createdDate: updatedTask.createdDate || null,
-                    updatedAt: updatedTask.updatedAt || null,
+                    updatedAt: savedAt ?? (updatedTask.updatedAt || null),
                     dueDate: updatedTask.dueDate,
                     // Mirror start_date into the IDB row so the
                     // optimistic local update survives the next
