@@ -87,6 +87,7 @@ import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { useInboxResync } from "./hooks/inbox/useInboxResync";
 import { useTodoGroups } from "./hooks/useTodoGroups";
+import { analytics } from "./services/analytics";
 import {
     registerApiHealthListener,
     unregisterApiHealthListener,
@@ -97,6 +98,7 @@ import { NotificationsProvider } from "./services/notifications/NotificationsCon
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
+import { startPerfRecorder, type PerfRecorder } from "./services/perf/startPerfRecorder";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { SearchTeamTasksResponse } from "./types/tasks";
@@ -1261,6 +1263,33 @@ const AppBody = () => {
             setMountedHomes((prev) => new Set(prev).add(activeService));
         }
     }, [activeService, mountedHomes]);
+
+    // Real-session interaction timing (MIP-957): how long clicks take to paint
+    // and settle, and how much of the main thread they block. It reads the
+    // browser's own performance observers and posts a few numbers to
+    // /client-perf/; see `services/perf/startPerfRecorder.ts`. The refs let
+    // the long-lived recorder read the latest token and screen count.
+    const perfTokenRef = useRef<string | null>(null);
+    perfTokenRef.current = accessToken ?? null;
+    const perfHomesRef = useRef(0);
+    perfHomesRef.current = homesToRender.size;
+    const perfRecorderRef = useRef<PerfRecorder | null>(null);
+    useEffect(() => {
+        const recorder = startPerfRecorder({
+            getToken: () => perfTokenRef.current,
+            getHomesMounted: () => perfHomesRef.current,
+            apiBase: import.meta.env.VITE_API_BASE_URL,
+            isEnabled: () => analytics.isEnabled(),
+        });
+        perfRecorderRef.current = recorder;
+        return () => {
+            recorder.stop();
+            perfRecorderRef.current = null;
+        };
+    }, []);
+    useEffect(() => {
+        perfRecorderRef.current?.navigated(location.pathname);
+    }, [location.pathname]);
 
     // Prewarm the lazy route chunks once the shell is up and the browser is
     // idle, so the first visit to a section doesn't pay the chunk download.
