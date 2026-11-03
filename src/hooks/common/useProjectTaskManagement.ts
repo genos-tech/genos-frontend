@@ -23,7 +23,11 @@ export const useProjectTaskManagement = ({
     // project stops applying the moment the user is somewhere else — see
     // `tableMilestoneFilterId`. usePM is constructed first precisely so
     // this is available here.
-    const useTM = useTaskManagement(myself, accessToken, usePM.currentProject?.projectId);
+    // `currentTeamId` goes in too: a read that comes back after a team switch is
+    // dropped (see `fetchProjectTasks`).
+    const useTM = useTaskManagement(myself, accessToken, usePM.currentProject?.projectId, {
+        currentTeamId,
+    });
     const useSM = useSprintMilestoneManagement(accessToken);
 
     // Auto-fetch project tasks when:

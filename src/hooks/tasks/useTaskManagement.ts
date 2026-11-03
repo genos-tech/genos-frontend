@@ -22,6 +22,7 @@ import {
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
+import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
 import { ProjectTaskFieldRules } from "../../features/tasks/utils/taskFieldRules";
 import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
@@ -324,7 +325,13 @@ export const useTaskManagement = (
     /** The workspace's active project id. Optional: an instance built
      *  without project context simply never invalidates the milestone
      *  scope. */
-    currentProjectId?: number | null
+    currentProjectId?: number | null,
+    options?: {
+        /** The team the workspace is showing. It can flip a commit before or
+         *  after `myself.teamId` during a team switch, so a read is judged
+         *  against both. */
+        currentTeamId?: string;
+    }
 ): TaskManagementState => {
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
@@ -569,6 +576,20 @@ export const useTaskManagement = (
     };
     const [allTasks, setAllTasks] = useState<TaskTableProps[]>([]);
     const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(false);
+    // What `fetchProjectTasks` checks its answer against. Written every render
+    // (the latest committed props), read after the await.
+    const scopeRef = useRef({
+        projectId: currentProjectId ?? null,
+        teamId: myself.teamId,
+        currentTeamId: options?.currentTeamId,
+    });
+    scopeRef.current = {
+        projectId: currentProjectId ?? null,
+        teamId: myself.teamId,
+        currentTeamId: options?.currentTeamId,
+    };
+    // Counts the reads; a read that is no longer the newest does not land.
+    const readSeqRef = useRef(0);
 
     // Safety timeout: if isLoadingTasks stays true for too long (e.g. the new team
     // has no projects so fetchProjectTasks never runs), force it back to false so
@@ -867,7 +888,19 @@ export const useTaskManagement = (
         [myself, accessToken]
     );
 
+    // Read the project's rows from IndexedDB into the table.
+    //
+    // An answer only lands if it still describes what the user is looking at:
+    //   - the project it was read for is still the open one, in the team it
+    //     was asked in (a slow read for A used to write A's rows under B, and
+    //     an old team's rows under the new team), and
+    //   - no newer read has started (two reads of one project can come back in
+    //     either order; the newer one saw the later data).
+    // The loading flag follows the same rule: only the newest read turns it off,
+    // so an older answer cannot end the spinner while the newer is in flight.
     const fetchProjectTasks = async (projectId: number) => {
+        const seq = ++readSeqRef.current;
+        const askedIn = scopeRef.current;
         setTsLastLoadProjectTasks(Date.now());
         setIsLoadingTasks(true);
         try {
@@ -875,28 +908,24 @@ export const useTaskManagement = (
                 projectId,
                 taskTypes.all.statuses
             );
-            // Stable-identity guard. After the SWR pre-read in
-            // ProjectsListItem paints stale rows from IDB, the network
-            // round-trip completes and the `tsTasksLoadedToIDB` effect calls
-            // us again — at which point the fresh IDB read often matches the
-            // already-painted set exactly. Returning `prev` in that case keeps
-            // the array identity stable and avoids bouncing every downstream
-            // memo (childrenByParent / allChildrenByParent / displayRows /
-            // sort comparators) and re-rendering every row.
-            setAllTasks((prev) => {
-                if (prev.length !== _allTasks.length) return _allTasks;
-                for (let i = 0; i < prev.length; i++) {
-                    if (
-                        prev[i].id !== _allTasks[i].id ||
-                        prev[i].updatedAt !== _allTasks[i].updatedAt
-                    ) {
-                        return _allTasks;
-                    }
-                }
-                return prev;
-            });
+            const now = scopeRef.current;
+            if (
+                seq !== readSeqRef.current ||
+                now.projectId !== projectId ||
+                now.teamId !== askedIn.teamId ||
+                now.currentTeamId !== askedIn.currentTeamId
+            ) {
+                return;
+            }
+            // Keyed merge. The answer usually matches what is on screen (it
+            // follows the network refresh of rows already painted), and then
+            // `prev` comes back untouched: array identity stays put, so every
+            // downstream memo (childrenByParent / displayRows / the sort) and
+            // every row is left alone. When some rows did change, the rest keep
+            // their objects and only the changed ones render again.
+            setAllTasks((prev) => mergeProjectRows(prev, _allTasks));
         } finally {
-            setIsLoadingTasks(false);
+            if (seq === readSeqRef.current) setIsLoadingTasks(false);
         }
     };
 
