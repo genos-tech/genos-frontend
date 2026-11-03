@@ -20,6 +20,12 @@ export {
 export { FeedbackThumbs } from "./FeedbackThumbs";
 export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
+export {
+    type AgentSessionsDeletedDetail,
+    deletionCoversSession,
+    emitAgentSessionsDeleted,
+    useAgentSessionsDeleted,
+} from "./sessionEvents";
 export { sessionTurnToCompleted } from "./sessionTurns";
 export { SourceChips } from "./SourceChips";
 export { formatDurationMs, ToolProgressList } from "./ToolProgressList";

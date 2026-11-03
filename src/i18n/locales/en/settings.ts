@@ -5,7 +5,7 @@ export const settings = {
         planUsage: "Plan & Usage",
         chat: "Chat",
         tasks: "Tasks",
-        spotlight: "Spotlight",
+        spotlight: "Genos",
         notifications: "Notifications",
         mentionGroups: "Mention groups",
         customEmoji: "Custom emoji",
@@ -333,41 +333,13 @@ export const settings = {
         benefitNotes: "{n} notes per month",
         benefitNotesUnlimited: "Unlimited notes",
         benefitUpload: "Files up to {mb} MB",
-        // --- UX tier model: capability rows -----------------------
-        // The experience ladder each card leads with (what Genos does /
-        // how deeply it thinks / what it remembers / what it can see /
-        // whether it comes to you). Labels mirror the server's
-        // TIER_QUOTAS vocabulary. A capability a tier lacks renders
-        // with an EXPLICIT cross, never silently dropped — a false
-        // capability rendered as absent makes Free's card look
-        // identical to Core's on exactly the rows that separate them.
-        capAgencyRead: "Genos answers your questions",
-        capAgencyAct: "Genos takes actions for you, with your approval",
-        capAgencyOrganize: "Genos organizes — a whole plan in one approval",
-        capDepthQuick: "Quick answers",
-        capDepthThorough: "Thorough answers",
-        capDepthDeep: "Deep reasoning",
-        capDepthAdaptive: "Deep reasoning, auto-tuned per question",
-        capMemoryNone: "Remembers the current conversation",
-        capMemoryOwn: "Remembers your past conversations",
-        capMemoryTeam: "Remembers your team's collected knowledge",
-        capGenosHistoryDays: "Genos conversation history: {days} days",
-        capGenosHistoryUnlimited: "Unlimited Genos conversation history",
-        capReachWeb: "Web search",
-        capReachCalendar: "Google Calendar integration",
-        capReachGithub: "GitHub integration",
-        capMcp: "Connect an AI coding agent (MCP)",
-        capDigestNone: "Proactive digest from Genos",
-        capDigestWeekly: "Weekly digest from Genos",
-        capDigestDaily: "Daily digest + alerts from Genos",
         // --- Plan comparison matrix -------------------------------
-        // The same facts as the capability rows above, but pivoted: a
-        // feature is a ROW and a tier is a COLUMN, so the reader can
+        // A feature is a ROW and a tier is a COLUMN, so the reader can
         // answer "what does Pro give me that Core doesn't?" by reading
         // across. That question is unanswerable from five separate
-        // cards, which is why these are short values rather than the
-        // finished sentences above — a cell has one column's width,
-        // and five sentences side by side compare nothing.
+        // cards, which is why these are short values rather than whole
+        // sentences — a cell has one column's width, and five sentences
+        // side by side compare nothing.
         creditsPacksHeading: "Need more credits?",
         creditsPacksBlurb:
             "Buy a one-off pack. Your monthly credits are used first, and bought credits never expire.",
@@ -402,9 +374,8 @@ export const settings = {
         matrixRowTasks: "Tasks per month",
         matrixRowNotes: "Notes per month",
         matrixRowUpload: "File upload size",
-        // Short forms for the matrix: inside a group already headed
-        // "What Genos can reach", the word "integration" is noise in
-        // every row. The long forms above still serve the cards.
+        // Short forms: inside a group already headed "What Genos can
+        // reach", the word "integration" is noise in every row.
         matrixRowWeb: "Web search",
         matrixRowCalendar: "Google Calendar",
         matrixRowGithub: "GitHub",
@@ -496,20 +467,108 @@ export const settings = {
             "Turn this off to use double-click for selecting text instead. Applies to chat messages, thread messages, and task comments.",
     },
     spotlight: {
-        heading: "Spotlight",
+        heading: "Genos answers",
         description:
-            "Spotlight always searches your chats, tasks, and notes. The toggles below gate the optional LLM-powered answers, which count against your daily ask quota.",
+            "Spotlight search always looks through your chats, tasks, and notes. The switches below control whether Genos can write AI answers and browse the web.",
         aiAnswersLabel: "AI answers",
         aiAnswersHelper:
-            'Lets the "Ask" button send your query to the agent. When off, Spotlight returns search results only.',
+            "Lets the “Ask” button send your question to Genos. When off, Spotlight shows search results only.",
         webSearchLabel: "Web search",
         webSearchHelper:
             "Allow the agent to browse the web when answering. Requires AI answers to be on.",
     },
+    // "What Genos remembers" — a sub-view of the Genos settings.
+    //
+    // Genos keeps no separate store of "memories". What it draws on is what
+    // is listed here: the person's own conversations (earlier turns of the
+    // current one, a rolling summary of older turns, and recall of past
+    // conversations), their answers that teammates may see as anonymous
+    // "Previous answer" cards, and the two settings it reads. The copy says
+    // that plainly and avoids "memory" as a feature name for the same reason.
+    genosMemory: {
+        // The entry card shown in the Genos settings.
+        entryHeading: "What Genos remembers",
+        entryDescription:
+            "See what Genos draws on when it answers you, delete your conversations, and choose what's shared with your team.",
+        entryOpen: "Open",
+        // Back to the Genos settings from the sub-view.
+        backToSettings: "Genos settings",
+        title: "What Genos remembers",
+        intro: "Genos doesn't keep a separate store of “memories”. When it answers you, it draws on the three things below. You can see each one here and delete what you don't want kept.",
+        conversations: {
+            heading: "Your Genos conversations",
+            description:
+                "Genos reads the earlier turns of the conversation you're in, plus a short summary of turns older than that. It can also look back through your past conversations when a question needs it. All of this is built from questions you asked Genos, and deleting a conversation removes it all.",
+            listNote: "This list shows your most recent conversations.",
+            loading: "Loading conversations…",
+            empty: "You have no Genos conversations in this team.",
+            deleteTooltip: "Delete this conversation",
+            deleteAria: "Delete conversation: {question}",
+            deleteTitle: "Delete this conversation?",
+            deleteBody:
+                "This permanently deletes the conversation and everything Genos remembers from it. This can't be undone.",
+            deleteConfirm: "Delete conversation",
+            deleteAll: "Delete all conversations",
+            deleteAllTitle: "Delete all your Genos conversations?",
+            deleteAllBody:
+                "This permanently deletes every Genos conversation you have in this team, including ones started from a thread or a note and older ones this list doesn't show, along with everything Genos remembers from them. Your conversations in other teams are not affected. This can't be undone.",
+            deleteAllAck: "I understand this can't be undone",
+            deleteAllConfirm: "Delete everything",
+            deletedAll: "All your Genos conversations in this team were deleted.",
+            // The server refuses (and deletes nothing) while a conversation
+            // is still answering.
+            inFlight: "A conversation is still answering. Wait for it to finish, then try again.",
+            failed: "Couldn't delete. Please try again.",
+        },
+        shared: {
+            heading: "Answers shared with your team",
+            switchLabel: "Let my answers help teammates",
+            switchHelper:
+                "When on, a completed first-turn answer may show to teammates as an anonymous “Previous answer” if they could see all of its sources. This applies in all your teams.",
+            toggleFailed: "Couldn't change this setting. Please try again.",
+            offTitle: "Stop sharing your answers?",
+            offBody:
+                "Your existing answers will be removed from your teams right away, and new ones won't be shared. The conversations themselves stay. If you turn sharing back on later, it only applies to answers from then on; older ones may not come back.",
+            offConfirm: "Turn off sharing",
+            loading: "Loading shared answers…",
+            loadFailed: "Couldn't load your shared answers.",
+            empty: "None of your answers are shared with teammates right now.",
+            emptyOff: "Sharing is off, so none of your answers are shared.",
+            // `audience_size` counts the person themself, so 1 means nobody
+            // else; anything higher is "N people, including you".
+            audienceOnlyYou: "Only you can see this",
+            audienceMany: "Visible to {count} people, including you",
+            stop: "Stop sharing this answer",
+            stopTitle: "Stop sharing this answer?",
+            stopBody:
+                "Teammates will no longer see it as a “Previous answer”. The conversation stays in your history, and this answer won't be shared again.",
+            stopConfirm: "Stop sharing",
+            stopFailed: "Couldn't stop sharing that answer. Please try again.",
+            hasMore:
+                "Showing your latest {count} shared answers. There are more than this list shows.",
+        },
+        settingsUsed: {
+            heading: "Settings Genos uses",
+            description: "Genos reads these two settings when it answers you.",
+            timezoneLabel: "Time zone",
+            // The agent reads `CustomUser.timezone`, which the browser
+            // reports on every boot. The profile card's location is a
+            // separate column the agent does NOT read, so this deliberately
+            // points at the device, not at the profile.
+            timezoneHelper:
+                "Used to work out what “today” and “this week” mean for you. It's detected from your device and updated automatically; to change it, change the time zone on your device.",
+            timezoneUnknown: "Not detected yet",
+            languageLabel: "Answer language",
+            languageHelper:
+                "Your app language is sent with each question so Genos can reply in it.",
+            changeLanguage: "Change language",
+            languagePath: "You can change it in {settings} › {tab} › {section}.",
+        },
+    },
     llmModel: {
         heading: "AI model",
         description:
-            "Choose which LLM the Spotlight agent uses. Each model has a separate daily quota that resets at UTC midnight.",
+            "Choose which LLM Genos uses to answer you. Each model has a separate daily quota that resets at UTC midnight.",
         providerLabel: "Provider",
         providerHelper: "Pick the AI service that should answer your asks.",
         modelLabel: "Model",

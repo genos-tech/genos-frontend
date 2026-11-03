@@ -1485,6 +1485,7 @@ const AppBody = () => {
                                                         </HashMentionDataProvider>
                                                         <SpotlightSettingsModal
                                                             open={spotlightSettingsOpen}
+                                                            teamId={useTEM.currentTeamId}
                                                             onClose={() =>
                                                                 setSpotlightSettingsOpen(false)
                                                             }

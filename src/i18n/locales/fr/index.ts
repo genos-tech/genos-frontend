@@ -2681,7 +2681,7 @@ export const fr: DeepPartial<Messages> = {
             planUsage: "Forfait et utilisation",
             chat: "Chat",
             tasks: "Tâches",
-            spotlight: "Spotlight",
+            spotlight: "Genos",
             notifications: "Notifications",
             mentionGroups: "Groupes de mentions",
             customEmoji: "Émojis personnalisés",
@@ -2906,25 +2906,6 @@ export const fr: DeepPartial<Messages> = {
             benefitNotes: "{n} notes par mois",
             benefitNotesUnlimited: "Notes illimitées",
             benefitUpload: "Fichiers jusqu'à {mb} Mo",
-            capAgencyRead: "Genos répond à vos questions",
-            capAgencyAct: "Genos prend des mesures pour vous, avec votre approbation",
-            capAgencyOrganize: "Genos organise — tout un plan en une seule approbation",
-            capDepthQuick: "Réponses rapides",
-            capDepthThorough: "Réponses détaillées",
-            capDepthDeep: "Raisonnement profond",
-            capDepthAdaptive: "Raisonnement approfondi, réglé automatiquement par question",
-            capMemoryNone: "Se souvient de la conversation en cours",
-            capMemoryOwn: "Se souvient de vos conversations passées",
-            capMemoryTeam: "Mémorise les connaissances collectées par votre équipe",
-            capGenosHistoryDays: "Historique des conversations Genos : jours {days}",
-            capGenosHistoryUnlimited: "Historique des conversations Genos illimité",
-            capReachWeb: "Recherche sur le Web",
-            capReachCalendar: "Intégration Google Calendar",
-            capReachGithub: "Intégration GitHub",
-            capMcp: "Connecter un agent de codage AI (MCP)",
-            capDigestNone: "Résumé Proactif de Genos",
-            capDigestWeekly: "Résumé hebdomadaire de Genos",
-            capDigestDaily: "Résumé quotidien + alertes de Genos",
             creditsPacksHeading: "Besoin de plus de crédits ?",
             creditsPacksBlurb:
                 "Achetez un pack unique. Vos crédits mensuels sont utilisés en premier et les crédits achetés n'expirent jamais.",
@@ -3042,20 +3023,93 @@ export const fr: DeepPartial<Messages> = {
                 "Désactivez pour utiliser le double-clic afin de sélectionner du texte. S'applique aux messages de chat, fils et commentaires de tâches.",
         },
         spotlight: {
-            heading: "Spotlight",
+            heading: "Réponses de Genos",
             description:
-                "Spotlight recherche toujours dans vos conversations, tâches et notes. Les options ci-dessous activent les réponses LLM, comptabilisées dans votre quota quotidien.",
+                "La recherche Spotlight parcourt toujours vos conversations, tâches et notes. Les options ci-dessous déterminent si Genos peut rédiger des réponses IA et naviguer sur le web.",
             aiAnswersLabel: "Réponses IA",
             aiAnswersHelper:
-                "Permet au bouton \"Demander\" d'envoyer votre requête à l'agent. Désactivé, Spotlight ne renvoie que des résultats de recherche.",
+                "Permet au bouton « Demander » d'envoyer votre question à Genos. Désactivé, Spotlight n'affiche que des résultats de recherche.",
             webSearchLabel: "Recherche web",
             webSearchHelper:
                 "Autoriser l'agent à naviguer sur le web pour répondre. Nécessite l'activation des réponses IA.",
         },
+        genosMemory: {
+            entryHeading: "Ce dont Genos se souvient",
+            entryDescription:
+                "Voyez sur quoi Genos s'appuie pour vous répondre, supprimez vos conversations et choisissez ce qui est partagé avec votre équipe.",
+            entryOpen: "Ouvrir",
+            backToSettings: "Paramètres de Genos",
+            title: "Ce dont Genos se souvient",
+            intro: "Genos ne conserve pas de réserve distincte de « souvenirs ». Pour vous répondre, il s'appuie sur les trois éléments ci-dessous. Vous pouvez tous les consulter ici et supprimer ce que vous ne voulez pas garder.",
+            conversations: {
+                heading: "Vos conversations avec Genos",
+                description:
+                    "Genos lit les tours précédents de la conversation en cours, ainsi qu'un court résumé des tours plus anciens. Il peut aussi parcourir vos conversations passées quand une question l'exige. Tout cela est construit à partir des questions que vous avez posées à Genos, et supprimer une conversation supprime tout.",
+                listNote: "Cette liste affiche vos conversations les plus récentes.",
+                loading: "Chargement des conversations…",
+                empty: "Vous n'avez aucune conversation avec Genos dans cette équipe.",
+                deleteTooltip: "Supprimer cette conversation",
+                deleteAria: "Supprimer la conversation : {question}",
+                deleteTitle: "Supprimer cette conversation ?",
+                deleteBody:
+                    "Cette action supprime définitivement la conversation et tout ce que Genos en retient. Elle est irréversible.",
+                deleteConfirm: "Supprimer la conversation",
+                deleteAll: "Supprimer toutes les conversations",
+                deleteAllTitle: "Supprimer toutes vos conversations avec Genos ?",
+                deleteAllBody:
+                    "Cette action supprime définitivement toutes vos conversations avec Genos dans cette équipe, y compris celles lancées depuis un fil ou une note et les plus anciennes que cette liste n'affiche pas, ainsi que tout ce que Genos en retient. Vos conversations dans d'autres équipes ne sont pas touchées. Cette action est irréversible.",
+                deleteAllAck: "Je comprends que c'est irréversible",
+                deleteAllConfirm: "Tout supprimer",
+                deletedAll:
+                    "Toutes vos conversations avec Genos dans cette équipe ont été supprimées.",
+                inFlight:
+                    "Une conversation est encore en train de répondre. Attendez qu'elle se termine, puis réessayez.",
+                failed: "Impossible de supprimer. Veuillez réessayer.",
+            },
+            shared: {
+                heading: "Réponses partagées avec votre équipe",
+                switchLabel: "Laisser mes réponses aider mes coéquipiers",
+                switchHelper:
+                    "Lorsque cette option est activée, la réponse terminée à une première question peut être présentée à vos coéquipiers comme une « Réponse précédente » anonyme, s'ils peuvent voir toutes ses sources. S'applique à toutes vos équipes.",
+                toggleFailed: "Impossible de modifier ce réglage. Veuillez réessayer.",
+                offTitle: "Arrêter de partager vos réponses ?",
+                offBody:
+                    "Vos réponses existantes seront retirées de vos équipes immédiatement et les nouvelles ne seront pas partagées. Les conversations elles-mêmes sont conservées. Si vous réactivez le partage plus tard, il ne concernera que les réponses à partir de ce moment-là ; les plus anciennes pourraient ne pas revenir.",
+                offConfirm: "Désactiver le partage",
+                loading: "Chargement des réponses partagées…",
+                loadFailed: "Impossible de charger vos réponses partagées.",
+                empty: "Aucune de vos réponses n'est partagée avec vos coéquipiers pour le moment.",
+                emptyOff: "Le partage est désactivé : aucune de vos réponses n'est partagée.",
+                audienceOnlyYou: "Vous seul pouvez la voir",
+                audienceMany: "Visible par {count} personnes, vous compris",
+                stop: "Arrêter de partager cette réponse",
+                stopTitle: "Arrêter de partager cette réponse ?",
+                stopBody:
+                    "Vos coéquipiers ne la verront plus comme une « Réponse précédente ». La conversation reste dans votre historique et cette réponse ne sera plus jamais partagée.",
+                stopConfirm: "Arrêter le partage",
+                stopFailed:
+                    "Impossible d'arrêter le partage de cette réponse. Veuillez réessayer.",
+                hasMore:
+                    "Affichage de vos {count} dernières réponses partagées. Il y en a plus que cette liste n'en montre.",
+            },
+            settingsUsed: {
+                heading: "Réglages utilisés par Genos",
+                description: "Genos lit ces deux réglages quand il vous répond.",
+                timezoneLabel: "Fuseau horaire",
+                timezoneHelper:
+                    "Sert à déterminer ce que signifient « aujourd'hui » et « cette semaine » pour vous. Il est détecté depuis votre appareil et mis à jour automatiquement ; pour le changer, modifiez le fuseau horaire de votre appareil.",
+                timezoneUnknown: "Pas encore détecté",
+                languageLabel: "Langue des réponses",
+                languageHelper:
+                    "La langue de votre application est envoyée avec chaque question pour que Genos réponde dans cette langue.",
+                changeLanguage: "Changer de langue",
+                languagePath: "Vous pouvez la changer dans {settings} › {tab} › {section}.",
+            },
+        },
         llmModel: {
             heading: "Modèle d'IA",
             description:
-                "Choisissez le LLM utilisé par l'agent Spotlight. Chaque modèle dispose d'un quota quotidien distinct qui est réinitialisé à minuit UTC.",
+                "Choisissez le LLM que Genos utilise pour vous répondre. Chaque modèle dispose d'un quota quotidien distinct qui est réinitialisé à minuit UTC.",
             providerLabel: "Provider",
             providerHelper: "Choisissez le service d'IA qui doit répondre à vos demandes.",
             modelLabel: "Modèle",
@@ -3341,8 +3395,8 @@ export const fr: DeepPartial<Messages> = {
                 "Lecture seule : démarrez une nouvelle conversation pour demander un suivi.",
         },
         settings: {
-            title: "Paramètres de Spotlight",
-            openTooltip: "Paramètres de Spotlight — modèle et réponses IA",
+            title: "Paramètres de Genos",
+            openTooltip: "Paramètres de Genos — effort de l'IA et réponses IA",
         },
         approval: {
             titleWithTool: "Approbation requise : {toolName}",
