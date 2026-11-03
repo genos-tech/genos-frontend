@@ -30,6 +30,7 @@ import {
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
@@ -70,6 +71,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // Below `md`, the app-wide mobile cut-off. Only the header reads it.
+    const isMobile = useIsMobile();
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
@@ -360,20 +363,26 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 >
                                     {t.chat.todoPane.myTodos}
                                 </Typography>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.45)"
-                                            : "rgba(0,0,0,0.45)",
-                                        fontSize: "0.75rem",
-                                    }}
-                                >
-                                    {fmt(t.chat.todoPane.completedOfTotal, {
-                                        completed: completedItems,
-                                        total: totalItems,
-                                    })}
-                                </Typography>
+                                {/* The "N of M items completed" line is a
+                                    second row under the title; it is left
+                                    out on a phone to keep the header short
+                                    (the filter chips below show counts). */}
+                                {!isMobile && (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.45)",
+                                            fontSize: "0.75rem",
+                                        }}
+                                    >
+                                        {fmt(t.chat.todoPane.completedOfTotal, {
+                                            completed: completedItems,
+                                            total: totalItems,
+                                        })}
+                                    </Typography>
+                                )}
                             </Stack>
                         </Stack>
 
@@ -465,13 +474,29 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             buttons side by side read as one control split in
                             half. */}
                             {!tomorrowExists && (
-                                <AppTooltip title={t.chat.todoPane.createTomorrowTooltip}>
+                                <AppTooltip
+                                    title={
+                                        // On a phone the label is gone, so the
+                                        // hint says what the button was called.
+                                        isMobile
+                                            ? t.chat.todoPane.startTomorrow
+                                            : t.chat.todoPane.createTomorrowTooltip
+                                    }
+                                >
                                     <IconButton
+                                        // Icon-only on a phone, where the
+                                        // label made it the largest control
+                                        // in the header. Named for assistive
+                                        // tech, since nothing is printed.
+                                        {...(isMobile
+                                            ? { "aria-label": t.chat.todoPane.startTomorrow }
+                                            : {})}
                                         size="sm"
                                         sx={{
                                             borderRadius: "10px",
-                                            px: 1.5,
-                                            py: 0.75,
+                                            ...(isMobile
+                                                ? { px: 0, py: 0 }
+                                                : { px: 1.5, py: 0.75 }),
                                             fontSize: "13px",
                                             fontWeight: 600,
                                             gap: 0.5,
@@ -491,7 +516,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         onClick={handleCreateTomorrowGroup}
                                     >
                                         <AddIcon sx={{ fontSize: "18px" }} />
-                                        {t.chat.todoPane.startTomorrow}
+                                        {!isMobile && t.chat.todoPane.startTomorrow}
                                     </IconButton>
                                 </AppTooltip>
                             )}
