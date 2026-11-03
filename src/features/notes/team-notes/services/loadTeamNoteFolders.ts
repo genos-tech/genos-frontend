@@ -7,19 +7,21 @@ import { TeamNoteFolderProps } from "../../../../types/notes";
 // Team folders the caller can reach. The server does the ACL walk, so
 // every folder in the response is one this user may open.
 //
-// Resolves to [] on any failure so the sidebar degrades to an empty
-// Team Notes section rather than breaking, matching
-// `loadMyNoteFolders`.
+// Resolves undefined when the request fails (or there is no token, or the
+// answer is not a list), like `loadMyNoteMeta`. A successful empty list is a
+// real answer, "there are no team folders", and stays []. The caller keeps the
+// list it has on undefined; resolving [] here emptied the folder tree on every
+// failed poll (MIP-961).
 export const loadTeamNoteFolders = async (
     myself: UserProps,
     accessToken: string | null
-): Promise<TeamNoteFolderProps[]> => {
+): Promise<TeamNoteFolderProps[] | undefined> => {
     try {
         const api = authApi(accessToken);
         if (api) {
             const query = `team_id=${myself.teamId}&user_id=${myself.userId}`;
             const res = await api.get(`/note/team/folder/?${query}`);
-            return Array.isArray(res.data) ? res.data : [];
+            return Array.isArray(res.data) ? res.data : undefined;
         } else {
             console.error("Unauthorized. Auth token is not found.");
         }
@@ -30,5 +32,5 @@ export const loadTeamNoteFolders = async (
             console.error("Unexpected error:", error);
         }
     }
-    return [];
+    return undefined;
 };
