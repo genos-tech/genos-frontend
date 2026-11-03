@@ -16,7 +16,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
-import { loadTaskDependencies } from "../features/tasks/services/loadTaskDependencies";
+import { loadTaskDependenciesInto } from "../features/tasks/services/loadTaskDependencies";
 import { emitTaskTouched } from "../features/tasks/services/taskEvents";
 import type { TaskProps } from "../types/tasks";
 
@@ -86,10 +86,10 @@ vi.mock("../features/tasks/components/contents/base/TaskTabBlock", () => ({
         );
         return (
             <div
-                data-testid="tabs"
                 data-activities={(p.taskActivities as unknown[]).length}
                 data-comments={(p.taskComments as unknown[]).length}
                 data-notes={(p.taskNotes as unknown[]).length}
+                data-testid="tabs"
             />
         );
     },
@@ -149,7 +149,7 @@ vi.mock("../features/tasks/components/contents/base/sub/TaskStartDateInput", () 
 vi.mock("../features/tasks/components/contents/base/TaskDeliveriesBlock", () => ({
     // The deliveries the block was handed, so a test can see what landed.
     TaskDeliveriesBlock: (p: { deliveries?: unknown[] }) => (
-        <div data-testid="deliveries" data-count={p.deliveries?.length ?? 0} />
+        <div data-count={p.deliveries?.length ?? 0} data-testid="deliveries" />
     ),
 }));
 vi.mock("../features/tasks/components/contents/base/TaskDependenciesBlock", () => ({
@@ -276,9 +276,13 @@ const onRender: ProfilerOnRenderCallback = () => {
     host.commits += 1;
 };
 
-const Host = () => {
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
-    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
+const Host = ({ initialTask }: { initialTask?: TaskProps }) => {
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(
+        initialTask
+    );
+    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(
+        initialTask ? Number(initialTask.id) : -1
+    );
     const [taskComments, setTaskComments] = useState<unknown[]>([]);
     const [taskCommentLines, setTaskCommentLines] = useState(1);
     const [taskDependencies, setTaskDependencies] = useState<
@@ -304,22 +308,22 @@ const Host = () => {
         taskCommentLines,
         setTaskCommentLines,
         taskDependencies,
-        // The real hook's body (useTaskManagement): fetch, then write the
-        // state after the await.
-        loadTaskDependenciesFor: async (taskId: number) => {
-            const result = await loadTaskDependencies(taskId, "test-token");
-            if (result) {
-                setTaskDependencies((prev) => ({
-                    ...prev,
-                    [taskId]: result as { blocking: unknown[] },
-                }));
-            }
-        },
+        // The task manager's own function, over this host's state.
+        loadTaskDependenciesFor: (taskId: number, land?: (write: () => void) => void) =>
+            loadTaskDependenciesInto(
+                taskId,
+                "test-token",
+                (result) =>
+                    setTaskDependencies((prev) => ({
+                        ...prev,
+                        [taskId]: result as { blocking: unknown[] },
+                    })),
+                land
+            ),
     });
     return (
         <Profiler id="preview" onRender={onRender}>
             <TaskPreview
-                holdSwitchWithLoader
                 myself={ME as never}
                 setMyself={vi.fn()}
                 socket={null}
@@ -329,15 +333,17 @@ const Host = () => {
                 useTEM={stubBag({ teamMemberProfiles: {}, teamMembers: [] }) as never}
                 useTM={useTM as never}
                 useUISM={stubBag({}) as never}
+                holdSwitchWithLoader
             />
         </Profiler>
     );
 };
 
-const mount = () =>
+/** `initialTask`: the preview mounts with its task already open (a modal, the note page). */
+const mount = (initialTask?: TaskProps) =>
     render(
         <CssVarsProvider>
-            <Host />
+            <Host initialTask={initialTask} />
         </CssVarsProvider>
     );
 
@@ -521,6 +527,16 @@ describe("task open: the side loaders land together", () => {
         expect(view()).toEqual(viewOf(A));
     });
 
+    it("a preview that mounts with its task already open lands together too (modal, note page)", async () => {
+        const [A] = family(14);
+        mount(makeTask(A));
+        await settle();
+        expect(view()).toEqual(EMPTY);
+        const commits = await commitsDuring(() => answerAll(A));
+        expect(view()).toEqual(viewOf(A));
+        expect(commits).toBeLessThanOrEqual(2);
+    });
+
     it("a switch to another task lands together too (A -> B)", async () => {
         const [A, B] = family(6);
         mount();
@@ -602,6 +618,29 @@ describe("task open: one slow endpoint does not hold the others for ever", () =>
     });
 });
 
+describe("task open: leaving", () => {
+    it("closing the preview while a batch waits leaves no timer behind", async () => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        // What the preview leaves behind on its own when it closes after a
+        // batch has landed (a few short timers that are not this change's).
+        const [done] = family(15);
+        const first = mount();
+        await open(makeTask(done));
+        await answerAll(done);
+        first.unmount();
+        const leftover = vi.getTimerCount();
+        vi.clearAllTimers();
+
+        // Closing while the batch is still waiting must leave no more than that.
+        const [held] = family(16);
+        const second = mount();
+        await open(makeTask(held));
+        await answer("comments", held);
+        second.unmount();
+        expect(vi.getTimerCount()).toBe(leftover);
+    });
+});
+
 describe("task open: switching or failing mid-load", () => {
     it("a switch before the batch landed never shows the old task's late results on the new one", async () => {
         const [A, B] = family(10);
@@ -662,15 +701,28 @@ describe("task open: switching or failing mid-load", () => {
         expect(view().comments).toBe(4);
     });
 
-    it("one endpoint failing does not keep the others back, and it lands empty as before", async () => {
-        const [A] = family(12);
-        mount();
-        await open(makeTask(A));
-        const commits = await commitsDuring(async () => {
-            await fail("notes", A);
-            for (const key of orderFor(A).filter((k) => k !== "notes")) await answer(key, A);
-        });
-        expect(view()).toEqual({ ...viewOf(A), notes: 0 });
-        expect(commits).toBeLessThanOrEqual(2);
-    });
+    // The services catch a failed request and answer with nothing, and the
+    // block shows that as it did before: an empty list, no parent row, no
+    // dependency entry. What matters here is that the others still land, together.
+    it.each(KEYS.map((key, i) => [key, 20 + i] as const))(
+        "%s failing does not keep the others back, and shows what it showed before",
+        async (failing, familyNumber) => {
+            const [A] = family(familyNumber);
+            mount();
+            await open(makeTask(A));
+            const commits = await commitsDuring(async () => {
+                for (const key of orderFor(A).filter((k) => k !== failing)) await answer(key, A);
+                await fail(failing, A);
+            });
+            const empty: Partial<ReturnType<typeof view>> =
+                failing === "parent"
+                    ? { parent: null }
+                    : failing === "dependencies"
+                      ? {}
+                      : { [failing]: 0 };
+            expect(view()).toEqual({ ...viewOf(A), ...empty });
+            expect(host.deps[A] === undefined).toBe(failing === "dependencies");
+            expect(commits).toBeLessThanOrEqual(2);
+        }
+    );
 });

@@ -29,6 +29,7 @@ import {
 import { getCachedOrFetchPrStatus } from "../../../../integrations/services/prStatusCache";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
+import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLandingContext";
 import { useTaskDeliveries } from "../../../hooks/useTaskDeliveries";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { MilestoneFolderPicker } from "../../../sprint-milestone/components/MilestoneFolderPicker";
@@ -242,28 +243,38 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // Stored delivery links (branch / PR / state). Preview only: a task
     // being created has none, and the create form shouldn't fetch.
     const deliveries = useTaskDeliveries(myself, isPreviewMode ? taskContent.id : null);
+    // Inside a task preview the parent lands together with the preview's other
+    // loaders (see taskOpenLanding.ts); anywhere else the ticket writes at once.
+    const openLanding = useTaskOpenLanding();
     useEffect(() => {
         let cancelled = false;
+        const ticket =
+            taskContent.project && taskContent.parentTaskId != null
+                ? joinOpenLanding(openLanding, Number(taskContent.id), "parent")
+                : null;
         (async () => {
-            if (taskContent.project && taskContent.parentTaskId != null) {
+            if (ticket && taskContent.project && taskContent.parentTaskId != null) {
                 const parentTaskResult: TaskProps[] = await loadSpecificTask(
                     myself,
                     taskContent.project.projectId,
                     taskContent.parentTaskId,
                     accessToken
                 );
-                if (cancelled) return;
-                if (parentTaskResult.length === 1) {
-                    setParentTask(parentTaskResult[0]);
-                } else {
-                    setParentTask(undefined);
-                }
+                ticket.land(() => {
+                    if (cancelled) return;
+                    if (parentTaskResult.length === 1) {
+                        setParentTask(parentTaskResult[0]);
+                    } else {
+                        setParentTask(undefined);
+                    }
+                });
             } else {
                 setParentTask(undefined);
             }
         })();
         return () => {
             cancelled = true;
+            ticket?.cancel();
         };
         // Depend on the ids the lookup actually uses, not the
         // `taskContent` object: regular mode passes

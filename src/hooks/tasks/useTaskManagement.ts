@@ -17,8 +17,8 @@ import {
 import { deleteTaskDependency } from "../../features/tasks/services/deleteTaskDependency";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
 import {
-    loadTaskDependencies,
     loadTaskDependenciesForTasks,
+    loadTaskDependenciesInto,
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
@@ -308,7 +308,7 @@ export interface TaskManagementState {
     // Task dependencies (blocking / blocked-by). Keyed by task id so
     // multiple previews can coexist without thrashing the same slot.
     taskDependencies: Record<number, TaskDependencies>;
-    loadTaskDependenciesFor: (taskId: number) => Promise<void>;
+    loadTaskDependenciesFor: (taskId: number, land?: (write: () => void) => void) => Promise<void>;
     addTaskDependency: (args: {
         blockerTaskId: number;
         blockedTaskId: number;
@@ -934,12 +934,13 @@ export const useTaskManagement = (
     const [taskDependencies, setTaskDependencies] = useState<Record<number, TaskDependencies>>({});
 
     const loadTaskDependenciesFor = useCallback(
-        async (taskId: number) => {
-            const result = await loadTaskDependencies(taskId, accessToken);
-            if (result) {
-                setTaskDependencies((prev) => ({ ...prev, [taskId]: result }));
-            }
-        },
+        (taskId: number, land?: (write: () => void) => void) =>
+            loadTaskDependenciesInto(
+                taskId,
+                accessToken,
+                (result) => setTaskDependencies((prev) => ({ ...prev, [taskId]: result })),
+                land
+            ),
         [accessToken]
     );
 
