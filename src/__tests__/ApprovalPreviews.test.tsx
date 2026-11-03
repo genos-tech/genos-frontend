@@ -1134,6 +1134,211 @@ describe("Project previews (manage_project / manage_project_members approvals)",
     });
 });
 
+describe("Note folder previews (manage_note_folder / favorite_note approvals)", () => {
+    const PRIVATE_LINE = "Private to you until you share it from the app.";
+
+    it("renders a top-level folder in My Notes, with no private line", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "Research",
+            space: "personal",
+        });
+        expect(screen.getByText("Create folder Research")).toBeTruthy();
+        expect(screen.getByText("My Notes")).toBeTruthy();
+        expect(screen.queryByText("Team Notes")).toBeNull();
+        expect(screen.queryByText(/^Inside /)).toBeNull();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("action:")).toBeNull();
+        expect(screen.queryByText("space:")).toBeNull();
+        expect(screen.queryByText("name:")).toBeNull();
+    });
+
+    it("reads a create with no space and no parent as My Notes, the API's default", () => {
+        renderCard("manage_note_folder", { action: "create", name: "Ideas" });
+        expect(screen.getByText("Create folder Ideas")).toBeTruthy();
+        expect(screen.getByText("My Notes")).toBeTruthy();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+    });
+
+    it("renders a top-level Team Notes folder and says it stays private until shared", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "Handbook",
+            space: "team",
+        });
+        expect(screen.getByText("Create folder Handbook")).toBeTruthy();
+        expect(screen.getByText("Team Notes")).toBeTruthy();
+        expect(screen.queryByText("My Notes")).toBeNull();
+        expect(screen.getByText(PRIVATE_LINE)).toBeTruthy();
+    });
+
+    it("reads space case-insensitively, so a stray capital does not hide the private line", () => {
+        renderCard("manage_note_folder", { action: "create", name: "Handbook", space: " Team " });
+        expect(screen.getByText("Team Notes")).toBeTruthy();
+        expect(screen.getByText(PRIVATE_LINE)).toBeTruthy();
+    });
+
+    it("names the parent a folder goes inside, in My Notes", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "2026",
+            space: "personal",
+            parent_folder_id: "Research",
+        });
+        expect(screen.getByText("Create folder 2026")).toBeTruthy();
+        expect(screen.getByText("My Notes")).toBeTruthy();
+        expect(screen.getByText("Inside Research")).toBeTruthy();
+    });
+
+    it("does not claim My Notes when there is a parent and no space", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "2026",
+            parent_folder_id: "Research",
+        });
+        expect(screen.getByText("Create folder 2026")).toBeTruthy();
+        expect(screen.getByText("Inside Research")).toBeTruthy();
+        expect(screen.queryByText("My Notes")).toBeNull();
+        expect(screen.queryByText("Team Notes")).toBeNull();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+    });
+
+    it("has no private line for a Team Notes folder inside a parent", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "Onboarding",
+            space: "team",
+            parent_folder_id: "Handbook",
+        });
+        expect(screen.getByText("Team Notes")).toBeTruthy();
+        expect(screen.getByText("Inside Handbook")).toBeTruthy();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+    });
+
+    it("names the parent by its id when the caller may not see its name", () => {
+        renderCard("manage_note_folder", {
+            action: "create",
+            name: "Archive",
+            parent_folder_id: "17",
+        });
+        expect(screen.getByText("Inside 17")).toBeTruthy();
+    });
+
+    it("does not read a space it does not know as My Notes or Team Notes", () => {
+        renderCard("manage_note_folder", { action: "create", name: "Odd", space: "shared" });
+        expect(screen.getByText("shared")).toBeTruthy();
+        expect(screen.queryByText("My Notes")).toBeNull();
+        expect(screen.queryByText("Team Notes")).toBeNull();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+    });
+
+    it("reads a rename as the current name to the new one, with no where-chips or private line", () => {
+        renderCard("manage_note_folder", {
+            action: "rename",
+            folder_id: "Research",
+            name: "User research",
+            // A rename never moves a folder, so these are not shown even if sent.
+            space: "team",
+        });
+        expect(screen.getByText("Rename folder Research to User research")).toBeTruthy();
+        expect(screen.queryByText(/^Create folder/)).toBeNull();
+        expect(screen.queryByText("Team Notes")).toBeNull();
+        expect(screen.queryByText(PRIVATE_LINE)).toBeNull();
+        expect(screen.queryByText("folder_id:")).toBeNull();
+    });
+
+    it("names the folder to rename by its id when the caller may not see its name", () => {
+        renderCard("manage_note_folder", {
+            action: "rename",
+            folder_id: "17",
+            name: "Archive",
+        });
+        expect(screen.getByText("Rename folder 17 to Archive")).toBeTruthy();
+    });
+
+    it("stars a note by its title", () => {
+        renderCard("favorite_note", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            favorite: true,
+        });
+        expect(screen.getByText("Add Spotlight tips to favorites")).toBeTruthy();
+        expect(screen.queryByText(/from favorites/)).toBeNull();
+        // Neither the id nor the key:value fallback shows when the title is there.
+        expect(screen.queryByText(/#42/)).toBeNull();
+        expect(screen.queryByText("note_title:")).toBeNull();
+        expect(screen.queryByText("favorite:")).toBeNull();
+    });
+
+    it("reads a missing favorite as a star", () => {
+        renderCard("favorite_note", {
+            note_type: "team",
+            note_id: 9,
+            note_title: "Onboarding",
+        });
+        expect(screen.getByText("Add Onboarding to favorites")).toBeTruthy();
+    });
+
+    it("stars a folder by its name", () => {
+        renderCard("favorite_note", { folder_id: "Research", favorite: true });
+        expect(screen.getByText("Add Research to favorites")).toBeTruthy();
+    });
+
+    it("takes a note's title over a folder name if both arrive", () => {
+        renderCard("favorite_note", {
+            folder_id: "Research",
+            note_title: "Spotlight tips",
+        });
+        expect(screen.getByText("Add Spotlight tips to favorites")).toBeTruthy();
+    });
+
+    it("unstars a note and a folder", () => {
+        const { unmount } = renderCard("favorite_note", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            favorite: false,
+        });
+        expect(screen.getByText("Remove Spotlight tips from favorites")).toBeTruthy();
+        expect(screen.queryByText(/^Add /)).toBeNull();
+        unmount();
+
+        renderCard("favorite_note", { folder_id: "Research", favorite: false });
+        expect(screen.getByText("Remove Research from favorites")).toBeTruthy();
+    });
+
+    it('reads favorite sent as the string "false" as an unstar, and "true" as a star', () => {
+        const { unmount } = renderCard("favorite_note", {
+            folder_id: "Research",
+            favorite: "false",
+        });
+        expect(screen.getByText("Remove Research from favorites")).toBeTruthy();
+        unmount();
+
+        renderCard("favorite_note", { folder_id: "Research", favorite: "true" });
+        expect(screen.getByText("Add Research to favorites")).toBeTruthy();
+    });
+
+    it("falls back to the raw id of a note the caller can't read, then to a neutral word", () => {
+        const { unmount } = renderCard("favorite_note", {
+            note_type: "team",
+            note_id: 9,
+            favorite: true,
+        });
+        expect(screen.getByText("Add this note (#9) to favorites")).toBeTruthy();
+        unmount();
+
+        const second = renderCard("favorite_note", { note_type: "team", favorite: false });
+        expect(screen.getByText("Remove this note from favorites")).toBeTruthy();
+        second.unmount();
+
+        renderCard("favorite_note", { favorite: true });
+        expect(screen.getByText("Add this folder to favorites")).toBeTruthy();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -1151,6 +1356,11 @@ describe("getToolLabel", () => {
     it("labels the project create-or-change and project member tools", () => {
         expect(getToolLabel("manage_project", en)).toBe("Managing a project");
         expect(getToolLabel("manage_project_members", en)).toBe("Managing project members");
+    });
+
+    it("labels the note folder and favorite tools", () => {
+        expect(getToolLabel("manage_note_folder", en)).toBe("Managing a note folder");
+        expect(getToolLabel("favorite_note", en)).toBe("Updating your favorites");
     });
 
     it("labels the sprint create-or-change and sprint delete tools", () => {

@@ -227,6 +227,8 @@ describe("DevelopersPage", () => {
             "delete_sprint",
             "manage_project",
             "manage_project_members",
+            "manage_note_folder",
+            "favorite_note",
         ],
     };
 
@@ -244,6 +246,16 @@ describe("DevelopersPage", () => {
             ...MCP_CATALOG.read.map((name) => ({ name, type: "read" })),
             ...MCP_CATALOG.write.map((name) => ({ name, type: "write" })),
         ]);
+    });
+
+    it("describes list_note_folders as the My Notes and Team Notes folders", () => {
+        renderPage();
+        const row = [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === "list_note_folders"
+        );
+        expect(row?.textContent).toContain("The note folders in your My Notes and in Team Notes.");
+        // "Personal note" is retired from the UI: the space is My Notes.
+        expect(row?.textContent).not.toMatch(/personal/i);
     });
 
     it("states counts that agree with the tool table", () => {

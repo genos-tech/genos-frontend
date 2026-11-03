@@ -70,6 +70,7 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
+import { NOTE_SIDEBAR_TOOLS } from "../agentQA/noteWriteTools";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
     effectiveFilterServices,
@@ -847,10 +848,11 @@ export const useSpotlight = ({
                     if (tool_name === "create_todo_item" || tool_name === "update_todo_item") {
                         window.dispatchEvent(new CustomEvent("todoChanged"));
                     }
-                    // Same idea for notes: the note sidebar's meta
-                    // (useNoteManagement) won't reflect an agent-written
-                    // note until a manual reload. Nudge it to refetch.
-                    if (tool_name === "create_note" || tool_name === "update_note") {
+                    // Same idea for notes: the note sidebar's meta, folder
+                    // lists and Favorites (useNoteManagement) won't reflect
+                    // an agent-written note, folder or star until a manual
+                    // reload. Nudge it to refetch.
+                    if (NOTE_SIDEBAR_TOOLS.has(tool_name)) {
                         // detail = backend note ref (id/type/changed_fields)
                         // → useNoteManagement can push body updates into
                         // the note's Yjs doc; undefined on older backends
