@@ -1839,6 +1839,9 @@ export const useNoteManagement = (
     // and re-renders the whole sidebar on a timer for no reason.
     const getTeamNoteFolders = async () => {
         const loaded = await loadTeamNoteFolders(myself, accessToken);
+        // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
+        // real answer ("no team folders") and empties it.
+        if (!Array.isArray(loaded)) return;
         setTeamNoteFolders((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
     getTeamNoteFoldersRef.current = getTeamNoteFolders;
