@@ -1553,6 +1553,7 @@ export const hi: DeepPartial<Messages> = {
             searchPlaceholder: "टास्क खोजें (बंद और हटाए गए को छोड़कर)…",
             searchAriaLabel: "टास्क खोजें",
             recents: "हाल के",
+            recentsMore: "और देखें",
             projects: "प्रोजेक्ट",
             milestones: "माइलस्टोन",
             newProject: "नया प्रोजेक्ट",

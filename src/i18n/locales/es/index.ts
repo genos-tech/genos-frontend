@@ -1561,6 +1561,7 @@ export const es: DeepPartial<Messages> = {
             searchPlaceholder: "Buscar tareas (sin cerradas ni eliminadas)…",
             searchAriaLabel: "Buscar tareas",
             recents: "Recientes",
+            recentsMore: "Más",
             projects: "Proyectos",
             milestones: "Hitos",
             newProject: "Nuevo proyecto",

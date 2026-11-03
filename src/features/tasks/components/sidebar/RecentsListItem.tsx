@@ -1,22 +1,17 @@
 import { useMemo } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import { Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
-import { groupRecentTasks } from "../../utils/groupRecentTasks";
-import { taskMetaLabel } from "../../utils/taskMeta";
-import { CopyableTaskIdChip } from "../CopyableTaskId";
+import { groupRecentTasks, RecentTaskGroup } from "../../utils/groupRecentTasks";
 import { Toggler } from "./common";
+import { RecentProjectGroup } from "./RecentProjectGroup";
 
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
@@ -32,6 +27,21 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
 
     // Group by projectId (NOT name: same-named projects must not merge).
     const groupedTasks = useMemo(() => groupRecentTasks(recentTasks), [recentTasks]);
+
+    const openTask = (group: RecentTaskGroup, task: SearchTeamTasksResponse) => {
+        if (group.projectId) {
+            usePM.setCurrentProject({
+                projectId: group.projectId,
+                projectName: group.projectName,
+                projectTags: [],
+                systemUserId: group.systemUserId,
+            });
+            useTM.setCurrentPreviewTaskId(task.taskId);
+            useTM.setIsTaskPreviewVisible(true);
+        } else {
+            console.error("Failed to set the current project");
+        }
+    };
 
     return (
         <ListItem nested>
@@ -103,187 +113,12 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
             >
                 <List sx={{ gap: 0.5, pl: 1 }}>
                     {groupedTasks.map((group) => (
-                        <ListItem key={`project-group-${group.projectId}`} sx={{ gap: 0 }} nested>
-                            <Toggler
-                                defaultExpanded={true}
-                                renderToggle={({ open, setOpen }) => (
-                                    <ListItemButton
-                                        sx={{
-                                            borderRadius: "8px",
-                                            py: 0.75,
-                                            px: 1,
-                                            gap: 1,
-                                            transition: "all 0.15s ease",
-                                            "&:hover": {
-                                                backgroundColor: isDark
-                                                    ? "rgba(255,255,255,0.04)"
-                                                    : "rgba(0,0,0,0.03)",
-                                            },
-                                        }}
-                                        onClick={() => setOpen(!open)}
-                                    >
-                                        {open ? (
-                                            <KeyboardArrowDownIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.5)"
-                                                        : "rgba(0,0,0,0.4)",
-                                                }}
-                                            />
-                                        ) : (
-                                            <KeyboardArrowRightIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.5)"
-                                                        : "rgba(0,0,0,0.4)",
-                                                }}
-                                            />
-                                        )}
-                                        <FolderOpenIcon
-                                            sx={{
-                                                fontSize: 16,
-                                                color: isDark
-                                                    ? "rgba(255,255,255,0.6)"
-                                                    : "rgba(0,0,0,0.5)",
-                                            }}
-                                        />
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: 600,
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                flex: 1,
-                                                color: isDark
-                                                    ? "rgba(255,255,255,0.85)"
-                                                    : "rgba(0,0,0,0.75)",
-                                            }}
-                                        >
-                                            {group.projectName}
-                                        </Typography>
-                                        <Chip
-                                            color="neutral"
-                                            size="sm"
-                                            variant="soft"
-                                            sx={{
-                                                borderRadius: "4px",
-                                                fontSize: 10,
-                                                minHeight: 18,
-                                                px: 0.5,
-                                            }}
-                                        >
-                                            {group.tasks.length}
-                                        </Chip>
-                                    </ListItemButton>
-                                )}
-                            >
-                                <List sx={{ gap: 0, pl: 2.5 }}>
-                                    {group.tasks.map((task, index) => (
-                                        <ListItem key={`recent-task-${task.taskId}`}>
-                                            <ListItemButton
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    borderRadius: "6px",
-                                                    py: 0.5,
-                                                    px: 1,
-                                                    gap: 0.75,
-                                                    transition: "all 0.15s ease",
-                                                    "&:hover": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(255,255,255,0.04)"
-                                                            : "rgba(0,0,0,0.03)",
-                                                    },
-                                                }}
-                                                onClick={() => {
-                                                    if (group.projectId) {
-                                                        usePM.setCurrentProject({
-                                                            projectId: group.projectId,
-                                                            projectName: group.projectName,
-                                                            projectTags: [],
-                                                            systemUserId: group.systemUserId,
-                                                        });
-                                                        useTM.setCurrentPreviewTaskId(task.taskId);
-                                                        useTM.setIsTaskPreviewVisible(true);
-                                                    } else {
-                                                        console.error(
-                                                            "Failed to set the current project"
-                                                        );
-                                                    }
-                                                }}
-                                            >
-                                                {/* Milestone rows get the flag
-                                                    glyph on the far left — same
-                                                    orange as the header's "New
-                                                    Milestone" menu item. */}
-                                                {task.isMilestone === true && (
-                                                    <FlagRoundedIcon
-                                                        sx={{
-                                                            color: "#f97316",
-                                                            flexShrink: 0,
-                                                            fontSize: 14,
-                                                        }}
-                                                    />
-                                                )}
-                                                <CopyableTaskIdChip
-                                                    key={`task-id-chip-${task.taskId}`}
-                                                    color="neutral"
-                                                    task={task}
-                                                    variant="outlined"
-                                                    sx={{
-                                                        borderRadius: "4px",
-                                                        fontWeight: 600,
-                                                        fontSize: 10,
-                                                        minHeight: 18,
-                                                        px: 0.5,
-                                                    }}
-                                                />
-                                                <Chip
-                                                    key={`status-chip-${task.taskId}-${index}`}
-                                                    variant="soft"
-                                                    sx={{
-                                                        backgroundColor: task.status.color
-                                                            ? alpha(
-                                                                  task.status.color,
-                                                                  isDark ? 0.4 : 0.6
-                                                              )
-                                                            : "transparent",
-                                                        color: task.status.textColor,
-                                                        fontWeight: 600,
-                                                        borderRadius: "4px",
-                                                        fontSize: 12,
-                                                        minHeight: 18,
-                                                        px: 0.5,
-                                                    }}
-                                                >
-                                                    {taskMetaLabel(
-                                                        task.status.status,
-                                                        t.tasks.filters
-                                                    )}
-                                                </Chip>
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        flex: 1,
-                                                        color: isDark
-                                                            ? "rgba(255,255,255,0.75)"
-                                                            : "rgba(0,0,0,0.65)",
-                                                    }}
-                                                    noWrap
-                                                >
-                                                    {task.title}
-                                                </Typography>
-                                            </ListItemButton>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Toggler>
-                        </ListItem>
+                        <RecentProjectGroup
+                            key={`project-group-${group.projectId}`}
+                            group={group}
+                            selectedTaskId={useTM.currentPreviewTaskId}
+                            onOpenTask={openTask}
+                        />
                     ))}
                 </List>
             </Toggler>
