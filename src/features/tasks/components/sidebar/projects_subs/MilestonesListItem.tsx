@@ -141,7 +141,6 @@ export const MilestonesListItem = ({
             // enforce-match effect revert the project switch.
             useTM.closeTaskPreview();
             useTM.setTableMilestoneFilter(null);
-            useTM.setAllTasks([]);
             // Set in this click, not after the project list and the tasks
             // have been awaited. The preview and the scope below are set in
             // the same commit; the milestone is already in the sidebar's list,

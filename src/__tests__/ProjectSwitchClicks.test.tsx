@@ -8,8 +8,9 @@
  * project by hand. Now the click sets the project in its own render and asks
  * for the rows only, and none of them asks for the project list.
  *
- * `setAllTasks([])` is still part of the click in this PR, so the old rows never
- * show under the new project.
+ * The click no longer empties the table by hand: the table swaps to the new
+ * project's remembered rows (or to none) in the same render as the project
+ * change, whichever way the project changed (`useTaskManagement`).
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
@@ -153,8 +154,7 @@ describe("the sidebar's project row", () => {
         expect(popSpecificProjectTasks).not.toHaveBeenCalled();
         // Previews close first, then the project opens (the URL routing depends on that order).
         expect(calls.indexOf("closeTaskPreview")).toBeLessThan(calls.indexOf("openProject"));
-        expect(useTM.setAllTasks).toHaveBeenCalledWith([]);
-        expect(calls.indexOf("setAllTasks")).toBeLessThan(calls.indexOf("openProject"));
+        expect(useTM.setAllTasks).not.toHaveBeenCalled();
         // ...and all of it in the click itself.
         await Promise.resolve();
         expect(usePM.openProject).toHaveBeenCalledTimes(1);
@@ -234,6 +234,7 @@ describe("a milestone of another project in the sidebar", () => {
         expect(calls.indexOf("openProject")).toBeLessThan(
             calls.indexOf("setCurrentPreviewMilestoneId")
         );
+        expect(useTM.setAllTasks).not.toHaveBeenCalled();
     });
 
     it("a milestone of the open project switches nothing", () => {
@@ -298,6 +299,6 @@ describe("the dashboard's project picker", () => {
         expect(usePM.loadProjectsAndTasks).not.toHaveBeenCalled();
         expect(usePM.setCurrentProject).not.toHaveBeenCalled();
         expect(useTM.closeTaskPreview).toHaveBeenCalled();
-        expect(useTM.setAllTasks).toHaveBeenCalledWith([]);
+        expect(useTM.setAllTasks).not.toHaveBeenCalled();
     });
 });

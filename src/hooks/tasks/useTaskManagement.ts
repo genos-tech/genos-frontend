@@ -3,6 +3,7 @@ import {
     SetStateAction,
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -23,6 +24,12 @@ import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecif
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
+import {
+    NO_ROWS,
+    ProjectRowsCache,
+    projectRowsKey,
+    rowsOfProject,
+} from "../../features/tasks/utils/projectRowsCache";
 import { ProjectTaskFieldRules } from "../../features/tasks/utils/taskFieldRules";
 import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
@@ -317,7 +324,29 @@ export interface TaskManagementState {
     getTaskMeta: () => Promise<void>;
     handleCreateTask: () => void;
     fetchProjectTasks: (projectId: number) => Promise<void>;
+    // The in-memory copies of the last projects' rows (see `allTasks`). Drop
+    // one project's, or everything for projects that are no longer listed.
+    dropCachedProjectRows: (projectId: number) => void;
+    pruneCachedProjectRows: (keepProjectIds: number[]) => void;
 }
+
+// Which view of which team the rows were read for. `myself.teamId` and the
+// workspace's team do not flip in the same commit during a team switch, so both
+// are part of it: any change of either starts from nothing.
+const teamScopeOf = (teamId: string | undefined, currentTeamId: string | undefined): string =>
+    `${teamId ?? ""}|${currentTeamId ?? ""}`;
+
+// The rows in `allTasks` and whose they are.
+type RowsState = {
+    teamScope: string;
+    // The project the rows belong to (null: no project is open).
+    projectKey: string | null;
+    rows: TaskTableProps[];
+    // A read of the project has landed in `rows`. An empty list can be a real
+    // answer (a project with no tasks) or only "not read yet"; this tells them
+    // apart, and only rows that were read are worth remembering.
+    loaded: boolean;
+};
 
 export const useTaskManagement = (
     myself: UserProps,
@@ -582,8 +611,107 @@ export const useTaskManagement = (
         closed: { id: 2, statuses: ["Closed"], name: "Closed" },
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };
-    const [allTasks, setAllTasks] = useState<TaskTableProps[]>([]);
+    // --- The open project's rows -------------------------------------------
+    //
+    // `allTasks` holds the rows of the OPEN project, and it changes with the
+    // open project in the very render the project changes: a project the user
+    // saw lately paints its remembered rows at once (the reconcile read that
+    // follows corrects them), any other starts empty with the spinner. So no
+    // commit ever shows one project with another project's rows, whichever way
+    // the project was changed (sidebar click, Recents, Back/Forward, chat).
+    //
+    // This is React's "adjust state while rendering" pattern, on purpose NOT an
+    // effect: an effect would commit once with the new project and the old rows.
+    // React discards the render it was made in and renders again straight away,
+    // so nothing renders from the discarded pass. And on purpose HERE, in the
+    // one hook instance the whole workspace reads, not in a component: Homes
+    // are kept mounted while hidden, and a copy per component would swap against
+    // each other.
+    const teamScope = teamScopeOf(myself.teamId, options?.currentTeamId);
+    const projectKey = currentProjectId != null ? String(currentProjectId) : null;
+    const [rowsState, setRowsState] = useState<RowsState>(() => ({
+        teamScope,
+        projectKey,
+        rows: NO_ROWS,
+        loaded: false,
+    }));
     const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(false);
+    // The remembered rows of the last five projects: a plain Map behind a ref,
+    // not state, because dropping an entry must not cost a render.
+    const rowCacheRef = useRef<ProjectRowsCache | null>(null);
+    if (rowCacheRef.current === null) rowCacheRef.current = new ProjectRowsCache();
+    const rowCache = rowCacheRef.current;
+
+    if (rowsState.teamScope !== teamScope || rowsState.projectKey !== projectKey) {
+        // Reading the memory is the only thing done while rendering. It is
+        // changed at commit (below), so a render that React repeats or throws
+        // away (the swap itself, Strict Mode) leaves it alone.
+        const hit =
+            projectKey === null ? undefined : rowCache.peek(projectRowsKey(teamScope, projectKey));
+        setRowsState({
+            teamScope,
+            projectKey,
+            rows: hit ?? NO_ROWS,
+            loaded: hit !== undefined,
+        });
+        // A miss shows the spinner in the same commit; the read that follows
+        // turns it off.
+        if (projectKey !== null && hit === undefined) setIsLoadingTasks(true);
+    }
+
+    // At commit: what the rows were a moment ago goes into memory under the
+    // project they belonged to, and the project that is open now leaves it (its
+    // rows are `allTasks`). One project is in memory once, the open one plus the
+    // others never exceed `MAX_CACHED_PROJECTS`.
+    const committedRowsRef = useRef<RowsState | null>(null);
+    useLayoutEffect(() => {
+        const before = committedRowsRef.current;
+        committedRowsRef.current = rowsState;
+        if (before === null) return;
+        if (before.teamScope !== rowsState.teamScope) {
+            // Another team: nothing remembered belongs to this view, and the rows
+            // that were on screen (the old team's) are not stored.
+            rowCache.clear();
+            return;
+        }
+        if (before.projectKey === rowsState.projectKey) return;
+        if (before.projectKey !== null) {
+            const leaving = projectRowsKey(before.teamScope, before.projectKey);
+            if (before.loaded) {
+                // Only this project's own rows, and only because a read of them
+                // landed: a table that never got its read (switched away from
+                // at once) must not come back as an answer.
+                rowCache.put(leaving, rowsOfProject(before.rows, Number(before.projectKey)));
+            } else {
+                rowCache.delete(leaving);
+            }
+        }
+        if (rowsState.projectKey !== null) {
+            rowCache.take(projectRowsKey(rowsState.teamScope, rowsState.projectKey));
+        }
+    });
+
+    const allTasks = rowsState.rows;
+    // Same signature as before (a state setter), applied to the rows of the
+    // open project. A functional update sees those rows.
+    const setAllTasks = useCallback<Dispatch<SetStateAction<TaskTableProps[]>>>((action) => {
+        setRowsState((prev) => {
+            const next = typeof action === "function" ? action(prev.rows) : action;
+            if (next === prev.rows) return prev;
+            // Emptied by a caller (a wipe, the last task deleted): not an answer
+            // from a read any more.
+            return { ...prev, rows: next, loaded: prev.loaded && next.length > 0 };
+        });
+    }, []);
+    const dropCachedProjectRows = useCallback(
+        (projectId: number) => rowCache.deleteProject(projectId),
+        [rowCache]
+    );
+    const pruneCachedProjectRows = useCallback(
+        (keepProjectIds: number[]) => rowCache.retainProjects(keepProjectIds),
+        [rowCache]
+    );
+
     // What `fetchProjectTasks` checks its answer against. Written every render
     // (the latest committed props), read after the await.
     const scopeRef = useRef({
@@ -895,7 +1023,7 @@ export const useTaskManagement = (
                 })
             );
         },
-        [myself, accessToken]
+        [myself, accessToken, setAllTasks]
     );
 
     // Read the project's rows from IndexedDB into the table.
@@ -927,13 +1055,6 @@ export const useTaskManagement = (
             ) {
                 return;
             }
-            // Keyed merge. The answer usually matches what is on screen (it
-            // follows the network refresh of rows already painted), and then
-            // `prev` comes back untouched: array identity stays put, so every
-            // downstream memo (childrenByParent / displayRows / the sort) and
-            // every row is left alone. When some rows did change, the rest keep
-            // their objects and only the changed ones render again.
-            //
             // Team guard. IndexedDB outlives a team switch, so the store can
             // still hold rows filed under the previous team; in a project of
             // the user's own team those are not shown. (Project ids are global,
@@ -950,7 +1071,22 @@ export const useTaskManagement = (
                           (task) => task.teamId == null || ownTeams.includes(String(task.teamId))
                       )
                     : _allTasks;
-            setAllTasks((prev) => mergeProjectRows(prev, rows));
+            // Keyed merge. The answer usually matches what is on screen (it
+            // follows the network refresh of rows already painted, or the
+            // remembered rows of a switch back), and then `prev` comes back
+            // untouched: array identity stays put, so every downstream memo
+            // (childrenByParent / displayRows / the sort) and every row is left
+            // alone. When some rows did change, the rest keep their objects and
+            // only the changed ones render again.
+            const readKey = String(projectId);
+            const readScope = teamScopeOf(now.teamId, now.currentTeamId);
+            setRowsState((prev) => {
+                // Defensive: the rows on screen must be this project's.
+                if (prev.projectKey !== readKey || prev.teamScope !== readScope) return prev;
+                const merged = mergeProjectRows(prev.rows, rows);
+                if (merged === prev.rows && prev.loaded) return prev;
+                return { ...prev, rows: merged, loaded: true };
+            });
         } finally {
             if (seq === readSeqRef.current) setIsLoadingTasks(false);
         }
@@ -1033,7 +1169,7 @@ export const useTaskManagement = (
                 return next;
             });
         },
-        [myself.teamId]
+        [myself.teamId, setAllTasks]
     );
 
     return {
@@ -1141,5 +1277,7 @@ export const useTaskManagement = (
         getTaskMeta,
         handleCreateTask,
         fetchProjectTasks,
+        dropCachedProjectRows,
+        pruneCachedProjectRows,
     };
 };
