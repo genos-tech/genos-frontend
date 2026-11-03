@@ -39,14 +39,31 @@ export interface ToolCallStartPayload {
 }
 
 /** Compact ref the backend attaches to approved create_note /
- * update_note results so the client can refresh note caches and, for
- * body updates, push the new blocks into the live Yjs doc. Absent on
- * every other tool (and on older backends). */
+ * update_note / delete_note / restore_note_version results so the client
+ * can refresh note caches and, for body updates, push the new blocks into
+ * the live Yjs doc. `note_type` is the note FAMILY ("personal" covers My,
+ * Team and Shared notes). `deleted: true` marks a delete_note (no
+ * `changed_fields`); a restore reports `changed_fields: ["title", "body"]`
+ * and carries no body. Absent on every other tool (and on older
+ * backends). */
 export interface ToolResultNoteRef {
     note_id: number;
-    note_type: "personal" | "task";
+    note_type: "personal" | "task" | "chat";
     title?: string;
     changed_fields?: string[];
+    deleted?: boolean;
+}
+
+/** Ref the backend attaches to an approved delete_note_folder result: what
+ * the folder delete destroyed. All the notes are personal-family (My Notes
+ * and Team Notes both store personal-family notes). The id lists are
+ * capped by the backend; `ids_truncated: true` means they were cut, so the
+ * client reloads its lists instead of trusting them as complete. */
+export interface ToolResultNoteFolderRef {
+    folder_id: number;
+    deleted_folder_ids: number[];
+    deleted_note_ids: number[];
+    ids_truncated: boolean;
 }
 
 export interface ToolCallResultPayload {
@@ -54,6 +71,7 @@ export interface ToolCallResultPayload {
     tool_name: string;
     summary: string;
     note?: ToolResultNoteRef;
+    note_folder?: ToolResultNoteFolderRef;
     // Server-measured execution time for THIS call. The client can't
     // time it from event arrival: parallel batches emit every start
     // before any result, so arrival deltas would pin the whole batch
@@ -819,6 +837,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 tool_name: evt.tool_name,
                 summary: evt.summary,
                 note: evt.note,
+                note_folder: evt.note_folder,
                 duration_ms: evt.duration_ms,
             });
             return false;

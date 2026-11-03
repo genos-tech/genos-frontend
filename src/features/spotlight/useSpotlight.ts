@@ -70,7 +70,7 @@ import {
     type CompletedTurn,
     type ToolEvent,
 } from "../agentQA";
-import { NOTE_SIDEBAR_TOOLS } from "../agentQA/noteWriteTools";
+import { emitNoteChanged } from "../agentQA/noteWriteTools";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
     effectiveFilterServices,
@@ -820,12 +820,14 @@ export const useSpotlight = ({
                     tool_name,
                     summary,
                     note,
+                    note_folder,
                     duration_ms,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
+                    note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
                     duration_ms?: number;
                 }) => {
                     setAsk((prev) => {
@@ -852,13 +854,12 @@ export const useSpotlight = ({
                     // lists and Favorites (useNoteManagement) won't reflect
                     // an agent-written note, folder or star until a manual
                     // reload. Nudge it to refetch.
-                    if (NOTE_SIDEBAR_TOOLS.has(tool_name)) {
-                        // detail = backend note ref (id/type/changed_fields)
-                        // → useNoteManagement can push body updates into
-                        // the note's Yjs doc; undefined on older backends
-                        // keeps the plain meta refetch.
-                        window.dispatchEvent(new CustomEvent("noteChanged", { detail: note }));
-                    }
+                    // The refs carry what changed (id/type/changed_fields,
+                    // `deleted`, a folder delete's ids) so useNoteManagement
+                    // can push a body into the note's Yjs doc or drop what
+                    // the server removed; undefined on older backends keeps
+                    // the plain meta refetch.
+                    emitNoteChanged(tool_name, note, note_folder);
                     // And for tasks/milestones: an approved agent write
                     // (create_task_plan, update_tasks_bulk, ...) mutates
                     // rows outside the task UI's flows — nudge
