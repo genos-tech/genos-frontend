@@ -17,8 +17,8 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import type { AskState, CompletedTurn, UseAgentQAReturn } from "../features/agentQA";
 import { EMPTY_ASK_STATE } from "../features/agentQA/types";
@@ -131,12 +131,14 @@ const liveAsk = (over: Partial<AskState> = {}): AskState => ({
     ...over,
 });
 
+type Spy = Mock<(...args: unknown[]) => unknown>;
+
 interface Handlers {
-    openSource: ReturnType<typeof vi.fn>;
-    retry: ReturnType<typeof vi.fn>;
-    feedback: ReturnType<typeof vi.fn>;
-    approve: ReturnType<typeof vi.fn>;
-    reject: ReturnType<typeof vi.fn>;
+    openSource: Spy;
+    retry: Spy;
+    feedback: Spy;
+    approve: Spy;
+    reject: Spy;
 }
 
 interface Surface {
@@ -436,5 +438,51 @@ describe("citation sources: Spotlight resolves per turn, the Ask modals across t
         const turnTwo = screen.getByText(/As before,/).closest("p, div") as HTMLElement;
         expect(within(turnTwo).queryByRole("button", { name: "the fix" })).toBeNull();
         expect(turnTwo.textContent).toContain("the fix");
+    });
+});
+
+describe("one turn, one rendering", () => {
+    // The turn is a single component now, so the same finished turn must read
+    // identically wherever it is hosted: same words, same buttons, same order.
+    const turnOf = (): HTMLElement =>
+        screen.getByText(/What shipped last week\?/).parentElement!.parentElement!;
+
+    const snapshot = () => {
+        const root = turnOf();
+        return {
+            text: root.textContent,
+            buttons: within(root)
+                .getAllByRole("button")
+                .map((b) => {
+                    // A chip's name comes from the label it points at.
+                    const labelledBy = b.getAttribute("aria-labelledby");
+                    return (
+                        b.getAttribute("aria-label") ??
+                        (labelledBy ? document.getElementById(labelledBy)?.textContent : null) ??
+                        b.textContent
+                    );
+                }),
+        };
+    };
+
+    it("is the same in Spotlight and in the thread and note Ask modals", () => {
+        const seen = SURFACES.map((surface) => {
+            surface.mount({ turns: [TURN_ONE] });
+            const out = snapshot();
+            cleanup();
+            return out;
+        });
+        expect(seen[1]).toEqual(seen[0]);
+        expect(seen[2]).toEqual(seen[0]);
+        // And it is the full turn, not an empty match.
+        expect(seen[0].buttons).toEqual([
+            "the fix",
+            "Task PRJ-12: Fix login redirect",
+            "My note: Release notes",
+            "Good answer",
+            "Needs work",
+            "Copy answer",
+            "Ask again",
+        ]);
     });
 });

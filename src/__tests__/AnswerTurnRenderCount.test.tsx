@@ -11,9 +11,18 @@
  * number of calls with a given text is the number of times THAT turn was
  * rendered (all of its re-renders reach the parser, nothing else does).
  *
- * The numbers pinned for "finished turns" were measured on origin/main BEFORE
- * the single-turn refactor (0b59b6c5) and the test is unchanged since: a
- * finished turn costs nothing while streaming or typing, on every host.
+ * Measured on origin/main BEFORE the single-turn refactor (0b59b6c5), parser
+ * calls for one finished turn (and for the in-flight one) in each scenario:
+ *
+ *   scenario                                   Spotlight          Ask modals
+ *   30 streamed deltas                         0 (live 30)        0 (live 30)
+ *   5 query writes / new callback identities   5 each (live 5)    0 (live 5)
+ *   stream starts and ends (askDisabled flips) 3 each (live 3)    0 (live 3)
+ *   5 keystrokes in the draft                  0                  n/a
+ *
+ * The single turn brings every "5" and "3" to 0: its callbacks sit behind refs
+ * and the markdown parse has its own memo boundary. The streaming rows were
+ * already at the floor, and must stay there.
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -28,7 +37,7 @@ import { SpotlightContent } from "../features/spotlight/SpotlightContent";
 import { ThreadAskModal } from "../features/threadAsk/ThreadAskModal";
 import type { UseThreadAskReturn } from "../features/threadAsk/useThreadAsk";
 
-const parsed = vi.hoisted(() => ({ texts: [] as string[] }));
+const parsed = vi.hoisted(() => ({ texts: [] as string[], turns: [] as string[] }));
 
 vi.mock("react-markdown", async () => {
     const actual = await vi.importActual<typeof import("react-markdown")>("react-markdown");
@@ -37,6 +46,23 @@ vi.mock("react-markdown", async () => {
         return <actual.default {...props} />;
     };
     return { ...actual, default: Counting };
+});
+
+// A second probe, one level up: the tool-step strip is rendered by every turn
+// on every render of that turn (it is not memoised), so one call per turn
+// render. This is what notices a turn losing its `memo`, which the parser
+// count alone cannot (the markdown has its own memo boundary).
+vi.mock("../features/agentQA/ToolProgressList", async () => {
+    const actual = await vi.importActual<typeof import("../features/agentQA/ToolProgressList")>(
+        "../features/agentQA/ToolProgressList"
+    );
+    return {
+        ...actual,
+        ToolProgressList: (props: React.ComponentProps<typeof actual.ToolProgressList>) => {
+            parsed.turns.push(props.events[0]?.summary ?? "");
+            return <actual.ToolProgressList {...props} />;
+        },
+    };
 });
 
 vi.mock("../features/agentQA", async () => {
@@ -54,7 +80,16 @@ const turn = (id: number, answer: string): CompletedTurn => ({
     askedQuery: `Question ${id}`,
     answer,
     answerSources: [],
-    toolEvents: [],
+    // One step each, tagged, so a render of THIS turn can be told from another's.
+    toolEvents: [
+        {
+            step: 1,
+            tool_name: "search_workspace",
+            arguments: {},
+            status: "done",
+            summary: `turn-${id}`,
+        },
+    ],
     askError: null,
     runId: `run-${id}`,
 });
@@ -68,11 +103,23 @@ const live = (n: number): AskState => ({
     isStreaming: true,
     askedQuery: "Question 3",
     answer: `live ${"word ".repeat(n)}`,
+    toolEvents: [
+        {
+            step: 1,
+            tool_name: "search_workspace",
+            arguments: {},
+            status: "done",
+            summary: "turn-live",
+        },
+    ],
 });
 
 // How many times the parser saw each kind of turn since `since`.
-const countsSince = (since: number) => {
-    const slice = parsed.texts.slice(since);
+const mark = () => ({ t: parsed.texts.length, r: parsed.turns.length });
+type Mark = ReturnType<typeof mark>;
+
+const countsSince = (since: Mark) => {
+    const slice = parsed.texts.slice(since.t);
     return {
         one: slice.filter((t) => t === ONE).length,
         two: slice.filter((t) => t === TWO).length,
@@ -80,8 +127,19 @@ const countsSince = (since: number) => {
     };
 };
 
+// How many times each turn itself rendered since `since`.
+const rendersSince = (since: Mark) => {
+    const slice = parsed.turns.slice(since.r);
+    return {
+        one: slice.filter((t) => t === "turn-1").length,
+        two: slice.filter((t) => t === "turn-2").length,
+        live: slice.filter((t) => t === "turn-live").length,
+    };
+};
+
 beforeEach(() => {
     parsed.texts.length = 0;
+    parsed.turns.length = 0;
     localStorage.clear();
 });
 
@@ -137,38 +195,57 @@ const SpotlightHost = (props: Parameters<typeof spotlightProps>[0]) => (
 describe("Spotlight: a streamed answer", () => {
     it("re-renders only the in-flight turn, once per delta", () => {
         const view = render(<SpotlightHost ask={live(0)} />);
-        expect(countsSince(0)).toMatchObject({ one: 1, two: 1 });
-        const before = parsed.texts.length;
+        expect(countsSince({ t: 0, r: 0 })).toMatchObject({ one: 1, two: 1 });
+        const before = mark();
         for (let i = 1; i <= 30; i += 1) view.rerender(<SpotlightHost ask={live(i)} />);
         expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 30 });
+        // And the turn components themselves: only the in-flight one rendered.
+        expect(rendersSince(before)).toEqual({ one: 0, two: 0, live: 30 });
     }, 30_000);
 });
 
 describe("Spotlight: the draft and the App-root query write", () => {
     it("typing in the box re-renders no turn", () => {
-        render(<SpotlightHost ask={live(1)} />);
-        const before = parsed.texts.length;
+        const ask = live(1);
+        render(<SpotlightHost ask={ask} />);
+        const before = mark();
         const box = screen.getByRole("textbox");
         for (const value of ["w", "wh", "wha", "what", "what is"]) {
             fireEvent.change(box, { target: { value } });
         }
         expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+        expect(rendersSince(before)).toEqual({ one: 0, two: 0, live: 0 });
     });
 
     it("a new App-root `query` and a new `onAsk` identity re-render no finished turn", () => {
         // The real hook re-mints `onAsk` whenever `query` changes (it reads the
         // draft). The overlay debounces that write to ~one per pause, but each
         // one used to reach every finished turn through TurnView's `onAsk`.
-        const view = render(<SpotlightHost ask={live(1)} query="" onAsk={() => {}} />);
-        const before = parsed.texts.length;
+        // The conversation itself is the same object throughout, as the hook's is.
+        const ask = live(1);
+        const view = render(<SpotlightHost ask={ask} query="" onAsk={() => {}} />);
+        const before = mark();
         for (const q of ["a", "ab", "abc", "abcd", "abcde"]) {
-            view.rerender(<SpotlightHost ask={live(1)} query={q} onAsk={() => {}} />);
+            view.rerender(<SpotlightHost ask={ask} query={q} onAsk={() => {}} />);
         }
-        const c = countsSince(before);
-        // Measured on origin/main: 5 and 5, one per identity change (the
-        // callback was handed straight to the memoised turn).
-        expect(c.one).toBeLessThanOrEqual(5);
-        expect(c.two).toBeLessThanOrEqual(5);
+        // origin/main: 5 and 5 (and the live turn 5), one per identity change:
+        // the callback was handed straight to the memoised turn.
+        expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+        expect(rendersSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+    });
+
+    it("a stream starting and ending re-parses no turn", () => {
+        // `askDisabled` flips on every finished turn at each end. origin/main:
+        // 3 parses of each finished turn across off, on, off.
+        const view = render(<SpotlightHost ask={{ ...live(5), isStreaming: false }} />);
+        const before = mark();
+        view.rerender(<SpotlightHost ask={{ ...live(5), isStreaming: true }} />);
+        view.rerender(<SpotlightHost ask={{ ...live(5), isStreaming: false }} />);
+        view.rerender(<SpotlightHost ask={{ ...live(5), isStreaming: true }} />);
+        expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+        // The turns' shells do render (Ask again is disabled while busy, so it
+        // is a prop), as on origin/main: 3 each. Only the markdown is spared.
+        expect(rendersSince(before)).toEqual({ one: 3, two: 3, live: 3 });
     });
 });
 
@@ -262,8 +339,8 @@ describe.each([
 ] as const)("%s", (_name, Host) => {
     it("a streamed answer re-renders only the in-flight turn, once per delta", () => {
         const view = render(<Host agentQA={agentQAState(live(0))} />);
-        expect(countsSince(0)).toMatchObject({ one: 1, two: 1 });
-        const before = parsed.texts.length;
+        expect(countsSince({ t: 0, r: 0 })).toMatchObject({ one: 1, two: 1 });
+        const before = mark();
         for (let i = 1; i <= 30; i += 1) {
             view.rerender(<Host agentQA={agentQAState(live(i))} />);
         }
@@ -273,21 +350,35 @@ describe.each([
     it("a new `onAsk` and an inline `onSelectSource` re-render no finished turn", () => {
         // `onAsk` re-mints per keystroke (it closes over the live query) and a
         // host's `onSelectSource` is often an inline lambda.
+        const ask = live(1);
         const view = render(
-            <Host
-                agentQA={agentQAState(live(1), { onAsk: () => true })}
-                onSelectSource={() => {}}
-            />
+            <Host agentQA={agentQAState(ask, { onAsk: () => true })} onSelectSource={() => {}} />
         );
-        const before = parsed.texts.length;
+        const before = mark();
         for (let i = 0; i < 5; i += 1) {
             view.rerender(
                 <Host
-                    agentQA={agentQAState(live(1), { onAsk: () => true, query: "q".repeat(i) })}
+                    agentQA={agentQAState(ask, { onAsk: () => true, query: "q".repeat(i) })}
                     onSelectSource={() => {}}
                 />
             );
         }
-        expect(countsSince(before)).toMatchObject({ one: 0, two: 0 });
+        // origin/main: the in-flight turn re-parsed on every one of these (5).
+        expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+        expect(rendersSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+    });
+
+    it("a stream starting and ending re-parses no turn", () => {
+        const view = render(<Host agentQA={agentQAState({ ...live(5), isStreaming: false })} />);
+        const before = mark();
+        view.rerender(<Host agentQA={agentQAState({ ...live(5), isStreaming: true })} />);
+        view.rerender(<Host agentQA={agentQAState({ ...live(5), isStreaming: false })} />);
+        view.rerender(<Host agentQA={agentQAState({ ...live(5), isStreaming: true })} />);
+        expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
+        // Changed on purpose: the Ask modals now disable Ask again while busy,
+        // as Spotlight does (a click then did nothing, silently), so each
+        // finished turn's shell renders at stream start/end: 3 here, 0 on
+        // origin/main. No markdown is re-parsed.
+        expect(rendersSince(before)).toEqual({ one: 3, two: 3, live: 3 });
     });
 });
