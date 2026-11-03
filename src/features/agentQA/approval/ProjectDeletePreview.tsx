@@ -27,9 +27,11 @@ export const DeleteProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const destroyed = t.tasks.modals.deleteProject;
 
-    const byId = asString(args.project_id)?.trim();
-    // Digits only is the raw id the backend left alone, not a name.
-    const resolved = byId && !/^\d+$/.test(byId) ? byId : undefined;
+    const byId = asString(args.project_id);
+    const idText = byId?.trim();
+    // Digits only is the raw id the backend left alone, not a name. A name is
+    // kept exactly as the backend sent it, so it compares with the echo as is.
+    const resolved = idText && !/^\d+$/.test(idText) ? byId : undefined;
     // Not trimmed or tidied: "shown as typed" is the point of the echo.
     const given = asString(args.project_name);
 
@@ -39,8 +41,8 @@ export const DeleteProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     const heading = named
         ? fmt(t.agentApproval.deleteProject, { project: named })
         : fmt(t.agentApproval.deleteProjectUnnamed, {
-              project: byId
-                  ? fmt(t.agentApproval.thisProjectWithId, { id: byId })
+              project: idText
+                  ? fmt(t.agentApproval.thisProjectWithId, { id: idText })
                   : t.agentApproval.thisProject,
           });
     // The echo is its own line only when the heading did not already print it.

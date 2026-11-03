@@ -1816,6 +1816,14 @@ describe("DeleteProjectPreview (delete_project approval, in the app only)", () =
         expect(screen.getByText(d.destroyedTasks)).toBeTruthy();
     });
 
+    it("does not warn about a project name with spaces around it that the echo repeats", () => {
+        renderCard("delete_project", {
+            project_id: " Website Redesign ",
+            project_name: " Website Redesign ",
+        });
+        expect(screen.queryByText(/not the project's name/)).toBeNull();
+    });
+
     it("names a project the caller can't read by the echoed name, without comparing", () => {
         renderCard("delete_project", { project_id: 42, project_name: "Website Redesign" });
         expect(screen.getByText("Delete project Website Redesign")).toBeTruthy();
