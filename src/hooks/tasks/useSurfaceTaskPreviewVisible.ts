@@ -13,12 +13,20 @@ import { TaskManagementState } from "./useTaskManagement";
  * the task page and it is already "open" when you switch to chat, which
  * is not something the user asked for on that page.
  *
- * The Homes are keep-alive — they stay mounted while hidden — so a
- * backgrounded Home's effects still observe the global flag flipping.
- * That is exactly why the observation below is gated on `isActiveRoute`:
- * only the page the user is actually looking at may adopt an "opened"
- * transition as its own. A preview opened on the task page therefore
- * never marks the chat surface visible.
+ * The Homes are keep-alive — they stay mounted while hidden. They used to
+ * re-render with every change, so a backgrounded Home's effects observed
+ * the global flag flipping and kept `prevRef` current; the observation
+ * below is gated on `isActiveRoute` so only the page the user is actually
+ * looking at may adopt an "opened" transition as its own.
+ *
+ * They no longer re-render while hidden (`FreezeWhenHidden`, MIP-959), so
+ * `prevRef` goes stale: it still says "closed" from before the user left,
+ * and the first render back on this page saw closed -> open and took it for
+ * a fresh open (MIP-981). The gate alone cannot catch that, because by then
+ * the page IS active. So the moment this surface becomes the active route
+ * it RE-BASELINES: `prevRef` is brought up to the current global state and
+ * the difference is not treated as an open. An open or switch only counts
+ * when it happens while the surface is active.
  *
  * Closing is intentionally NOT scoped: when the global flag goes false
  * the preview really was closed, so every surface follows it down.
@@ -59,7 +67,19 @@ export const useSurfaceTaskPreviewVisible = (
         taskId: useTM.currentPreviewTaskId,
     });
 
+    // Was this surface the active route at the previous effect run? Used to
+    // spot the render that brings it to the foreground.
+    const wasActiveRef = useRef(isActiveRoute);
+    // How many closes the global flag had seen as of the last effect run.
+    const seenCloseCountRef = useRef(useTM.previewCloseCount ?? 0);
+
     useEffect(() => {
+        const justActivated = isActiveRoute && !wasActiveRef.current;
+        wasActiveRef.current = isActiveRoute;
+        const closeCount = useTM.previewCloseCount ?? 0;
+        const closedWhileAway = closeCount !== seenCloseCountRef.current;
+        seenCloseCountRef.current = closeCount;
+
         const wasVisible = prevRef.current.visible;
         const prevTaskId = prevRef.current.taskId;
         prevRef.current = {
@@ -75,6 +95,26 @@ export const useSurfaceTaskPreviewVisible = (
 
         // Only the foreground page may adopt an open/switch as its own.
         if (!isActiveRoute) return;
+
+        // Coming to the foreground is not an open. Whatever differs from
+        // `prevRef` happened while this page was hidden (and, being frozen,
+        // not rendering), i.e. on another page. `prevRef` was just brought
+        // up to date above; a real open from here on is seen as a change
+        // against it. A cross-page "open this thread's task in chat" does not
+        // come through here: it sets the visible flag directly
+        // (`isThreadTaskVisible` in chatHome).
+        if (justActivated) {
+            // The same applies to a CLOSE that happened while away. The
+            // un-frozen hook saw the global flag drop and lowered `visible`;
+            // frozen, it only sees "open" on return, which could be a
+            // close-then-reopen on another page. If a close went by, this
+            // surface's own preview went with it (a stale persisted `true`
+            // from an earlier open here must not resurface for a preview
+            // opened elsewhere). A real cross-page open in chat sets the flag
+            // itself afterwards (`isThreadTaskVisible`), which wins.
+            if (closedWhileAway && visible) setVisible(false);
+            return;
+        }
 
         // ...and only when there is something to preview. Opening a thread
         // on the chat page runs `setCurrentPreviewTaskId(-1)` for a message
@@ -92,6 +132,7 @@ export const useSurfaceTaskPreviewVisible = (
     }, [
         useTM.isTaskPreviewVisible,
         useTM.currentPreviewTaskId,
+        useTM.previewCloseCount,
         hasContent,
         isActiveRoute,
         visible,
