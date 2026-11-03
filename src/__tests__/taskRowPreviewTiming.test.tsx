@@ -4,13 +4,18 @@
  *
  * Both used to wait 150 ms after EVERY click before touching the preview
  * state, so an ordinary single click paid 150 ms of nothing. The wait is now
- * leading-edge: the first click starts the load at once, and only clicks that
- * follow another within 150 ms are collapsed (to the last one).
+ * leading-edge: a click with no other click in the last 150 ms starts the load
+ * right after the next painted frame. It does NOT start it inside the click:
+ * the click's own render (the highlight, the pane) has to be on screen first,
+ * and the load is a whole-app render. Only clicks that follow another within
+ * 150 ms are collapsed (to the last one).
  *
  * The table and the board are rendered for real, with their rows / columns
  * replaced by stubs that hand the test the click handler and the "is this
  * selected" answer the real ones receive. The preview state is real React
  * state, so the highlight that follows the click is observed, not assumed.
+ * The fake timers fake `requestAnimationFrame` too, so a "frame" is
+ * `advance(FRAME)`.
  */
 import { useMemo, useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -132,8 +137,17 @@ const MILESTONE = makeRow("50", { isMilestone: true, milestoneId: 7 });
 
 const ALL_TASKS = [A, B, C, MILESTONE];
 
-// Every write the click makes to the preview state, in order.
+// One frame: the fake clock's 16 ms animation frame, plus the 1 ms it adds to
+// the zero-delay timer that is queued from inside that frame's callback.
+const FRAME = 17;
+
+// Every write that STARTS the preview load, in order.
 let writes: string[] = [];
+// Everything the click does to the preview state, in order (the pane opening
+// included), to check what comes first.
+let events: string[] = [];
+// Whether the pane is open, as the screen would render it.
+let paneOpen = false;
 // Opens a task the way something other than a click does (a link, the URL).
 let openElsewhere: (id: number) => void = () => {};
 
@@ -144,6 +158,7 @@ const usePreviewTM = () => {
     const [currentPreviewKind, setKind] = useState<"task" | "milestone">("task");
     const [isTaskPreviewVisible, setVisible] = useState(false);
     openElsewhere = setTaskId;
+    paneOpen = isTaskPreviewVisible;
     return useMemo(
         () => ({
             allTasks: ALL_TASKS,
@@ -159,14 +174,19 @@ const usePreviewTM = () => {
             isTaskPreviewVisible,
             setCurrentPreviewTaskId: (id: number) => {
                 writes.push(`task:${id}`);
+                events.push(`task:${id}`);
                 setTaskId(id);
             },
             setCurrentPreviewMilestoneId: (id: number) => {
                 writes.push(`milestone:${id}`);
+                events.push(`milestone:${id}`);
                 setMilestoneId(id);
             },
             setCurrentPreviewKind: (kind: "task" | "milestone") => setKind(kind),
-            setIsTaskPreviewVisible: (v: boolean) => setVisible(v),
+            setIsTaskPreviewVisible: (v: boolean) => {
+                events.push(`pane:${v}`);
+                setVisible(v);
+            },
         }),
         [currentPreviewTaskId, currentPreviewMilestoneId, currentPreviewKind, isTaskPreviewVisible]
     );
@@ -213,6 +233,8 @@ const mount = async (Host: () => React.JSX.Element) => {
     );
     await act(async () => {});
     writes = [];
+    events = [];
+    paneOpen = false;
     screenRenders = 0;
     return view;
 };
@@ -221,6 +243,7 @@ const advance = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
 beforeEach(() => {
     vi.useFakeTimers();
     writes = [];
+    events = [];
 });
 afterEach(() => {
     vi.useRealTimers();
@@ -243,20 +266,30 @@ describe.each([
                 : cardSelection.selectedTaskId === Number(row.id),
     ],
 ] as const)("%s", (_name, Host, click, selected) => {
-    it("a single click starts the load at once, with no timer needed", async () => {
+    it("a single click shows the highlight and the pane first, then starts the load after one frame", async () => {
         await mount(Host);
 
         click(A);
 
-        expect(writes).toEqual(["task:42"]);
+        // The click's own commit: highlight and pane are up, and the heavy
+        // preview state has NOT been touched yet (it would delay this paint).
         expect(selected(A)).toBe(true);
         expect(selected(B)).toBe(false);
+        expect(paneOpen).toBe(true);
+        expect(writes).toEqual([]);
+        expect(events).toEqual(["pane:true"]);
+
+        // The next painted frame: now the load starts.
+        advance(FRAME);
+        expect(writes).toEqual(["task:42"]);
+        expect(events).toEqual(["pane:true", "task:42"]);
+        expect(selected(A)).toBe(true);
         // Nothing more happens when the window closes.
         advance(1000);
         expect(writes).toEqual(["task:42"]);
     });
 
-    it("two clicks 50 ms apart: the first loads at once, the second after the window", async () => {
+    it("two clicks 50 ms apart: the first loads after its frame, the second after the window", async () => {
         await mount(Host);
 
         click(A);
@@ -276,7 +309,25 @@ describe.each([
         expect(selected(A)).toBe(false);
     });
 
-    it("five rapid clicks load the first and the last only", async () => {
+    it("a second click before the frame supersedes the first: only the second loads, after the window", async () => {
+        await mount(Host);
+
+        click(A);
+        advance(5); // less than a frame
+        click(B);
+
+        expect(selected(B)).toBe(true);
+        advance(FRAME * 2);
+        // The first click never loads.
+        expect(writes).toEqual([]);
+        advance(150 - FRAME * 2 - 1);
+        expect(writes).toEqual([]);
+        advance(1);
+        expect(writes).toEqual(["task:43"]);
+        expect(selected(B)).toBe(true);
+    });
+
+    it("five rapid clicks (a frame apart) load the first and the last only", async () => {
         await mount(Host);
 
         for (const row of [A, B, C, A, B]) {
@@ -289,10 +340,23 @@ describe.each([
         expect(selected(B)).toBe(true);
     });
 
+    it("five clicks inside one frame load only the last", async () => {
+        await mount(Host);
+
+        for (const row of [A, B, C, A, B]) {
+            click(row);
+            advance(2);
+        }
+        advance(500);
+
+        expect(writes).toEqual(["task:43"]);
+    });
+
     it("once the load has started, the highlight follows the real preview state again", async () => {
         await mount(Host);
 
         click(A);
+        advance(FRAME);
         act(() => openElsewhere(43));
 
         // A stuck "pending" click would keep A highlighted over the real B.
@@ -304,23 +368,29 @@ describe.each([
         await mount(Host);
 
         click(MILESTONE);
+        expect(writes).toEqual([]);
+        expect(selected(MILESTONE)).toBe(true);
 
+        advance(FRAME);
         expect(writes).toEqual(["milestone:7"]);
         expect(selected(MILESTONE)).toBe(true);
     });
 
-    it("the pending highlight is dropped in the same batch as the load: no render follows the click", async () => {
+    it("the load costs no more renders than the click did, and nothing renders after it", async () => {
         await mount(Host);
 
         click(A);
-        const rendersAfterClick = screenRenders;
+        const rendersOfClick = screenRenders;
+        advance(FRAME);
+        const rendersOfLoad = screenRenders - rendersOfClick;
         advance(1000);
 
-        // Pane visible + load started + pending highlight dropped, together.
-        // The pending highlight used to be dropped by a separate effect, a
-        // render after the load started (and the load itself a timer later),
-        // so renders kept coming after the click.
-        expect(screenRenders).toBe(rendersAfterClick);
+        // The load and the hand-over of the highlight (the pending id is
+        // dropped in the same call) settle together. This is a ceiling, not a
+        // proof that a separate clearing effect would cost more: its re-render
+        // batches with the screen's other effect-driven render here.
+        expect(rendersOfLoad).toBeLessThanOrEqual(rendersOfClick);
+        expect(screenRenders - rendersOfClick).toBe(rendersOfLoad);
         expect(selected(A)).toBe(true);
     });
 
@@ -334,5 +404,15 @@ describe.each([
         advance(1000);
 
         expect(writes).toEqual(["task:42"]);
+    });
+
+    it("leaving the screen before the first click's frame drops that click too", async () => {
+        const view = await mount(Host);
+
+        click(A);
+        view.unmount();
+        advance(1000);
+
+        expect(writes).toEqual([]);
     });
 });
