@@ -23,9 +23,9 @@
  */
 import { useEffect, useState } from "react";
 import { act, render, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import axios, { InternalAxiosRequestConfig } from "axios";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
 import { usePreviewEditMirror } from "../../features/tasks/components/contents/utils/usePreviewEditMirror";
 import { useTaskManagement } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
@@ -34,9 +34,26 @@ import { TaskProps, TaskTableProps } from "../../types/tasks";
 vi.mock("../../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: vi.fn(async () => []),
 }));
-vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
+
+// Every request any axios instance makes lands here, whichever module makes it:
+// the test watches the wire, so a task-meta request added back under any name is
+// seen. Every request is answered with an empty list.
+const requested: string[] = [];
+let originalAdapter: typeof axios.defaults.adapter;
+beforeEach(() => {
+    requested.length = 0;
+    originalAdapter = axios.defaults.adapter;
+    axios.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
+        requested.push(`${config.baseURL ?? ""}${config.url ?? ""}`);
+        return { data: [], status: 200, statusText: "OK", headers: {}, config };
+    };
+});
+afterEach(() => {
+    axios.defaults.adapter = originalAdapter;
+});
+
+// `/note/task/meta/` (task NOTES) is a different endpoint that ends the same way.
+const taskMetaRequests = () => requested.filter((url) => /(?<!\/note)\/task\/meta\//.test(url));
 
 const me = { userId: "me", userName: "Me" } as unknown as UserProps;
 const person = (userId: string) => ({ userId, userName: userId }) as unknown as UserProps;
@@ -230,7 +247,7 @@ describe("usePreviewEditMirror wired to the real table state", () => {
             project: { projectId: 10 },
         }) as unknown as TaskProps;
 
-    it("an open leaves the table and the network alone; an edit reaches the row; neither asks for task meta", async () => {
+    it("an open leaves the table and the network alone; an edit reaches the row; neither asks the server for task meta", async () => {
         const meUser = { userId: "u1", teamId: "t1" } as unknown as UserProps;
         const view = renderHook(
             (props: { working: TaskProps }) => {
@@ -266,7 +283,26 @@ describe("usePreviewEditMirror wired to the real table state", () => {
 
         expect(view.result.current.allTasks[0].title).toBe("Edited");
         expect(view.result.current.currentPreviewTask?.title).toBe("Edited");
-        expect(loadTaskMeta).not.toHaveBeenCalled();
+        expect(taskMetaRequests()).toEqual([]);
+
+        // The other fields that used to make the host refetch task meta: status,
+        // parent and project. Each reaches the row, none reaches the server.
+        view.rerender({
+            working: {
+                ...loaded,
+                title: "Edited",
+                status: { status: "WIP" },
+                parentTaskId: 7,
+                project: { projectId: 11 },
+            } as unknown as TaskProps,
+        });
+        await act(async () => {});
+
+        const edited = view.result.current.allTasks[0];
+        expect(edited.status).toBe("WIP");
+        expect(edited.parentTaskId).toBe("7");
+        expect(edited.projectId).toBe(11);
+        expect(taskMetaRequests()).toEqual([]);
     });
 });
 

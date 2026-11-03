@@ -36,9 +36,6 @@ const idb = vi.hoisted(() => ({ rows: [] as unknown[] }));
 vi.mock("../../features/tasks/services/popSpecificProjectTasks", () => ({
     popSpecificProjectTasks: vi.fn(async () => idb.rows),
 }));
-vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
 // Sprint / milestone loading is a different concern with its own endpoints.
 vi.mock("../../hooks/tasks/useSprintMilestoneManagement", () => {
     const stub = {
