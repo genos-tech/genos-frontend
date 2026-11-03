@@ -241,7 +241,7 @@ const TurnRowInner = ({
                         color: "text.tertiary",
                     }}
                 >
-                    {(labels.states.answeredIn ?? "Answered in {duration}").replace(
+                    {labels.states.answeredIn.replace(
                         "{duration}",
                         formatDurationMs(turn.elapsedMs)
                     )}

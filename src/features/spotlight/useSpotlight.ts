@@ -74,6 +74,7 @@ import {
     type ToolEvent,
 } from "../agentQA";
 import { emitNoteChanged } from "../agentQA/noteWriteTools";
+import { emitTodoChanged } from "../agentQA/todoWriteTools";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import {
     effectiveFilterServices,
@@ -863,10 +864,10 @@ export const useSpotlight = ({
                     // Cross-feature invalidator: the chat-side ToDoPane
                     // owns its own state and won't see these writes
                     // unless we nudge it. useTodoGroups listens for
-                    // this event and refetches.
-                    if (tool_name === "create_todo_item" || tool_name === "update_todo_item") {
-                        window.dispatchEvent(new CustomEvent("todoChanged"));
-                    }
+                    // this event and refetches. useAgentQA emits it through
+                    // the same helper, so a to-do written from a thread or
+                    // note ask refreshes the pane too.
+                    emitTodoChanged(tool_name);
                     // Same idea for notes: the note sidebar's meta, folder
                     // lists and Favorites (useNoteManagement) won't reflect
                     // an agent-written note, folder or star until a manual

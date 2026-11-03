@@ -30,6 +30,7 @@ import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEv
 import { emitProjectToolResult } from "./approvedProjectWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { emitNoteChanged } from "./noteWriteTools";
+import { emitTodoChanged } from "./todoWriteTools";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
@@ -244,7 +245,13 @@ export const useAgentQA = ({
                             ),
                         };
                     });
-                    // Cross-feature invalidator: a note written by the
+                    // Cross-feature invalidator: the chat-side ToDoPane owns
+                    // its own state and won't see an agent-written to-do
+                    // (thread/note Q&A shares the write tools) unless we
+                    // nudge it. useTodoGroups listens for this event and
+                    // refetches. Mirrors the Spotlight overlay's handler.
+                    emitTodoChanged(tool_name);
+                    // Same idea for notes: a note written by the
                     // agent (thread/note Q&A shares the write tools) won't
                     // show in the note sidebar until a reload. Nudge
                     // useNoteManagement to refetch its meta, folder lists

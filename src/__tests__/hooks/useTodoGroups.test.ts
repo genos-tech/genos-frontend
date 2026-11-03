@@ -167,6 +167,24 @@ describe("useTodoGroups — identity guard", () => {
     });
 });
 
+describe("useTodoGroups — external invalidator", () => {
+    // The agent's to-do writes (Spotlight and the thread/note ask) announce
+    // themselves with the `todoChanged` window event; the pane has no other
+    // way to learn of them.
+    it("re-reads the groups when `todoChanged` is dispatched", async () => {
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        expect(loadTodoGroupsMock).toHaveBeenCalledTimes(1);
+
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent("todoChanged"));
+            await new Promise((r) => setTimeout(r, 0));
+        });
+        expect(loadTodoGroupsMock).toHaveBeenCalledTimes(2);
+    });
+});
+
 describe("useTodoGroups — parent completion cascades to children", () => {
     it("closing a parent closes its still-open children (and only those)", async () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
