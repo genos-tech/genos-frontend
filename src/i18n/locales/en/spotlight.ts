@@ -11,6 +11,7 @@ export const spotlight = {
         approve: "Approve",
         reject: "Reject",
         copyAnswer: "Copy answer",
+        copied: "Copied",
         feedbackUp: "Good answer",
         feedbackDown: "Needs work",
         retry: "Ask again",
@@ -24,6 +25,10 @@ export const spotlight = {
         streaming: "streaming…",
         awaitingApproval: "awaiting your approval",
         untitled: "(untitled)",
+        // A finished turn that has no answer text (cancelled before the first
+        // word, or a run that ended on tool steps alone). The turn says so
+        // rather than leaving the question hanging.
+        noAnswer: "(no answer)",
     },
     empty: {
         initial: "Start typing to search across chats, tasks, and notes.",
