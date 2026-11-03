@@ -5,9 +5,16 @@ export { agentMarkdownComponents, BlockedImage, ExternalLink } from "./agentMark
 export { emitProjectToolResult } from "./approvedProjectWrites";
 export { AgentQAConversation } from "./AgentQAConversation";
 export { AgentQAInput } from "./AgentQAInput";
-export { ApprovalCard } from "./ApprovalCard";
-export { agentQAUrlTransform, CitationAnchor } from "./CitationAnchor";
+export { AgentTurn, type AgentTurnActionContext, type AgentTurnProps } from "./AgentTurn";
 export {
+    type AgentTurnHost,
+    type AgentTurnLabels,
+    buildAgentTurnLabels,
+    type ChipLabels,
+} from "./agentTurnLabels";
+export { ApprovalCard } from "./ApprovalCard";
+export {
+    agentQAUrlTransform,
     buildSourcesById,
     CITATION_HREF_PREFIX,
     CITATION_PATTERN,
@@ -17,8 +24,14 @@ export {
     rewriteCitations,
     sourceToUrl,
 } from "./citationUtils";
+export { CitationLink } from "./CitationLink";
 export { FeedbackThumbs } from "./FeedbackThumbs";
-export { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
+export {
+    DARK_TEXT_MEDIUM,
+    DARK_TEXT_SOFT,
+    DARK_TEXT_STRONG,
+    markdownAnswerSx,
+} from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export {
     type AgentSessionsDeletedDetail,
@@ -27,7 +40,7 @@ export {
     useAgentSessionsDeleted,
 } from "./sessionEvents";
 export { sessionTurnToCompleted } from "./sessionTurns";
-export { SourceChips } from "./SourceChips";
+export { sourceChipLabel } from "./sourceChipLabel";
 export { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 export { getToolLabel } from "./toolLabels";
 export { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";

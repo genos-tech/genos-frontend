@@ -1,13 +1,14 @@
 // Citation handling — canonical home for the citation-token vocabulary
 // shared by every surface that renders agent answers: the thread-Ask
-// and note-Ask modals (via `AgentQAConversation`), Spotlight (via
-// `SpotlightContent`, which `SpotlightOverlay` renders), and the
+// and note-Ask modals and Spotlight (both through `AgentTurn`), and the
 // saved-note serialiser.
 //
 // Spotlight previously kept its own byte-identical inline copy of this
 // logic; it has since converged onto this module (see the note beside
 // the `rewriteCitations` import in `SpotlightContent.tsx`), so the
 // parsing rule can't drift between surfaces (SPOTLIGHT_QUALITY_ARCHITECTURE.md §4.6).
+
+import { defaultUrlTransform } from "react-markdown";
 
 import { canonicalSpotlightHref } from "../../utils/canonicalSpotlightHref";
 import { SpotlightResult } from "../spotlight/types";
@@ -26,7 +27,7 @@ const _CHAT_LABEL_TOKEN = "(?:dm|gm|pm|mdm):[0-9a-fA-F]";
 // known entity prefixes so a free-form sentence with literal brackets
 // ("[reminder: ship by Friday]") doesn't trip the pattern. This set
 // must cover every entity type the agent can inline-cite AND the
-// SourceChips row can render (see `_sourceIcon` in SpotlightContent):
+// chip row can render (see `sourceIcon` in `AgentTurnSources`):
 // chat / task / note / project / todo / milestone. A type missing here
 // renders its raw `[todo:...]` token in the prose instead of being
 // stripped into a chip — the exact bug this list guards against.
@@ -50,8 +51,22 @@ export const CITATION_LINK_PATTERN = new RegExp(
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
 // standard <a href>. The same prefix drives the anchor renderers in
-// both `CitationAnchor` (the Ask modals) and `SpotlightContent`.
+// `CitationLink`, the one anchor every answer surface renders.
 export const CITATION_HREF_PREFIX = "spotlight-citation:";
+
+/** The ONE `urlTransform` for model-authored markdown that carries
+ *  citations.
+ *
+ *  ReactMarkdown's default allow-list passes http(s)/mailto/etc. and blanks
+ *  every other scheme to "" — including our `spotlight-citation:<token>`
+ *  sentinel. A blanked href falls through the citation anchor's sentinel check
+ *  and renders as `<a href="" target="_blank">`, which opens the current page
+ *  in a new tab on click. So the sentinel passes untouched; everything else
+ *  goes to the library default, so its XSS guards (javascript:, data:) still
+ *  apply. Used by the answer turn, the history archive and the Ask modals'
+ *  summaries. */
+export const agentQAUrlTransform = (url: string): string =>
+    url.startsWith(CITATION_HREF_PREFIX) ? url : defaultUrlTransform(url);
 
 // Build the entity-id → source lookup the rewriter consumes. Chat
 // entity ids in the index don't carry the leading "chat:" prefix
@@ -178,7 +193,7 @@ export const normalizeCitationToken = (token: string): string =>
 // hrefs/chip filters in the form the anchor components look up.
 export const resolveCitationToken = (
     rawToken: string,
-    sourcesById: Map<string, SpotlightResult>
+    sourcesById: ReadonlyMap<string, SpotlightResult>
 ): { key: string; source: SpotlightResult } | null => {
     const token = normalizeCitationToken(rawToken);
     const exact = sourcesById.get(token);
@@ -206,7 +221,7 @@ export const resolveCitationToken = (
 // Two forms coexist:
 //   1. Natural-prose link `[prose](type:id)` — the preferred form. We
 //      rewrite its URL to the `spotlight-citation:` sentinel so the
-//      ReactMarkdown `a` override (CitationAnchor / CitationLink) renders
+//      ReactMarkdown `a` override (`CitationLink`) renders
 //      a click-to-preview citation whose visible text is the model's
 //      grammatical prose. Resolve-guard: only when `type:id` is a source
 //      we actually retrieved (`sourcesById`, with `resolveCitationToken`'s
@@ -216,7 +231,7 @@ export const resolveCitationToken = (
 //      hallucinated link to a bogus id.
 //   2. Bare `[type:id]` token — the fallback the model emits when it
 //      can't phrase a grammatical link. We strip it; the source surfaces
-//      in the `SourceChips` row below the answer instead.
+//      in the chip row below the answer instead.
 //
 // Weak-model hardening (seen with gemini-flash; cheap models ignore the
 // natural-prose instruction): a link whose LABEL is itself a raw token
@@ -231,9 +246,14 @@ export const resolveCitationToken = (
 // (form 1) is what makes inline attribution readable — the title swap
 // above applies ONLY when the model's label is a raw token, where the
 // title is strictly better than the id.
+//
+// `labelFor` is the localized stand-in for a title-less source whose link
+// label had to be replaced (see above). The answer turn passes one built from
+// its label contract; callers that omit it get the English generic label.
 export const rewriteCitations = (
     answer: string,
-    sourcesById: Map<string, SpotlightResult>
+    sourcesById: ReadonlyMap<string, SpotlightResult>,
+    labelFor?: (source: SpotlightResult) => string
 ): string => {
     if (!answer) return answer;
     // Pass 1: natural-prose links → sentinel links (resolved) or plain prose.
@@ -251,6 +271,7 @@ export const rewriteCitations = (
                 ? // Strip brackets from injected titles so they can't
                   // break the markdown link we're building.
                   (hit.source.title || "").replace(/[[\]]/g, "").trim() ||
+                  labelFor?.(hit.source) ||
                   entitySubtitle(hit.source)
                 : label;
             // Canonical key in the href so the anchor components'
@@ -284,7 +305,7 @@ export const rewriteCitations = (
 // key form (what `buildSourcesById` maps), not the raw emitted token.
 export const extractInlineCitedIds = (
     answer: string,
-    sourcesById?: Map<string, SpotlightResult>
+    sourcesById?: ReadonlyMap<string, SpotlightResult>
 ): Set<string> => {
     const ids = new Set<string>();
     if (!answer) return ids;
@@ -393,8 +414,8 @@ export const citedChipSources = (
     );
 };
 
-// Build a URL that opens the entity. Used by CitationAnchor / SourceChips
-// (to prefer a UrlLinkModal preview) and by the saved-note serialiser (to
+// Build a URL that opens the entity. Used by the Ask modals' open-source
+// handler (to prefer a UrlLinkModal preview) and by the saved-note serialiser (to
 // make citation tokens clickable outside the modal context). Returns
 // `null` if the source doesn't have enough metadata to deep-link.
 //

@@ -890,7 +890,7 @@ export const useSpotlight = ({
     );
 
     // ---- View a collected past answer (entity_type "spotlight_answer")
-    // inline, reusing the live-answer renderer (TurnView). No network call —
+    // inline, reusing the live-answer renderer (AgentTurn). No network call —
     // the answer body + its sources already came back on the search result,
     // so we just inject them as a completed (non-streaming) turn. Reset like
     // "New conversation" first so the past answer stands alone rather than

