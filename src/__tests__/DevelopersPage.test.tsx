@@ -179,6 +179,7 @@ describe("DevelopersPage", () => {
             "list_task_dependencies",
             "list_note_folders",
             "list_note_access",
+            "get_note_history",
             "list_uncompleted_todos",
             "list_today_todos",
             "list_calendar_events",
@@ -233,6 +234,7 @@ describe("DevelopersPage", () => {
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
+            "restore_note_version",
         ],
     };
 
@@ -260,6 +262,20 @@ describe("DevelopersPage", () => {
         expect(row?.textContent).toContain("The note folders in your My Notes and in Team Notes.");
         // "Personal note" is retired from the UI: the space is My Notes.
         expect(row?.textContent).not.toMatch(/personal/i);
+    });
+
+    it("gates the note deletes and sharing on the destructive opt-in, and not the restore", () => {
+        renderPage();
+        const rowOf = (name: string) =>
+            [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            )?.textContent ?? "";
+        for (const name of ["delete_note", "delete_note_folder", "manage_note_sharing"]) {
+            expect(rowOf(name)).toContain("destructive opt-in");
+        }
+        // A restore keeps what the note says now as a version, so it can be undone.
+        expect(rowOf("restore_note_version")).not.toContain("destructive opt-in");
+        expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
     it("states counts that agree with the tool table", () => {

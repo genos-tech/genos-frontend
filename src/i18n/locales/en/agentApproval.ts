@@ -128,6 +128,12 @@ export const agentApproval = {
     shareNoteAsViewer: "Share {note} with {person} as a viewer",
     unshareNote: "Stop sharing {note} with {person}",
     noteShareNotNotified: "They are not notified.",
+    restoreNote: "Restore note {note} to {version}",
+    restoreNoteUnnamed: "Restore {note} to {version}",
+    versionNumber: "version {n}",
+    anEarlierVersion: "an earlier version",
+    restoreNoteKeepsCurrent:
+        "What the note says now is kept as a version first, so this can be undone.",
     cleared: "none",
     unset: "—",
     // Friendly, non-technical labels for every agent tool, keyed by the
@@ -236,5 +242,7 @@ export const agentApproval = {
         delete_note_folder: "Deleting a note folder",
         manage_note_sharing: "Managing note sharing",
         list_note_access: "Checking who can open a note",
+        fetch_note_history: "Reading a note's history",
+        restore_note_version: "Restoring an earlier version of a note",
     },
 } as const;

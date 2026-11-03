@@ -88,10 +88,12 @@ const NOTE_SIDEBAR_WRITES = [
     "favorite_note",
     "delete_note",
     "delete_note_folder",
+    "restore_note_version",
 ];
 const NOT_SIDEBAR_TOOLS = [
     "list_note_folders",
     "list_note_access",
+    "fetch_note_history",
     "get_note",
     "manage_note_sharing",
     "create_task",

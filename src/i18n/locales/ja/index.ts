@@ -513,6 +513,12 @@ export const ja: DeepPartial<Messages> = {
         shareNoteAsViewer: "{note} を {person} と閲覧者として共有",
         unshareNote: "{note} の {person} との共有を停止",
         noteShareNotNotified: "相手には通知されません。",
+        restoreNote: "ノート {note} を{version}に復元",
+        restoreNoteUnnamed: "{note} を{version}に復元",
+        versionNumber: "バージョン {n}",
+        anEarlierVersion: "以前のバージョン",
+        restoreNoteKeepsCurrent:
+            "現在のノートの内容は先にバージョンとして保存されるので、元に戻せます。",
         cleared: "なし",
         unset: "—",
     },

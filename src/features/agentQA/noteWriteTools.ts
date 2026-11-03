@@ -11,4 +11,6 @@ export const NOTE_SIDEBAR_TOOLS: ReadonlySet<string> = new Set([
     "favorite_note",
     "delete_note",
     "delete_note_folder",
+    // A restore puts an earlier title (and body) back.
+    "restore_note_version",
 ]);

@@ -1506,6 +1506,63 @@ describe("Note delete and sharing previews (delete_note / delete_note_folder / m
     });
 });
 
+describe("RestoreNoteVersionPreview (restore_note_version approval)", () => {
+    const UNDOABLE = "What the note says now is kept as a version first, so this can be undone.";
+
+    it("reads a restore by the note's title and the version number, and says it can be undone", () => {
+        renderCard("restore_note_version", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            version_no: 3,
+        });
+        expect(screen.getByText("Restore note Spotlight tips to version 3")).toBeTruthy();
+        expect(screen.getByText(UNDOABLE)).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("version_no:")).toBeNull();
+        expect(screen.queryByText("note_id:")).toBeNull();
+        expect(screen.queryByText(/#42/)).toBeNull();
+    });
+
+    it("is not styled as a delete: no for-good warning", () => {
+        renderCard("restore_note_version", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            version_no: 3,
+        });
+        expect(screen.queryByText(/for good/)).toBeNull();
+        expect(screen.queryByText("This action cannot be undone")).toBeNull();
+    });
+
+    it("names a note the caller can't read by its id, then by a neutral word", () => {
+        const { unmount } = renderCard("restore_note_version", {
+            note_type: "team",
+            note_id: 9,
+            version_no: 2,
+        });
+        expect(screen.getByText("Restore this note (#9) to version 2")).toBeTruthy();
+        expect(screen.getByText(UNDOABLE)).toBeTruthy();
+        unmount();
+
+        renderCard("restore_note_version", { note_type: "team", version_no: 2 });
+        expect(screen.getByText("Restore this note to version 2")).toBeTruthy();
+    });
+
+    it("reads a missing version as an earlier one rather than printing a blank", () => {
+        const { unmount } = renderCard("restore_note_version", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+        });
+        expect(screen.getByText("Restore note Spotlight tips to an earlier version")).toBeTruthy();
+        unmount();
+
+        renderCard("restore_note_version", { note_type: "personal", note_id: 42 });
+        expect(screen.getByText("Restore this note (#42) to an earlier version")).toBeTruthy();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -1535,6 +1592,13 @@ describe("getToolLabel", () => {
         expect(getToolLabel("delete_note_folder", en)).toBe("Deleting a note folder");
         expect(getToolLabel("manage_note_sharing", en)).toBe("Managing note sharing");
         expect(getToolLabel("list_note_access", en)).toBe("Checking who can open a note");
+    });
+
+    it("labels the note history read and the note version restore", () => {
+        expect(getToolLabel("fetch_note_history", en)).toBe("Reading a note's history");
+        expect(getToolLabel("restore_note_version", en)).toBe(
+            "Restoring an earlier version of a note"
+        );
     });
 
     it("labels the sprint create-or-change and sprint delete tools", () => {
