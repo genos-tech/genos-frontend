@@ -18,7 +18,10 @@ import { memo, type ReactNode } from "react";
  *  - The render that SHOWS it goes through with the latest props, so every
  *    effect keyed on a prop that changed while hidden catches up then.
  *  - Context changes (theme, language) and the screen's own state updates still
- *    reach it, because a memo bail-out does not stop either.
+ *    reach it, because a memo bail-out does not stop either. That includes
+ *    react-router's location and route contexts, which change on every
+ *    navigation: `FreezeRouterWhenHidden` sits just inside this component and
+ *    holds those still while the screen is hidden (MIP-971).
  *
  * What it does NOT do: a screen's effects do not re-run for a prop that changes
  * while hidden until the screen is shown again. Anything that must react while

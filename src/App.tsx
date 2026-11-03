@@ -23,6 +23,7 @@ import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar";
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
+import { FreezeRouterWhenHidden } from "./components/layout/FreezeRouterWhenHidden";
 import { FreezeWhenHidden } from "./components/layout/FreezeWhenHidden";
 import { HistoryShell } from "./components/layout/HistoryShell";
 import { IdleReloadSnackbar } from "./components/layout/IdleReloadSnackbar";
@@ -2012,38 +2013,45 @@ const AppBody = () => {
                                                                                                                     "chat"
                                                                                                                 }
                                                                                                             >
-                                                                                                                <FeatureErrorBoundary
-                                                                                                                    feature={
-                                                                                                                        t
-                                                                                                                            .app
-                                                                                                                            .features
-                                                                                                                            .chat
+                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                    active={
+                                                                                                                        activeService ===
+                                                                                                                        "chat"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
+                                                                                                                    <FeatureErrorBoundary
+                                                                                                                        feature={
+                                                                                                                            t
+                                                                                                                                .app
+                                                                                                                                .features
+                                                                                                                                .chat
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <ChatHome
-                                                                                                                            {...homeManagers}
-                                                                                                                            isActiveRoute={
-                                                                                                                                activeService ===
-                                                                                                                                "chat"
+                                                                                                                        <Suspense
+                                                                                                                            fallback={
+                                                                                                                                <RouteLoadingFallback />
                                                                                                                             }
-                                                                                                                            useTG={
-                                                                                                                                useTG
-                                                                                                                            }
-                                                                                                                        />
-                                                                                                                        <ServiceSwitchReady
-                                                                                                                            service="chat"
-                                                                                                                            active={
-                                                                                                                                activeService ===
-                                                                                                                                "chat"
-                                                                                                                            }
-                                                                                                                        />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
+                                                                                                                        >
+                                                                                                                            <ChatHome
+                                                                                                                                {...homeManagers}
+                                                                                                                                isActiveRoute={
+                                                                                                                                    activeService ===
+                                                                                                                                    "chat"
+                                                                                                                                }
+                                                                                                                                useTG={
+                                                                                                                                    useTG
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                            <ServiceSwitchReady
+                                                                                                                                service="chat"
+                                                                                                                                active={
+                                                                                                                                    activeService ===
+                                                                                                                                    "chat"
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                        </Suspense>
+                                                                                                                    </FeatureErrorBoundary>
+                                                                                                                </FreezeRouterWhenHidden>
                                                                                                             </FreezeWhenHidden>
                                                                                                         </div>
                                                                                                     )}
@@ -2065,35 +2073,42 @@ const AppBody = () => {
                                                                                                                     "tasks"
                                                                                                                 }
                                                                                                             >
-                                                                                                                <FeatureErrorBoundary
-                                                                                                                    feature={
-                                                                                                                        t
-                                                                                                                            .app
-                                                                                                                            .features
-                                                                                                                            .tasks
+                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                    active={
+                                                                                                                        activeService ===
+                                                                                                                        "tasks"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
+                                                                                                                    <FeatureErrorBoundary
+                                                                                                                        feature={
+                                                                                                                            t
+                                                                                                                                .app
+                                                                                                                                .features
+                                                                                                                                .tasks
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <TaskHome
-                                                                                                                            {...homeManagers}
-                                                                                                                            isActiveRoute={
-                                                                                                                                activeService ===
-                                                                                                                                "tasks"
+                                                                                                                        <Suspense
+                                                                                                                            fallback={
+                                                                                                                                <RouteLoadingFallback />
                                                                                                                             }
-                                                                                                                        />
-                                                                                                                        <ServiceSwitchReady
-                                                                                                                            service="tasks"
-                                                                                                                            active={
-                                                                                                                                activeService ===
-                                                                                                                                "tasks"
-                                                                                                                            }
-                                                                                                                        />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
+                                                                                                                        >
+                                                                                                                            <TaskHome
+                                                                                                                                {...homeManagers}
+                                                                                                                                isActiveRoute={
+                                                                                                                                    activeService ===
+                                                                                                                                    "tasks"
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                            <ServiceSwitchReady
+                                                                                                                                service="tasks"
+                                                                                                                                active={
+                                                                                                                                    activeService ===
+                                                                                                                                    "tasks"
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                        </Suspense>
+                                                                                                                    </FeatureErrorBoundary>
+                                                                                                                </FreezeRouterWhenHidden>
                                                                                                             </FreezeWhenHidden>
                                                                                                         </div>
                                                                                                     )}
@@ -2115,35 +2130,42 @@ const AppBody = () => {
                                                                                                                     "notes"
                                                                                                                 }
                                                                                                             >
-                                                                                                                <FeatureErrorBoundary
-                                                                                                                    feature={
-                                                                                                                        t
-                                                                                                                            .app
-                                                                                                                            .features
-                                                                                                                            .notes
+                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                    active={
+                                                                                                                        activeService ===
+                                                                                                                        "notes"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
+                                                                                                                    <FeatureErrorBoundary
+                                                                                                                        feature={
+                                                                                                                            t
+                                                                                                                                .app
+                                                                                                                                .features
+                                                                                                                                .notes
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <NoteHome
-                                                                                                                            {...homeManagers}
-                                                                                                                            isActiveRoute={
-                                                                                                                                activeService ===
-                                                                                                                                "notes"
+                                                                                                                        <Suspense
+                                                                                                                            fallback={
+                                                                                                                                <RouteLoadingFallback />
                                                                                                                             }
-                                                                                                                        />
-                                                                                                                        <ServiceSwitchReady
-                                                                                                                            service="notes"
-                                                                                                                            active={
-                                                                                                                                activeService ===
-                                                                                                                                "notes"
-                                                                                                                            }
-                                                                                                                        />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
+                                                                                                                        >
+                                                                                                                            <NoteHome
+                                                                                                                                {...homeManagers}
+                                                                                                                                isActiveRoute={
+                                                                                                                                    activeService ===
+                                                                                                                                    "notes"
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                            <ServiceSwitchReady
+                                                                                                                                service="notes"
+                                                                                                                                active={
+                                                                                                                                    activeService ===
+                                                                                                                                    "notes"
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                        </Suspense>
+                                                                                                                    </FeatureErrorBoundary>
+                                                                                                                </FreezeRouterWhenHidden>
                                                                                                             </FreezeWhenHidden>
                                                                                                         </div>
                                                                                                     )}
