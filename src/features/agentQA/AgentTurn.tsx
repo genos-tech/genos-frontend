@@ -23,11 +23,15 @@
 //   providers. (`ToolProgressList` and the approval previews read the i18n
 //   context, which is mounted at the very root.)
 //
-// RENDER BUDGET (MIP-904)
-//   Wrapped in `memo`. A host must hand it stable props: the callbacks behind
-//   refs, `labels` memoised on `t`, the turn's own arrays by identity. Then a
-//   streamed `answer_delta` re-renders only the in-flight turn, and typing or
-//   any App-root write re-renders none. The markdown parse is the expense.
+// RENDER BUDGET
+//   App-root writes re-render the whole app (the render storm), so a turn must
+//   cost nothing when nothing about it changed. Wrapped in `memo`. A host must
+//   hand it stable props: the callbacks behind refs, `labels` memoised on `t`,
+//   the turn's own arrays by identity. Then a streamed `answer_delta`
+//   re-renders only the in-flight turn, and typing or any App-root write
+//   re-renders none. The markdown parse is the expense, and has its own memo
+//   boundary (`AnswerMarkdown`) so even a re-render of the turn does not
+//   re-parse the answer.
 //
 // EXTENSION POINTS (so a later change does not reopen this file)
 //   - `renderExtraActions`: extra buttons in the per-turn action bar ("Save as

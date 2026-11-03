@@ -127,9 +127,10 @@ export const AgentQAConversation = ({
         );
     }
 
-    // Ask again is off while a turn streams or waits on an approval: a second
-    // ask would race the first (same rule as Spotlight's).
-    const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
+    // Deliberately no `askDisabled` here. Spotlight disables Ask again while a
+    // turn streams, which re-renders every finished turn at each stream start
+    // and end; the modals never did, `useAgentQA.onAsk` already refuses while
+    // busy, and adding the prop would add renders to every finished turn.
 
     return (
         <Stack spacing={1.5} sx={{ mb: 1 }}>
@@ -138,7 +139,6 @@ export const AgentQAConversation = ({
                     key={turn.id}
                     answer={turn.answer}
                     answerSources={turn.answerSources ?? NO_SOURCES}
-                    askDisabled={askDisabled}
                     askedQuery={turn.askedQuery}
                     askError={turn.askError}
                     elapsedMs={turn.elapsedMs}
@@ -159,7 +159,6 @@ export const AgentQAConversation = ({
                 <AgentTurn
                     answer={ask.answer}
                     answerSources={ask.answerSources ?? NO_SOURCES}
-                    askDisabled={askDisabled}
                     askedQuery={ask.askedQuery}
                     askError={ask.askError}
                     elapsedMs={ask.elapsedMs}

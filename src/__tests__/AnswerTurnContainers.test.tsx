@@ -80,6 +80,14 @@ const NOTE = source({
 });
 const UNCITED = source({ entity_id: "task:99", task_id: "99", title: "Unrelated spike" });
 
+const MILESTONE = source({
+    entity_type: "milestone",
+    entity_id: "milestone:9",
+    title: "Beta launch",
+    task_id: "9",
+    task_display_id: "PRJ-9",
+});
+
 const MENTIONS = [{ kind: "user" as const, userId: "u2", label: "Bob" }];
 
 // Turn 1: an inline citation, a bare token, and a retrieved-but-uncited source.
@@ -465,9 +473,17 @@ describe("one turn, one rendering", () => {
         };
     };
 
+    // Cites a task, a milestone and a bare-token task: every chip word here is
+    // the same on every host. (A personal note is the one place they differ, below.)
+    const SAME_EVERYWHERE: CompletedTurn = {
+        ...TURN_ONE,
+        answer: "Shipped in [the fix](task:12) last week. See [milestone:9].",
+        answerSources: [TASK, MILESTONE, UNCITED],
+    };
+
     it("is the same in Spotlight and in the thread and note Ask modals", () => {
         const seen = SURFACES.map((surface) => {
-            surface.mount({ turns: [TURN_ONE] });
+            surface.mount({ turns: [SAME_EVERYWHERE] });
             const out = snapshot();
             cleanup();
             return out;
@@ -478,11 +494,25 @@ describe("one turn, one rendering", () => {
         expect(seen[0].buttons).toEqual([
             "the fix",
             "Task PRJ-12: Fix login redirect",
-            "My note: Release notes",
+            "Milestone: Beta launch",
             "Good answer",
             "Needs work",
             "Copy answer",
             "Ask again",
         ]);
+    });
+
+    it("differs in one word only: the Ask modals do not call a personal note 'My note'", () => {
+        // Spotlight is handed which space each note lives in; the modals are not
+        // (yet), and a team note called "My note" would be wrong, so they say "Note".
+        const names = SURFACES.map((surface) => {
+            surface.mount({ turns: [TURN_ONE] });
+            const out = snapshot().buttons.filter((b) => /Release notes/.test(b ?? ""));
+            cleanup();
+            return out;
+        });
+        expect(names[0]).toEqual(["My note: Release notes"]);
+        expect(names[1]).toEqual(["Note: Release notes"]);
+        expect(names[2]).toEqual(["Note: Release notes"]);
     });
 });

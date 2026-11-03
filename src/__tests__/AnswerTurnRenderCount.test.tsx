@@ -1,5 +1,5 @@
 /**
- * Render budget of the answer turn (MIP-904 follow-up).
+ * Render budget of the answer turn.
  *
  * The turn parses markdown, so re-rendering a finished answer is the expensive
  * thing to get wrong: a streamed `answer_delta` must re-render only the
@@ -375,10 +375,9 @@ describe.each([
         view.rerender(<Host agentQA={agentQAState({ ...live(5), isStreaming: false })} />);
         view.rerender(<Host agentQA={agentQAState({ ...live(5), isStreaming: true })} />);
         expect(countsSince(before)).toEqual({ one: 0, two: 0, live: 0 });
-        // Changed on purpose: the Ask modals now disable Ask again while busy,
-        // as Spotlight does (a click then did nothing, silently), so each
-        // finished turn's shell renders at stream start/end: 3 here, 0 on
-        // origin/main. No markdown is re-parsed.
-        expect(rendersSince(before)).toEqual({ one: 3, two: 3, live: 3 });
+        // The modals never disabled Ask again while busy (the hook refuses the
+        // ask anyway), so finished turns stay untouched, as on origin/main; the
+        // in-flight turn renders for each flip, as it did.
+        expect(rendersSince(before)).toEqual({ one: 0, two: 0, live: 3 });
     });
 });

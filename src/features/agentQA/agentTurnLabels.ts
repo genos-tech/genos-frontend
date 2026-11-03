@@ -104,6 +104,13 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             toolLabel: (toolName) => getToolLabel(toolName, t),
         },
         chip: sp.chip,
-        entitySubtitle: sp.entitySubtitle,
+        // A cited personal note reads "My note" / "Team note" / "Shared note"
+        // by which space it lives in, which only the host can know (Spotlight
+        // gets it from the note manager at the App root). The Ask modals do
+        // not pass it yet, and "My note" would be WRONG for a team note, so
+        // until they do they say just "Note".
+        entitySubtitle: own
+            ? { ...sp.entitySubtitle, notePersonal: sp.entitySubtitle.noteFallback }
+            : sp.entitySubtitle,
     };
 };

@@ -170,7 +170,13 @@ describe("where each host's labels come from", () => {
         expect(l.actions.moreCount).toBe(sp.actions.moreCount);
         expect(l.actions.showLess).toBe(sp.actions.showLess);
         expect(l.chip).toEqual(sp.chip);
-        expect(l.entitySubtitle).toEqual(sp.entitySubtitle);
+        // The modals cannot tell which space a personal note is in, so they do
+        // not call it "My note" (it may be a team note): just "Note".
+        expect(l.entitySubtitle).toEqual({
+            ...sp.entitySubtitle,
+            notePersonal: sp.entitySubtitle.noteFallback,
+        });
+        expect(l.entitySubtitle.notePersonal).not.toBe(sp.entitySubtitle.notePersonal);
     });
 
     it("names a tool from the agentApproval catalog, and falls back to the raw name", () => {
