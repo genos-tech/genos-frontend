@@ -27,20 +27,23 @@ export const loadSpecificTask = (
     taskId: number,
     accessToken: string | null,
     options?: { forceRefresh?: boolean; expectedMinUpdatedAt?: string | null }
-) =>
+): Promise<TaskProps[]> =>
     inFlightTaskLoads.get(
         inFlightTaskKey(taskId, myself?.teamId, projectId, options?.expectedMinUpdatedAt),
         () => fetchSpecificTask(myself, projectId, taskId, accessToken, options),
         { forceRefresh: options?.forceRefresh }
     );
 
+// Always an array: `[]` when the task could not be loaded (request failed, no
+// auth token, IndexedDB error). Callers read `.length` straight away, and a
+// failed load used to resolve `undefined` and make each of them throw (MIP-987).
 const fetchSpecificTask = async (
     myself: UserProps,
     projectId: number,
     taskId: number,
     accessToken: string | null,
     options?: { forceRefresh?: boolean; expectedMinUpdatedAt?: string | null }
-) => {
+): Promise<TaskProps[]> => {
     try {
         if (!options?.forceRefresh) {
             const cached = await getCachedFullTask(taskId);
@@ -76,7 +79,7 @@ const fetchSpecificTask = async (
             if (Array.isArray(data) && data[0]) {
                 await cacheFullTask(data[0] as TaskProps);
             }
-            return data;
+            return Array.isArray(data) ? (data as TaskProps[]) : [];
         } else {
             console.error("Unauthorized. Auth toke is not found.");
         }
@@ -87,4 +90,5 @@ const fetchSpecificTask = async (
             console.error("Unexpected error:", error);
         }
     }
+    return [];
 };
