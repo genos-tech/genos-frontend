@@ -38,6 +38,7 @@ import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverl
 import { Sidebar } from "./components/layout/sidebar";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
+import { useAvatarContextValue } from "./components/ui/avatars/useAvatarContextValue";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
@@ -1299,6 +1300,24 @@ const AppBody = () => {
         useUISM,
     };
 
+    // Context values handed to providers below, memoized so a render of
+    // `AppBody` that changed none of their inputs does not re-render every
+    // consumer (MIP-958). `AppBody` renders about 13 times per task click.
+    const avatarContextValue = useAvatarContextValue({
+        myself,
+        setMyself,
+        setTeamMemberProfiles: useTEM.setTeamMemberProfiles,
+        socket: socketInstance,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
+        useCM,
+        useUISM,
+        selfNotificationsPaused: useNotif.isPausedNow,
+    });
+    const urlLinkModalContextValue = useMemo(
+        () => ({ openModalByHref: urlLinkModal.openModalByHref }),
+        [urlLinkModal.openModalByHref]
+    );
+
     // if (isTooSmall) {
     //     return (
     //         <ColorThemeProvider>
@@ -1311,7 +1330,7 @@ const AppBody = () => {
     // }
 
     return (
-        <ColorThemeProvider>
+        <>
             <CssBaseline />
             <I18nProvider>
                 {/* Blocks the tab when another tab takes over the single
@@ -1493,25 +1512,12 @@ const AppBody = () => {
                                 of truth instead of taking a fan-out of
                                 props at every callsite. */}
                                                                 <AvatarContextProvider
-                                                                    value={{
-                                                                        myself,
-                                                                        setMyself,
-                                                                        setTeamMemberProfiles:
-                                                                            useTEM.setTeamMemberProfiles,
-                                                                        socket: socketInstance,
-                                                                        teamMemberProfiles:
-                                                                            useTEM.teamMemberProfiles,
-                                                                        useCM,
-                                                                        useUISM,
-                                                                        selfNotificationsPaused:
-                                                                            useNotif.isPausedNow,
-                                                                    }}
+                                                                    value={avatarContextValue}
                                                                 >
                                                                     <UrlLinkModalProvider
-                                                                        value={{
-                                                                            openModalByHref:
-                                                                                urlLinkModal.openModalByHref,
-                                                                        }}
+                                                                        value={
+                                                                            urlLinkModalContextValue
+                                                                        }
                                                                     >
                                                                         <HashMentionDataProvider
                                                                             value={hashMentionData}
@@ -2141,7 +2147,7 @@ const AppBody = () => {
                     </ThemePreferenceProvider>
                 </UiSettingsProvider>
             </I18nProvider>
-        </ColorThemeProvider>
+        </>
     );
 };
 
@@ -2169,9 +2175,17 @@ const AppBody = () => {
  * consumers inside `AppBody` (SettingsModal) resolve the same context one level
  * up, and `aiAnswers` is the only field any of them reads from a hook above the
  * old provider position — `webSearch` is server-side, read only by Settings.
+ *
+ * `ColorThemeProvider` lives here for a performance reason (MIP-958). It renders
+ * MUI's `CssVarsProvider`, which builds a NEW theme object every time it renders.
+ * Inside `AppBody` it re-rendered on every `AppBody` render (about 13 per task
+ * click), so every styled component in the app re-rendered, memo or not. One
+ * level up it renders only when the theme itself changes.
  */
 export const App = () => (
-    <SpotlightPreferencesProvider>
-        <AppBody />
-    </SpotlightPreferencesProvider>
+    <ColorThemeProvider>
+        <SpotlightPreferencesProvider>
+            <AppBody />
+        </SpotlightPreferencesProvider>
+    </ColorThemeProvider>
 );
