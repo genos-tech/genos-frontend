@@ -105,48 +105,26 @@ export const EMPTY_ASK_STATE: AskState = {
     runId: null,
 };
 
-// i18n labels for the conversation / input / approval / action UI. Each
-// surface (threadAsk, noteAsk, Spotlight)
-// builds this from its own i18n namespace and passes it as a prop —
-// agentQA components stay string-free and locale-agnostic.
+// i18n labels for the conversation PANEL and the INPUT of the Ask modals (thread
+// Ask, note Ask): the empty-state hint, the input's placeholder and buttons, the
+// mention dropdown's aria-label. Each modal builds this from its own i18n
+// namespace and passes it as a prop, so these components stay string-free and
+// locale-agnostic.
+//
+// What a TURN says (Q/A letters, approve/reject, copy, retry, thumbs, the
+// chip vocabulary, ...) is NOT here: that is `AgentTurnLabels`
+// (`agentTurnLabels.ts`), the one contract of the shared answer turn.
 export interface AgentQALabels {
     conversation: {
         empty: string;
-        turnLabelQ: string;
-        turnLabelA: string;
         placeholder: string;
         send: string;
         cancel: string;
     };
-    actions: {
-        approve: string;
-        reject: string;
-        copyAnswer: string;
-        copied: string;
-        retry: string;
-        // 👍/👎 feedback (F1). Required: these were optional once, with
-        // an English fallback in FeedbackThumbs, and the thread and note
-        // label sets simply never passed them, so every locale read
-        // "Good answer / Needs work". A missing key is now a type error.
-        // Spotlight's own keys (`spotlight.actions.feedbackUp/Down`) are
-        // the translated source for surfaces with no copy of their own.
-        feedbackUp: string;
-        feedbackDown: string;
-    };
-    states: {
-        streaming: string;
-        thinking: string;
-        // "Answered in {duration}" template for the per-turn total time
-        // footnote. Required for the same reason as the feedback labels.
-        answeredIn: string;
-    };
-    approval: {
-        // ICU-template-ish string with `{toolName}` placeholder.
-        titleWithTool: string;
-    };
-    // @/# mention dropdown a11y label. Optional so existing locale
-    // label sets don't break; the dropdown falls back to English.
-    mentions?: {
+    // @/# mention dropdown a11y label. Required: it was optional once, with
+    // an English fallback in the dropdown, and an omitted key just read
+    // "Mention suggestions" in every language.
+    mentions: {
         ariaLabel: string;
     };
 }

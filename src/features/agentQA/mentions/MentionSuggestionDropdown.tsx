@@ -66,8 +66,7 @@ const VIEWPORT_GUTTER = 8;
 const MAX_MENU_HEIGHT = 280;
 
 // The shared icon vocabulary (`MENTION_ICONS`), which is also what the
-// answer's citation chips use (`_sourceIcon` in SpotlightOverlay /
-// `sourceIcon` in SourceChips) — so a mention option, the editor row for
+// answer's citation chips use (`sourceIcon` in AgentTurnSources) — so a mention option, the editor row for
 // the same thing, and the source chip it later becomes all read as one
 // object. A milestone (a task flagged `isMilestone`) takes the flag icon
 // so it reads as a milestone even though it resolves as a task on the
@@ -238,7 +237,10 @@ interface Props {
     // Spotlight renders on a translucent dark sheet where Joy's default
     // surface tokens are illegible; the flag switches to its palette.
     isDark?: boolean;
-    ariaLabel?: string;
+    // The listbox's accessible name. Required: it used to fall back to the
+    // English "Mention suggestions", which every host that forgot it showed
+    // in every language.
+    ariaLabel: string;
 }
 
 export const MentionSuggestionDropdown = ({
@@ -319,7 +321,7 @@ export const MentionSuggestionDropdown = ({
 
     return createPortal(
         <Sheet
-            aria-label={ariaLabel ?? "Mention suggestions"}
+            aria-label={ariaLabel}
             data-testid="agent-mention-dropdown"
             role="listbox"
             sx={{

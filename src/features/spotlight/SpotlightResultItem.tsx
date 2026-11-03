@@ -24,6 +24,13 @@ import type { SpotlightResult } from "./types";
 
 type SpotlightMessages = Messages["spotlight"];
 
+// The subtitle vocabulary, with plain-string values: every key required, but
+// not tied to the English catalog's literal types, so a labels object built
+// from any locale (or a test) satisfies it.
+export type EntitySubtitleLabels = Readonly<
+    Record<keyof SpotlightMessages["entitySubtitle"], string>
+>;
+
 interface Props {
     result: SpotlightResult;
     query: string;
@@ -100,7 +107,7 @@ const DARK_TEXT_SOFT = "#a89bbf";
 
 // Friendly label shown next to the icon for context (e.g. "DM",
 // "Group chat", "Personal note"). Exported so the agent's source-chip
-// renderer (`_chipLabel` in SpotlightOverlay) reuses the same wording
+// renderer (`sourceChipLabel`, in the answer turn) reuses the same wording
 // — keeps the two surfaces from drifting. Accepts the translation
 // dictionary so the labels stay locale-aware without turning this pure
 // helper into a hook.
@@ -111,7 +118,7 @@ const DARK_TEXT_SOFT = "#a89bbf";
 // note" without it. See `personalNoteScopes`.
 export const entitySubtitle = (
     r: SpotlightResult,
-    ts: SpotlightMessages,
+    ts: { entitySubtitle: EntitySubtitleLabels },
     noteScopes?: ReadonlyMap<number, "shared" | "team">
 ): string => {
     if (r.entity_type === "chat") {
@@ -213,7 +220,10 @@ export const badgeFor = (r: SpotlightResult): BadgeKey | null => {
     // milestone (`milestone_mirrors.py`) and keeps its chunk types.
     if (
         (r.entity_type === "task" || r.entity_type === "milestone") &&
-        r.matched_chunk_types[0] === "task_comment"
+        // Optional-chained: a cited source restored from an older session or
+        // snapshot may predate the field, and the Ask modals' chips now come
+        // through here too: one such source must not take the whole modal down.
+        r.matched_chunk_types?.[0] === "task_comment"
     ) {
         return "comment";
     }
