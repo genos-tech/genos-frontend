@@ -159,6 +159,58 @@ export const agentApproval = {
         "What the note says now is kept as a version first, so this can be undone.",
     cleared: "none",
     unset: "—",
+    edit: {
+        // Edit before approve: the editors a pending write card offers for the
+        // fields the server lists as editable (genos-api #570), and the mark a
+        // finished write carries when the person changed it first.
+        edit: "Edit",
+        cancelEdit: "Cancel edit",
+        reset: "Reset",
+        resetField: "Reset {field}",
+        approveWithChanges: "Approve with your changes",
+        changesCount: "{count, plural, one {# change} other {# changes}}",
+        hint: "Change what you want, then approve. Genos runs what you see here.",
+        groupLabel: "Edit before approving",
+        proposed: "Genos proposed: {value}",
+        now: "Now: {value}",
+        asProposed: "{value} (as proposed)",
+        rejected:
+            "Some of your changes can't be applied. Nothing was approved or run: fix them and approve again.",
+        tagPlaceholder: "Add a tag",
+        addTag: "Add",
+        removeTag: "Remove tag {tag}",
+        noTags: "No tags (this clears them)",
+        tagsNote:
+            "Each tag must already exist in the project. If one doesn't, the change is refused when it runs.",
+        edited: "Edited",
+        row: "Row {n}",
+        fields: {
+            title: "Title",
+            description: "Description",
+            addToEnd: "Text to add at the end",
+            addToStart: "Text to add at the start",
+            comment: "Comment",
+            content: "Content",
+            notes: "Notes",
+            priority: "Priority",
+            effort: "Effort",
+            status: "Status",
+            due: "Due date",
+            start: "Start date",
+            day: "Day",
+            reminder: "Reminder",
+            tags: "Tags",
+        },
+        errors: {
+            required: "{field} can't be empty.",
+            tooLong: "{field} is too long (at most {max} characters).",
+            bodyTooLong: "{field} is too long (the limit is 256 KB).",
+            badDate: "{field}: enter a real date.",
+            dateRequired: "{field}: choose a date.",
+            badReminder: "{field}: enter a date and a time.",
+            reminderRequired: "{field}: choose a date and a time.",
+        },
+    },
     // Friendly, non-technical labels for every agent tool, keyed by the
     // backend `tool_name`. Used for the in-flight tool-progress strip
     // ("Searching your workspace") and the approval-card title

@@ -186,7 +186,7 @@ export interface UseSpotlightReturn {
         mentions?: AgentMentionRef[],
         origin?: SpotlightAskOrigin
     ) => void;
-    onApprove: () => void;
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
     onCancel: () => void;
     onNewConversation: () => void;

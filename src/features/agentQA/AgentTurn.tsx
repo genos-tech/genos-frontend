@@ -37,8 +37,14 @@
 //   - `renderExtraActions`: extra buttons in the per-turn action bar ("Save as
 //     note", "Undo"); handed everything an action needs to know about the turn.
 //   - `onApprove`: typed as the ApprovalCard's own `onApprove`, handed to it
-//     untouched, so an approval that carries an edited payload flows through
-//     here with no change.
+//     untouched. The card calls it `onApprove(edits)` when the person changed
+//     a field before approving (edit before approve), so the payload flows
+//     through here with no wrapper: `AgentTurn` never sees it, and cannot
+//     drop it.
+//   - `approvalFieldErrors` / `approvalEdits`: after the server refused an
+//     edit (422) the host's state hands the refusal back, and the card
+//     reopens in edit mode on what was typed. Pass them as they are in the
+//     host's state (identity matters to the memo).
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
@@ -112,6 +118,10 @@ export interface AgentTurnProps {
     isCurrent: boolean;
     isStreaming?: boolean;
     pendingApproval?: PendingApprovalPayload | null;
+    // A refused attempt to approve with edits: the sentence per path, and the
+    // patch that was refused. Both ride with `pendingApproval` (see the header).
+    approvalFieldErrors?: Record<string, string> | null;
+    approvalEdits?: Record<string, unknown> | null;
     isDark: boolean;
     labels: AgentTurnLabels;
     // Total server-side response time from `done`. Null / absent for error
@@ -189,6 +199,8 @@ const AgentTurnInner = ({
     isCurrent,
     isStreaming,
     pendingApproval,
+    approvalFieldErrors,
+    approvalEdits,
     isDark,
     labels,
     elapsedMs,
@@ -398,10 +410,14 @@ const AgentTurnInner = ({
 
                     {isCurrent && pendingApproval && onApprove && onReject && (
                         <ApprovalCard
+                            // A new pause is a new card: its edits are its own.
+                            key={pendingApproval.approval_token}
                             approveLabel={labels.actions.approve}
+                            fieldErrors={approvalFieldErrors}
                             isDark={isDark}
                             pending={pendingApproval}
                             rejectLabel={labels.actions.reject}
+                            restoredEdits={approvalEdits}
                             titleText={fmt(labels.approval.titleWithTool, {
                                 toolName: labels.approval.toolLabel(pendingApproval.tool_name),
                             })}

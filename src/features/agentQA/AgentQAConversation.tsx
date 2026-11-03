@@ -159,6 +159,8 @@ export const AgentQAConversation = ({
                 <AgentTurn
                     answer={ask.answer}
                     answerSources={ask.answerSources ?? NO_SOURCES}
+                    approvalEdits={ask.approvalEdits}
+                    approvalFieldErrors={ask.approvalFieldErrors}
                     askedQuery={ask.askedQuery}
                     askError={ask.askError}
                     elapsedMs={ask.elapsedMs}

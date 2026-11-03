@@ -23,6 +23,13 @@ export interface ToolEvent {
     // stream event. Absent while pending, on session-cache hits, and
     // against older backends — the strip shows a time only when set.
     duration_ms?: number;
+    // Set from the result event of an approved write the person edited on the
+    // card first: `edited_arguments` is `{path: value}`, the values that
+    // actually ran (as typed). `arguments` already holds the effective call
+    // (the resumed leg's start event shows it). Never set on an error, a read
+    // or a plain approve.
+    edited?: boolean;
+    edited_arguments?: Record<string, unknown>;
 }
 
 // Live state of the in-flight (or just-finished) turn.
@@ -42,6 +49,15 @@ export interface AskState {
     // When the agent calls a write tool, the loop pauses here. The UI
     // renders Approve / Reject; either action resumes the same stream.
     pendingApproval: PendingApprovalPayload | null;
+    // Set while `pendingApproval` is back on the card after the server
+    // refused the person's edits (422, nothing was approved or run): the
+    // sentence for each offending path, shown beside its field. Null / absent
+    // otherwise. Cleared by the next attempt and by a new turn.
+    approvalFieldErrors?: Record<string, string> | null;
+    // The patch the server refused, so the restored card reopens with what
+    // the person typed instead of making them type it again. Paired with
+    // `approvalFieldErrors`.
+    approvalEdits?: Record<string, unknown> | null;
     // Conversation session ID returned by the backend on the `done`
     // event. Sent back with subsequent /ask/ calls so the model sees
     // prior Q&A turns as context. Null means fresh session.
@@ -100,6 +116,8 @@ export const EMPTY_ASK_STATE: AskState = {
     askError: null,
     toolEvents: [],
     pendingApproval: null,
+    approvalFieldErrors: null,
+    approvalEdits: null,
     sessionId: null,
     turnId: 0,
     runId: null,
@@ -202,7 +220,11 @@ export interface UseAgentQAReturn {
     // was dispatched.
     onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[], meta?: unknown) => boolean;
     onCancel: () => void;
-    onApprove: () => void;
+    // `editedArgs` is the card's edit payload: ONLY the fields the person
+    // changed, as `{path: value}`; absent or empty = approve as proposed. A
+    // card must call this explicitly (never `onClick={onApprove}`: that would
+    // pass the click event). A reject takes nothing, and never carries edits.
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
     // Wipes turns + session locally and sets a one-shot flag so the
     // next /ask/ call tells the backend to start a fresh session even

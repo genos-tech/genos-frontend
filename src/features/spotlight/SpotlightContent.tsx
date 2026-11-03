@@ -157,7 +157,7 @@ export interface SpotlightContentProps {
         mentions?: AgentMentionRef[],
         origin?: SpotlightAskOrigin
     ) => void;
-    onApprove: () => void;
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
     onCancel: () => void;
     onNewConversation: () => void;
@@ -1397,7 +1397,7 @@ interface ConversationPanelProps {
     turns: CompletedTurn[];
     isDark: boolean;
     onPreview: (r: SpotlightResult) => void;
-    onApprove: () => void;
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
     onNewConversation: () => void;
     onAsk: (
@@ -1761,6 +1761,8 @@ const ConversationPanel = memo(
                             <AgentTurn
                                 answer={ask.answer}
                                 answerSources={ask.answerSources}
+                                approvalEdits={ask.approvalEdits}
+                                approvalFieldErrors={ask.approvalFieldErrors}
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}

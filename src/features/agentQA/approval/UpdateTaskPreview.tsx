@@ -23,7 +23,7 @@ import { Box, Chip, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { diffValue } from "./previewHelpers";
+import { diffValue, placeValue } from "./previewHelpers";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];
@@ -99,6 +99,19 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     }
     if (bodyProposed && !body)
         chips.push(`${t.agentApproval.changesBody}: ${t.agentApproval.cleared}`);
+    // The tags REPLACE the task's tags; [] clears them. (They were never shown
+    // here before: the person was approving a change the card did not name.)
+    if (Array.isArray(args.tags)) {
+        chips.push(
+            `${t.agentApproval.fieldLabels.tags}: ${placeValue(args.tags, t.agentApproval.cleared)}`
+        );
+    }
+    // A passage added to the description, the other way to change a body.
+    const added: Array<{ label: string; text: string }> = [];
+    const prepend = asString(args.body_prepend);
+    const append = asString(args.body_append);
+    if (prepend) added.push({ label: t.agentApproval.edit.fields.addToStart, text: prepend });
+    if (append) added.push({ label: t.agentApproval.edit.fields.addToEnd, text: append });
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
@@ -136,6 +149,29 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                     {body}
                 </Box>
             ) : null}
+
+            {added.map(({ label, text }) => (
+                <Box key={label} sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                    <Typography level="body-xs" sx={{ color: palette.textMuted, fontWeight: 700 }}>
+                        {label}
+                    </Typography>
+                    <Box
+                        sx={{
+                            maxHeight: 260,
+                            overflowY: "auto",
+                            pl: 1.25,
+                            borderLeft: "2px solid",
+                            borderColor: palette.borderMuted,
+                            fontSize: "0.8125rem",
+                            color: palette.textMuted,
+                            whiteSpace: "pre-wrap",
+                            overflowWrap: "anywhere",
+                        }}
+                    >
+                        {text}
+                    </Box>
+                </Box>
+            ))}
         </Box>
     );
 };
