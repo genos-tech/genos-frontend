@@ -98,6 +98,11 @@ export const analytics = {
         posthog.reset();
     },
 
+    /** Whether the user has left analytics on. Other telemetry honours the same opt-out. */
+    isEnabled(): boolean {
+        return userEnabled;
+    },
+
     setEnabled(enabled: boolean): void {
         userEnabled = enabled;
         if (!initialized) return;
