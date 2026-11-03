@@ -239,16 +239,16 @@ export type DraggableTaskRowProps = {
     isGhost?: boolean;
     // Which root-task/milestone family this row belongs to: the id of the
     // root its parent chain ends at (its own id when it IS a root). Rendered
-    // as a `data-task-family` attribute and read by the generated hover
-    // stylesheet in `familyFocusCss.ts` — hovering any row dims every row
-    // outside that family.
+    // as a `data-task-family` attribute and read by the hover handler in
+    // `familyFocusCss.ts` — hovering any row dims every row outside that
+    // family.
     //
     // It is only an attribute, never read at render time, which is the whole
-    // point: the cross-row highlight resolves in the browser's selector
-    // engine, so mouse movement costs React nothing. Driving it from a
-    // hovered-id state in the table would re-render the entire row map on
-    // every mouse-enter — the exact cost the hover-in-CSS note above
-    // `getTableRowStyles` exists to avoid.
+    // point: the table body's pointer handler reads it from the DOM and sets
+    // `data-dim` on the other rows imperatively, so mouse movement costs React
+    // nothing. Driving it from a hovered-id state in the table would
+    // re-render the entire row map on every mouse-enter — the exact cost the
+    // hover-in-CSS note above `getTableRowStyles` exists to avoid.
     familyKey?: string;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
@@ -2368,12 +2368,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             rowRef.current = el;
                         }}
                         {...provided.draggableProps}
-                        // Hooks for the generated family-focus stylesheet
+                        // Hooks for the family-focus handler and rules
                         // (see `familyFocusCss.ts`). The class makes this row
-                        // both a `:hover` probe and a dim target; the family
-                        // attribute is what the rules match on. `selected` is
-                        // published so the dim rules can exempt the row whose
-                        // preview pane is open.
+                        // both the hover probe and a dim target; the family
+                        // attribute is what the handler compares. `selected`
+                        // is published so the dim rule can exempt the row
+                        // whose preview pane is open.
                         className={TASK_ROW_CLASS}
                         data-task-family={familyKey}
                         data-task-selected={isSelected ? "true" : undefined}

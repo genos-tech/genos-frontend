@@ -21,8 +21,8 @@ export type TaskTableRowsProps = {
      *  assigned to the filtered member. Rendered dimmed + non-interactive. */
     ghostIds: Set<string>;
     /** Row id → the id of the root task/milestone its parent chain ends at.
-     *  Published to the DOM as `data-task-family` so the generated hover
-     *  stylesheet can dim every row outside the hovered row's family. Built
+     *  Published to the DOM as `data-task-family` so the hover handler
+     *  can dim every row outside the hovered row's family. Built
      *  in the same tree walk as `depthMap`, so it shares its identity. */
     familyKeyByRow: Map<string, string>;
     columns: ColumnDef[];
