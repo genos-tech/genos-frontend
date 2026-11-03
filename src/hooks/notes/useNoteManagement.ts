@@ -1845,6 +1845,9 @@ export const useNoteManagement = (
 
     const getTeamNoteMeta = async () => {
         const loaded = await loadTeamNotesMeta(myself, accessToken);
+        // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
+        // real answer ("no team notes") and empties it.
+        if (!Array.isArray(loaded)) return;
         setTeamNoteMeta((prev) => (sameJson(prev, loaded) ? prev : loaded));
     };
     getTeamNoteMetaRef.current = getTeamNoteMeta;
@@ -1963,7 +1966,10 @@ export const useNoteManagement = (
     // Shared-with-me personal notes
     const getSharedNoteMeta = async () => {
         const loaded = await loadSharedNotesMeta(myself, accessToken);
-        setSharedNoteMeta(loaded);
+        // See getChatNoteMeta: undefined on a failed request keeps the list.
+        if (Array.isArray(loaded)) {
+            setSharedNoteMeta(loaded);
+        }
     };
 
     // Recent notes functions
