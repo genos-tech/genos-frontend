@@ -26,13 +26,14 @@ import {
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { usePendingServiceHighlight } from "../../hooks/common/usePendingServiceHighlight";
 import { useSidebarVisibility } from "../../hooks/common/useSidebarVisibility";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -143,10 +144,12 @@ export const Sidebar = (props: SidebarProps) => {
     // ring blends seamlessly into the surface behind it.
     const sidebarBg = isDark ? "rgba(var(--gp-dark-surface-b-rgb), 1)" : "rgba(252,250,255,1)";
     const navigate = useNavigate();
-    const location = useLocation();
+    // What the rail lights up: the route, except between a click and the
+    // switch committing, when it is the service just clicked (MIP-965).
+    const { highlightPath, markPending } = usePendingServiceHighlight();
     // The Genos entry navigates to a real route now, so it gets the
     // same route-derived active treatment as the NAV_ITEMS below.
-    const genosActive = location.pathname.includes("/workspace/genos");
+    const genosActive = highlightPath.includes("/workspace/genos");
     const genosColor = isDark ? NAV_ACCENT.dark : NAV_ACCENT.light;
     const genosColorRgb = isDark ? NAV_ACCENT.darkRgb : NAV_ACCENT.lightRgb;
 
@@ -162,6 +165,7 @@ export const Sidebar = (props: SidebarProps) => {
     const handleNavClick = (path: string) => {
         // Shows the "Loading data…" page first when the click changes service
         // (MIP-965); a click inside the current service navigates straight.
+        markPending(path);
         switchService(navigate, path);
     };
 
@@ -310,7 +314,10 @@ export const Sidebar = (props: SidebarProps) => {
                                         transform: "translateY(0)",
                                     },
                                 }}
-                                onClick={onOpenGenos}
+                                onClick={() => {
+                                    markPending("/workspace/genos");
+                                    onOpenGenos();
+                                }}
                             >
                                 <Box
                                     sx={{
@@ -368,7 +375,7 @@ export const Sidebar = (props: SidebarProps) => {
                     {NAV_ITEMS.filter((item) => sidebarVisibility.isVisible(item.labelKey)).map(
                         (item) => {
                             const Icon = item.icon;
-                            const isActive = location.pathname.includes(item.path);
+                            const isActive = highlightPath.includes(item.path);
                             const badgeCount = getBadgeCount(item.id);
                             const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
                             const colorRgb = isDark
