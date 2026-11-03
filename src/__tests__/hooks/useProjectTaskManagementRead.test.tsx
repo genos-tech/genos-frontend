@@ -344,7 +344,6 @@ describe("cross-project milestone click, with the real URL routing", () => {
         act(() => {
             latest.useTM.closeTaskPreview();
             latest.useTM.setTableMilestoneFilter(null);
-            latest.useTM.setAllTasks([]);
             latest.usePM.openProject(project(B));
             latest.useTM.setCurrentPreviewKind("milestone");
             latest.useTM.setCurrentPreviewMilestoneId(200);
@@ -390,7 +389,6 @@ describe("cross-project milestone click, with the real URL routing", () => {
             latest.useTM.setTableMilestoneFilter(null);
             latest.useTM.setIsTaskDashboardVisible(false);
             latest.useTM.setIsTaskTableVisible(true);
-            latest.useTM.setAllTasks([]);
             latest.usePM.openProject(project(B));
         });
         await flush();

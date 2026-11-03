@@ -64,10 +64,25 @@ export const useProjectTaskManagement = ({
 
     useEffect(() => {
         const signal = usePM.tsTasksLoadedToIDB;
-        if (!signal || !openId || signal.projectId !== openId) return;
+        if (!signal) return;
+        if (signal.projectId !== openId) {
+            // Rows of a project the user is not in changed under the copy that
+            // is remembered for it: forget the copy (a switch back is a miss and
+            // reads IndexedDB, which is current).
+            useTM.dropCachedProjectRows(signal.projectId);
+            return;
+        }
         void useTM.fetchProjectTasks(openId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [usePM.tsTasksLoadedToIDB]);
+
+    // A project that is gone from the team's list (deleted here or by the
+    // agent, left, or the whole list reset by a team switch) keeps no rows in
+    // memory.
+    useEffect(() => {
+        useTM.pruneCachedProjectRows(usePM.teamProjects.map((p) => p.projectId));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.teamProjects]);
 
     // Load sprint config + sprints + milestones whenever the active
     // project changes. Each loader is idempotent and replaces only its

@@ -985,7 +985,6 @@ export const TaskHomeContent = ({
             // `targetUrlProjectId.current`. Close the preview first so the URL
             // (and the routing target) tracks the new project.
             useTM.closeTaskPreview();
-            useTM.setAllTasks([]);
             usePM.openProject(selectedProject);
         }
     };

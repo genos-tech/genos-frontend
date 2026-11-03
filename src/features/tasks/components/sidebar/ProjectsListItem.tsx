@@ -399,16 +399,13 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     // task list.
                                                     useTM.setIsTaskDashboardVisible(false);
                                                     useTM.setIsTaskTableVisible(true);
-                                                    // Empty the task table so the previous
-                                                    // project's rows never show under this one.
-                                                    // The table's own read of the project's
-                                                    // IndexedDB rows follows the project change
-                                                    // (see useProjectTaskManagement).
-                                                    useTM.setAllTasks([]);
-
                                                     // The project is the open one in this very
                                                     // click, and its rows are refreshed from the
-                                                    // server in the background. This used to
+                                                    // server in the background. The table swaps
+                                                    // to the project's remembered rows (or to
+                                                    // none) in the same render, so the previous
+                                                    // project's rows never show under this one
+                                                    // (see useTaskManagement). This used to
                                                     // await `loadProjectsAndTasks`: the whole
                                                     // project list first, then the tasks, then
                                                     // set the project: two round trips in series
