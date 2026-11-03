@@ -81,6 +81,23 @@ vi.mock("../features/notes/team-notes/services/loadTeamNotesMeta", () => ({
 
 const NOTE_CHANGED = "noteChanged";
 
+const NOTE_SIDEBAR_WRITES = [
+    "create_note",
+    "update_note",
+    "manage_note_folder",
+    "favorite_note",
+    "delete_note",
+    "delete_note_folder",
+];
+const NOT_SIDEBAR_TOOLS = [
+    "list_note_folders",
+    "list_note_access",
+    "get_note",
+    "manage_note_sharing",
+    "create_task",
+    "manage_project",
+];
+
 // Streams one tool result, then finishes the turn.
 const streamToolResult = (tool_name: string) =>
     vi.mocked(askAgentStream).mockImplementation(async (args) => {
@@ -97,14 +114,14 @@ const listenForNoteChanged = () => {
 };
 
 describe("NOTE_SIDEBAR_TOOLS", () => {
-    it("covers the note writes, the folder tool and the favorite tool", () => {
-        for (const name of ["create_note", "update_note", "manage_note_folder", "favorite_note"]) {
+    it("covers the note writes, the folder tool, the favorite tool and the two deletes", () => {
+        for (const name of NOTE_SIDEBAR_WRITES) {
             expect(NOTE_SIDEBAR_TOOLS.has(name)).toBe(true);
         }
     });
 
-    it("leaves out the reads and the other writes", () => {
-        for (const name of ["list_note_folders", "get_note", "create_task", "manage_project"]) {
+    it("leaves out the reads, sharing (it changes no sidebar list) and the other writes", () => {
+        for (const name of NOT_SIDEBAR_TOOLS) {
             expect(NOTE_SIDEBAR_TOOLS.has(name)).toBe(false);
         }
     });
@@ -143,17 +160,14 @@ describe.each([
         localStorage.clear();
     });
 
-    it.each(["create_note", "update_note", "manage_note_folder", "favorite_note"])(
-        "%s",
-        async (tool) => {
-            const { seen, stop } = listenForNoteChanged();
-            await runTurn(tool);
-            stop();
-            expect(seen).toHaveBeenCalledTimes(1);
-        }
-    );
+    it.each(NOTE_SIDEBAR_WRITES)("%s", async (tool) => {
+        const { seen, stop } = listenForNoteChanged();
+        await runTurn(tool);
+        stop();
+        expect(seen).toHaveBeenCalledTimes(1);
+    });
 
-    it.each(["list_note_folders", "get_note", "manage_project"])("%s does not", async (tool) => {
+    it.each(NOT_SIDEBAR_TOOLS)("%s does not", async (tool) => {
         const { seen, stop } = listenForNoteChanged();
         await runTurn(tool);
         stop();

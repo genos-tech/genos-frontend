@@ -1339,6 +1339,173 @@ describe("Note folder previews (manage_note_folder / favorite_note approvals)", 
     });
 });
 
+describe("Note delete and sharing previews (delete_note / delete_note_folder / manage_note_sharing approvals)", () => {
+    const NOTE_WARNING = "Deletes the note and its version history for good.";
+    const FOLDER_WARNING = "Also deletes every note and folder inside it, for good.";
+    const ONLY_EMPTY = "Only goes ahead if the folder is empty.";
+    const NOT_NOTIFIED = "They are not notified.";
+
+    it("reads a note delete by its title, with the for-good warning", () => {
+        renderCard("delete_note", {
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+        });
+        expect(screen.getByText("Delete note Spotlight tips")).toBeTruthy();
+        expect(screen.getByText(NOTE_WARNING)).toBeTruthy();
+        // Structured: the raw key:value fallback must NOT render.
+        expect(screen.queryByText("note_id:")).toBeNull();
+        expect(screen.queryByText("note_type:")).toBeNull();
+        expect(screen.queryByText(/#42/)).toBeNull();
+    });
+
+    it("names a note the caller can't read by its id, then by a neutral word", () => {
+        const { unmount } = renderCard("delete_note", { note_type: "team", note_id: 9 });
+        expect(screen.getByText("Delete this note (#9)")).toBeTruthy();
+        expect(screen.getByText(NOTE_WARNING)).toBeTruthy();
+        unmount();
+
+        renderCard("delete_note", { note_type: "team" });
+        expect(screen.getByText("Delete this note")).toBeTruthy();
+        expect(screen.getByText(NOTE_WARNING)).toBeTruthy();
+    });
+
+    it("reads a folder delete by its name and says it only goes ahead if the folder is empty", () => {
+        renderCard("delete_note_folder", { folder_id: "Research" });
+        expect(screen.getByText("Delete folder Research")).toBeTruthy();
+        expect(screen.getByText(ONLY_EMPTY)).toBeTruthy();
+        expect(screen.queryByText(FOLDER_WARNING)).toBeNull();
+        expect(screen.queryByText("folder_id:")).toBeNull();
+    });
+
+    it("warns that include_contents deletes everything inside, and drops the empty-only line", () => {
+        renderCard("delete_note_folder", { folder_id: "Research", include_contents: true });
+        expect(screen.getByText("Delete folder Research")).toBeTruthy();
+        expect(screen.getByText(FOLDER_WARNING)).toBeTruthy();
+        expect(screen.queryByText(ONLY_EMPTY)).toBeNull();
+        expect(screen.queryByText("include_contents:")).toBeNull();
+    });
+
+    it("reads include_contents sent as a string, and anything but true as false", () => {
+        const { unmount } = renderCard("delete_note_folder", {
+            folder_id: "Research",
+            include_contents: "true",
+        });
+        expect(screen.getByText(FOLDER_WARNING)).toBeTruthy();
+        unmount();
+
+        const second = renderCard("delete_note_folder", {
+            folder_id: "Research",
+            include_contents: "false",
+        });
+        expect(screen.getByText(ONLY_EMPTY)).toBeTruthy();
+        expect(screen.queryByText(FOLDER_WARNING)).toBeNull();
+        second.unmount();
+
+        renderCard("delete_note_folder", { folder_id: "Research", include_contents: null });
+        expect(screen.getByText(ONLY_EMPTY)).toBeTruthy();
+    });
+
+    it("names a folder the caller can't see by its id, then by a neutral word", () => {
+        const { unmount } = renderCard("delete_note_folder", { folder_id: "17" });
+        expect(screen.getByText("Delete folder 17")).toBeTruthy();
+        unmount();
+
+        renderCard("delete_note_folder", {});
+        expect(screen.getByText("Delete this folder")).toBeTruthy();
+    });
+
+    it("reads a share as an editor, and says the person is not notified", () => {
+        renderCard("manage_note_sharing", {
+            action: "share",
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            user_id: "alice",
+            role: "editor",
+        });
+        expect(screen.getByText("Share Spotlight tips with alice as an editor")).toBeTruthy();
+        expect(screen.getByText(NOT_NOTIFIED)).toBeTruthy();
+        expect(screen.queryByText("user_id:")).toBeNull();
+        expect(screen.queryByText("role:")).toBeNull();
+        expect(screen.queryByText("action:")).toBeNull();
+    });
+
+    it("reads a share as a viewer", () => {
+        renderCard("manage_note_sharing", {
+            action: "share",
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            user_id: "alice",
+            role: "viewer",
+        });
+        expect(screen.getByText("Share Spotlight tips with alice as a viewer")).toBeTruthy();
+        expect(screen.getByText(NOT_NOTIFIED)).toBeTruthy();
+    });
+
+    it("does not read a role it does not know as an editor or a viewer", () => {
+        renderCard("manage_note_sharing", {
+            action: "share",
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            user_id: "alice",
+            role: "owner",
+        });
+        expect(screen.getByText("Share Spotlight tips with alice")).toBeTruthy();
+        expect(screen.getByText("owner")).toBeTruthy();
+        expect(screen.queryByText(/as an editor/)).toBeNull();
+        expect(screen.queryByText(/as a viewer/)).toBeNull();
+    });
+
+    it("reads an unshare without a role and without the not-notified line", () => {
+        renderCard("manage_note_sharing", {
+            action: "unshare",
+            note_type: "personal",
+            note_id: 42,
+            note_title: "Spotlight tips",
+            user_id: "alice",
+            // An unshare has no role, so one that is sent is not shown.
+            role: "editor",
+        });
+        expect(screen.getByText("Stop sharing Spotlight tips with alice")).toBeTruthy();
+        expect(screen.queryByText(NOT_NOTIFIED)).toBeNull();
+        expect(screen.queryByText(/^Share /)).toBeNull();
+        expect(screen.queryByText("editor")).toBeNull();
+    });
+
+    it("names a note and a person the caller can't read by their ids", () => {
+        const { unmount } = renderCard("manage_note_sharing", {
+            action: "share",
+            note_type: "team",
+            note_id: 9,
+            user_id: "c54505c5-d24a-4f1a-bf23-ddd135645b88",
+            role: "viewer",
+        });
+        expect(
+            screen.getByText(
+                "Share this note (#9) with c54505c5-d24a-4f1a-bf23-ddd135645b88 as a viewer"
+            )
+        ).toBeTruthy();
+        unmount();
+
+        renderCard("manage_note_sharing", { action: "unshare", user_id: "alice" });
+        expect(screen.getByText("Stop sharing this note with alice")).toBeTruthy();
+    });
+
+    it("falls back to a neutral word when the person is missing", () => {
+        renderCard("manage_note_sharing", {
+            action: "share",
+            note_title: "Spotlight tips",
+            role: "editor",
+        });
+        expect(
+            screen.getByText("Share Spotlight tips with this person as an editor")
+        ).toBeTruthy();
+    });
+});
+
 describe("getToolLabel", () => {
     it("maps a known tool_name to its friendly, non-technical label", () => {
         expect(getToolLabel("search_knowledge_base", en)).toBe("Searching your workspace");
@@ -1361,6 +1528,13 @@ describe("getToolLabel", () => {
     it("labels the note folder and favorite tools", () => {
         expect(getToolLabel("manage_note_folder", en)).toBe("Managing a note folder");
         expect(getToolLabel("favorite_note", en)).toBe("Updating your favorites");
+    });
+
+    it("labels the note delete, note folder delete, note sharing and note access tools", () => {
+        expect(getToolLabel("delete_note", en)).toBe("Deleting a note");
+        expect(getToolLabel("delete_note_folder", en)).toBe("Deleting a note folder");
+        expect(getToolLabel("manage_note_sharing", en)).toBe("Managing note sharing");
+        expect(getToolLabel("list_note_access", en)).toBe("Checking who can open a note");
     });
 
     it("labels the sprint create-or-change and sprint delete tools", () => {

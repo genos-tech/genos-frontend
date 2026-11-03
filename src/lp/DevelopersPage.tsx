@@ -246,6 +246,12 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "The note folders in your My Notes and in Team Notes.",
     },
     {
+        name: "list_note_access",
+        type: "read",
+        meaning:
+            "Who can open a note and with what role (owner, editor or viewer), and whether you may change it. A note is named by its url, or by its id with its note_type.",
+    },
+    {
         name: "list_uncompleted_todos",
         type: "read",
         meaning: "Your open to-dos, with any pending reminder.",
@@ -484,6 +490,24 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         meaning:
             "Star or unstar a note, or a note folder, in your own sidebar. A note is named by its url, or by its id with its note_type. Nothing else changes.",
+    },
+    {
+        name: "delete_note",
+        type: "write",
+        meaning:
+            "Delete a note for good, with its version history. Only its author or owner may, and a note with sub-notes is refused. A note is named by its url, or by its id with its note_type. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "delete_note_folder",
+        type: "write",
+        meaning:
+            "Delete a note folder. A folder that holds notes or folders is refused unless include_contents is true, which deletes everything inside it for good. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "manage_note_sharing",
+        type: "write",
+        meaning:
+            "Share a note with a teammate as an editor or a viewer, or stop sharing it. Only its owner may, and the person is not notified. A note is named by its url, or by its id with its note_type. Needs a key that also has the destructive opt-in, because it changes who has access.",
     },
 ];
 
