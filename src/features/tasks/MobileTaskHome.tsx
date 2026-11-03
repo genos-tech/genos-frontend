@@ -346,6 +346,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            holdSwitchWithLoader
                         />
                     </MobileOverlay>
                 )}

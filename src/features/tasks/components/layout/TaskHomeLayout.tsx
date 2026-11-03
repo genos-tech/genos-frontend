@@ -189,6 +189,7 @@ export const TaskHomeLayout = ({
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
+                        holdSwitchWithLoader
                     />
                 </Box>
             </Panel>
