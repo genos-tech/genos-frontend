@@ -3720,6 +3720,7 @@ export const ja: DeepPartial<Messages> = {
             searchPlaceholder: "タスクを検索(完了・削除済みを除く)…",
             searchAriaLabel: "タスクを検索",
             recents: "最近の項目",
+            recentsMore: "もっと見る",
             projects: "プロジェクト",
             milestones: "マイルストーン",
             newProject: "新規プロジェクト",

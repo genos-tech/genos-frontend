@@ -1538,6 +1538,7 @@ export const ar: DeepPartial<Messages> = {
             searchPlaceholder: "ابحث في المهام (باستثناء المغلقة والمحذوفة)...",
             searchAriaLabel: "البحث في المهام",
             recents: "الأخيرة",
+            recentsMore: "المزيد",
             projects: "المشاريع",
             milestones: "المعالم",
             newProject: "مشروع جديد",

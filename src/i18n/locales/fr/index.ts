@@ -3514,6 +3514,7 @@ export const fr: DeepPartial<Messages> = {
             searchPlaceholder: "Rechercher des tâches (fermées et supprimées exclues)…",
             searchAriaLabel: "Rechercher des tâches",
             recents: "Récents",
+            recentsMore: "Plus",
             projects: "Projets",
             milestones: "Jalons",
             newProject: "Nouveau projet",

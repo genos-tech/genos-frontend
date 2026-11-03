@@ -3350,6 +3350,7 @@ export const zh: DeepPartial<Messages> = {
             searchPlaceholder: "搜索任务(不含已关闭和已删除)…",
             searchAriaLabel: "搜索任务",
             recents: "最近",
+            recentsMore: "更多",
             projects: "项目",
             milestones: "里程碑",
             newProject: "新建项目",

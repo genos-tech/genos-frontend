@@ -80,6 +80,9 @@ export const tasks = {
         searchPlaceholder: "Search tasks (closed & deleted excluded)...",
         searchAriaLabel: "Search Tasks",
         recents: "Recents",
+        // The per-project "show more" row under Recents: each project folder
+        // starts at five tasks and this reveals the next five.
+        recentsMore: "More",
         projects: "Projects",
         milestones: "Milestones",
         newProject: "New Project",
