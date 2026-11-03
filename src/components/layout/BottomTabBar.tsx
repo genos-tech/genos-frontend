@@ -16,6 +16,7 @@ import {
 } from "../../hooks/common/useSidebarVisibility";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
+import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
 import { purplePalette } from "../../theme/purplePalette";
 
 type BottomTabBarProps = {
@@ -147,7 +148,9 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             transition: "color 0.2s ease",
                             "&:active": { opacity: 0.7 },
                         }}
-                        onClick={() => (item.path === "" ? onOpenAccount() : navigate(item.path))}
+                        onClick={() =>
+                            item.path === "" ? onOpenAccount() : switchService(navigate, item.path)
+                        }
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}

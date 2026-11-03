@@ -452,6 +452,9 @@ export const zh: DeepPartial<Messages> = {
             messageSendFailed: "消息发送失败，请重试。",
             idleReload: "长时间无操作，正在刷新页面…",
         },
+        serviceSwitch: {
+            loading: "正在加载数据…",
+        },
         meetClipboard: {
             eventTitle: "见面链接（自动删除的活动）",
             generating: "正在生成 Meet 链接…",

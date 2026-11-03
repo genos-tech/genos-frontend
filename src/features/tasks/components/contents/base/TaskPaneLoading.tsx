@@ -1,5 +1,6 @@
-import { keyframes } from "@emotion/react";
-import { Box, Sheet, Typography } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
+
+import { LoadingIndicator } from "../../../../../components/ui/misc/LoadingIndicator";
 
 // Loading state for the task / milestone / create panes.
 //
@@ -11,23 +12,11 @@ import { Box, Sheet, Typography } from "@mui/joy";
 // `TaskPreviewLayout`), so the surface reads as the same pane and nothing
 // reflows when the real content swaps in.
 
-const dotPulse = keyframes`
-    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-    40% { transform: scale(1); opacity: 1; }
-`;
-
-// Delayed variant (task SWITCH): the card SURFACE (Sheet, gradient, accent
-// bar) is visible immediately, with no entrance animation, so a swap that
-// lands within a frame or two reads as card-to-card with no blank pane. Only
-// the dots + caption are invisible for `fadeInDelayMs` and then fade in.
-// `both` fill-mode holds opacity 0 through the delay: no timer or state, so a
-// switch that resolves inside the delay never paints the dots at all. Under
-// `prefers-reduced-motion` the fade becomes a 1ms opacity step that keeps the
-// delay.
-const delayedShow = keyframes`
-    from { opacity: 0; }
-    to { opacity: 1; }
-`;
+// The delayed variant (task SWITCH) keeps the card SURFACE (Sheet, gradient,
+// accent bar) visible immediately with no entrance animation, so a swap that
+// lands within a frame or two reads as card-to-card with no blank pane. The
+// dots + caption, and their delayed fade, live in the shared
+// `LoadingIndicator`.
 
 type TaskPaneLoadingProps = {
     isDark: boolean;
@@ -43,17 +32,6 @@ type TaskPaneLoadingProps = {
 };
 
 export const TaskPaneLoading = ({ isDark, label, fadeInDelayMs }: TaskPaneLoadingProps) => {
-    // Applied to the dots and the caption only (not the surface).
-    const delayedContentSx =
-        fadeInDelayMs != null
-            ? {
-                  animation: `${delayedShow} 0.2s ease-out ${fadeInDelayMs}ms both`,
-                  "@media (prefers-reduced-motion: reduce)": {
-                      animation: `${delayedShow} 1ms linear ${fadeInDelayMs}ms both`,
-                  },
-              }
-            : undefined;
-
     return (
         <Sheet
             aria-busy="true"
@@ -121,34 +99,7 @@ export const TaskPaneLoading = ({ isDark, label, fadeInDelayMs }: TaskPaneLoadin
                 }}
             />
 
-            {/* Pulsing dots — the app's shared loading vocabulary. */}
-            <Box sx={{ display: "flex", gap: "12px", ...delayedContentSx }}>
-                {[0, 1, 2].map((i) => (
-                    <Box
-                        key={i}
-                        sx={{
-                            width: "10px",
-                            height: "10px",
-                            borderRadius: "50%",
-                            background:
-                                "linear-gradient(135deg, #6366f1 0%, var(--gp-brand-500) 100%)",
-                            animation: `${dotPulse} 1.4s ease-in-out infinite`,
-                            animationDelay: `${i * 0.16}s`,
-                        }}
-                    />
-                ))}
-            </Box>
-
-            <Typography
-                level="body-sm"
-                sx={{
-                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-                    letterSpacing: "0.01em",
-                    ...delayedContentSx,
-                }}
-            >
-                {label}
-            </Typography>
+            <LoadingIndicator fadeInDelayMs={fadeInDelayMs} isDark={isDark} label={label} />
         </Sheet>
     );
 };

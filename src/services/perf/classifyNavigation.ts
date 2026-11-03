@@ -18,7 +18,10 @@ export type PerfNavigationKind =
 
 const WORKSPACE = /^\/workspace\/([^/]+)(?:\/(.*))?$/;
 
-const serviceOf = (path: string): string | null => WORKSPACE.exec(path)?.[1] ?? null;
+/** `/workspace/tasks/project/295` → "tasks" (null outside `/workspace/<service>`).
+ *  Also used by the service-switch loader (MIP-965) to tell a service switch
+ *  from a navigation inside one service. */
+export const serviceOf = (path: string): string | null => WORKSPACE.exec(path)?.[1] ?? null;
 
 /** `/workspace/tasks/project/295/task/12` → { project: "295", item: "task/12" } */
 const taskRoute = (path: string): { project: string | null; item: string | null } => {

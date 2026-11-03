@@ -18,6 +18,11 @@ export const app = {
     collaboration: {
         unknownUser: "Unknown user",
     },
+    // The page shown right after clicking another service (rail, tab bar,
+    // shortcuts), while the new service renders (MIP-965).
+    serviceSwitch: {
+        loading: "Loading data…",
+    },
     tooSmall: {
         title: "Window Size Too Small",
         body: "This application is designed for desktop use. Please resize your browser window or switch to a larger screen.",

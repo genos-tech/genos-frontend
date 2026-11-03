@@ -327,6 +327,9 @@ export const hi: DeepPartial<Messages> = {
             messageSendFailed: "आपका संदेश नहीं भेजा जा सका। कृपया पुनः प्रयास करें।",
             idleReload: "निष्क्रियता के बाद पेज रीफ़्रेश किया जा रहा है…",
         },
+        serviceSwitch: {
+            loading: "डेटा लोड हो रहा है…",
+        },
         meetClipboard: {
             eventTitle: "मीट लिंक (स्वतः-हटाया गया इवेंट)",
             generating: "मीट लिंक जनरेट किया जा रहा है...",

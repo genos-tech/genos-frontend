@@ -39,6 +39,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
+import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
 import { isMac } from "../../utils/platform";
@@ -159,7 +160,9 @@ export const Sidebar = (props: SidebarProps) => {
     const [signOutBusy, setSignOutBusy] = useState<boolean>(false);
 
     const handleNavClick = (path: string) => {
-        navigate(path);
+        // Shows the "Loading data…" page first when the click changes service
+        // (MIP-965); a click inside the current service navigates straight.
+        switchService(navigate, path);
     };
 
     // Get badge count for a service
