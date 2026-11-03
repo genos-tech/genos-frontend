@@ -2,6 +2,7 @@
 // future noteAsk variants) import everything they need from here.
 
 export { agentMarkdownComponents, BlockedImage, ExternalLink } from "./agentMarkdown";
+export { emitProjectToolResult } from "./approvedProjectWrites";
 export { AgentQAConversation } from "./AgentQAConversation";
 export { AgentQAInput } from "./AgentQAInput";
 export { ApprovalCard } from "./ApprovalCard";

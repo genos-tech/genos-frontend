@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
+import {
+    PROJECT_DELETED_EVENT,
+    type ProjectDeletedDetail,
+} from "../../features/agentQA/approvedProjectWrites";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
 import { UserProps } from "../../types/admin";
@@ -177,6 +181,24 @@ export const useProjectManagement = (
             }
         }
     }, [currentProject, teamProjects]);
+
+    // The agent deleted a project (an approved `delete_project`). The server
+    // has already done it, so this only drops the browser's copies, the same
+    // two steps `ModalDeleteProject` takes on a 204 and with no call to the
+    // delete endpoint: leave the project's page if it is the open one, and
+    // take it out of the team project list (the sidebar). Functional updates,
+    // because this listener is installed once and would otherwise close over
+    // the first render's lists.
+    useEffect(() => {
+        const onProjectDeleted = (event: Event) => {
+            const projectId = (event as CustomEvent<ProjectDeletedDetail>).detail?.projectId;
+            if (typeof projectId !== "number") return;
+            setCurrentProject((current) => (current?.projectId === projectId ? null : current));
+            setTeamProjects((projects) => projects.filter((p) => p.projectId !== projectId));
+        };
+        window.addEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);
+        return () => window.removeEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);
+    }, []);
 
     // Load projects and tasks when myself changes.
     //

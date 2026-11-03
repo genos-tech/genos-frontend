@@ -27,6 +27,7 @@ import {
 } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
+import { emitProjectToolResult } from "./approvedProjectWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { NOTE_SIDEBAR_TOOLS } from "./noteWriteTools";
 import {
@@ -219,12 +220,14 @@ export const useAgentQA = ({
                     summary,
                     note,
                     duration_ms,
+                    project,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
                     duration_ms?: number;
+                    project?: import("../../services/agentApi").ToolResultProjectRef;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -261,6 +264,9 @@ export const useAgentQA = ({
                     if (TASK_WRITE_TOOLS.has(tool_name)) {
                         emitTasksBulkChanged();
                     }
+                    // A deleted project leaves the sidebar, and an answered
+                    // join request changes its inbox row on the server.
+                    emitProjectToolResult(tool_name, project);
                 },
                 onToolError: ({
                     step,

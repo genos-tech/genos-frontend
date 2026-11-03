@@ -253,7 +253,7 @@ describe("DeveloperSettingsSection", () => {
             await pickScope(user, /Read & write/);
             expect(
                 screen.getByLabelText(
-                    /can't be undone or that change who has access \(deleting calendar events, milestones, sprints, notes and note folders; adding people to projects; sharing notes\)/i
+                    /can't be undone or that change who has access \(deleting calendar events, milestones, sprints, notes and note folders; adding people to projects or approving their requests to join; sharing notes\)/i
                 )
             ).toBeInTheDocument();
         });

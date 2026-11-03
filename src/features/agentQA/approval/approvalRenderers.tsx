@@ -19,6 +19,7 @@ import { AddCommentPreview } from "./AddCommentPreview";
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
 import { DeleteCommentPreview, UpdateCommentPreview } from "./CommentWritePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
+import { ApproveJoinRequestPreview, DeclineJoinRequestPreview } from "./JoinRequestPreview";
 import { DeleteMilestonePreview, ManageMilestonePreview } from "./MilestoneWritePreview";
 import {
     DeleteNoteFolderPreview,
@@ -27,6 +28,8 @@ import {
 } from "./NoteDeleteSharePreview";
 import { FavoriteNotePreview, ManageNoteFolderPreview } from "./NoteFolderWritePreview";
 import { NoteWritePreview } from "./NoteWritePreview";
+import { AddProjectTagPreview, ManageProjectLabelsPreview } from "./ProjectCatalogPreview";
+import { DeleteProjectPreview } from "./ProjectDeletePreview";
 import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWritePreview";
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
 import { RestoreNoteVersionPreview } from "./RestoreNoteVersionPreview";
@@ -66,6 +69,13 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // change a project; add a member or change a member's role).
     manage_project: ManageProjectPreview,
     manage_project_members: ManageProjectMembersPreview,
+    // A project's tag list and the team's project labels, answering a request
+    // to join a project, and (in the app only) deleting a project for good.
+    add_project_tag: AddProjectTagPreview,
+    manage_project_labels: ManageProjectLabelsPreview,
+    approve_join_request: ApproveJoinRequestPreview,
+    decline_join_request: DeclineJoinRequestPreview,
+    delete_project: DeleteProjectPreview,
     // One component for both note writes — it branches on the presence
     // of `note_id` in the args (only updates have one).
     create_note: NoteWritePreview,

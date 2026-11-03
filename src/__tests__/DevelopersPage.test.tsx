@@ -229,6 +229,10 @@ describe("DevelopersPage", () => {
             "delete_sprint",
             "manage_project",
             "manage_project_members",
+            "add_project_tag",
+            "manage_project_labels",
+            "approve_join_request",
+            "decline_join_request",
             "manage_note_folder",
             "favorite_note",
             "delete_note",
@@ -276,6 +280,47 @@ describe("DevelopersPage", () => {
         // A restore keeps what the note says now as a version, so it can be undone.
         expect(rowOf("restore_note_version")).not.toContain("destructive opt-in");
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
+    });
+
+    it("says the destructive opt-in on exactly the ten tools that need it", () => {
+        renderPage();
+        const rows = [...document.querySelectorAll("tr")].filter((tr) =>
+            tr.textContent?.includes("destructive opt-in")
+        );
+        expect(rows.map((tr) => tr.querySelector("td")?.textContent)).toEqual([
+            "delete_comment",
+            "delete_todo_item",
+            "delete_calendar_event",
+            "delete_milestone",
+            "delete_sprint",
+            "manage_project_members",
+            "approve_join_request",
+            "delete_note",
+            "delete_note_folder",
+            "manage_note_sharing",
+        ]);
+    });
+
+    it("lets a person in only with the opt-in, and lets a decline through without it", () => {
+        renderPage();
+        const rowOf = (name: string) =>
+            [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            )?.textContent ?? "";
+        expect(rowOf("approve_join_request")).toContain("because it changes who has access");
+        expect(rowOf("decline_join_request")).not.toContain("destructive opt-in");
+        // Adding a tag or a label lets nobody in and destroys nothing.
+        expect(rowOf("add_project_tag")).not.toContain("destructive opt-in");
+        expect(rowOf("manage_project_labels")).not.toContain("destructive opt-in");
+    });
+
+    it("does not publish delete_project, which exists in the app only", () => {
+        renderPage();
+        expect(
+            [...document.querySelectorAll("tr")].some(
+                (tr) => tr.querySelector("td")?.textContent === "delete_project"
+            )
+        ).toBe(false);
     });
 
     it("states counts that agree with the tool table", () => {

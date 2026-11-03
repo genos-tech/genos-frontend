@@ -62,6 +62,7 @@ import type { NotificationManager } from "../../services/notifications/notificat
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import {
+    emitProjectToolResult,
     MAX_TURNS_IN_HISTORY,
     sessionTurnToCompleted,
     toWireMentions,
@@ -821,12 +822,14 @@ export const useSpotlight = ({
                     summary,
                     note,
                     duration_ms,
+                    project,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
                     duration_ms?: number;
+                    project?: import("../../services/agentApi").ToolResultProjectRef;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -867,6 +870,9 @@ export const useSpotlight = ({
                     if (TASK_WRITE_TOOLS.has(tool_name)) {
                         emitTasksBulkChanged();
                     }
+                    // A deleted project leaves the sidebar, and an answered
+                    // join request changes its inbox row on the server.
+                    emitProjectToolResult(tool_name, project);
                 },
                 onToolError: ({
                     step,

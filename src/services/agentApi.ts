@@ -49,6 +49,15 @@ export interface ToolResultNoteRef {
     changed_fields?: string[];
 }
 
+/** Ref the backend attaches to an approved delete_project result: the
+ * server has already deleted the project, so the client only drops its own
+ * copies (sidebar entry, open page). Absent on every other tool (and on
+ * older backends). */
+export interface ToolResultProjectRef {
+    project_id: number;
+    deleted: true;
+}
+
 export interface ToolCallResultPayload {
     step: number;
     tool_name: string;
@@ -60,6 +69,7 @@ export interface ToolCallResultPayload {
     // wall-clock on the first call. Absent on older backends and on
     // session-cache hits (nothing executed).
     duration_ms?: number;
+    project?: ToolResultProjectRef;
 }
 
 export interface ToolCallErrorPayload {
@@ -820,6 +830,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 summary: evt.summary,
                 note: evt.note,
                 duration_ms: evt.duration_ms,
+                project: evt.project,
             });
             return false;
         case "tool_call_error":

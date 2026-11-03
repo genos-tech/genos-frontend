@@ -71,10 +71,11 @@ export const settings = {
             // Write keys only, off by default. It covers what can't be undone
             // (deleting a calendar event, a milestone, a sprint, a note or a
             // note folder) and what changes who has access (adding someone to
-            // a project, sharing a note), and an instruction hidden in a task
-            // or a web page can ask for any of it.
+            // a project, or approving their request to join one, sharing a
+            // note), and an instruction hidden in a task or a web page can ask
+            // for any of it.
             allowDestructive:
-                "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones, sprints, notes and note folders; adding people to projects; sharing notes)",
+                "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones, sprints, notes and note folders; adding people to projects or approving their requests to join; sharing notes)",
             destructiveChip: "Can delete",
         },
         // Owner-only. Lists every live key bound to the team, including

@@ -233,7 +233,8 @@ const MCP_TOOLS: McpTool[] = [
     {
         name: "list_project_tags",
         type: "read",
-        meaning: "A project's tags, custom fields and saved filters.",
+        meaning:
+            "A project's tags, custom fields and saved filters, and the team's project labels with their ids.",
     },
     {
         name: "list_task_dependencies",
@@ -447,7 +448,8 @@ const MCP_TOOLS: McpTool[] = [
     {
         name: "delete_calendar_event",
         type: "write",
-        meaning: "Delete a calendar event. Nothing on this side can bring it back.",
+        meaning:
+            "Delete a calendar event. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
     },
     {
         name: "manage_milestone",
@@ -484,6 +486,30 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         meaning:
             "Add a teammate to a project, who also gets the project's chat, or change a member's role. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "add_project_tag",
+        type: "write",
+        meaning:
+            "Add a tag to a project's tag list, so its tasks can carry it. Any member of the project may. The name is up to 20 characters, and a name that differs from an existing tag only in case is refused. A color is an optional hex like #3b82f6; the tag is grey without one. It cannot rename or delete a tag.",
+    },
+    {
+        name: "manage_project_labels",
+        type: "write",
+        meaning:
+            "Create a project label, or put labels on a project or take them off. The action argument picks which. Labels group projects and belong to the whole team, so a new one is visible to everyone in it. Only the project's owner or an editor may. It cannot rename or delete a label.",
+    },
+    {
+        name: "approve_join_request",
+        type: "write",
+        meaning:
+            "Approve someone's request to join a project: they are added to it and told, and can then see and edit it. Take the request's item_id from list_my_inbox. Project requests only. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "decline_join_request",
+        type: "write",
+        meaning:
+            "Decline someone's request to join a project: the request closes and they are told. A request that was already answered cannot be changed. Take the request's item_id from list_my_inbox. Project requests only.",
     },
     {
         name: "manage_note_folder",
