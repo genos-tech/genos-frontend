@@ -89,6 +89,8 @@ export const GenosHome = ({
     const {
         sessions,
         isLoading: sessionsLoading,
+        loadFailed: sessionsLoadFailed,
+        reload: reloadSessions,
         search: sessionSearch,
         setSearch: setSessionSearch,
         pinError: sessionPinError,
@@ -128,11 +130,13 @@ export const GenosHome = ({
         <GenosSessionSidebar
             activeSessionId={spotlight.ask.sessionId}
             isLoading={sessionsLoading || spotlight.resumeIsLoading}
+            loadFailed={sessionsLoadFailed}
             pinError={sessionPinError}
             resumeError={spotlight.resumeError}
             search={sessionSearch}
             sessions={sessions}
             onNewChat={handleNewChat}
+            onRetry={reloadSessions}
             onSearchChange={setSessionSearch}
             onSelectSession={handleSelectSession}
             onTogglePin={toggleSessionPin}
@@ -306,6 +310,7 @@ export const GenosHome = ({
                         filterServices={spotlight.filterServices}
                         historyDetail={spotlight.historyDetail}
                         historyIsLoading={spotlight.historyIsLoading}
+                        historyLoadFailed={spotlight.historyLoadFailed}
                         historyMode={spotlight.historyMode}
                         historySessions={spotlight.historySessions}
                         isDemoUser={isDemoUser}

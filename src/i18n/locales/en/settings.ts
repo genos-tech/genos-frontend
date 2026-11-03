@@ -502,6 +502,10 @@ export const settings = {
             listNote: "This list shows your most recent conversations.",
             loading: "Loading conversations…",
             empty: "You have no Genos conversations in this team.",
+            // The list request failed. Deliberately not `empty`: this page
+            // must never tell someone they have no conversations because of
+            // an outage.
+            loadFailed: "Couldn't load your conversations.",
             deleteTooltip: "Delete this conversation",
             deleteAria: "Delete conversation: {question}",
             deleteTitle: "Delete this conversation?",

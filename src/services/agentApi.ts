@@ -544,11 +544,19 @@ export async function fetchThreadSummary(args: {
 // point: the asks worth searching for are usually the ones too old to
 // scroll to. Omitted from the URL when blank so browsing stays a plain
 // cacheable GET.
+//
+// `null` when the request FAILED (a non-2xx, a dropped connection, a body that
+// isn't JSON), `[]` only when the server answered and there are none. The two
+// are different claims: callers keep the list they already show on `null` and
+// say "couldn't load" if they have nothing, instead of telling the person they
+// have no conversations (MIP-973). Same contract as `fetchAgentSessionDetail`
+// and `fetchSharedAnswers`. With no token or team there is nothing to ask, so
+// that is `[]` — both callers check before they call.
 export async function fetchAgentSessions(args: {
     accessToken: string;
     teamId: string;
     search?: string;
-}): Promise<AgentSessionSummary[]> {
+}): Promise<AgentSessionSummary[] | null> {
     if (!args.accessToken || !args.teamId) return [];
     const search = (args.search || "").trim();
     try {
@@ -557,11 +565,11 @@ export async function fetchAgentSessions(args: {
                 (search ? `&search=${encodeURIComponent(search)}` : ""),
             { headers: { Authorization: `Bearer ${args.accessToken}` } }
         );
-        if (!resp.ok) return [];
+        if (!resp.ok) return null;
         const data = (await resp.json()) as { sessions?: AgentSessionSummary[] };
         return data.sessions || [];
     } catch {
-        return [];
+        return null;
     }
 }
 

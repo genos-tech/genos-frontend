@@ -478,11 +478,30 @@ describe("agentApi GET helpers", () => {
             expect(fetchMock).not.toHaveBeenCalled();
         });
 
-        it("returns [] on not-ok and on throw", async () => {
+        // MIP-973: a failed request is `null`, never `[]`, so a caller can tell
+        // "couldn't load" from "you have none" (a successful `{ sessions: [] }`).
+        it("returns null on not-ok, on throw, and on a body that is not JSON", async () => {
             vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, { ok: false })));
-            expect(await fetchAgentSessions({ accessToken: "tok", teamId: "t" })).toEqual([]);
+            expect(await fetchAgentSessions({ accessToken: "tok", teamId: "t" })).toBeNull();
 
             vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("x")));
+            expect(await fetchAgentSessions({ accessToken: "tok", teamId: "t" })).toBeNull();
+
+            vi.stubGlobal(
+                "fetch",
+                vi.fn().mockResolvedValue({
+                    ok: true,
+                    status: 200,
+                    json: async () => {
+                        throw new SyntaxError("Unexpected token <");
+                    },
+                })
+            );
+            expect(await fetchAgentSessions({ accessToken: "tok", teamId: "t" })).toBeNull();
+        });
+
+        it("still returns [] when the server answers with no sessions", async () => {
+            vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ sessions: [] })));
             expect(await fetchAgentSessions({ accessToken: "tok", teamId: "t" })).toEqual([]);
         });
     });

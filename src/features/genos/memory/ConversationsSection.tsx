@@ -49,11 +49,21 @@ type Target = { kind: "one"; session: AgentSessionSummary } | { kind: "all" };
  *  - 409 (a conversation is still answering): nothing was deleted, say wait.
  *  - 404 (already gone): that IS the state they wanted, so the row goes.
  *  - anything else: nothing known changed, say so and keep the row.
+ *
+ * A list that failed to LOAD is its own state, not an empty one: "you have no
+ * conversations" on this page is a claim about what Genos keeps, and an
+ * outage must not be able to make it. With rows already showing, a failed
+ * refresh just leaves them; with none, it says so and offers a retry (the same
+ * shape as the shared-answers list below it).
  */
 export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) => {
     const { t } = useTranslation();
     const m = t.settings.genosMemory.conversations;
-    const { sessions, isLoading } = useGenosSessions({ accessToken, teamId, refreshKey: 0 });
+    const { sessions, isLoading, loadFailed, reload } = useGenosSessions({
+        accessToken,
+        teamId,
+        refreshKey: 0,
+    });
 
     const [target, setTarget] = useState<Target | null>(null);
     const [busy, setBusy] = useState(false);
@@ -121,6 +131,15 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 1 }}>
                     <CircularProgress size="sm" />
                     <Typography level="body-sm">{m.loading}</Typography>
+                </Stack>
+            ) : sessions.length === 0 && loadFailed ? (
+                <Stack alignItems="flex-start" spacing={1} sx={{ py: 1 }}>
+                    <Typography level="body-sm" sx={{ color: "danger.500" }}>
+                        {m.loadFailed}
+                    </Typography>
+                    <Button size="sm" variant="outlined" onClick={reload}>
+                        {t.common.actions.retry}
+                    </Button>
                 </Stack>
             ) : sessions.length === 0 ? (
                 <Typography level="body-sm" sx={{ py: 1, color: "text.tertiary" }}>

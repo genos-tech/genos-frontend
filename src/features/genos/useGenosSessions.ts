@@ -16,12 +16,21 @@
 // question in a session, and `togglePin`, which keeps a session at the
 // top regardless of age.
 //
+// A request that FAILS is not an empty answer (MIP-973). The list on screen is
+// kept, so a dropped connection or a deploy rolling over the API cannot wipe
+// it, and `loadFailed` lets a surface that has nothing to show say "couldn't
+// load" with a retry instead of "no conversations". The one exception is a
+// failed load for a DIFFERENT list than the one held — another team, another
+// search term: that old list is the wrong thing to leave up, so it goes and
+// the failure shows. It is keyed on team + term, never on the token, so a
+// token refresh that fails does not wipe the list.
+//
 // Deletes happen elsewhere (Settings -> What Genos remembers) and arrive as
 // an `agentSessionsDeleted` event. Every instance of this hook — the page's
 // sidebar and the settings panel's own list — drops the deleted rows on it,
 // so neither needs to know the other exists and neither has to refetch.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     fetchAgentSessions,
@@ -43,6 +52,14 @@ export interface UseGenosSessionsArgs {
 export interface UseGenosSessionsReturn {
     sessions: AgentSessionSummary[];
     isLoading: boolean;
+    /**
+     * The latest load failed. `sessions` is then either the list that was
+     * already on screen (kept) or empty (nothing to keep) — callers show the
+     * error only in the empty case, and never the "no conversations" message.
+     */
+    loadFailed: boolean;
+    /** Fetch again now, e.g. from a "Retry" button after `loadFailed`. */
+    reload: () => void;
     /** What's in the box right now — updates on every keystroke. */
     search: string;
     setSearch: (next: string) => void;
@@ -58,6 +75,7 @@ export const useGenosSessions = ({
 }: UseGenosSessionsArgs): UseGenosSessionsReturn => {
     const [sessions, setSessions] = useState<AgentSessionSummary[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [search, setSearch] = useState("");
     // The term the list was actually fetched with. Split from `search` so
     // the input can stay instant while requests lag behind it.
@@ -68,6 +86,11 @@ export const useGenosSessions = ({
     // are exempt from the recent cap; reproducing that here would be a
     // second implementation of it, free to drift.
     const [pinRefreshKey, setPinRefreshKey] = useState(0);
+    // Bumped by `reload` to refetch without anything else changing.
+    const [reloadKey, setReloadKey] = useState(0);
+    // Which list `sessions` holds: the team and search term it was loaded for.
+    // Null when it holds nothing worth keeping.
+    const loadedForRef = useRef<string | null>(null);
 
     useEffect(() => {
         const term = search.trim();
@@ -85,8 +108,11 @@ export const useGenosSessions = ({
     useEffect(() => {
         if (!accessToken || !teamId) {
             setSessions([]);
+            setLoadFailed(false);
+            loadedForRef.current = null;
             return;
         }
+        const listKey = `${teamId}\n${committedSearch}`;
         let cancelled = false;
         // Only the very first load shows a spinner; refreshes swap the
         // list in place so a completing turn doesn't flash the sidebar.
@@ -94,6 +120,16 @@ export const useGenosSessions = ({
         fetchAgentSessions({ accessToken, search: committedSearch, teamId })
             .then((next) => {
                 if (cancelled) return;
+                if (next === null) {
+                    setLoadFailed(true);
+                    if (loadedForRef.current !== listKey) {
+                        setSessions([]);
+                        loadedForRef.current = null;
+                    }
+                    return;
+                }
+                loadedForRef.current = listKey;
+                setLoadFailed(false);
                 setSessions(next);
             })
             .finally(() => {
@@ -105,7 +141,9 @@ export const useGenosSessions = ({
         // `sessions.length` is deliberately NOT a dep — it only shapes
         // the spinner decision for the fetch the other deps triggered.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [accessToken, teamId, refreshKey, committedSearch, pinRefreshKey]);
+    }, [accessToken, teamId, refreshKey, committedSearch, pinRefreshKey, reloadKey]);
+
+    const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
     useAgentSessionsDeleted((detail) => {
         setSessions((prev) =>
@@ -145,5 +183,5 @@ export const useGenosSessions = ({
         [accessToken, sessions]
     );
 
-    return { isLoading, pinError, search, sessions, setSearch, togglePin };
+    return { isLoading, loadFailed, pinError, reload, search, sessions, setSearch, togglePin };
 };

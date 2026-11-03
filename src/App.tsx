@@ -1436,6 +1436,9 @@ const AppBody = () => {
                                                                 historyIsLoading={
                                                                     spotlight.historyIsLoading
                                                                 }
+                                                                historyLoadFailed={
+                                                                    spotlight.historyLoadFailed
+                                                                }
                                                                 historyMode={spotlight.historyMode}
                                                                 historySessions={
                                                                     spotlight.historySessions

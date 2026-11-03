@@ -200,6 +200,10 @@ export interface UseSpotlightReturn {
     historySessions: AgentSessionSummary[];
     historyDetail: AgentSessionDetail | null;
     historyIsLoading: boolean;
+    // The last attempt to load the list FAILED. Not the same as an empty
+    // list: with rows already showing they are kept, with none the panel says
+    // it couldn't load and calls `openHistory` again to retry.
+    historyLoadFailed: boolean;
     openHistory: () => void;
     viewHistorySession: (sessionId: string) => void;
     backToHistoryList: () => void;
@@ -262,6 +266,14 @@ export const useSpotlight = ({
     const [historySessions, setHistorySessions] = useState<AgentSessionSummary[]>([]);
     const [historyDetail, setHistoryDetail] = useState<AgentSessionDetail | null>(null);
     const [historyIsLoading, setHistoryIsLoading] = useState(false);
+    const [historyLoadFailed, setHistoryLoadFailed] = useState(false);
+    // Latest list request, so an older one that resolves late cannot overwrite
+    // (or, by failing, flag) the answer to a newer one.
+    const historyListRequestRef = useRef(0);
+    // The team `historySessions` was loaded for. A failed load keeps the rows
+    // only for the same team; another team's list is the wrong thing to leave
+    // up in this team's shell.
+    const historyListTeamRef = useRef<string | null>(null);
     // ----- Session resume (Genos page) -----
     const [resumeIsLoading, setResumeIsLoading] = useState(false);
     const [resumeError, setResumeError] = useState<string | null>(null);
@@ -1137,7 +1149,9 @@ export const useSpotlight = ({
     //
     // openHistory: switch the panel into list mode and fetch the user's
     // recent sessions. Refetches each time so a session created in
-    // another tab shows up without a page reload.
+    // another tab shows up without a page reload. It is also the panel's
+    // "Retry". A request that FAILS leaves the list as it was (MIP-973):
+    // only a successful answer, empty or not, replaces it.
     //
     // viewHistorySession: flip into detail mode and fetch the full Q&A
     // for one session. Optimistically clears the prior detail so the
@@ -1155,12 +1169,30 @@ export const useSpotlight = ({
         setHistoryDetail(null);
         if (!accessToken || !teamId) {
             setHistorySessions([]);
+            setHistoryLoadFailed(false);
+            historyListTeamRef.current = null;
             return;
         }
+        const request = ++historyListRequestRef.current;
         setHistoryIsLoading(true);
         fetchAgentSessions({ accessToken, teamId })
-            .then((sessions) => setHistorySessions(sessions))
-            .finally(() => setHistoryIsLoading(false));
+            .then((sessions) => {
+                if (request !== historyListRequestRef.current) return;
+                if (sessions === null) {
+                    setHistoryLoadFailed(true);
+                    if (historyListTeamRef.current !== teamId) {
+                        setHistorySessions([]);
+                        historyListTeamRef.current = null;
+                    }
+                    return;
+                }
+                historyListTeamRef.current = teamId;
+                setHistoryLoadFailed(false);
+                setHistorySessions(sessions);
+            })
+            .finally(() => {
+                if (request === historyListRequestRef.current) setHistoryIsLoading(false);
+            });
     }, [accessToken, teamId]);
 
     const viewHistorySession = useCallback(
@@ -1382,6 +1414,7 @@ export const useSpotlight = ({
         historySessions,
         historyDetail,
         historyIsLoading,
+        historyLoadFailed,
         openHistory,
         viewHistorySession,
         backToHistoryList,
