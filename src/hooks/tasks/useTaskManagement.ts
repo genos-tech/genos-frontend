@@ -331,6 +331,13 @@ export const useTaskManagement = (
          *  after `myself.teamId` during a team switch, so a read is judged
          *  against both. */
         currentTeamId?: string;
+        /** True only when the open project is in the team's list AND belongs
+         *  to the user's own team. Rows of another team are then stale
+         *  leftovers and are not shown. Anything else (a project shared from
+         *  another team, where every row belongs to the HOST team, or one this
+         *  hook cannot place) is shown as read: `undefined` must never empty a
+         *  table. */
+        isOwnTeamProject?: boolean;
     }
 ): TaskManagementState => {
     // Task visible states
@@ -582,11 +589,13 @@ export const useTaskManagement = (
         projectId: currentProjectId ?? null,
         teamId: myself.teamId,
         currentTeamId: options?.currentTeamId,
+        isOwnTeamProject: options?.isOwnTeamProject,
     });
     scopeRef.current = {
         projectId: currentProjectId ?? null,
         teamId: myself.teamId,
         currentTeamId: options?.currentTeamId,
+        isOwnTeamProject: options?.isOwnTeamProject,
     };
     // Counts the reads; a read that is no longer the newest does not land.
     const readSeqRef = useRef(0);
@@ -923,7 +932,24 @@ export const useTaskManagement = (
             // downstream memo (childrenByParent / displayRows / the sort) and
             // every row is left alone. When some rows did change, the rest keep
             // their objects and only the changed ones render again.
-            setAllTasks((prev) => mergeProjectRows(prev, _allTasks));
+            //
+            // Team guard. IndexedDB outlives a team switch, so the store can
+            // still hold rows filed under the previous team; in a project of
+            // the user's own team those are not shown. (Project ids are global,
+            // so this is about leftovers, not about two teams sharing an id.)
+            // A shared project is exempt: every row in it belongs to the host.
+            // `myself.teamId` and the workspace's team do not flip in the same
+            // commit during a switch, so a row of either is the user's own.
+            const ownTeams = [now.teamId, now.currentTeamId]
+                .filter((id): id is string => !!id)
+                .map(String);
+            const rows =
+                now.isOwnTeamProject === true && ownTeams.length > 0
+                    ? _allTasks.filter(
+                          (task) => task.teamId == null || ownTeams.includes(String(task.teamId))
+                      )
+                    : _allTasks;
+            setAllTasks((prev) => mergeProjectRows(prev, rows));
         } finally {
             if (seq === readSeqRef.current) setIsLoadingTasks(false);
         }

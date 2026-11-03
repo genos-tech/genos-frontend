@@ -29,6 +29,13 @@ vi.mock("../../features/tasks/services/loadTeamProjects", () => ({
 vi.mock("../../features/tasks/services/loadProjectTasks", () => ({
     loadProjectTasks: vi.fn(async () => undefined),
 }));
+// A project change now reads the project's rows at once (it used to wait 1 s);
+// without this stub that read would reach for the IndexedDB worker. The store
+// holds what the test puts in the table, so that read lands the same rows.
+const idb = vi.hoisted(() => ({ rows: [] as unknown[] }));
+vi.mock("../../features/tasks/services/popSpecificProjectTasks", () => ({
+    popSpecificProjectTasks: vi.fn(async () => idb.rows),
+}));
 vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
     loadTaskMeta: vi.fn(async () => []),
 }));
@@ -116,6 +123,7 @@ const flush = () =>
 
 /** The hook with project 10 selected and the given rows in the table. */
 const setup = async (rows: TaskTableProps[]) => {
+    idb.rows = rows;
     const view = renderHook(
         () =>
             useProjectTaskManagement({

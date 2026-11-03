@@ -21,6 +21,10 @@ export interface ProjectManagementState {
     setCurrentProject: (project: ProjectProps | null) => void;
     loadProjectsAndTasks: (targetProjectId: number) => Promise<void>;
     refreshProjectTasks: (projectId: number) => Promise<void>;
+    // Open a project the user picked (sidebar, milestone of another project,
+    // dashboard picker). The project is the open one in the same render as
+    // the click, and its rows are refreshed from the server in the background.
+    openProject: (project: ProjectProps) => void;
     // Signal that tasks for `projectId` have just finished being written to
     // IndexedDB by `loadProjectTasks`. Consumers can react to this to fetch
     // the freshly-cached rows into React state, instead of guessing with a
@@ -183,6 +187,26 @@ export const useProjectManagement = (
         });
     };
 
+    // The click on a project. `loadProjectsAndTasks` was used for this, and
+    // it first waited for the whole `GET /project/projects/` answer to pick the
+    // project out of it, then set it as the open one, then loaded its tasks: two
+    // round trips in series, with the open project (and so the URL, the
+    // filters and the sort) unchanged until the first returned. The click
+    // already holds the project, so: set it now, refresh its rows (`refreshProjectTasks`
+    // announces them through `tsTasksLoadedToIDB`, which makes the table read
+    // them), and leave the list to its own 60 s refresh.
+    //
+    // The list's record is the complete one (labels, `isExternal`,
+    // `hostTeamName`, ...); the dashboard picker and the milestone click build
+    // partial objects, so prefer the record and fall back to what was passed.
+    const openProject = (project: ProjectProps) => {
+        const projectId = project.projectId;
+        setCurrentProject(teamProjects.find((p) => p.projectId === projectId) ?? project);
+        refreshProjectTasks(projectId).catch((error: unknown) => {
+            console.error(`Failed to refresh the tasks of project ${projectId}`, error);
+        });
+    };
+
     // Update project isPrivate if undefined
     useEffect(() => {
         if (currentProject && currentProject.isPrivate === undefined) {
@@ -262,6 +286,7 @@ export const useProjectManagement = (
         setCurrentProject,
         loadProjectsAndTasks,
         refreshProjectTasks,
+        openProject,
         tsTasksLoadedToIDB,
     };
 };
