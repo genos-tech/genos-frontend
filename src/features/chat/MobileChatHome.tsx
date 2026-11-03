@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
 
+import { MobileOverlay as SharedMobileOverlay } from "../../components/layout/MobileOverlay";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -254,23 +255,25 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
             {isTaskPreviewVisibleHere &&
                 useTM.isTaskPreviewVisible === true &&
                 (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") && (
-                    <MobileOverlay onClose={() => useTM.setIsTaskPreviewVisible(false)}>
-                        <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
-                            <TaskPreview
-                                myself={myself}
-                                setMyself={setMyself}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                usePM={usePM}
-                                useSM={useSM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        </Box>
-                    </MobileOverlay>
+                    // The shared shell, not the local copy above: that one floats
+                    // Close over the pane (hence `pt: 6` = 48px of blank at the top),
+                    // pads the pane by 8px, and leaves a dead strip under it. The
+                    // preview's Sheet is the one scroller, as on the task page.
+                    <SharedMobileOverlay onClose={() => useTM.setIsTaskPreviewVisible(false)}>
+                        <TaskPreview
+                            myself={myself}
+                            setMyself={setMyself}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                        />
+                    </SharedMobileOverlay>
                 )}
 
             {/* Derived, not the raw intent flag: `ChatNoteMain` renders

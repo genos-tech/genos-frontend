@@ -66,18 +66,31 @@ export const TaskPaneLoading = ({ isDark, label, fadeInDelayMs }: TaskPaneLoadin
                 // way instead of collapsing to `minHeight`. `flex: 1` fills a flex
                 // parent; `minHeight` is the floor for any non-flex mount site.
                 flex: 1,
-                minHeight: 500,
-                borderRadius: "16px",
+                // Below `md` this is the same full-screen frame as the loaded
+                // `TaskPreviewLayout` (mobile opens the preview as an overlay), so
+                // the loader gets the same values: no 500px floor, no card radius,
+                // border or shadow. Otherwise the loader is a rounded card and the
+                // task that replaces it is edge to edge, and the pane visibly
+                // changes shape when it loads. One shorthand per breakpoint, colour
+                // included, as there (a responsive `border` shorthand emitted after
+                // a `borderColor` longhand would reset it).
+                minHeight: { xs: 0, md: 500 },
+                borderRadius: { xs: 0, md: "16px" },
                 p: 0,
                 overflow: "hidden",
                 background: isDark
                     ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
                     : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                boxShadow: isDark
-                    ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
-                    : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+                border: {
+                    xs: "none",
+                    md: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                },
+                boxShadow: {
+                    xs: "none",
+                    md: isDark
+                        ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
+                        : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+                },
                 position: "relative",
                 display: "flex",
                 flexDirection: "column",

@@ -192,7 +192,18 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     return (
         <Box
             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-            sx={{ height: "100%", overflow: "auto", width: "100%" }}
+            // Below `md` a flex column, so the preview's Sheet (which is
+            // `flex: 1` there) fills the dialog instead of stopping at its
+            // content height. From `md` up it stays the block it was: the
+            // Sheet is `flex: 0 1 auto` there, and in a flex parent it
+            // would become the scroller in place of this box.
+            sx={{
+                display: { xs: "flex", md: "block" },
+                flexDirection: "column",
+                height: "100%",
+                overflow: "auto",
+                width: "100%",
+            }}
         >
             <TaskPreview
                 hostZIndex={hostZIndex}
