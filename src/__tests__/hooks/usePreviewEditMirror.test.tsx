@@ -13,10 +13,16 @@
  *     push nothing, so an open writes nothing to the table;
  *   - an edit (a new object) is handed over, and reaches the row;
  *   - every edit is handed over, even in back-to-back commits;
- *   - the empty working copy of a fresh mount does not touch the table;
+ *   - the empty working copy of a fresh mount touches neither the host's slot
+ *     nor the table;
+ *   - a copy of ANOTHER task never overwrites the host's slot: two previews can
+ *     be mounted on one slot (the Tasks page and another Home's panel), and
+ *     each handing over a copy the other has not caught up with sent them back
+ *     and forth, dozens of whole-pane renders per click;
  *   - the chips always show the people of the working copy that arrived.
  */
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
+import { useEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
@@ -116,12 +122,34 @@ describe("usePreviewEditMirror", () => {
         ]);
     });
 
-    it("the empty working copy of a fresh mount fills the host's slot but never touches the table", () => {
+    it("the empty working copy of a fresh mount touches neither the host's slot nor the table", () => {
         const empty = {} as TaskProps;
-        const { calls } = setup({ working: empty, preview: undefined });
+        const shown = task(1);
+        const { calls } = setup({ working: empty, preview: shown });
 
-        expect(calls.setPreview).toHaveBeenCalledWith(empty);
+        expect(calls.setPreview).not.toHaveBeenCalled();
         expect(calls.syncRow).not.toHaveBeenCalled();
+
+        const none = setup({ working: {} as TaskProps, preview: undefined });
+        expect(none.calls.setPreview).not.toHaveBeenCalled();
+        expect(none.calls.syncRow).not.toHaveBeenCalled();
+    });
+
+    it("a copy of ANOTHER task never overwrites the host's slot", () => {
+        const { calls } = setup({ working: task(1), preview: task(2) });
+
+        expect(calls.setPreview).not.toHaveBeenCalled();
+        expect(calls.syncRow).not.toHaveBeenCalled();
+    });
+
+    it("a copy with an id still fills a host slot that is empty or holds no task", () => {
+        const mine = task(1);
+        const empty = setup({ working: mine, preview: undefined });
+        expect(empty.calls.setPreview).toHaveBeenCalledWith(mine);
+        expect(empty.calls.syncRow).toHaveBeenCalledWith(mine);
+
+        const bare = setup({ working: mine, preview: {} as TaskProps });
+        expect(bare.calls.setPreview).toHaveBeenCalledWith(mine);
     });
 
     it("the chips show the people of the working copy that arrived, on mount and on a switch", () => {
@@ -239,5 +267,75 @@ describe("usePreviewEditMirror wired to the real table state", () => {
         expect(view.result.current.allTasks[0].title).toBe("Edited");
         expect(view.result.current.currentPreviewTask?.title).toBe("Edited");
         expect(loadTaskMeta).not.toHaveBeenCalled();
+    });
+});
+
+describe("usePreviewEditMirror with two previews on one host slot", () => {
+    // What the app does when a second TaskPreview is mounted on the same slot
+    // (the Tasks page plus another Home's panel): each keeps its own working
+    // copy, pulls the slot's task into it (TaskPreview's sync effect), and hands
+    // its copy to the slot through the mirror. One of them starts empty.
+    const Preview = ({
+        name,
+        slot,
+        setSlot,
+        initial,
+        pushes,
+    }: {
+        name: string;
+        slot: TaskProps | undefined;
+        setSlot: (t: TaskProps) => void;
+        initial: TaskProps;
+        pushes: string[];
+    }) => {
+        const [working, setWorking] = useState<TaskProps>(initial);
+        useEffect(() => {
+            if (slot && slot !== working) setWorking(slot);
+        }, [slot]);
+        usePreviewEditMirror({
+            working,
+            preview: slot,
+            myself: me,
+            setPreview: (t) => {
+                pushes.push(`${name}:${t?.id ?? "none"}`);
+                setSlot(t);
+            },
+            syncRow: () => {},
+            setAssignee: () => {},
+            setReporter: () => {},
+        });
+        return <span data-testid={name}>{String(working?.id ?? "none")}</span>;
+    };
+
+    it("settles on the shown task with no pushes, instead of overwriting each other", async () => {
+        const shown = task(7);
+        const pushes: string[] = [];
+        let renders = 0;
+        const Harness = () => {
+            renders += 1;
+            // Fail fast instead of hanging if the two previews fight over the slot.
+            if (renders > 60) throw new Error("previews are overwriting each other");
+            const [slot, setSlot] = useState<TaskProps | undefined>(shown);
+            return (
+                <>
+                    <Preview name="tasks" slot={slot} setSlot={setSlot} initial={shown} pushes={pushes} />
+                    <Preview
+                        name="other"
+                        slot={slot}
+                        setSlot={setSlot}
+                        initial={{} as TaskProps}
+                        pushes={pushes}
+                    />
+                </>
+            );
+        };
+
+        const view = render(<Harness />);
+        await act(async () => {});
+
+        expect(pushes).toEqual([]);
+        expect(view.getByTestId("tasks").textContent).toBe("7");
+        expect(view.getByTestId("other").textContent).toBe("7");
+        expect(renders).toBeLessThan(6);
     });
 });
