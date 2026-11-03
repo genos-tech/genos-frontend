@@ -187,6 +187,10 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
         setIsTaskPreviewVisible: (visible: boolean) => {
             if (!visible) onClose();
         },
+        // The modal's edits stay in the modal: they do not patch the host
+        // page's table row (the old flag loop patched the HOST page's own
+        // preview row here, which was a no-op). Kept that way on purpose.
+        syncPreviewEdit: () => {},
     };
 
     return (
