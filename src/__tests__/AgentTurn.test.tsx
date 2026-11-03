@@ -324,9 +324,10 @@ describe("the approval card mount", () => {
     });
 
     it("hands the host's own onApprove and onReject to the card, unwrapped", () => {
-        // The card's signature is the contract: a later change gives it an
-        // edited payload, and that only flows through if this mount adds no
-        // wrapper of its own.
+        // Still true after edit before approve, and it is WHY the payload flows:
+        // the card calls `onApprove(edits)` and this mount adds no wrapper of its
+        // own, so it cannot drop (or invent) an argument. The next test pins the
+        // payload itself; this one pins that there is no wrapper to lose it in.
         const onApprove = vi.fn();
         const onReject = vi.fn();
         renderTurn({
@@ -340,6 +341,78 @@ describe("the approval card mount", () => {
         expect(props.onApprove).toBe(onApprove);
         expect(props.onReject).toBe(onReject);
         expect(props.pending).toBe(PENDING);
+    });
+
+    it("carries the card's edit payload to the host's onApprove, exactly", () => {
+        // The reason identity alone is no longer enough: the signature now takes
+        // the person's edits, and what reaches the host must be that object.
+        const onApprove = vi.fn();
+        renderTurn({
+            isCurrent: true,
+            isStreaming: false,
+            pendingApproval: { ...PENDING, arguments: { title: "Old" }, editable: ["title"] },
+            onApprove,
+            onReject: vi.fn(),
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+        fireEvent.change(screen.getByLabelText("Title"), { target: { value: "New" } });
+        fireEvent.click(screen.getByRole("button", { name: "Approve with your changes" }));
+        expect(onApprove).toHaveBeenCalledTimes(1);
+        expect(onApprove.mock.calls[0]).toEqual([{ title: "New" }]);
+        // And a plain approve still hands over nothing at all.
+        onApprove.mockClear();
+        fireEvent.click(screen.getByRole("button", { name: "Cancel edit" }));
+        fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+        expect(onApprove.mock.calls[0]).toEqual([]);
+    });
+
+    it("hands a refused attempt's sentences and draft to the card as they are, and reopens it", () => {
+        const approvalFieldErrors = { title: "Title can't be empty." };
+        const approvalEdits = { title: "" };
+        renderTurn({
+            isCurrent: true,
+            isStreaming: false,
+            pendingApproval: { ...PENDING, arguments: { title: "Old" }, editable: ["title"] },
+            approvalFieldErrors,
+            approvalEdits,
+            onApprove: vi.fn(),
+            onReject: vi.fn(),
+        });
+        const props = cardProps.seen[cardProps.seen.length - 1];
+        expect(props.fieldErrors).toBe(approvalFieldErrors);
+        expect(props.restoredEdits).toBe(approvalEdits);
+        expect((screen.getByLabelText("Title") as HTMLInputElement).value).toBe("");
+        expect(screen.getByText("Title can't be empty.")).toBeTruthy();
+    });
+
+    it("a new pause is a new card: an edit in progress does not leak into the next approval", () => {
+        const first = { ...PENDING, arguments: { title: "Old" }, editable: ["title"] };
+        const { rerender, props } = renderTurn({
+            isCurrent: true,
+            pendingApproval: first,
+            onApprove: vi.fn(),
+            onReject: vi.fn(),
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+        fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Typed" } });
+        rerender(
+            <CssVarsProvider>
+                <AgentTurn {...props} pendingApproval={{ ...first, approval_token: "ap-2" }} />
+            </CssVarsProvider>
+        );
+        // The card is back in read mode, on the new proposal.
+        expect(screen.queryByLabelText("Title")).toBeNull();
+        expect(screen.getByRole("button", { name: "Edit" })).toBeTruthy();
+    });
+
+    it("a tool with nothing editable gets the card it always had: no Edit button", () => {
+        renderTurn({
+            isCurrent: true,
+            pendingApproval: { ...PENDING, editable: [] },
+            onApprove: vi.fn(),
+            onReject: vi.fn(),
+        });
+        expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
     });
 
     it("names the tool in the host's language", () => {
