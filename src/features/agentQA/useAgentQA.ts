@@ -28,7 +28,7 @@ import {
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
-import { NOTE_SIDEBAR_TOOLS } from "./noteWriteTools";
+import { emitNoteChanged } from "./noteWriteTools";
 import {
     EMPTY_ASK_STATE,
     MAX_TURNS_IN_HISTORY,
@@ -218,12 +218,14 @@ export const useAgentQA = ({
                     tool_name,
                     summary,
                     note,
+                    note_folder,
                     duration_ms,
                 }: {
                     step: number;
                     tool_name: string;
                     summary: string;
                     note?: import("../../services/agentApi").ToolResultNoteRef;
+                    note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
                     duration_ms?: number;
                 }) => {
                     setAsk((prev) => {
@@ -244,14 +246,12 @@ export const useAgentQA = ({
                     // show in the note sidebar until a reload. Nudge
                     // useNoteManagement to refetch its meta, folder lists
                     // and Favorites. Mirrors the Spotlight overlay's handler.
-                    if (NOTE_SIDEBAR_TOOLS.has(tool_name)) {
-                        // detail carries the backend's note ref (id/type/
-                        // changed_fields) so useNoteManagement can also
-                        // push a body update into the note's Yjs doc;
-                        // undefined against older backends → meta-refetch
-                        // only, exactly the previous behavior.
-                        window.dispatchEvent(new CustomEvent("noteChanged", { detail: note }));
-                    }
+                    // The refs carry what changed (id/type/changed_fields,
+                    // `deleted`, a folder delete's ids) so useNoteManagement
+                    // can push a body into the note's Yjs doc or drop what
+                    // the server removed; undefined against older backends
+                    // → meta-refetch only, exactly the previous behavior.
+                    emitNoteChanged(tool_name, note, note_folder);
                     // Same idea for tasks/milestones: an approved agent
                     // write mutates rows outside the task UI's flows, so
                     // the table / diagram / milestone list would show

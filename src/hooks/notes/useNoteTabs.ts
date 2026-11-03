@@ -375,6 +375,12 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 }
             }
 
+            // Advance the refs now, not at the next render: closing several
+            // tabs in one go (an agent folder delete) would otherwise have
+            // every call start from the same stale list, and only the last
+            // close would survive.
+            tabsRef.current = next;
+            activeIdRef.current = nextActive;
             setTabs(next);
             setActiveTabId(nextActive);
             // Drop the closed tab from the live pool so its editor
