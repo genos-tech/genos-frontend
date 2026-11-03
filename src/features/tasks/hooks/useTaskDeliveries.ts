@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
@@ -14,6 +14,9 @@ import { loadTaskDeliveries } from "../services/loadTaskDeliveries";
  *   - the window regains focus, bypassing the cache — a PR's state moves
  *     on GitHub (merge, close), which no local event can signal, and
  *     "merge it, alt-tab back" is exactly when the row must be current.
+ *     Only the load a focus causes skips the cache: the nonce only grows, so
+ *     keying on `focusNonce > 0` made every later load (every task switch,
+ *     for the rest of the page's life) skip it as well.
  */
 export const useTaskDeliveries = (
     myself: UserProps,
@@ -22,6 +25,7 @@ export const useTaskDeliveries = (
     const { accessToken } = useAuth();
     const [deliveries, setDeliveries] = useState<TaskDeliveryProps[]>([]);
     const [focusNonce, setFocusNonce] = useState(0);
+    const handledFocusNonce = useRef(0);
 
     const numericId = Number(taskId);
     const resolvedId = Number.isFinite(numericId) && numericId > 0 ? numericId : null;
@@ -40,9 +44,11 @@ export const useTaskDeliveries = (
         // Cancelled-flag guard: a stale load must not clobber the
         // freshly-selected task's rows when clicks outrun fetches.
         let cancelled = false;
+        const causedByFocus = focusNonce !== handledFocusNonce.current;
+        handledFocusNonce.current = focusNonce;
         (async () => {
             const rows = await loadTaskDeliveries(myself, resolvedId, accessToken, {
-                forceRefresh: focusNonce > 0,
+                forceRefresh: causedByFocus,
             });
             if (!cancelled) setDeliveries(rows);
         })();
