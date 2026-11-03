@@ -24,45 +24,50 @@ export const useProjectTaskManagement = ({
     // `tableMilestoneFilterId`. usePM is constructed first precisely so
     // this is available here.
     // `currentTeamId` goes in too: a read that comes back after a team switch is
-    // dropped (see `fetchProjectTasks`).
-    const useTM = useTaskManagement(myself, accessToken, usePM.currentProject?.projectId, {
+    // dropped (see `fetchProjectTasks`). So does whether the open project is the
+    // user's own team's: that is read from the team's LIST, not from the open
+    // project object, because the paths that open a project (chat, boot, the
+    // URL) do not all carry `isExternal`.
+    const openProjectId = usePM.currentProject?.projectId;
+    const listedOpenProject =
+        openProjectId == null
+            ? undefined
+            : usePM.teamProjects.find((p) => p.projectId === openProjectId);
+    const isOwnTeamProject = listedOpenProject
+        ? listedOpenProject.isExternal !== true && usePM.currentProject?.isExternal !== true
+        : undefined;
+    const useTM = useTaskManagement(myself, accessToken, openProjectId, {
         currentTeamId,
+        isOwnTeamProject,
     });
     const useSM = useSprintMilestoneManagement(accessToken);
 
-    // Auto-fetch project tasks when:
-    //   (a) loadProjectsAndTasks has just finished writing the tasks for the
-    //       current project into IndexedDB (signaled by tsTasksLoadedToIDB), or
-    //   (b) currentProject changed but no signal has fired (e.g. setCurrentProject
-    //       was called directly from a chat bubble or thread navigation, without
-    //       going through loadProjectsAndTasks). In that case fall back to a
-    //       short delay so any in-flight IDB write has a chance to complete.
+    // Read the open project's rows from IndexedDB into the table.
     //
-    // Previously this effect always waited a fixed 1000ms before reading from
-    // IndexedDB, which raced loadProjectTasks on slower networks. When a team
-    // switch fired loadProjectTasks > 1s of API + IDB time, the fetch ran
-    // against an empty store, allTasks was set to [], and nothing re-read the
-    // store afterward — leaving the table empty until the user refreshed.
+    //   (a) The open project CHANGED (by id): read at once, so what is already
+    //       in IndexedDB paints without waiting for the network. This used to
+    //       wait for `tsTasksLoadedToIDB` or a 1 s timer, and ran for every new
+    //       project OBJECT: a switch sets that object several times (the click,
+    //       the tag reload, a record completed from the list), up to four
+    //       950-row reads per switch.
+    //   (b) The network refresh of the open project finished writing its rows
+    //       (`tsTasksLoadedToIDB`): read them again. A refresh of any OTHER
+    //       project (the agent's bulk write, a cross-project move) changed rows
+    //       this table does not show: no read.
+    const openId = usePM.currentProject?.projectId;
     useEffect(() => {
-        if (!usePM.currentProject || !usePM.currentProject.projectId) return;
-        const projectId = usePM.currentProject.projectId;
+        if (!openId) return;
+        void useTM.fetchProjectTasks(openId);
+        localStorage.setItem("lastProjectId", openId.toString());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openId]);
 
-        const runFetch = () => {
-            useTM.fetchProjectTasks(projectId);
-            localStorage.setItem("lastProjectId", projectId.toString());
-        };
-
-        // Signal matches the active project: IDB is freshly populated, fetch now.
-        if (usePM.tsTasksLoadedToIDB?.projectId === projectId) {
-            runFetch();
-            return;
-        }
-
-        // Fallback path: schedule a deferred fetch and clear it if the signal
-        // arrives first (which will re-trigger this effect via the dep below).
-        const timer = setTimeout(runFetch, 1000);
-        return () => clearTimeout(timer);
-    }, [usePM.currentProject, usePM.tsTasksLoadedToIDB]);
+    useEffect(() => {
+        const signal = usePM.tsTasksLoadedToIDB;
+        if (!signal || !openId || signal.projectId !== openId) return;
+        void useTM.fetchProjectTasks(openId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.tsTasksLoadedToIDB]);
 
     // Load sprint config + sprints + milestones whenever the active
     // project changes. Each loader is idempotent and replaces only its

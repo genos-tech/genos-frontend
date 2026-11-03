@@ -976,7 +976,7 @@ export const TaskHomeContent = ({
     const handleCreateTask = () => {
         useTM.handleCreateTask();
     };
-    const handleProjectChange = async (projectId: number) => {
+    const handleProjectChange = (projectId: number) => {
         const selectedProject = usePM.teamProjects?.find((p) => p.projectId === projectId);
         if (selectedProject && projectId !== usePM.currentProject?.projectId) {
             // An open task preview keeps `isTaskPreviewVisible=true`, which makes
@@ -986,14 +986,7 @@ export const TaskHomeContent = ({
             // (and the routing target) tracks the new project.
             useTM.closeTaskPreview();
             useTM.setAllTasks([]);
-            await usePM.loadProjectsAndTasks(projectId);
-            usePM.setCurrentProject({
-                projectId: selectedProject.projectId,
-                projectName: selectedProject.projectName,
-                projectTags: selectedProject.projectTags || [],
-                isPrivate: selectedProject.isPrivate,
-                systemUserId: selectedProject.systemUserId,
-            });
+            usePM.openProject(selectedProject);
         }
     };
 

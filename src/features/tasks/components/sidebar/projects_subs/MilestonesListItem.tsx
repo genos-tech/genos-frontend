@@ -124,7 +124,7 @@ export const MilestonesListItem = ({
     const pastSprintLabel = (g: { sprintId: number | null; sprintName: string }) =>
         g.sprintId == null ? t.tasks.sidebar.noSprint : g.sprintName;
 
-    const handleOpen = async (milestoneId: number) => {
+    const handleOpen = (milestoneId: number) => {
         // If the clicked milestone belongs to a different project than the
         // one currently in focus, switch projects first. MilestonePreviewInner
         // resolves the milestone via `useSM.projectMilestones[currentProject.projectId]`
@@ -142,14 +142,11 @@ export const MilestonesListItem = ({
             useTM.closeTaskPreview();
             useTM.setTableMilestoneFilter(null);
             useTM.setAllTasks([]);
-            await usePM.loadProjectsAndTasks(currentProjectId);
-            usePM.setCurrentProject({
-                projectId: target.projectId,
-                projectName: target.projectName,
-                projectTags: target.projectTags || [],
-                isPrivate: target.isPrivate,
-                systemUserId: target.systemUserId,
-            });
+            // Set in this click, not after the project list and the tasks
+            // have been awaited. The preview and the scope below are set in
+            // the same commit; the milestone is already in the sidebar's list,
+            // so the preview finds it.
+            usePM.openProject(target);
         }
 
         // Open the milestone preview AND scope the task table to this
