@@ -20,20 +20,34 @@
  */
 
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import axios, { InternalAxiosRequestConfig } from "axios";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
 import { useTaskManagement } from "../../hooks/tasks/useTaskManagement";
+import { authApi } from "../../services/api";
 import { UserProps } from "../../types/admin";
 import { TaskProps, TaskTableProps } from "../../types/tasks";
 
 vi.mock("../../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: vi.fn(async () => []),
 }));
-// Edits must not ask for task meta; the mock lets the test see that they don't.
-vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
+
+// Every request any axios instance makes lands here, whichever module makes it:
+// the test watches the wire, not one loader, so a request added back under any
+// name is seen. Every request is answered with an empty list.
+const requested: string[] = [];
+let originalAdapter: typeof axios.defaults.adapter;
+beforeEach(() => {
+    requested.length = 0;
+    originalAdapter = axios.defaults.adapter;
+    axios.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
+        requested.push(`${config.baseURL ?? ""}${config.url ?? ""}`);
+        return { data: [], status: 200, statusText: "OK", headers: {}, config };
+    };
+});
+
+// `/note/task/meta/` (task NOTES) is a different endpoint that ends the same way.
+const taskMetaRequests = () => requested.filter((url) => /(?<!\/note)\/task\/meta\//.test(url));
 
 const myself = {
     userId: "u1",
@@ -118,6 +132,7 @@ const setup = async (rows: TaskTableProps[] = [ROW]) => {
 };
 
 afterEach(() => {
+    axios.defaults.adapter = originalAdapter;
     vi.clearAllMocks();
 });
 
@@ -194,24 +209,47 @@ describe("useTaskManagement — syncPreviewEdit (preview→row)", () => {
         expect(result.current.allTasks[0].title).toBe("Second edit");
     });
 
-    it("never asks the server for task meta, for an open or for an edit", async () => {
+    it("never asks the server for task meta: not on mount, not for an open, not for an edit of any field it used to refetch for", async () => {
         const { result } = await setup();
 
         act(() => result.current.syncPreviewEdit(previewFor()));
         act(() => result.current.syncPreviewEdit(previewFor({ title: "Edited" })));
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor({ title: "Edited", status: { status: "WIP" } })
+            )
+        );
+        act(() => result.current.syncPreviewEdit(previewFor({ parentTaskId: 7 })));
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor({ parentTaskId: 7, project: { projectId: 11 } })
+            )
+        );
         await flush();
 
-        expect(loadTaskMeta).not.toHaveBeenCalled();
+        // Vacuity guard: the edits reached the row, so the requests below
+        // would have been sent had anything wanted to send them.
+        expect(result.current.allTasks[0].projectId).toBe(11);
+        expect(result.current.allTasks[0].parentTaskId).toBe("7");
+        expect(taskMetaRequests()).toEqual([]);
     });
 
-    it("leaves getTaskMeta available to the callers that still use it", async () => {
+    it("sees a /task/meta/ request when one is made, and not a /note/task/meta/ one (the watcher is not blind)", async () => {
+        await setup();
+
+        await authApi("token")!.get("/note/task/meta/?team_id=t1&user_id=u1");
+        expect(taskMetaRequests()).toEqual([]);
+
+        await authApi("token")!.get("/task/meta/?team_id=t1&user_id=u1");
+        expect(taskMetaRequests()).toHaveLength(1);
+    });
+
+    it("keeps no team-wide task-meta list, tree or loader (nothing reads them)", async () => {
         const { result } = await setup();
 
-        await act(async () => {
-            await result.current.getTaskMeta();
-        });
-
-        expect(loadTaskMeta).toHaveBeenCalledTimes(1);
+        for (const member of ["taskMeta", "setTaskMeta", "taskMetaTree", "getTaskMeta"]) {
+            expect(member in result.current, member).toBe(false);
+        }
     });
 
     it("keeps milestone fields the preview does not carry (the row's own survive the patch)", async () => {

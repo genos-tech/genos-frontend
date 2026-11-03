@@ -33,9 +33,6 @@ const loadSpecificTask = vi.fn();
 vi.mock("../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: (...args: unknown[]) => loadSpecificTask(...args),
 }));
-vi.mock("../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
 vi.mock("../features/tasks/services/addTask", () => ({
     addTask: vi.fn().mockResolvedValue(null),
 }));

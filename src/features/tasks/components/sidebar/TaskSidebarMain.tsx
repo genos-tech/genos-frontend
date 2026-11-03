@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -25,46 +23,63 @@ import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
 import { SprintBoardListItem } from "./SprintBoardListItem";
 import { TaskTableListItem } from "./TaskTableListItem";
+import { SidebarSlices, useSidebarSlices } from "./useSidebarSlices";
 
 // A batch of status changes (several table edits, a run of drags) reloads
 // Recents once.
 const RECENTS_RELOAD_DEBOUNCE_MS = 500;
 
+type SetOpenJoinProject = (value: {
+    flag: boolean;
+    projectId: number;
+    projectName: string;
+    isPrivate: boolean;
+    systemUserId: string;
+}) => void;
+
 type TaskSidebarProps = {
     myself: UserProps;
-    // Forwarded down to MilestonesListItem so its assignee avatars
-    // can use AvatarWithStatus (which surfaces a UserProfile modal
-    // and online-pulse dot just like the rest of the app).
-    setMyself: (value: UserProps) => void;
-    setOpenJoinProject: (value: {
-        flag: boolean;
-        projectId: number;
-        projectName: string;
-        isPrivate: boolean;
-        systemUserId: string;
-    }) => void;
+    setOpenJoinProject: SetOpenJoinProject;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     useSM: SprintMilestoneManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
-    socket: Socket | null;
 };
 
+/**
+ * The task sidebar, as the two task pages (desktop and mobile) mount it: with
+ * the whole managers. It cuts them into the slices each part of the sidebar
+ * reads and hands only those to the memoized body, so an `AppBody` render that
+ * changed none of those values renders nothing below this line (MIP-971).
+ * `AppBody` renders about a dozen times per task click, and every manager is a
+ * new object on every one of those renders.
+ *
+ * `setMyself`, `socket` and `useUISM` are not props any more: nothing under the
+ * sidebar read them. The assignee avatars it renders take them from the avatar
+ * context.
+ */
 export const TaskSidebar = (props: TaskSidebarProps) => {
-    const {
-        myself,
-        setMyself,
-        setOpenJoinProject,
-        usePM,
-        useTM,
-        useSM,
-        useTEM,
-        useCM,
-        useUISM,
-        socket,
-    } = props;
+    const { myself, setOpenJoinProject, usePM, useTM, useSM, useTEM, useCM } = props;
+    const slices = useSidebarSlices({ usePM, useTM, useSM, useTEM, useCM });
+    return (
+        <TaskSidebarBody myself={myself} setOpenJoinProject={setOpenJoinProject} slices={slices} />
+    );
+};
+
+type TaskSidebarBodyProps = {
+    myself: UserProps;
+    setOpenJoinProject: SetOpenJoinProject;
+    slices: SidebarSlices;
+};
+
+const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProps) {
+    const { myself, setOpenJoinProject, slices } = props;
+    // What this component itself reads. The other slices belong to the children
+    // they are handed to: the task id the user has open is in this one and in
+    // Recents' only, so the project / milestone tree does not re-render when it
+    // changes.
+    const { tm: useTM, pm: usePM } = slices.shell;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -231,7 +246,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     accessToken={accessToken}
                     myself={myself}
                     teamTaskSearchOptions={teamTaskSearchOptions}
-                    useTM={useTM}
+                    useTM={slices.search.tm}
                 />
             </Box>
 
@@ -352,8 +367,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     {t.tasks.sidebar.viewsHeader}
                                 </Typography>
                             </Box>
-                            <TaskTableListItem useTM={useTM} />
-                            <SprintBoardListItem useTM={useTM} />
+                            <TaskTableListItem useTM={slices.tableView.tm} />
+                            <SprintBoardListItem useTM={slices.boardView.tm} />
                         </>
                     )}
 
@@ -373,7 +388,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         </Typography>
                     </Box>
 
-                    <RecentsListItem recentTasks={recentTasks} usePM={usePM} useTM={useTM} />
+                    <RecentsListItem
+                        recentTasks={recentTasks}
+                        usePM={slices.recents.pm}
+                        useTM={slices.recents.tm}
+                    />
 
                     {/* Section Header - Projects */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
@@ -393,15 +412,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
                     <ProjectsListItem
                         myself={myself}
-                        setMyself={setMyself}
                         setOpenJoinProject={setOpenJoinProject}
-                        socket={socket}
-                        useCM={useCM}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
+                        useCM={slices.tree.cm}
+                        usePM={slices.tree.pm}
+                        useSM={slices.tree.sm}
+                        useTEM={slices.tree.tem}
+                        useTM={slices.tree.tm}
                     />
                 </List>
             </Box>
@@ -429,4 +445,4 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             </Box>
         </Sheet>
     );
-};
+});

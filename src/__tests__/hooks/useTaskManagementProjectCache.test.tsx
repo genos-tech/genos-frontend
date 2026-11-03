@@ -29,9 +29,6 @@ vi.mock("../../features/tasks/services/popSpecificProjectTasks", () => ({
 vi.mock("../../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: vi.fn(async () => []),
 }));
-vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
 
 const read = vi.mocked(popSpecificProjectTasks);
 

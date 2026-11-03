@@ -184,14 +184,14 @@ describe("loadSpecificTask — in-flight dedupe", () => {
         expect(apiGet).toHaveBeenCalledTimes(1);
     });
 
-    it("a failed load resolves undefined for every sharer, and the next call retries", async () => {
+    it("a failed load resolves an empty list for every sharer, and the next call retries", async () => {
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         const gate = deferred<{ data: unknown }>();
         apiGet.mockImplementationOnce(() => gate.promise);
 
         const calls = [loadSpecificTask(me, 10, 7, "tok"), loadSpecificTask(me, 10, 7, "tok")];
         gate.reject(new Error("boom"));
-        expect(await Promise.all(calls)).toEqual([undefined, undefined]);
+        expect(await Promise.all(calls)).toEqual([[], []]);
 
         const retry = await loadSpecificTask(me, 10, 7, "tok");
         expect(retry[0].title).toBe("T");

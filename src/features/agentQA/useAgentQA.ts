@@ -2,12 +2,20 @@
 // ask state, the abort controllers, and the stream-handler wiring
 // for /api/v2/agent/ask/ + /api/v2/agent/decide/.
 //
-// Policy-free by design — the hook knows nothing about threads, notes,
-// or any other entity context. Callers (useThreadAsk, useNoteAsk, etc.)
-// inject per-call payload extras via `buildAskExtras` and seed/replace
-// the hook's state via `reset` when their surrounding context changes.
+// This is the ONE ask/answer state machine: the thread ask, the note ask
+// and Spotlight (the overlay and the Genos page) all run on it. Spotlight
+// is a thin wrapper (`features/spotlight/useSpotlight`) that adds only what
+// is Spotlight's own: the combined search+ask input, filters, History,
+// localStorage persistence and the AI-answers setting.
 //
-// Invariants (mirrors useSpotlight's Phase-12 contract):
+// Policy-free by design — the hook knows nothing about threads, notes,
+// Spotlight or any other entity context. Callers inject per-call payload
+// extras via `buildAskExtras`, seed/replace the hook's state via `reset`
+// when their surrounding context changes, and opt into the few behaviours
+// that differ per surface through the options on `UseAgentQAArgs`
+// (`noTeamError`, `resumeVisibleSession`, `onRunComplete`).
+//
+// Invariants (the Phase-12 contract, formerly duplicated in useSpotlight):
 //   - Each ask gets a fresh monotonic `turnId`. Stream handlers gate
 //     on `prev.turnId === askedTurnId` so a late event from a superseded
 //     turn can't corrupt the current one.
@@ -37,16 +45,42 @@ import {
     type AgentRunResult,
     type AskState,
     type CompletedTurn,
+    type StaticAnswer,
     type ToolEvent,
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
+
+// Soft-capped append: the UI keeps the last MAX_TURNS_IN_HISTORY turns.
+const appendTurn = (turns: CompletedTurn[], turn: CompletedTurn): CompletedTurn[] => {
+    const next = [...turns, turn];
+    return next.length > MAX_TURNS_IN_HISTORY
+        ? next.slice(next.length - MAX_TURNS_IN_HISTORY)
+        : next;
+};
+
+// Immutable snapshot of the live turn. Carries the structured mentions so
+// "Ask again" on ANY promoted turn (finished, failed or cancelled) re-sends
+// the same @/# references.
+const snapshotTurn = (ask: AskState): CompletedTurn => ({
+    id: ask.turnId,
+    askedQuery: ask.askedQuery,
+    answer: ask.answer,
+    answerSources: ask.answerSources,
+    toolEvents: ask.toolEvents,
+    askError: ask.askError,
+    runId: ask.runId ?? null,
+    mentions: ask.askedMentions,
+    elapsedMs: ask.elapsedMs ?? null,
+});
 
 export const useAgentQA = ({
     accessToken,
     teamId,
     buildAskExtras,
     onRunComplete,
+    noTeamError,
+    resumeVisibleSession = false,
 }: UseAgentQAArgs): UseAgentQAReturn => {
     const [query, setQuery] = useState("");
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
@@ -113,23 +147,8 @@ export const useAgentQA = ({
                 prev.answerSources.length > 0 ||
                 Boolean(prev.askError);
             if (hasContent) {
-                const snapshot: CompletedTurn = {
-                    id: prev.turnId,
-                    askedQuery: prev.askedQuery,
-                    answer: prev.answer,
-                    answerSources: prev.answerSources,
-                    toolEvents: prev.toolEvents,
-                    askError: prev.askError,
-                    runId: prev.runId,
-                    mentions: prev.askedMentions,
-                    elapsedMs: prev.elapsedMs ?? null,
-                };
-                setTurns((prevTurns) => {
-                    const next = [...prevTurns, snapshot];
-                    return next.length > MAX_TURNS_IN_HISTORY
-                        ? next.slice(next.length - MAX_TURNS_IN_HISTORY)
-                        : next;
-                });
+                const snapshot = snapshotTurn(prev);
+                setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
             }
             return {
                 ...EMPTY_ASK_STATE,
@@ -151,6 +170,11 @@ export const useAgentQA = ({
                     setAsk((prev) =>
                         stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
                     );
+                    // Mirror the count for `onRunComplete`: `onDone` lands before
+                    // this state update is readable from a handler closure.
+                    if (liveRunRef.current?.turnId === askedTurnId) {
+                        liveRunRef.current.sourceCount = sources.length;
+                    }
                 },
                 onDelta: (text: string) => {
                     setAsk((prev) =>
@@ -175,7 +199,10 @@ export const useAgentQA = ({
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);
-                    finishRun(askedTurnId, { runId: runId ?? null });
+                    finishRun(askedTurnId, {
+                        runId: runId ?? null,
+                        elapsedMs: typeof elapsedMs === "number" ? elapsedMs : null,
+                    });
                 },
                 onError: (message: string) => {
                     setAsk((prev) =>
@@ -324,14 +351,36 @@ export const useAgentQA = ({
     );
 
     // ---- Send a question. ----
+    //
+    // Returns true when a request was dispatched (so a caller that owns its
+    // own input draft knows whether to clear it), false when the ask was
+    // ignored or answered locally (empty text, a run already in flight, no
+    // team).
+    //
+    // `meta` is opaque to the hook: it rides along to `onRunComplete`
+    // (`AgentRunResult.meta`) so a surface can tag an ask with something the
+    // terminal callback needs (Spotlight: where the question came from).
     const onAsk = useCallback(
-        (overrideQuery?: string, mentions?: AgentMentionRef[]) => {
+        (overrideQuery?: string, mentions?: AgentMentionRef[], meta?: unknown): boolean => {
             // `overrideQuery` wins when supplied (Retry on a past turn);
             // otherwise the live input is the source.
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
-            if (!trimmed) return;
-            if (!teamId) return;
-            if (ask.isStreaming || ask.pendingApproval !== null) return;
+            if (!trimmed) return false;
+            if (ask.isStreaming || ask.pendingApproval !== null) return false;
+            if (!teamId) {
+                // Surfaces that can render the problem (Spotlight) pass the
+                // message and see it as the turn; the others stay silent.
+                if (noTeamError) {
+                    setAsk({
+                        ...EMPTY_ASK_STATE,
+                        sessionId: ask.sessionId,
+                        turnId: ask.turnId + 1,
+                        askedQuery: trimmed,
+                        askError: noTeamError,
+                    });
+                }
+                return false;
+            }
 
             askAbortRef.current?.abort();
             const controller = new AbortController();
@@ -367,6 +416,9 @@ export const useAgentQA = ({
                 answer: "",
                 runId: null,
                 error: null,
+                elapsedMs: null,
+                sourceCount: 0,
+                meta,
             };
 
             // Consume the "new conversation" flag (set by clearConversation).
@@ -382,7 +434,15 @@ export const useAgentQA = ({
                 teamId,
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
-                newConversation,
+                // Only on the wire when set: the field is absent, not `false`.
+                ...(newConversation ? { newConversation } : {}),
+                // Continuing a conversation the user can SEE (completed turns
+                // under a live session) → tell the backend so an idle-expired
+                // session is resumed rather than silently forked. First-ever
+                // asks omit it.
+                ...(resumeVisibleSession && turns.length > 0 && ask.sessionId
+                    ? { resume: true }
+                    : {}),
                 signal: controller.signal,
                 ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
                 ...extras,
@@ -391,6 +451,7 @@ export const useAgentQA = ({
 
             // Clear the input so it's ready for the next question.
             setQuery("");
+            return true;
         },
         [
             query,
@@ -398,53 +459,65 @@ export const useAgentQA = ({
             accessToken,
             buildAskExtras,
             buildStreamHandlers,
+            noTeamError,
+            resumeVisibleSession,
             ask.isStreaming,
             ask.pendingApproval,
             ask.turnId,
             ask.sessionId,
+            turns.length,
         ]
     );
 
     // ---- Approve / Reject handlers for the pending write tool. ----
     //
+    // The ONE implementation of the decision: the resume request is
+    // started here, never from inside a `setAsk` updater (updaters must be
+    // pure — StrictMode double-invokes them, which would have sent two
+    // decisions for one click).
+    //
     // `decide` does NOT bump `turnId`. Approve/reject is a continuation
     // of the same turn — the resumed stream's `onDone` is what promotes
     // it into history.
+    //
+    // The consumed approval token is remembered because the closure below
+    // only sees the pending approval as of the last render: two clicks in
+    // the same tick would both read it. (The old in-updater version got
+    // this dedupe for free from the updater queue.)
+    const decidedApprovalTokenRef = useRef<string | null>(null);
     const decide = useCallback(
         (decision: "approve" | "reject") => {
-            setAsk((prev) => {
-                if (!prev.pendingApproval) return prev;
-                const payload = prev.pendingApproval;
-                const askedTurnId = prev.turnId;
+            const payload = ask.pendingApproval;
+            if (!payload) return;
+            if (decidedApprovalTokenRef.current === payload.approval_token) return;
+            decidedApprovalTokenRef.current = payload.approval_token;
+            const askedTurnId = ask.turnId;
 
-                // Flip back to streaming; the resumed stream's
-                // tool_call_start / result / error events fill in the
-                // pending row (deduped via buildStreamHandlers).
-                const next: AskState = {
-                    ...prev,
-                    pendingApproval: null,
-                    isStreaming: true,
-                };
+            // Reuse the abort handle — the new request supersedes
+            // anything older.
+            askAbortRef.current?.abort();
+            const controller = new AbortController();
+            askAbortRef.current = controller;
 
-                // Reuse the abort handle — the new request supersedes
-                // anything older.
-                askAbortRef.current?.abort();
-                const controller = new AbortController();
-                askAbortRef.current = controller;
+            // Flip back to streaming; the resumed stream's
+            // tool_call_start / result / error events fill in the
+            // pending row (deduped via buildStreamHandlers).
+            setAsk((prev) =>
+                prev.turnId === askedTurnId && prev.pendingApproval
+                    ? { ...prev, pendingApproval: null, isStreaming: true }
+                    : prev
+            );
 
-                void decideAgent({
-                    runId: payload.run_id,
-                    approvalToken: payload.approval_token,
-                    decision,
-                    accessToken,
-                    signal: controller.signal,
-                    ...buildStreamHandlers(askedTurnId),
-                });
-
-                return next;
+            void decideAgent({
+                runId: payload.run_id,
+                approvalToken: payload.approval_token,
+                decision,
+                accessToken,
+                signal: controller.signal,
+                ...buildStreamHandlers(askedTurnId),
             });
         },
-        [accessToken, buildStreamHandlers]
+        [ask.pendingApproval, ask.turnId, accessToken, buildStreamHandlers]
     );
 
     const onApprove = useCallback(() => decide("approve"), [decide]);
@@ -468,26 +541,16 @@ export const useAgentQA = ({
             const turnId = prev.turnId;
             if (!promotedTurnIdsRef.current.has(turnId)) {
                 promotedTurnIdsRef.current.add(turnId);
+                // Keep whatever partial content arrived before cancel. The
+                // snapshot carries the mentions, so "Ask again" on a cancelled
+                // turn re-sends the same @/# references.
                 const hasContent =
                     Boolean(prev.answer) ||
                     prev.toolEvents.length > 0 ||
                     prev.answerSources.length > 0;
                 if (hasContent) {
-                    const snapshot: CompletedTurn = {
-                        id: turnId,
-                        askedQuery: prev.askedQuery,
-                        answer: prev.answer,
-                        answerSources: prev.answerSources,
-                        toolEvents: prev.toolEvents,
-                        askError: prev.askError,
-                        runId: prev.runId,
-                    };
-                    setTurns((prevTurns) => {
-                        const next = [...prevTurns, snapshot];
-                        return next.length > MAX_TURNS_IN_HISTORY
-                            ? next.slice(next.length - MAX_TURNS_IN_HISTORY)
-                            : next;
-                    });
+                    const snapshot = snapshotTurn(prev);
+                    setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
                 }
             }
             return { ...EMPTY_ASK_STATE, sessionId: prev.sessionId, turnId: prev.turnId };
@@ -562,6 +625,29 @@ export const useAgentQA = ({
         });
     }, []);
 
+    // ---- Show a finished answer that did not come from a stream. ----
+    // Spotlight's "Previous answer" cards (a collected answer returned by
+    // search) render through the live-answer renderer: no request, nothing
+    // for the model to see. Resets like a new conversation first, so the
+    // answer stands alone instead of trailing an unrelated one; the answer
+    // then sits in the live slot (never promoted into `turns`) until the
+    // next ask replaces it. `turnId` keeps counting up so a straggler from
+    // the aborted turn can never match it.
+    const showStaticAnswer = useCallback((answer: StaticAnswer) => {
+        askAbortRef.current?.abort();
+        askAbortRef.current = null;
+        liveRunRef.current = null;
+        promotedTurnIdsRef.current.clear();
+        setTurns([]);
+        setAsk((prev) => ({
+            ...EMPTY_ASK_STATE,
+            turnId: prev.turnId + 1,
+            askedQuery: answer.askedQuery,
+            answer: answer.answer,
+            answerSources: answer.answerSources,
+        }));
+    }, []);
+
     // ---- Record 👍/👎 on a finished turn (F1). ----
     // Fire-and-forget: the answer is already shown, so a feedback POST
     // failing must never surface to the user. The component owns the
@@ -586,6 +672,7 @@ export const useAgentQA = ({
         onReject,
         clearConversation,
         reset,
+        showStaticAnswer,
         submitFeedback,
     };
 };

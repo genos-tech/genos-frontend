@@ -4,12 +4,10 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
-    useMemo,
     useRef,
     useState,
 } from "react";
 
-import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
 import {
     createTaskDependency,
     CreateTaskDependencyResult,
@@ -22,7 +20,6 @@ import {
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
-import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
 import {
     NO_ROWS,
@@ -36,14 +33,12 @@ import { UserProps } from "../../types/admin";
 import {
     TaskCommentProps,
     TaskDependencies,
-    TaskMetaProps,
     TaskMetaTreeNode,
     TaskProps,
     TaskTableProps,
     TaskTypesProps,
 } from "../../types/tasks";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { initCurrentTaskChain } from "./sidebar";
 
 // Draft snapshot of an in-progress CreateTaskForm. Persisted to
 // localStorage in `setTaskDraft` below so navigating away from the
@@ -293,11 +288,6 @@ export interface TaskManagementState {
     isLoadingTasks: boolean;
     setIsLoadingTasks: (loading: boolean) => void;
 
-    // Task metadata. `taskMetaTree` is derived from `taskMeta` via useMemo;
-    // callers that need to clear the tree should clear `taskMeta` instead.
-    taskMeta: TaskMetaProps[];
-    setTaskMeta: Dispatch<SetStateAction<TaskMetaProps[]>>;
-    taskMetaTree: TaskMetaTreeNode[];
     currentTaskChain: TaskMetaTreeNode[];
     setCurrentTaskChain: (chain: TaskMetaTreeNode[]) => void;
 
@@ -328,7 +318,6 @@ export interface TaskManagementState {
     loadTask: (projectId: number, taskId: number) => Promise<void>;
     loadUpdatedTask: (projectId: number) => Promise<void>;
     initializeTaskStates: () => void;
-    getTaskMeta: () => Promise<void>;
     handleCreateTask: () => void;
     fetchProjectTasks: (projectId: number) => Promise<void>;
     // The in-memory copies of the last projects' rows (see `allTasks`). Drop
@@ -754,12 +743,6 @@ export const useTaskManagement = (
         return () => clearTimeout(timer);
     }, [isLoadingTasks]);
 
-    // Task metadata
-    const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
-    // Derived: same-render compute via useMemo. Previously a `useState` +
-    // `useEffect(() => setTaskMetaTree(buildTaskTree(taskMeta)), [taskMeta])`
-    // pair, which cost an extra commit per meta update.
-    const taskMetaTree = useMemo<TaskMetaTreeNode[]>(() => buildTaskTree(taskMeta), [taskMeta]);
     const [currentTaskChain, setCurrentTaskChain] = useState<TaskMetaTreeNode[]>([]);
 
     // Task visibility
@@ -769,8 +752,6 @@ export const useTaskManagement = (
     const initializeTaskStates = () => {
         setIsNewTaskCreated(false);
         setAllTasks([]);
-        // Clear `taskMeta`; `taskMetaTree` is derived and will refresh.
-        setTaskMeta([]);
         setCurrentTaskChain([]);
         setIsTaskVisibleInNote(false);
     };
@@ -902,13 +883,6 @@ export const useTaskManagement = (
                 });
             }
             setIsNewTaskCreated(false);
-        }
-    };
-
-    const getTaskMeta = async () => {
-        const loadedTaskMeta: TaskMetaProps[] = await loadTaskMeta(myself, accessToken);
-        if (loadedTaskMeta.length > 0) {
-            setTaskMeta(loadedTaskMeta);
         }
     };
 
@@ -1107,15 +1081,6 @@ export const useTaskManagement = (
         }
     };
 
-    initCurrentTaskChain({
-        taskMeta: taskMeta,
-        currentTaskChain: currentTaskChain,
-        setCurrentTaskChain: setCurrentTaskChain,
-    });
-
-    // taskMetaTree is derived from taskMeta via useMemo above; the redundant
-    // effect that mirrored it into local state has been removed.
-
     // Push an edited task onto its row in `allTasks`. We spread the existing
     // row first so milestone-only fields (`isMilestone`, `milestoneId`,
     // `sprintId`) — which the edited copy doesn't always carry — survive the
@@ -1268,10 +1233,6 @@ export const useTaskManagement = (
         isLoadingTasks,
         setIsLoadingTasks,
 
-        // Task metadata (taskMetaTree derived from taskMeta via useMemo)
-        setTaskMeta,
-        taskMeta,
-        taskMetaTree,
         currentTaskChain,
         setCurrentTaskChain,
 
@@ -1290,7 +1251,6 @@ export const useTaskManagement = (
         loadTask,
         loadUpdatedTask,
         initializeTaskStates,
-        getTaskMeta,
         handleCreateTask,
         fetchProjectTasks,
         dropCachedProjectRows,

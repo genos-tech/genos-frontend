@@ -1,25 +1,26 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { groupRecentTasks, RecentTaskGroup } from "../../utils/groupRecentTasks";
 import { Toggler } from "./common";
 import { RecentProjectGroup } from "./RecentProjectGroup";
+import type { SidebarRecentsPM, SidebarRecentsTM } from "./useSidebarSlices";
 
+// The managers arrive as slices (MIP-971): this list needs the open task id (for
+// the highlight) and three setters, nothing else.
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
-    usePM: ProjectManagementState;
-    useTM: TaskManagementState;
+    usePM: SidebarRecentsPM;
+    useTM: SidebarRecentsTM;
 };
 
-export const RecentsListItem = (props: RecentsListItemProps) => {
+export const RecentsListItem = memo(function RecentsListItem(props: RecentsListItemProps) {
     const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -124,4 +125,4 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
             </Toggler>
         </ListItem>
     );
-};
+});

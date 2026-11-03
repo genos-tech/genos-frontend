@@ -243,8 +243,15 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     // comments+notes loads (attachments arrive synchronously with the
     // task). Subsequent comment / note / attachment changes don't move
     // the user — only the user's tab click does (TaskTabBlock onChange).
+    //
+    // Keyed on the task being SHOWN (`useTM.currentPreviewTask`), the id the
+    // comment and note loaders are keyed on. It used to be keyed on
+    // `taskEditState.currentTaskId`, a copy that lags behind by an effect: the
+    // loaders captured `markCommentsLoaded` for the OLD id, the answer for the
+    // new task then failed the hook's "is this still my entity" check, and the
+    // starting tab was never re-picked after a task switch (MIP-988).
     const { tabIndex, setTabIndex, markCommentsLoaded, markNotesLoaded, reportFileCount } =
-        useInitialTabIndex(taskEditState.currentTaskId);
+        useInitialTabIndex(useTM.currentPreviewTask?.id);
 
     // Set the current preview task when the component is mounted
     useEffect(() => {

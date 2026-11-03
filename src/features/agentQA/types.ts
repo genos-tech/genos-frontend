@@ -1,10 +1,8 @@
 // Shared agent-Q&A types + constants.
 //
 // These were previously inlined in `features/spotlight/useSpotlight.ts`.
-// They now live here so `useAgentQA` (this package) and the per-entity
-// wrappers (threadAsk, future noteAsk variants) all reference one source
-// of truth. Spotlight still imports them from here pending the stretch
-// goal of migrating its Q&A loop onto `useAgentQA`.
+// They live here so `useAgentQA` and every surface built on it (thread
+// ask, note ask, Spotlight) reference one source of truth.
 
 import type { AskAgentArgs, PendingApprovalPayload } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
@@ -54,8 +52,7 @@ export interface AskState {
     turnId: number;
     // AgentRun id returned on the `done` event. Carried so the completed
     // turn can attach 👍/👎 feedback (F1). Null/absent until the turn
-    // finishes; optional so the un-migrated Spotlight loop (which reuses
-    // this type) compiles without threading it.
+    // finishes.
     runId?: string | null;
     // Total server-side wall time of the stream that finished this turn,
     // from the `done` event's `elapsed_ms`. Null/absent until then (and
@@ -78,8 +75,7 @@ export interface CompletedTurn {
     toolEvents: ToolEvent[];
     askError: string | null;
     // AgentRun id for this turn (F1 feedback target). Absent for turns
-    // restored from older snapshots / cancelled before `done`. Optional so
-    // the un-migrated Spotlight loop (which reuses this type) compiles.
+    // restored from older snapshots / cancelled before `done`.
     runId?: string | null;
     // The structured mentions this turn was asked with — Retry re-sends
     // them verbatim (labels are advisory; the server re-resolves + ACL-
@@ -110,7 +106,7 @@ export const EMPTY_ASK_STATE: AskState = {
 };
 
 // i18n labels for the conversation / input / approval / action UI. Each
-// surface (threadAsk, Spotlight when migrated, future noteAsk variants)
+// surface (threadAsk, noteAsk, Spotlight)
 // builds this from its own i18n namespace and passes it as a prop —
 // agentQA components stay string-free and locale-agnostic.
 export interface AgentQALabels {
@@ -164,6 +160,22 @@ export interface AgentRunResult {
     answer: string;
     runId: string | null;
     error: string | null;
+    // The stream's total server-side wall time (`done.elapsed_ms`); null on
+    // an error and against older backends.
+    elapsedMs: number | null;
+    // How many citation sources the answer came with. Mirrored from the
+    // `sources` event because the state that holds them is not readable from
+    // a stream handler's closure.
+    sourceCount: number;
+    // Whatever the surface passed as `onAsk`'s third argument, untouched.
+    meta?: unknown;
+}
+
+// A finished answer shown without a stream (see `showStaticAnswer`).
+export interface StaticAnswer {
+    askedQuery: string;
+    answer: string;
+    answerSources: SpotlightResult[];
 }
 
 export interface UseAgentQAArgs {
@@ -183,6 +195,19 @@ export interface UseAgentQAArgs {
     // policy-free: whether a finished run is worth interrupting someone
     // over is the caller's call, not this state machine's.
     onRunComplete?: (result: AgentRunResult) => void;
+    // What an ask with no team does. Unset (thread / note): it is ignored
+    // silently, as those modals only open inside a team. Set (Spotlight,
+    // which is reachable before a team is chosen): the message becomes the
+    // turn's error so the user sees why nothing happened. Either way no
+    // request is sent and `onAsk` returns false.
+    noTeamError?: string;
+    // Continue the conversation the user can SEE: an ask that follows
+    // completed turns under a live session sends `resume: true`, so a session
+    // that idled out server-side is reused (within history retention) rather
+    // than silently forked. Spotlight and the Genos page opt in — they
+    // restore transcripts from history and localStorage; the thread / note
+    // modals seed their session from the server and don't need it.
+    resumeVisibleSession?: boolean;
 }
 
 export interface UseAgentQAReturn {
@@ -194,9 +219,10 @@ export interface UseAgentQAReturn {
     // `overrideQuery` lets a past turn's "Ask again" button re-fire its
     // original question without stomping the live input. `mentions` are
     // the structured @/# refs the input's picker collected for the live
-    // query (retry passes none — the tokens remain in the text, but the
-    // resolved ids aren't stored on completed turns in v1).
-    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[]) => void;
+    // query (retry re-sends the ones stored on the turn). `meta` is handed
+    // back untouched as `AgentRunResult.meta`. Returns true when a request
+    // was dispatched.
+    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[], meta?: unknown) => boolean;
     onCancel: () => void;
     onApprove: () => void;
     onReject: () => void;
@@ -211,6 +237,9 @@ export interface UseAgentQAReturn {
     // Lets callers do partial resets without accidentally wiping the
     // other half.
     reset: (args: { sessionId?: string | null; turns?: CompletedTurn[] }) => void;
+    // Show a finished answer that did not come from a stream, in place of
+    // the conversation (Spotlight's collected "Previous answer" cards).
+    showStaticAnswer: (answer: StaticAnswer) => void;
     // Record 👍/👎 on a finished turn (F1). `rating`: 1 = up, -1 = down,
     // 0 = cleared. Fire-and-forget; failures are swallowed (feedback is
     // best-effort telemetry, never blocks the UI).
