@@ -34,9 +34,6 @@ vi.mock("../../features/tasks/services/loadTeamProjects", () => ({
 vi.mock("../../features/tasks/services/loadProjectTasks", () => ({
     loadProjectTasks: vi.fn(async () => []),
 }));
-vi.mock("../../features/notes/task-notes/services/loadTaskMeta", () => ({
-    loadTaskMeta: vi.fn(async () => []),
-}));
 vi.mock("../../hooks/tasks/useSprintMilestoneManagement", () => {
     const stub = {
         loadConfigForProject: vi.fn(async () => undefined),
