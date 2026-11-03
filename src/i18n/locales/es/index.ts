@@ -712,7 +712,7 @@ export const es: DeepPartial<Messages> = {
                 toggleFailed: "No se pudo cambiar este ajuste. Inténtalo de nuevo.",
                 offTitle: "¿Dejar de compartir tus respuestas?",
                 offBody:
-                    "Tus respuestas actuales se quitarán de tus equipos de inmediato y las nuevas no se compartirán. Las conversaciones en sí se conservan. Si vuelves a activar el uso compartido más adelante, solo afectará a las respuestas a partir de ese momento; es posible que las anteriores no vuelvan.",
+                    "Tus respuestas actuales se quitarán de tus equipos de inmediato y las nuevas no se compartirán. Las conversaciones en sí se conservan. Si vuelves a activar el uso compartido más adelante, tus respuestas recientes se compartirán de nuevo poco después. Las respuestas que dejaste de compartir una a una seguirán sin compartirse.",
                 offConfirm: "Desactivar el uso compartido",
                 loading: "Cargando respuestas compartidas…",
                 loadFailed: "No se pudieron cargar tus respuestas compartidas.",
