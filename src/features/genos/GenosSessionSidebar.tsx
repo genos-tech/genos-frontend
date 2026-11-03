@@ -29,6 +29,10 @@ import { relativeTimeLabel } from "../spotlight/SpotlightContent";
 interface Props {
     sessions: AgentSessionSummary[];
     isLoading: boolean;
+    // The last load failed. With rows showing they are simply kept; with none,
+    // the sidebar says it couldn't load (and offers `onRetry`) instead of
+    // claiming there are no conversations.
+    loadFailed: boolean;
     // The live conversation's session id (ask.sessionId) — highlights
     // its row. Null when the current conversation has no session yet.
     activeSessionId: string | null;
@@ -43,11 +47,13 @@ interface Props {
     onTogglePin: (sessionId: string) => void;
     onSelectSession: (sessionId: string) => void;
     onNewChat: () => void;
+    onRetry: () => void;
 }
 
 export const GenosSessionSidebar = ({
     sessions,
     isLoading,
+    loadFailed,
     activeSessionId,
     resumeError,
     search,
@@ -56,6 +62,7 @@ export const GenosSessionSidebar = ({
     onTogglePin,
     onSelectSession,
     onNewChat,
+    onRetry,
 }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -339,7 +346,32 @@ export const GenosSessionSidebar = ({
                     </Box>
                 )}
 
-                {!isLoading && sessions.length === 0 && (
+                {/* A failed load is neither of the messages below: "no
+                    conversations yet" / "no matches" would be a claim the
+                    server never made. Gated on `!isLoading` because the host
+                    folds a resume-in-progress into it, and a retry shows the
+                    spinner above while it runs. */}
+                {!isLoading && sessions.length === 0 && loadFailed && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            gap: 1,
+                            px: 0.5,
+                            py: 1,
+                        }}
+                    >
+                        <Typography level="body-sm" sx={{ color: "danger.500" }}>
+                            {t.genos.sidebar.loadFailed}
+                        </Typography>
+                        <Button color="neutral" size="sm" variant="outlined" onClick={onRetry}>
+                            {t.common.actions.retry}
+                        </Button>
+                    </Box>
+                )}
+
+                {!isLoading && sessions.length === 0 && !loadFailed && (
                     <Typography level="body-sm" sx={{ opacity: 0.7, px: 0.5, py: 1 }}>
                         {/* An empty result while searching isn't an empty
                             history — saying "ask Genos anything to start

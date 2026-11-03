@@ -193,6 +193,9 @@ export interface SpotlightContentProps {
     historySessions: AgentSessionSummary[];
     historyDetail: AgentSessionDetail | null;
     historyIsLoading: boolean;
+    // The list failed to load (not "is empty"): the History list says so and
+    // offers a retry, which is `openHistory` again.
+    historyLoadFailed: boolean;
     openHistory: () => void;
     viewHistorySession: (sessionId: string) => void;
     backToHistoryList: () => void;
@@ -289,6 +292,7 @@ export const SpotlightContent = ({
     historySessions,
     historyDetail,
     historyIsLoading,
+    historyLoadFailed,
     openHistory,
     viewHistorySession,
     backToHistoryList,
@@ -1220,6 +1224,7 @@ export const SpotlightContent = ({
                 askDisabled={askDisabled}
                 historyDetail={historyDetail}
                 historyIsLoading={historyIsLoading}
+                historyLoadFailed={historyLoadFailed}
                 historyMode={historyMode}
                 historySessions={historySessions}
                 isDark={isDark}
@@ -1235,6 +1240,7 @@ export const SpotlightContent = ({
                 onNewConversation={onNewConversation}
                 onPreview={onPreview}
                 onReject={onReject}
+                onRetryHistory={openHistory}
                 onViewHistorySession={viewHistorySession}
             />
 
@@ -1422,6 +1428,8 @@ interface ConversationPanelProps {
     historySessions: AgentSessionSummary[];
     historyDetail: AgentSessionDetail | null;
     historyIsLoading: boolean;
+    historyLoadFailed: boolean;
+    onRetryHistory: () => void;
     onViewHistorySession: (sessionId: string) => void;
     onBackToHistoryList: () => void;
     onCloseHistory: () => void;
@@ -1464,6 +1472,8 @@ const ConversationPanel = memo(
         historySessions,
         historyDetail,
         historyIsLoading,
+        historyLoadFailed,
+        onRetryHistory,
         onViewHistorySession,
         onBackToHistoryList,
         onCloseHistory,
@@ -1697,8 +1707,10 @@ const ConversationPanel = memo(
                     <HistoryListView
                         isDark={isDark}
                         isLoading={historyIsLoading}
+                        loadFailed={historyLoadFailed}
                         sessions={historySessions}
                         ts={ts}
+                        onRetry={onRetryHistory}
                         onSelect={onViewHistorySession}
                     />
                 )}
@@ -2417,12 +2429,25 @@ function _sourceIcon(entityType: string) {
 interface HistoryListViewProps {
     sessions: AgentSessionSummary[];
     isLoading: boolean;
+    // The last load failed. Rows already showing are left alone; with none,
+    // the view says it couldn't load instead of "no past conversations".
+    loadFailed: boolean;
     isDark: boolean;
     ts: SpotlightMessages;
+    onRetry: () => void;
     onSelect: (sessionId: string) => void;
 }
 
-const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryListViewProps) => {
+const HistoryListView = ({
+    sessions,
+    isLoading,
+    loadFailed,
+    isDark,
+    ts,
+    onRetry,
+    onSelect,
+}: HistoryListViewProps) => {
+    const { t } = useTranslation();
     if (isLoading && sessions.length === 0) {
         return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
@@ -2436,6 +2461,28 @@ const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryL
                 >
                     {ts.history.loading}
                 </Typography>
+            </Box>
+        );
+    }
+
+    if (sessions.length === 0 && loadFailed) {
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 1,
+                    px: 0.5,
+                    py: 1,
+                }}
+            >
+                <Typography level="body-md" sx={{ color: "danger.500", opacity: 0.95 }}>
+                    {ts.history.listLoadFailed}
+                </Typography>
+                <Button color="neutral" size="sm" variant="outlined" onClick={onRetry}>
+                    {t.common.actions.retry}
+                </Button>
             </Box>
         );
     }
