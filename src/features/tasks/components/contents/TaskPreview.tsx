@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
@@ -55,10 +55,12 @@ import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
+import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import { emitTasksBulkChanged, onTaskTouched } from "../../services/taskEvents";
+import { createOpenLanding, OpenLanding } from "../../services/taskOpenLanding";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -195,8 +197,9 @@ type TaskPreviewProps = {
     holdSwitchWithLoader?: boolean;
 };
 
-export const TaskPreview = (props: TaskPreviewProps) => {
+const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => {
     const {
+        landing,
         socket,
         myself,
         setMyself,
@@ -552,8 +555,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
     useEffect(() => {
         let cancelled = false;
+        // The first answer of an open lands together with the other side
+        // loaders (see taskOpenLanding.ts); a refresh (`taskNoteMeta`) joins
+        // nothing and writes at once.
+        const ticket = useTM.currentPreviewTask?.project
+            ? landing.join(Number(useTM.currentPreviewTask.id), "notes")
+            : null;
         (async () => {
-            if (useTM.currentPreviewTask?.project) {
+            if (ticket && useTM.currentPreviewTask?.project) {
                 const loadedTaskNotes: TaskNoteProps[] =
                     (await loadTaskNotes(
                         myself,
@@ -561,10 +570,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         Number(useTM.currentPreviewTask.id),
                         accessToken
                     )) ?? [];
-                if (cancelled) return;
-                const notes = loadedTaskNotes ?? [];
-                setTaskNotes(notes);
-                markNotesLoaded(notes.length);
+                ticket.land(() => {
+                    if (cancelled) return;
+                    const notes = loadedTaskNotes ?? [];
+                    setTaskNotes(notes);
+                    markNotesLoaded(notes.length);
+                });
             } else {
                 if (cancelled) return;
                 setTaskNotes([]);
@@ -573,6 +584,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         })();
         return () => {
             cancelled = true;
+            ticket?.cancel();
         };
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
@@ -582,7 +594,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         const id = Number(useTM.currentPreviewTask?.id);
         if (!Number.isFinite(id) || id <= 0) return;
-        void useTM.loadTaskDependenciesFor(id);
+        // Lands together with the other side loaders (see taskOpenLanding.ts).
+        void useTM.loadTaskDependenciesFor(id, landing.join(id, "dependencies").land);
     }, [taskEditState.currentTaskId]);
 
     // Task comments are hoisted into `useTM` (shared with the chat
@@ -672,6 +685,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     const previewTaskId = Number(useTM.currentPreviewTask?.id);
+    const hasPreviewTaskId = Number.isFinite(previewTaskId) && previewTaskId > 0;
+    // A new open begins when the requested task's object arrives. Armed in a
+    // layout effect: those run before every passive effect of the commit, so
+    // before any loader below (or in a child block) joins. Never armed in
+    // milestone mode: the milestone preview owns its loaders.
+    useLayoutEffect(() => {
+        landing.arm(!isMilestoneMode && hasPreviewTaskId ? previewTaskId : null);
+    }, [landing, previewTaskId, hasPreviewTaskId, isMilestoneMode]);
     useEffect(() => {
         // The milestone preview owns the shared `taskComments` slot while
         // it's up — don't fight it. Leaving milestone mode flips this dep
@@ -684,18 +705,24 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             return;
         }
         // Cancelled-flag guard: stale comment loads must not clobber
-        // the freshly-selected task's data when clicks outrun fetches.
+        // the freshly-selected task's data when clicks outrun fetches. It is
+        // checked again when the write runs: a write may wait for the rest of
+        // the open (see taskOpenLanding.ts).
         let cancelled = false;
+        const ticket = landing.join(previewTaskId, "comments");
         (async () => {
             const loadedTaskComments: TaskCommentProps[] =
                 (await loadTaskComments(myself, previewTaskId, accessToken)) ?? [];
-            if (cancelled) return;
-            const comments = loadedTaskComments ?? [];
-            setTaskComments(comments);
-            markCommentsLoaded(comments.length);
+            ticket.land(() => {
+                if (cancelled) return;
+                const comments = loadedTaskComments ?? [];
+                setTaskComments(comments);
+                markCommentsLoaded(comments.length);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket.cancel();
         };
         // Keyed on the id it actually READS. It used to key on
         // `taskEditState.currentTaskId` — a copy that lags behind and, on
@@ -730,18 +757,36 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             return;
         }
         let cancelled = false;
+        const ticket = landing.join(previewTaskId, "activity");
         (async () => {
             setIsLoadingTaskActivities(true);
             const rows = await loadTaskActivities(myself, previewTaskId, accessToken);
-            if (cancelled) return;
-            setTaskActivities(rows);
-            setIsLoadingTaskActivities(false);
+            ticket.land(() => {
+                if (cancelled) return;
+                setTaskActivities(rows);
+                setIsLoadingTaskActivities(false);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket.cancel();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [previewTaskId, activityRefreshNonce]);
+
+    // Every block of the preview has started its loads for this task once the
+    // working copy has caught up with the requested one (a commit's child
+    // effects run before this one). From here the writes of the open run as
+    // soon as nothing is outstanding. See taskOpenLanding.ts.
+    useEffect(() => {
+        if (
+            !isMilestoneMode &&
+            hasPreviewTaskId &&
+            Number(taskEditState.currentTaskId) === previewTaskId
+        ) {
+            landing.seal(previewTaskId);
+        }
+    }, [landing, previewTaskId, hasPreviewTaskId, isMilestoneMode, taskEditState.currentTaskId]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -1059,6 +1104,23 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 />
             )}
         </TaskPreviewSwitchGate>
+    );
+};
+
+/**
+ * The task preview. It owns one `OpenLanding` (see taskOpenLanding.ts) and
+ * provides it to the blocks below, so the side loaders of an open (comments,
+ * activity, notes, dependencies, children, deliveries, the parent task) land
+ * in one render pass instead of one each. Blocks rendered anywhere else have
+ * no landing and write at once.
+ */
+export const TaskPreview = (props: TaskPreviewProps) => {
+    const [landing] = useState(createOpenLanding);
+    useEffect(() => () => landing.dispose(), [landing]);
+    return (
+        <TaskOpenLandingContext.Provider value={landing}>
+            <TaskPreviewBody {...props} landing={landing} />
+        </TaskOpenLandingContext.Provider>
     );
 };
 

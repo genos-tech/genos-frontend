@@ -4,6 +4,8 @@ import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { TaskDeliveryProps } from "../../../types/tasks";
 import { loadTaskDeliveries } from "../services/loadTaskDeliveries";
+import { passThroughTicket } from "../services/taskOpenLanding";
+import { joinOpenLanding, useTaskOpenLanding } from "./TaskOpenLandingContext";
 
 /**
  * Load one task's delivery links (branch / PR / state), kept fresh while
@@ -17,6 +19,10 @@ import { loadTaskDeliveries } from "../services/loadTaskDeliveries";
  *     Only the load a focus causes skips the cache: the nonce only grows, so
  *     keying on `focusNonce > 0` made every later load (every task switch,
  *     for the rest of the page's life) skip it as well.
+ *
+ * Inside a task preview the first answer of an open lands together with the
+ * preview's other loaders (see taskOpenLanding.ts); a focus refresh never
+ * waits for them.
  */
 export const useTaskDeliveries = (
     myself: UserProps,
@@ -25,6 +31,7 @@ export const useTaskDeliveries = (
     const { accessToken } = useAuth();
     const [deliveries, setDeliveries] = useState<TaskDeliveryProps[]>([]);
     const [focusNonce, setFocusNonce] = useState(0);
+    const landing = useTaskOpenLanding();
     const handledFocusNonce = useRef(0);
 
     const numericId = Number(taskId);
@@ -46,14 +53,20 @@ export const useTaskDeliveries = (
         let cancelled = false;
         const causedByFocus = focusNonce !== handledFocusNonce.current;
         handledFocusNonce.current = focusNonce;
+        const ticket = causedByFocus
+            ? passThroughTicket
+            : joinOpenLanding(landing, resolvedId, "deliveries");
         (async () => {
             const rows = await loadTaskDeliveries(myself, resolvedId, accessToken, {
                 forceRefresh: causedByFocus,
             });
-            if (!cancelled) setDeliveries(rows);
+            ticket.land(() => {
+                if (!cancelled) setDeliveries(rows);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket.cancel();
         };
         // `myself` is deliberately keyed by its team only: the object is
         // rebuilt on unrelated profile updates.

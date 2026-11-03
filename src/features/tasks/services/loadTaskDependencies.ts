@@ -29,6 +29,27 @@ export const loadTaskDependencies = async (
     }
 };
 
+/**
+ * Load one task's dependency edges and hand them to `store` (the task
+ * manager's map). With `land`, the write is handed over instead of run, so
+ * a task preview can land it together with its other loaders (see
+ * taskOpenLanding.ts). `land` is called even when the load failed (with a
+ * write that does nothing), so a waiting batch is never kept for it.
+ */
+export const loadTaskDependenciesInto = async (
+    taskId: number,
+    accessToken: string | null,
+    store: (dependencies: TaskDependencies) => void,
+    land?: (write: () => void) => void
+): Promise<void> => {
+    const result = await loadTaskDependencies(taskId, accessToken);
+    const write = () => {
+        if (result) store(result);
+    };
+    if (land) land(write);
+    else write();
+};
+
 // Mirrors the backend cap on /task/dependency/list-for-tasks/.
 const BATCH_MAX_IDS = 500;
 

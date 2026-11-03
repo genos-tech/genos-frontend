@@ -13,6 +13,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
+import { loadTaskDependenciesInto } from "../features/tasks/services/loadTaskDependencies";
 import type { TaskProps } from "../types/tasks";
 
 // ---------------------------------------------------------------- network --
@@ -271,6 +272,9 @@ const Host = ({ initialTask }: { initialTask?: TaskProps }) => {
         initialTask ? Number(initialTask.id) : -1
     );
     const [taskComments, setTaskComments] = useState<unknown[]>([]);
+    const [taskDependencies, setTaskDependencies] = useState<
+        Record<number, { blocking: unknown[] }>
+    >({});
     const [taskCommentLines, setTaskCommentLines] = useState(1);
     host.open = (task) => {
         setCurrentPreviewTaskId(Number(task.id));
@@ -290,8 +294,20 @@ const Host = ({ initialTask }: { initialTask?: TaskProps }) => {
         setTaskComments,
         taskCommentLines,
         setTaskCommentLines,
-        taskDependencies: {},
-        loadTaskDependenciesFor: () => undefined,
+        taskDependencies,
+        // The task manager's own function, over this host's state: it joins
+        // the open's landing like the real one, so the batch can complete.
+        loadTaskDependenciesFor: (taskId: number, land?: (write: () => void) => void) =>
+            loadTaskDependenciesInto(
+                taskId,
+                "test-token",
+                (result) =>
+                    setTaskDependencies((prev) => ({
+                        ...prev,
+                        [taskId]: result as { blocking: unknown[] },
+                    })),
+                land
+            ),
     });
     return (
         <>
@@ -348,6 +364,15 @@ const answer = async (key: Key, forTask: number) => {
     await settle();
 };
 
+// Answer whatever else the open asked for (activity, dependencies, children,
+// deliveries, the parent). Where the side loaders land together (MIP-968), the
+// comments and notes are written when the last of them has answered.
+const answerRest = async (taskId: number) => {
+    for (const key of ["activity", "dependencies", "children", "deliveries", "parent"] as const) {
+        while (pendingFor(key, taskId)) await answer(key, taskId);
+    }
+};
+
 const tabOf = () => Number(screen.getByTestId("tabs").getAttribute("data-tab"));
 
 describe("starting tab after a task switch", () => {
@@ -362,12 +387,14 @@ describe("starting tab after a task switch", () => {
         await open(makeTask(a));
         await answer("comments", a);
         await answer("notes", a);
+        await answerRest(a);
         expect(tabOf()).toBe(0);
 
         // B has no comments and 2 notes: the tab must move to Notes (1).
         await open(makeTask(b));
         await answer("comments", b);
         await answer("notes", b);
+        await answerRest(b);
         expect(tabOf()).toBe(1);
     });
 
@@ -377,11 +404,13 @@ describe("starting tab after a task switch", () => {
         await open(makeTask(a));
         await answer("notes", a);
         await answer("comments", a);
+        await answerRest(a);
         expect(tabOf()).toBe(0);
 
         await open(makeTask(b));
         await answer("notes", b);
         await answer("comments", b);
+        await answerRest(b);
         expect(tabOf()).toBe(1);
     });
 
@@ -391,14 +420,17 @@ describe("starting tab after a task switch", () => {
         await open(makeTask(a));
         await answer("comments", a);
         await answer("notes", a);
+        await answerRest(a);
         await open(makeTask(b));
         await answer("comments", b);
         await answer("notes", b);
+        await answerRest(b);
         expect(tabOf()).toBe(1);
 
         await open(makeTask(c)); // role 3: 2 comments
         await answer("comments", c);
         await answer("notes", c);
+        await answerRest(c);
         expect(tabOf()).toBe(0);
     });
 });
