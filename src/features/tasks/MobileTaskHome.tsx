@@ -276,15 +276,12 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     <Box sx={{ height: "100%", width: "100%" }}>
                         <TaskSidebar
                             myself={myself}
-                            setMyself={setMyself}
                             setOpenJoinProject={setOpenJoinProject}
-                            socket={socket}
                             useCM={useCM}
                             usePM={usePM}
                             useSM={useSM}
                             useTEM={useTEM}
                             useTM={useTM}
-                            useUISM={useUISM}
                         />
                     </Box>
                 )}

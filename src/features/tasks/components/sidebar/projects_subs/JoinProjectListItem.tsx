@@ -5,12 +5,13 @@ import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
+import type { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../../i18n";
 import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {
-    usePM: ProjectManagementState;
+    // Only the list and the open project (MIP-971): the sidebar's slice satisfies it.
+    usePM: Pick<ProjectManagementState, "teamProjects" | "currentProject">;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;

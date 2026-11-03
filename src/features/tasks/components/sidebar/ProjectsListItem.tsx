@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -18,15 +18,8 @@ import {
 } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
@@ -36,9 +29,20 @@ import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 import { distinctProjectLabels, filterAndSortProjects } from "./projectSidebarOrder";
+import type {
+    SidebarTreeCM,
+    SidebarTreePM,
+    SidebarTreeSM,
+    SidebarTreeTEM,
+    SidebarTreeTM,
+} from "./useSidebarSlices";
 
+// The managers arrive as slices (MIP-971): TypeScript forbids reading a member
+// outside them, and `memo` skips the render of an `AppBody` pass that changed
+// none of the values below. Every prop must therefore be referentially stable
+// from the parent: slices from `useSidebarSlices`, `myself`, a `useState` setter.
 type ProjectsListItemProps = {
-    usePM: ProjectManagementState;
+    usePM: SidebarTreePM;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -46,32 +50,18 @@ type ProjectsListItemProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    useTM: TaskManagementState;
-    useSM: SprintMilestoneManagementState;
-    // Forwarded so MilestonesListItem can render `AvatarWithStatus`
-    // (which needs the team profile lookup, online-status presence,
-    // user-profile modal hook, and the dispatch socket).
-    useTEM: TeamManagementState;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
+    useTM: SidebarTreeTM;
+    useSM: SidebarTreeSM;
+    // `currentTeam` (guest check) here; `teamMemberProfiles` is forwarded so
+    // MilestonesListItem can resolve its assignee avatars.
+    useTEM: SidebarTreeTEM;
+    // Only `allChats`: the project row's avatar is its PM chat's image.
+    useCM: SidebarTreeCM;
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
-    socket: Socket | null;
 };
 
-export const ProjectsListItem = (props: ProjectsListItemProps) => {
-    const {
-        usePM,
-        setOpenJoinProject,
-        useTM,
-        useSM,
-        useTEM,
-        useCM,
-        useUISM,
-        myself,
-        setMyself,
-        socket,
-    } = props;
+export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsListItemProps) {
+    const { usePM, setOpenJoinProject, useTM, useSM, useTEM, useCM, myself } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
@@ -461,14 +451,10 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     <MilestonesListItem
                                         currentProjectId={projectId}
                                         myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        useCM={useCM}
                                         usePM={usePM}
                                         useSM={useSM}
                                         useTEM={useTEM}
                                         useTM={useTM}
-                                        useUISM={useUISM}
                                     />
                                 </Toggler>
                             );
@@ -494,4 +480,4 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
             </Toggler>
         </ListItem>
     );
-};
+});
