@@ -1,5 +1,7 @@
 import { codeBlockOptions } from "@blocknote/code-block";
 import { createExtension } from "@blocknote/core";
+import { getDiagramBlockTypeSelectItems } from "@blocknote/diagram-block";
+import { getMathBlockTypeSelectItems } from "@blocknote/math-block";
 import { blockTypeSelectItems, type BlockTypeSelectItem } from "@blocknote/react";
 import { RiCodeBoxLine } from "react-icons/ri";
 
@@ -79,4 +81,17 @@ export const getBlockTypeSelectItemsWithCodeBlock = (
         type: "codeBlock",
         icon: RiCodeBoxLine,
     },
+];
+
+/**
+ * The block type list for the editors people write documents in (notes, task
+ * bodies): the code-block list plus the math and diagram blocks, when the editor's
+ * schema has them (MIP-1019).
+ */
+export const getBlockTypeSelectItemsForDocuments = (
+    editor: Parameters<typeof blockTypeSelectItems>[0]
+): BlockTypeSelectItem[] => [
+    ...getBlockTypeSelectItemsWithCodeBlock(editor),
+    ...("mathBlock" in editor.schema.blockSchema ? getMathBlockTypeSelectItems(editor) : []),
+    ...("diagram" in editor.schema.blockSchema ? getDiagramBlockTypeSelectItems(editor) : []),
 ];

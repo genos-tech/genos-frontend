@@ -802,6 +802,122 @@
                     ]
                 }
             ]
+        },
+        {
+            "name": "fixture-math-diagram",
+            "blocks": [
+                {
+                    "id": "math-heading",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Energy ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "E=mc^2"
+                        },
+                        {
+                            "type": "text",
+                            "text": " in joules, and a ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "\\frac{a}{b}"
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "x^2 + y^2 = z^2",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block-multiline",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a = b \\\\\nc = d",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-block",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "graph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-empty",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "id": "math-in-list",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a list item with a block below it",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "math-in-list-child",
+                            "type": "mathBlock",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a^2",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

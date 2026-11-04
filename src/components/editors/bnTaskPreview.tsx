@@ -1,5 +1,6 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "@blocknote/math-block/style.css";
 import "../../App.css";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
@@ -67,6 +68,11 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+    withGenosBlockSlashItems,
+} from "./genosBlockSpecs";
 import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
@@ -86,7 +92,7 @@ import { Alert } from "./sub/Alert";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
 import {
     codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
+    getBlockTypeSelectItemsForDocuments,
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
@@ -187,6 +193,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 // Adds the mention tag.
                 mention: CreateMentionSpec(
                     useTEM.teamMemberProfiles,
@@ -205,6 +212,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             },
             blockSpecs: {
                 ...remainingBlockSpecs,
+                ...genosExtraBlockSpecs,
                 // BlockNote 0.49 moved the code-block options out of
                 // `useCreateBlockNote` and into the schema. We override
                 // the default plain-text codeBlock with the syntax-
@@ -236,7 +244,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
+        withGenosBlockSlashItems(
+            editor,
+            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
+        );
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
@@ -551,7 +562,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                     key={"blockTypeSelect"}
                                     items={[
                                         // Gets the default Block Type Select items.
-                                        ...getBlockTypeSelectItemsWithCodeBlock(editor),
+                                        ...getBlockTypeSelectItemsForDocuments(editor),
                                         // Adds an item for the Alert block.
                                         {
                                             name: t.common.editor.alertBlock,

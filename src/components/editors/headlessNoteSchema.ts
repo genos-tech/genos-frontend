@@ -10,6 +10,7 @@ import {
 } from "@blocknote/core";
 
 import { getMessages } from "../../i18n";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
 import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     ALERT_SPEC_CONFIG,
@@ -54,6 +55,7 @@ export const createHeadlessNoteSchema = () => {
         styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             mention: createInlineContentSpec(MENTION_SPEC_CONFIG, { render: inlineStub }),
             mentionGroup: createInlineContentSpec(
                 mentionGroupSpecConfig(getMessages().common.editor.mentionGroupFallback),
@@ -71,6 +73,7 @@ export const createHeadlessNoteSchema = () => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             codeBlock: createCodeBlockSpec(codeBlockOptions),
             alert: createBlockSpec(ALERT_SPEC_CONFIG, { render: blockStub })(),
         },

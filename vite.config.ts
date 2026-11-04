@@ -107,6 +107,20 @@ export default defineConfig({
                     if (id.includes("@mui") || id.includes("@emotion")) {
                         return "vendor-mui";
                     }
+                    // emotion's CSS engine. The app's RTL cache (`theme/rtlCache.ts`, on
+                    // the signin path) imports it, and Mermaid (the diagram block, in
+                    // the lazy editor chunk) depends on it too: left unpinned, Rollup
+                    // put the shared module in vendor-editor and the entry statically
+                    // imported the whole editor stack to reach it (MIP-1019).
+                    if (/node_modules\/(stylis|stylis-plugin-rtl)\//.test(id)) {
+                        return "vendor-mui";
+                    }
+                    // Same story for dayjs: the calendar modal (App.tsx, eager) and
+                    // Mermaid both import it. It rides in the chunk the entry already
+                    // loads: a chunk of its own costs the critical path more than it is.
+                    if (id.includes("node_modules/dayjs/")) {
+                        return "vendor-mui";
+                    }
                     return undefined;
                 },
             },

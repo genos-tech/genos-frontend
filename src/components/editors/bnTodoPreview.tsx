@@ -1,5 +1,6 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "@blocknote/math-block/style.css";
 
 import { useRef } from "react";
 import {
@@ -36,6 +37,7 @@ import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
 import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
@@ -105,6 +107,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -124,6 +127,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
         },
     });
 
