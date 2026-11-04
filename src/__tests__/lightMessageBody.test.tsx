@@ -36,12 +36,11 @@ vi.mock("../context/AuthContext", async (importOriginal) => ({
     useAuth: () => ({ accessToken: authState.accessToken }),
 }));
 
-// Stand in for the real card, which fetches from GitHub and renders
-// nothing when the integration isn't connected. What's under test here
-// is the wiring — that the body finds PR urls and asks for a card — not
-// the card's own behaviour.
-vi.mock("../features/integrations/components/LinkedPrCard", () => ({
-    LinkedPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
+// Stand in for the real chip, which fetches from GitHub when hovered. What's
+// under test here is the wiring — that the body finds PR urls and asks for a
+// chip (never a full card, MIP-1000) — not the chip's own behaviour.
+vi.mock("../features/integrations/components/LinkedPrCompactRow", () => ({
+    LinkedPrCompactRow: ({ url }: { url: string }) => <div data-testid="pr-chip">{url}</div>,
 }));
 
 // Media download / URL-resolution seams. `downloadFile` is asserted on
@@ -412,7 +411,7 @@ describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
         expect(anchor?.getAttribute("href")).toBe("https://example.com/page");
     });
 
-    it("unfurls a GitHub PR url found in plain text", () => {
+    it("shows a chip for a GitHub PR url found in plain text", () => {
         authState.accessToken = "token";
         const content = [
             {
@@ -436,22 +435,22 @@ describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
                 <LightMessageBody content={content} {...ctx} />
             </CssVarsProvider>
         );
-        expect(screen.getByTestId("pr-card").textContent).toBe(
+        expect(screen.getByTestId("pr-chip").textContent).toBe(
             "https://github.com/acme/repo/pull/42"
         );
     });
 
-    it("renders no unfurl when there is no PR url", () => {
+    it("renders no PR chip when there is no PR url", () => {
         authState.accessToken = "token";
         render(
             <CssVarsProvider>
                 <LightMessageBody content={linkContent} {...ctx} />
             </CssVarsProvider>
         );
-        expect(screen.queryByTestId("pr-card")).toBeNull();
+        expect(screen.queryByTestId("pr-chip")).toBeNull();
     });
 
-    it("renders no unfurl when signed out", () => {
+    it("renders no PR chip when signed out", () => {
         authState.accessToken = null;
         const content = [
             {
@@ -471,7 +470,7 @@ describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
                 <LightMessageBody content={content} {...ctx} />
             </CssVarsProvider>
         );
-        expect(screen.queryByTestId("pr-card")).toBeNull();
+        expect(screen.queryByTestId("pr-chip")).toBeNull();
     });
 });
 

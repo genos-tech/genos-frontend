@@ -35,7 +35,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
-import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
+import { MessagePrUnfurls } from "../../features/integrations/components/MessagePrUnfurls";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { hashTaskLabel } from "../../features/tasks/utils/taskDisplayId";
@@ -717,16 +717,7 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
             </div>
 
             {prUrls.length > 0 && accessToken && (
-                <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
-                    {prUrls.map((url) => (
-                        <LinkedPrCard
-                            key={url}
-                            accessToken={accessToken}
-                            url={url}
-                            hideOnNotConnected
-                        />
-                    ))}
-                </Stack>
+                <MessagePrUnfurls accessToken={accessToken} urls={prUrls} />
             )}
 
             <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />
