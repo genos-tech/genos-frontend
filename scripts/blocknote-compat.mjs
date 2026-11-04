@@ -31,6 +31,10 @@ try {
         platform: "node",
         format: "esm",
         packages: "external",
+        // The formula and diagram renderers (KaTeX with its stylesheet, Mermaid) are
+        // reached only by dynamic import, when a preview is drawn (MIP-1025). A headless
+        // read never draws one, and Node cannot load a .css file: leave them out.
+        external: ["./katexModule", "./mermaidModule"],
         logLevel: "warning",
     });
     const run = spawnSync(process.execPath, [bundle, ...process.argv.slice(2)], {

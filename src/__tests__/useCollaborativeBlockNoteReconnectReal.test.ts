@@ -23,7 +23,11 @@ const editor = vi.hoisted(() => {
     vi.stubEnv("VITE_COLLAB_URL", "ws://collab.test");
     return { document: [] as unknown[], replaceBlocks: vi.fn() };
 });
-vi.mock("@blocknote/react", () => ({ useCreateBlockNote: () => editor }));
+vi.mock("@blocknote/react", async (importOriginal) => ({
+    // The editors' own specs (math, diagram) are built from the real module.
+    ...(await importOriginal<Record<string, unknown>>()),
+    useCreateBlockNote: () => editor,
+}));
 vi.mock("../db/utils/yjsPersistence", () => ({
     createYjsPersistence: () => ({}),
     destroyYjsPersistence: () => Promise.resolve(),

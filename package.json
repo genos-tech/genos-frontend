@@ -26,9 +26,7 @@
     "dependencies": {
         "@blocknote/code-block": "0.57.0",
         "@blocknote/core": "0.57.0",
-        "@blocknote/diagram-block": "0.57.0",
         "@blocknote/mantine": "0.57.0",
-        "@blocknote/math-block": "0.57.0",
         "@blocknote/react": "0.57.0",
         "@dagrejs/dagre": "^3.0.0",
         "@emoji-mart/data": "^1.2.1",
@@ -56,9 +54,12 @@
         "framer-motion": "^12.38.0",
         "idb": "^8.0.3",
         "jszip": "^3.10.1",
+        "katex": "0.18.10",
         "lucide-react": "^1.14.0",
         "luxon": "^3.7.2",
+        "mermaid": "11.17.2",
         "posthog-js": "^1.373.5",
+        "prosemirror-model": "^1.25.12",
         "prosemirror-state": "^1.4.4",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
@@ -80,6 +81,8 @@
         "yjs": "^13.6.33"
     },
     "devDependencies": {
+        "@blocknote/diagram-block": "0.57.0",
+        "@blocknote/math-block": "0.57.0",
         "@eslint/js": "^9.15.0",
         "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
         "@testing-library/dom": "^10.4.1",

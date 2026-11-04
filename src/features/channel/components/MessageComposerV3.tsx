@@ -39,7 +39,6 @@
 
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import "@blocknote/math-block/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs } from "@blocknote/core";

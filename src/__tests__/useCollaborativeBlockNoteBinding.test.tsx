@@ -72,10 +72,12 @@ vi.mock("@hocuspocus/provider", async () => {
 });
 // The hook builds its editor with BlockNote's `useCreateBlockNote`; hand it back the options
 // it was given so a real editor can be built from them below.
-vi.mock("@blocknote/react", async () => {
+vi.mock("@blocknote/react", async (importOriginal) => {
     const { BlockNoteEditor: Real } = await import("@blocknote/core");
     const built = new WeakMap<object, unknown>();
     return {
+        // The editors' own specs (math, diagram) are built from the real module.
+        ...(await importOriginal<Record<string, unknown>>()),
         useCreateBlockNote: (options: Record<string, unknown>) => {
             passed.push(options);
             // One editor per options object, as the real hook keeps one per dependency set.

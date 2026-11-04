@@ -39,7 +39,11 @@ vi.mock("@hocuspocus/provider", () => ({
         destroy() {}
     },
 }));
-vi.mock("@blocknote/react", () => ({ useCreateBlockNote: () => ({ document: [] }) }));
+vi.mock("@blocknote/react", async (importOriginal) => ({
+    // The editors' own specs (math, diagram) are built from the real module.
+    ...(await importOriginal<Record<string, unknown>>()),
+    useCreateBlockNote: () => ({ document: [] }),
+}));
 vi.mock("../db/utils/yjsPersistence", () => ({
     createYjsPersistence: () => ({}),
     destroyYjsPersistence: () => Promise.resolve(),
