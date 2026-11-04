@@ -120,7 +120,6 @@ export const SignUpForm = () => {
             username,
             email,
             password,
-            false,
             setErrorMessage,
             inviteToken || undefined
         );
