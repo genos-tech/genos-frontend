@@ -111,12 +111,23 @@ const ciStateLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"])
     }
 };
 
+// A merged or closed PR is final: the list payload already says which, and
+// the detail request only adds the CI dot and the richer hover card. It is
+// three GitHub calls on the server (about 1.2 s the first time), and a table
+// mounts a dozen of them at once, most of them for PRs nobody is looking at.
+// So these rows draw from the list and ask for the detail when the chip is
+// hovered or focused (MIP-994). Open and draft PRs still ask at mount: their
+// CI is the live signal the dot exists for.
+const isFinishedPull = (pull: LinkedPull): boolean =>
+    pull.merged_at != null || pull.state === "closed";
+
 // One badge per PR. We have the URL from the server list but the
 // detailed state (merged/draft/closed) + CI signal need a second fetch
 // — that's what `prStatusCache` is for. The list response already
 // carries enough info (`state`, `draft`, `merged_at`) to render a
 // reasonable badge without the second fetch, so we use the list state
-// as a fast first-paint and upgrade once detail lands.
+// as a fast first-paint and upgrade once detail lands. For a finished PR
+// that fetch waits for the first hover or focus (`isFinishedPull`).
 const SinglePrBadge = ({
     pull,
     accessToken,
@@ -129,9 +140,15 @@ const SinglePrBadge = ({
     const { t } = useTranslation();
     const [detail, setDetail] = useState<PrStatusResult | null>(null);
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+    const finished = isFinishedPull(pull);
+    // Latches on the first hover or focus. Computed from the live `pull` too,
+    // so a PR that was finished when the row mounted and is open by the next
+    // refresh (reopened) is fetched like any open one.
+    const [asked, setAsked] = useState(false);
+    const needsDetail = asked || !finished;
 
     useEffect(() => {
-        if (!accessToken) return;
+        if (!accessToken || !needsDetail) return;
         let cancelled = false;
         (async () => {
             const r = await getCachedOrFetchPrStatus(accessToken, pull.html_url);
@@ -140,7 +157,8 @@ const SinglePrBadge = ({
         return () => {
             cancelled = true;
         };
-    }, [accessToken, pull.html_url]);
+    }, [accessToken, pull.html_url, needsDetail]);
+    const ask = () => setAsked(true);
 
     // Derive a PR state from the list payload until detail lands.
     // Mirrors the backend list shape (`state` is open/closed, `merged_at`
@@ -185,7 +203,10 @@ const SinglePrBadge = ({
             </Box>
             <Box sx={{ fontSize: 11, color: palette.textMuted }}>{title}</Box>
             <Box sx={{ fontSize: 11 }}>
-                {prStateLabel(prState, t)} · {ciStateLabel(ci, t)}
+                {/* "No CI" would claim something we have not asked about yet. */}
+                {finished
+                    ? prStateLabel(prState, t)
+                    : `${prStateLabel(prState, t)} · ${ciStateLabel(ci, t)}`}
             </Box>
         </Stack>
     );
@@ -227,6 +248,8 @@ const SinglePrBadge = ({
                     },
                 }}
                 onClick={(e) => e.stopPropagation()}
+                onFocus={ask}
+                onMouseEnter={ask}
             >
                 <PrStateIcon state={prState} />
                 {/* Tiny CI dot — easier to scan at row scale than the
