@@ -89,6 +89,7 @@ import {
 } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -295,7 +296,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeBlockEnterShortcut, linkHostCaption],
     });
 
     // Fan @-mentions left in inline comments out to the activity system,

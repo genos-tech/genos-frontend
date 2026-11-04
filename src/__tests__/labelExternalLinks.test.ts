@@ -185,6 +185,73 @@ describe("labelling a subtree", () => {
     });
 });
 
+describe("an editable region (MIP-990)", () => {
+    // ProseMirror redraws a link it didn't write to, which this observer then
+    // labels again: the loop that left every link in an editable editor without a
+    // caption and impossible to click. An editable editor draws its own caption
+    // (`linkHostCaption`), so what is written here must stay out of it.
+    const editableEditor = (html: string): HTMLElement => {
+        const editor = editorWith(html);
+        editor.setAttribute("contenteditable", "true");
+        return editor;
+    };
+
+    it("does not label a link inside an editable editor", () => {
+        const editor = editableEditor('<a href="https://attacker.example/x">doc</a>');
+
+        expect(labelExternalLinksIn(editor)).toBe(0);
+
+        expect(anchor(editor).hasAttribute(LINK_HOST_ATTRIBUTE)).toBe(false);
+    });
+
+    it("does not label a link nested in a block of an editable editor", () => {
+        const editor = editableEditor(
+            '<div><div><p>see <a href="https://attacker.example/x">doc</a></p></div></div>'
+        );
+
+        expect(labelExternalLinksIn(editor)).toBe(0);
+
+        expect(anchor(editor).hasAttribute(LINK_HOST_ATTRIBUTE)).toBe(false);
+    });
+
+    it("treats a bare contenteditable attribute as editable too", () => {
+        const editor = editorWith('<a href="https://attacker.example/x">doc</a>');
+        editor.setAttribute("contenteditable", "");
+
+        expect(labelExternalLinksIn(editor)).toBe(0);
+    });
+
+    it("still labels a read-only editor", () => {
+        const editor = editorWith('<a href="https://attacker.example/x">doc</a>');
+        editor.setAttribute("contenteditable", "false");
+
+        expect(labelExternalLinksIn(editor)).toBe(1);
+
+        expect(anchor(editor).getAttribute(LINK_HOST_ATTRIBUTE)).toBe("attacker.example");
+    });
+
+    it("still labels an editor that was never editable (no contenteditable at all)", () => {
+        const editor = editorWith('<a href="https://attacker.example/x">doc</a>');
+
+        expect(labelExternalLinksIn(editor)).toBe(1);
+    });
+
+    it("leaves a link added later to an editable editor alone, and labels one added to a read-only one", async () => {
+        const stop = startLabellingExternalLinks();
+        const editable = editableEditor("");
+        const readOnly = editorWith("");
+        readOnly.setAttribute("contenteditable", "false");
+
+        editable.innerHTML = '<a href="https://one.example/">1</a>';
+        readOnly.innerHTML = '<a href="https://two.example/">2</a>';
+        await settle();
+        stop();
+
+        expect(anchor(editable).hasAttribute(LINK_HOST_ATTRIBUTE)).toBe(false);
+        expect(anchor(readOnly).getAttribute(LINK_HOST_ATTRIBUTE)).toBe("two.example");
+    });
+});
+
 describe("the observer", () => {
     let stop: () => void;
 

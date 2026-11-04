@@ -74,6 +74,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnLocalBodyEditorProps = {
@@ -155,7 +156,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
-        extensions: [codeBlockEnterShortcut, tabStaysInEditor],
+        extensions: [codeBlockEnterShortcut, linkHostCaption, tabStaysInEditor],
         dictionary,
     });
 
