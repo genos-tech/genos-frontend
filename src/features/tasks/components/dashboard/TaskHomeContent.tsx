@@ -215,6 +215,14 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
     return "upcoming";
 };
 
+// "Ongoing" for the Assigned Milestones section: anything not Closed
+// (Pending and Blocked count as ongoing). Applied ON TOP of
+// `selectVisibleMilestones` (MIP-1004) and kept local on purpose: that
+// selector also feeds the sidebar's live list, the task filter menu and the
+// milestone picker, which all keep Closed milestones that have no sprint or
+// sit in an active/upcoming sprint.
+const isOngoingMilestone = (m: Milestone): boolean => m.status !== "Closed";
+
 // Maps a backend status enum to the i18n key whose value renders in
 // the dashboard. Resolve through `t.tasks.dashboard.statusLabels[key]`
 // at the call site (`statusKeyFor` below).
@@ -889,9 +897,15 @@ export const TaskHomeContent = ({
     // Current-project scoped: milestones only load for the active project
     // (`useSM.projectMilestones` is keyed by project and populated on
     // project switch), so this reads that slice directly. "Ongoing" ==
-    // `selectVisibleMilestones` (drops Deleted + Closed-in-ended-sprint) —
-    // the same visible-set definition the sidebar/filter use. The selector
-    // already sorts, so the cards render in due-date → status → title order.
+    // `selectVisibleMilestones` (drops Deleted + Closed-in-ended-sprint)
+    // MINUS every Closed milestone (`isOngoingMilestone`). The shared
+    // selector keeps Closed milestones with no sprint or in an
+    // active/upcoming sprint (the sidebar, filter menu and picker need
+    // them), but a finished milestone is not work in progress, so this
+    // section drops them (MIP-1004). Pending and Blocked stay. The count
+    // chip, the section and the "nothing assigned" card all follow this
+    // list, on both My Tasks and Member's Tasks. The selector already sorts,
+    // so the cards render in due-date → status → title order.
     const focusAssignedMilestones = useMemo<Milestone[]>(() => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId || focusUserId == null) return [];
@@ -913,6 +927,7 @@ export const TaskHomeContent = ({
         }
 
         return selectVisibleMilestones(all, sprints).filter((m) => {
+            if (!isOngoingMilestone(m)) return false;
             const isAssignee = (m.assignees ?? []).some(
                 (a) => a.userId != null && String(a.userId) === focusUserId
             );
