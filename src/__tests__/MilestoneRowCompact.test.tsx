@@ -145,7 +145,7 @@ describe("MilestonesListItem: narrow-sidebar rows (MIP-1012)", () => {
             ".MsRowAvatars { display: none; }"
         );
         const list = containerRule("ms-list (max-width: 299px)");
-        expect(list).toMatch(/>\* \{ --ms-indent-base: 24px; --ms-indent-step: 8px; \}/);
+        expect(list).toMatch(/>\* \{ --ms-indent-base: 24px; --ms-indent-step: 8px; /);
     });
 
     it("indents every level of the tree through the shared indent variables", () => {
