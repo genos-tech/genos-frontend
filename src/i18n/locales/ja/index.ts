@@ -4152,6 +4152,7 @@ export const ja: DeepPartial<Messages> = {
             closeTooltip: "閉じる",
             tasksInThisMilestone: "このマイルストーンのタスク",
             taskProgress: "タスクの進捗状況",
+            taskProgressOther: "その他",
             taskButton: "タスク",
             emptyMilestoneTasks:
                 "まだタスクはありません。タスクを作成してこのマイルストーンに割り当ててください。",

@@ -3949,6 +3949,7 @@ export const fr: DeepPartial<Messages> = {
             closeTooltip: "Fermer",
             tasksInThisMilestone: "Tâches dans ce jalon",
             taskProgress: "Progression de la tâche",
+            taskProgressOther: "Autres",
             taskButton: "Tâche",
             emptyMilestoneTasks:
                 "Aucune tâche pour le moment. Créez une tâche et assignez-la à ce jalon.",

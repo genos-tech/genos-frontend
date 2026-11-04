@@ -3767,6 +3767,7 @@ export const zh: DeepPartial<Messages> = {
             closeTooltip: "关闭",
             tasksInThisMilestone: "此里程碑下的任务",
             taskProgress: "任务进度",
+            taskProgressOther: "其他",
             taskButton: "任务",
             emptyMilestoneTasks: "暂无任务。创建任务并指定到此里程碑。",
             menu: {

@@ -447,6 +447,7 @@ export const tasks = {
         closeTooltip: "Close",
         tasksInThisMilestone: "Tasks in this milestone",
         taskProgress: "Task progress",
+        taskProgressOther: "Other",
         taskButton: "Task",
         emptyMilestoneTasks: "No tasks yet. Create a task and assign it to this milestone.",
         menu: {
