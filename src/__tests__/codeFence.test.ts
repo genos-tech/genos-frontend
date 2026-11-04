@@ -125,7 +125,7 @@ describe("keys that are not the fence", () => {
 
 describe("the reason this file exists", () => {
     // CANARY: when BlockNote fixes its rule this fails, and `codeFenceInputRule` (and its
-    // 13 uses in the editors) can be deleted.
+    // 12 editors that list it) can be deleted.
     it.each(KEYS)("BlockNote's own ``` rule still throws for an unknown name on %s", (key) => {
         expect(() => typeFence(false, "```math", key)).toThrow(/Language math is not supported/);
     });
