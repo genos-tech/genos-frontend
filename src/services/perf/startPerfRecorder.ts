@@ -1,4 +1,5 @@
 import { classifyNavigation } from "./classifyNavigation";
+import { isBackgroundRequest } from "./classifyRequest";
 import { PerfRecorderCore, type PerfSample } from "./perfRecorderCore";
 
 /**
@@ -168,7 +169,11 @@ export const startPerfRecorder = (opts: PerfRecorderOptions): PerfRecorder => {
         if (!r.name.startsWith(opts.apiBase)) return;
         // Our own upload is not "the app's" traffic.
         if (r.name.includes("/client-perf/")) return;
-        core.request(r.startTime, r.responseEnd || r.startTime + r.duration);
+        core.request(
+            r.startTime,
+            r.responseEnd || r.startTime + r.duration,
+            isBackgroundRequest(r.name, opts.apiBase)
+        );
     });
     observe(
         "event",

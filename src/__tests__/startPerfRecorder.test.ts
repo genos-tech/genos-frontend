@@ -175,6 +175,46 @@ describe("startPerfRecorder", () => {
         rec.stop();
     });
 
+    it("reports content_ms without GitHub, presence or runtime-config traffic", () => {
+        const rec = start();
+        rec.navigated(`${TASKS}/task/4`);
+        const t0 = now;
+        press();
+        advance(150);
+        rec.navigated(`${TASKS}/task/5`);
+        const entry = (path: string, initiatorType: string, start: number, end: number) => ({
+            name: `${API}${path}`,
+            initiatorType,
+            startTime: t0 + start,
+            responseEnd: t0 + end,
+            duration: end - start,
+        });
+        observer("resource").emit([
+            entry("/task/getTask/?id=5", "xmlhttprequest", 200, 700),
+            entry("/github/pulls/acme/rocket/7/", "xmlhttprequest", 300, 2300),
+            entry("/user/presence/heartbeat/", "fetch", 400, 2800),
+            entry("/runtime-config/", "xmlhttprequest", 500, 900),
+        ]);
+        advance(6000);
+        Object.defineProperty(document, "visibilityState", {
+            value: "hidden",
+            configurable: true,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+
+        expect(sentBodies()[0].samples[0]).toMatchObject({
+            kind: "task_switch",
+            settle_ms: 2800, // the heartbeat: what the old figure said
+            content_ms: 700, // the task's own request
+            requests: 4,
+        });
+        Object.defineProperty(document, "visibilityState", {
+            value: "visible",
+            configurable: true,
+        });
+        rec.stop();
+    });
+
     it("uploads when enough samples have queued", () => {
         const rec = start();
         for (let i = 0; i < FLUSH_AT_QUEUE; i += 1) {
@@ -249,6 +289,7 @@ describe("sendPerfSamples", () => {
         kind: "task_open" as const,
         paint_ms: 10,
         settle_ms: 20,
+        content_ms: 15,
         blocked_ms: 30,
         longest_ms: 40,
         requests: 5,
@@ -273,6 +314,7 @@ describe("sendPerfSamples", () => {
         expect(buildPayload([sample], ctx)).toEqual({ samples: [sample], ctx });
         expect(Object.keys(sample).sort()).toEqual([
             "blocked_ms",
+            "content_ms",
             "kind",
             "longest_ms",
             "paint_ms",

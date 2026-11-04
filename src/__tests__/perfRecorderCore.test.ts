@@ -41,6 +41,7 @@ describe("PerfRecorderCore: interactions", () => {
                 kind: "task_switch",
                 paint_ms: 120,
                 settle_ms: 1600, // the response that ended at 2600, minus the click at 1000
+                content_ms: 1600, // nothing here is background traffic: the same
                 blocked_ms: 500,
                 longest_ms: 300,
                 requests: 2,
@@ -67,6 +68,7 @@ describe("PerfRecorderCore: interactions", () => {
             kind: "note_open",
             paint_ms: null,
             settle_ms: null,
+            content_ms: null,
             blocked_ms: 0,
             longest_ms: 0,
             requests: 0,
@@ -119,6 +121,7 @@ describe("PerfRecorderCore: interactions", () => {
         core.tick(1000 + FINALIZE_AFTER_MS);
         expect(out[0].paint_ms).toBe(600_000);
         expect(out[0].settle_ms).toBe(600_000);
+        expect(out[0].content_ms).toBe(600_000);
     });
 
     it("says when it next has work to do", () => {
@@ -129,21 +132,105 @@ describe("PerfRecorderCore: interactions", () => {
     });
 });
 
+describe("PerfRecorderCore: content_ms", () => {
+    const sampleOf = (feed: (core: PerfRecorderCore) => void): PerfSample => {
+        const { core, out } = make();
+        click(core, 1000, `${TASKS}/task/4`, `${TASKS}/task/5`);
+        feed(core);
+        core.tick(1000 + FINALIZE_AFTER_MS);
+        return out[0];
+    };
+
+    it("leaves a background request out, and still counts it in settle_ms and requests", () => {
+        const s = sampleOf((core) => {
+            core.request(1160, 1400); // the content
+            core.request(1100, 3900, true); // GitHub: ends much later
+        });
+        expect(s.settle_ms).toBe(2900);
+        expect(s.content_ms).toBe(400);
+        expect(s.requests).toBe(2);
+    });
+
+    it("counts a long task even when only background traffic ended before it", () => {
+        const s = sampleOf((core) => {
+            core.request(1100, 3500, true);
+            core.longTask(2000, 400); // 2000-2400
+        });
+        expect(s.content_ms).toBe(1400);
+        expect(s.settle_ms).toBe(2500);
+    });
+
+    it("is the last foreground request or long task, whichever ends later", () => {
+        const later = sampleOf((core) => {
+            core.request(1100, 1900);
+            core.longTask(1800, 500); // ends 2300
+        });
+        expect(later.content_ms).toBe(1300);
+        const earlier = sampleOf((core) => {
+            core.request(1100, 2600);
+            core.longTask(1800, 200); // ends 2000
+        });
+        expect(earlier.content_ms).toBe(1600);
+    });
+
+    it("is null, with settle_ms and requests still reported, when only background traffic ran", () => {
+        const s = sampleOf((core) => {
+            core.request(1100, 2500, true);
+            core.request(1200, 2600, true);
+        });
+        expect(s.content_ms).toBeNull();
+        expect(s.settle_ms).toBe(1600);
+        expect(s.requests).toBe(2);
+    });
+
+    it("equals settle_ms when no request is flagged", () => {
+        const s = sampleOf((core) => {
+            core.request(1100, 2200);
+            core.request(1300, 2700);
+            core.longTask(1200, 300);
+        });
+        expect(s.content_ms).toBe(s.settle_ms);
+    });
+
+    it("treats a request as foreground unless it is flagged", () => {
+        const s = sampleOf((core) => core.request(1100, 2200));
+        expect(s.content_ms).toBe(1200);
+    });
+
+    it("still only counts requests that started inside the window", () => {
+        const s = sampleOf((core) => {
+            core.request(1100, 1500);
+            core.request(1000 + WINDOW_MS + 1, 1000 + WINDOW_MS + 900); // starts after it
+        });
+        expect(s.content_ms).toBe(500);
+    });
+
+    it("clamps a background-only absurd value to nothing, and a foreground one to the contract", () => {
+        const background = sampleOf((core) => core.request(1100, 1100 + 9e9, true));
+        expect(background.content_ms).toBeNull();
+        expect(background.settle_ms).toBe(600_000);
+        const foreground = sampleOf((core) => core.request(1100, 1100 + 9e9));
+        expect(foreground.content_ms).toBe(600_000);
+    });
+});
+
 describe("PerfRecorderCore: idle minutes", () => {
     it("reports the long tasks and requests of a minute with no input", () => {
         const { core, out } = make(0);
         core.longTask(10_000, 400);
         core.longTask(30_000, 900);
         core.request(20_000, 20_300);
+        core.request(25_000, 25_500, true);
         core.tick(IDLE_WINDOW_MS);
         expect(out).toEqual([
             {
                 kind: "idle_minute",
                 paint_ms: null,
                 settle_ms: null,
+                content_ms: null,
                 blocked_ms: 1300,
                 longest_ms: 900,
-                requests: 1,
+                requests: 2, // a background request is still a request in an idle minute
                 window_ms: IDLE_WINDOW_MS,
             },
         ]);
