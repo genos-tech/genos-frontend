@@ -275,11 +275,26 @@ describe("the editor the hook builds", () => {
         editor.updateBlock("p1", { content: "edited elsewhere" } as never);
 
         const fragment = provider.document.getXmlFragment(FRAGMENT);
-        const plain = fragment.toString().replace(/<[^>]*>/g, "");
         expect(elementsNamed(fragment, "codeBlock")).toHaveLength(1);
-        expect(plain).toContain("const answer = 42;");
+        expect(plainText(fragment)).toContain("const answer = 42;");
     });
 });
+
+/** The text of a Yjs XML tree, formatting left out (read from the text nodes, not by cutting tags out of a string). */
+const plainText = (node: unknown): string => {
+    if (node instanceof Y.XmlText) {
+        return (node.toDelta() as { insert?: unknown }[])
+            .map((op) => (typeof op.insert === "string" ? op.insert : ""))
+            .join("");
+    }
+    if (node instanceof Y.XmlElement || node instanceof Y.XmlFragment) {
+        return node
+            .toArray()
+            .map((child) => plainText(child))
+            .join("");
+    }
+    return "";
+};
 
 const elementsNamed = (node: Y.XmlFragment | Y.XmlElement, name: string): Y.XmlElement[] => {
     const found: Y.XmlElement[] = [];
