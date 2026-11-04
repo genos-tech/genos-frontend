@@ -100,6 +100,82 @@ describe("noteBlocksToMarkdown", () => {
     });
 });
 
+// A link's address must come back from export → import as the same string.
+// BlockNote 0.51's markdown parser keeps the backslash escapes of a link
+// destination in the href (`Foo_(bar)` came back as `Foo_\(bar\)`, a broken
+// address), and its serializer writes a raw space into a destination, which
+// ends the link there. MIP-1009 measured it on the production notes: 50 links
+// in 38 documents carry parentheses.
+describe("link addresses through export and import", () => {
+    const hrefsOf = (blocks: unknown): string[] => {
+        const found: string[] = [];
+        const walk = (value: unknown) => {
+            if (Array.isArray(value)) value.forEach(walk);
+            else if (value && typeof value === "object") {
+                const node = value as Record<string, unknown>;
+                if (node.type === "link" && typeof node.href === "string") found.push(node.href);
+                Object.values(node).forEach(walk);
+            }
+        };
+        walk(blocks);
+        return found;
+    };
+    const roundTrip = async (href: string) => {
+        const md = await noteBlocksToMarkdown([
+            {
+                type: "paragraph",
+                content: [
+                    {
+                        type: "link",
+                        href,
+                        content: [{ type: "text", text: "t", styles: {} }],
+                    },
+                ],
+            },
+        ]);
+        return hrefsOf(await markdownToNoteBlocks(md));
+    };
+
+    it.each([
+        ["plain", "https://example.com/a/b?x=1&y=2#frag"],
+        ["parentheses", "https://example.com/wiki/Foo_(bar)"],
+        ["nested parentheses", "https://example.com/a_(b_(c))"],
+        ["a closing parenthesis alone", "https://example.com/x)"],
+        ["an opening parenthesis alone", "https://example.com/x("],
+        ["a backslash", "https://example.com/a\\b"],
+        ["a percent-encoded space", "https://example.com/a%20b"],
+        ["square brackets", "https://example.com/a[1]/b"],
+        ["non-ASCII", "https://example.com/café/日本"],
+    ])("keeps an address with %s", async (_name, href) => {
+        expect(await roundTrip(href)).toEqual([href]);
+    });
+
+    it("writes a space in an address as %20, which keeps the link whole", async () => {
+        expect(await roundTrip("https://example.com/a b")).toEqual(["https://example.com/a%20b"]);
+    });
+
+    it("reads the backslash escapes of a destination in a markdown file", async () => {
+        const blocks = await markdownToNoteBlocks("[wiki](https://example.com/Foo_\\(bar\\))");
+        expect(hrefsOf(blocks)).toEqual(["https://example.com/Foo_(bar)"]);
+    });
+
+    it("also fixes links inside table cells and nested list items", async () => {
+        const blocks = await markdownToNoteBlocks(
+            "| a |\n| --- |\n| [x](https://example.com/p_\\(q\\)) |\n\n- one\n  - [y](https://example.com/r_\\(s\\))"
+        );
+        expect(hrefsOf(blocks).sort()).toEqual(
+            ["https://example.com/p_(q)", "https://example.com/r_(s)"].sort()
+        );
+    });
+
+    it("leaves the text around a link alone", async () => {
+        const blocks = await markdownToNoteBlocks("a \\(b\\) [t](https://example.com/c)");
+        const text = JSON.stringify(blocks);
+        expect(text).toContain("a (b) ");
+        expect(hrefsOf(blocks)).toEqual(["https://example.com/c"]);
+    });
+});
+
 describe("sanitizeBlocksForMarkdown", () => {
     it("keeps default blocks and recurses into children", () => {
         const out = sanitizeBlocksForMarkdown([
