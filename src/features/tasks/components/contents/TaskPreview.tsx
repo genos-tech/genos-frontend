@@ -940,14 +940,6 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                 />
                             </Box>
 
-                            <LinkedPrSection
-                                accessToken={accessToken}
-                                isDark={isDark}
-                                links={taskEditState.tmpCurrentTaskContent.links}
-                                myself={myself}
-                                taskId={taskEditState.tmpCurrentTaskContent.id}
-                            />
-
                             <SectionDivider isDark={isDark} />
 
                             <Stack direction="row">
@@ -2703,7 +2695,6 @@ const MilestonePreviewInner = ({
                         accessToken={accessToken}
                         isDark={isDark}
                         links={taskContentLike.links}
-                        myself={myself}
                     />
 
                     <SectionDivider isDark={isDark} />

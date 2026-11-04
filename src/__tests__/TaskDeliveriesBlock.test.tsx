@@ -10,11 +10,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DynamicURLManager } from "../features/tasks/components/contents/base/sub/DynamicURLManager";
-import {
-    deliveryPrUrls,
-    TaskDeliveriesBlock,
-    TaskDeliveriesBlock,
-} from "../features/tasks/components/contents/base/TaskDeliveriesBlock";
+import { TaskDeliveriesBlock } from "../features/tasks/components/contents/base/TaskDeliveriesBlock";
 import { deliveryPrUrls } from "../features/tasks/utils/deliveryPrUrls";
 import type { TaskDeliveryProps, TaskProps } from "../types/tasks";
 
