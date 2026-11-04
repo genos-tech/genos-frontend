@@ -25,6 +25,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { useTranslation } from "../../../../i18n";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { Sprint } from "../types";
+import { MILESTONE_LIST_STATUSES } from "../utils/sortMilestones";
 import { DeleteSprintModal } from "./DeleteSprintModal";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -298,7 +299,7 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
         // the latest state, including newly auto-rolled rows.
         useSM.loadSprintsForProject(projectId);
         useSM.loadMilestonesForProject(projectId, {
-            statuses: ["Open", "WIP", "Pending", "Closed"],
+            statuses: MILESTONE_LIST_STATUSES,
         });
     }, [open, projectId]);
 

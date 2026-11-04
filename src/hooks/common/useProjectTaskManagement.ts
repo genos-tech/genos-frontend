@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 import { onTasksBulkChanged } from "../../features/tasks/services/taskEvents";
+import { MILESTONE_LIST_STATUSES } from "../../features/tasks/sprint-milestone/utils/sortMilestones";
 import { useSprintMilestoneManagement } from "../tasks/useSprintMilestoneManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
 import { useProjectManagement } from "./useProjectManagement";
@@ -99,7 +100,7 @@ export const useProjectTaskManagement = ({
             useSM.loadConfigForProject(projectId),
             useSM.loadSprintsForProject(projectId),
             useSM.loadMilestonesForProject(projectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             }),
         ]);
     }, [usePM.currentProject?.projectId]);
@@ -196,7 +197,7 @@ export const useProjectTaskManagement = ({
             if (!projectId) return;
             void usePM.refreshProjectTasks(projectId);
             void useSM.loadMilestonesForProject(projectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             });
             if (useTM.currentPreviewMilestoneId !== -1) {
                 void useSM.refreshMilestone(useTM.currentPreviewMilestoneId);

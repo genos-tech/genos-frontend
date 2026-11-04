@@ -218,3 +218,30 @@ describe("sidebar milestone lists (Closed + no sprint -> Past milestones)", () =
         expect(tree[0].sprints[0].sprintId).toBeNull();
     });
 });
+
+// MIP-1015: the API moves a milestone to "Blocked" by itself when a
+// dependency blocks it. Blocked is ongoing work wherever it sits: never
+// "past", never a reason to hide the milestone's tasks.
+describe("Blocked milestones are ongoing", () => {
+    const blocked = [
+        milestone(60, "Blocked", null),
+        milestone(61, "Blocked", 2), // active sprint
+        milestone(62, "Blocked", 1), // archived sprint
+        milestone(63, "Blocked", 3), // completed sprint
+    ];
+    const ids = (ms: Milestone[]) => ms.map((m) => m.milestoneId).sort((a, b) => a - b);
+
+    it("are visible to the filter, picker and dashboard in every sprint state", () => {
+        expect(ids(selectVisibleMilestones(blocked, SPRINTS))).toEqual([60, 61, 62, 63]);
+    });
+
+    it("stay on the sidebar's live list and never land in Past milestones", () => {
+        expect(ids(selectSidebarLiveMilestones(blocked, SPRINTS))).toEqual([60, 61, 62, 63]);
+        expect(selectSidebarPastMilestones(blocked, SPRINTS)).toEqual([]);
+    });
+
+    it("are never outdated, so their tasks are never hidden", () => {
+        expect(selectOutdatedMilestones(blocked, SPRINTS)).toEqual([]);
+        expect(getOutdatedMilestoneIds(blocked, SPRINTS).size).toBe(0);
+    });
+});
