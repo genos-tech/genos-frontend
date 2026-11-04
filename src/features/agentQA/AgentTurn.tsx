@@ -41,6 +41,12 @@
 //     a field before approving (edit before approve), so the payload flows
 //     through here with no wrapper: `AgentTurn` never sees it, and cannot
 //     drop it.
+//   - `undoSteps` / `onUndo`: Undo of the turn's approved writes, in a slot of its
+//     own under the steps (not the hover-revealed action bar: it is the person's
+//     way back and must be visible). The list is derived from `toolEvents` (the
+//     live turn) plus `undoSteps` (a restored or persisted turn, which has no
+//     events); each control's STATE lives in the undo store, so an undo re-renders
+//     that one control and never the turn. See `UndoControls.tsx`.
 //   - `approvalFieldErrors` / `approvalEdits`: after the server refused an
 //     edit (422) the host's state hands the refusal back, and the card
 //     reopens in edit mode on what was typed. Pass them as they are in the
@@ -80,6 +86,8 @@ import {
 import type { AgentMentionRef } from "./mentions/types";
 import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 import type { ToolEvent } from "./types";
+import { UndoSlot } from "./UndoControls";
+import { mergeUndoSteps, type UndoRequest, type UndoStepRef } from "./undoSteps";
 
 /** What a per-turn action needs to know about the turn it sits on. */
 export interface AgentTurnActionContext {
@@ -122,6 +130,10 @@ export interface AgentTurnProps {
     // patch that was refused. Both ride with `pendingApproval` (see the header).
     approvalFieldErrors?: Record<string, string> | null;
     approvalEdits?: Record<string, unknown> | null;
+    // The approved writes of a restored or persisted turn that can be undone
+    // (`CompletedTurn.undo`); a live turn needs none, its `toolEvents` say.
+    // Pass the turn's own array, never one built inline (identity matters to the memo).
+    undoSteps?: readonly UndoStepRef[];
     isDark: boolean;
     labels: AgentTurnLabels;
     // Total server-side response time from `done`. Null / absent for error
@@ -145,6 +157,9 @@ export interface AgentTurnProps {
     // can stay one stable identity across every turn.
     onRetry?: (askedQuery: string, mentions?: AgentMentionRef[]) => void;
     onFeedback?: (runId: string, rating: number) => void;
+    // Starts one undo (the host's stable callback, behind a ref). Absent: no Undo
+    // controls, the turn renders as it did before undo existed.
+    onUndo?: (request: UndoRequest) => void;
     // Extra per-turn actions, rendered in the action bar before the built-ins.
     // Keep the function's identity stable; it is called on every render of
     // the turn.
@@ -201,6 +216,7 @@ const AgentTurnInner = ({
     pendingApproval,
     approvalFieldErrors,
     approvalEdits,
+    undoSteps,
     isDark,
     labels,
     elapsedMs,
@@ -213,6 +229,7 @@ const AgentTurnInner = ({
     onReject,
     onRetry,
     onFeedback,
+    onUndo,
     renderExtraActions,
 }: AgentTurnProps) => {
     const [copied, setCopied] = useState(false);
@@ -259,6 +276,12 @@ const AgentTurnInner = ({
     const chipSources = useMemo(
         () => citedChipSources(answer, answerSources),
         [answer, answerSources]
+    );
+
+    // The writes this turn can undo, newest first. Derived, never built by the host.
+    const undoList = useMemo(
+        () => mergeUndoSteps(toolEvents, undoSteps, runId),
+        [toolEvents, undoSteps, runId]
     );
 
     const handleCopy = useCallback(() => {
@@ -406,6 +429,17 @@ const AgentTurnInner = ({
 
                     {toolEvents.length > 0 && (
                         <ToolProgressList events={toolEvents} isDark={isDark} />
+                    )}
+
+                    {/* Undo: always on screen (not in the hover-revealed action
+                        bar), one control per approved write, newest first. */}
+                    {onUndo && undoList.length > 0 && (
+                        <UndoSlot
+                            isDark={isDark}
+                            labels={labels}
+                            steps={undoList}
+                            onUndo={onUndo}
+                        />
                     )}
 
                     {isCurrent && pendingApproval && onApprove && onReject && (

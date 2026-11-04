@@ -87,6 +87,7 @@ import {
     type AgentTurnLabels,
     type AskState,
     type CompletedTurn,
+    type UndoRequest,
 } from "../agentQA";
 import {
     isServiceDisabledByProjectScope,
@@ -159,6 +160,10 @@ export interface SpotlightContentProps {
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
+    // Undo one approved write of a turn (`useSpotlight.undoStep`). Required, so a
+    // host that renders Spotlight cannot forget it: the overlay and the Genos page
+    // both show the same conversation, and each needs the control to work.
+    onUndo: (request: UndoRequest) => void;
     onCancel: () => void;
     onNewConversation: () => void;
     // F1 — persist a 👍/👎 rating for a finished turn (keyed by the
@@ -265,6 +270,7 @@ export const SpotlightContent = ({
     onAsk,
     onApprove,
     onReject,
+    onUndo,
     onCancel,
     onNewConversation,
     onFeedback,
@@ -1229,6 +1235,7 @@ export const SpotlightContent = ({
                 onPreview={onPreview}
                 onReject={onReject}
                 onRetryHistory={openHistory}
+                onUndo={onUndo}
                 onViewHistorySession={viewHistorySession}
             />
 
@@ -1399,6 +1406,8 @@ interface ConversationPanelProps {
     onPreview: (r: SpotlightResult) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
+    // Required: see `SpotlightContentProps.onUndo`.
+    onUndo: (request: UndoRequest) => void;
     onNewConversation: () => void;
     onAsk: (
         overrideQuery?: string,
@@ -1457,6 +1466,7 @@ const ConversationPanel = memo(
         onPreview,
         onApprove,
         onReject,
+        onUndo,
         onNewConversation,
         onAsk,
         onFeedback,
@@ -1751,9 +1761,11 @@ const ConversationPanel = memo(
                                 noteScopes={noteScopes}
                                 runId={turn.runId}
                                 toolEvents={turn.toolEvents}
+                                undoSteps={turn.undo}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
                                 onRetry={onRetry}
+                                onUndo={onUndo}
                             />
                         ))}
 
@@ -1781,6 +1793,7 @@ const ConversationPanel = memo(
                                 onPreview={onPreview}
                                 onReject={onReject}
                                 onRetry={onRetry}
+                                onUndo={onUndo}
                             />
                         )}
                     </>

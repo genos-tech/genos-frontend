@@ -40,6 +40,7 @@ export {
     useAgentSessionsDeleted,
 } from "./sessionEvents";
 export { sessionTurnToCompleted } from "./sessionTurns";
+export { type UndoRequest, type UndoStepRef } from "./undoSteps";
 export { sourceChipLabel } from "./sourceChipLabel";
 export { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 export { getToolLabel } from "./toolLabels";

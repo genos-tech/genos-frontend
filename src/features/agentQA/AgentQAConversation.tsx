@@ -23,6 +23,7 @@ import type { AgentTurnLabels } from "./agentTurnLabels";
 import { buildSourcesById, sourceToUrl } from "./citationUtils";
 import type { AgentMentionRef } from "./mentions/types";
 import type { AgentQALabels, UseAgentQAReturn } from "./types";
+import type { UndoRequest } from "./undoSteps";
 
 interface AgentQAConversationProps {
     state: UseAgentQAReturn;
@@ -68,6 +69,12 @@ export const AgentQAConversation = ({
         (runId: string, rating: number) => onFeedbackRef.current?.(runId, rating),
         []
     );
+    // Same for Undo. `state.undoStep` is already one identity for the life of the
+    // hook; the ref keeps it so even a host that hands in a fresh `state.undoStep`
+    // (a test double, a wrapper) cannot re-render the turns.
+    const onUndoRef = useRef(state.undoStep);
+    onUndoRef.current = state.undoStep;
+    const onUndo = useCallback((request: UndoRequest) => onUndoRef.current?.(request), []);
     // A click on an inline citation or a source chip: try the UrlLinkModal
     // preview first (quick-look without losing the conversation), fall back to
     // the host's `onSelectSource` navigate handler when there's no preview —
@@ -150,9 +157,11 @@ export const AgentQAConversation = ({
                     runId={turn.runId}
                     sourcesById={sourcesById}
                     toolEvents={turn.toolEvents}
+                    undoSteps={turn.undo}
                     onFeedback={onFeedback}
                     onPreview={onPreview}
                     onRetry={onRetry}
+                    onUndo={onUndo}
                 />
             ))}
             {hasInFlightAnswer ? (
@@ -179,6 +188,7 @@ export const AgentQAConversation = ({
                     onPreview={onPreview}
                     onReject={state.onReject}
                     onRetry={onRetry}
+                    onUndo={onUndo}
                 />
             ) : null}
         </Stack>
