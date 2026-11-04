@@ -1330,7 +1330,6 @@ html,
 .bn-suggestion-menu,
 .bn-link-toolbar,
 .bn-table-handle,
-.bn-grid-suggestion-menu,
 .bn-floating-toolbar {
     z-index: 13300 !important;
 }
@@ -1387,7 +1386,6 @@ body
         .bn-table-handle,
         .bn-formatting-toolbar,
         .bn-suggestion-menu,
-        .bn-grid-suggestion-menu,
         .bn-link-toolbar,
         .bn-floating-toolbar,
         .bn-emoji-picker-popover,

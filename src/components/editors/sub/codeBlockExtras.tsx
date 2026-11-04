@@ -1,5 +1,5 @@
 import { codeBlockOptions } from "@blocknote/code-block";
-import { createExtension, getLanguageId, type Dictionary } from "@blocknote/core";
+import { createExtension } from "@blocknote/core";
 import { blockTypeSelectItems, type BlockTypeSelectItem } from "@blocknote/react";
 import { RiCodeBoxLine } from "react-icons/ri";
 
@@ -16,6 +16,17 @@ import { RiCodeBoxLine } from "react-icons/ri";
 // already does. Plain Enter inside any other block is left alone
 // (we return `false`), and `Mod-Enter` (chat-send) is a different
 // keymap binding so it isn't intercepted here either.
+// BlockNote's own `getLanguageId` is no longer exported from the package root
+// (0.57 declares it but does not re-export it), so this is its logic: a language
+// the user typed after the backticks resolves to its id by id or alias.
+const getLanguageId = (
+    options: typeof codeBlockOptions,
+    languageName: string
+): string | undefined =>
+    Object.entries(options.supportedLanguages ?? {}).find(
+        ([id, { aliases }]) => aliases?.includes(languageName) || id === languageName
+    )?.[0];
+
 export const codeBlockEnterShortcut = createExtension({
     key: "code-block-enter-shortcut",
     keyboardShortcuts: {
@@ -56,13 +67,15 @@ export const codeBlockEnterShortcut = createExtension({
 // Default `blockTypeSelectItems` (paragraph / headings / lists /
 // quote) plus a "Code Block" entry, so the formatting-toolbar
 // dropdown can convert the current block to a code block alongside
-// the other block-type conversions.
+// the other block-type conversions. Takes the editor (since 0.56 the
+// default items follow the schema); the default list has no code block
+// entry, so this one is not a duplicate.
 export const getBlockTypeSelectItemsWithCodeBlock = (
-    dict: Dictionary & Record<string, any>
+    editor: Parameters<typeof blockTypeSelectItems>[0]
 ): BlockTypeSelectItem[] => [
-    ...blockTypeSelectItems(dict),
+    ...blockTypeSelectItems(editor),
     {
-        name: dict.slash_menu.code_block.title,
+        name: editor.dictionary.slash_menu.code_block.title,
         type: "codeBlock",
         icon: RiCodeBoxLine,
     },

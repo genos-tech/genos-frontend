@@ -71,6 +71,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -180,6 +181,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         // This is done by picking out the blocks you want to disable
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,
@@ -579,7 +581,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                                     key={"blockTypeSelect"}
                                                     items={[
                                                         ...getBlockTypeSelectItemsWithCodeBlock(
-                                                            editor.dictionary
+                                                            editor
                                                         ),
                                                         {
                                                             name: t.common.editor.alertBlock,

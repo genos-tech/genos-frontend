@@ -3,7 +3,6 @@ import {
     BlockNoteSchema,
     createParagraphBlockSpec,
     defaultInlineContentSpecs,
-    defaultStyleSpecs,
 } from "@blocknote/core";
 import { CommentsExtension } from "@blocknote/core/comments";
 import { BlockNoteView, components as mantineComponents } from "@blocknote/mantine";
@@ -28,6 +27,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { UserProps } from "../../../types/admin";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { CreateCustomEmojiSpec } from "../CustomEmoji";
+import { genosStyleSpecs } from "../genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -94,10 +94,11 @@ export const buildCommentSchema = (args: {
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
 }) => {
-    // Drop the color styles from the default style specs, exactly as the stock
-    // comment schema does — the comment formatting toolbar offers no color
-    // buttons, so keeping them would be dead schema.
-    const { textColor, backgroundColor, ...styleSpecs } = defaultStyleSpecs;
+    // Drop the color styles from the style specs, exactly as the stock comment
+    // schema does (the comment formatting toolbar offers no color buttons, so
+    // keeping them would be dead schema), starting from ours so inline code
+    // can still be combined with the other styles (see `genosStyleSpecs`).
+    const { textColor, backgroundColor, ...styleSpecs } = genosStyleSpecs;
     return BlockNoteSchema.create({
         blockSpecs: {
             paragraph: createParagraphBlockSpec(),

@@ -1,5 +1,5 @@
 {
-    "readWith": "@blocknote/core 0.49.0",
+    "readWith": "@blocknote/core 0.57.0",
     "docs": [
         {
             "name": "fixture-all-types",
@@ -949,9 +949,9 @@
                 "equal": true,
                 "hash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b"
             },
-            "markdown": "# **Release notes&#x20;**&#x66;or 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold&#x20;***italic&#x20;*&#x75;nderline ~~strike ~~`code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1\\&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n\n  * nested bullet\n\n    * three deep\n\n  1. numbered under a bullet\n\n* second bullet\n\n3. starts at three\n\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n| **Name** | Owner       | Status      |\n| -------- | ----------- | ----------- |\n| Import   | merged cell |             |\n| Export   | Bob         | in progress |\n\n![diagram.png](https://example.test/files/diagram.png)\n\nAn invented diagram\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
-            "markdownHash": "762838aac0df32c4a0e2c0bd1471e0c586b97d8825e24c09f979b741853e465a",
-            "reparsedHash": "ef14a21e602d51a92577ba5642b4a34633fb8727e8a75a78f70edbf9fb9bd12b"
+            "markdown": "# **Release notes** for 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold** *italic* underline ~~strike~~ `code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n  * nested bullet\n    * three deep\n  1. numbered under a bullet\n* second bullet\n\n3. starts at three\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n\n\n| **Name**   | Owner       | Status      |\n| ---------- | ----------- | ----------- |\n| Import     | merged cell |             |\n| Export     | Bob         | in progress |\n\n<figure><img alt=\"diagram.png\" src=\"https://example.test/files/diagram.png\"><figcaption>An invented diagram</figcaption></figure>\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
+            "markdownHash": "1443ddaab197eb959fcc12326409a40f557c4f48306bef72d16d7650b6ec8948",
+            "reparsedHash": "3514cb37a2968a77bd2be453f2f90db03057abd10c9fe8fa41da124d3ab3d776"
         },
         {
             "name": "fixture-empty",
@@ -979,8 +979,8 @@
                 "equal": true,
                 "hash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
             },
-            "markdown": "",
-            "markdownHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
             "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
         },
         {
@@ -1009,8 +1009,8 @@
                 "equal": true,
                 "hash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c"
             },
-            "markdown": "",
-            "markdownHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
             "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
         },
         {
@@ -1995,9 +1995,9 @@
                 "equal": true,
                 "hash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b"
             },
-            "markdown": "# **Release notes&#x20;**&#x66;or 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold&#x20;***italic&#x20;*&#x75;nderline ~~strike ~~`code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1\\&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n\n  * nested bullet\n\n    * three deep\n\n  1. numbered under a bullet\n\n* second bullet\n\n3. starts at three\n\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n| **Name** | Owner       | Status      |\n| -------- | ----------- | ----------- |\n| Import   | merged cell |             |\n| Export   | Bob         | in progress |\n\n![diagram.png](https://example.test/files/diagram.png)\n\nAn invented diagram\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
-            "markdownHash": "762838aac0df32c4a0e2c0bd1471e0c586b97d8825e24c09f979b741853e465a",
-            "reparsedHash": "ef14a21e602d51a92577ba5642b4a34633fb8727e8a75a78f70edbf9fb9bd12b"
+            "markdown": "# **Release notes** for 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold** *italic* underline ~~strike~~ `code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n  * nested bullet\n    * three deep\n  1. numbered under a bullet\n* second bullet\n\n3. starts at three\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n\n\n| **Name**   | Owner       | Status      |\n| ---------- | ----------- | ----------- |\n| Import     | merged cell |             |\n| Export     | Bob         | in progress |\n\n<figure><img alt=\"diagram.png\" src=\"https://example.test/files/diagram.png\"><figcaption>An invented diagram</figcaption></figure>\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
+            "markdownHash": "1443ddaab197eb959fcc12326409a40f557c4f48306bef72d16d7650b6ec8948",
+            "reparsedHash": "3514cb37a2968a77bd2be453f2f90db03057abd10c9fe8fa41da124d3ab3d776"
         },
         {
             "name": "fixture-empty:yjs",
@@ -2025,8 +2025,8 @@
                 "equal": true,
                 "hash": "6b336e3bb53ab17127f9f424a818518a2824a43b68da5523a9d6842038fe4d75"
             },
-            "markdown": "",
-            "markdownHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
             "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
         },
         {
@@ -2055,8 +2055,8 @@
                 "equal": true,
                 "hash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c"
             },
-            "markdown": "",
-            "markdownHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
             "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
         },
         {

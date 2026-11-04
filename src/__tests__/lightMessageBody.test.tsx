@@ -197,6 +197,67 @@ const cases: Array<{ name: string; content: any[] }> = [
         ],
     },
     {
+        name: "numbered list that continues",
+        content: [
+            { type: "numberedListItem", content: [{ type: "text", text: "one", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "two", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "three", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered list with a start",
+        content: [
+            {
+                type: "numberedListItem",
+                props: { start: 5 },
+                content: [{ type: "text", text: "five", styles: {} }],
+            },
+            { type: "numberedListItem", content: [{ type: "text", text: "six", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered lists separated by a paragraph restart",
+        content: [
+            { type: "numberedListItem", content: [{ type: "text", text: "a", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "b", styles: {} }] },
+            { type: "paragraph", content: [{ type: "text", text: "break", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "c", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "d", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered list nested in numbered list and a bullet between",
+        content: [
+            {
+                type: "numberedListItem",
+                content: [{ type: "text", text: "parent", styles: {} }],
+                children: [
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "x", styles: {} }],
+                    },
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "y", styles: {} }],
+                    },
+                    {
+                        type: "bulletListItem",
+                        content: [{ type: "text", text: "dot", styles: {} }],
+                    },
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "z", styles: {} }],
+                    },
+                ],
+            },
+            { type: "numberedListItem", content: [{ type: "text", text: "next", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
         name: "nested list",
         content: [
             {

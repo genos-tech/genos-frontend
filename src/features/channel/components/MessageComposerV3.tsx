@@ -50,6 +50,7 @@ import {
 } from "@blocknote/react";
 
 import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
+import { genosStyleSpecs } from "../../../components/editors/genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -175,6 +176,7 @@ export function MessageComposerV3({
         void audio;
         void video;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 ...defaultInlineContentSpecs,
                 mention: createMentionSpecV3(currentUserId),

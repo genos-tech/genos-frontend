@@ -36,6 +36,7 @@ import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -100,6 +101,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
@@ -163,7 +165,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                             />
 
                             <BasicTextStyleButton

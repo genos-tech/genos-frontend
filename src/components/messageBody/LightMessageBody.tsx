@@ -589,12 +589,34 @@ function InlineWrapper({
     return <p className="bn-inline-content">{inner}</p>;
 }
 
+/** The number each numbered list item shows, `undefined` for any other block.
+ *  BlockNote draws it from a `data-index` attribute on the item (its CSS prints
+ *  `attr(data-index)` followed by a dot), and since 0.51 it is there from the
+ *  first render. A run of consecutive numbered siblings counts up from the first
+ *  item's `start` (1 when unset); any other block in between starts a new run,
+ *  and a nested list is its own run. Same rule as BlockNote's indexing plugin. */
+const numberedIndices = (blocks: AnyBlock[]): (number | undefined)[] => {
+    let previous: number | undefined;
+    return blocks.map((block) => {
+        if (block.type !== "numberedListItem") {
+            previous = undefined;
+            return undefined;
+        }
+        const start = Number(block.props?.start);
+        previous = previous === undefined ? (start > 0 ? start : 1) : previous + 1;
+        return previous;
+    });
+};
+
 const BlockNode = ({
     block,
+    index,
     ctx,
     onImageZoom,
 }: {
     block: AnyBlock;
+    /** See `numberedIndices`. */
+    index?: number;
     ctx: Omit<LightMessageBodyProps, "content">;
     onImageZoom: (src: string) => void;
 }) => {
@@ -616,6 +638,14 @@ const BlockNode = ({
                         // is not the no-op it looks like.
                         ...(block.type === "heading" && (Number(block.props?.level) || 1) !== 1
                             ? { "data-level": String(Number(block.props?.level)) }
+                            : {})
+                    }
+                    {...(index !== undefined ? { "data-index": String(index) } : {})}
+                    {
+                        // BlockNote writes every non-default prop as a data
+                        // attribute; for a numbered item that is its `start`.
+                        ...(block.type === "numberedListItem" && block.props?.start != null
+                            ? { "data-start": String(block.props.start) }
                             : {})
                     }
                     {...(isCheck ? { "data-checked": String(checked) } : {})}
@@ -650,9 +680,18 @@ const BlockNode = ({
                 </div>
                 {children.length > 0 && (
                     <div className="bn-block-group" data-node-type="blockGroup">
-                        {children.map((child, i) => (
-                            <BlockNode key={i} block={child} ctx={ctx} onImageZoom={onImageZoom} />
-                        ))}
+                        {(() => {
+                            const indices = numberedIndices(children);
+                            return children.map((child, i) => (
+                                <BlockNode
+                                    key={i}
+                                    block={child}
+                                    ctx={ctx}
+                                    index={indices[i]}
+                                    onImageZoom={onImageZoom}
+                                />
+                            ));
+                        })()}
                     </div>
                 )}
             </div>
@@ -710,8 +749,14 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
         <div ref={editorBoxRef} className={isJumboEmoji ? "bn-emoji-only-body" : undefined}>
             <div className="bn-editor bn-default-styles">
                 <div className="bn-block-group" data-node-type="blockGroup">
-                    {blocks.map((block, i) => (
-                        <BlockNode key={i} block={block} ctx={ctx} onImageZoom={setZoomSrc} />
+                    {numberedIndices(blocks).map((index, i) => (
+                        <BlockNode
+                            key={i}
+                            block={blocks[i]}
+                            ctx={ctx}
+                            index={index}
+                            onImageZoom={setZoomSrc}
+                        />
                     ))}
                 </div>
             </div>

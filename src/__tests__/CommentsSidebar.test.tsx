@@ -39,7 +39,12 @@ vi.mock("@blocknote/react", () => ({
     useExtension: () => ({ selectThread }),
     useExtensionState: () => ({ threadPositions, selectedThreadId }),
     useThreads: () => threads,
-    useUser: (userId: string) => users.get(userId),
+}));
+
+// The author lookup is its own hook (BlockNote's `useUser` is not public in 0.57);
+// it has its own test (`useCommentAuthor.test.tsx`), here it just answers from `users`.
+vi.mock("../components/editors/sub/useCommentAuthor", () => ({
+    useCommentAuthor: (userId: string) => users.get(userId),
 }));
 
 // The sidebar imports the CommentsExtension token only to pass it to the mocked
