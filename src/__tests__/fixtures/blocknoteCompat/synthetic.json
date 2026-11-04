@@ -1,0 +1,807 @@
+{
+    "docs": [
+        {
+            "name": "fixture-all-types",
+            "blocks": [
+                {
+                    "id": "h1",
+                    "type": "heading",
+                    "props": {
+                        "level": 1,
+                        "textColor": "red",
+                        "backgroundColor": "yellow",
+                        "textAlignment": "center"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Release notes ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "for 4 Nov",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "h2",
+                    "type": "heading",
+                    "props": {
+                        "level": 2,
+                        "isToggleable": true
+                    },
+                    "children": [
+                        {
+                            "id": "h2c",
+                            "type": "paragraph",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "hidden by default",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "A toggleable heading",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "h3",
+                    "type": "heading",
+                    "props": {
+                        "level": 3
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Third level",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "p-styles",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "bold ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "italic ",
+                            "styles": {
+                                "italic": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "underline ",
+                            "styles": {
+                                "underline": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "strike ",
+                            "styles": {
+                                "strike": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "code ",
+                            "styles": {
+                                "code": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "red ",
+                            "styles": {
+                                "textColor": "red"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "blue bg ",
+                            "styles": {
+                                "backgroundColor": "blue"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "all of it",
+                            "styles": {
+                                "bold": true,
+                                "italic": true,
+                                "underline": true,
+                                "strike": true,
+                                "textColor": "green",
+                                "backgroundColor": "purple"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-links",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "see ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://example.org/a?b=1&c=2",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a link",
+                                    "styles": {
+                                        "bold": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "text": " and ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://docs.example.net/d/1/edit",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "another",
+                                    "styles": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-chips",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "ask ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mention",
+                            "props": {
+                                "userName": "Alice",
+                                "userId": "u-1"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mentionGroup",
+                            "props": {
+                                "groupName": "eng",
+                                "groupId": "3",
+                                "memberCount": "5"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "customEmoji",
+                            "props": {
+                                "name": "parrot",
+                                "url": "https://example.test/emoji/parrot.gif"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " about ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashTask",
+                            "props": {
+                                "projectId": "1",
+                                "taskId": "42",
+                                "displayId": "PRJ-42",
+                                "title": "Ship it",
+                                "labelMode": ""
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashNote",
+                            "props": {
+                                "noteKind": "task",
+                                "noteId": "7",
+                                "title": "Plan",
+                                "projectId": "1",
+                                "taskId": "42",
+                                "chatType": "",
+                                "chatId": "",
+                                "threadId": "0"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashChat",
+                            "props": {
+                                "chatId": "c-9",
+                                "chatName": "general"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashProject",
+                            "props": {
+                                "projectId": "1",
+                                "projectName": "Alpha"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "bl1",
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "blue"
+                    },
+                    "children": [
+                        {
+                            "id": "bl1a",
+                            "type": "bulletListItem",
+                            "props": {},
+                            "children": [
+                                {
+                                    "id": "bl1a1",
+                                    "type": "bulletListItem",
+                                    "props": {},
+                                    "children": [],
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "three deep",
+                                            "styles": {}
+                                        }
+                                    ]
+                                }
+                            ],
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "nested bullet",
+                                    "styles": {}
+                                }
+                            ]
+                        },
+                        {
+                            "id": "bl1b",
+                            "type": "numberedListItem",
+                            "props": {},
+                            "children": [],
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "numbered under a bullet",
+                                    "styles": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "first bullet",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "bl2",
+                    "type": "bulletListItem",
+                    "props": {
+                        "textAlignment": "right"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "second bullet",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "nl1",
+                    "type": "numberedListItem",
+                    "props": {
+                        "start": 3
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "starts at three",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "nl2",
+                    "type": "numberedListItem",
+                    "props": {},
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "then four",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "cl1",
+                    "type": "checkListItem",
+                    "props": {
+                        "checked": true
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "done",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "cl2",
+                    "type": "checkListItem",
+                    "props": {
+                        "checked": false
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "not yet",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "tg1",
+                    "type": "toggleListItem",
+                    "props": {},
+                    "children": [
+                        {
+                            "id": "tg1c",
+                            "type": "paragraph",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "inside the toggle",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a toggle",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "q1",
+                    "type": "quote",
+                    "props": {
+                        "backgroundColor": "gray"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a quote with ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "emphasis",
+                            "styles": {
+                                "italic": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "cb1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "typescript"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "const x: number = 1;\nconsole.log(x);",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "cb2",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "text"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain text, no highlighting",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "dv1",
+                    "type": "divider",
+                    "props": {},
+                    "children": []
+                },
+                {
+                    "id": "tb1",
+                    "type": "table",
+                    "props": {
+                        "textColor": "default"
+                    },
+                    "children": [],
+                    "content": {
+                        "type": "tableContent",
+                        "columnWidths": [200, null, 120],
+                        "headerRows": 1,
+                        "rows": [
+                            {
+                                "cells": [
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Name",
+                                            "styles": {
+                                                "bold": true
+                                            }
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Owner",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Status",
+                                            "styles": {}
+                                        }
+                                    ]
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Import",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    {
+                                        "type": "tableCell",
+                                        "props": {
+                                            "colspan": 2,
+                                            "rowspan": 1,
+                                            "backgroundColor": "green",
+                                            "textColor": "default",
+                                            "textAlignment": "center"
+                                        },
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "merged cell",
+                                                "styles": {}
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Export",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "Bob",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    [
+                                        {
+                                            "type": "text",
+                                            "text": "in progress",
+                                            "styles": {}
+                                        }
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "im1",
+                    "type": "image",
+                    "props": {
+                        "url": "https://example.test/files/diagram.png",
+                        "name": "diagram.png",
+                        "caption": "An invented diagram",
+                        "showPreview": true,
+                        "previewWidth": 300,
+                        "textAlignment": "center",
+                        "backgroundColor": "default"
+                    },
+                    "children": []
+                },
+                {
+                    "id": "fl1",
+                    "type": "file",
+                    "props": {
+                        "url": "https://example.test/files/report.pdf",
+                        "name": "report.pdf",
+                        "caption": "Quarterly report",
+                        "backgroundColor": "default"
+                    },
+                    "children": []
+                },
+                {
+                    "id": "al1",
+                    "type": "alert",
+                    "props": {
+                        "type": "warning"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Heads up: warning alert",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "al2",
+                    "type": "alert",
+                    "props": {
+                        "type": "error",
+                        "textAlignment": "center"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "An error alert",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "al3",
+                    "type": "alert",
+                    "props": {
+                        "type": "info",
+                        "textColor": "blue"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "For information",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "al4",
+                    "type": "alert",
+                    "props": {
+                        "type": "success"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "It worked",
+                            "styles": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "p-aligned",
+                    "type": "paragraph",
+                    "props": {
+                        "textAlignment": "right",
+                        "backgroundColor": "orange"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "right aligned on a tinted background",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "deep0",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "level 0",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "deep1",
+                            "type": "paragraph",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "level 1",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "id": "deep2",
+                                    "type": "paragraph",
+                                    "props": {},
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "level 2",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "id": "deep3",
+                                            "type": "paragraph",
+                                            "props": {},
+                                            "content": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "level 3",
+                                                    "styles": {}
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "p-empty",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "name": "fixture-empty",
+            "blocks": []
+        },
+        {
+            "name": "fixture-one-empty-paragraph",
+            "blocks": [
+                {
+                    "id": "e1",
+                    "type": "paragraph",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "name": "fixture-code-only",
+            "blocks": [
+                {
+                    "id": "c1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "sql"
+                    },
+                    "children": [],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "select 1;",
+                            "styles": {}
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
