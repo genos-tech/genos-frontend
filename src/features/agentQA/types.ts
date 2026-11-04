@@ -7,6 +7,7 @@
 import type { AskAgentArgs, PendingApprovalPayload } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import type { AgentMentionRef } from "./mentions/types";
+import type { UndoRequest, UndoStepRef } from "./undoSteps";
 
 export type ToolEventStatus = "pending" | "done" | "error";
 
@@ -30,6 +31,12 @@ export interface ToolEvent {
     // or a plain approve.
     edited?: boolean;
     edited_arguments?: Record<string, unknown>;
+    // Set from the result event of an approved write that can be undone: only
+    // when the server really stored what undo needs, so this alone decides
+    // whether the turn offers Undo. `run_id` is the run the approval resumed:
+    // the result event does not name it, and the turn's own run id only
+    // arrives with `done` (never, for a turn cancelled or failed after the write).
+    undo?: { step_id: number; available_until: string; run_id?: string };
 }
 
 // Live state of the in-flight (or just-finished) turn.
@@ -99,6 +106,11 @@ export interface CompletedTurn {
     mentions?: AgentMentionRef[];
     // Total response time snapshot from AskState.elapsedMs (see there).
     elapsedMs?: number | null;
+    // The approved writes of this turn that can be undone, oldest first. From
+    // the turn's own tool events when it was live, from the server's list when
+    // restored (a restored turn has no tool events), and kept when Spotlight
+    // persists the turn (it strips the events). Absent when there are none.
+    undo?: UndoStepRef[];
 }
 
 // Soft cap on how many completed turns we hold in client memory. The
@@ -244,4 +256,8 @@ export interface UseAgentQAReturn {
     // 0 = cleared. Fire-and-forget; failures are swallowed (feedback is
     // best-effort telemetry, never blocks the UI).
     submitFeedback: (runId: string, rating: number) => void;
+    // Undo one approved write (the click on a turn's Undo control). Stable
+    // identity; the state of the step lives in the undo store, not here, so this
+    // never re-renders the conversation. See `undoStore.ts`.
+    undoStep: (request: UndoRequest) => void;
 }

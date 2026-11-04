@@ -32,6 +32,7 @@ import {
     decideAgent,
     submitAgentFeedback,
     type PendingApprovalPayload,
+    type ToolResultUndoRef,
 } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
@@ -50,6 +51,8 @@ import {
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
+import { undoStepsFromToolEvents, type UndoRequest } from "./undoSteps";
+import { runUndo } from "./undoStore";
 
 // An edit patch worth sending: a plain `{path: value}` object with at least one
 // entry. (Not an event, an array or null: see `decide`.)
@@ -71,17 +74,23 @@ const appendTurn = (turns: CompletedTurn[], turn: CompletedTurn): CompletedTurn[
 // Immutable snapshot of the live turn. Carries the structured mentions so
 // "Ask again" on ANY promoted turn (finished, failed or cancelled) re-sends
 // the same @/# references.
-const snapshotTurn = (ask: AskState): CompletedTurn => ({
-    id: ask.turnId,
-    askedQuery: ask.askedQuery,
-    answer: ask.answer,
-    answerSources: ask.answerSources,
-    toolEvents: ask.toolEvents,
-    askError: ask.askError,
-    runId: ask.runId ?? null,
-    mentions: ask.askedMentions,
-    elapsedMs: ask.elapsedMs ?? null,
-});
+const snapshotTurn = (ask: AskState): CompletedTurn => {
+    // The turn's undoable writes, kept as data of their own: Spotlight persists
+    // turns without their tool events, and the list has to outlive that.
+    const undo = undoStepsFromToolEvents(ask.toolEvents, ask.runId);
+    return {
+        id: ask.turnId,
+        askedQuery: ask.askedQuery,
+        answer: ask.answer,
+        answerSources: ask.answerSources,
+        toolEvents: ask.toolEvents,
+        askError: ask.askError,
+        runId: ask.runId ?? null,
+        mentions: ask.askedMentions,
+        elapsedMs: ask.elapsedMs ?? null,
+        ...(undo.length > 0 ? { undo } : {}),
+    };
+};
 
 export const useAgentQA = ({
     accessToken,
@@ -171,8 +180,12 @@ export const useAgentQA = ({
     // Shared by askAgentStream (fresh /ask/) and decideAgent (resume).
     // Both flows write into the same `ask` state, so the UI sees one
     // continuous answer panel across a pause + resume.
+    //
+    // `resumedRunId` is the run a /decide/ resumed. A result event names neither
+    // its run nor (before `done`) does the turn, and the Undo of an approved
+    // write needs one: it rides on the tool event from here.
     const buildStreamHandlers = useCallback(
-        (askedTurnId: number) => {
+        (askedTurnId: number, resumedRunId?: string) => {
             const stillCurrent = (prev: AskState) => prev.turnId === askedTurnId;
             return {
                 onSources: (sources: SpotlightResult[]) => {
@@ -261,6 +274,7 @@ export const useAgentQA = ({
                     note_folder,
                     duration_ms,
                     project,
+                    undo,
                 }: {
                     step: number;
                     tool_name: string;
@@ -271,6 +285,7 @@ export const useAgentQA = ({
                     note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
                     duration_ms?: number;
                     project?: import("../../services/agentApi").ToolResultProjectRef;
+                    undo?: ToolResultUndoRef;
                 }) => {
                     setAsk((prev) => {
                         if (!stillCurrent(prev)) return prev;
@@ -290,6 +305,19 @@ export const useAgentQA = ({
                                           // one stays exactly as it was.
                                           ...(edited === true && edited_arguments
                                               ? { edited: true, edited_arguments }
+                                              : {}),
+                                          // Only a write whose undo was really
+                                          // stored carries one: it alone decides
+                                          // whether the turn offers Undo.
+                                          ...(undo
+                                              ? {
+                                                    undo: {
+                                                        ...undo,
+                                                        ...(resumedRunId
+                                                            ? { run_id: resumedRunId }
+                                                            : {}),
+                                                    },
+                                                }
                                               : {}),
                                       }
                                     : te
@@ -569,7 +597,7 @@ export const useAgentQA = ({
                 ...(edits ? { editedArgs: edits } : {}),
                 accessToken,
                 signal: controller.signal,
-                ...buildStreamHandlers(askedTurnId),
+                ...buildStreamHandlers(askedTurnId, payload.run_id),
                 onEditsRejected: ({ fieldErrors }) => {
                     if (askAbortRef.current !== controller || controller.signal.aborted) return;
                     if (decidedApprovalTokenRef.current === payload.approval_token) {
@@ -736,6 +764,18 @@ export const useAgentQA = ({
         [accessToken]
     );
 
+    // ---- Undo one approved write. ----
+    // The state of the step is not here (see `undoStore.ts`): this only starts the
+    // request, with the live token read through a ref so the callback keeps ONE
+    // identity for the life of the hook and never re-renders a turn.
+    const accessTokenRef = useRef(accessToken);
+    accessTokenRef.current = accessToken;
+    const undoStep = useCallback(
+        ({ runId, stepId }: UndoRequest) =>
+            void runUndo({ runId, stepId, accessToken: accessTokenRef.current }),
+        []
+    );
+
     return {
         query,
         setQuery,
@@ -750,5 +790,6 @@ export const useAgentQA = ({
         reset,
         showStaticAnswer,
         submitFeedback,
+        undoStep,
     };
 };
