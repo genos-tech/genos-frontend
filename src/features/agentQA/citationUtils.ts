@@ -68,18 +68,25 @@ export const CITATION_HREF_PREFIX = "spotlight-citation:";
 export const agentQAUrlTransform = (url: string): string =>
     url.startsWith(CITATION_HREF_PREFIX) ? url : defaultUrlTransform(url);
 
-// Build the entity-id → source lookup the rewriter consumes. Chat
-// entity ids in the index don't carry the leading "chat:" prefix
-// (they're "dm:5:thread:4" not "chat:dm:5:thread:4") so we normalise
-// to the prefixed form to match what CITATION_PATTERN captures.
+// The identity of a source: the form a citation token spells it in, and the key
+// every lookup and every merge of sources goes by. Chat entity ids in the index
+// don't carry the leading "chat:" prefix (they're "dm:5:thread:4" not
+// "chat:dm:5:thread:4") so we normalise to the prefixed form to match what
+// CITATION_PATTERN captures; one thread shipped with and without the prefix is
+// one source. A source with no entity id at all (the server never sends one)
+// has no identity to compare, so its content stands in: two different ones stay
+// two, and the same one sent twice stays one.
+export const sourceKey = (s: SpotlightResult): string => {
+    const id: unknown = s.entity_id;
+    if (typeof id !== "string") return `\0${JSON.stringify(s)}`;
+    return id.startsWith(`${s.entity_type}:`) ? id : `${s.entity_type}:${id}`;
+};
+
+// Build the entity-id → source lookup the rewriter consumes, keyed by
+// `sourceKey`.
 export const buildSourcesById = (sources: SpotlightResult[]): Map<string, SpotlightResult> => {
     const m = new Map<string, SpotlightResult>();
-    for (const s of sources) {
-        const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
-            ? s.entity_id
-            : `${s.entity_type}:${s.entity_id}`;
-        m.set(tokenKey, s);
-    }
+    for (const s of sources) m.set(sourceKey(s), s);
     return m;
 };
 
@@ -367,9 +374,9 @@ export const extractBareCitedIds = (answer: string): Set<string> => {
 // answer, and the model occasionally forgets the citation — the chip is
 // the guarantee the prose can't provide.
 //
-// Token normalisation matches `buildSourcesById` so a chat source whose
-// `entity_id` lacks the "chat:" prefix still matches the prefixed token
-// form the model emits.
+// Token normalisation is `sourceKey`'s, so a chat source whose `entity_id`
+// lacks the "chat:" prefix still matches the prefixed token form the model
+// emits.
 export const citedChipSources = (
     answer: string,
     sources: SpotlightResult[]
@@ -390,10 +397,7 @@ export const citedChipSources = (
     const chips = sources.filter((s) => {
         if (s.operated) return true;
         if (cited.size === 0) return false;
-        const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
-            ? s.entity_id
-            : `${s.entity_type}:${s.entity_id}`;
-        return cited.has(tokenKey);
+        return cited.has(sourceKey(s));
     });
 
     // A milestone IS a task under the hood, so the backend can return

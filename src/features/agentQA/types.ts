@@ -47,7 +47,9 @@ export interface AskState {
     askedQuery: string;
     // Accumulated answer text from the streamed deltas.
     answer: string;
-    // Citation sources returned by the backend before the stream started.
+    // The turn's citation sources: the union of every `sources` event of the
+    // turn, across an approval pause too (see `mergeSources`). Empty at the start
+    // of each ask.
     answerSources: SpotlightResult[];
     // Set when the stream emits an error event (or transport fails).
     askError: string | null;
