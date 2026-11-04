@@ -4,7 +4,7 @@ import { authApi } from "../../../../services/api";
 import { ProjectMilestonesResponse } from "../types";
 
 export type LoadProjectMilestonesOptions = {
-    statuses?: string[];
+    statuses?: readonly string[];
     sprintId?: number | "null" | null;
 };
 

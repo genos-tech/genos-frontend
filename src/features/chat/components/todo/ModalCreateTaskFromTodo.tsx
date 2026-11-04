@@ -29,6 +29,7 @@ import { createQuickTask } from "../../../tasks/services/createQuickTask";
 import { loadTeamProjects } from "../../../tasks/services/loadTeamProjects";
 import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
 import { SprintMilestonePicker } from "../../../tasks/sprint-milestone/components/SprintMilestonePicker";
+import { MILESTONE_LIST_STATUSES } from "../../../tasks/sprint-milestone/utils/sortMilestones";
 import { projectAvatarSrc } from "../../../tasks/utils/projectAvatar";
 
 // Remembers the last project a to-do was promoted into. Most people
@@ -159,7 +160,7 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
         setMilestoneTaskId(null);
         if (nextProjectId != null) {
             void useSM.loadMilestonesForProject(nextProjectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             });
         }
     };

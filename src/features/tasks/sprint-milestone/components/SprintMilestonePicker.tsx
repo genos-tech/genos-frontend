@@ -75,9 +75,15 @@ const SPRINT_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "n
     archived: "neutral",
 };
 
-const MILESTONE_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
+const MILESTONE_STATUS_COLOR: Record<
+    string,
+    "primary" | "warning" | "danger" | "success" | "neutral"
+> = {
     Open: "primary",
     WIP: "warning",
+    // The API Blocks a milestone by itself when a dependency blocks it
+    // (MIP-1015); without this it fell back to the neutral "unknown" tone.
+    Blocked: "danger",
     Pending: "neutral",
     Closed: "success",
     Deleted: "neutral",
