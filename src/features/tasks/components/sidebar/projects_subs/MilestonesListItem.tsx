@@ -60,13 +60,30 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 // (the search popper). Row menus portal to <body>, so they are unaffected.
 const MS_LIST = "ms-list";
 const MS_ROW = "ms-row";
+// Where the row menu sits vertically: centred on the first line (title), so it
+// covers the progress chip and not the second line's chips and avatars.
+const MS_MENU_TOP = "17px";
 // List width below which the indent steps get smaller.
 const LIST_COMPACT_MAX_PX = 299;
+// MIP-1021: below this list width (a panel of ~210px, the 10% minimum on most
+// screens) the indent, Joy's nested inset and the ListItem padding shrink
+// further: at ~140px the old 24px base + 32px inset + 8px padding left the
+// title no room at all.
+const LIST_TIGHT_MAX_PX = 199;
+// ...and below this, folder rows drop their count chip (the title would get
+// ~20px next to icon + count + arrow).
+const LIST_NO_FOLDER_COUNT_MAX_PX = 159;
+const PROGRESS_CLASS = "MsRowProgress";
+const FOLDER_COUNT_CLASS = "MsFolderCount";
+// The title never gets less than this; a chip or the indent never wins.
+const TITLE_MIN_WIDTH = "4ch";
 // Row content widths (tuned in a browser): row 2 is the sprint chip (the
 // flexible part), a status chip of up to ~60px and the avatars (~54px for
 // four, ~34px for one + "+N"). Below 180px only one avatar + "+N" shows; below
 // 160px the sprint chip would be an unreadable stub, so it goes; below 100px
-// even status + one avatar can't fit, so the avatars go and status stays.
+// even status + one avatar can't fit, so the avatars go and status stays. The
+// progress chip goes at the same width (MIP-1021): with it the title would
+// get under ~60px (about 8 characters), and the title never goes.
 const ROW_ONE_AVATAR_MAX_PX = 179;
 const ROW_NO_SPRINT_MAX_PX = 159;
 const ROW_NO_AVATARS_MAX_PX = 99;
@@ -74,11 +91,80 @@ const AVATARS_CLASS = "MsRowAvatars";
 const SURPLUS_CLASS = "MsRowAvatarSurplus";
 const SPRINT_CLASS = "MsRowSprint";
 
+// ── Row menu and title room (MIP-1021) ──
+// A row's "..." menu shows only while the row is hovered, keyboard-focused or
+// its menu is open, and always on a touch device (no hover there). While
+// hidden it takes NO width: it is Joy's absolutely positioned `endAction`, and
+// the row no longer keeps a 32px margin for it, so the title gets that room
+// and does not move when the menu appears (it overlays the row's right end).
+//   - The button stays in the DOM and in the tab order (opacity, not display
+//     or visibility), so keyboard and screen-reader users still reach it.
+//   - Opacity and pointer-events sit on the BUTTON, not the endAction wrapper:
+//     an opacity-0 wrapper would hide the button in every state. The wrapper
+//     never takes a click itself, so a hidden menu can't block the row.
+//   - No `:has()` (MIP-963: one cost a second of style recalc). Row focus is
+//     read from Joy's `.Mui-focusVisible` on the preceding row button, so a
+//     mouse click on a row does not leave its menu showing.
+//   - `--ms-menu-reserve` is the margin a touch device keeps for the visible
+//     button (32px, as before) so it never covers the chips; it is 0 for a
+//     mouse, and 0 in a compact (<= 299px) list on touch too: title room is
+//     scarcer than chip room there, and the button simply overlays.
+//   - Where the button overlays, it has the row's hover colour as background
+//     and a same-colour shadow fading to its left (a chip under its edge
+//     fades out instead of being cut). Where it has its own space (touch in a
+//     wide list) both are off: `--ms-menu-bg` / `--ms-menu-fade`.
+const MENU_RESERVE_TOUCH = "32px";
+// A folder row ends in a chevron that is also a click target: the menu sits
+// just left of it (over the count chip), not on it. 18px = the chevron (16px)
+// + its margin (4px) + the button's padding (4px) less Joy's 4px shift of the
+// button; plus the row's right padding. On touch in a wide list the reserved
+// 32px already keeps the chevron clear, so the menu goes back to the edge.
+const FOLDER_MENU_RIGHT = "max(0px, calc(var(--ms-li-pr, 8px) + 18px - var(--ms-menu-reserve)))";
+const END_ACTION = ".MuiListItem-endAction";
+const REVEAL_SELECTORS = [
+    `&:hover > ${END_ACTION} button`,
+    `& > .Mui-focusVisible ~ ${END_ACTION} button`,
+    `& > ${END_ACTION} button:focus-visible`,
+    `& > ${END_ACTION} button[aria-expanded="true"]`,
+].join(", ");
+const rowMenuSx = (place: { top?: string; right?: string } = {}) => ({
+    [`& > ${END_ACTION}`]: { pointerEvents: "none", ...place },
+    [`& > ${END_ACTION} button`]: {
+        opacity: 0,
+        pointerEvents: "none",
+        transition: "opacity 0.12s",
+        "--IconButton-size": "28px",
+        // Opaque, as the row's hover colour: it overlays whatever is under it.
+        // The shadow is the same colour, fading out to the left, so a chip
+        // under the button's edge fades instead of being cut off.
+        backgroundColor: "var(--ms-menu-bg)",
+        boxShadow: "var(--ms-menu-fade)",
+    },
+    [REVEAL_SELECTORS]: { opacity: 1, pointerEvents: "auto" },
+    "@media (hover: none)": {
+        [`& > ${END_ACTION} button`]: {
+            opacity: 1,
+            pointerEvents: "auto",
+            "--IconButton-size": "32px",
+        },
+    },
+});
+
 // Left indent for tree level `depth` (0 = directly under the project row).
-// Normal 40/56/72/88px (spacing 5 + 2 per level); compact 24/32/40/48px.
+// Normal 40/56/72/88px (spacing 5 + 2 per level); compact 24/32/40/48px;
+// tight (list <= 199px) 16/22/28/34px.
 const indentSx = (depth: number) => ({
     ml: `calc(var(--ms-indent-base) + ${depth} * var(--ms-indent-step))`,
 });
+// Joy gives every button in a nested list an inset of 24px + 8px. The tight
+// tier shrinks it (`--ms-btn-pl`); elsewhere the variable is unset and the
+// fallback is Joy's own value.
+const BTN_PL = "var(--ms-btn-pl, var(--ListItem-paddingLeft))";
+// Joy puts an 8px gap between a row's icon, label and arrow; the icons carry
+// their own right margin, so the tight tier drops it (`--ms-btn-gap`).
+const BTN_GAP = "var(--ms-btn-gap, var(--ListItem-gap))";
+// The ListItem's right padding (8px): 0 in the tight tier.
+const LI_PR = "var(--ms-li-pr, 8px)";
 
 // The managers arrive as slices (MIP-971): TypeScript forbids reading a member
 // outside them, and `memo` skips the render of an `AppBody` pass that changed
@@ -218,7 +304,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
         return (
             <ListItem
                 key={m.milestoneId}
-                sx={{ pl: 0, pr: 1 }}
+                sx={{ pl: 0, pr: LI_PR, ...rowMenuSx({ top: MS_MENU_TOP }) }}
                 endAction={
                     // Past milestones keep their folder but are not filed from here:
                     // they sit in the year/sprint tree, not in a folder.
@@ -239,15 +325,18 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         useTM.currentPreviewKind === "milestone" &&
                         useTM.currentPreviewMilestoneId === m.milestoneId
                     }
-                    // `endAction` is absolutely positioned at the right edge, so
-                    // the content has to stop short of it (a 2rem button): else
-                    // the progress chip and the assignee avatars sit under it.
+                    // `endAction` is absolutely positioned at the right edge. A
+                    // mouse keeps no room for it (it shows over the row's end on
+                    // hover); a touch device, where it is always visible, keeps
+                    // 32px (see `rowMenuSx`).
                     sx={{
                         borderRadius: 8,
                         ...indentSx(depth),
                         py: 0.5,
+                        pl: BTN_PL,
                         pr: 0.5,
-                        mr: canFile ? 4 : 0,
+                        gap: BTN_GAP,
+                        mr: canFile ? "var(--ms-menu-reserve)" : 0,
                     }}
                     onClick={() => handleOpen(m.milestoneId)}
                 >
@@ -265,8 +354,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             [`@container ${MS_ROW} (max-width: ${ROW_NO_SPRINT_MAX_PX}px)`]: {
                                 [`& .${SPRINT_CLASS}`]: { display: "none" },
                             },
+                            // One block: two keys with the same prelude would
+                            // overwrite each other.
                             [`@container ${MS_ROW} (max-width: ${ROW_NO_AVATARS_MAX_PX}px)`]: {
                                 [`& .${AVATARS_CLASS}`]: { display: "none" },
+                                [`& .${PROGRESS_CLASS}`]: { display: "none" },
                             },
                         }}
                     >
@@ -274,12 +366,15 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={{ minWidth: 0 }}
+                            // Clips the progress chip, never the title (which has a
+                            // minimum width): the chip is the part that can go.
+                            sx={{ minWidth: 0, overflow: "hidden" }}
                         >
                             <Typography
                                 level="body-sm"
                                 sx={{
                                     flex: 1,
+                                    minWidth: TITLE_MIN_WIDTH,
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
@@ -288,7 +383,12 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             >
                                 {m.title}
                             </Typography>
-                            <Chip size="sm" sx={{ flexShrink: 0 }} variant="soft">
+                            <Chip
+                                className={PROGRESS_CLASS}
+                                size="sm"
+                                sx={{ flexShrink: 0 }}
+                                variant="soft"
+                            >
                                 {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
                             </Chip>
                         </Stack>
@@ -394,11 +494,36 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 containerName: MS_LIST,
                 "--ms-indent-base": theme.spacing(5),
                 "--ms-indent-step": theme.spacing(2),
+                // Room a visible row menu keeps: none for a mouse (the menu is
+                // hidden until hover), the button's width on touch.
+                "--ms-menu-reserve": "0px",
+                "--ms-menu-bg": theme.vars.palette.neutral.plainHoverBg,
+                "--ms-menu-fade": `-10px 0 8px 0 ${theme.vars.palette.neutral.plainHoverBg}`,
+                "@media (hover: none)": {
+                    "--ms-menu-reserve": MENU_RESERVE_TOUCH,
+                    "--ms-menu-bg": "transparent",
+                    "--ms-menu-fade": "none",
+                },
                 [`@container ${MS_LIST} (max-width: ${LIST_COMPACT_MAX_PX}px)`]: {
                     "& > *": {
                         "--ms-indent-base": theme.spacing(3),
                         "--ms-indent-step": theme.spacing(1),
+                        "--ms-menu-reserve": "0px",
+                        "--ms-menu-bg": theme.vars.palette.neutral.plainHoverBg,
+                        "--ms-menu-fade": `-10px 0 8px 0 ${theme.vars.palette.neutral.plainHoverBg}`,
                     },
+                },
+                [`@container ${MS_LIST} (max-width: ${LIST_TIGHT_MAX_PX}px)`]: {
+                    "& > *": {
+                        "--ms-indent-base": "16px",
+                        "--ms-indent-step": "6px",
+                        "--ms-btn-pl": "8px",
+                        "--ms-btn-gap": "0px",
+                        "--ms-li-pr": "0px",
+                    },
+                },
+                [`@container ${MS_LIST} (max-width: ${LIST_NO_FOLDER_COUNT_MAX_PX}px)`]: {
+                    [`& .${FOLDER_COUNT_CLASS}`]: { display: "none" },
                 },
             })}
         >
@@ -443,7 +568,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 </MilestoneTreeFolder>
             ))}
             {folderGroups.length > 0 && unfiled.length > 0 && (
-                <ListItem sx={{ pl: 0, pb: 0 }}>
+                <ListItem sx={{ pl: 0, pb: 0, pr: LI_PR }}>
                     <Typography
                         level="body-xs"
                         sx={{
@@ -573,15 +698,21 @@ const MilestoneTreeFolder = ({
     const [open, setOpen] = useState(defaultOpen);
     return (
         <>
-            <ListItem endAction={actions} sx={{ pl: 0, pr: actions ? 1 : undefined }}>
+            <ListItem
+                endAction={actions}
+                sx={{ pl: 0, pr: LI_PR, ...rowMenuSx({ right: FOLDER_MENU_RIGHT }) }}
+            >
                 <ListItemButton
-                    // Same as the milestone row: stop short of the "..." menu.
+                    // Same as the milestone row: no room kept for the "..." menu
+                    // except on touch.
                     sx={{
                         borderRadius: 8,
                         ...indentSx(depth),
                         py: 0.5,
+                        pl: BTN_PL,
                         pr: 0.5,
-                        mr: actions ? 4 : 0,
+                        gap: BTN_GAP,
+                        mr: actions ? "var(--ms-menu-reserve)" : 0,
                     }}
                     onClick={() => setOpen((prev) => !prev)}
                 >
@@ -590,6 +721,7 @@ const MilestoneTreeFolder = ({
                         <Typography
                             level="body-sm"
                             sx={{
+                                minWidth: TITLE_MIN_WIDTH,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
@@ -602,7 +734,7 @@ const MilestoneTreeFolder = ({
                             {label}
                         </Typography>
                     </ListItemContent>
-                    <Chip size="sm" variant="soft">
+                    <Chip className={FOLDER_COUNT_CLASS} size="sm" variant="soft">
                         {count}
                     </Chip>
                     <KeyboardArrowDownRoundedIcon
@@ -624,8 +756,11 @@ const MilestoneTreeFolder = ({
 const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
     const { t } = useTranslation();
     return (
-        <ListItem sx={{ pl: 0 }}>
-            <ListItemButton sx={{ borderRadius: 8, ...indentSx(0), py: 0.5 }} onClick={onClick}>
+        <ListItem sx={{ pl: 0, pr: LI_PR }}>
+            <ListItemButton
+                sx={{ borderRadius: 8, ...indentSx(0), py: 0.5, pl: BTN_PL, gap: BTN_GAP }}
+                onClick={onClick}
+            >
                 <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
                 <Typography
                     level="body-sm"
@@ -643,8 +778,11 @@ const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boo
 const AddFolderRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
     const { t } = useTranslation();
     return (
-        <ListItem sx={{ pl: 0 }}>
-            <ListItemButton sx={{ borderRadius: 8, ...indentSx(0), py: 0.5 }} onClick={onClick}>
+        <ListItem sx={{ pl: 0, pr: LI_PR }}>
+            <ListItemButton
+                sx={{ borderRadius: 8, ...indentSx(0), py: 0.5, pl: BTN_PL, gap: BTN_GAP }}
+                onClick={onClick}
+            >
                 <FolderRoundedIcon
                     sx={{
                         fontSize: 16,
