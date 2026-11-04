@@ -4108,6 +4108,71 @@ export const es: DeepPartial<Messages> = {
                 reminderRequired: "{field}: elige una fecha y una hora.",
             },
         },
+        undo: {
+            chip: "No se puede deshacer",
+            reasons: {
+                irreversible_delete: "Se elimina de forma definitiva.",
+                notified_people:
+                    "Afecta a otras personas, por ejemplo al dar acceso o enviar un mensaje, y deshacer no puede revertirlo.",
+                no_snapshot:
+                    "Los valores anteriores no se guardan, así que no hay nada que restaurar.",
+                unsupported_fields: "Este cambio afecta a algo que deshacer no puede restaurar.",
+                not_yet: "Deshacer aún no está disponible para este tipo de cambio.",
+            },
+            button: "Deshacer",
+            buttonFor: "Deshacer: {tool}",
+            undoing: "Deshaciendo…",
+            retry: "Reintentar",
+            notRecalled: "Lo que ya se haya enviado, como las notificaciones, no se retira.",
+            hints: {
+                create_task: "Elimina la tarea que creó Genos.",
+                update_task: "Restaura los valores anteriores.",
+                restore_task_body: "Restaura la descripción tal como estaba antes.",
+                add_comment: "Elimina el comentario que añadió Genos.",
+                create_note: "Elimina la nota que creó Genos.",
+                update_note: "Restaura el texto anterior de la nota.",
+                restore_note_version: "Restaura la versión de la nota que este cambio reemplazó.",
+                fallback: "Revierte este cambio.",
+            },
+            fields: {
+                title: "Título",
+                body: "Contenido",
+            },
+            listSeparator: ", ",
+            done: {
+                alreadyUndone: "Deshecho",
+                generic: "Deshecho.",
+                restored: "Deshecho. Se restauró: {fields}.",
+                restoredSkipped:
+                    "Deshecho. Se restauró: {fields}. Se dejó como estaba lo que cambió después: {skipped}.",
+                deletedTask: "Deshecho. Se eliminó la tarea {task}.",
+                deletedTaskUnnamed: "Deshecho. Se eliminó la tarea.",
+                deletedNote: "Deshecho. Se eliminó la nota «{title}».",
+                deletedNoteUnnamed: "Deshecho. Se eliminó la nota.",
+                deletedComment: "Deshecho. Se eliminó el comentario.",
+            },
+            refused: {
+                not_found: "Genos ya no encuentra este cambio, así que no se deshizo nada.",
+                not_undoable: "Este cambio no se puede deshacer. No se cambió nada.",
+                already_undone: "Este cambio ya se deshizo.",
+                changed_since:
+                    "Esto se modificó después del cambio de Genos, así que se dejó como está. No se deshizo nada.",
+                changedSinceFields:
+                    "No se deshizo nada. Esto cambió después del cambio de Genos y se dejó como está: {fields}.",
+                expired:
+                    "Ya es tarde para deshacer este cambio: Deshacer solo está disponible durante un tiempo limitado.",
+                permission_lost:
+                    "Ya no puedes modificar esto, así que no se puede deshacer. No se cambió nada.",
+                throttled:
+                    "Demasiados intentos de deshacer. Espera un momento e inténtalo de nuevo.",
+                unauthorized:
+                    "Se cerró tu sesión, así que no se deshizo nada. Inicia sesión de nuevo e inténtalo otra vez.",
+                network:
+                    "No se pudo conectar con Genos, así que no se deshizo nada. Revisa tu conexión e inténtalo de nuevo.",
+                server: "Algo falló por nuestra parte, así que no se deshizo nada. Inténtalo de nuevo.",
+                unknown: "No se pudo deshacer este cambio.",
+            },
+        },
     },
     calendar: {
         title: "Calendario",

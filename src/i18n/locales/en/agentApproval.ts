@@ -211,6 +211,86 @@ export const agentApproval = {
             reminderRequired: "{field}: choose a date and a time.",
         },
     },
+    // Undo of an approved write (genos-api `agent/undo.py`, `undo_apply.py`). The
+    // server's own English `error` / `summary` is only a fallback: these are what
+    // people read. One namespace for every host of an answer turn
+    // (`agentQA/undoCopy.ts` builds the turn's labels from it).
+    undo: {
+        // The chip on an approval card whose write can't be undone.
+        chip: "Can't be undone",
+        // Why, per the server's `undo_reason`. A code not listed reads as `not_yet`.
+        reasons: {
+            irreversible_delete: "This deletes it for good.",
+            notified_people:
+                "This involves other people, such as giving access or sending a message, and undo can't take that back.",
+            no_snapshot: "The old values aren't kept, so there is nothing to put back.",
+            unsupported_fields: "This change touches something undo can't put back.",
+            not_yet: "Undo isn't available for this kind of change yet.",
+        },
+        // The control on a finished write.
+        button: "Undo",
+        // The button's accessible name when a turn has several (the tool names the write).
+        buttonFor: "Undo: {tool}",
+        undoing: "Undoing…",
+        retry: "Try again",
+        // Said once before (tooltip) and once after (status line): undo puts data
+        // back, it does not recall what already left.
+        notRecalled: "Anything already sent, such as notifications, isn't recalled.",
+        // What the click does, per tool (the tooltip's first sentence).
+        hints: {
+            create_task: "Deletes the task Genos created.",
+            update_task: "Puts back the earlier values.",
+            restore_task_body: "Puts back the description as it was before.",
+            add_comment: "Deletes the comment Genos added.",
+            create_note: "Deletes the note Genos created.",
+            update_note: "Puts back the earlier text of the note.",
+            restore_note_version: "Puts back the version of the note this replaced.",
+            fallback: "Reverses this change.",
+        },
+        // The two fields an undo can report that `fieldLabels` has no word for
+        // (everything else it reports is in `fieldLabels`).
+        fields: {
+            title: "Title",
+            body: "Content",
+        },
+        // Joins a list of field names ("Status, Priority").
+        listSeparator: ", ",
+        // The status line after an undo that worked.
+        done: {
+            // A restored turn whose write was already undone.
+            alreadyUndone: "Undone",
+            generic: "Undone.",
+            restored: "Undone. Put back: {fields}.",
+            restoredSkipped:
+                "Undone. Put back: {fields}. Left as they are, because they changed since: {skipped}.",
+            deletedTask: "Undone. Task {task} was deleted.",
+            deletedTaskUnnamed: "Undone. The task was deleted.",
+            deletedNote: "Undone. The note “{title}” was deleted.",
+            deletedNoteUnnamed: "Undone. The note was deleted.",
+            deletedComment: "Undone. The comment was deleted.",
+        },
+        // The status line when it did not, one sentence per code. Nothing was changed.
+        refused: {
+            not_found: "Genos can't find this change any more, so nothing was undone.",
+            not_undoable: "This change can't be undone. Nothing was changed.",
+            already_undone: "This change was already undone.",
+            changed_since:
+                "This was changed after Genos made its change, so it was left as it is. Nothing was undone.",
+            changedSinceFields:
+                "Nothing was undone: {fields} changed after Genos made its change, so they were left as they are.",
+            expired:
+                "It's too late to undo this change: Undo is only available for a limited time.",
+            permission_lost:
+                "You can no longer change this, so it can't be undone. Nothing was changed.",
+            throttled: "That was too many undo attempts. Wait a moment and try again.",
+            unauthorized:
+                "You were signed out, so nothing was undone. Sign in again, then try again.",
+            network:
+                "Couldn't reach Genos, so nothing was undone. Check your connection and try again.",
+            server: "Something went wrong on our side, so nothing was undone. Try again.",
+            unknown: "Couldn't undo this change.",
+        },
+    },
     // Friendly, non-technical labels for every agent tool, keyed by the
     // backend `tool_name`. Used for the in-flight tool-progress strip
     // ("Searching your workspace") and the approval-card title

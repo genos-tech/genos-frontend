@@ -594,6 +594,69 @@ export const ja: DeepPartial<Messages> = {
                 reminderRequired: "{field}：日付と時刻を選んでください。",
             },
         },
+        undo: {
+            chip: "元に戻せません",
+            reasons: {
+                irreversible_delete: "完全に削除され、復元できません。",
+                notified_people:
+                    "他のメンバーへのアクセス付与やメッセージ送信を伴うため、「元に戻す」では取り消せません。",
+                no_snapshot: "元の値は保存されないため、戻す内容がありません。",
+                unsupported_fields: "「元に戻す」では戻せない項目を変更します。",
+                not_yet: "この種類の変更は、まだ「元に戻す」に対応していません。",
+            },
+            button: "元に戻す",
+            buttonFor: "元に戻す: {tool}",
+            undoing: "元に戻しています…",
+            retry: "もう一度試す",
+            notRecalled: "すでに送信された通知などは取り消されません。",
+            hints: {
+                create_task: "Genos が作成したタスクを削除します。",
+                update_task: "変更前の値に戻します。",
+                restore_task_body: "タスクの説明を以前の内容に戻します。",
+                add_comment: "Genos が追加したコメントを削除します。",
+                create_note: "Genos が作成したノートを削除します。",
+                update_note: "ノートの内容を変更前に戻します。",
+                restore_note_version: "この操作で置き換えられたノートの版に戻します。",
+                fallback: "この変更を取り消します。",
+            },
+            fields: {
+                title: "タイトル",
+                body: "内容",
+            },
+            listSeparator: "、",
+            done: {
+                alreadyUndone: "元に戻しました",
+                generic: "元に戻しました。",
+                restored: "元に戻しました。戻した項目: {fields}。",
+                restoredSkipped:
+                    "元に戻しました。戻した項目: {fields}。その後に変更されていたため、そのままにした項目: {skipped}。",
+                deletedTask: "元に戻しました。タスク {task} を削除しました。",
+                deletedTaskUnnamed: "元に戻しました。タスクを削除しました。",
+                deletedNote: "元に戻しました。ノート「{title}」を削除しました。",
+                deletedNoteUnnamed: "元に戻しました。ノートを削除しました。",
+                deletedComment: "元に戻しました。コメントを削除しました。",
+            },
+            refused: {
+                not_found: "この変更が見つからないため、何も元に戻していません。",
+                not_undoable: "この変更は元に戻せません。何も変更していません。",
+                already_undone: "この変更はすでに元に戻されています。",
+                changed_since:
+                    "Genos の変更後にさらに変更が加えられたため、そのままにしました。何も元に戻していません。",
+                changedSinceFields:
+                    "何も元に戻していません。{fields} は Genos の変更後に変更されていたため、そのままにしました。",
+                expired:
+                    "この変更はもう元に戻せません。「元に戻す」を使える期間は限られています。",
+                permission_lost:
+                    "この変更を行う権限がなくなったため、元に戻せません。何も変更していません。",
+                throttled: "元に戻す操作が多すぎます。しばらくしてからもう一度お試しください。",
+                unauthorized:
+                    "サインアウトされたため、何も元に戻していません。サインインし直してから、もう一度お試しください。",
+                network:
+                    "Genos に接続できないため、何も元に戻していません。接続を確認して、もう一度お試しください。",
+                server: "サーバー側で問題が発生したため、何も元に戻していません。もう一度お試しください。",
+                unknown: "この変更を元に戻せませんでした。",
+            },
+        },
     },
     app: {
         features: {
