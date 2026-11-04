@@ -1072,6 +1072,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <FieldLabel isDark={isDark}>{t.tasks.delivery.label}</FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <TaskDeliveriesBlock
+                                accessToken={accessToken}
                                 deliveries={deliveries}
                                 isDark={isDark}
                                 taskStatus={taskContent.status?.status}
