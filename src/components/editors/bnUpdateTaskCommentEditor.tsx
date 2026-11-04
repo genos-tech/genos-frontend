@@ -1,6 +1,5 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import "@blocknote/math-block/style.css";
 import "../../App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";

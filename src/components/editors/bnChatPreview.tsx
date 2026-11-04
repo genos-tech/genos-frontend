@@ -1,6 +1,5 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import "@blocknote/math-block/style.css";
 
 import { useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";

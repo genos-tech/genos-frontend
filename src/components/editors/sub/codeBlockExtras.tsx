@@ -1,9 +1,10 @@
 import { codeBlockOptions } from "@blocknote/code-block";
 import { createExtension } from "@blocknote/core";
-import { getDiagramBlockTypeSelectItems } from "@blocknote/diagram-block";
-import { getMathBlockTypeSelectItems } from "@blocknote/math-block";
 import { blockTypeSelectItems, type BlockTypeSelectItem } from "@blocknote/react";
 import { RiCodeBoxLine } from "react-icons/ri";
+
+import { getDiagramBlockTypeSelectItems } from "../blocks/diagramBlock";
+import { getMathBlockTypeSelectItems } from "../blocks/mathBlocks";
 
 // Enter handler that converts a paragraph starting with "```" into
 // a syntax-highlighted code block.
