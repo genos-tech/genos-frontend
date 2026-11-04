@@ -6,6 +6,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
+import { genosTableOptions } from "../../components/editors/genosBlockSpecs";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../../components/editors/sub/tabIndent";
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { getMessages } from "../../i18n";
@@ -412,6 +413,7 @@ export function useCollaborativeBlockNote({
         if (!provider) {
             const opts: Record<string, any> = {
                 ...TAB_INDENT_OPTIONS,
+                tables: genosTableOptions,
                 schema,
                 resolveFileUrl: resolveInsecureFileUrl,
                 dictionary,
@@ -439,6 +441,7 @@ export function useCollaborativeBlockNote({
         // placeholder initial content.
         const opts: Record<string, any> = withCollaboration({
             ...TAB_INDENT_OPTIONS,
+            tables: genosTableOptions,
             schema,
             dictionary,
             uploadFile,

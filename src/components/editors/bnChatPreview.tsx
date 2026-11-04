@@ -1,5 +1,6 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "@blocknote/math-block/style.css";
 
 import { useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
@@ -32,6 +33,7 @@ import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils"
 import { AppTooltip } from "../ui/AppTooltip";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
 import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
@@ -89,6 +91,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 // Adds the mention tag.
                 mention: CreateMentionSpec(
                     useTEM.teamMemberProfiles,
@@ -108,6 +111,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             blockSpecs: {
                 // remainingBlockSpecs contains all the other blocks
                 ...remainingBlockSpecs,
+                ...genosExtraBlockSpecs,
                 // BlockNote 0.49 moved the code-block options out of
                 // `useCreateBlockNote` and into the schema. We override
                 // the default plain-text codeBlock with the syntax-

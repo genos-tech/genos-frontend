@@ -794,6 +794,19 @@ describe("canRenderLight routing", () => {
         ).toBe(true);
     });
 
+    it("sends math and diagram blocks and inline math to the full editor (MIP-1019)", () => {
+        // The light path has no renderer for them (KaTeX, Mermaid), so a body with
+        // one must keep going through BlockNote, which does.
+        const run = [{ type: "text", text: "x", styles: {} }];
+        for (const block of [
+            { type: "mathBlock", props: {}, content: run },
+            { type: "diagram", props: {}, content: run },
+            { type: "paragraph", content: [{ type: "math", props: {}, content: "E=mc^2" }] },
+        ]) {
+            expect(canRenderLight(wrap([block])), block.type).toBe(false);
+        }
+    });
+
     it("accepts mention / mentionGroup / customEmoji", () => {
         for (const type of ["mention", "mentionGroup", "customEmoji"]) {
             expect(

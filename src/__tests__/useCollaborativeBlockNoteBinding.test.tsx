@@ -278,6 +278,51 @@ describe("the editor the hook builds", () => {
         expect(elementsNamed(fragment, "codeBlock")).toHaveLength(1);
         expect(plainText(fragment)).toContain("const answer = 42;");
     });
+
+    it("loads math, inline math and a diagram, shows them, and keeps them while another block is edited (MIP-1019)", () => {
+        // The live path with the new types: the schema the hook's editors have knows
+        // them, so the binding builds them instead of deleting them from the shared
+        // document (an editor WITHOUT them does delete them, which is why every schema
+        // has them and a deploy is followed by a reload).
+        mountHook();
+        const provider = providers.at(-1) as FakeProvider;
+        const editor = realEditor();
+
+        const run = (value: string) => [{ type: "text", text: value, styles: {} }];
+        const remote = new Y.Doc();
+        blocksToYXmlFragment(
+            createHeadlessNoteEditor(),
+            [
+                {
+                    id: "p0",
+                    type: "paragraph",
+                    content: [
+                        { type: "text", text: "Energy ", styles: {} },
+                        { type: "math", props: {}, content: "E=mc^2" },
+                    ],
+                },
+                { id: "m1", type: "mathBlock", props: {}, content: run("a^2 + b^2 = c^2") },
+                { id: "d1", type: "diagram", props: {}, content: run("graph LR; A-->B") },
+                { id: "p1", type: "paragraph", content: "after" },
+            ] as never,
+            remote.getXmlFragment(FRAGMENT)
+        );
+        Y.applyUpdate(provider.document, Y.encodeStateAsUpdate(remote));
+
+        const shown = editor.document.map((b) => b.type);
+        expect(shown).toEqual(expect.arrayContaining(["mathBlock", "diagram"]));
+        expect(JSON.stringify(editor.document[0].content)).toContain('"type":"math"');
+
+        editor.updateBlock("p1", { content: "edited elsewhere" } as never);
+
+        const fragment = provider.document.getXmlFragment(FRAGMENT);
+        expect(elementsNamed(fragment, "mathBlock")).toHaveLength(1);
+        expect(elementsNamed(fragment, "diagram")).toHaveLength(1);
+        expect(elementsNamed(fragment, "math")).toHaveLength(1);
+        expect(plainText(fragment)).toContain("a^2 + b^2 = c^2");
+        expect(plainText(fragment)).toContain("graph LR; A-->B");
+        expect(plainText(fragment)).toContain("E=mc^2");
+    });
 });
 
 /** The text of a Yjs XML tree, formatting left out (read from the text nodes, not by cutting tags out of a string). */

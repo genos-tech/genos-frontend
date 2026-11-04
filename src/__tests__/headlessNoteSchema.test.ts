@@ -18,6 +18,10 @@ import { describe, expect, it } from "vitest";
 
 import { CreateCustomEmojiSpec } from "../components/editors/CustomEmoji";
 import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+} from "../components/editors/genosBlockSpecs";
+import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
     CreateHashProjectSpec,
@@ -36,6 +40,7 @@ const buildEditorsSchema = () => {
     return BlockNoteSchema.create({
         inlineContentSpecs: {
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             mention: CreateMentionSpec({}, null, {} as never, () => {}, {} as never, {} as never),
             mentionGroup: CreateMentionGroupSpec(),
             customEmoji: CreateCustomEmojiSpec(),
@@ -46,6 +51,7 @@ const buildEditorsSchema = () => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             codeBlock: createCodeBlockSpec(codeBlockOptions),
             alert: Alert(),
         },

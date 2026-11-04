@@ -39,6 +39,7 @@
 
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "@blocknote/math-block/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs } from "@blocknote/core";
@@ -50,6 +51,10 @@ import {
 } from "@blocknote/react";
 
 import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
+import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+} from "../../../components/editors/genosBlockSpecs";
 import { genosStyleSpecs } from "../../../components/editors/genosStyleSpecs";
 import {
     CreateHashChatSpec,
@@ -179,6 +184,7 @@ export function MessageComposerV3({
             styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
                 customEmoji: CreateCustomEmojiSpec(),
@@ -187,7 +193,7 @@ export function MessageComposerV3({
                 hashChat: CreateHashChatSpec(),
                 hashProject: CreateHashProjectSpec(),
             },
-            blockSpecs: remaining,
+            blockSpecs: { ...remaining, ...genosExtraBlockSpecs },
         });
     }, [currentUserId]);
 

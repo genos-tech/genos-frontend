@@ -26,7 +26,9 @@
     "dependencies": {
         "@blocknote/code-block": "0.57.0",
         "@blocknote/core": "0.57.0",
+        "@blocknote/diagram-block": "0.57.0",
         "@blocknote/mantine": "0.57.0",
+        "@blocknote/math-block": "0.57.0",
         "@blocknote/react": "0.57.0",
         "@dagrejs/dagre": "^3.0.0",
         "@emoji-mart/data": "^1.2.1",

@@ -25,6 +25,11 @@
  * exists in production data). The golden was regenerated on 0.57 for that. The
  * Yjs bytes were NOT regenerated: they stay what 0.49 wrote, which is the point.
  *
+ * MIP-1019 added the free math and diagram blocks (`mathBlock`, `diagram`, inline
+ * `math`) and `fixture-math-diagram` to use them. 0.49 cannot write those types, so that one
+ * document's Yjs bytes were written by 0.57 (its entry in `synthetic.yjs.json` says so); the
+ * other entries are still 0.49's, byte for byte.
+ *
  * Do not regenerate it to make a red run green without reading the diff.
  */
 
@@ -178,7 +183,7 @@ describe("the synthetic fixture", () => {
         expect(registered.filter((style) => !seen.styles.has(style))).toEqual([]);
     });
 
-    it("has a Yjs update for each document, written by 0.49", () => {
+    it("has a Yjs update for each document (0.49's, except the 0.57-only math and diagram one)", () => {
         expect(loadYjs().map((d) => d.name)).toEqual(fixtureDocs.map((d) => d.name));
     });
 });

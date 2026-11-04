@@ -1048,6 +1048,139 @@
             "reparsedHash": "668c65418f484d22f39d73f9d2113269c106f42531490f61b154dea42060f1ff"
         },
         {
+            "name": "fixture-math-diagram",
+            "kind": "blocks",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "math-heading",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Energy ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "E=mc^2"
+                        },
+                        {
+                            "type": "text",
+                            "text": " in joules, and a ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "\\frac{a}{b}"
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "x^2 + y^2 = z^2",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block-multiline",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a = b \\\\\nc = d",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-block",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "graph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-empty",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "id": "math-in-list",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a list item with a block below it",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "math-in-list-child",
+                            "type": "mathBlock",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a^2",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ],
+            "blocksHash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770",
+            "blockCount": 6,
+            "types": {
+                "paragraph": 1,
+                "mathBlock": 3,
+                "diagram": 2,
+                "bulletListItem": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770"
+            },
+            "markdown": "Energy $E=mc^2$ **in joules, and a** $\\frac{a}{b}$\n\n```math\nx^2 + y^2 = z^2\n```\n\n```math\na = b \\\\\nc = d\n```\n\n```mermaid\ngraph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]\n```\n\n```mermaid\n```\n\n* a list item with a block below it\n\n```math\na^2\n```\n",
+            "markdownHash": "aa6d874c41a80694cd74c528ab6e9cb4728e16327cb0877a60701390bde20244",
+            "reparsedHash": "d60f64410f6346a5cd67dd260c9f3748947b21c9e8e2305961c74e9a7a248942"
+        },
+        {
             "name": "fixture-all-types:yjs",
             "kind": "yjs",
             "ok": true,
@@ -2092,6 +2225,139 @@
             "markdown": "```sql\nselect 1;\n```\n",
             "markdownHash": "5a914ce0482357c5215287d2a72fc2a131247bd1a1e8fa67b8a25e37283f0bd3",
             "reparsedHash": "668c65418f484d22f39d73f9d2113269c106f42531490f61b154dea42060f1ff"
+        },
+        {
+            "name": "fixture-math-diagram:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "math-heading",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Energy ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "E=mc^2"
+                        },
+                        {
+                            "type": "text",
+                            "text": " in joules, and a ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "\\frac{a}{b}"
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "x^2 + y^2 = z^2",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block-multiline",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a = b \\\\\nc = d",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-block",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "graph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-empty",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "id": "math-in-list",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a list item with a block below it",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "math-in-list-child",
+                            "type": "mathBlock",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a^2",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ],
+            "blocksHash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770",
+            "blockCount": 6,
+            "types": {
+                "paragraph": 1,
+                "mathBlock": 3,
+                "diagram": 2,
+                "bulletListItem": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770"
+            },
+            "markdown": "Energy $E=mc^2$ **in joules, and a** $\\frac{a}{b}$\n\n```math\nx^2 + y^2 = z^2\n```\n\n```math\na = b \\\\\nc = d\n```\n\n```mermaid\ngraph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]\n```\n\n```mermaid\n```\n\n* a list item with a block below it\n\n```math\na^2\n```\n",
+            "markdownHash": "aa6d874c41a80694cd74c528ab6e9cb4728e16327cb0877a60701390bde20244",
+            "reparsedHash": "d60f64410f6346a5cd67dd260c9f3748947b21c9e8e2305961c74e9a7a248942"
         }
     ]
 }
