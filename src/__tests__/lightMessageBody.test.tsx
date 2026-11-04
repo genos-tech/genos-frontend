@@ -40,8 +40,8 @@ vi.mock("../context/AuthContext", async (importOriginal) => ({
 // nothing when the integration isn't connected. What's under test here
 // is the wiring — that the body finds PR urls and asks for a card — not
 // the card's own behaviour.
-vi.mock("../features/integrations/components/LinkedPrCard", () => ({
-    LinkedPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
+vi.mock("../features/integrations/components/LazyPrCard", () => ({
+    LazyPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
 }));
 
 // Media download / URL-resolution seams. `downloadFile` is asserted on

@@ -35,7 +35,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
-import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
+import { LazyPrCard } from "../../features/integrations/components/LazyPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { hashTaskLabel } from "../../features/tasks/utils/taskDisplayId";
@@ -719,7 +719,7 @@ export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => 
             {prUrls.length > 0 && accessToken && (
                 <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
                     {prUrls.map((url) => (
-                        <LinkedPrCard
+                        <LazyPrCard
                             key={url}
                             accessToken={accessToken}
                             url={url}
