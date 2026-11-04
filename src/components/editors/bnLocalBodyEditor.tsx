@@ -76,10 +76,7 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsForDocuments,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
@@ -170,7 +167,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
-        extensions: [codeBlockEnterShortcut, linkHostCaption, tabStaysInEditor],
+        extensions: [codeFenceInputRule, linkHostCaption, tabStaysInEditor],
         dictionary,
     });
 

@@ -6,19 +6,10 @@ import { RiCodeBoxLine } from "react-icons/ri";
 import { getDiagramBlockTypeSelectItems } from "../blocks/diagramBlock";
 import { getMathBlockTypeSelectItems } from "../blocks/mathBlocks";
 
-// Enter handler that converts a paragraph starting with "```" into
-// a syntax-highlighted code block.
-//
-// BlockNote 0.49 ships an input rule of shape `^```<lang>\s$` on
-// `codeBlock` (see `@blocknote/core/blocks/Code/block.ts`). That
-// rule fires when the user types a literal whitespace character
-// after the backticks (i.e. Space), but Enter splits the node
-// before any whitespace lands in the document, so the rule never
-// matches on Enter. This extension closes that gap so the familiar
-// Markdown shortcut ``` + Enter works the same way ``` + Space
-// already does. Plain Enter inside any other block is left alone
-// (we return `false`), and `Mod-Enter` (chat-send) is a different
-// keymap binding so it isn't intercepted here either.
+// A ``` fence typed at the start of a paragraph (then Space or Enter) becomes a code block.
+// BlockNote 0.51+ does this itself, on both keys, with ONE input rule; the Enter-key handler
+// this file used to carry was redundant on 0.57 (MIP-1011) and is gone. What stays is a copy
+// of that rule with one change, below: the language it puts in the block.
 // BlockNote's own `getLanguageId` is no longer exported from the package root
 // (0.57 declares it but does not re-export it), so this is its logic: a language
 // the user typed after the backticks resolves to its id by id or alias.
@@ -30,41 +21,31 @@ const getLanguageId = (
         ([id, { aliases }]) => aliases?.includes(languageName) || id === languageName
     )?.[0];
 
-export const codeBlockEnterShortcut = createExtension({
-    key: "code-block-enter-shortcut",
-    keyboardShortcuts: {
-        Enter: ({ editor }) =>
-            editor.transact(() => {
-                const { block } = editor.getTextCursorPosition();
-                if (block.type !== "paragraph") return false;
+/**
+ * The language of a code block made by typing ``` and a name. BlockNote's own rule (0.57) puts
+ * the TYPED text in the block when it is not a language it has, and the block's language
+ * dropdown then throws while rendering: the editor stays wedged (every later edit throws)
+ * until the page is reloaded. So an unknown name, such as ```math or ```nope, gives plain text.
+ * `codeFence.test.ts` pins this for both the Enter and the Space path.
+ */
+const codeLanguageFor = (requested: string): string =>
+    requested
+        ? (getLanguageId(codeBlockOptions, requested) ?? "text")
+        : (codeBlockOptions.defaultLanguage ?? "text");
 
-                const text = ((block.content as any[]) || [])
-                    .map((c: any) => (typeof c.text === "string" ? c.text : ""))
-                    .join("");
-                const match = /^```(.*)$/.exec(text);
-                if (!match) return false;
-
-                const requested = match[1].trim();
-                const language = requested
-                    ? (getLanguageId(codeBlockOptions, requested) ?? requested)
-                    : (codeBlockOptions.defaultLanguage ?? "text");
-
-                editor.updateBlock(block, {
-                    type: "codeBlock",
-                    props: { language },
-                    content: [],
-                });
-                // After `updateBlock` swaps the paragraph for an empty
-                // code block, the selection mapped from "end of the
-                // old `` ``` `` text" lands just outside the new code
-                // block (typically the following block / boundary), so
-                // typing would continue OUTSIDE the new code block.
-                // Drop the cursor inside the new block so the user can
-                // keep typing in it immediately.
-                editor.setTextCursorPosition(block.id, "start");
-                return true;
+export const codeFenceInputRule = createExtension({
+    key: "code-fence-input-rule",
+    // BlockNote's own rule is `^```(.*?)\s$`, run for Space and for Enter alike.
+    inputRules: [
+        {
+            find: /^```(.*?)\s$/,
+            replace: ({ match }) => ({
+                type: "codeBlock",
+                props: { language: codeLanguageFor(match[1].trim()) },
+                content: [],
             }),
-    },
+        },
+    ],
 });
 
 // Default `blockTypeSelectItems` (paragraph / headings / lists /
