@@ -1867,6 +1867,7 @@ export const hi: DeepPartial<Messages> = {
             closeTooltip: "बंद करें",
             tasksInThisMilestone: "इस माइलस्टोन के टास्क",
             taskProgress: "कार्य प्रगति",
+            taskProgressOther: "अन्य",
             taskButton: "टास्क",
             emptyMilestoneTasks:
                 "अभी कोई टास्क नहीं। एक टास्क बनाएँ और उसे इस माइलस्टोन को असाइन करें।",

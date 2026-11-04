@@ -1859,6 +1859,7 @@ export const ar: DeepPartial<Messages> = {
             confirmDeleteMilestone: "حذف هذا المعلم؟",
             loadingTask: "جارٍ تحميل المهمة...",
             taskProgress: "تقدم المهمة",
+            taskProgressOther: "أخرى",
         },
         createForm: {
             bootstrapFailed: "تعذّر تجهيز مهمة جديدة. تحقّق من اتصالك وحاول مرة أخرى.",

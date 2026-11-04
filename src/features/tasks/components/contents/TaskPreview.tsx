@@ -70,6 +70,10 @@ import { Milestone } from "../../sprint-milestone/types";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
+import {
+    countMilestoneTaskStatuses,
+    type MilestoneProgressKey,
+} from "../../utils/milestoneTaskProgress";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
@@ -1053,6 +1057,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     );
 };
 
+// Chip colours of the "Task progress" row: the shared milestone status palette,
+// plus a neutral grey for "Other".
+const MILESTONE_PROGRESS_CHIP_COLORS: Record<MilestoneProgressKey, { color: string }> = {
+    ...MILESTONE_STATUS_CHIP_COLORS,
+    Other: { color: "#94a3b8" },
+} as Record<MilestoneProgressKey, { color: string }>;
+
 const STATUS_COLOR: Record<string, string> = {
     Open: "#0044c2",
     WIP: "#ff8c00",
@@ -1313,22 +1324,19 @@ const MilestonePreviewInner = ({
 
     // Per-status task counts for this milestone, computed from
     // `useTM.allTasks` (the Milestone payload only carries `tasksTotal`
-    // / `tasksClosed`, not the per-status breakdown). Statuses outside
-    // the four headline ones are silently dropped — the strip is a
-    // quick at-a-glance breakdown, not a reconciliation against
-    // `total`. Excludes the milestone's own backing task row.
+    // / `tasksClosed`, not the per-status breakdown). The chips always add
+    // up to the total: a status without a chip of its own falls into
+    // "Other" (see countMilestoneTaskStatuses). Excludes the milestone's own
+    // backing task row.
     const milestoneTaskCounts = useMemo(() => {
         if (!milestone) return null;
-        const counts = { Open: 0, WIP: 0, Pending: 0, Closed: 0 };
-        let total = 0;
+        const statuses: (string | null)[] = [];
         for (const task of useTM.allTasks) {
             if (task.milestoneId !== milestone.milestoneId) continue;
             if (task.isMilestone) continue;
-            total += 1;
-            const s = task.status;
-            if (s && s in counts) counts[s as keyof typeof counts] += 1;
+            statuses.push(task.status);
         }
-        return { counts, total };
+        return countMilestoneTaskStatuses(statuses);
     }, [milestone, useTM.allTasks]);
 
     // Pull the latest copy from the server when this milestone is
@@ -2565,8 +2573,10 @@ const MilestonePreviewInner = ({
                         empty milestones don't show a row of zeros.
                         Colors mirror the milestone status palette used
                         on the sidebar / picker (Open=blue, WIP=orange,
-                        Pending=purple, Closed=green) so the chips read
-                        consistently across the app. */}
+                        Blocked=rose, Pending=purple, Closed=green) so the
+                        chips read consistently across the app. A chip shows
+                        only for a count above zero; "Other" (grey) holds
+                        any status without a chip so they add up to the total. */}
                     {milestoneTaskCounts && milestoneTaskCounts.total > 0 && (
                         <Stack
                             direction="row"
@@ -2590,8 +2600,8 @@ const MilestonePreviewInner = ({
                             >
                                 {t.tasks.preview.taskProgress}
                             </Typography>
-                            {(["Open", "WIP", "Pending", "Closed"] as const).map((s) => {
-                                const tone = MILESTONE_STATUS_CHIP_COLORS[s];
+                            {milestoneTaskCounts.entries.map(({ status: s, count }) => {
+                                const tone = MILESTONE_PROGRESS_CHIP_COLORS[s];
                                 return (
                                     <Chip
                                         key={s}
@@ -2611,8 +2621,10 @@ const MilestonePreviewInner = ({
                                             px: 1,
                                         }}
                                     >
-                                        {taskMetaLabel(s, t.tasks.filters)}:{" "}
-                                        {milestoneTaskCounts.counts[s]}
+                                        {s === "Other"
+                                            ? t.tasks.preview.taskProgressOther
+                                            : taskMetaLabel(s, t.tasks.filters)}
+                                        : {count}
                                     </Chip>
                                 );
                             })}

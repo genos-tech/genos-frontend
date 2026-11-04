@@ -1885,6 +1885,7 @@ export const es: DeepPartial<Messages> = {
             confirmDeleteMilestone: "¿Eliminar este hito?",
             loadingTask: "Cargando tarea…",
             taskProgress: "Progreso de la tarea",
+            taskProgressOther: "Otros",
         },
         createForm: {
             bootstrapFailed:
