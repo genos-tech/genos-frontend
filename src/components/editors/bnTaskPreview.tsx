@@ -89,10 +89,7 @@ import {
 } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsForDocuments,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { linkHostCaption } from "./sub/linkHostCaption";
@@ -305,10 +302,9 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         initialBody: body,
         enableComments: true,
         teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut, linkHostCaption],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
     });
 
     // Fan @-mentions left in inline comments out to the activity system,

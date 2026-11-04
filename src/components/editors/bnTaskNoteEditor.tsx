@@ -93,10 +93,7 @@ import {
 } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsForDocuments,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
@@ -299,10 +296,9 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         initialBody: body,
         enableComments: true,
         teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut, linkHostCaption],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
     });
     const isEditable = isNoteEditable(myRoleId, collabScope);
 
