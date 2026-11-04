@@ -160,7 +160,7 @@ export interface NoteManagementState {
     setChatNoteMeta: (meta: ChatNoteMetaProps[]) => void;
     currentChatNoteChain: ChatNoteMetaTreeNode[] | undefined;
     setCurrentChatNoteChain: (chain: ChatNoteMetaTreeNode[]) => void;
-    getChatNoteMeta: () => Promise<void>;
+    getChatNoteMeta: () => Promise<boolean>;
 
     // Task notes
     currentTaskNote: TaskNoteProps | null;
@@ -169,7 +169,7 @@ export interface NoteManagementState {
     setTaskNoteMeta: (meta: TaskNoteMetaProps[]) => void;
     currentTaskNoteChain: TaskNoteMetaTreeNode[] | undefined;
     setCurrentTaskNoteChain: (chain: TaskNoteMetaTreeNode[]) => void;
-    getTaskNoteMeta: () => Promise<void>;
+    getTaskNoteMeta: () => Promise<boolean>;
 
     // My notes
     currentMyNote: MyNoteProps | null;
@@ -181,7 +181,7 @@ export interface NoteManagementState {
     patchPersonalNoteMeta: (noteId: number, title: string, tsUpdated: string) => void;
     currentMyNoteChain: MyNoteMetaTreeNode[] | undefined;
     setCurrentMyNoteChain: (chain: MyNoteMetaTreeNode[]) => void;
-    getMyNoteMeta: () => Promise<void>;
+    getMyNoteMeta: () => Promise<boolean>;
 
     // My-note sidebar folders (user-created organization layer).
     // Folders never appear in tabs/search/recents — they only shape
@@ -273,8 +273,8 @@ export interface NoteManagementState {
     teamNoteFolderForest: TeamNoteFolderForest;
     teamNoteMeta: TeamNoteMetaProps[];
     teamNoteMetaTree: MyNoteMetaTreeNode[];
-    getTeamNoteFolders: () => Promise<void>;
-    getTeamNoteMeta: () => Promise<void>;
+    getTeamNoteFolders: () => Promise<boolean>;
+    getTeamNoteMeta: () => Promise<boolean>;
     createTeamNoteFolder: (input: CreateTeamFolderInput) => Promise<TeamNoteFolderProps | null>;
     renameTeamNoteFolder: (folderId: number, name: string) => Promise<void>;
     setTeamNoteFolderVisibility: (
@@ -287,7 +287,7 @@ export interface NoteManagementState {
     sharedNoteMeta: SharedNoteMetaProps[];
     setSharedNoteMeta: (meta: SharedNoteMetaProps[]) => void;
     sharedNoteMetaTree: SharedNoteMetaTreeNode[];
-    getSharedNoteMeta: () => Promise<void>;
+    getSharedNoteMeta: () => Promise<boolean>;
 
     // Visibility states
     isTaskNoteVisible: boolean;
@@ -682,9 +682,12 @@ export const useNoteManagement = (
         // The write keeps the previous array for an equal answer: this runs on
         // the 60 s `#`-mention refresh, and a fresh identity rebuilds the meta
         // tree and re-renders the whole sidebar for nothing.
-        if (Array.isArray(loadedNotes)) {
-            setChatNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
-        }
+        // The return value says whether the list was LOADED (even if empty), for the
+        // change-driven refresh: it records a "nothing new" token only for a load that
+        // worked. Existing callers ignore it.
+        if (!Array.isArray(loadedNotes)) return false;
+        setChatNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
     };
 
     initCurrentChatNoteChain({
@@ -790,9 +793,10 @@ export const useNoteManagement = (
     const getTaskNoteMeta = async () => {
         const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
-        if (Array.isArray(loadedNotes)) {
-            setTaskNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
-        }
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loadedNotes)) return false;
+        setTaskNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
     };
 
     updataTaskNoteChain({
@@ -959,9 +963,10 @@ export const useNoteManagement = (
     const getMyNoteMeta = async () => {
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
-        if (Array.isArray(loadedNotes)) {
-            setMyNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
-        }
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loadedNotes)) return false;
+        setMyNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
     };
 
     // Recents live apart from the three meta lists, so a delete or a rename
@@ -1125,9 +1130,9 @@ export const useNoteManagement = (
     const getChatNoteMetaRef = useRef(getChatNoteMeta);
     getChatNoteMetaRef.current = getChatNoteMeta;
     // Assigned below, after each of them is declared.
-    const getTeamNoteMetaRef = useRef<() => Promise<void>>(async () => {});
+    const getTeamNoteMetaRef = useRef<() => Promise<boolean>>(async () => false);
     const getMyNoteFoldersRef = useRef<() => Promise<void>>(async () => {});
-    const getTeamNoteFoldersRef = useRef<() => Promise<void>>(async () => {});
+    const getTeamNoteFoldersRef = useRef<() => Promise<boolean>>(async () => false);
     const getFavoriteNotesMetaRef = useRef<() => Promise<void>>(async () => {});
     const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
     applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
@@ -1833,8 +1838,10 @@ export const useNoteManagement = (
         const loaded = await loadTeamNoteFolders(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team folders") and empties it.
-        if (!Array.isArray(loaded)) return;
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
         setTeamNoteFolders((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
     getTeamNoteFoldersRef.current = getTeamNoteFolders;
 
@@ -1842,8 +1849,10 @@ export const useNoteManagement = (
         const loaded = await loadTeamNotesMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team notes") and empties it.
-        if (!Array.isArray(loaded)) return;
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
         setTeamNoteMeta((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
     getTeamNoteMetaRef.current = getTeamNoteMeta;
 
@@ -1962,9 +1971,10 @@ export const useNoteManagement = (
     const getSharedNoteMeta = async () => {
         const loaded = await loadSharedNotesMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list.
-        if (Array.isArray(loaded)) {
-            setSharedNoteMeta((prev) => keepIfEqual(prev, loaded));
-        }
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
+        setSharedNoteMeta((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
 
     // Recent notes functions
