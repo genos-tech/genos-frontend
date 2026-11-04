@@ -22,7 +22,7 @@ import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString } from "./previewHelpers";
 
-export const DeleteProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const destroyed = t.tasks.modals.deleteProject;
@@ -104,9 +104,11 @@ export const DeleteProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
                     {destroyed.chatNote}
                 </Typography>
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.dangerTint, fontWeight: 600 }}>
-                {t.agentApproval.cannotUndo}
-            </Typography>
+            {undoKnown ? null : (
+                <Typography level="body-xs" sx={{ color: palette.dangerTint, fontWeight: 600 }}>
+                    {t.agentApproval.cannotUndo}
+                </Typography>
+            )}
         </Box>
     );
 };
