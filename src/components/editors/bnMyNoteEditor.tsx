@@ -95,6 +95,7 @@ import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWit
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -318,7 +319,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeBlockEnterShortcut, linkHostCaption],
     });
     const isEditable = isNoteEditable(myRoleId, collabScope);
 

@@ -76,6 +76,7 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
@@ -190,7 +191,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeBlockEnterShortcut, linkHostCaption],
         dictionary,
         initialContent: initialContent,
     });

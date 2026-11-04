@@ -53,6 +53,7 @@ import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnTodoPreviewProps = {
@@ -132,7 +133,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         // `codeBlockEnterShortcut` augments the built-in
         // ``` + Space input rule with an Enter-key handler, so
         // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut, tabStaysInEditor],
+        extensions: [codeBlockEnterShortcut, linkHostCaption, tabStaysInEditor],
         dictionary,
         initialContent: body,
     });

@@ -22,6 +22,14 @@
  *
  * It is a label, not a gate: the link still works. (A `javascript:` URL is a
  * different problem, handled where links are stored and rendered: MIP-821.)
+ *
+ * **Not inside an editable editor (MIP-990).** ProseMirror watches the DOM of an
+ * editor it can edit, and a write it did not make there (this attribute) makes it
+ * redraw the link as a new `<a>`, which this observer then labels again, about once
+ * a frame: the link flickers, shows no caption and can't be clicked. So anchors in
+ * an editable region are skipped here, and the editors draw the caption themselves
+ * (`linkHostCaption`, a mark view that builds the anchor with the attribute).
+ * Read-only editors are not watched by ProseMirror and are labelled from here.
  */
 
 import { externalHost } from "../features/agentQA/agentMarkdown";
@@ -30,6 +38,8 @@ export const LINK_HOST_ATTRIBUTE = "data-link-host";
 
 const EDITOR_SELECTOR = ".bn-editor";
 const ANCHOR_SELECTOR = "a[href]";
+// What ProseMirror sets on an editor it can edit (`contenteditable="true"`).
+const EDITABLE_SELECTOR = '[contenteditable="true"], [contenteditable=""]';
 
 /** Set, change or clear the host label on one anchor. Returns whether it changed. */
 export const labelAnchor = (anchor: HTMLAnchorElement): boolean => {
@@ -56,6 +66,9 @@ export const labelExternalLinksIn = (root: ParentNode): number => {
         // Only links inside an editor: the rest of the app has its own link
         // styling and a host printed after a sidebar link would be noise.
         if (!anchor.closest(EDITOR_SELECTOR)) continue;
+        // An editable editor draws its own caption: writing here would make
+        // ProseMirror redraw the link in a loop (MIP-990).
+        if (anchor.closest(EDITABLE_SELECTOR)) continue;
         if (labelAnchor(anchor)) changed += 1;
     }
     return changed;
