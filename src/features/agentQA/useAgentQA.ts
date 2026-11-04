@@ -24,6 +24,9 @@
 //     reset to empty (preserving `sessionId` + `turnId`).
 //   - `decide` does NOT bump `turnId` — approve/reject is a continuation
 //     of the same turn, completed by the resumed stream.
+//   - The chips of a turn are the UNION of its `sources` events, never the
+//     last one (see `mergeSources`): the resumed stream of a decided turn
+//     does not repeat what the first stream found. A new ask starts empty.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -38,6 +41,7 @@ import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { emitProjectToolResult } from "./approvedProjectWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
+import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
 import { emitTodoChanged } from "./todoWriteTools";
 import {
@@ -132,6 +136,14 @@ export const useAgentQA = ({
     // `prev` *is* fresh — would be a side effect in an updater, which
     // StrictMode double-invokes.)
     const liveRunRef = useRef<AgentRunResult | null>(null);
+    // The chips of the live turn, kept outside the state because a `sources`
+    // event has to be folded into what the turn already has, and only here is
+    // that readable (`prev` is only fresh inside an updater, which must stay
+    // pure, and `onDone` cannot read state at all). Tagged with the turn id
+    // like `liveRunRef`: a `decide` keeps the turn, so its resumed stream goes
+    // on adding to the same list; a new ask starts a new, empty one. Null when
+    // no turn is live, which is what drops a late event.
+    const liveSourcesRef = useRef<{ turnId: number; sources: SpotlightResult[] } | null>(null);
     // Fires at most once per turn. Deliberately NOT `promotedTurnIdsRef`:
     // an explicit Cancel also promotes, and a run the user just cancelled
     // must not announce itself as finished.
@@ -157,6 +169,7 @@ export const useAgentQA = ({
     const promoteCurrentTurn = useCallback((turnId: number) => {
         if (promotedTurnIdsRef.current.has(turnId)) return;
         promotedTurnIdsRef.current.add(turnId);
+        if (liveSourcesRef.current?.turnId === turnId) liveSourcesRef.current = null;
         setAsk((prev) => {
             if (prev.turnId !== turnId) return prev;
             const hasContent =
@@ -189,13 +202,21 @@ export const useAgentQA = ({
             const stillCurrent = (prev: AskState) => prev.turnId === askedTurnId;
             return {
                 onSources: (sources: SpotlightResult[]) => {
+                    const live = liveSourcesRef.current;
+                    if (!live || live.turnId !== askedTurnId) return;
+                    // An event that adds nothing (the server's final re-rank
+                    // of what it already sent, say) changes nothing: no state
+                    // write, so no render.
+                    const merged = mergeSources(live.sources, sources);
+                    if (merged === live.sources) return;
+                    live.sources = merged;
                     setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
+                        stillCurrent(prev) ? { ...prev, answerSources: merged } : prev
                     );
                     // Mirror the count for `onRunComplete`: `onDone` lands before
                     // this state update is readable from a handler closure.
                     if (liveRunRef.current?.turnId === askedTurnId) {
-                        liveRunRef.current.sourceCount = sources.length;
+                        liveRunRef.current.sourceCount = merged.length;
                     }
                 },
                 onDelta: (text: string) => {
@@ -467,6 +488,9 @@ export const useAgentQA = ({
                 askedMentions: mentions?.length ? mentions : undefined,
             });
 
+            // The turn's chips start empty, whatever the live slot held.
+            liveSourcesRef.current = { turnId: askedTurnId, sources: [] };
+
             // Mirror of the turn that `onRunComplete` will report on.
             liveRunRef.current = {
                 turnId: askedTurnId,
@@ -640,6 +664,7 @@ export const useAgentQA = ({
         // blocks a late in-flight event from announcing it afterwards.
         if (liveRunRef.current) completedTurnIdsRef.current.add(liveRunRef.current.turnId);
         liveRunRef.current = null;
+        liveSourcesRef.current = null;
         setAsk((prev) => {
             if (!prev.isStreaming && prev.pendingApproval === null) return prev;
             const turnId = prev.turnId;
@@ -673,6 +698,7 @@ export const useAgentQA = ({
         // cleared too or the first turn of the new conversation would be
         // treated as already-announced.
         liveRunRef.current = null;
+        liveSourcesRef.current = null;
         completedTurnIdsRef.current.clear();
         promotedTurnIdsRef.current.clear();
         pendingNewConversationRef.current = true;
@@ -705,6 +731,7 @@ export const useAgentQA = ({
         // `reset` rewinds `turnId` to match the restored history and a
         // stale id in the set would mute a genuine future run.
         liveRunRef.current = null;
+        liveSourcesRef.current = null;
         completedTurnIdsRef.current.clear();
         pendingNewConversationRef.current = false;
         if (args.turns !== undefined) {
@@ -741,6 +768,7 @@ export const useAgentQA = ({
         askAbortRef.current?.abort();
         askAbortRef.current = null;
         liveRunRef.current = null;
+        liveSourcesRef.current = null;
         promotedTurnIdsRef.current.clear();
         setTurns([]);
         setAsk((prev) => ({
