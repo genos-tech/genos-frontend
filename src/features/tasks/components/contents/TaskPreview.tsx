@@ -50,8 +50,6 @@ import {
     TaskProps,
 } from "../../../../types/tasks";
 import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
-import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
-import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
@@ -85,71 +83,8 @@ import { TaskPreviewSwitchGate } from "./base/TaskPreviewSwitchGate";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
-
-// Section divider component
-const SectionDivider = ({ isDark }: { isDark: boolean }) => (
-    <Divider
-        sx={{
-            my: 2,
-            opacity: isDark ? 0.08 : 0.12,
-        }}
-    />
-);
-
-// Section header component
-const SectionHeader = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
-    <Typography
-        level="body-xs"
-        sx={{
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            fontSize: 10,
-            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-            mb: 1,
-        }}
-    >
-        {children}
-    </Typography>
-);
-
-/**
- * "Linked pull requests" — a rich card per PR URL found in the entity's
- * Links list. Source of truth is `links`; there is no separate PR field.
- *
- * Shared by the task branch and `MilestonePreviewInner`. It lived inline
- * in the task branch only, so a milestone's PRs never rendered even
- * though milestones carry `links` exactly like tasks do (the create form
- * forwards them, and `DynamicURLManager` edits them in both previews).
- * Extracted rather than copied so the two panes can't drift again.
- *
- * Renders nothing — divider and header included — when no link parses as
- * a PR URL, so a task with only non-GitHub links is unaffected.
- */
-const LinkedPrSection = ({
-    links,
-    isDark,
-    accessToken,
-}: {
-    links: TaskProps["links"] | undefined;
-    isDark: boolean;
-    accessToken: string | null;
-}) => {
-    const { t } = useTranslation();
-    const prUrls = (links ?? []).map((l) => l.url).filter((u) => parsePrUrl(u) !== null);
-    if (prUrls.length === 0) return null;
-    return (
-        <>
-            <SectionDivider isDark={isDark} />
-            <SectionHeader isDark={isDark}>{t.tasks.linkedPr.header}</SectionHeader>
-            <Stack spacing={1}>
-                {prUrls.map((url) => (
-                    <LinkedPrCard key={url} accessToken={accessToken ?? ""} url={url} />
-                ))}
-            </Stack>
-        </>
-    );
-};
+import { LinkedPrSection } from "./LinkedPrSection";
+import { SectionDivider, SectionHeader } from "./PreviewSection";
 
 type TaskPreviewProps = {
     socket: Socket | null;
@@ -1009,6 +944,8 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                 accessToken={accessToken}
                                 isDark={isDark}
                                 links={taskEditState.tmpCurrentTaskContent.links}
+                                myself={myself}
+                                taskId={taskEditState.tmpCurrentTaskContent.id}
                             />
 
                             <SectionDivider isDark={isDark} />
@@ -2766,6 +2703,7 @@ const MilestonePreviewInner = ({
                         accessToken={accessToken}
                         isDark={isDark}
                         links={taskContentLike.links}
+                        myself={myself}
                     />
 
                     <SectionDivider isDark={isDark} />
