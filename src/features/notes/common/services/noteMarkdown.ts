@@ -27,9 +27,31 @@ const getHolder = (): BlockNoteEditor => {
     return holder;
 };
 
+// BlockNote's markdown parser (replaced in 0.51) leaves the backslash escapes
+// of a link destination in the href: `[t](https://x/Foo_\(bar\))` reads as
+// `https://x/Foo_\(bar\)`, a broken address, and the serializer escapes
+// parentheses and backslashes exactly that way, so an exported note came back
+// with its links changed. CommonMark processes those escapes (any ASCII
+// punctuation) when it reads a destination; do it here.
+const ESCAPED_PUNCTUATION = /\\([!-/:-@[-`{-~])/g;
+
+type AnyRecord = Record<string, unknown>;
+
+const unescapeLinkHrefs = <T>(node: T): T => {
+    if (Array.isArray(node)) return node.map(unescapeLinkHrefs) as T;
+    if (!node || typeof node !== "object") return node;
+    const source = node as AnyRecord;
+    const out: AnyRecord = {};
+    for (const [key, value] of Object.entries(source)) out[key] = unescapeLinkHrefs(value);
+    if (source.type === "link" && typeof source.href === "string") {
+        out.href = source.href.replace(ESCAPED_PUNCTUATION, "$1");
+    }
+    return out as T;
+};
+
 /** Parse raw markdown text into BlockNote blocks for a new note body. */
 export const markdownToNoteBlocks = async (markdown: string): Promise<PartialBlock[]> => {
-    const blocks = await getHolder().tryParseMarkdownToBlocks(markdown);
+    const blocks = unescapeLinkHrefs(await getHolder().tryParseMarkdownToBlocks(markdown));
     // A note body must have at least one block (the ProseMirror doc
     // invariant every editor in this codebase maintains).
     return blocks.length > 0 ? (blocks as PartialBlock[]) : [{ type: "paragraph" }];
@@ -55,8 +77,6 @@ const DEFAULT_BLOCK_TYPES = new Set([
     "video",
     "audio",
 ]);
-
-type AnyRecord = Record<string, unknown>;
 
 // Best-effort text for a custom inline node. Prop names match the notes
 // schema specs (Mention.tsx / HashMention.tsx).
@@ -96,7 +116,11 @@ const sanitizeInline = (content: unknown): unknown => {
         const n = node as AnyRecord;
         if (n.type === "text") return n;
         if (n.type === "link") {
-            return { ...n, content: sanitizeInline(n.content) };
+            // A raw space ends a markdown link destination, so the address
+            // would be cut at it on import (0.49 wrote it as %20).
+            const href =
+                typeof n.href === "string" ? n.href.replace(/\s/g, encodeURIComponent) : n.href;
+            return { ...n, href, content: sanitizeInline(n.content) };
         }
         // Custom inline → plain styled-less text run.
         return { type: "text", text: customInlineToText(n), styles: {} };

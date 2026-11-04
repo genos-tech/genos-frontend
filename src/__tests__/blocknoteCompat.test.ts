@@ -8,14 +8,22 @@
  * the editors write, stored both as block JSON and as Yjs updates WRITTEN BY
  * BLOCKNOTE 0.49, plus the result 0.49 gives for each (the golden file).
  *
- * That makes it a tripwire for an upgrade. On 0.57, the Yjs bytes written by
- * 0.49 must read to the same blocks, the same round trip and the same markdown.
+ * That makes it a tripwire for an upgrade: Yjs bytes written by an EARLIER
+ * BlockNote must read to the same blocks, round trip and markdown on a later one.
  * When one does not, this fails with the differing data. A difference that is
  * wanted (a new default prop, a changed export) is accepted on purpose by
  * regenerating the golden file and saying why in the PR:
  *
  *   UPDATE_COMPAT_GOLDEN=1 npx vitest run src/__tests__/blocknoteCompat.test.ts
  *   npx prettier --write src/__tests__/fixtures/blocknoteCompat
+ *
+ * History: the golden was made on 0.49 (MIP-1008). BlockNote 0.57 (MIP-1009) reads
+ * the 0.49-written Yjs bytes to the SAME blocks and the same round trip, and
+ * differs only in the markdown export, which 0.51 rewrote: no stray `&#x20;`
+ * after bold or italic text, no `\&` inside link URLs, tight lists, padded
+ * table columns, and an image with a caption as `<figure>` HTML (no caption
+ * exists in production data). The golden was regenerated on 0.57 for that. The
+ * Yjs bytes were NOT regenerated: they stay what 0.49 wrote, which is the point.
  *
  * Do not regenerate it to make a red run green without reading the diff.
  */
@@ -105,7 +113,7 @@ if (process.env.UPDATE_COMPAT_GOLDEN) {
             const results = await readAll();
             writeFileSync(
                 goldenPath,
-                JSON.stringify({ readWith: "@blocknote/core 0.49.0", docs: results }, null, 2)
+                JSON.stringify({ readWith: "@blocknote/core 0.57.0", docs: results }, null, 2)
             );
             expect(results.every((r) => r.ok)).toBe(true);
         }, 60000);
@@ -182,7 +190,7 @@ describe("what the installed BlockNote makes of the fixture", () => {
         expect(results.filter((r) => !r.ok).map((r) => `${r.name}: ${r.error}`)).toEqual([]);
     });
 
-    it("matches the golden result of 0.49, document by document", async () => {
+    it("matches the golden result, document by document", async () => {
         const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as { docs: CompatDoc[] };
         const results = await readAll();
 

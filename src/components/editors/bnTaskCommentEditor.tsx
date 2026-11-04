@@ -61,6 +61,7 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -159,6 +160,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const { mentionGroups } = useMentionGroupsContext();
 
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
@@ -634,7 +636,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             {!isMobile && (
                                 <BlockTypeSelect
                                     key={"blockTypeSelect"}
-                                    items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                    items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                                 />
                             )}
 

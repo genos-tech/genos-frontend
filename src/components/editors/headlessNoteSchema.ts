@@ -10,6 +10,7 @@ import {
 } from "@blocknote/core";
 
 import { getMessages } from "../../i18n";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     ALERT_SPEC_CONFIG,
     CUSTOM_EMOJI_SPEC_CONFIG,
@@ -50,6 +51,7 @@ export const createHeadlessNoteSchema = () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
     return BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             ...defaultInlineContentSpecs,
             mention: createInlineContentSpec(MENTION_SPEC_CONFIG, { render: inlineStub }),

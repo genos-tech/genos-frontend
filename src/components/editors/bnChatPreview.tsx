@@ -32,6 +32,7 @@ import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils"
 import { AppTooltip } from "../ui/AppTooltip";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -84,6 +85,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         // This is done by picking out the blocks you want to disable
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,

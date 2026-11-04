@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BlockNoteSchema, PartialBlock } from "@blocknote/core";
-import {
-    CommentsExtension,
-    DefaultThreadStoreAuth,
-    YjsThreadStore,
-    type User,
-} from "@blocknote/core/comments";
+import { BlockNoteSchema, PartialBlock, type User } from "@blocknote/core";
+import { CommentsExtension, DefaultThreadStoreAuth } from "@blocknote/core/comments";
+import { withCollaboration, YjsThreadStore } from "@blocknote/core/yjs";
 import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
@@ -428,25 +424,34 @@ export function useCollaborativeBlockNote({
             return opts;
         }
 
-        const opts: Record<string, any> = {
-            ...TAB_INDENT_OPTIONS,
-            schema,
-            dictionary,
-            uploadFile,
-            collaboration: {
-                provider,
-                fragment,
-                user,
-            },
-        };
-
         const allExtensions = [...extraExtensions];
         if (commentsExtension) {
             allExtensions.push(commentsExtension);
         }
-        if (allExtensions.length > 0) {
-            opts.extensions = allExtensions;
-        }
+
+        // Since BlockNote 0.52 the `collaboration` option only takes effect when
+        // the options go through `withCollaboration`. This hook casts its options
+        // to `any`, so TypeScript would not notice a missing wrap: every
+        // collaborative editor would silently stop syncing. `withCollaboration`
+        // APPENDS the Yjs binding to `extensions` (so the full list has to be
+        // here already: setting `opts.extensions` after it would drop the binding),
+        // turns the built-in history off in favour of the Yjs undo, and sets the
+        // placeholder initial content.
+        const opts: Record<string, any> = withCollaboration({
+            ...TAB_INDENT_OPTIONS,
+            schema,
+            dictionary,
+            uploadFile,
+            ...(allExtensions.length > 0 ? { extensions: allExtensions } : {}),
+            collaboration: {
+                // Hocuspocus types `awareness` as `Awareness | null`; BlockNote's
+                // option wants `Awareness | undefined`. This hook creates the
+                // provider without `awareness: null`, so it always has one.
+                provider: provider as never,
+                fragment,
+                user,
+            },
+        });
 
         return opts;
     }, [

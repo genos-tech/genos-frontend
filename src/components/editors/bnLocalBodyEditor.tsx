@@ -55,6 +55,7 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -118,6 +119,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const schema = useMemo(() => {
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 ...defaultInlineContentSpecs,
                 mention: CreateMentionSpec(
@@ -218,7 +220,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
                                 items={[
-                                    ...getBlockTypeSelectItemsWithCodeBlock(editor.dictionary),
+                                    ...getBlockTypeSelectItemsWithCodeBlock(editor),
                                     {
                                         name: t.common.editor.alertBlock,
                                         type: "alert",
