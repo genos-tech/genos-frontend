@@ -43,6 +43,43 @@ import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMileston
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
+// ── Narrow-sidebar layout (MIP-1012) ──
+// The task sidebar is a resizable panel (10-30% of the window, ~137px at
+// 1440). Rows adapt with CSS container queries only: no width state and no
+// ResizeObserver, so dragging the panel never re-renders the tree (MIP-904).
+//   - Every row is always 2 lines: row 2 never wraps; the sprint chip
+//     ellipsizes while the status chip, avatars and progress chip keep size.
+//   - `ms-list` (the root <List>) drives the indent: the staircase has to
+//     shrink for folders, rows and the add rows together, so the container
+//     is the element above all of them. A container can't query itself, so
+//     the rule restyles the List's children.
+//   - `ms-row` (each row's ListItemContent) drives the chips: what fits
+//     depends on the row's OWN width, which differs by depth (a Past row is
+//     indented three levels deeper than an unfiled one).
+// The sidebar Sheet itself gets no containment: it hosts fixed-position UI
+// (the search popper). Row menus portal to <body>, so they are unaffected.
+const MS_LIST = "ms-list";
+const MS_ROW = "ms-row";
+// List width below which the indent steps get smaller.
+const LIST_COMPACT_MAX_PX = 299;
+// Row content widths (tuned in a browser): row 2 is the sprint chip (the
+// flexible part), a status chip of up to ~60px and the avatars (~54px for
+// four, ~34px for one + "+N"). Below 180px only one avatar + "+N" shows; below
+// 160px the sprint chip would be an unreadable stub, so it goes; below 100px
+// even status + one avatar can't fit, so the avatars go and status stays.
+const ROW_ONE_AVATAR_MAX_PX = 179;
+const ROW_NO_SPRINT_MAX_PX = 159;
+const ROW_NO_AVATARS_MAX_PX = 99;
+const AVATARS_CLASS = "MsRowAvatars";
+const SURPLUS_CLASS = "MsRowAvatarSurplus";
+const SPRINT_CLASS = "MsRowSprint";
+
+// Left indent for tree level `depth` (0 = directly under the project row).
+// Normal 40/56/72/88px (spacing 5 + 2 per level); compact 24/32/40/48px.
+const indentSx = (depth: number) => ({
+    ml: `calc(var(--ms-indent-base) + ${depth} * var(--ms-indent-step))`,
+});
+
 // The managers arrive as slices (MIP-971): TypeScript forbids reading a member
 // outside them, and `memo` skips the render of an `AppBody` pass that changed
 // none of the values below. Every prop must therefore be referentially stable
@@ -170,9 +207,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
         useTM.setIsTaskTableVisible(false);
     };
 
-    // `ml` lets callers indent the row deeper when it's nested inside the
-    // Past-milestones year/sprint tree (default 5 = the flat, top-level indent).
-    const renderMilestoneRow = (m: Milestone, ml = 5, canFile = true) => {
+    // `depth` indents the row one tree level per step: 1 inside a folder, 3
+    // inside the Past-milestones year/sprint tree (0 = the flat, top level).
+    const renderMilestoneRow = (m: Milestone, depth = 0, canFile = true) => {
         const sprintName =
             m.sprintId == null
                 ? t.tasks.sidebar.noSprint
@@ -198,18 +235,41 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 }
             >
                 <ListItemButton
-                    // `endAction` is absolutely positioned at the right edge, so
-                    // the content has to stop short of it (a 2rem button): else
-                    // the progress chip and the assignee avatars sit under it.
-                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5, mr: canFile ? 4 : 0 }}
                     selected={
                         useTM.currentPreviewKind === "milestone" &&
                         useTM.currentPreviewMilestoneId === m.milestoneId
                     }
+                    // `endAction` is absolutely positioned at the right edge, so
+                    // the content has to stop short of it (a 2rem button): else
+                    // the progress chip and the assignee avatars sit under it.
+                    sx={{
+                        borderRadius: 8,
+                        ...indentSx(depth),
+                        py: 0.5,
+                        pr: 0.5,
+                        mr: canFile ? 4 : 0,
+                    }}
                     onClick={() => handleOpen(m.milestoneId)}
                 >
                     <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", mr: 0.75 }} />
-                    <ListItemContent>
+                    <ListItemContent
+                        sx={{
+                            containerType: "inline-size",
+                            containerName: MS_ROW,
+                            [`@container ${MS_ROW} (max-width: ${ROW_ONE_AVATAR_MAX_PX}px)`]: {
+                                [`& .${AVATARS_CLASS} > :nth-child(n+2):not(.${SURPLUS_CLASS})`]: {
+                                    display: "none",
+                                },
+                                [`& .${SURPLUS_CLASS}`]: { display: "flex" },
+                            },
+                            [`@container ${MS_ROW} (max-width: ${ROW_NO_SPRINT_MAX_PX}px)`]: {
+                                [`& .${SPRINT_CLASS}`]: { display: "none" },
+                            },
+                            [`@container ${MS_ROW} (max-width: ${ROW_NO_AVATARS_MAX_PX}px)`]: {
+                                [`& .${AVATARS_CLASS}`]: { display: "none" },
+                            },
+                        }}
+                    >
                         <Stack
                             alignItems="center"
                             direction="row"
@@ -228,17 +288,27 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             >
                                 {m.title}
                             </Typography>
-                            <Chip size="sm" variant="soft">
+                            <Chip size="sm" sx={{ flexShrink: 0 }} variant="soft">
                                 {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
                             </Chip>
                         </Stack>
+                        {/* One line at any width (MIP-1012): wrapping put each
+                            chip on its own line. `useFlexGap` so a chip the
+                            container query hides leaves no gap behind. */}
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={{ mt: 0.25, flexWrap: "wrap", rowGap: 0.25 }}
+                            sx={{ mt: 0.25, flexWrap: "nowrap", minWidth: 0, overflow: "hidden" }}
+                            useFlexGap
                         >
-                            <Chip size="sm" variant="outlined">
+                            <Chip
+                                className={SPRINT_CLASS}
+                                size="sm"
+                                sx={{ minWidth: 0, flexShrink: 1 }}
+                                title={sprintName}
+                                variant="outlined"
+                            >
                                 {sprintName}
                             </Chip>
                             {(() => {
@@ -251,6 +321,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                             backgroundColor: tone.color,
                                             color: tone.textColor,
                                             fontWeight: 600,
+                                            flexShrink: 0,
                                         }}
                                     >
                                         {taskMetaLabel(m.status, t.tasks.filters)}
@@ -258,7 +329,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                 );
                             })()}
                             <Box sx={{ flex: 1 }} />
-                            <AvatarGroup size="sm" sx={{ "--Avatar-size": "18px" }}>
+                            <AvatarGroup
+                                className={AVATARS_CLASS}
+                                size="sm"
+                                sx={{ "--Avatar-size": "18px", flexShrink: 0 }}
+                            >
                                 {m.assignees.slice(0, 4).map((a) => {
                                     const userIdKey = a.userId != null ? String(a.userId) : "";
                                     const profile = userIdKey
@@ -293,6 +368,16 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                         </Avatar>
                                     );
                                 })}
+                                {/* Narrow rows show the first avatar plus this
+                                    count of everyone else (hidden otherwise). */}
+                                {m.assignees.length > 1 && (
+                                    <Avatar
+                                        className={SURPLUS_CLASS}
+                                        sx={{ display: "none", fontSize: 10 }}
+                                    >
+                                        +{m.assignees.length - 1}
+                                    </Avatar>
+                                )}
                             </AvatarGroup>
                         </Stack>
                     </ListItemContent>
@@ -302,14 +387,28 @@ export const MilestonesListItem = memo(function MilestonesListItem({
     };
 
     return (
-        <List sx={{ gap: 0.25 }}>
+        <List
+            sx={(theme) => ({
+                gap: 0.25,
+                containerType: "inline-size",
+                containerName: MS_LIST,
+                "--ms-indent-base": theme.spacing(5),
+                "--ms-indent-step": theme.spacing(2),
+                [`@container ${MS_LIST} (max-width: ${LIST_COMPACT_MAX_PX}px)`]: {
+                    "& > *": {
+                        "--ms-indent-base": theme.spacing(3),
+                        "--ms-indent-step": theme.spacing(1),
+                    },
+                },
+            })}
+        >
             {folderGroups.map(({ folder, milestones: inFolder }) => (
                 <MilestoneTreeFolder
                     key={`folder-${folder.folderId}`}
                     count={inFolder.length}
+                    depth={0}
                     isDark={isDark}
                     label={folder.name}
-                    ml={5}
                     actions={
                         <FolderMenu
                             folderName={folder.name}
@@ -340,14 +439,19 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                     }
                     defaultOpen
                 >
-                    {inFolder.map((m) => renderMilestoneRow(m, 7))}
+                    {inFolder.map((m) => renderMilestoneRow(m, 1))}
                 </MilestoneTreeFolder>
             ))}
             {folderGroups.length > 0 && unfiled.length > 0 && (
                 <ListItem sx={{ pl: 0, pb: 0 }}>
                     <Typography
                         level="body-xs"
-                        sx={{ ml: 5, pl: 1, opacity: 0.55, textTransform: "uppercase" }}
+                        sx={{
+                            ...indentSx(0),
+                            pl: 1,
+                            opacity: 0.55,
+                            textTransform: "uppercase",
+                        }}
                     >
                         {t.tasks.folders.unfiled}
                     </Typography>
@@ -357,9 +461,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
             {pastMilestones.length > 0 && (
                 <MilestoneTreeFolder
                     count={pastMilestones.length}
+                    depth={0}
                     isDark={isDark}
                     label={t.tasks.sidebar.pastMilestones}
-                    ml={5}
                     icon={
                         <HistoryRoundedIcon
                             sx={{
@@ -379,9 +483,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             <MilestoneTreeFolder
                                 key={yearGroup.year}
                                 count={yearCount}
+                                depth={1}
                                 isDark={isDark}
                                 label={yearGroup.year}
-                                ml={7}
                                 icon={
                                     <CalendarMonthRoundedIcon
                                         sx={{
@@ -398,9 +502,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                     <MilestoneTreeFolder
                                         key={sprintGroup.sprintId ?? "none"}
                                         count={sprintGroup.milestones.length}
+                                        depth={2}
                                         isDark={isDark}
                                         label={pastSprintLabel(sprintGroup)}
-                                        ml={9}
                                         icon={
                                             <DirectionsRunRoundedIcon
                                                 sx={{
@@ -414,7 +518,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                         }
                                     >
                                         {sprintGroup.milestones.map((m) =>
-                                            renderMilestoneRow(m, 11, false)
+                                            renderMilestoneRow(m, 3, false)
                                         )}
                                     </MilestoneTreeFolder>
                                 ))}
@@ -442,13 +546,13 @@ export const MilestonesListItem = memo(function MilestonesListItem({
 
 // Generic collapsible folder used for every level of the "Past milestones"
 // tree (Past milestones → year → sprint). Defaults collapsed — it's an
-// archive, not something the user looks at every session. `ml` sets the
-// indent so nested levels staircase inward.
+// archive, not something the user looks at every session. `depth` sets the
+// indent (`indentSx`) so nested levels staircase inward.
 const MilestoneTreeFolder = ({
     icon,
     label,
     count,
-    ml,
+    depth,
     isDark,
     children,
     defaultOpen = false,
@@ -457,7 +561,7 @@ const MilestoneTreeFolder = ({
     icon: ReactNode;
     label: string;
     count: number;
-    ml: number;
+    depth: number;
     isDark: boolean;
     children: ReactNode;
     // Folders of live milestones open by default (the work is the point);
@@ -472,7 +576,13 @@ const MilestoneTreeFolder = ({
             <ListItem endAction={actions} sx={{ pl: 0, pr: actions ? 1 : undefined }}>
                 <ListItemButton
                     // Same as the milestone row: stop short of the "..." menu.
-                    sx={{ borderRadius: 8, ml, py: 0.5, pr: 0.5, mr: actions ? 4 : 0 }}
+                    sx={{
+                        borderRadius: 8,
+                        ...indentSx(depth),
+                        py: 0.5,
+                        pr: 0.5,
+                        mr: actions ? 4 : 0,
+                    }}
                     onClick={() => setOpen((prev) => !prev)}
                 >
                     {icon}
@@ -515,7 +625,7 @@ const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boo
     const { t } = useTranslation();
     return (
         <ListItem sx={{ pl: 0 }}>
-            <ListItemButton sx={{ borderRadius: 8, ml: 5, py: 0.5 }} onClick={onClick}>
+            <ListItemButton sx={{ borderRadius: 8, ...indentSx(0), py: 0.5 }} onClick={onClick}>
                 <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
                 <Typography
                     level="body-sm"
@@ -534,7 +644,7 @@ const AddFolderRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolea
     const { t } = useTranslation();
     return (
         <ListItem sx={{ pl: 0 }}>
-            <ListItemButton sx={{ borderRadius: 8, ml: 5, py: 0.5 }} onClick={onClick}>
+            <ListItemButton sx={{ borderRadius: 8, ...indentSx(0), py: 0.5 }} onClick={onClick}>
                 <FolderRoundedIcon
                     sx={{
                         fontSize: 16,
