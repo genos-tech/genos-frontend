@@ -160,6 +160,16 @@ export interface SprintMilestoneManagementState {
         projectId: number,
         opts?: LoadProjectSprintsOptions
     ) => Promise<Sprint[]>;
+    /**
+     * Same load as `loadSprintsForProject`, but says whether it worked:
+     * `[]` from the one above is both "this project has no sprints" and "the
+     * request failed", and the change-driven refresh must not record a token
+     * for a load that failed.
+     */
+    refreshSprintsForProject: (
+        projectId: number,
+        opts?: LoadProjectSprintsOptions
+    ) => Promise<boolean>;
     loadMilestonesForProject: (
         projectId: number,
         opts?: LoadProjectMilestonesOptions
@@ -271,15 +281,17 @@ export const useSprintMilestoneManagement = (
         [accessToken]
     );
 
-    const loadSprintsForProject = useCallback(
-        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> => {
+    // `null` when the request failed, so a caller that has to tell that from
+    // an empty project can (see `refreshSprintsForProject`).
+    const loadSprintsChecked = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[] | null> => {
             const res = await loadProjectSprints(projectId, accessToken, opts);
             // A failed request (transient auth gap on a focus/interval
             // refresh, network blip) resolves to `undefined` — distinct from
             // a project that genuinely has zero sprints (`{ sprints: [] }`).
             // Bail WITHOUT touching state so a background refresh can never
             // blank out the picker/dashboard that already have good data.
-            if (!res) return [];
+            if (!res) return null;
             const sprints = res.sprints ?? [];
             setProjectSprintsState((prev) => ({ ...prev, [projectId]: sprints }));
             setTsLastSprintsLoaded(Date.now());
@@ -318,6 +330,18 @@ export const useSprintMilestoneManagement = (
             return sprints;
         },
         [accessToken]
+    );
+
+    const loadSprintsForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> =>
+            (await loadSprintsChecked(projectId, opts)) ?? [],
+        [loadSprintsChecked]
+    );
+
+    const refreshSprintsForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<boolean> =>
+            (await loadSprintsChecked(projectId, opts)) !== null,
+        [loadSprintsChecked]
     );
 
     const loadMilestonesForProject = useCallback(
@@ -668,6 +692,7 @@ export const useSprintMilestoneManagement = (
         loadConfigForProject,
         saveConfig,
         loadSprintsForProject,
+        refreshSprintsForProject,
         loadMilestonesForProject,
         refreshMilestone,
         createNewSprint,

@@ -126,9 +126,14 @@ export const useProjectTaskManagement = ({
 
     // Freshness strategy. Two pieces working together:
     //
-    //   (A) Window focus → refresh the project task list. The list call
-    //       is cheap and gives every row a fresh `updatedAt`. This is
-    //       the *trigger*: it makes `allTasks` authoritative.
+    //   (A) A change-driven refresh of the project task list (and its sprints)
+    //       on window focus, on a 60 s tick and when the `#` menu asks. It
+    //       lives in `useChangeRefresher`, mounted once in `App`, and is NOT
+    //       registered here any more: this hook used to add its own unthrottled
+    //       `focus` listener next to it, which reloaded the task list and the
+    //       sprints on every focus whether or not anything had changed. The
+    //       list call gives every row a fresh `updatedAt`, so it is the
+    //       *trigger* that makes `allTasks` authoritative.
     //   (B) `allTasks`-watch effect below → when the open preview's row
     //       in `allTasks` has a newer `updatedAt` than what
     //       `currentPreviewTask` currently shows (and that IS the open task),
@@ -141,27 +146,17 @@ export const useProjectTaskManagement = ({
     // This catches everything the PM socket misses (PR-merge auto-close,
     // teammate edits via the task UI, background jobs) without paying
     // for a full task refetch every focus event.
-    useEffect(() => {
-        const onFocus = () => {
-            if (usePM.currentProject) {
-                void usePM.refreshProjectTasks(usePM.currentProject.projectId);
-                // A sprint's `status` (upcoming/active/completed) is derived
-                // server-side from today's date, so the active sprint silently
-                // rotates at a sprint boundary. Sprints are otherwise loaded
-                // only on project change, freezing a stale "active" in memory
-                // — re-fetch on focus so a tab returned to the next day picks
-                // up the new active sprint (and any freshly auto-rolled ones)
-                // without a reload. Both the milestone sprint picker and the
-                // dashboard read this shared state.
-                void useSM.loadSprintsForProject(usePM.currentProject.projectId);
-            }
-        };
-        window.addEventListener("focus", onFocus);
-        return () => window.removeEventListener("focus", onFocus);
-    }, [usePM.currentProject, useSM.loadSprintsForProject]);
+    //
+    // A sprint's `status` (upcoming/active/completed) is derived server-side
+    // from today's date, so the active sprint silently rotates at a sprint
+    // boundary and no write announces it. Returning to the tab after it
+    // happened lands on the full refresh (more than ten minutes since the
+    // last), which re-fetches the sprints; the day-change poll below covers a
+    // tab that never leaves. Both the milestone sprint picker and the dashboard
+    // read this shared state.
 
     // Sprint rotation for a tab that stays OPEN AND FOCUSED across a day
-    // boundary — the focus refresh above never fires then. Poll cheaply for a
+    // boundary — a focus refresh never fires then. Poll cheaply for a
     // change in the local calendar date and re-fetch sprints when it ticks
     // over, so the dashboard's active sprint and the milestone picker rotate
     // on their own. The date compare is a near-free string check; the network

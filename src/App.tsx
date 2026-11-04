@@ -9,8 +9,8 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
+import { buildChangeLoaderGroups } from "./context/changeLoaderGroups";
 import { HashMentionDataProvider } from "./context/HashMentionDataContext";
-import { createThrottledRefresh, NOTE_LIST_POLL_MS } from "./context/hashMentionRefresh";
 import {
     MentionGroupModalProvider,
     useMentionGroupModalState,
@@ -66,6 +66,7 @@ import { useAppBadge } from "./hooks/common/useAppBadge";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { BubbleActionsPreferenceProvider } from "./hooks/common/useBubbleActionsPreference";
 import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePreference";
+import { useChangeRefresher } from "./hooks/common/useChangeRefresher";
 import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { HistoryProvider } from "./hooks/common/useHistory";
@@ -320,13 +321,7 @@ const AppBody = () => {
     // list are fetched ONCE at service init and only patched by this
     // user's own writes, so a note or project created by a teammate (or
     // in another tab) stayed missing from the `#` menu until a page
-    // reload. Tasks ride along via the same project-tasks refresh the
-    // window-focus handler uses. Chats are left out on purpose — the v3
-    // channel service keeps `allChats` live over the socket.
-    //
-    // The body is held in a ref so the throttled wrapper below can stay
-    // referentially stable (it goes into the context value) while always
-    // running the CURRENT loaders rather than a stale render's closure.
+    // reload. Tasks ride along via the open project's task refresh.
     //
     // The team-wide task list lives here rather than in `useTaskManagement`
     // because it belongs to the `#` menu alone: `useTM.allTasks` is the
@@ -347,9 +342,13 @@ const AppBody = () => {
             accessToken,
             false
         );
+        // `false` for a failed request (the loader resolves undefined): the
+        // change-driven refresh records no token for a load that did not work.
+        if (!Array.isArray(teamTasks)) return false;
         // Keep the previous array when nothing changed: this runs on the
         // 60 s refresh, and a new identity re-renders every `#` consumer.
-        if (Array.isArray(teamTasks)) setHashTeamTasks((prev) => keepIfEqual(prev, teamTasks));
+        setHashTeamTasks((prev) => keepIfEqual(prev, teamTasks));
+        return true;
     };
     const loadHashTeamTasksRef = useRef(loadHashTeamTasks);
     loadHashTeamTasksRef.current = loadHashTeamTasks;
@@ -360,67 +359,56 @@ const AppBody = () => {
     useEffect(() => {
         if (accessToken && myself?.teamId) void loadHashTeamTasksRef.current();
     }, [accessToken, myself?.teamId]);
-    const refreshHashMentionImplRef = useRef<() => void>(() => {});
-    refreshHashMentionImplRef.current = () => {
-        void useNM.getMyNoteMeta();
-        void useNM.getTaskNoteMeta();
-        void useNM.getChatNoteMeta();
-        void useNM.getSharedNoteMeta();
-        // Team Notes postdate this refresh and were never added, so a
-        // folder someone shared with you — or a note they filed in one
-        // you can already see — stayed missing until a full reload.
-        void useNM.getTeamNoteFolders();
-        void useNM.getTeamNoteMeta();
-        // The project LIST only. Deliberately NOT `loadProjectsAndTasks`,
-        // which calls `setCurrentProject` when it finds a joined project —
-        // a background refresh must never yank the user's open project out
-        // from under them.
-        void (async () => {
-            const projects = await loadTeamProjects(myself, accessToken);
-            if (projects) usePM.setTeamProjects([...projects]);
-        })();
-        const projectId = usePM.currentProject?.projectId;
-        if (projectId) void usePM.refreshProjectTasks(projectId);
-        void loadHashTeamTasksRef.current();
-    };
-    const refreshHashMentionData = useMemo(
-        () => createThrottledRefresh(() => refreshHashMentionImplRef.current()),
-        []
-    );
-
-    // Returning to the tab is the cheapest signal that "things may have
-    // happened elsewhere", and it's already the trigger for the task-list
-    // refresh in `useProjectTaskManagement`. Throttled, so a burst of
-    // focus events costs one round of fetches at most.
-    useEffect(() => {
-        window.addEventListener("focus", refreshHashMentionData);
-        return () => window.removeEventListener("focus", refreshHashMentionData);
-    }, [refreshHashMentionData]);
-
-    // `focus` only fires on a blur→focus round trip, so a user parked on
-    // the page never saw anything a teammate created — the reported
-    // "I can't get new notes until I refresh". Two cheaper signals cover
-    // that gap:
+    // One entry point for every trigger (window focus, `visibilitychange`, the
+    // 60 s tick while visible, the `#` menu's `refresh`): ONE `GET /changes/`
+    // call, then only the loaders of the collections whose token moved. See
+    // `context/changeRefresher` for the rules (full refresh on the first run, on
+    // a team switch, every 10 minutes and whenever `/changes/` fails, which
+    // includes an API that has no such endpoint yet).
     //
-    //   * `visibilitychange` — catches tab switches inside one window,
-    //     which don't always emit `focus`.
-    //   * a slow poll while the tab is VISIBLE — the only trigger that
-    //     works when the user never leaves at all. Deliberately paused
-    //     when hidden so background tabs cost nothing.
+    // Which loaders each token drives is MIP-970's table. Every loader reports
+    // whether it worked: a token is recorded only for a collection whose loaders
+    // all did, so a failed one is retried at the next trigger.
     //
-    // Both go through the same 30s throttle as everything else, so the
-    // extra listeners can't multiply the request rate.
-    useEffect(() => {
-        const onVisible = () => {
-            if (document.visibilityState === "visible") refreshHashMentionData();
-        };
-        document.addEventListener("visibilitychange", onVisible);
-        const timer = setInterval(onVisible, NOTE_LIST_POLL_MS);
-        return () => {
-            document.removeEventListener("visibilitychange", onVisible);
-            clearInterval(timer);
-        };
-    }, [refreshHashMentionData]);
+    // The project LIST only, deliberately NOT `loadProjectsAndTasks`, which calls
+    // `setCurrentProject` when it finds a joined project: a background refresh
+    // must never yank the user's open project out from under them. Chats are left
+    // out on purpose, the v3 channel service keeps `allChats` live over the socket.
+    const refreshHashMentionData = useChangeRefresher({
+        accessToken,
+        buildGroups: (projectId) =>
+            buildChangeLoaderGroups(
+                {
+                    getChatNoteMeta: () => useNM.getChatNoteMeta(),
+                    // Team Notes postdate this refresh and were never added, so a
+                    // folder someone shared with you, or a note they filed in one
+                    // you can already see, stayed missing until a full reload.
+                    getMyNoteMeta: () => useNM.getMyNoteMeta(),
+                    getSharedNoteMeta: () => useNM.getSharedNoteMeta(),
+                    getTaskNoteMeta: () => useNM.getTaskNoteMeta(),
+                    getTeamNoteFolders: () => useNM.getTeamNoteFolders(),
+                    getTeamNoteMeta: () => useNM.getTeamNoteMeta(),
+                    loadProjects: async () => {
+                        const projects = await loadTeamProjects(myself, accessToken);
+                        if (!Array.isArray(projects)) return false;
+                        usePM.setTeamProjects([...projects]);
+                        return true;
+                    },
+                    loadTeamTasks: () => loadHashTeamTasksRef.current(),
+                    // The `since=` delta of the open project's tasks (it rejects when
+                    // the request failed) and its sprints. A sprint's status is derived
+                    // from today's date on the server, so a bump never announces a
+                    // rotation: the backstop and the day-change poll in
+                    // `useProjectTaskManagement` are what pick that up.
+                    refreshProjectTasks: (id) => usePM.refreshProjectTasks(id),
+                    refreshSprints: (id) => useSM.refreshSprintsForProject(id),
+                },
+                projectId
+            ),
+        projectId: usePM.currentProject?.projectId,
+        teamId: myself?.teamId,
+        userId: myself?.userId,
+    });
 
     // Backing data for the "#" mention menu, fed to every editor's
     // `HashSuggestionMenuController` via `HashMentionDataProvider`. See
