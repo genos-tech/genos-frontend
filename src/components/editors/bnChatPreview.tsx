@@ -18,7 +18,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
-import { MessagePrUnfurls } from "../../features/integrations/components/MessagePrUnfurls";
+import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -137,7 +137,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const { accessToken } = useAuth();
 
     // Scan the message body for GitHub PR URLs once per content change
-    // and render a PR chip per match below the body. Memoized so
+    // and render a LinkedPrCard per match below the body. Memoized so
     // Virtuoso scroll re-renders don't re-walk the document. Caps at
     // MAX_PR_UNFURLS to keep noisy paste-bombs in check.
     const prUrls = useMemo(
@@ -212,7 +212,16 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             ></BlockNoteView>
 
             {prUrls.length > 0 && accessToken && (
-                <MessagePrUnfurls accessToken={accessToken} urls={prUrls} />
+                <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
+                    {prUrls.map((url) => (
+                        <LinkedPrCard
+                            key={url}
+                            accessToken={accessToken}
+                            url={url}
+                            hideOnNotConnected
+                        />
+                    ))}
+                </Stack>
             )}
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
