@@ -22,6 +22,7 @@
 import type { Messages } from "../../i18n";
 import type { EntitySubtitleLabels } from "../spotlight/SpotlightResultItem";
 import { getToolLabel } from "./toolLabels";
+import { buildUndoLabels, type UndoLabels } from "./undoCopy";
 
 type SpotlightMessages = Messages["spotlight"];
 
@@ -68,6 +69,10 @@ export interface AgentTurnLabels {
     // vocabulary the Spotlight result rows use.
     chip: ChipLabels;
     entitySubtitle: EntitySubtitleLabels;
+    // Undo of an approved write: the control, its tooltip per tool, and a
+    // sentence per outcome and refusal. One wording for every host
+    // (`agentApproval.undo`); `undoCopy.ts` builds it.
+    undo: UndoLabels;
 }
 
 export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk";
@@ -112,5 +117,6 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
         entitySubtitle: own
             ? { ...sp.entitySubtitle, notePersonal: sp.entitySubtitle.noteFallback }
             : sp.entitySubtitle,
+        undo: buildUndoLabels(t),
     };
 };

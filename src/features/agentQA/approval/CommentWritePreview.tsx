@@ -57,7 +57,7 @@ export const UpdateCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     );
 };
 
-export const DeleteCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteCommentPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -71,7 +71,7 @@ export const DeleteCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => 
                         task: asString(args.task_id) ?? "",
                     })}
                 </Typography>
-                <MetaChip label={t.agentApproval.cannotUndo} />
+                {undoKnown ? null : <MetaChip label={t.agentApproval.cannotUndo} />}
             </Box>
         </Box>
     );

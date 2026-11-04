@@ -77,7 +77,7 @@ export const ManageSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     );
 };
 
-export const DeleteSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteSprintPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -88,7 +88,7 @@ export const DeleteSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                 <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
                     {fmt(t.agentApproval.deleteSprint, { sprint: asString(args.sprint_id) ?? "" })}
                 </Typography>
-                <MetaChip label={t.agentApproval.cannotUndo} />
+                {undoKnown ? null : <MetaChip label={t.agentApproval.cannotUndo} />}
             </Box>
             <Typography level="body-xs" sx={{ color: palette.textMuted }}>
                 {t.agentApproval.sprintMilestonesKept}

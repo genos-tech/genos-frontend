@@ -339,6 +339,7 @@ export const GenosHome = ({
                         onReject={spotlight.onReject}
                         onSelect={onSelect}
                         onToggleFilterService={spotlight.onToggleFilterService}
+                        onUndo={spotlight.undoStep}
                     />
                 </Box>
             </Box>

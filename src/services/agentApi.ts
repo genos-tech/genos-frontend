@@ -2,8 +2,10 @@
 //
 //   POST /api/v2/agent/ask/      — start a fresh run
 //   POST /api/v2/agent/decide/   — resume a paused run (approve / reject)
+//   POST /api/v2/agent/runs/<run>/steps/<step>/undo/ — undo one approved write
+//                                                      (plain JSON, not a stream)
 //
-// Both endpoints stream NDJSON over POST and emit the same event
+// The first two endpoints stream NDJSON over POST and emit the same event
 // vocabulary. Phase 7 added `tool_call_pending_approval`; Phase 8
 // added `session_id` to the `done` event so the frontend can thread
 // conversation history across multiple /ask/ calls.
@@ -11,10 +13,11 @@
 // NDJSON event types:
 //   {"type": "tool_call_start", "step", "tool_name", "arguments"}
 //   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?,
-//        "edited"?, "edited_arguments"?}
+//        "edited"?, "edited_arguments"?, "undo"?}
 //   {"type": "tool_call_error",  "step", "tool_name", "error", "duration_ms"?}
 //   {"type": "tool_call_pending_approval",
-//        "step", "tool_name", "arguments", "editable"?, "approval_token", "run_id"}
+//        "step", "tool_name", "arguments", "editable"?, "undoable"?, "undo_reason"?,
+//        "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
 //   {"type": "done", "session_id": "...", "elapsed_ms"?}   ← session_id added in Phase 8
@@ -76,6 +79,16 @@ export interface ToolResultProjectRef {
     deleted: true;
 }
 
+/** What an approved write's result carries when what undo needs was really
+ * stored (genos-api `agent/undo.py`, `event_info`). It, and not `undoable` on
+ * the approval card, decides whether Undo is offered. `available_until` is an
+ * ISO instant. Absent on a read, on a write nothing was stored for, and on
+ * older backends. */
+export interface ToolResultUndoRef {
+    step_id: number;
+    available_until: string;
+}
+
 export interface ToolCallResultPayload {
     step: number;
     tool_name: string;
@@ -95,6 +108,7 @@ export interface ToolCallResultPayload {
     // session-cache hits (nothing executed).
     duration_ms?: number;
     project?: ToolResultProjectRef;
+    undo?: ToolResultUndoRef;
 }
 
 export interface ToolCallErrorPayload {
@@ -116,9 +130,27 @@ export interface PendingApprovalPayload {
     // Absent against older backends, which read the same as `[]`. At these
     // paths `arguments` already holds the value as the tool will receive it.
     editable?: string[];
+    // A PREDICTION of whether this call could be undone once approved
+    // (genos-api `undo.proposal`): the card says so BEFORE the person approves.
+    // `false` comes with `undo_reason`, one of `UNDO_REASONS` below. Absent
+    // against older backends, which reads as "no claim" (not as undoable). Whether
+    // Undo is shown afterwards is the result event's `undo`, never this.
+    undoable?: boolean;
+    undo_reason?: string;
     approval_token: string;
     run_id: string;
 }
+
+/** Why a proposed write can't be undone: the codes the card has copy for. A
+ * code outside the list reads as the generic one. */
+export const UNDO_REASONS = [
+    "irreversible_delete",
+    "notified_people",
+    "no_snapshot",
+    "unsupported_fields",
+    "not_yet",
+] as const;
+export type UndoReason = (typeof UNDO_REASONS)[number];
 
 // What a 422 from /decide/ says: the person's edits cannot be applied. The
 // approval was NOT spent, the run is still awaiting it, and the same token
@@ -446,6 +478,20 @@ export interface AgentSessionTurn {
     error: string | null;
     started_at: string;
     sources: SpotlightResult[];
+    // The turn's approved writes that have an undo, oldest first (one run can
+    // approve several): empty for none, absent against older backends. Whether
+    // one can STILL be undone is not known here, only when it is tried.
+    undo?: AgentSessionUndo[];
+}
+
+export interface AgentSessionUndo {
+    step_id: number;
+    // The step's index within its run.
+    step: number;
+    tool_name: string;
+    available_until: string;
+    // Set once the write was undone.
+    undone_at: string | null;
 }
 
 export interface AgentSessionDetail {
@@ -913,6 +959,267 @@ export async function decideAgent(args: DecideAgentArgs): Promise<void> {
     );
 }
 
+// `undo` of a result event, only when it is whole: a real step id and a date.
+// Anything else (a field from a newer backend, a null) is no Undo at all, never
+// a control that cannot work.
+const asUndoRef = (raw: unknown): ToolResultUndoRef | undefined => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+    const { step_id, available_until } = raw as Record<string, unknown>;
+    if (typeof step_id !== "number" || !Number.isFinite(step_id)) return undefined;
+    if (typeof available_until !== "string" || !available_until) return undefined;
+    return { step_id, available_until };
+};
+
+// ---------------------------------------------------------------------------
+// Undo an approved write.
+//
+//   POST /agent/runs/<run_id>/steps/<step_id>/undo/     (genos-api `undo_apply.py`)
+//
+// No body, and nothing in it is the person's to choose: the click is the
+// authorization. A plain JSON POST like the feedback call, with the same bearer
+// token the other agent calls use (none of them refreshes a token, and neither
+// does this: the caller holds the live one).
+//
+// Never throws. The answer is either `undone` or a `refused` one that names why
+// in a code the card has a sentence for. A refusal changes NOTHING on the server.
+// ---------------------------------------------------------------------------
+
+/** A field undo reports it did not put back, because someone changed it after
+ * the write. `field` is a column name (`status`, `due_date`, ...) or `body`. */
+export interface UndoSkippedField {
+    field: string;
+    reason: string;
+}
+
+/** What the undo touched. `note_type` is the note FAMILY, as on a note ref.
+ * `comment` is what undoing `add_comment` reports (it deleted the comment). */
+export type UndoEntity =
+    | { kind: "task"; task_id: number; project_id: number | null; display_id: string }
+    | {
+          kind: "note";
+          note_type: "personal" | "task" | "chat";
+          note_id: number;
+          title: string;
+      }
+    | {
+          kind: "comment";
+          task_id: number;
+          project_id: number | null;
+          display_id: string;
+          comment_id: number;
+      };
+
+export interface UndoAnswer {
+    run_id: string;
+    step_id: number;
+    tool_name: string;
+    undone_at: string;
+    // `restored`: put back as it was, re-read it. `deleted`: what the agent made
+    // is gone, close it and drop it.
+    action: "restored" | "deleted";
+    // Column names put back (`title`, `status`, `priority`, `effort_level`,
+    // `due_date`, `start_date`, `tags`, `body`); empty for a delete.
+    restored: string[];
+    skipped: UndoSkippedField[];
+    // Null for a kind this client does not know: nothing is refreshed for it.
+    entity: UndoEntity | null;
+    // The server's English sentence: a fallback, people read localized copy.
+    summary: string;
+    // A note edit only: whether the live editor was handed the restored text
+    // (`sent`, `failed`, `skipped`, `deferred`).
+    live_editor?: string;
+}
+
+/** Why an undo was not done. The first six are the server's own `code`; the
+ * rest are decided here from the transport. */
+export type UndoRefusalCode =
+    | "not_found"
+    | "not_undoable"
+    | "already_undone"
+    | "changed_since"
+    | "expired"
+    | "permission_lost"
+    | "throttled"
+    | "unauthorized"
+    | "network"
+    | "server"
+    | "unknown";
+
+export interface UndoRefusal {
+    code: UndoRefusalCode;
+    status: number;
+    // The server's sentence (`error`, or DRF's `detail` on a throttle). English.
+    message: string | null;
+    // `changed_since` of `update_task` lists what had changed.
+    skipped: UndoSkippedField[];
+    // `changed_since` of a note may say why.
+    detail: string | null;
+    // Whether trying again can help: only where the cause is not the state of
+    // the workspace (a dropped connection, a 5xx, the throttle, a token).
+    retryable: boolean;
+}
+
+export type UndoResult =
+    | { kind: "undone"; answer: UndoAnswer }
+    | { kind: "refused"; refusal: UndoRefusal };
+
+const SERVER_UNDO_CODES: ReadonlySet<string> = new Set([
+    "not_found",
+    "not_undoable",
+    "already_undone",
+    "changed_since",
+    "expired",
+    "permission_lost",
+]);
+
+const asSkipped = (raw: unknown): UndoSkippedField[] =>
+    Array.isArray(raw)
+        ? raw.flatMap((item) => {
+              if (!item || typeof item !== "object") return [];
+              const { field, reason } = item as Record<string, unknown>;
+              return typeof field === "string"
+                  ? [{ field, reason: typeof reason === "string" ? reason : "changed_since" }]
+                  : [];
+          })
+        : [];
+
+const asNumber = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) ? v : null;
+
+const asUndoEntity = (raw: unknown): UndoEntity | null => {
+    if (!raw || typeof raw !== "object") return null;
+    const e = raw as Record<string, unknown>;
+    if (e.kind === "task" || e.kind === "comment") {
+        const taskId = asNumber(e.task_id);
+        if (taskId === null) return null;
+        const base = {
+            task_id: taskId,
+            project_id: asNumber(e.project_id),
+            display_id: typeof e.display_id === "string" ? e.display_id : "",
+        };
+        if (e.kind === "task") return { kind: "task", ...base };
+        const commentId = asNumber(e.comment_id);
+        return commentId === null ? null : { kind: "comment", ...base, comment_id: commentId };
+    }
+    if (e.kind === "note") {
+        const noteId = asNumber(e.note_id);
+        const family = e.note_type;
+        if (noteId === null || (family !== "personal" && family !== "task" && family !== "chat")) {
+            return null;
+        }
+        return {
+            kind: "note",
+            note_type: family,
+            note_id: noteId,
+            title: typeof e.title === "string" ? e.title : "",
+        };
+    }
+    return null;
+};
+
+const asUndoAnswer = (raw: unknown, fallbackStepId: number): UndoAnswer | null => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const d = raw as Record<string, unknown>;
+    if (d.action !== "restored" && d.action !== "deleted") return null;
+    return {
+        run_id: typeof d.run_id === "string" ? d.run_id : "",
+        step_id: asNumber(d.step_id) ?? fallbackStepId,
+        tool_name: typeof d.tool_name === "string" ? d.tool_name : "",
+        undone_at: typeof d.undone_at === "string" ? d.undone_at : new Date().toISOString(),
+        action: d.action,
+        restored: Array.isArray(d.restored)
+            ? d.restored.filter((f): f is string => typeof f === "string")
+            : [],
+        skipped: asSkipped(d.skipped),
+        entity: asUndoEntity(d.entity),
+        summary: typeof d.summary === "string" ? d.summary : "",
+        ...(typeof d.live_editor === "string" ? { live_editor: d.live_editor } : {}),
+    };
+};
+
+const refusal = (
+    code: UndoRefusalCode,
+    status: number,
+    extra: Partial<Omit<UndoRefusal, "code" | "status">> = {}
+): UndoResult => ({
+    kind: "refused",
+    refusal: {
+        code,
+        status,
+        message: null,
+        skipped: [],
+        detail: null,
+        retryable:
+            code === "network" ||
+            code === "server" ||
+            code === "throttled" ||
+            code === "unauthorized",
+        ...extra,
+    },
+});
+
+export async function undoAgentStep(args: {
+    runId: string;
+    stepId: number;
+    accessToken: string | null;
+    signal?: AbortSignal;
+}): Promise<UndoResult> {
+    if (!args.accessToken) return refusal("unauthorized", 0, { retryable: false });
+    let resp: Response;
+    try {
+        resp = await fetch(
+            `${API_BASE}/agent/runs/${encodeURIComponent(args.runId)}/steps/${encodeURIComponent(
+                String(args.stepId)
+            )}/undo/`,
+            {
+                method: "POST",
+                signal: args.signal,
+                headers: { Authorization: `Bearer ${args.accessToken}` },
+            }
+        );
+    } catch {
+        return refusal("network", 0);
+    }
+
+    let data: unknown = null;
+    try {
+        data = await resp.json();
+    } catch {
+        // An HTML 404 from an older backend, a gateway page: no body to read.
+    }
+
+    if (resp.ok) {
+        const answer = asUndoAnswer(data, args.stepId);
+        // A 2xx that is not an undo answer did not undo what we can name: say so
+        // rather than claim it did.
+        return answer ? { kind: "undone", answer } : refusal("unknown", resp.status);
+    }
+
+    const body = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    const message =
+        typeof body.error === "string"
+            ? body.error
+            : typeof body.detail === "string"
+              ? body.detail
+              : null;
+    const extra = {
+        message,
+        skipped: asSkipped(body.skipped),
+        detail: typeof body.detail === "string" ? body.detail : null,
+    };
+    // A DRF throttle is `{detail}` with no code; 401 is the token.
+    if (resp.status === 429) return refusal("throttled", 429, extra);
+    if (resp.status === 401) return refusal("unauthorized", 401, extra);
+    if (resp.status >= 500) return refusal("server", resp.status, extra);
+    const code = typeof body.code === "string" ? body.code : "";
+    if (SERVER_UNDO_CODES.has(code)) {
+        return refusal(code as UndoRefusalCode, resp.status, extra);
+    }
+    // No (known) code: the status is all there is. A 404 is "not found" even from
+    // a backend that has no such route.
+    return refusal(resp.status === 404 ? "not_found" : "unknown", resp.status, extra);
+}
+
 // `field_errors` as the card can use it: an object of `{path: sentence}`.
 // Entries that are not text are dropped; no object at all (not a 422 from the
 // edit check) is null, so the caller treats the response as any other failure.
@@ -1089,6 +1396,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 note_folder: evt.note_folder,
                 duration_ms: evt.duration_ms,
                 project: evt.project,
+                undo: asUndoRef(evt.undo),
             });
             return false;
         case "tool_call_error":
@@ -1105,6 +1413,11 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 tool_name: evt.tool_name,
                 arguments: evt.arguments,
                 editable: evt.editable,
+                // Only a real boolean is a claim; only a `false` has a reason.
+                ...(typeof evt.undoable === "boolean" ? { undoable: evt.undoable } : {}),
+                ...(evt.undoable === false && typeof evt.undo_reason === "string"
+                    ? { undo_reason: evt.undo_reason }
+                    : {}),
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
             });

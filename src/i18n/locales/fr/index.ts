@@ -486,6 +486,72 @@ export const fr: DeepPartial<Messages> = {
                 reminderRequired: "{field} : choisissez une date et une heure.",
             },
         },
+        undo: {
+            chip: "Impossible à défaire",
+            reasons: {
+                irreversible_delete: "Cela supprime définitivement l'élément.",
+                notified_people:
+                    "Cela concerne d'autres personnes, par exemple en donnant un accès ou en envoyant un message, et « Défaire » ne peut pas y revenir.",
+                no_snapshot:
+                    "Les anciennes valeurs ne sont pas conservées : il n'y a donc rien à rétablir.",
+                unsupported_fields:
+                    "Cette modification touche un élément que « Défaire » ne peut pas rétablir.",
+                not_yet: "« Défaire » n'est pas encore disponible pour ce type de modification.",
+            },
+            button: "Défaire",
+            buttonFor: "Défaire : {tool}",
+            undoing: "Annulation en cours…",
+            retry: "Réessayer",
+            notRecalled: "Ce qui a déjà été envoyé, comme les notifications, n'est pas rappelé.",
+            hints: {
+                create_task: "Supprime la tâche créée par Genos.",
+                update_task: "Rétablit les valeurs précédentes.",
+                restore_task_body: "Rétablit la description telle qu'elle était avant.",
+                add_comment: "Supprime le commentaire ajouté par Genos.",
+                create_note: "Supprime la note créée par Genos.",
+                update_note: "Rétablit le texte précédent de la note.",
+                restore_note_version:
+                    "Rétablit la version de la note que cette modification a remplacée.",
+                fallback: "Revient sur cette modification.",
+            },
+            fields: {
+                title: "Titre",
+                body: "Contenu",
+            },
+            listSeparator: ", ",
+            done: {
+                alreadyUndone: "Défait",
+                generic: "Modification défaite.",
+                restored: "Modification défaite. Rétabli : {fields}.",
+                restoredSkipped:
+                    "Modification défaite. Rétabli : {fields}. Laissé tel quel, car modifié depuis : {skipped}.",
+                deletedTask: "Modification défaite. La tâche {task} a été supprimée.",
+                deletedTaskUnnamed: "Modification défaite. La tâche a été supprimée.",
+                deletedNote: "Modification défaite. La note « {title} » a été supprimée.",
+                deletedNoteUnnamed: "Modification défaite. La note a été supprimée.",
+                deletedComment: "Modification défaite. Le commentaire a été supprimé.",
+            },
+            refused: {
+                not_found: "Genos ne retrouve plus cette modification : rien n'a été défait.",
+                not_undoable: "Cette modification ne peut pas être défaite. Rien n'a été changé.",
+                already_undone: "Cette modification a déjà été défaite.",
+                changed_since:
+                    "Cet élément a été modifié après la modification de Genos ; il a donc été laissé tel quel. Rien n'a été défait.",
+                changedSinceFields:
+                    "Rien n'a été défait. Ces éléments ont été modifiés après la modification de Genos et ont été laissés tels quels : {fields}.",
+                expired:
+                    "Il est trop tard pour défaire cette modification : cette option n'est disponible que pendant une durée limitée.",
+                permission_lost:
+                    "Vous ne pouvez plus modifier cet élément : impossible de défaire. Rien n'a été changé.",
+                throttled: "Trop de tentatives. Patientez un instant, puis réessayez.",
+                unauthorized:
+                    "Vous avez été déconnecté : rien n'a été défait. Reconnectez-vous, puis réessayez.",
+                network:
+                    "Impossible de joindre Genos : rien n'a été défait. Vérifiez votre connexion et réessayez.",
+                server: "Un problème est survenu de notre côté : rien n'a été défait. Réessayez.",
+                unknown: "Impossible de défaire cette modification.",
+            },
+        },
     },
     app: {
         features: {

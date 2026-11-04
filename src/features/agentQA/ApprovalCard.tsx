@@ -25,6 +25,10 @@
 // `restoredEdits` the person had typed: the card opens in edit mode on them,
 // with each sentence beside its field.
 //
+// CAN'T BE UNDONE. When the pending event says `undoable === false`, a small chip
+// (`approval/UndoChip`) tells the person BEFORE they approve, with the reason. Only
+// `false` is a claim; absent (older backend) or `true` shows nothing.
+//
 // The existing labels (heading, Approve, Reject) are props, so every agent
 // surface (Spotlight, threadAsk, noteAsk) mounts the same component with
 // surface-specific i18n copy. The edit chrome and the structured preview
@@ -42,6 +46,7 @@ import { BulkRowField, EditFieldList } from "./approval/ApprovalEditFields";
 import { getApprovalRenderer } from "./approval/approvalRenderers";
 import { BulkUpdatePreview } from "./approval/BulkUpdatePreview";
 import { withoutEditable } from "./approval/editableFields";
+import { UndoChip } from "./approval/UndoChip";
 import { useApprovalEdit } from "./approval/useApprovalEdit";
 
 interface ApprovalCardProps {
@@ -160,7 +165,13 @@ export const ApprovalCard = ({
                 }}
             />
         ) : PreviewRenderer ? (
-            <PreviewRenderer args={shownArgs} isDark={isDark} />
+            // A backend that predicts undo says it once, in the chip below: the
+            // previews that used to say "cannot be undone" themselves stop.
+            <PreviewRenderer
+                args={shownArgs}
+                isDark={isDark}
+                undoKnown={pending.undoable !== undefined}
+            />
         ) : (
             argEntries.length > 0 && (
                 <Box
@@ -257,6 +268,8 @@ export const ApprovalCard = ({
                     <EditFieldList args={args} edit={edit} isDark={isDark} />
                 </Box>
             ) : null}
+
+            <UndoChip isDark={isDark} pending={pending} />
 
             <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
                 <Button

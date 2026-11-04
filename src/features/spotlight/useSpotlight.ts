@@ -70,6 +70,7 @@ import {
     type AskState,
     type CompletedTurn,
     type ToolEvent,
+    type UndoRequest,
 } from "../agentQA";
 import { useAgentQA } from "../agentQA/useAgentQA";
 import {
@@ -188,6 +189,9 @@ export interface UseSpotlightReturn {
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
+    // Undo one approved write: the shared machine's `undoStep`. The step's state
+    // lives in the undo store, so the overlay and the Genos page agree.
+    undoStep: (request: UndoRequest) => void;
     onCancel: () => void;
     onNewConversation: () => void;
     // Render a collected past answer (a "spotlight_answer" search result)
@@ -692,7 +696,7 @@ export const useSpotlight = ({
     );
 
     // Approve / reject / cancel / feedback are the shared machine's.
-    const { onApprove, onReject, onCancel, submitFeedback } = qa;
+    const { onApprove, onReject, onCancel, submitFeedback, undoStep } = qa;
 
     // ---- History panel handlers (Phase ~4.6) ----
     //
@@ -925,6 +929,7 @@ export const useSpotlight = ({
         onAsk,
         onApprove,
         onReject,
+        undoStep,
         onCancel,
         onNewConversation,
         showStoredAnswer,

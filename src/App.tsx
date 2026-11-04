@@ -1467,6 +1467,7 @@ const AppBody = () => {
                                                                 onQueryChange={spotlight.setQuery}
                                                                 onReject={spotlight.onReject}
                                                                 onSelect={handleSpotlightSelect}
+                                                                onUndo={spotlight.undoStep}
                                                                 onToggleFilterService={
                                                                     spotlight.onToggleFilterService
                                                                 }
