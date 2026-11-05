@@ -20,6 +20,10 @@ import {
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
+import {
+    applyTreePositionToDescendants,
+    resolveRootTaskId,
+} from "../../features/tasks/utils/cascadeTreePosition";
 import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
 import {
     NO_ROWS,
@@ -1140,13 +1144,50 @@ export const useTaskManagement = (
                     // fall back to the existing row when the
                     // preview payload doesn't include it.
                     isMilestone: edited.isMilestone ?? task.isMilestone ?? false,
-                    milestoneId: edited.milestoneId ?? task.milestoneId ?? null,
+                    // `null` is an explicit "no milestone" (the picker's clear,
+                    // which the PUT sends to the server as `milestone: null`);
+                    // only `undefined` means the payload didn't say. `??` read
+                    // both as "not provided", so clearing a milestone from the
+                    // preview left the row filed under it in the table.
+                    milestoneId:
+                        edited.milestoneId === undefined
+                            ? (task.milestoneId ?? null)
+                            : edited.milestoneId,
                     sprintId: edited.sprintId ?? task.sprintId ?? null,
                 };
+                // The sprint is always the milestone's (there is no sprint
+                // picker on a task), so a task with no milestone has none.
+                if (patched.milestoneId == null && task.milestoneId != null) {
+                    patched.sprintId = null;
+                }
+                // A move: the task now sits under another milestone or another
+                // parent. Its root follows where it hangs (the preview never
+                // sends one: the server re-derives it), and everything beneath
+                // it has to follow too. The server does exactly that; without
+                // it here, the sub-tasks keep the milestone and root they had,
+                // and a milestone-scoped table drops them from under their own
+                // parent until a full reload (MIP-1026). Not on every edit: a
+                // title save must not rewrite the whole sub-tree.
+                const moved =
+                    !task.isMilestone &&
+                    (String(task.milestoneId ?? "") !== String(patched.milestoneId ?? "") ||
+                        String(task.parentTaskId ?? "") !== String(patched.parentTaskId ?? ""));
+                if (moved) {
+                    patched.rootTaskId = resolveRootTaskId(
+                        prevTasks,
+                        patched.id!,
+                        patched.parentTaskId
+                    );
+                }
                 if (isSameTableRow(task, patched)) return prevTasks;
                 const next = prevTasks.slice();
                 next[idx] = patched;
-                return next;
+                if (!moved) return next;
+                return applyTreePositionToDescendants(next, patched.id!, {
+                    milestoneId: patched.milestoneId ?? null,
+                    sprintId: patched.sprintId ?? null,
+                    rootTaskId: patched.rootTaskId ?? null,
+                });
             });
         },
         [myself.teamId, setAllTasks]
