@@ -1,4 +1,4 @@
-import { ElementType, ReactElement } from "react";
+import { ElementType, ReactElement, useCallback, useRef } from "react";
 import {
     createReactInlineContentSpec,
     DefaultReactSuggestionItem,
@@ -554,39 +554,51 @@ export const HashMentionMenuItems = (
 export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
     const data = useHashMentionData();
     const accessToken = useOptionalAccessToken();
+    // BlockNote re-runs `getItems` whenever its IDENTITY changes (its loader
+    // effect depends on `[query, getItems]`). A function made in this render
+    // changed on every render, so every unrelated data update (a socket event,
+    // the list refresh below) re-ran the loader, including the server lookup for
+    // a typed id that matches nothing: a `#kds-652` left in the editor sent a
+    // request per render, and the `refresh()` inside the loader fed the next
+    // render (MIP-1038). So the function is made once per editor and reads the
+    // latest data through this ref. The menu still shows the newest lists on the
+    // next keystroke, which is what the comment on `data.refresh()` promises.
+    const latest = useRef({ data, accessToken });
+    latest.current = { data, accessToken };
+    const getItems = useCallback(
+        async (query: string) => {
+            const { data, accessToken } = latest.current;
+            // Kick a (throttled, app-wide) re-pull of the backing
+            // lists: note metadata and the project list are otherwise
+            // loaded once per page load, so a teammate's note was
+            // missing here until a reload.
+            //
+            // Deliberately NOT awaited. `data` is the latest render's value, and
+            // BlockNote only re-runs `getItems` when the QUERY changes: awaiting
+            // would add a network beat to menu-open latency and still return the
+            // old list. Firing it here means the fetch lands while the user is
+            // still typing the name, so the next keystroke shows the item.
+            data.refresh();
+            rememberHashQuery(editor, query);
+            const items = filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query);
+            // A whole id that matches no listed task may be a closed
+            // one: ask for it (MIP-739). Awaited, unlike the refresh
+            // above — it's one row, and only for an exact id.
+            const id = fullDisplayIdIn(query);
+            if (id && data.myself && !items.some((item) => displayIdEquals(id, item.title))) {
+                const row = await lookupTaskByDisplayId(data.myself, id, accessToken);
+                if (row) return [lookedUpTaskItem(editor, row, data.projects), ...items];
+            }
+            return items;
+        },
+        [editor]
+    );
     return (
         <SuggestionMenuController
+            getItems={getItems}
             minQueryLength={2}
             suggestionMenuComponent={MentionSuggestionMenu}
             triggerCharacter={"#"}
-            getItems={async (query) => {
-                // Kick a (throttled, app-wide) re-pull of the backing
-                // lists: note metadata and the project list are otherwise
-                // loaded once per page load, so a teammate's note was
-                // missing here until a reload.
-                //
-                // Deliberately NOT awaited. `data` is this render's
-                // closure, and BlockNote only re-runs `getItems` when the
-                // QUERY changes — awaiting would add a network beat to
-                // menu-open latency and still return the old list. Firing
-                // it here means the fetch lands while the user is still
-                // typing the name, so the next keystroke shows the item.
-                data.refresh();
-                rememberHashQuery(editor, query);
-                const items = filterAndRankSuggestionItems(
-                    HashMentionMenuItems(editor, data),
-                    query
-                );
-                // A whole id that matches no listed task may be a closed
-                // one: ask for it (MIP-739). Awaited, unlike the refresh
-                // above — it's one row, and only for an exact id.
-                const id = fullDisplayIdIn(query);
-                if (id && data.myself && !items.some((item) => displayIdEquals(id, item.title))) {
-                    const row = await lookupTaskByDisplayId(data.myself, id, accessToken);
-                    if (row) return [lookedUpTaskItem(editor, row, data.projects), ...items];
-                }
-                return items;
-            }}
         />
     );
 };
