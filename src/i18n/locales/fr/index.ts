@@ -825,8 +825,11 @@ export const fr: DeepPartial<Messages> = {
                 pause: "Pause",
                 resume: "Reprendre",
                 delete: "Supprimer",
-                deleteConfirm:
-                    "Supprimer cette planification ? Les tâches déjà ajoutées resteront.",
+                deleteTitle: "Supprimer cette planification ?",
+                deleteBody: "Les tâches déjà ajoutées resteront.",
+                edit: "Modifier",
+                editHeading: "Modifier la tâche programmée",
+                save: "Enregistrer les modifications",
                 needsRepeat: "Choisissez la fréquence à laquelle cela se répète.",
                 failed: "Impossible d'enregistrer le planning. Veuillez réessayer.",
                 summaryDaily: "Quotidiennement",

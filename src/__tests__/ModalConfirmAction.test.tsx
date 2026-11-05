@@ -159,6 +159,14 @@ describe("ModalConfirmAction", () => {
         ).toBe(false);
     });
 
+    it("is purple by default and red for a destructive action", () => {
+        const first = mount();
+        expect(screen.getByRole("dialog").getAttribute("data-tone")).toBe("brand");
+        first.unmount();
+        mount({ tone: "danger" });
+        expect(screen.getByRole("dialog").getAttribute("data-tone")).toBe("danger");
+    });
+
     it("stacks at the layer it is given (above a modal-hosted preview), else at 10010", () => {
         const { unmount } = mount({ zIndex: 13210 });
         expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe("13210");

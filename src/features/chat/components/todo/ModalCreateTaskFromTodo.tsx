@@ -31,6 +31,7 @@ import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
 import { SprintMilestonePicker } from "../../../tasks/sprint-milestone/components/SprintMilestonePicker";
 import { MILESTONE_LIST_STATUSES } from "../../../tasks/sprint-milestone/utils/sortMilestones";
 import { projectAvatarSrc } from "../../../tasks/utils/projectAvatar";
+import { popupLayerSx, useTodoDialogLayer } from "./TodoHostLayer";
 
 // Remembers the last project a to-do was promoted into. Most people
 // funnel their to-dos into the same project, and the picker defaulting
@@ -93,6 +94,8 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const { open, onClose, myself, todoTitle, todoNotes, onCreated, useCM } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    // Inside the to-do modal this opens above it (MIP-1047).
+    const layer = useTodoDialogLayer();
     // Present on the chat surface (the to-do pane renders inside the
     // provider); null on any surface without it, where we just close.
     const urlLinkModal = useUrlLinkModal();
@@ -223,7 +226,7 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const noProjects = !loadingProjects && projects.length === 0;
 
     return (
-        <Modal open={open} onClose={onClose}>
+        <Modal open={open} sx={{ zIndex: layer, ...popupLayerSx(layer) }} onClose={onClose}>
             <ModalDialog sx={{ width: 420, maxWidth: "92vw" }}>
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                     <TaskAltRoundedIcon />

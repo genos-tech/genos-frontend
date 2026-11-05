@@ -42,6 +42,7 @@ import {
     reminderPresets,
     toDatetimeLocalValue,
 } from "../../utils/reminderPresets";
+import { popupLayerSx, useTodoDialogLayer } from "../todo/TodoHostLayer";
 
 type Props = {
     open: boolean;
@@ -73,6 +74,8 @@ export const ModalRemindMe = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const m = t.chat.remindMe;
+    // Inside the to-do modal this opens above it (MIP-1047).
+    const layer = useTodoDialogLayer(10010);
 
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -131,7 +134,12 @@ export const ModalRemindMe = ({
     return (
         <Modal
             open={open}
-            sx={{ zIndex: 10010, backdropFilter: "blur(4px)", backgroundColor: "transparent" }}
+            sx={{
+                zIndex: layer,
+                backdropFilter: "blur(4px)",
+                backgroundColor: "transparent",
+                ...popupLayerSx(layer),
+            }}
             onClose={() => !submitting && onClose()}
         >
             <ModalDialog
