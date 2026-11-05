@@ -148,9 +148,12 @@ export const defaultColumns: ColumnDef[] = [
         field: "pr",
         headerName: "PR",
         headerLabelKey: "pr",
-        width: 60,
-        minWidth: 48,
-        maxWidth: 100,
+        // Each chip now carries its PR number (`#443`, about 60px), and the
+        // cell wraps: a narrow column stacks the chips, a wide one (up to
+        // `maxWidth`) keeps several on one line (MIP-1032).
+        width: 96,
+        minWidth: 72,
+        maxWidth: 360,
         align: "center",
         resizable: true,
         hidden: true,

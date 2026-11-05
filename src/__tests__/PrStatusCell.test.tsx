@@ -256,3 +256,77 @@ describe("PrStatusCell: a table of rows", () => {
         expect(mockStatus).toHaveBeenLastCalledWith("tok", merged(4).html_url);
     });
 });
+
+// MIP-1032: a task with several PRs used to draw a row of identical icons that
+// could not be told apart and never wrapped, so they spilled out of a narrow
+// column.
+const inRepo = (repo: string, number: number, over: Partial<LinkedPull> = {}) =>
+    pull(number, {
+        repo,
+        html_url: `https://github.com/acme/${repo}/pull/${number}`,
+        ...over,
+    });
+
+/** Chip labels in DOM order (the link's own text, icon and dot carry none). */
+const labels = () => screen.getAllByRole("link").map((chip) => chip.textContent?.trim());
+
+describe("PrStatusCell: telling several PRs apart (MIP-1032)", () => {
+    it("labels each chip with its PR number", async () => {
+        await mount([pull(443), pull(540)]);
+
+        expect(labels()).toEqual(["#443", "#540"]);
+    });
+
+    it("leaves the repo off while every PR is in one repo", async () => {
+        await mount([inRepo("genos-api", 443), inRepo("genos-api", 444)]);
+
+        expect(labels()).toEqual(["#443", "#444"]);
+    });
+
+    it("adds the repo name once the PRs span more than one repo", async () => {
+        await mount([inRepo("genos-api", 443), inRepo("genos-frontend", 540)]);
+
+        expect(labels()).toEqual(["genos-api#443", "genos-frontend#540"]);
+    });
+
+    it("orders chips by repo, then PR number, whatever order the server sent", async () => {
+        await mount([
+            inRepo("genos-frontend", 540),
+            inRepo("genos-api", 444),
+            inRepo("genos-frontend", 12),
+            inRepo("genos-api", 443),
+        ]);
+
+        expect(labels()).toEqual([
+            "genos-api#443",
+            "genos-api#444",
+            "genos-frontend#12",
+            "genos-frontend#540",
+        ]);
+    });
+
+    it("names the PR for assistive tech (repo and number), not just an icon", async () => {
+        await mount([inRepo("genos-api", 443)]);
+
+        expect(screen.getByRole("link", { name: /acme\/genos-api #443/ })).toBeTruthy();
+    });
+
+    it("puts the branch in the hover text before the detail has loaded", async () => {
+        await mount([inRepo("genos-api", 443, { branch: "MIP-1026" })]);
+
+        expect(screen.getByTestId("tooltip").textContent).toContain("MIP-1026");
+    });
+
+    it("lets the chips wrap, so a narrow column stacks them instead of spilling", async () => {
+        await mount([pull(1), pull(2), pull(3), pull(4)]);
+
+        const wrapper = screen.getAllByRole("link")[0].parentElement!.parentElement!;
+        expect(getComputedStyle(wrapper).flexWrap).toBe("wrap");
+    });
+
+    it("renders nothing for a task with no PRs (unchanged)", async () => {
+        await mount([]);
+
+        expect(screen.queryAllByRole("link")).toHaveLength(0);
+    });
+});
