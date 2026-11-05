@@ -33,20 +33,21 @@ type Props = {
     sprintId: number | null | undefined;
     milestoneId: number | null | undefined;
     onChangeSprint: (sprintId: number | null) => void;
-    // Picking a milestone may also auto-sync the sprint linkage when
-    // the milestone points at a sprint different from the current one.
-    // We deliberately bundle both updates into a single callback (and
-    // therefore a single `setState` upstream) — emitting them as two
-    // separate callbacks caused parents that read state via closure
-    // to clobber the milestone update with the sprint update inside
-    // the same React batch (the second `setState({...prev, ...})` only
-    // saw the stale `prev` and dropped `milestoneId`). `autoSyncedSprint`
-    // is non-null iff the picker also wants the parent to update the
-    // sprint linkage in the same step.
+    // Picking a milestone also settles the sprint: a task's sprint is its
+    // milestone's, or none. We deliberately bundle both updates into a single
+    // callback (and therefore a single `setState` upstream) — emitting them as
+    // two separate callbacks caused parents that read state via closure to
+    // clobber the milestone update with the sprint update inside the same React
+    // batch (the second `setState({...prev, ...})` only saw the stale `prev` and
+    // dropped `milestoneId`). `sprintId` is ALWAYS the sprint the task has
+    // after the pick: the milestone's own, or `null` for none (a milestone
+    // without a sprint, or no milestone). It used to be sent only when the
+    // milestone's sprint differed from the current one, so `null` could not be
+    // told from "unsaid" and a task kept a sprint it no longer had (MIP-1035).
     onChangeMilestone: (
         milestoneId: number | null,
         taskId: number | null,
-        autoSyncedSprint?: Sprint | null
+        sprintId: number | null
     ) => void;
     showSprint?: boolean;
     showMilestone?: boolean;
@@ -367,27 +368,13 @@ export const SprintMilestonePicker = ({
                     }}
                     disableClearable
                     onChange={(_, v) => {
-                        // Auto-sync the sprint to the milestone's
-                        // sprint when one is set, so the two pickers
-                        // stay coherent without nagging the user.
-                        // Resolve the sprint here and forward it to
-                        // the parent in a SINGLE callback so the
-                        // upstream setState collapses both updates
-                        // into one batch (see `onChangeMilestone`
-                        // doc above for why two callbacks corrupted
-                        // the state).
-                        let autoSyncedSprint: Sprint | null = null;
-                        if (v?.milestone) {
-                            const linkedSprintId = v.milestone.sprintId;
-                            if (linkedSprintId != null && linkedSprintId !== sprintId) {
-                                autoSyncedSprint =
-                                    sprints.find((s) => s.sprintId === linkedSprintId) ?? null;
-                            }
-                        }
+                        // The sprint follows the milestone, so it goes up with
+                        // the pick in a SINGLE callback (see `onChangeMilestone`
+                        // above for why two callbacks corrupted the state).
                         onChangeMilestone(
                             v?.id ?? null,
                             v?.milestone?.taskId ?? null,
-                            autoSyncedSprint
+                            v?.milestone?.sprintId ?? null
                         );
                     }}
                 />

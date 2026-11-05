@@ -244,3 +244,79 @@ describe("syncPreviewEdit — moving a task into a milestone from the preview", 
         [43, 44, 45].forEach((id, i) => expect(byId(id)).toBe(children[i]));
     });
 });
+
+// MIP-1035: the sprint follows the milestone. The preview hands over the sprint
+// the task ends up with (the picker always says), and `null` means "no sprint",
+// not "not provided".
+describe("syncPreviewEdit — the sprint follows the milestone (MIP-1035)", () => {
+    const SPRINT = 5;
+    const inSprint = () =>
+        table().map((r) =>
+            [42, 43, 44, 45].includes(Number(r.id)) ? { ...r, sprintId: SPRINT } : r
+        );
+    const sprintsOf = (byId: (id: number) => TaskTableProps) =>
+        [42, 43, 44, 45].map((id) => byId(id).sprintId);
+
+    it("moving into a milestone with NO sprint clears the sprint on the task and its sub-tasks", async () => {
+        const { result, byId } = await setup(inSprint());
+
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor(42, {
+                    milestoneId: MILESTONE_ID,
+                    parentTaskId: BACKING,
+                    sprintId: null,
+                })
+            )
+        );
+        await flush();
+
+        expect(sprintsOf(byId)).toEqual([null, null, null, null]);
+    });
+
+    it("moving into a milestone WITH a sprint gives the whole tree that sprint", async () => {
+        const { result, byId } = await setup(inSprint());
+
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor(42, { milestoneId: MILESTONE_ID, parentTaskId: BACKING, sprintId: 7 })
+            )
+        );
+        await flush();
+
+        expect(sprintsOf(byId)).toEqual([7, 7, 7, 7]);
+    });
+
+    it("clearing the milestone clears the sprint on the whole tree", async () => {
+        const { result, byId } = await setup(inSprint());
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor(42, { milestoneId: MILESTONE_ID, parentTaskId: BACKING, sprintId: 7 })
+            )
+        );
+        await flush();
+
+        act(() =>
+            result.current.syncPreviewEdit(
+                previewFor(42, { milestoneId: null, parentTaskId: null, sprintId: 7 })
+            )
+        );
+        await flush();
+
+        // Even if the copy still carries the old sprint, a task with no milestone has none.
+        expect(sprintsOf(byId)).toEqual([null, null, null, null]);
+    });
+
+    it("an edit that is not a move keeps the sprint, even from a copy that does not carry one", async () => {
+        const { result, byId } = await setup(inSprint());
+        const children = [43, 44, 45].map(byId);
+
+        act(() =>
+            result.current.syncPreviewEdit(previewFor(42, { title: "Renamed", sprintId: null }))
+        );
+        await flush();
+
+        expect(byId(42).sprintId).toBe(SPRINT);
+        [43, 44, 45].forEach((id, i) => expect(byId(id)).toBe(children[i]));
+    });
+});
