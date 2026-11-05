@@ -434,8 +434,9 @@ const ScheduleRow = ({
                     )}
                 </Stack>
             </Box>
-            {/* Three compact icon buttons: no gap, so they read as one group. */}
-            <Stack alignItems="center" direction="row" spacing={0} sx={{ flexShrink: 0 }}>
+            {/* Three compact icon buttons, with a small gap (MIP-1051): touching
+                icons read as one blob and are easy to mis-hit. */}
+            <Stack alignItems="center" direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
                 <AppTooltip title={ts.edit}>
                     <IconButton
                         aria-label={ts.edit}

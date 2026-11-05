@@ -182,6 +182,32 @@ describe("useAgentMentionDraft", () => {
         expect(result.current.draft.pickerOpen).toBe(false);
     });
 
+    // MIP-1051: the query after a pick is "<label> ", and it still matches any
+    // LONGER title that contains it, so the menu used to hang open.
+    it("closes after picking a title that is a prefix of another title", () => {
+        const { result } = renderHook(() => useHarness());
+        act(() => {
+            result.current.setValue("#Fix");
+        });
+        act(() => {
+            result.current.draft.setCaret(4);
+        });
+        expect(result.current.draft.suggestions.map((s) => s.key)).toEqual(["task:1", "task:2"]);
+        act(() => {
+            result.current.draft.selectSuggestion(ENTITIES[0]); // "#Fix login "
+        });
+        expect(result.current.value).toBe("#Fix login ");
+        expect(result.current.draft.pickerOpen).toBe(false);
+        // A fresh trigger after the pick opens the menu again.
+        act(() => {
+            result.current.setValue("#Fix login #Wri");
+        });
+        act(() => {
+            result.current.draft.setCaret(15);
+        });
+        expect(result.current.draft.suggestions.map((s) => s.key)).toEqual(["task:3"]);
+    });
+
     it("selectSuggestion splices the token and reports the new caret", () => {
         const { result } = renderHook(() => useHarness());
         act(() => {

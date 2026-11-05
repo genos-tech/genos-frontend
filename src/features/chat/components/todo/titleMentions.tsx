@@ -199,6 +199,7 @@ export const useTodoMentionPool = (): TodoMentionPool =>
 const NO_CANDIDATES: AgentMentionCandidate[] = [];
 
 export interface TodoTitleMentions {
+    /** The menu is showing: there are matches AND the field has focus. */
     pickerOpen: boolean;
     suggestions: AgentMentionCandidate[];
     highlightIndex: number;
@@ -206,6 +207,10 @@ export interface TodoTitleMentions {
     onSelect: (c: AgentMentionCandidate) => void;
     /** Feed caret moves — call from onChange / onClick / onKeyUp. */
     syncCaret: () => void;
+    /** Focus moved into / out of the field — wire to onFocus / onBlur. A
+     *  field that lost focus (a click elsewhere) shows no menu. */
+    onFocus: () => void;
+    onBlur: () => void;
     /**
      * Returns TRUE when the picker consumed the key, in which case the
      * host must not act on it. Each title field owns different Enter /
@@ -249,6 +254,15 @@ export const useTodoTitleMentions = ({
         if (wantsEntities) refreshEntities();
     }, [wantsEntities, refreshEntities]);
 
+    // A click outside the field used to leave the menu hanging (MIP-1051).
+    // Hide it while the field is blurred; focusing back shows it again if
+    // the caret is still inside a trigger. Picking with the mouse does NOT
+    // blur: the dropdown's onMouseDown preventDefault keeps focus here.
+    const [focused, setFocused] = useState(true);
+    const onFocus = useCallback(() => setFocused(true), []);
+    const onBlur = useCallback(() => setFocused(false), []);
+    const pickerOpen = focused && mention.pickerOpen;
+
     const syncCaret = useCallback(() => {
         const el = inputRef.current;
         if (el) mention.setCaret(el.selectionStart ?? el.value.length);
@@ -279,7 +293,7 @@ export const useTodoTitleMentions = ({
             // composition. Reporting it as consumed is what stops the host
             // from adding a half-typed item on the confirm keystroke.
             if (e.nativeEvent.isComposing || e.keyCode === 229) return true;
-            if (!mention.pickerOpen) return false;
+            if (!pickerOpen) return false;
             switch (e.key) {
                 case "ArrowDown":
                     e.preventDefault();
@@ -310,16 +324,18 @@ export const useTodoTitleMentions = ({
                     return false;
             }
         },
-        [inputRef, mention]
+        [inputRef, mention, pickerOpen]
     );
 
     return {
-        pickerOpen: mention.pickerOpen,
+        pickerOpen,
         suggestions: mention.suggestions,
         highlightIndex: mention.highlightIndex,
         highlightRanges: mention.highlightRanges,
         onSelect,
         syncCaret,
+        onFocus,
+        onBlur,
         handleKeyDown,
     };
 };

@@ -303,6 +303,13 @@ export function useAgentMentionDraft({
             const newCaret = trigger.start + inserted.length;
             pickedRef.current.set(c.key, ref);
             setPicksVersion((v) => v + 1);
+            // A pick ENDS this mention. The query is now the whole label plus
+            // a space, which still substring-matches any longer title that
+            // contains it ("#Fix login " inside "Fix login bug"), so without
+            // this the menu stayed open after a pick (MIP-1051). Same
+            // dismissal Escape uses: it re-arms when the caret leaves this
+            // trigger, so the next fresh `@`/`#` opens the menu again.
+            setDismissedStart(trigger.start);
             onChange(next);
             setCaretPos(newCaret);
             return newCaret;

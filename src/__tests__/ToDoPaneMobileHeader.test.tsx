@@ -1,13 +1,13 @@
 /**
  * The To-do pane's header on a phone (MIP-979).
  *
- * The header was the tallest thing in the mobile pane, so two things go on a
- * phone and nothing else changes:
- *   - the "N of M items completed" line under "My Todos";
- *   - the label on "Start tomorrow", which becomes a small add-icon button that
- *     keeps its name (aria-label) and its click behaviour.
+ * The header was the tallest thing in the mobile pane, so the "N of M items
+ * completed" line under "My Todos" goes on a phone; desktop keeps it.
  *
- * Desktop keeps both. The switch is `useIsMobile()` (a JS media query), not an
+ * "Start tomorrow" is a small add-icon button at EVERY width (MIP-1051; it was
+ * phone-only, MIP-979). It keeps its name (aria-label) and its click behaviour.
+ *
+ * The phone switch is `useIsMobile()` (a JS media query), not an
  * `sx` breakpoint, because jsdom can't evaluate the latter — see
  * `mobile-layout-overflow-patterns`. `useIsMobile` is mocked the way
  * `ToDoPaneLayout.test.tsx` does it.
@@ -105,14 +105,12 @@ describe("To-do pane header on mobile", () => {
         expect(screen.queryByText(/items completed/)).toBeNull();
     });
 
-    it("shows Start tomorrow with its label on desktop", () => {
-        renderPane([groupOn(OLD_DAY)]);
-
-        expect(screen.getByText("Start tomorrow")).toBeInTheDocument();
-    });
-
-    it("shows Start tomorrow as an icon-only button on mobile, still named", () => {
-        isMobileViewport = true;
+    // MIP-1051: icon-only at every width, not only on a phone.
+    it.each([
+        ["desktop", false],
+        ["mobile", true],
+    ])("shows Start tomorrow as an icon-only button on %s, still named", (_name, mobile) => {
+        isMobileViewport = mobile;
         renderPane([groupOn(OLD_DAY)]);
 
         // The name is the old label, so the meaning isn't lost to assistive tech.
@@ -136,10 +134,10 @@ describe("To-do pane header on mobile", () => {
         });
     });
 
-    it("creates tomorrow's list from the labelled button on desktop too", () => {
+    it("creates tomorrow's list from the icon button on desktop too", () => {
         const { addItem } = renderPane([groupOn(OLD_DAY)]);
 
-        fireEvent.click(screen.getByText("Start tomorrow"));
+        fireEvent.click(screen.getByRole("button", { name: "Start tomorrow" }));
 
         expect(addItem).toHaveBeenCalledWith({
             localDate: getLocalTomorrowDate(),
@@ -147,12 +145,18 @@ describe("To-do pane header on mobile", () => {
         });
     });
 
-    it("leaves Start today with its label on mobile (only tomorrow's button shrinks)", () => {
-        isMobileViewport = true;
-        renderPane([groupOn(OLD_DAY)]);
+    it.each([
+        ["desktop", false],
+        ["mobile", true],
+    ])(
+        "leaves Start today with its label on %s (only tomorrow's button shrinks)",
+        (_n, mobile) => {
+            isMobileViewport = mobile;
+            renderPane([groupOn(OLD_DAY)]);
 
-        expect(screen.getByText("Start today")).toBeInTheDocument();
-    });
+            expect(screen.getByText("Start today")).toBeInTheDocument();
+        }
+    );
 
     it("offers no Start tomorrow at all once tomorrow's list exists, mobile or not", () => {
         isMobileViewport = true;
