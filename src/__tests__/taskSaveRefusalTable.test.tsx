@@ -225,6 +225,7 @@ const setAllTasksSpy = vi.fn();
 const setCurrentPreviewTaskSpy = vi.fn();
 let latestAllTasks: TaskTableProps[] = [];
 let latestPreview: Record<string, unknown> = {};
+let openPreviewOf: (preview: Record<string, unknown>) => void = () => {};
 
 const Host = () => {
     const [allTasks, setAllTasksState] = useState<TaskTableProps[]>(initialRows());
@@ -232,6 +233,7 @@ const Host = () => {
         useState<Record<string, unknown>>(initialPreview());
     latestAllTasks = allTasks;
     latestPreview = currentPreviewTask;
+    openPreviewOf = setPreviewState;
     const useTM = useMemo(
         () => ({
             allTasks,
@@ -320,6 +322,75 @@ describe("an inline edit in the task table", () => {
         );
         expect(setAllTasksSpy).toHaveBeenCalledTimes(1);
         expect(bus).toEqual([]);
+    });
+});
+
+// MIP-1034: edits to several rows, one after the other. A row is memoised and its
+// comparator ignores `onRowUpdate`, so a row that has not re-rendered keeps the
+// callback of the render it last drew in. That callback must not carry its own
+// copy of the task list: writing it back reverts every row edited since.
+describe("inline edits to several rows, one after the other (MIP-1034)", () => {
+    const status = (id: string) => screen.getByTestId(`row-${id}`).getAttribute("data-status");
+
+    it("keeps the first row's edit when the second row saves through its older callback", async () => {
+        respondWith(200, { task: { ts_updated_at: "now" } });
+        renderTable();
+        await waitFor(() => expect(screen.queryByTestId("row-42")).not.toBeNull());
+        // What row 43 holds: the callback of the first render, never refreshed.
+        const olderCallback = rowUpdate;
+
+        await act(async () => {
+            await rowUpdate(makeRow("42", { status: "WIP" }));
+        });
+        await waitFor(() => expect(status("42")).toBe("WIP"));
+        // Vacuity guard: the callback really is an older one than the table now hands out.
+        expect(rowUpdate).not.toBe(olderCallback);
+
+        await act(async () => {
+            await olderCallback(makeRow("43", { status: "WIP" }));
+        });
+
+        await waitFor(() => expect(status("43")).toBe("WIP"));
+        expect(status("42")).toBe("WIP");
+        expect(latestAllTasks.map((r) => r.status)).toEqual(["WIP", "WIP"]);
+        expect(bus).toEqual([]);
+    });
+
+    it("keeps every earlier edit when both rows save through the first callback", async () => {
+        respondWith(200, { task: { ts_updated_at: "now" } });
+        renderTable();
+        await waitFor(() => expect(screen.queryByTestId("row-42")).not.toBeNull());
+        const olderCallback = rowUpdate;
+
+        await act(async () => {
+            await olderCallback(makeRow("42", { status: "WIP", priority: "High" }));
+        });
+        await act(async () => {
+            await olderCallback(makeRow("43", { status: "Blocked" }));
+        });
+
+        await waitFor(() => expect(status("43")).toBe("Blocked"));
+        expect(status("42")).toBe("WIP");
+        expect(latestAllTasks.find((r) => r.id === "42")?.priority).toBe("High");
+    });
+});
+
+describe("an inline edit saved through a callback older than the open preview (MIP-1034)", () => {
+    it("updates the preview open NOW, not the one the callback's render saw", async () => {
+        respondWith(200, { task: { ts_updated_at: "now" } });
+        renderTable();
+        await waitFor(() => expect(screen.queryByTestId("row-42")).not.toBeNull());
+        // The callback was made while task 42's preview was open ...
+        const olderCallback = rowUpdate;
+        // ... and the user has since opened task 43.
+        act(() => openPreviewOf({ ...initialPreview(), id: 43, title: "Task 43" }));
+
+        await act(async () => {
+            await olderCallback(makeRow("43", { status: "WIP" }));
+        });
+
+        expect((latestPreview.status as { status: string }).status).toBe("WIP");
+        expect(latestPreview.id).toBe(43);
     });
 });
 
