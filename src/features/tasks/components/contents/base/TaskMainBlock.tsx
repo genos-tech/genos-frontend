@@ -34,6 +34,7 @@ import { useTaskDeliveries } from "../../../hooks/useTaskDeliveries";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { MilestoneFolderPicker } from "../../../sprint-milestone/components/MilestoneFolderPicker";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
+import { applyMilestonePick } from "../../../utils/applyMilestonePick";
 import { deliveryPrUrls } from "../../../utils/deliveryPrUrls";
 import { ownsItsProject } from "../../../utils/taskKind";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -839,23 +840,20 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 showSprint={isMilestone === true}
                                 sprintId={(taskContent as any)?.sprintId ?? null}
                                 useSM={useSM}
-                                onChangeMilestone={(mid, taskId, autoSyncedSprint) => {
-                                    // Picking a milestone may also
-                                    // auto-sync the sprint linkage —
-                                    // both updates MUST land in a
-                                    // single `setTaskContent` call so
-                                    // they don't clobber each other
-                                    // inside the same React batch
-                                    // (see the picker's
-                                    // `onChangeMilestone` doc).
-                                    setTaskContent({
-                                        ...(taskContent as any),
-                                        milestoneId: mid,
-                                        parentTaskId: taskId, // Changing the milestone -> changing the parent task too.
-                                        ...(autoSyncedSprint
-                                            ? { sprintId: autoSyncedSprint.sprintId }
-                                            : {}),
-                                    } as TaskProps);
+                                onChangeMilestone={(mid, taskId, nextSprintId) => {
+                                    // One `setTaskContent` for the milestone, its
+                                    // backing task as the parent, and the sprint the
+                                    // task has under it (`null` = none): separate
+                                    // updates clobber each other in a React batch
+                                    // (see the picker's `onChangeMilestone` doc).
+                                    setTaskContent(
+                                        applyMilestonePick(
+                                            taskContent as TaskProps,
+                                            mid,
+                                            taskId,
+                                            nextSprintId
+                                        )
+                                    );
                                     setTaskUpdated?.(true);
                                 }}
                                 onChangeSprint={(sid) => {

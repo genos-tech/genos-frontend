@@ -1156,9 +1156,21 @@ export const useTaskManagement = (
                     sprintId: edited.sprintId ?? task.sprintId ?? null,
                 };
                 // The sprint is always the milestone's (there is no sprint
-                // picker on a task), so a task with no milestone has none.
-                if (patched.milestoneId == null && task.milestoneId != null) {
-                    patched.sprintId = null;
+                // picker on a task), or none. When the milestone changed, the
+                // preview's sprint is the new answer, `null` ("no sprint")
+                // included: the picker always hands one over. `??` above read
+                // that `null` as "not provided" and kept the old sprint on the
+                // row, so a task moved into a milestone without a sprint stayed
+                // in its old sprint's bucket until a reload (MIP-1035). A task
+                // with no milestone has none, whatever the copy still carries.
+                // An edit that is not a milestone change keeps the `??`: a copy
+                // that doesn't know the sprint must not clear the row's.
+                if (
+                    !task.isMilestone &&
+                    (task.milestoneId ?? null) !== (patched.milestoneId ?? null)
+                ) {
+                    patched.sprintId =
+                        patched.milestoneId == null ? null : (edited.sprintId ?? null);
                 }
                 // A move: the task now sits under another milestone or another
                 // parent. Its root follows where it hangs (the preview never
