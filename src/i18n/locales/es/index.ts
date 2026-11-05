@@ -1882,8 +1882,9 @@ export const es: DeepPartial<Messages> = {
                 newProject: "Nuevo proyecto",
                 deleteMilestone: "Eliminar hito",
                 convertToTask: "Convertir en tarea",
-                convertToTaskConfirm:
-                    "¿Convertir este hito en una tarea? Sus tareas permanecen debajo como subtareas. Se quitan la carpeta y el sprint, y los demás responsables pasan a ser colaboradores.",
+                convertToTaskTitle: "¿Convertir este hito en una tarea?",
+                convertToTaskBody:
+                    "Sus tareas permanecen debajo como subtareas. Se quitan la carpeta y el sprint, y los demás responsables pasan a ser colaboradores.",
             },
             confirmDeleteMilestone: "¿Eliminar este hito?",
             loadingTask: "Cargando tarea…",
@@ -2030,8 +2031,9 @@ export const es: DeepPartial<Messages> = {
                 newTag: "Nueva etiqueta",
                 newProject: "Nuevo proyecto",
                 convertToMilestone: "Convertir en hito",
-                convertToMilestoneConfirm:
-                    "¿Convertir esta tarea en un hito? Sus subtareas permanecen debajo y pasan a formar parte del hito. Puedes volver a convertirla en tarea cuando quieras.",
+                convertToMilestoneTitle: "¿Convertir esta tarea en un hito?",
+                convertToMilestoneBody:
+                    "Sus subtareas permanecen debajo y pasan a formar parte del hito. Puedes volver a convertirla en tarea cuando quieras.",
                 deleteTask: "Eliminar tarea",
             },
         },

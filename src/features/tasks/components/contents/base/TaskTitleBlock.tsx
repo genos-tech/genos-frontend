@@ -60,6 +60,7 @@ import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { taskMetaLabel } from "../../../utils/taskMeta";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
+import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
 
@@ -192,6 +193,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         );
     };
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
+    // "Convert to milestone" asks first, in the app's own dialog (MIP-1042).
+    const [openConvertToMilestone, setOpenConvertToMilestone] = useState<boolean>(false);
     const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
     // Opens the React Flow task-graph modal anchored on this task.
     const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
@@ -799,16 +802,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         !isMilestone &&
                                         !isSubTask &&
                                         canConvertTaskToMilestone(taskContent),
-                                    onClick: async () => {
-                                        if (
-                                            !confirm(
-                                                t.tasks.titleBlock.menu.convertToMilestoneConfirm
-                                            )
-                                        )
-                                            return;
-                                        if (taskContent.id != null)
-                                            await convert.toMilestone(taskContent.id);
-                                    },
+                                    onClick: () => setOpenConvertToMilestone(true),
                                 },
                                 {
                                     id: "deleteTask",
@@ -985,6 +979,19 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     }}
                 />
             </FormControl>
+
+            <ModalConvertTaskMilestone
+                direction="toMilestone"
+                name={taskContent.title}
+                open={openConvertToMilestone}
+                // 10010 is the default; a modal-hosted preview (10020 and up)
+                // needs the dialog above itself.
+                zIndex={hostZIndex != null ? hostZIndex + 10 : undefined}
+                onClose={() => setOpenConvertToMilestone(false)}
+                onConfirm={async () => {
+                    if (taskContent.id != null) await convert.toMilestone(taskContent.id);
+                }}
+            />
 
             <ModalDeleteTask
                 currentTaskContent={taskContent}
