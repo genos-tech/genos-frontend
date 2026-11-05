@@ -14,6 +14,7 @@ import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { SprintBoardCard } from "../features/tasks/components/board/SprintBoardCard";
 import { AssignedMilestoneCard } from "../features/tasks/components/dashboard/AssignedMilestoneCard";
 import { Milestone } from "../features/tasks/sprint-milestone/types";
+import { TASK_TEMPLATES } from "../features/tasks/utils/taskTemplates";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 
@@ -156,6 +157,18 @@ describe.each(cards)("shared milestone body on the $name", ({ renderCard }) => {
         expect(screen.getByText("MIP-70")).toBeTruthy();
         expect(screen.getByText("Sprint 9")).toBeTruthy();
         expect(screen.getByText("1/4 done")).toBeTruthy();
+    });
+
+    it("never flags a milestone for having no body", () => {
+        // A missing description is the author's choice, not something to warn about.
+        for (const description of [null, [], TASK_TEMPLATES.milestone.blocks]) {
+            const { unmount } = renderCard(
+                makeMilestone({ description: description as Milestone["description"] })
+            );
+            expect(screen.getByText("Launch week")).toBeTruthy();
+            expect(screen.queryByText("No goal")).toBeNull();
+            unmount();
+        }
     });
 
     it("puts the tag chips right under the progress bar", () => {

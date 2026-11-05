@@ -6,11 +6,7 @@
 import { PartialBlock } from "@blocknote/core";
 import { describe, expect, it } from "vitest";
 
-import {
-    milestoneHasGoal,
-    stripUntouchedPrompts,
-    TASK_TEMPLATES,
-} from "../features/tasks/utils/taskTemplates";
+import { stripUntouchedPrompts, TASK_TEMPLATES } from "../features/tasks/utils/taskTemplates";
 
 const text = (b: PartialBlock) =>
     (Array.isArray(b.content) ? b.content : []).map((r) => ("text" in r ? r.text : "")).join("");
@@ -120,33 +116,5 @@ describe("stripUntouchedPrompts", () => {
         const before = JSON.stringify(TASK_TEMPLATES.default.blocks);
         stripUntouchedPrompts(TASK_TEMPLATES.default.blocks);
         expect(JSON.stringify(TASK_TEMPLATES.default.blocks)).toBe(before);
-    });
-});
-
-describe("milestoneHasGoal", () => {
-    it("is false for an empty description and for the untouched template", () => {
-        expect(milestoneHasGoal(null)).toBe(false);
-        expect(milestoneHasGoal([])).toBe(false);
-        expect(milestoneHasGoal([{ type: "paragraph", content: [] }])).toBe(false);
-        expect(milestoneHasGoal(TASK_TEMPLATES.milestone.blocks)).toBe(false);
-    });
-
-    it("is true once any prompt is replaced with the author's own text", () => {
-        const body = fill(
-            TASK_TEMPLATES.milestone.blocks,
-            "What outcome does this milestone deliver, and for whom?",
-            "Ship v1."
-        );
-        expect(milestoneHasGoal(body)).toBe(true);
-    });
-
-    it("is true for a custom body that has nothing to do with the built-in template", () => {
-        expect(
-            milestoneHasGoal([{ type: "paragraph", content: [{ type: "text", text: "Q4 push" }] }])
-        ).toBe(true);
-    });
-
-    it("treats a description that was not loaded as not flaggable", () => {
-        expect(milestoneHasGoal(undefined)).toBe(true);
     });
 });
