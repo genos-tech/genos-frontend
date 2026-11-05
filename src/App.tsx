@@ -694,14 +694,15 @@ const AppBody = () => {
         t.app.diagram.milestoneFallback,
     ]);
 
-    // Open the user's ToDo pane. The ToDo list has no dedicated route — it
+    // Open the user's ToDo PAGE. The ToDo list has no dedicated route — it
     // lives inside the self-DM chat — so we route to that DM, flip the pane
     // visible in localStorage, and dispatch `openTodoPane` for a ChatHome
-    // that's already mounted (chatHome listens for it). Shared by the global
-    // shortcut (Ctrl+Cmd/Alt+O) and the sidebar ToDo button; mirrors the
-    // `entity_type === "todo"` branch in handleSpotlightPreview but with no
-    // specific item to focus.
-    const openTodo = useCallback(() => {
+    // that's already mounted (chatHome listens for it). Since MIP-1044 this is
+    // no longer what the shortcut and the sidebar button do (they open the
+    // to-do modal, below); it is the modal's "Open full page" action. Mirrors
+    // the `entity_type === "todo"` branch in handleSpotlightPreview but with
+    // no specific item to focus.
+    const openTodoPage = useCallback(() => {
         const selfDm = useCM.allChats.find(
             (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
         );
@@ -728,29 +729,55 @@ const AppBody = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [useCM, useTM, usePM, navigate]);
 
-    const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
-        useGlobalServiceShortcut({
-            onOpenCalendarModal: calendarModal.open,
-            onOpenHistory: openHistory,
-            onOpenNotesAndCreate: () => {
-                // The create runs right after the navigation, as before: a real
-                // switch navigates a frame later (see `switchService`).
-                switchService(navigate, "/workspace/notes", () => {
-                    void useNM.handleCreateNewMyNote(null);
-                });
-            },
-            onOpenTaskDiagram: () => {
-                if (!taskDiagramTarget) return;
-                setTaskDiagramOpen(true);
-            },
-            onOpenTasksAndCreate: () => {
-                switchService(navigate, "/workspace/tasks", () => {
-                    useTM.handleCreateTask();
-                });
-            },
-            onOpenTodo: openTodo,
-            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
-        });
+    // The to-do list as a MODAL over the current page (MIP-1044): the
+    // shortcut (Ctrl+Cmd/Alt+O), the sidebar button and the service switcher
+    // all open it without leaving the page. It is the shared preview modal on
+    // a day-less to-do target, so it renders against the same live to-do
+    // data as the chat page, and its "Open full page" button goes to that
+    // page (`openTodoPage`).
+    const { openTodoList, closeModal: closeUrlLinkModal } = urlLinkModal;
+    const todoModalOpen = urlLinkModal.target?.kind === "todo";
+    const showTodoModal = useCallback(
+        () => openTodoList({ onOpenFullPage: openTodoPage }),
+        [openTodoList, openTodoPage]
+    );
+    // The shortcut toggles; the sidebar button and the switcher only open
+    // (a second press of the shortcut is the way to put it away).
+    const toggleTodoModal = useCallback(() => {
+        if (todoModalOpen) closeUrlLinkModal();
+        else showTodoModal();
+    }, [todoModalOpen, closeUrlLinkModal, showTodoModal]);
+
+    const {
+        previewIndex: serviceSwitcherPreviewIndex,
+        mruOrder: serviceSwitcherMruOrder,
+        highlight: highlightServiceSwitcherTile,
+        select: selectServiceSwitcherTile,
+    } = useGlobalServiceShortcut({
+        isTodoOpen: todoModalOpen,
+        onHideTodo: closeUrlLinkModal,
+        onShowTodo: showTodoModal,
+        onOpenCalendarModal: calendarModal.open,
+        onOpenHistory: openHistory,
+        onOpenNotesAndCreate: () => {
+            // The create runs right after the navigation, as before: a real
+            // switch navigates a frame later (see `switchService`).
+            switchService(navigate, "/workspace/notes", () => {
+                void useNM.handleCreateNewMyNote(null);
+            });
+        },
+        onOpenTaskDiagram: () => {
+            if (!taskDiagramTarget) return;
+            setTaskDiagramOpen(true);
+        },
+        onOpenTasksAndCreate: () => {
+            switchService(navigate, "/workspace/tasks", () => {
+                useTM.handleCreateTask();
+            });
+        },
+        onOpenTodo: toggleTodoModal,
+        onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
+    });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
     // notification refers to. Lives here because this is the layer that has
@@ -1377,6 +1404,10 @@ const AppBody = () => {
                                                             previewIndex={
                                                                 serviceSwitcherPreviewIndex
                                                             }
+                                                            onHighlight={
+                                                                highlightServiceSwitcherTile
+                                                            }
+                                                            onSelect={selectServiceSwitcherTile}
                                                         />
                                                         {/* Second HashMentionDataProvider: the overlay
                                                 mounts above the main provider tree (line
@@ -1743,7 +1774,7 @@ const AppBody = () => {
                                                                                                             openGenosPage
                                                                                                         }
                                                                                                         onOpenTodo={
-                                                                                                            openTodo
+                                                                                                            showTodoModal
                                                                                                         }
                                                                                                     />
                                                                                                     <Routes>

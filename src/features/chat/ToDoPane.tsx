@@ -322,9 +322,16 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 >
                     <Stack
                         alignItems="center"
+                        data-todo-header-row
                         direction="row"
                         justifyContent="space-between"
                         mb={1.5}
+                        // In a modal the "open full page" and ✕ buttons float over
+                        // this corner (UrlLinkModal: right 56 and 12, 36px wide,
+                        // so 92px from the edge). The box already pads 20px; keep
+                        // the rest of that corner free so they don't cover the
+                        // actions (MIP-1044).
+                        sx={hostedInModal ? { pr: "76px" } : undefined}
                     >
                         <Stack alignItems="center" direction="row" spacing={1.5}>
                             <Box

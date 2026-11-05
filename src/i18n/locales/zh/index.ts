@@ -2131,6 +2131,7 @@ export const zh: DeepPartial<Messages> = {
             tasks: "任务",
             notes: "笔记",
             search: "Genos",
+            todo: "待办事项",
             hintMac: "按住 ⌘  ·  点按 Ctrl 切换  ·  松开 ⌘ 确认",
             hintOther: "按住 Alt  ·  点按 Ctrl 切换  ·  松开 Alt 确认",
         },

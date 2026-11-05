@@ -423,6 +423,7 @@ export const hi: DeepPartial<Messages> = {
             tasks: "टास्क",
             notes: "नोट",
             search: "Genos",
+            todo: "करने के लिए",
             hintMac: "⌘ दबाए रखें  ·  साइकल के लिए Ctrl टैप करें  ·  बदलने के लिए ⌘ छोड़ें",
             hintOther: "Alt दबाए रखें  ·  साइकल के लिए Ctrl टैप करें  ·  बदलने के लिए Alt छोड़ें",
         },

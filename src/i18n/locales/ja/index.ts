@@ -2375,6 +2375,7 @@ export const ja: DeepPartial<Messages> = {
             tasks: "タスク",
             notes: "ノート",
             search: "Genos",
+            todo: "To-Do",
             hintMac: "⌘ を長押し  ・  Ctrl をタップで切り替え  ・  ⌘ を離して確定",
             hintOther: "Alt を長押し  ・  Ctrl をタップで切り替え  ・  Alt を離して確定",
         },

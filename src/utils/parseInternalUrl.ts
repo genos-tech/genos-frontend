@@ -88,7 +88,9 @@ export type TodoTarget = {
     kind: "todo";
     // The group's day bucket (YYYY-MM-DD) — part of the URL so the modal
     // can fetch that day's group when it's outside the loaded window.
-    localDate: string;
+    // Absent for the whole-list modal the shortcut, the sidebar button and
+    // the service switcher open (MIP-1044): no URL, so nothing to look up.
+    localDate?: string;
     itemId?: number;
 };
 

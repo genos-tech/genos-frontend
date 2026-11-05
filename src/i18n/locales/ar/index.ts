@@ -415,6 +415,7 @@ export const ar: DeepPartial<Messages> = {
             hintMac: "استمر بالضغط على ⌘  ·  اضغط على Ctrl للتنقل  ·  حرّر ⌘ للتبديل",
             hintOther: "استمر بالضغط على Alt  ·  اضغط على Ctrl للتنقل  ·  حرّر Alt للتبديل",
             search: "Genos",
+            todo: "المهام",
         },
         mobile: {
             close: "إغلاق",

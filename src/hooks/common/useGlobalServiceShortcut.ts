@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
@@ -9,13 +9,17 @@ import { isMac } from "../../utils/platform";
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 // (Genos, id 4, is the one exception to the NAV_ITEMS mirror: the sidebar
-// renders it as its own dedicated button above the nav list.)
-const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
+// renders it as its own dedicated button above the nav list. To-Do, id 5,
+// is the other: it has NO page — a stop on it opens the to-do modal over
+// whatever page is current, so its `path` is null.)
+export const TODO_SERVICE_ID = 5;
+const SERVICES_BY_ID: Array<{ id: number; path: string | null }> = [
     { id: 0, path: "/workspace/inbox" },
     { id: 1, path: "/workspace/chat" },
     { id: 2, path: "/workspace/tasks" },
     { id: 3, path: "/workspace/notes" },
     { id: 4, path: "/workspace/genos" },
+    { id: TODO_SERVICE_ID, path: null },
 ];
 
 // Derive the active service id from the current URL. Returns -1 when the
@@ -23,7 +27,7 @@ const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
 // which we treat as "unknown — leave the MRU list alone".
 const deriveServiceId = (pathname: string): number => {
     for (const service of SERVICES_BY_ID) {
-        if (pathname.includes(service.path)) return service.id;
+        if (service.path !== null && pathname.includes(service.path)) return service.id;
     }
     return -1;
 };
@@ -55,6 +59,17 @@ export type GlobalServiceShortcutState = {
      * outside a gesture.
      */
     mruOrder: number[];
+    /**
+     * Moves the highlight to a tile the pointer is over. Ignored while the
+     * overlay is hidden, so a stray hover can never raise it.
+     */
+    highlight: (positionInMru: number) => void;
+    /**
+     * Commits the tile at `positionInMru` right away (a click on it) and
+     * hides the overlay. The later release of the hold key then has nothing
+     * left to commit, so a click never switches twice.
+     */
+    select: (positionInMru: number) => void;
 };
 
 export type GlobalServiceShortcutOptions = {
@@ -104,6 +119,16 @@ export type GlobalServiceShortcutOptions = {
      * hook just dispatches the keypress.
      */
     onOpenTodo?: () => void;
+    /**
+     * True while the to-do modal is open. To-Do is then the *current*
+     * service (first in the MRU order), so a single tap of the cycle goes
+     * back to the page underneath — which only has to close the modal.
+     */
+    isTodoOpen?: boolean;
+    /** The cycle landed on the To-Do stop: open the modal (no navigation). */
+    onShowTodo?: () => void;
+    /** The cycle landed on a page service while the modal is open: close it. */
+    onHideTodo?: () => void;
 };
 
 /**
@@ -122,6 +147,11 @@ export type GlobalServiceShortcutOptions = {
  *     so a single tap toggles between the two most-recent services, as in
  *     macOS Cmd+Tab.
  *   - `Escape` or `window.blur` cancels without navigating.
+ *   - To-Do is a stop too, but it has no page: landing on it opens the to-do
+ *     modal over the current page (`onShowTodo`), and while that modal is open
+ *     it counts as the current service, so landing on the page underneath
+ *     just closes it (`onHideTodo`).
+ *   - The overlay's tiles can be hovered (`highlight`) and clicked (`select`).
  *
  * Letter shortcuts (action shortcuts, no overlay):
  *   - `Ctrl+Cmd+<letter>` on Mac, `Ctrl+Alt+<letter>` elsewhere.
@@ -131,7 +161,7 @@ export type GlobalServiceShortcutOptions = {
  *   - `M` -> generate a Meet link and copy to clipboard (via `onQuickMeetClipboard`).
  *   - `H` -> toggle the global History modal (via `onOpenHistory`).
  *   - `G` -> open the task graph for the current preview task (via `onOpenTaskDiagram`).
- *   - `O` -> open the ToDo pane (via `onOpenTodo`).
+ *   - `O` -> toggle the to-do modal (via `onOpenTodo`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  *   - Each letter is wired through a callback so this hook stays free of
@@ -147,9 +177,14 @@ export const useGlobalServiceShortcut = (
         [location.pathname]
     );
 
+    // The to-do modal sits on top of the page, so while it is open it is the
+    // service the user is "in"; the URL's service is the one underneath.
+    const isTodoOpen = options?.isTodoOpen === true;
+    const effectiveServiceId = isTodoOpen ? TODO_SERVICE_ID : currentServiceId;
+
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
     const [mruOrder, setMruOrder] = useState<number[]>(() =>
-        buildInitialMruOrder(currentServiceId)
+        buildInitialMruOrder(effectiveServiceId)
     );
 
     // Mirror state into refs so the keydown / keyup / blur listeners can
@@ -182,12 +217,22 @@ export const useGlobalServiceShortcut = (
     // visually reorder mid-tap, and skipped for unknown services (-1).
     useEffect(() => {
         if (previewIndexRef.current !== null) return;
-        if (currentServiceId < 0) return;
+        if (effectiveServiceId < 0) return;
         setMruOrder((prev) => {
-            if (prev[0] === currentServiceId) return prev;
-            return [currentServiceId, ...prev.filter((id) => id !== currentServiceId)];
+            if (prev[0] === effectiveServiceId) return prev;
+            return [effectiveServiceId, ...prev.filter((id) => id !== effectiveServiceId)];
         });
+    }, [effectiveServiceId]);
+
+    // The listener below is attached once; it reads the URL's service through
+    // a ref, like the options, so a commit always sees the current page.
+    const currentServiceIdRef = useRef(currentServiceId);
+    useEffect(() => {
+        currentServiceIdRef.current = currentServiceId;
     }, [currentServiceId]);
+    // The commit step lives inside the listener effect (it needs `navigate`);
+    // a click on a tile reaches it through this ref.
+    const commitRef = useRef<(positionInMru: number) => void>(() => {});
 
     useEffect(() => {
         const mac = isMac();
@@ -196,10 +241,23 @@ export const useGlobalServiceShortcut = (
             const serviceId = mruOrderRef.current[positionInMru];
             const target = SERVICES_BY_ID[serviceId];
             if (!target) return;
+            const todoOpen = optionsRef.current?.isTodoOpen === true;
+            if (target.path === null) {
+                // To-Do: a modal over the current page, no navigation. If it
+                // is already open there is nothing to do.
+                if (!todoOpen) optionsRef.current?.onShowTodo?.();
+                return;
+            }
+            if (todoOpen) {
+                optionsRef.current?.onHideTodo?.();
+                // The page underneath is already where the URL is.
+                if (serviceId === currentServiceIdRef.current) return;
+            }
             // Cmd+Tab-style commit: shows the "Loading data…" page first when
             // the service changes (MIP-965).
             switchService(navigate, target.path);
         };
+        commitRef.current = commit;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             // Escape closes the overlay without committing, regardless of
@@ -316,5 +374,19 @@ export const useGlobalServiceShortcut = (
         };
     }, [navigate]);
 
-    return { previewIndex, mruOrder };
+    const highlight = useCallback((positionInMru: number) => {
+        if (previewIndexRef.current === null) return;
+        previewIndexRef.current = positionInMru;
+        setPreviewIndex(positionInMru);
+    }, []);
+
+    const select = useCallback((positionInMru: number) => {
+        // Clear the ref now, not after the re-render: releasing the hold key
+        // right behind the click must find nothing to commit.
+        previewIndexRef.current = null;
+        setPreviewIndex(null);
+        commitRef.current(positionInMru);
+    }, []);
+
+    return { previewIndex, mruOrder, highlight, select };
 };
