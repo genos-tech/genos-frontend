@@ -24,6 +24,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { withoutTrailingBlank } from "../components/editors/utils/messageBlocks";
 import { canRenderLight } from "../components/messageBody/lightBodySupport";
 import { LightMessageBody } from "../components/messageBody/LightMessageBody";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
@@ -79,7 +80,7 @@ const BnReference = ({ content }: { content: any[] }) => {
         inlineContentSpecs: { ...defaultInlineContentSpecs },
         blockSpecs: { ...remainingBlockSpecs, codeBlock: createCodeBlockSpec(codeBlockOptions) },
     });
-    const editor = useCreateBlockNote({ schema, initialContent: content.slice(0, -1) });
+    const editor = useCreateBlockNote({ schema, initialContent: withoutTrailingBlank(content) });
     return (
         <BlockNoteView
             editable={false}
@@ -309,14 +310,27 @@ describe("LightMessageBody fidelity vs BlockNote", () => {
         });
     }
 
-    it("drops the trailing block like BnChatPreview does", () => {
+    // MIP-1039: only a BLANK trailing block is the stored "end of message"
+    // line. A message typed since BlockNote 0.57 can end with a real line, and
+    // dropping the last block unconditionally hid it.
+    it("drops a blank trailing block, like BnChatPreview does", () => {
         const content = [
             { type: "paragraph", content: [{ type: "text", text: "kept", styles: {} }] },
-            { type: "paragraph", content: [{ type: "text", text: "dropped", styles: {} }] },
+            { type: "paragraph", content: [] },
         ];
         const { container } = render(<LightMessageBody content={content} {...ctx} />);
         expect(container.textContent).toContain("kept");
-        expect(container.textContent).not.toContain("dropped");
+        expect(container.querySelectorAll(".bn-block-outer")).toHaveLength(1);
+    });
+
+    it("keeps a last line that has text (a body with no trailing blank)", () => {
+        const content = [
+            { type: "paragraph", content: [{ type: "text", text: "first", styles: {} }] },
+            { type: "paragraph", content: [{ type: "text", text: "second", styles: {} }] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.textContent).toContain("first");
+        expect(container.textContent).toContain("second");
     });
 });
 

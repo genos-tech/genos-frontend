@@ -275,9 +275,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         // Mirror the BlockNote document shape `bnChatEditor` emits — a
         // paragraph block with a `link` inline node so the URL renders
         // as a clickable hyperlink (plain text wouldn't auto-linkify on
-        // the receive side). Trailing empty paragraph is mandatory:
-        // `BnChatPreview` does `content.slice(0, -1)` when seeding its
-        // preview editor.
+        // the receive side). It ends with the empty paragraph every stored
+        // body ends with (see `withTrailingBlank`), which the renderers drop.
         const content = [
             {
                 type: "paragraph",
