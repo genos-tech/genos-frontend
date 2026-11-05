@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -101,6 +101,62 @@ const BUBBLE_SHADOW = {
         light: "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
     },
 } as const;
+
+/**
+ * Avatar and header (name, time) on the first row, the body below.
+ *
+ * From `md` up (the same breakpoint as `useIsMobile`) the body stays in the
+ * column beside the avatar, so it lines up under the name. Below it, on a
+ * phone, the body spans the full width under the avatar: the avatar column is
+ * about 44px that would otherwise stay empty down the whole list (MIP-1033).
+ *
+ * One grid, not a media-query-driven restructure, so the header and body
+ * markup is the same at every width. The avatar spans all rows beside the
+ * body, so it never makes the first row taller than the header.
+ */
+const CommentLayout = ({
+    avatar,
+    header,
+    body,
+    footer,
+    bodyOffset,
+}: {
+    avatar: ReactNode;
+    header: ReactNode;
+    body: ReactNode;
+    footer?: ReactNode;
+    /** Space above the body beside the avatar (theme spacing units). */
+    bodyOffset: number;
+}) => (
+    <Box
+        sx={{
+            display: "grid",
+            gridTemplateColumns: "auto minmax(0, 1fr)",
+            columnGap: 1.5,
+            alignItems: "start",
+        }}
+    >
+        <Box sx={{ gridColumn: 1, gridRow: { xs: 1, md: "1 / span 3" }, flexShrink: 0 }}>
+            {avatar}
+        </Box>
+        <Box sx={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}>{header}</Box>
+        <Box
+            sx={{
+                gridColumn: { xs: "1 / -1", md: 2 },
+                gridRow: 2,
+                minWidth: 0,
+                mt: { xs: 0.75, md: bodyOffset },
+            }}
+        >
+            {body}
+        </Box>
+        {footer != null && (
+            <Box sx={{ gridColumn: { xs: "1 / -1", md: 2 }, gridRow: 3, minWidth: 0, mt: 0.5 }}>
+                {footer}
+            </Box>
+        )}
+    </Box>
+);
 
 const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const {
@@ -569,12 +625,12 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                     </Box>
                 )}
 
-                <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-                    <Box sx={{ flexShrink: 0 }}>
-                        <UserAvatar showPulseDot={false} userId={comment.senderId} />
-                    </Box>
-
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                <CommentLayout
+                    avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
+                    body={commentBody}
+                    bodyOffset={0.25}
+                    footer={reactionsDisplay}
+                    header={
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <Typography
                                 level="title-sm"
@@ -602,12 +658,8 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                                 {isEdited ? `${sentLabel} Edited` : sentLabel}
                             </Typography>
                         </Stack>
-
-                        <Box sx={{ mt: 0.25 }}>{commentBody}</Box>
-
-                        <Box sx={{ mt: 0.5 }}>{reactionsDisplay}</Box>
-                    </Box>
-                </Stack>
+                    }
+                />
             </Box>
         );
     }
@@ -692,11 +744,11 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                         />
                     )}
 
-                    <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-                        <Box sx={{ flexShrink: 0 }}>
-                            <UserAvatar showPulseDot={false} userId={comment.senderId} />
-                        </Box>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <CommentLayout
+                        avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
+                        body={commentBody}
+                        bodyOffset={0.5}
+                        header={
                             <Stack alignItems="center" direction="row" spacing={1}>
                                 <Typography
                                     level="title-sm"
@@ -728,10 +780,8 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                                     {isEdited ? `${sentLabel} Edited` : sentLabel}
                                 </Typography>
                             </Stack>
-
-                            <Box sx={{ mt: 0.5 }}>{commentBody}</Box>
-                        </Box>
-                    </Stack>
+                        }
+                    />
 
                     {/* Quick-emoji + edit + ⋮ more-menu affordances,
                         top-right of bubble (mirrors MessageBubble's

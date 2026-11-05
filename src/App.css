@@ -1095,10 +1095,16 @@ div[data-floating-ui-focusable] {
    ========================================================================== */
 
 /* Task comment preview - Updated for modern bubble colors */
+/* A comment body is read-only, so it has no side-menu / drag handle to leave
+   room for. BlockNote's own `.bn-editor { padding-inline: 54px }` is that room
+   for the full-page editor; the old override cut only the START side to 20px
+   and left the end at 54px, which took ~74px of every body (on a 390px phone,
+   more than half of its width). Match the chat bubbles: a hairline of padding
+   on both sides (MIP-1033). */
 .task-comment-preview-light .bn-editor {
     color: #111827; /* Dark text on white background */
     background-color: transparent;
-    padding-inline-start: 20px;
+    padding-inline: 2px;
 }
 
 .task-comment-preview-light code {
@@ -1117,7 +1123,7 @@ div[data-floating-ui-focusable] {
 .task-comment-preview-dark .bn-editor {
     color: #e0e7ff; /* Light indigo text on dark indigo background */
     background-color: transparent;
-    padding-inline-start: 20px;
+    padding-inline: 2px;
 }
 
 .task-comment-preview-dark code {
