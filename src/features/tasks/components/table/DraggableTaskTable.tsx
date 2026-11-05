@@ -1110,6 +1110,21 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [sortTasks]
     );
 
+    // What `handleRowUpdate` reads AFTER its `await`. A row is memoised and its
+    // comparator ignores `onRowUpdate`, so a row that has not re-rendered keeps the
+    // callback of the render it last drew in, and everything that callback closed
+    // over is as old as that render. Reading the lists from the closure after a
+    // save wrote every row edited since back to what that render saw: edit task A,
+    // then task B, and A reverted until a reload (MIP-1034).
+    const latestForRowUpdate = useRef({
+        displaying: currentDisplayingTasks,
+        preview: useTM.currentPreviewTask,
+    });
+    latestForRowUpdate.current = {
+        displaying: currentDisplayingTasks,
+        preview: useTM.currentPreviewTask,
+    };
+
     // Handle row update
     const handleRowUpdate = async (updatedRow: TaskTableProps): Promise<TaskTableProps> => {
         try {
@@ -1236,37 +1251,39 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 prev.map((task) => (task.id === result.id ? result : task))
             );
 
-            // Update preview task if it's the current one
+            // Update preview task if it's the current one. Read from the ref: the
+            // preview open NOW, not the one this callback's render saw.
+            const openPreview = latestForRowUpdate.current.preview;
             let editedPreview: TaskProps | undefined;
-            if (useTM.currentPreviewTask && useTM.currentPreviewTask.id === Number(result.id)) {
+            if (openPreview && openPreview.id === Number(result.id)) {
                 editedPreview = {
-                    ...useTM.currentPreviewTask,
-                    title: result.title || useTM.currentPreviewTask.title,
-                    tags: result.tags || useTM.currentPreviewTask.tags,
-                    concatTags: result.concatTags || useTM.currentPreviewTask.concatTags,
+                    ...openPreview,
+                    title: result.title || openPreview.title,
+                    tags: result.tags || openPreview.tags,
+                    concatTags: result.concatTags || openPreview.concatTags,
                     assignee:
                         teamMembers.find((member) => member.userId === result.assigneeId) ||
-                        useTM.currentPreviewTask.assignee,
+                        openPreview.assignee,
                     status:
                         statuses.find((status) => status.status === result.status) ||
-                        useTM.currentPreviewTask.status,
+                        openPreview.status,
                     priority:
                         priorities.find((priority) => priority.priority === result.priority) ||
-                        useTM.currentPreviewTask.priority,
+                        openPreview.priority,
                     effortLevel:
                         effortLevels.find(
                             (effortLevel) => effortLevel.level === result.effortLevel
-                        ) || useTM.currentPreviewTask.effortLevel,
-                    dueDate: result.dueDate || useTM.currentPreviewTask.dueDate,
+                        ) || openPreview.effortLevel,
+                    dueDate: result.dueDate || openPreview.dueDate,
                 };
                 useTM.setCurrentPreviewTask(editedPreview);
             }
 
-            // Update allTasks
-            const updatedAllTasks = useTM.allTasks.map((task) =>
-                task.id === result.id ? result : task
+            // Update allTasks. A functional update, so the save lands on the list as
+            // it is now and never on the copy this (possibly old) callback captured.
+            useTM.setAllTasks((prev) =>
+                prev.map((task) => (task.id === result.id ? result : task))
             );
-            useTM.setAllTasks(updatedAllTasks);
 
             // The open preview's row also takes the preview's own values (after
             // the write above, as the flag loop did).
@@ -1281,7 +1298,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             // after the await, so nothing optimistic landed: hand back the row
             // as the table still holds it, not the edited copy.
             if (error instanceof TaskSaveRefusedError) {
-                return currentDisplayingTasks.find((t) => t.id === updatedRow.id) ?? updatedRow;
+                return (
+                    latestForRowUpdate.current.displaying.find((t) => t.id === updatedRow.id) ??
+                    updatedRow
+                );
             }
             return updatedRow;
         }
