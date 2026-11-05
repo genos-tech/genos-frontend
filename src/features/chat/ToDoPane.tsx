@@ -481,38 +481,19 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
                                 {/* "Start tomorrow" — same gate as today's, so a
                             day that already has a list doesn't offer to
-                            create it again. Outlined rather than the filled
-                            gradient: tomorrow is the secondary of the two
-                            when both are offered, and two identical filled
-                            buttons side by side read as one control split in
-                            half. */}
+                            create it again. Icon-only at every width (MIP-1051):
+                            tomorrow is the secondary of the two, and a second
+                            labelled button made the header crowded. The tooltip
+                            and aria-label carry the name. */}
                                 {!tomorrowExists && (
-                                    <AppTooltip
-                                        title={
-                                            // On a phone the label is gone, so the
-                                            // hint says what the button was called.
-                                            isMobile
-                                                ? t.chat.todoPane.startTomorrow
-                                                : t.chat.todoPane.createTomorrowTooltip
-                                        }
-                                    >
+                                    <AppTooltip title={t.chat.todoPane.createTomorrowTooltip}>
                                         <IconButton
-                                            // Icon-only on a phone, where the
-                                            // label made it the largest control
-                                            // in the header. Named for assistive
-                                            // tech, since nothing is printed.
-                                            {...(isMobile
-                                                ? { "aria-label": t.chat.todoPane.startTomorrow }
-                                                : {})}
+                                            aria-label={t.chat.todoPane.startTomorrow}
                                             size="sm"
                                             sx={{
                                                 borderRadius: "10px",
-                                                ...(isMobile
-                                                    ? { px: 0, py: 0 }
-                                                    : { px: 1.5, py: 0.75 }),
-                                                fontSize: "13px",
-                                                fontWeight: 600,
-                                                gap: 0.5,
+                                                px: 0,
+                                                py: 0,
                                                 border: "1px solid",
                                                 borderColor: isDark
                                                     ? "rgba(var(--gp-brandalt-400-rgb), 0.4)"
@@ -529,7 +510,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                             onClick={handleCreateTomorrowGroup}
                                         >
                                             <AddIcon sx={{ fontSize: "18px" }} />
-                                            {!isMobile && t.chat.todoPane.startTomorrow}
                                         </IconButton>
                                     </AppTooltip>
                                 )}

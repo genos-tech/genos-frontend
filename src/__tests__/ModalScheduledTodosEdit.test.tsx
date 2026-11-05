@@ -44,12 +44,25 @@ const ENTITIES: AgentMentionCandidate[] = [
         projectId: 3,
         subtitle: "GEN-7",
     },
+    {
+        // Contains the title above, so it still matches after "#Fix login " is
+        // picked (MIP-1051).
+        ref: { kind: "task", taskId: 8, label: "Fix login bug" },
+        trigger: "#",
+        key: "task:8",
+        href: TASK_HREF,
+        projectId: 3,
+        subtitle: "GEN-8",
+    },
 ];
 const POOL: TodoMentionPool = {
     members: [],
     entities: ENTITIES,
     refs: ENTITIES.map((c) => c.ref),
-    hrefByKey: new Map([["task:7", TASK_HREF]]),
+    hrefByKey: new Map([
+        ["task:7", TASK_HREF],
+        ["task:8", TASK_HREF],
+    ]),
     taskCardByKey: new Map(),
     refreshEntities: () => {},
 };
@@ -150,6 +163,56 @@ describe("the title field is the to-do list's own input", () => {
     });
 });
 
+describe("the @ / # menu closes (MIP-1051)", () => {
+    const openMenu = async (value = "#Fix") => {
+        const view = mount([]);
+        titleInput().focus();
+        fireEvent.change(titleInput(), { target: { value } });
+        await screen.findByTestId("agent-mention-dropdown");
+        return view;
+    };
+    const menu = () => screen.queryByTestId("agent-mention-dropdown");
+
+    it("picking an item with the mouse closes it, even when a longer title still matches", async () => {
+        await openMenu();
+        // "Fix login" is a prefix of "Fix login bug": the menu used to stay up.
+        fireEvent.mouseDown(screen.getByTestId("agent-mention-option-task:7"));
+        await waitFor(() => expect(titleInput().value).toBe("#Fix login "));
+        expect(menu()).toBeNull();
+    });
+
+    it("picking with Enter closes it too", async () => {
+        await openMenu();
+        fireEvent.keyDown(titleInput(), { key: "Enter" });
+        await waitFor(() => expect(titleInput().value).toBe("#Fix login "));
+        expect(menu()).toBeNull();
+    });
+
+    it("typing a fresh # after a pick opens the menu again", async () => {
+        await openMenu();
+        fireEvent.mouseDown(screen.getByTestId("agent-mention-option-task:7"));
+        await waitFor(() => expect(titleInput().value).toBe("#Fix login "));
+        fireEvent.change(titleInput(), { target: { value: "#Fix login #Fix" } });
+        expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
+    });
+
+    it("Escape closes the menu, and only the menu (the modal stays open)", async () => {
+        const { props } = await openMenu();
+        fireEvent.keyDown(titleInput(), { key: "Escape" });
+        expect(menu()).toBeNull();
+        expect(props.onClose).not.toHaveBeenCalled();
+    });
+
+    it("clicking away (the field loses focus) closes it; coming back shows it again", async () => {
+        await openMenu();
+        act(() => titleInput().blur());
+        expect(menu()).toBeNull();
+        // Back in the field with the caret still inside the token.
+        act(() => titleInput().focus());
+        expect(await screen.findByTestId("agent-mention-dropdown")).toBeInTheDocument();
+    });
+});
+
 describe("a schedule row", () => {
     it("shows a link as a link, not as [word](url)", () => {
         mount([schedule({ title: "Read [spec](https://example.com)" })]);
@@ -171,6 +234,16 @@ describe("a schedule row", () => {
             .getAllByRole("button")
             .map((b) => b.getAttribute("aria-label"));
         expect(names).toEqual([ts.edit, ts.pause, ts.delete]);
+    });
+
+    it("leaves a gap between the three actions (they used to touch)", () => {
+        mount();
+        const buttons = within(rowOf("Daily standup")).getAllByRole("button");
+        // Joy's Stack spaces siblings with a margin on every child after the first.
+        const marginLeft = (el: HTMLElement) => parseFloat(getComputedStyle(el).marginLeft || "0");
+        expect(buttons).toHaveLength(3);
+        expect(marginLeft(buttons[1])).toBeGreaterThan(0);
+        expect(marginLeft(buttons[2])).toBeGreaterThan(0);
     });
 
     it("a paused schedule offers Resume in the same slot", () => {

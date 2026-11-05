@@ -48,6 +48,8 @@ export const useTodoTitleField = ({ value, setValue, enabled = true, onKeyDown }
         slotProps: { input: { ref: setInputNode } },
         value,
         onClick: mentions.syncCaret,
+        onFocus: mentions.onFocus,
+        onBlur: mentions.onBlur,
         onKeyUp: mentions.syncCaret,
         onChange: (e: ChangeEvent<HTMLInputElement>) => {
             setValue(e.target.value);
