@@ -32,6 +32,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { sendChatMessage } from "../../features/chat/services/sendChatMessage";
@@ -324,7 +326,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     }, [pendingFiles]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send. A block count meant "typed something"
+    // only while BlockNote kept a real empty block at the end (MIP-1039).
+    const [canSend, setCanSend] = useState<boolean>(false);
 
     // Restore (or clear) the editor when the user navigates between
     // chats, and persist unsent typing as a per-chat draft. See
@@ -345,7 +349,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
 
     const sendingMessage = async () => {
-        if (editor.document.length > 1 && socket !== null && !uploadInProgress) {
+        if (hasSendableContent(editor.document) && socket !== null && !uploadInProgress) {
             // Capture the message, then clear the composer IMMEDIATELY —
             // don't freeze it on the server round-trip. The previous
             // `await sendChatMessage(...)` BEFORE clearing held the editor
@@ -357,7 +361,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             const sent = await sendChatMessage({
                 socket,
                 chat,
-                content,
+                content: withTrailingBlank(content),
                 myself,
                 useCM,
                 setCurrentChat,
@@ -369,7 +373,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             // mirrors exactly how useEditorDraft restores a draft from
             // storage (deserialized blocks), the path BlockNote re-hydrates
             // cleanly on every chat switch, so there's no id-reuse rejection.
-            if (!sent && editor.document.length <= 1) {
+            if (!sent && !hasSendableContent(editor.document)) {
                 try {
                     editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
                 } catch {
@@ -455,7 +459,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={async (event) => {
@@ -465,7 +469,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={() => {
                             void sendingMessage();
                         }}

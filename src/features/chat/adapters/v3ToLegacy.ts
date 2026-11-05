@@ -49,22 +49,19 @@ const KIND_TO_CHAT_TYPE: Record<ChannelKind, number> = {
 };
 
 /**
- * Normalize a v3 Message body for the legacy renderer. The legacy
- * `BnChatPreview` does `content.slice(0, -1)` to drop the trailing
- * empty paragraph the BlockNote editor auto-appends; this throws
- * if `content` isn't an array OR has fewer than 2 blocks (slicing a
- * 1-element array gives `[]` and BlockNote rejects "empty initial
- * content"). Defensive coercion + tail pad so any malformed body
- * (string, empty array, single block from a legacy import) still
- * renders instead of crashing the whole MessageBubble.
+ * Normalize a v3 Message body for the legacy renderer. A stored body ends with
+ * a blank paragraph, which `BnChatPreview` drops (only when blank, since
+ * MIP-1039). Defensive coercion + tail pad so a malformed body (a string, an
+ * empty array, a single block from a legacy import) still renders instead of
+ * crashing the whole MessageBubble: BlockNote rejects empty initial content.
  */
 const EMPTY_PARAGRAPH = { type: "paragraph", content: [] };
 function normalizeBodyForLegacy(body: unknown): unknown[] {
     const arr = Array.isArray(body) ? body : [];
     if (arr.length >= 2) return arr;
     if (arr.length === 1) return [...arr, EMPTY_PARAGRAPH];
-    // Empty array — give BnChatPreview two blocks so `.slice(0, -1)`
-    // leaves at least one element. Renders as a blank bubble (matches
+    // Empty array: two blank blocks, so the renderer still has one left.
+    // Renders as a blank bubble (matches
     // the legacy "deleted / empty message" rendering).
     return [EMPTY_PARAGRAPH, EMPTY_PARAGRAPH];
 }

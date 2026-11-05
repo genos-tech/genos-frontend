@@ -64,6 +64,7 @@ import {
     USER_OTHER_PALETTE,
     USER_SELF_PALETTE,
 } from "../editors/Mention";
+import { withoutTrailingBlank } from "../editors/utils/messageBlocks";
 import { AppTooltip } from "../ui/AppTooltip";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { isJumboEmojiBody } from "./emojiOnlyBody";
@@ -702,13 +703,13 @@ const BlockNode = ({
 /* ------------------------------------------------------------------ */
 
 export const LightMessageBody = ({ content, ...ctx }: LightMessageBodyProps) => {
-    // `BnChatPreview` renders `content.slice(0, -1)` — the composer always
-    // appends a trailing empty paragraph when saving, and dropping it is
-    // what keeps a message from carrying a blank line at the end. Match
-    // that exactly or every bubble gains a trailing gap.
+    // Stored bodies end with a blank paragraph, which is not shown. Drop it the
+    // way `BnChatPreview` does, and only when it is blank: a message typed since
+    // BlockNote 0.57 may not end with one, and a blind `slice(0, -1)` hid its
+    // last real line (MIP-1039).
     // Memoized so it keeps a stable identity for the emoji-only check
     // below (a fresh slice every render would defeat that memo).
-    const blocks = useMemo(() => content.slice(0, -1), [content]);
+    const blocks = useMemo(() => withoutTrailingBlank(content), [content]);
 
     // Anchor clicks open the in-app URL modal instead of navigating away.
     // This has to live here rather than in `MessageBody`, whose fallback

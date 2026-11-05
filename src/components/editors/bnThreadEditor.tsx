@@ -32,6 +32,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -310,7 +312,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     }, [pendingFiles]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send (MIP-1039; see bnChatEditor).
+    const [canSend, setCanSend] = useState<boolean>(false);
 
     // Per-thread draft cache: see `useEditorDraft` for the
     // load/save/clear lifecycle. Keyed by chatType + chatId +
@@ -330,7 +333,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
 
     const sendingThreadMessage = async () => {
-        if (editor.document.length <= 1 || uploadInProgress) return;
+        if (!hasSendableContent(editor.document) || uploadInProgress) return;
         // v3 cutover. The legacy `socket.emit("thread_message", POST,
         // ...)` + manual optimistic append + addThreadMessage IDB
         // write is replaced by `channelService.send(channelUuid,
@@ -364,7 +367,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // round-trip. channelService swaps it for the server row on
             // ack and removes it on failure (the restore below then
             // puts the text back in the composer).
-            await channelService.send(channelUuid, content, {
+            await channelService.send(channelUuid, withTrailingBlank(content), {
                 parentId: threadRootUuid,
                 bodyText,
                 echo: {
@@ -385,7 +388,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         // On failure (toast already surfaced), restore the text so it isn't
         // lost — but only if the user hasn't started a new message. Re-insert
         // a JSON deep-clone, matching how useEditorDraft restores a draft.
-        if (!sent && editor.document.length <= 1) {
+        if (!sent && !hasSendableContent(editor.document)) {
             try {
                 editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
             } catch {
@@ -470,7 +473,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
@@ -480,7 +483,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={sendingThreadMessage}
                     />
 

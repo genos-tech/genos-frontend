@@ -32,6 +32,12 @@ import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import {
+    hasSendableContent,
+    withoutTrailingBlank,
+    withTrailingBlank,
+} from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -184,7 +190,9 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     );
 
     const dictionary = useBlockNoteDictionary();
-    const initialContent: any[] = message.content;
+    // Without the stored trailing blank line, or editing shows (and saves) an
+    // extra empty line at the end (MIP-1039).
+    const initialContent: any[] = withoutTrailingBlank(message.content);
     const editor = useCreateBlockNote({
         ...TAB_INDENT_OPTIONS,
         schema,
@@ -222,7 +230,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         }
     }, [selectedEmoji]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
+    const [canSend, setCanSend] = useState<boolean>(hasSendableContent(message.content));
 
     const countLines = (nodes: any[]): number => {
         let count = 0;
@@ -251,12 +259,12 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     }, [isInEdit]);
 
     useEffect(() => {
-        const newInitialContent: any[] = message.content;
+        const newInitialContent: any[] = withoutTrailingBlank(message.content);
         editor.replaceBlocks(editor.document, newInitialContent);
     }, [message]);
 
     const sendUpdatedMessage = async () => {
-        if (editor.document.length <= 1) return;
+        if (!hasSendableContent(editor.document)) return;
         // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
         // plus a sibling `socket.emit("message", PUT, ...)` mirror at
         // `messageId === 1` (the synthetic "first thread message"
@@ -273,7 +281,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         try {
             await channelService.edit(
                 v3MessageId,
-                editor.document,
+                // Stored with the trailing blank line every reader expects (MIP-1039).
+                withTrailingBlank(editor.document),
                 getFirstLine(editor.document[0])
             );
         } catch (e) {
@@ -319,7 +328,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                     }}
                     onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -330,7 +339,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 >
                     <IconButton
                         color="success"
-                        disabled={editorDocLength < 2}
+                        disabled={!canSend}
                         size="sm"
                         variant="solid"
                         sx={{

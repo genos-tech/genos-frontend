@@ -33,6 +33,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -395,7 +397,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         return count;
     };
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send (MIP-1039; see bnChatEditor).
+    const [canSend, setCanSend] = useState<boolean>(false);
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     // Mirror the local line count back up to the task page so the
@@ -446,11 +449,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     const sendComment = async () => {
         if (!socket) return;
-        if (editor.document.length <= 1) return;
+        if (!hasSendableContent(editor.document)) return;
         if (!task.id) return;
         if (uploadInProgress) return;
 
-        const commentBodySnapshot = editor.document;
+        // Stored with the trailing blank line every reader expects (MIP-1039).
+        const commentBodySnapshot = withTrailingBlank(editor.document);
 
         const optimistic = {
             projectId: task.project?.projectId || null,
@@ -467,7 +471,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskComments([...taskComments, optimistic]);
         editor.replaceBlocks(editor.document, []);
         clearDraft();
-        setEditorDocLength(0);
+        setCanSend(false);
         setNumEditorLines(0);
 
         socket.emit(
@@ -593,7 +597,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
@@ -603,7 +607,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={sendComment}
                     />
 
