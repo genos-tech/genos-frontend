@@ -1057,6 +1057,18 @@ input[type="checkbox"] {
     gap: 8px;
 }
 
+/* BlockNote 0.57 puts its floating menus (side menu, formatting toolbar, slash
+   and mention menus) in a `data-floating-ui-portal` element INSIDE the
+   container. It is an empty, zero-height block until a menu is open, but in this
+   flex column it is a second item, so the 8px gap above appears with it: hover a
+   text block, the side menu opens, and the whole editor drops 8px; type, the menu
+   hides and it jumps back (MIP-1043). The menus position themselves
+   (absolute/fixed), so the wrapper has nothing to lay out: take it out of the
+   column. */
+.bn-box.bn-container > [data-floating-ui-portal] {
+    display: contents;
+}
+
 .bn-formatting-toolbar {
     margin-inline: auto;
 }
