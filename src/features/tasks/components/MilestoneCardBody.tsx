@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { AvatarGroup, Box, Chip, LinearProgress, Typography } from "@mui/joy";
+import { AvatarGroup, Box, LinearProgress, Typography } from "@mui/joy";
 import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -11,7 +11,6 @@ import { fmt, useTranslation } from "../../../i18n";
 import { TagListProps } from "../../../types/tasks";
 import { Milestone, MilestoneAssignee } from "../sprint-milestone/types";
 import { priorityChipColors, taskMetaLabel } from "../utils/taskMeta";
-import { milestoneHasGoal } from "../utils/taskTemplates";
 import { ProjectTagChip } from "./ProjectTagChip";
 import { SprintChip } from "./SprintChip";
 
@@ -147,20 +146,6 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
             >
                 {milestone.title}
             </Typography>
-
-            {/* Nobody has written what this milestone is for (MIP-799). */}
-            {!milestoneHasGoal(milestone.description) && (
-                <Box sx={{ mb: 0.75 }}>
-                    <Chip
-                        color="warning"
-                        size="sm"
-                        title={t.tasks.sidebar.noGoalHint}
-                        variant="outlined"
-                    >
-                        {t.tasks.sidebar.noGoal}
-                    </Chip>
-                </Box>
-            )}
 
             {/* Progress: closed / total sub-tasks */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
