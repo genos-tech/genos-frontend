@@ -4,7 +4,20 @@ export type { CreateSprintInput } from "./createSprint";
 export { createSprint } from "./createSprint";
 export { deleteMilestone } from "./deleteMilestone";
 export { deleteSprint } from "./deleteSprint";
-export { loadMilestone } from "./loadMilestone";
+export type {
+    ConvertedTaskRef,
+    ConvertFailure,
+    ConvertResult,
+    MilestoneToTaskResponse,
+    TaskToMilestoneResponse,
+} from "./convertTaskMilestone";
+export {
+    convertMilestoneToTask,
+    convertTaskToMilestone,
+    MILESTONE_CONVERTED_CODE,
+} from "./convertTaskMilestone";
+export type { MilestoneLookup } from "./loadMilestone";
+export { loadMilestone, lookupMilestone } from "./loadMilestone";
 export type { LoadProjectMilestonesOptions } from "./loadProjectMilestones";
 export { loadProjectMilestones } from "./loadProjectMilestones";
 export type { LoadProjectSprintsOptions } from "./loadProjectSprints";

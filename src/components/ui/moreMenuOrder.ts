@@ -37,7 +37,15 @@ export const MORE_MENU_GROUPS = [
     },
     {
         group: "organize",
-        kinds: ["rename", "move", "tags", "members", "customizeFields", "versionHistory"],
+        kinds: [
+            "rename",
+            "move",
+            "convert",
+            "tags",
+            "members",
+            "customizeFields",
+            "versionHistory",
+        ],
     },
     { group: "content", kinds: ["unwrapAll", "unwrapCode", "import", "export"] },
     { group: "mute", kinds: ["mute"] },

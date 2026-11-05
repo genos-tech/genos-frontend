@@ -4163,6 +4163,9 @@ export const ja: DeepPartial<Messages> = {
                 newTag: "新規タグ",
                 newProject: "新規プロジェクト",
                 deleteMilestone: "マイルストーンを削除",
+                convertToTask: "タスクに変換",
+                convertToTaskConfirm:
+                    "このマイルストーンをタスクに変換しますか？マイルストーン内のタスクはサブタスクとして残ります。フォルダとスプリントは外れ、他の担当者はコラボレーターになります。",
             },
             confirmDeleteMilestone: "このマイルストーンを削除しますか？",
         },
@@ -4466,6 +4469,9 @@ export const ja: DeepPartial<Messages> = {
                 openNote: "ノートを開く",
                 newTag: "新規タグ",
                 newProject: "新規プロジェクト",
+                convertToMilestone: "マイルストーンに変換",
+                convertToMilestoneConfirm:
+                    "このタスクをマイルストーンに変換しますか？サブタスクはそのまま配下に残り、マイルストーンに含まれます。いつでもタスクに戻せます。",
                 deleteTask: "タスクを削除",
             },
         },
