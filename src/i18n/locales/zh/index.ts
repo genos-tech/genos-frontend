@@ -3779,8 +3779,9 @@ export const zh: DeepPartial<Messages> = {
                 newProject: "新建项目",
                 deleteMilestone: "删除里程碑",
                 convertToTask: "转换为任务",
-                convertToTaskConfirm:
-                    "将此里程碑转换为任务？其中的任务将作为子任务保留。文件夹和迭代将被移除，其他负责人将成为合作者。",
+                convertToTaskTitle: "将此里程碑转换为任务？",
+                convertToTaskBody:
+                    "其中的任务将作为子任务保留。文件夹和迭代将被移除，其他负责人将成为合作者。",
             },
             confirmDeleteMilestone: "删除此里程碑？",
         },
@@ -4051,8 +4052,8 @@ export const zh: DeepPartial<Messages> = {
                 newTag: "新建标签",
                 newProject: "新建项目",
                 convertToMilestone: "转换为里程碑",
-                convertToMilestoneConfirm:
-                    "将此任务转换为里程碑？其子任务保持不变，并归入该里程碑。随时可以转换回任务。",
+                convertToMilestoneTitle: "将此任务转换为里程碑？",
+                convertToMilestoneBody: "其子任务保持不变，并归入该里程碑。随时可以转换回任务。",
                 deleteTask: "删除任务",
             },
         },

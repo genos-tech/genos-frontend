@@ -1,5 +1,6 @@
 /**
- * MIP-1042: the four conversion strings exist in all seven locales.
+ * MIP-1042: the conversion strings exist in all seven locales (two labels, and
+ * a title and a body for each of the two confirmation dialogs).
  *
  * `DeepPartial<Messages>` lets a locale ship a catalog incrementally and the
  * loader merges every missing key onto English, so a locale that FORGOT a key
@@ -25,20 +26,22 @@ type Catalog = {
 };
 const strings = (c: Catalog) => ({
     convertToTask: c.tasks?.preview?.menu?.convertToTask,
-    convertToTaskConfirm: c.tasks?.preview?.menu?.convertToTaskConfirm,
+    convertToTaskTitle: c.tasks?.preview?.menu?.convertToTaskTitle,
+    convertToTaskBody: c.tasks?.preview?.menu?.convertToTaskBody,
     convertToMilestone: c.tasks?.titleBlock?.menu?.convertToMilestone,
-    convertToMilestoneConfirm: c.tasks?.titleBlock?.menu?.convertToMilestoneConfirm,
+    convertToMilestoneTitle: c.tasks?.titleBlock?.menu?.convertToMilestoneTitle,
+    convertToMilestoneBody: c.tasks?.titleBlock?.menu?.convertToMilestoneBody,
 });
 
 describe("conversion strings", () => {
-    it("English has all four", () => {
+    it("English has all six", () => {
         for (const [key, value] of Object.entries(strings(en as Catalog))) {
             expect(value, key).toBeTruthy();
         }
     });
 
     for (const [name, catalog] of Object.entries(OTHERS)) {
-        it(`${name} has all four, translated (not the English)`, () => {
+        it(`${name} has all six, translated (not the English)`, () => {
             const english = strings(en as Catalog);
             for (const [key, value] of Object.entries(strings(catalog as Catalog))) {
                 expect(value, `${name}.${key}`).toBeTruthy();
@@ -49,12 +52,27 @@ describe("conversion strings", () => {
         });
     }
 
-    it("the confirmations say what happens to the tasks, in every locale (no stray placeholders)", () => {
+    it("the old one-line confirmations are gone from every locale", () => {
+        for (const catalog of [en, ...Object.values(OTHERS)]) {
+            const c = catalog as Catalog;
+            expect(c.tasks?.preview?.menu).not.toHaveProperty("convertToTaskConfirm");
+            expect(c.tasks?.titleBlock?.menu).not.toHaveProperty("convertToMilestoneConfirm");
+        }
+    });
+
+    it("each title is a question and each body says what happens, with no stray placeholders", () => {
         for (const catalog of [en, ...Object.values(OTHERS)]) {
             const s = strings(catalog as Catalog);
-            for (const text of [s.convertToTaskConfirm, s.convertToMilestoneConfirm]) {
-                expect(text).not.toMatch(/[{}]/);
-                expect(text!.length).toBeGreaterThan(30);
+            for (const title of [s.convertToTaskTitle, s.convertToMilestoneTitle]) {
+                expect(title).toMatch(/[?？؟]$/);
+                expect(title).not.toMatch(/[{}]/);
+            }
+            for (const body of [s.convertToTaskBody, s.convertToMilestoneBody]) {
+                expect(body).not.toMatch(/[{}]/);
+                // CJK sentences are short; this only rules out an empty or title-sized body.
+                expect(body!.length).toBeGreaterThan(15);
+                // The question lives in the title; the body is statements.
+                expect(body).not.toMatch(/[?？؟]/);
             }
         }
     });

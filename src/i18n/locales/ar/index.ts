@@ -1857,8 +1857,9 @@ export const ar: DeepPartial<Messages> = {
                 newProject: "مشروع جديد",
                 deleteMilestone: "حذف المعلم",
                 convertToTask: "تحويل إلى مهمة",
-                convertToTaskConfirm:
-                    "هل تريد تحويل هذا المعلم إلى مهمة؟ ستبقى مهامه تحته كمهام فرعية. تتم إزالة المجلد والسبرنت، ويصبح بقية المكلفين متعاونين.",
+                convertToTaskTitle: "هل تريد تحويل هذا المعلم إلى مهمة؟",
+                convertToTaskBody:
+                    "ستبقى مهامه تحته كمهام فرعية. تتم إزالة المجلد والسبرنت، ويصبح بقية المكلفين متعاونين.",
             },
             confirmDeleteMilestone: "حذف هذا المعلم؟",
             loadingTask: "جارٍ تحميل المهمة...",
@@ -2004,8 +2005,9 @@ export const ar: DeepPartial<Messages> = {
                 newTag: "وسم جديد",
                 newProject: "مشروع جديد",
                 convertToMilestone: "تحويل إلى معلم",
-                convertToMilestoneConfirm:
-                    "هل تريد تحويل هذه المهمة إلى معلم؟ تبقى مهامها الفرعية تحتها وتنضم إلى المعلم. يمكنك إعادتها إلى مهمة في أي وقت.",
+                convertToMilestoneTitle: "هل تريد تحويل هذه المهمة إلى معلم؟",
+                convertToMilestoneBody:
+                    "تبقى مهامها الفرعية تحتها وتنضم إلى المعلم. يمكنك إعادتها إلى مهمة في أي وقت.",
                 deleteTask: "حذف المهمة",
             },
         },

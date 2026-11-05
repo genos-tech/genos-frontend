@@ -458,8 +458,9 @@ export const tasks = {
             newProject: "New Project",
             deleteMilestone: "Delete Milestone",
             convertToTask: "Convert to task",
-            convertToTaskConfirm:
-                "Convert this milestone to a task? Its tasks stay under it as sub-tasks. The folder and sprint are removed, and its other assignees become collaborators.",
+            convertToTaskTitle: "Convert this milestone to a task?",
+            convertToTaskBody:
+                "Its tasks stay under it as sub-tasks. The folder and sprint are removed, and its other assignees become collaborators.",
         },
         confirmDeleteMilestone: "Delete this milestone?",
     },
@@ -791,8 +792,9 @@ export const tasks = {
             newTag: "New Tag",
             newProject: "New Project",
             convertToMilestone: "Convert to milestone",
-            convertToMilestoneConfirm:
-                "Convert this task to a milestone? Its sub-tasks stay under it and join the milestone. You can convert it back at any time.",
+            convertToMilestoneTitle: "Convert this task to a milestone?",
+            convertToMilestoneBody:
+                "Its sub-tasks stay under it and join the milestone. You can convert it back at any time.",
             deleteTask: "Delete Task",
         },
     },

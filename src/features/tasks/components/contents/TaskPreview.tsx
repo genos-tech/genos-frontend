@@ -80,6 +80,7 @@ import {
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
+import { ModalConvertTaskMilestone } from "../modals/ModalConvertTaskMilestone";
 import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
@@ -1278,6 +1279,8 @@ const MilestonePreviewInner = ({
     const { accessToken } = useAuth();
     // Milestone -> task (MIP-1042).
     const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });
+    // ...which asks first, in the app's own dialog.
+    const [openConvertToTask, setOpenConvertToTask] = useState(false);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
@@ -2479,14 +2482,7 @@ const MilestonePreviewInner = ({
                                     kind: "convert",
                                     label: t.tasks.preview.menu.convertToTask,
                                     icon: <SwapHorizRoundedIcon sx={{ fontSize: 18 }} />,
-                                    onClick: async () => {
-                                        if (!confirm(t.tasks.preview.menu.convertToTaskConfirm))
-                                            return;
-                                        await convert.toTask(
-                                            milestone.milestoneId,
-                                            milestone.projectId
-                                        );
-                                    },
+                                    onClick: () => setOpenConvertToTask(true),
                                 },
                                 {
                                     id: "deleteMilestone",
@@ -2855,6 +2851,18 @@ const MilestonePreviewInner = ({
     return (
         <>
             {previewLayout}
+            <ModalConvertTaskMilestone
+                direction="toTask"
+                name={milestone.title}
+                open={openConvertToTask}
+                // Above a modal-hosted preview (UrlLinkModal), else the default.
+                zIndex={hostZIndex != null ? hostZIndex + 10 : undefined}
+                onClose={() => setOpenConvertToTask(false)}
+                onConfirm={async () => {
+                    await convert.toTask(milestone.milestoneId, milestone.projectId);
+                }}
+            />
+
             {milestone.taskId != null && milestone.projectId != null && (
                 <LazyTaskDiagram
                     myself={myself}
