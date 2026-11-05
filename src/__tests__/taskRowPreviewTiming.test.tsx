@@ -203,7 +203,7 @@ const TableHost = () => {
             teamMembers={[user]}
             useCM={{} as never}
             usePM={{ currentProject: { projectId: 1, projectTags: [] } } as never}
-            useSM={{ projectSprints: {} } as never}
+            useSM={{ projectMilestones: {}, projectSprints: {} } as never}
             useTEM={{} as never}
             useTM={useTM as never}
             useUISM={{} as never}
@@ -219,7 +219,7 @@ const BoardHost = () => {
             teamMemberProfiles={{}}
             teamMembers={[user]}
             usePM={{ currentProject: { projectId: 1, projectTags: [] } } as never}
-            useSM={{} as never}
+            useSM={{ projectMilestones: {}, projectSprints: {} } as never}
             useTM={useTM as never}
         />
     );

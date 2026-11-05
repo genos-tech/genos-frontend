@@ -11,6 +11,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { Milestone } from "../../sprint-milestone/types";
 import { SprintBoardCard } from "./SprintBoardCard";
 import { BOARD_DRAGGING_ATTR } from "./useBoardDragScrollLock";
 
@@ -106,6 +107,12 @@ type SprintBoardColumnProps = {
     // the quick-add card, which takes no drag index and stays in view while
     // the list scrolls.
     quickAddSlot?: React.ReactNode;
+    // Milestone cards draw the same body as My Tasks' "Assigned Milestones"
+    // card (MIP-1048), which needs the Milestone record (progress, tags,
+    // assignees) and the sprint's name. Both maps must be identity-stable in
+    // the parent: the column and its cards are React.memo.
+    milestonesByTaskId?: ReadonlyMap<number, Milestone>;
+    sprintNameById?: ReadonlyMap<number, string>;
 };
 
 const SprintBoardColumnImpl = ({
@@ -120,6 +127,8 @@ const SprintBoardColumnImpl = ({
     isMilestonePreviewActive,
     onQuickAddClick,
     quickAddSlot,
+    milestonesByTaskId,
+    sprintNameById,
 }: SprintBoardColumnProps) => {
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
@@ -333,14 +342,26 @@ const SprintBoardColumnImpl = ({
                                           selectedMilestoneId != null &&
                                           task.milestoneId === selectedMilestoneId
                                         : selectedTaskId === Number(task.id);
+                                    // Looked up by the row's own id (the milestone's
+                                    // backing task), not by `milestoneId`.
+                                    const milestone = isMilestoneRow
+                                        ? milestonesByTaskId?.get(Number(task.id))
+                                        : undefined;
                                     return (
                                         <SprintBoardCard
                                             key={task.id}
                                             index={index}
                                             isSelected={isSelected}
+                                            milestone={milestone}
                                             myself={myself}
                                             task={task}
                                             teamMemberProfiles={teamMemberProfiles}
+                                            sprintName={
+                                                milestone?.sprintId != null
+                                                    ? (sprintNameById?.get(milestone.sprintId) ??
+                                                      null)
+                                                    : null
+                                            }
                                             onOpenDiagram={onOpenDiagram}
                                             onTaskClick={onTaskClick}
                                         />

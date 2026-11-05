@@ -23,6 +23,7 @@ import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { milestonesByTaskIdWithLiveProgress } from "../../utils/boardMilestoneProgress";
 import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
@@ -541,6 +542,25 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // ---- Create a task from the Open column (MIP-901) --------------------
     const projectId = usePM.currentProject?.projectId ?? null;
     const projectTags = usePM.currentProject?.projectTags ?? NO_TAGS;
+    // What a milestone card needs beyond its board row (MIP-1048): the
+    // Milestone record (progress, tags, assignees, sprint) and the sprint's
+    // name. Keyed by the BACKING TASK's id, which is the board row's own id:
+    // it does not depend on the row carrying `milestoneId` (demo-seeded
+    // milestones don't). Memoised so the memoised columns and cards keep
+    // skipping renders.
+    const projectMilestoneList =
+        projectId != null ? useSM.projectMilestones[projectId] : undefined;
+    const projectSprintList = projectId != null ? useSM.projectSprints[projectId] : undefined;
+    // Progress is counted from the loaded task rows, so it follows a task
+    // dragged to Closed at once (see milestonesByTaskIdWithLiveProgress).
+    const milestonesByTaskId = useMemo(
+        () => milestonesByTaskIdWithLiveProgress(projectMilestoneList ?? [], useTM.allTasks),
+        [projectMilestoneList, useTM.allTasks]
+    );
+    const sprintNameById = useMemo(
+        () => new Map((projectSprintList ?? []).map((s) => [s.sprintId, s.name])),
+        [projectSprintList]
+    );
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const toggleQuickAdd = useCallback(() => setIsQuickAddOpen((open) => !open), []);
     const closeQuickAdd = useCallback(() => setIsQuickAddOpen(false), []);
@@ -777,9 +797,11 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                     key={column.id}
                                     column={column}
                                     isMilestonePreviewActive={isMilestonePreviewActive}
+                                    milestonesByTaskId={milestonesByTaskId}
                                     myself={myself}
                                     selectedMilestoneId={selectedMilestoneId}
                                     selectedTaskId={selectedTaskId}
+                                    sprintNameById={sprintNameById}
                                     tasks={boardTasks[column.id] || []}
                                     teamMemberProfiles={teamMemberProfiles}
                                     quickAddSlot={
