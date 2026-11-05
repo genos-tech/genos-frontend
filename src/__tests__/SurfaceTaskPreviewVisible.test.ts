@@ -48,6 +48,25 @@ describe("useSurfaceTaskPreviewVisible", () => {
         expect(result.current[0]).toBe(false);
     });
 
+    it("does NOT adopt an open that happened while it was frozen, once it comes to the foreground (MIP-981)", () => {
+        // A frozen (hidden) Home does not re-render while the preview opens
+        // elsewhere, so the hook never sees the closed -> open step: model it
+        // by going straight from "hidden, closed" to "active, open".
+        const { result, rerender } = renderHook(
+            ({ visible, active }: { visible: boolean; active: boolean }) =>
+                useSurfaceTaskPreviewVisible("chat", active, useTMWith(visible, 1)),
+            { initialProps: { active: true, visible: false } }
+        );
+        rerender({ active: false, visible: false });
+        rerender({ active: true, visible: true });
+        expect(result.current[0]).toBe(false);
+
+        // The re-baseline is one-shot: an open that happens while active counts.
+        rerender({ active: true, visible: false });
+        rerender({ active: true, visible: true });
+        expect(result.current[0]).toBe(true);
+    });
+
     it("opens when the preview is opened while this surface is in the foreground", () => {
         const { result, rerender } = renderHook(
             ({ visible, active }: { visible: boolean; active: boolean }) =>

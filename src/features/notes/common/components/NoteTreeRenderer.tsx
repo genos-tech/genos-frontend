@@ -22,6 +22,11 @@ import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     node: T;
+    // Bumped by `useNoteTreeState` whenever the tree or the selected tab
+    // changes. It is a prop ONLY so the `memo` below sees a change and
+    // re-renders the row; it must never reach a React `key`, because a key
+    // change unmounts and rebuilds the row's whole subtree (every child row
+    // and the "⋯" menu), which is what used to happen on every refresh tick.
     timestamp: string;
     currentChain: T[] | undefined;
     noteType: number;
@@ -131,13 +136,11 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
     return (
         <Box
-            key={`note-box-${node.noteId}-${timestamp}`}
             sx={{
                 position: "relative",
             }}
         >
             <ListItem
-                key={`note-${node.noteId}-${timestamp}`}
                 ref={rowRef}
                 sx={{
                     position: "relative",

@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+    PROJECT_DELETED_EVENT,
+    type ProjectDeletedDetail,
+} from "../../features/agentQA/approvedProjectWrites";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
+import { keepIfEqual } from "../../utils/keepIfEqual";
 
 export interface ProjectManagementState {
     teamProjects: ProjectProps[];
@@ -16,6 +21,10 @@ export interface ProjectManagementState {
     setCurrentProject: (project: ProjectProps | null) => void;
     loadProjectsAndTasks: (targetProjectId: number) => Promise<void>;
     refreshProjectTasks: (projectId: number) => Promise<void>;
+    // Open a project the user picked (sidebar, milestone of another project,
+    // dashboard picker). The project is the open one in the same render as
+    // the click, and its rows are refreshed from the server in the background.
+    openProject: (project: ProjectProps) => void;
     // Signal that tasks for `projectId` have just finished being written to
     // IndexedDB by `loadProjectTasks`. Consumers can react to this to fetch
     // the freshly-cached rows into React state, instead of guessing with a
@@ -28,7 +37,19 @@ export const useProjectManagement = (
     accessToken: string | null,
     currentTeamId: string
 ): ProjectManagementState => {
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
+    const [teamProjects, setTeamProjectsRaw] = useState<ProjectProps[]>([]);
+    // The one write path for the project list. A caller that re-fetches the
+    // list on a timer (the `#`-mention refresh in App.tsx) hands in a new
+    // array every time, even when the server's answer is unchanged, and a new
+    // identity re-renders the project sidebar, dashboard and routing effects.
+    // Handing back `prev` for an equal list makes that write a no-op; any
+    // real change (add / join / rename / delete / reorder) still lands as a
+    // new array. Stable identity, because it is threaded into services and
+    // memoized props.
+    const setTeamProjects = useCallback(
+        (projects: ProjectProps[]) => setTeamProjectsRaw((prev) => keepIfEqual(prev, projects)),
+        []
+    );
     const [openCreateProject, setOpenCreateProject] = useState(false);
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -166,6 +187,26 @@ export const useProjectManagement = (
         });
     };
 
+    // The click on a project. `loadProjectsAndTasks` was used for this, and
+    // it first waited for the whole `GET /project/projects/` answer to pick the
+    // project out of it, then set it as the open one, then loaded its tasks: two
+    // round trips in series, with the open project (and so the URL, the
+    // filters and the sort) unchanged until the first returned. The click
+    // already holds the project, so: set it now, refresh its rows (`refreshProjectTasks`
+    // announces them through `tsTasksLoadedToIDB`, which makes the table read
+    // them), and leave the list to its own 60 s refresh.
+    //
+    // The list's record is the complete one (labels, `isExternal`,
+    // `hostTeamName`, ...); the dashboard picker and the milestone click build
+    // partial objects, so prefer the record and fall back to what was passed.
+    const openProject = (project: ProjectProps) => {
+        const projectId = project.projectId;
+        setCurrentProject(teamProjects.find((p) => p.projectId === projectId) ?? project);
+        refreshProjectTasks(projectId).catch((error: unknown) => {
+            console.error(`Failed to refresh the tasks of project ${projectId}`, error);
+        });
+    };
+
     // Update project isPrivate if undefined
     useEffect(() => {
         if (currentProject && currentProject.isPrivate === undefined) {
@@ -177,6 +218,24 @@ export const useProjectManagement = (
             }
         }
     }, [currentProject, teamProjects]);
+
+    // The agent deleted a project (an approved `delete_project`). The server
+    // has already done it, so this only drops the browser's copies, the same
+    // two steps `ModalDeleteProject` takes on a 204 and with no call to the
+    // delete endpoint: leave the project's page if it is the open one, and
+    // take it out of the team project list (the sidebar). Functional updates,
+    // because this listener is installed once and would otherwise close over
+    // the first render's lists.
+    useEffect(() => {
+        const onProjectDeleted = (event: Event) => {
+            const projectId = (event as CustomEvent<ProjectDeletedDetail>).detail?.projectId;
+            if (typeof projectId !== "number") return;
+            setCurrentProject((current) => (current?.projectId === projectId ? null : current));
+            setTeamProjectsRaw((projects) => projects.filter((p) => p.projectId !== projectId));
+        };
+        window.addEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);
+        return () => window.removeEventListener(PROJECT_DELETED_EVENT, onProjectDeleted);
+    }, []);
 
     // Load projects and tasks when myself changes.
     //
@@ -227,6 +286,7 @@ export const useProjectManagement = (
         setCurrentProject,
         loadProjectsAndTasks,
         refreshProjectTasks,
+        openProject,
         tsTasksLoadedToIDB,
     };
 };

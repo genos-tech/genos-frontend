@@ -8,18 +8,15 @@ export const signUp = async (
     username: string,
     email: string,
     password: string,
-    isSystemUser: boolean,
     setErrorMessage?: (value: string) => void,
     inviteToken?: string
 ): Promise<SignUpResponse | SignUpVerificationResponse | undefined> => {
-    const is_system_user: boolean = isSystemUser;
     try {
         const api = nonAuthApi();
         const body: Record<string, unknown> = {
             username,
             email,
             password,
-            is_system_user,
         };
         // When present, the backend validates the token + email match,
         // auto-verifies, auto-joins the team, and returns a SignUpResponse
@@ -35,11 +32,7 @@ export const signUp = async (
                 setErrorMessage?.(m.network);
             } else if (error.response.status === 400) {
                 console.error("HTTP 400 error:", error.response.data);
-                if (isSystemUser) {
-                    setErrorMessage?.(m.duplicateName);
-                } else {
-                    setErrorMessage?.(m.duplicateEmail);
-                }
+                setErrorMessage?.(m.duplicateEmail);
             } else {
                 console.error("API error:", error.response.status, error.response.data);
                 setErrorMessage?.(m.generic);

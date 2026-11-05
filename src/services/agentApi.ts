@@ -2,18 +2,22 @@
 //
 //   POST /api/v2/agent/ask/      — start a fresh run
 //   POST /api/v2/agent/decide/   — resume a paused run (approve / reject)
+//   POST /api/v2/agent/runs/<run>/steps/<step>/undo/ — undo one approved write
+//                                                      (plain JSON, not a stream)
 //
-// Both endpoints stream NDJSON over POST and emit the same event
+// The first two endpoints stream NDJSON over POST and emit the same event
 // vocabulary. Phase 7 added `tool_call_pending_approval`; Phase 8
 // added `session_id` to the `done` event so the frontend can thread
 // conversation history across multiple /ask/ calls.
 //
 // NDJSON event types:
 //   {"type": "tool_call_start", "step", "tool_name", "arguments"}
-//   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?}
+//   {"type": "tool_call_result", "step", "tool_name", "summary", "duration_ms"?,
+//        "edited"?, "edited_arguments"?, "undo"?}
 //   {"type": "tool_call_error",  "step", "tool_name", "error", "duration_ms"?}
 //   {"type": "tool_call_pending_approval",
-//        "step", "tool_name", "arguments", "approval_token", "run_id"}
+//        "step", "tool_name", "arguments", "editable"?, "undoable"?, "undo_reason"?,
+//        "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
 //   {"type": "done", "session_id": "...", "elapsed_ms"?}   ← session_id added in Phase 8
@@ -39,27 +43,72 @@ export interface ToolCallStartPayload {
 }
 
 /** Compact ref the backend attaches to approved create_note /
- * update_note results so the client can refresh note caches and, for
- * body updates, push the new blocks into the live Yjs doc. Absent on
- * every other tool (and on older backends). */
+ * update_note / delete_note / restore_note_version results so the client
+ * can refresh note caches and, for body updates, push the new blocks into
+ * the live Yjs doc. `note_type` is the note FAMILY ("personal" covers My,
+ * Team and Shared notes). `deleted: true` marks a delete_note (no
+ * `changed_fields`); a restore reports `changed_fields: ["title", "body"]`
+ * and carries no body. Absent on every other tool (and on older
+ * backends). */
 export interface ToolResultNoteRef {
     note_id: number;
-    note_type: "personal" | "task";
+    note_type: "personal" | "task" | "chat";
     title?: string;
     changed_fields?: string[];
+    deleted?: boolean;
+}
+
+/** Ref the backend attaches to an approved delete_note_folder result: what
+ * the folder delete destroyed. All the notes are personal-family (My Notes
+ * and Team Notes both store personal-family notes). The id lists are
+ * capped by the backend; `ids_truncated: true` means they were cut, so the
+ * client reloads its lists instead of trusting them as complete. */
+export interface ToolResultNoteFolderRef {
+    folder_id: number;
+    deleted_folder_ids: number[];
+    deleted_note_ids: number[];
+    ids_truncated: boolean;
+}
+
+/** Ref the backend attaches to an approved delete_project result: the
+ * server has already deleted the project, so the client only drops its own
+ * copies (sidebar entry, open page). Absent on every other tool (and on
+ * older backends). */
+export interface ToolResultProjectRef {
+    project_id: number;
+    deleted: true;
+}
+
+/** What an approved write's result carries when what undo needs was really
+ * stored (genos-api `agent/undo.py`, `event_info`). It, and not `undoable` on
+ * the approval card, decides whether Undo is offered. `available_until` is an
+ * ISO instant. Absent on a read, on a write nothing was stored for, and on
+ * older backends. */
+export interface ToolResultUndoRef {
+    step_id: number;
+    available_until: string;
 }
 
 export interface ToolCallResultPayload {
     step: number;
     tool_name: string;
     summary: string;
+    // An approved write the person edited first (genos-api #570): `edited` is
+    // true and `edited_arguments` holds `{path: value}` for what they typed,
+    // the values that actually ran. Both are absent on a plain approve, on
+    // every read, and against older backends.
+    edited?: boolean;
+    edited_arguments?: Record<string, unknown>;
     note?: ToolResultNoteRef;
+    note_folder?: ToolResultNoteFolderRef;
     // Server-measured execution time for THIS call. The client can't
     // time it from event arrival: parallel batches emit every start
     // before any result, so arrival deltas would pin the whole batch
     // wall-clock on the first call. Absent on older backends and on
     // session-cache hits (nothing executed).
     duration_ms?: number;
+    project?: ToolResultProjectRef;
+    undo?: ToolResultUndoRef;
 }
 
 export interface ToolCallErrorPayload {
@@ -75,8 +124,41 @@ export interface PendingApprovalPayload {
     step: number;
     tool_name: string;
     arguments: Record<string, unknown>;
+    // The argument paths the person may change before approving
+    // (`title`, `updates[3].priority`): exactly the paths /decide/ accepts in
+    // `edited_args`, in display order. `[]` for a tool with nothing editable.
+    // Absent against older backends, which read the same as `[]`. At these
+    // paths `arguments` already holds the value as the tool will receive it.
+    editable?: string[];
+    // A PREDICTION of whether this call could be undone once approved
+    // (genos-api `undo.proposal`): the card says so BEFORE the person approves.
+    // `false` comes with `undo_reason`, one of `UNDO_REASONS` below. Absent
+    // against older backends, which reads as "no claim" (not as undoable). Whether
+    // Undo is shown afterwards is the result event's `undo`, never this.
+    undoable?: boolean;
+    undo_reason?: string;
     approval_token: string;
     run_id: string;
+}
+
+/** Why a proposed write can't be undone: the codes the card has copy for. A
+ * code outside the list reads as the generic one. */
+export const UNDO_REASONS = [
+    "irreversible_delete",
+    "notified_people",
+    "no_snapshot",
+    "unsupported_fields",
+    "not_yet",
+] as const;
+export type UndoReason = (typeof UNDO_REASONS)[number];
+
+// What a 422 from /decide/ says: the person's edits cannot be applied. The
+// approval was NOT spent, the run is still awaiting it, and the same token
+// still works. `fieldErrors` maps each offending path (as the client sent it)
+// to a sentence for a person (English, from the server).
+export interface EditsRejected {
+    message: string;
+    fieldErrors: Record<string, string>;
 }
 
 export type AgentEvent =
@@ -182,8 +264,19 @@ export interface DecideAgentArgs extends BaseStreamHandlers {
     runId: string;
     approvalToken: string;
     decision: "approve" | "reject";
+    // The edits made on the card: a flat `{path: new value}` patch carrying
+    // ONLY what changed. Sent on an approve and never on a reject (the server
+    // answers 400 to that); an empty patch is a plain approve and is left off
+    // the wire.
+    editedArgs?: Record<string, unknown>;
     accessToken: string | null;
     signal?: AbortSignal;
+    // Called INSTEAD of `onError` when the server refuses the edits with a 422
+    // `{error, field_errors}`. That is not a stream and not a failure of the
+    // run: nothing was approved or run, and the card still works. No other
+    // handler is called. Without this handler a 422 falls through to `onError`
+    // like any other non-OK answer.
+    onEditsRejected?: (rejection: EditsRejected) => void;
 }
 
 // One quota dimension's snapshot — `null` limit means unlimited for
@@ -385,6 +478,20 @@ export interface AgentSessionTurn {
     error: string | null;
     started_at: string;
     sources: SpotlightResult[];
+    // The turn's approved writes that have an undo, oldest first (one run can
+    // approve several): empty for none, absent against older backends. Whether
+    // one can STILL be undone is not known here, only when it is tried.
+    undo?: AgentSessionUndo[];
+}
+
+export interface AgentSessionUndo {
+    step_id: number;
+    // The step's index within its run.
+    step: number;
+    tool_name: string;
+    available_until: string;
+    // Set once the write was undone.
+    undone_at: string | null;
 }
 
 export interface AgentSessionDetail {
@@ -516,11 +623,19 @@ export async function fetchThreadSummary(args: {
 // point: the asks worth searching for are usually the ones too old to
 // scroll to. Omitted from the URL when blank so browsing stays a plain
 // cacheable GET.
+//
+// `null` when the request FAILED (a non-2xx, a dropped connection, a body that
+// isn't JSON), `[]` only when the server answered and there are none. The two
+// are different claims: callers keep the list they already show on `null` and
+// say "couldn't load" if they have nothing, instead of telling the person they
+// have no conversations (MIP-973). Same contract as `fetchAgentSessionDetail`
+// and `fetchSharedAnswers`. With no token or team there is nothing to ask, so
+// that is `[]` — both callers check before they call.
 export async function fetchAgentSessions(args: {
     accessToken: string;
     teamId: string;
     search?: string;
-}): Promise<AgentSessionSummary[]> {
+}): Promise<AgentSessionSummary[] | null> {
     if (!args.accessToken || !args.teamId) return [];
     const search = (args.search || "").trim();
     try {
@@ -529,11 +644,11 @@ export async function fetchAgentSessions(args: {
                 (search ? `&search=${encodeURIComponent(search)}` : ""),
             { headers: { Authorization: `Bearer ${args.accessToken}` } }
         );
-        if (!resp.ok) return [];
+        if (!resp.ok) return null;
         const data = (await resp.json()) as { sessions?: AgentSessionSummary[] };
         return data.sessions || [];
     } catch {
-        return [];
+        return null;
     }
 }
 
@@ -577,6 +692,171 @@ export async function fetchAgentSessionDetail(args: {
         return (await resp.json()) as AgentSessionDetail;
     } catch {
         return null;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// "What Genos remembers": delete conversations, list and withdraw the
+// answers shared with the team.
+//
+//   DELETE /agent/sessions/<id>/             one of the caller's conversations
+//   DELETE /agent/sessions/?team_id=         ALL of the caller's, in that team
+//   GET    /agent/shared-answers/?team_id=   the answers teammates may see
+//   DELETE /agent/shared-answers/<run_id>/   stop sharing one answer
+//
+// Unlike the best-effort helpers above, these return a result the caller
+// MUST branch on: a destructive request that silently "worked" (or didn't)
+// is worse than none. Each outcome the UI words differently has its own
+// `kind`, and nothing here throws.
+// ---------------------------------------------------------------------------
+
+export type AgentDeleteResult =
+    | { kind: "deleted"; deletedSessions: number; deletedRuns: number }
+    // 404: already gone, or never the caller's. Same outcome as success for
+    // the list (the row has to go), so callers treat it that way.
+    | { kind: "gone" }
+    // 409 `run_in_flight`: a conversation is still answering. The server
+    // deletes NOTHING in that case (all-or-nothing), so the caller keeps
+    // its list and asks the person to wait.
+    | { kind: "in_flight" }
+    | { kind: "error" };
+
+const readDeleteCounts = async (
+    resp: Response
+): Promise<{ deletedSessions: number; deletedRuns: number }> => {
+    try {
+        const data = (await resp.json()) as {
+            deleted_sessions?: number;
+            deleted_runs?: number;
+        };
+        return {
+            deletedSessions: Number(data.deleted_sessions) || 0,
+            deletedRuns: Number(data.deleted_runs) || 0,
+        };
+    } catch {
+        return { deletedSessions: 0, deletedRuns: 0 };
+    }
+};
+
+const classifyDelete = async (resp: Response): Promise<AgentDeleteResult> => {
+    if (resp.ok) return { kind: "deleted", ...(await readDeleteCounts(resp)) };
+    if (resp.status === 404) return { kind: "gone" };
+    if (resp.status === 409) return { kind: "in_flight" };
+    return { kind: "error" };
+};
+
+// Permanently delete one of the caller's own conversations: the session,
+// all of its turns, and the copies Genos recalls them from.
+export async function deleteAgentSession(args: {
+    accessToken: string;
+    sessionId: string;
+}): Promise<AgentDeleteResult> {
+    if (!args.accessToken || !args.sessionId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/${encodeURIComponent(args.sessionId)}/`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        return await classifyDelete(resp);
+    } catch {
+        return { kind: "error" };
+    }
+}
+
+// Permanently delete ALL of the caller's conversations in one team,
+// including ones the History list doesn't show (older than its cap, hidden
+// by the plan's history window, or started from a thread or note). The team
+// is required by the server and deliberately never defaulted: a delete-all
+// that quietly reached into the person's other teams would be the worst way
+// to get this wrong.
+export async function deleteAllAgentSessions(args: {
+    accessToken: string;
+    teamId: string;
+}): Promise<AgentDeleteResult> {
+    if (!args.accessToken || !args.teamId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/?team_id=${encodeURIComponent(args.teamId)}`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        return await classifyDelete(resp);
+    } catch {
+        return { kind: "error" };
+    }
+}
+
+// One answer the caller currently has shared with teammates. `audience_size`
+// counts the people who could be shown it, the caller included, so 1 means
+// only them. `session_id` is null for a standalone ask.
+export interface SharedAnswer {
+    run_id: string;
+    session_id: string | null;
+    team_id: string;
+    question: string;
+    answer_snippet: string;
+    started_at: string;
+    audience_size: number;
+}
+
+export interface SharedAnswersResponse {
+    // The account-wide preference; when false the server sends no answers.
+    share_answers_with_team: boolean;
+    answers: SharedAnswer[];
+    // True when the list was cut short (the server returns at most 50 and
+    // only audits a bounded number of candidates).
+    has_more: boolean;
+}
+
+// `null` on any failure, so the caller can tell "couldn't load" from "nothing
+// shared" and say so — an empty list that is really an outage would read as
+// "your answers are not shared", which is exactly the claim this page makes.
+export async function fetchSharedAnswers(args: {
+    accessToken: string;
+    teamId: string;
+}): Promise<SharedAnswersResponse | null> {
+    if (!args.accessToken || !args.teamId) return null;
+    try {
+        // Always team-scoped: omitting `team_id` returns every team's, which
+        // would show another team's answers in this team's shell.
+        const resp = await fetch(
+            `${API_BASE}/agent/shared-answers/?team_id=${encodeURIComponent(args.teamId)}`,
+            { headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (!resp.ok) return null;
+        const data = (await resp.json()) as Partial<SharedAnswersResponse>;
+        return {
+            share_answers_with_team: data.share_answers_with_team !== false,
+            answers: Array.isArray(data.answers) ? data.answers : [],
+            has_more: Boolean(data.has_more),
+        };
+    } catch {
+        return null;
+    }
+}
+
+export type WithdrawSharedAnswerResult =
+    | { kind: "withdrawn" }
+    // 404: missing or not the caller's. The row has to go either way.
+    | { kind: "gone" }
+    | { kind: "error" };
+
+// Stop sharing ONE answer. One-way on the server: the conversation stays,
+// but that answer is never collected for the team again.
+export async function withdrawSharedAnswer(args: {
+    accessToken: string;
+    runId: string;
+}): Promise<WithdrawSharedAnswerResult> {
+    if (!args.accessToken || !args.runId) return { kind: "error" };
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/shared-answers/${encodeURIComponent(args.runId)}/`,
+            { method: "DELETE", headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (resp.ok) return { kind: "withdrawn" };
+        if (resp.status === 404) return { kind: "gone" };
+        return { kind: "error" };
+    } catch {
+        return { kind: "error" };
     }
 }
 
@@ -657,18 +937,300 @@ export async function decideAgent(args: DecideAgentArgs): Promise<void> {
         args.onError(getMessages().services.agent.notSignedIn);
         return;
     }
+    // Edits ride only on an approve, and only when there is something in them:
+    // the server treats an absent / null / `{}` patch as a plain approve, and a
+    // reject that carries one as a 400 that consumes nothing.
+    const edits =
+        args.decision === "approve" && args.editedArgs && Object.keys(args.editedArgs).length > 0
+            ? args.editedArgs
+            : undefined;
     await runNdjsonStream(
         `${API_BASE}/agent/decide/`,
         {
             run_id: args.runId,
             approval_token: args.approvalToken,
             decision: args.decision,
+            ...(edits ? { edited_args: edits } : {}),
         },
         args.accessToken,
         args.signal,
-        args
+        args,
+        args.onEditsRejected
     );
 }
+
+// `undo` of a result event, only when it is whole: a real step id and a date.
+// Anything else (a field from a newer backend, a null) is no Undo at all, never
+// a control that cannot work.
+const asUndoRef = (raw: unknown): ToolResultUndoRef | undefined => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+    const { step_id, available_until } = raw as Record<string, unknown>;
+    if (typeof step_id !== "number" || !Number.isFinite(step_id)) return undefined;
+    if (typeof available_until !== "string" || !available_until) return undefined;
+    return { step_id, available_until };
+};
+
+// ---------------------------------------------------------------------------
+// Undo an approved write.
+//
+//   POST /agent/runs/<run_id>/steps/<step_id>/undo/     (genos-api `undo_apply.py`)
+//
+// No body, and nothing in it is the person's to choose: the click is the
+// authorization. A plain JSON POST like the feedback call, with the same bearer
+// token the other agent calls use (none of them refreshes a token, and neither
+// does this: the caller holds the live one).
+//
+// Never throws. The answer is either `undone` or a `refused` one that names why
+// in a code the card has a sentence for. A refusal changes NOTHING on the server.
+// ---------------------------------------------------------------------------
+
+/** A field undo reports it did not put back, because someone changed it after
+ * the write. `field` is a column name (`status`, `due_date`, ...) or `body`. */
+export interface UndoSkippedField {
+    field: string;
+    reason: string;
+}
+
+/** What the undo touched. `note_type` is the note FAMILY, as on a note ref.
+ * `comment` is what undoing `add_comment` reports (it deleted the comment). */
+export type UndoEntity =
+    | { kind: "task"; task_id: number; project_id: number | null; display_id: string }
+    | {
+          kind: "note";
+          note_type: "personal" | "task" | "chat";
+          note_id: number;
+          title: string;
+      }
+    | {
+          kind: "comment";
+          task_id: number;
+          project_id: number | null;
+          display_id: string;
+          comment_id: number;
+      };
+
+export interface UndoAnswer {
+    run_id: string;
+    step_id: number;
+    tool_name: string;
+    undone_at: string;
+    // `restored`: put back as it was, re-read it. `deleted`: what the agent made
+    // is gone, close it and drop it.
+    action: "restored" | "deleted";
+    // Column names put back (`title`, `status`, `priority`, `effort_level`,
+    // `due_date`, `start_date`, `tags`, `body`); empty for a delete.
+    restored: string[];
+    skipped: UndoSkippedField[];
+    // Null for a kind this client does not know: nothing is refreshed for it.
+    entity: UndoEntity | null;
+    // The server's English sentence: a fallback, people read localized copy.
+    summary: string;
+    // A note edit only: whether the live editor was handed the restored text
+    // (`sent`, `failed`, `skipped`, `deferred`).
+    live_editor?: string;
+}
+
+/** Why an undo was not done. The first six are the server's own `code`; the
+ * rest are decided here from the transport. */
+export type UndoRefusalCode =
+    | "not_found"
+    | "not_undoable"
+    | "already_undone"
+    | "changed_since"
+    | "expired"
+    | "permission_lost"
+    | "throttled"
+    | "unauthorized"
+    | "network"
+    | "server"
+    | "unknown";
+
+export interface UndoRefusal {
+    code: UndoRefusalCode;
+    status: number;
+    // The server's sentence (`error`, or DRF's `detail` on a throttle). English.
+    message: string | null;
+    // `changed_since` of `update_task` lists what had changed.
+    skipped: UndoSkippedField[];
+    // `changed_since` of a note may say why.
+    detail: string | null;
+    // Whether trying again can help: only where the cause is not the state of
+    // the workspace (a dropped connection, a 5xx, the throttle, a token).
+    retryable: boolean;
+}
+
+export type UndoResult =
+    | { kind: "undone"; answer: UndoAnswer }
+    | { kind: "refused"; refusal: UndoRefusal };
+
+const SERVER_UNDO_CODES: ReadonlySet<string> = new Set([
+    "not_found",
+    "not_undoable",
+    "already_undone",
+    "changed_since",
+    "expired",
+    "permission_lost",
+]);
+
+const asSkipped = (raw: unknown): UndoSkippedField[] =>
+    Array.isArray(raw)
+        ? raw.flatMap((item) => {
+              if (!item || typeof item !== "object") return [];
+              const { field, reason } = item as Record<string, unknown>;
+              return typeof field === "string"
+                  ? [{ field, reason: typeof reason === "string" ? reason : "changed_since" }]
+                  : [];
+          })
+        : [];
+
+const asNumber = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) ? v : null;
+
+const asUndoEntity = (raw: unknown): UndoEntity | null => {
+    if (!raw || typeof raw !== "object") return null;
+    const e = raw as Record<string, unknown>;
+    if (e.kind === "task" || e.kind === "comment") {
+        const taskId = asNumber(e.task_id);
+        if (taskId === null) return null;
+        const base = {
+            task_id: taskId,
+            project_id: asNumber(e.project_id),
+            display_id: typeof e.display_id === "string" ? e.display_id : "",
+        };
+        if (e.kind === "task") return { kind: "task", ...base };
+        const commentId = asNumber(e.comment_id);
+        return commentId === null ? null : { kind: "comment", ...base, comment_id: commentId };
+    }
+    if (e.kind === "note") {
+        const noteId = asNumber(e.note_id);
+        const family = e.note_type;
+        if (noteId === null || (family !== "personal" && family !== "task" && family !== "chat")) {
+            return null;
+        }
+        return {
+            kind: "note",
+            note_type: family,
+            note_id: noteId,
+            title: typeof e.title === "string" ? e.title : "",
+        };
+    }
+    return null;
+};
+
+const asUndoAnswer = (raw: unknown, fallbackStepId: number): UndoAnswer | null => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const d = raw as Record<string, unknown>;
+    if (d.action !== "restored" && d.action !== "deleted") return null;
+    return {
+        run_id: typeof d.run_id === "string" ? d.run_id : "",
+        step_id: asNumber(d.step_id) ?? fallbackStepId,
+        tool_name: typeof d.tool_name === "string" ? d.tool_name : "",
+        undone_at: typeof d.undone_at === "string" ? d.undone_at : new Date().toISOString(),
+        action: d.action,
+        restored: Array.isArray(d.restored)
+            ? d.restored.filter((f): f is string => typeof f === "string")
+            : [],
+        skipped: asSkipped(d.skipped),
+        entity: asUndoEntity(d.entity),
+        summary: typeof d.summary === "string" ? d.summary : "",
+        ...(typeof d.live_editor === "string" ? { live_editor: d.live_editor } : {}),
+    };
+};
+
+const refusal = (
+    code: UndoRefusalCode,
+    status: number,
+    extra: Partial<Omit<UndoRefusal, "code" | "status">> = {}
+): UndoResult => ({
+    kind: "refused",
+    refusal: {
+        code,
+        status,
+        message: null,
+        skipped: [],
+        detail: null,
+        retryable:
+            code === "network" ||
+            code === "server" ||
+            code === "throttled" ||
+            code === "unauthorized",
+        ...extra,
+    },
+});
+
+export async function undoAgentStep(args: {
+    runId: string;
+    stepId: number;
+    accessToken: string | null;
+    signal?: AbortSignal;
+}): Promise<UndoResult> {
+    if (!args.accessToken) return refusal("unauthorized", 0, { retryable: false });
+    let resp: Response;
+    try {
+        resp = await fetch(
+            `${API_BASE}/agent/runs/${encodeURIComponent(args.runId)}/steps/${encodeURIComponent(
+                String(args.stepId)
+            )}/undo/`,
+            {
+                method: "POST",
+                signal: args.signal,
+                headers: { Authorization: `Bearer ${args.accessToken}` },
+            }
+        );
+    } catch {
+        return refusal("network", 0);
+    }
+
+    let data: unknown = null;
+    try {
+        data = await resp.json();
+    } catch {
+        // An HTML 404 from an older backend, a gateway page: no body to read.
+    }
+
+    if (resp.ok) {
+        const answer = asUndoAnswer(data, args.stepId);
+        // A 2xx that is not an undo answer did not undo what we can name: say so
+        // rather than claim it did.
+        return answer ? { kind: "undone", answer } : refusal("unknown", resp.status);
+    }
+
+    const body = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    const message =
+        typeof body.error === "string"
+            ? body.error
+            : typeof body.detail === "string"
+              ? body.detail
+              : null;
+    const extra = {
+        message,
+        skipped: asSkipped(body.skipped),
+        detail: typeof body.detail === "string" ? body.detail : null,
+    };
+    // A DRF throttle is `{detail}` with no code; 401 is the token.
+    if (resp.status === 429) return refusal("throttled", 429, extra);
+    if (resp.status === 401) return refusal("unauthorized", 401, extra);
+    if (resp.status >= 500) return refusal("server", resp.status, extra);
+    const code = typeof body.code === "string" ? body.code : "";
+    if (SERVER_UNDO_CODES.has(code)) {
+        return refusal(code as UndoRefusalCode, resp.status, extra);
+    }
+    // No (known) code: the status is all there is. A 404 is "not found" even from
+    // a backend that has no such route.
+    return refusal(resp.status === 404 ? "not_found" : "unknown", resp.status, extra);
+}
+
+// `field_errors` as the card can use it: an object of `{path: sentence}`.
+// Entries that are not text are dropped; no object at all (not a 422 from the
+// edit check) is null, so the caller treats the response as any other failure.
+const asFieldErrors = (raw: unknown): Record<string, string> | null => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const out: Record<string, string> = {};
+    for (const [path, message] of Object.entries(raw)) {
+        if (typeof message === "string") out[path] = message;
+    }
+    return out;
+};
 
 // Shared NDJSON consumer. Used by both /ask/ and /decide/ — the wire
 // protocol is identical, only the request body differs.
@@ -677,7 +1239,8 @@ async function runNdjsonStream(
     body: unknown,
     accessToken: string,
     signal: AbortSignal | undefined,
-    handlers: BaseStreamHandlers
+    handlers: BaseStreamHandlers,
+    onEditsRejected?: (rejection: EditsRejected) => void
 ): Promise<void> {
     let resp: Response;
     try {
@@ -702,9 +1265,14 @@ async function runNdjsonStream(
 
     if (!resp.ok) {
         let message = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
+        let fieldErrors: Record<string, string> | null = null;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            // /decide/ answers 422 `{error, field_errors}` when the person's
+            // edits cannot be applied. Plain JSON, not an NDJSON stream, and
+            // not a failed run: hand it to the caller, who restores the card.
+            if (resp.status === 422) fieldErrors = asFieldErrors(data?.field_errors);
         } catch {
             try {
                 const txt = await resp.text();
@@ -712,6 +1280,10 @@ async function runNdjsonStream(
             } catch {
                 // ignore
             }
+        }
+        if (fieldErrors && onEditsRejected) {
+            onEditsRejected({ message, fieldErrors });
+            return;
         }
         handlers.onError(message);
         return;
@@ -818,8 +1390,13 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 summary: evt.summary,
+                edited: evt.edited,
+                edited_arguments: evt.edited_arguments,
                 note: evt.note,
+                note_folder: evt.note_folder,
                 duration_ms: evt.duration_ms,
+                project: evt.project,
+                undo: asUndoRef(evt.undo),
             });
             return false;
         case "tool_call_error":
@@ -835,6 +1412,12 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 arguments: evt.arguments,
+                editable: evt.editable,
+                // Only a real boolean is a claim; only a `false` has a reason.
+                ...(typeof evt.undoable === "boolean" ? { undoable: evt.undoable } : {}),
+                ...(evt.undoable === false && typeof evt.undo_reason === "string"
+                    ? { undo_reason: evt.undo_reason }
+                    : {}),
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
             });

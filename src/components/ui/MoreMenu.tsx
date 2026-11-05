@@ -5,9 +5,13 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 
 import { useTranslation } from "../../i18n";
+import { MoreMenuKind, orderMoreMenuItems } from "./moreMenuOrder";
 
 export type MoreMenuItem = {
     id: string;
+    /** Which action this is, so every menu lists it in the same place
+     *  (see `moreMenuOrder.ts`). `items` order does not decide position. */
+    kind?: MoreMenuKind;
     label: string;
     icon: React.ReactNode;
     onClick: () => void;
@@ -80,7 +84,7 @@ export const MoreMenu = ({
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const visibleItems = items.filter((item) => item.visible !== false);
+    const visibleItems = orderMoreMenuItems(items);
 
     const updateMenuPosition = useCallback(() => {
         if (!buttonRef.current) return;

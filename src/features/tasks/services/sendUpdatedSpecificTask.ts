@@ -5,12 +5,60 @@ import { cacheFullTask, invalidateCachedFullTask } from "../../../db/services/ta
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { channelService } from "../../../services/channel/channelService";
+import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
-import { emitTasksBulkChanged } from "./taskEvents";
+import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
+import { forgetInFlightTask } from "./taskLoadInFlight";
+import { TaskSaveRefusedError } from "./taskSaveRefusedError";
 import { uploadTaskAttachments } from "./uploadTaskAttachments";
+
+// PUT the task. The server's HTTP 400 is a REFUSAL: it read the request and
+// declined it, so nothing was stored and any copy of the task that already
+// shows the new value is wrong. That is the one outcome the callers cannot
+// ignore, so it leaves here as a `TaskSaveRefusedError` after the reason has
+// been shown. Scoped to this one call on purpose: a 400 from anything later
+// in the save (the attachment upload, the PM card sync) says nothing about
+// whether the task was stored.
+//
+// What the person reads, in order of preference:
+//   1. the translated sub-task message, for that one `code` (kept from
+//      before: it explains the rule better than the raw sentence);
+//   2. the server's own `error` sentence, shown as-is (English, whatever the
+//      UI language: it names the exact field and id, which is what makes it
+//      useful);
+//   3. nothing extra, when the body has no single sentence (the serializer's
+//      field -> [messages] map). The response interceptor has already raised
+//      the generic "couldn't complete" toast for every 400, so they are not
+//      left without a signal, and the caller still puts its state back.
+// A reason is emitted AFTER that generic toast, and the snackbar keeps only
+// the newest, so the reason is what stays on screen.
+const putTask = async (
+    api: NonNullable<ReturnType<typeof authApi>>,
+    body: Record<string, unknown>,
+    setErrorMessage?: (value: string) => void
+) => {
+    try {
+        return await api.put("/task/", body);
+    } catch (error: unknown) {
+        if (!axios.isAxiosError(error) || error.response?.status !== 400) throw error;
+        console.error("HTTP 400 error:", error.response?.data);
+        const data = error.response?.data as { error?: unknown; code?: unknown } | undefined;
+        const code = typeof data?.code === "string" ? data.code : null;
+        const serverText = typeof data?.error === "string" && data.error ? data.error : null;
+        const reason =
+            code === "subtask_project_move_forbidden"
+                ? getMessages().tasks.errors.subTaskProjectMoveForbidden
+                : serverText;
+        if (reason) emitRequestError("serverMessage", reason);
+        // A 400 with nothing to say keeps the callback's old fallback text.
+        setErrorMessage?.(reason ?? getMessages().tasks.errors.messageIdExists);
+        throw new TaskSaveRefusedError(reason, code);
+    }
+};
 
 export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
@@ -27,7 +75,14 @@ export const sendUpdatedSpecificTask = async (
     // metadata edit after opening a task (the "PM card stays stale" bug).
     syncCard: boolean,
     accessToken: string | null,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    options?: {
+        // False when this save does not edit the start date (a table / board
+        // inline edit), so the PUT must not mention it at all. Defaults to
+        // true: a save from the open task sends whatever the working copy
+        // holds (see `start_date` below).
+        sendStartDate?: boolean;
+    }
 ) => {
     const errMsgs = getMessages().tasks.errors;
     try {
@@ -41,7 +96,7 @@ export const sendUpdatedSpecificTask = async (
         const api = authApi(accessToken);
 
         if (api) {
-            const res = await api.put("/task/", {
+            const taskBody = {
                 task_id: updatedTask.id,
                 team: myself.teamId,
                 project: updatedTask.project.projectId,
@@ -57,14 +112,22 @@ export const sendUpdatedSpecificTask = async (
                 status: updatedTask.status.status !== null ? updatedTask.status.status : null,
                 content: updatedTask.body.length !== 0 ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
-                // Always include `start_date` so a fresh value lands
-                // on the row and an explicit clear (null) survives the
-                // backend's None-strip via partial=True. Without this,
-                // the "+ Start Date" affordance on TaskMainBlock never
-                // persisted — the PUT payload omitted the field
-                // entirely so the next refetch wiped the optimistic
-                // local update.
-                start_date: updatedTask.startDate ?? null,
+                // Three states, and the server treats them differently:
+                //   - a date string  -> set it;
+                //   - `null`         -> the user CLEARED it, and the PUT
+                //                       clears the stored date (MIP-912);
+                //   - `undefined`    -> this object does not carry the
+                //                       field (a pre-field IndexedDB entry,
+                //                       a partial task): OMIT the key so
+                //                       the stored date is left alone.
+                // This used to be `startDate ?? null`, which sent null for
+                // both of the last two. That was harmless only while the
+                // backend dropped every null; now that a null clears the
+                // date, collapsing "cleared" and "not loaded" would wipe a
+                // real date on any save from an object that never had it.
+                ...(options?.sendStartDate !== false && updatedTask.startDate !== undefined
+                    ? { start_date: updatedTask.startDate }
+                    : {}),
                 links: updatedTask.links,
                 tags: updatedTask.tags,
                 // Always send `milestone` (even when null) so the
@@ -98,7 +161,13 @@ export const sendUpdatedSpecificTask = async (
                 ...(updatedTask.collaborators != null
                     ? { collaborators: updatedTask.collaborators.map((c) => c.userId) }
                     : {}),
-            });
+            };
+            const res = await putTask(api, taskBody, setErrorMessage);
+
+            // The save's own updated time, in the form the caches use. The
+            // working copy's `updatedAt` is from BEFORE the save, so it is
+            // only the fallback for an answer that carries no readable time.
+            const savedAt = toServerTimestamp(res?.data?.task?.ts_updated_at);
 
             if (res) {
                 // Mirror the freshly-PUT task into the full-task IDB
@@ -123,8 +192,15 @@ export const sendUpdatedSpecificTask = async (
                     attachments: (updatedTask.attachments ?? []).filter(
                         (a) => a.attachment_id >= 0
                     ),
+                    // The time the server stamped on THIS save (MIP-948);
+                    // `updatedTask.updatedAt` is from when the task was
+                    // opened. Both caches below carry the same one.
+                    ...(savedAt ? { updatedAt: savedAt } : {}),
                 };
                 await cacheFullTask(cacheableTask);
+                // A `getTask` still running from before this save holds the
+                // pre-save task: nobody arriving from now on may join it.
+                if (cacheableTask.id != null) forgetInFlightTask(cacheableTask.id);
             }
 
             if (res) {
@@ -165,6 +241,7 @@ export const sendUpdatedSpecificTask = async (
             // `uploadTaskAttachments` was skipped, then `useSendUpdatedTask`'s
             // post-save merge stripped the now-orphaned negative-id rows.
             if (res && syncCard) {
+                emitTaskMetadataSaved();
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 // Rewrite the PM task-card header so the status / title /
                 // priority / assignee change fans out to every viewer of the
@@ -217,7 +294,7 @@ export const sendUpdatedSpecificTask = async (
                     priority: updatedTask.priority.priority,
                     effortLevel: updatedTask.effortLevel.level,
                     createdDate: updatedTask.createdDate || null,
-                    updatedAt: updatedTask.updatedAt || null,
+                    updatedAt: savedAt ?? (updatedTask.updatedAt || null),
                     dueDate: updatedTask.dueDate,
                     // Mirror start_date into the IDB row so the
                     // optimistic local update survives the next
@@ -230,7 +307,14 @@ export const sendUpdatedSpecificTask = async (
                     assigneeEmail: updatedTask.assignee?.userEmail ?? null,
                     assigneeName: updatedTask.assignee?.userName ?? null,
                     assigneeImgPath: updatedTask.assignee?.avatarImgPath ?? null,
-                    parentTaskId: String(updatedTask.parentTaskId),
+                    // Null stays null: `String(null)` is the text "null", and
+                    // the table finds root rows with `parentTaskId == null`, so
+                    // that row showed nowhere until a sync replaced it. A sync
+                    // that ran while this PUT was in flight has already moved
+                    // the checkpoint past the save, so none ever would
+                    // (MIP-943).
+                    parentTaskId:
+                        updatedTask.parentTaskId != null ? String(updatedTask.parentTaskId) : null,
                     threadId: updatedTask.threadId,
                     tags: updatedTask.tags,
                     concatTags: updatedTask.concatTags || null,
@@ -271,6 +355,7 @@ export const sendUpdatedSpecificTask = async (
                 // try to re-upload them.
                 if (uploadAttachments.length > 0) {
                     await invalidateCachedFullTask(updatedTask.id);
+                    forgetInFlightTask(updatedTask.id);
                 }
 
                 // A project move rewrote more than the row above: the task's
@@ -294,20 +379,14 @@ export const sendUpdatedSpecificTask = async (
             }
         }
     } catch (error: unknown) {
+        // The refusal has been reported (see `putTask`); callers put their
+        // own state back.
+        if (error instanceof TaskSaveRefusedError) throw error;
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    // The server rejects a project change on a sub-task —
-                    // the picker is read-only there, so this only fires for
-                    // a client that predates the rule or a non-picker
-                    // caller. Naming the reason beats the generic 400 text,
-                    // which claims a duplicate message id.
-                    setErrorMessage(
-                        error.response?.data?.code === "subtask_project_move_forbidden"
-                            ? errMsgs.subTaskProjectMoveForbidden
-                            : errMsgs.messageIdExists
-                    );
+                    setErrorMessage(errMsgs.messageIdExists);
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);

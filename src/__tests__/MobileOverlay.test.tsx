@@ -53,9 +53,25 @@ describe("MobileOverlay", () => {
         expect(body).toContainElement(screen.getByTestId("pane"));
     });
 
-    it("reserves the bottom strip so the pane clears the tab bar and keyboard", () => {
+    it("runs to the bottom edge: it leaves the home indicator and keyboard free, not a tab-bar band", () => {
         renderOverlay();
         const overlay = screen.getByTestId("mobile-overlay-body").parentElement as HTMLElement;
-        expect(getComputedStyle(overlay).paddingBottom).toBe("var(--mobile-bottom-inset, 60px)");
+        const padding = getComputedStyle(overlay).paddingBottom;
+        // The overlay is z-index 1300 and the tab bar 1200, so it paints over
+        // the bar: reserving the bar's height (`--mobile-bottom-inset`) left a
+        // 60px band of empty gradient under every pane.
+        expect(padding).not.toContain("--mobile-bottom-inset");
+        expect(padding).not.toContain("60px");
+        // What it does reserve: the home indicator, and the keyboard when it is
+        // up (iOS doesn't resize the layout viewport).
+        expect(padding).toBe("max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))");
+    });
+
+    it("keeps the Close row to a single compact strip", () => {
+        renderOverlay();
+        const strip = screen.getByRole("button", { name: "Close" }).parentElement as HTMLElement;
+        // 2px of padding top and bottom (theme spacing 0.25), around the 32px button.
+        expect(getComputedStyle(strip).paddingTop).toBe("2px");
+        expect(getComputedStyle(strip).paddingBottom).toBe("2px");
     });
 });

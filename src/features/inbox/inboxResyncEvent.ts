@@ -18,8 +18,8 @@
  * so, and `useInboxResync` runs the same delta sync + repaint the wake
  * refresh already uses.
  *
- * Two callers have that reason, and they are complementary rather than
- * redundant — each covers what the other cannot:
+ * Three callers have that reason. The first two are complementary rather
+ * than redundant — each covers what the other cannot:
  *   * the reminder sweep (`reminderSweep.ts`), which already arms a timer for
  *     shortly after the soonest pending reminder is due. It fires whether or
  *     not a push arrived, which is the whole point: a device whose push
@@ -27,6 +27,12 @@
  *   * a push actually arriving (`sw.js` → `pushSubscription.ts`). This one
  *     needs no timer and covers reminders nobody's timer knew about — one set
  *     on another device after this tab loaded.
+ *
+ * The third is an approved agent write that changes an inbox item on the
+ * server (`approve_join_request` / `decline_join_request` close a request).
+ * The app's own Approve button updates the row itself and relays through the
+ * socket server; a tool runs on the API and has no browser to relay from, so
+ * the row is changed behind this one's back. See `agentQA/approvedProjectWrites`.
  *
  * Same window-event shape as `selfEchoEvent.ts`, and for the same reason:
  * the senders (a service singleton, a hook, a service-worker message) have no
@@ -37,7 +43,7 @@ export const INBOX_RESYNC_EVENT = "inbox:resync";
 
 /** Why the resync was asked for. Only `"push"` changes the behaviour (see
  *  `deliveredTag`); otherwise it is here to be logged and asserted on. */
-export type InboxResyncReason = "reminder-sweep" | "push";
+export type InboxResyncReason = "reminder-sweep" | "push" | "agent-write";
 
 export interface InboxResyncDetail {
     reason: InboxResyncReason;

@@ -14,7 +14,6 @@ export interface WebSocketSyncProps {
     funcSetInboxItems: () => void;
     currentProject: ProjectProps | null;
     currentPreviewTaskId: number;
-    setIsTaskUpdatedBySomeone: (value: boolean) => void;
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     useCM: ChatManagementState;
     useTEM: TeamManagementState;

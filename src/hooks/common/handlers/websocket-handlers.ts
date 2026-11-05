@@ -28,7 +28,6 @@ export const setupWebSocketHandlers = (
     accessToken: string | null,
     currentProject: any,
     currentPreviewTaskId: number,
-    setIsTaskUpdatedBySomeone: (value: boolean) => void,
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
     useCM: ChatManagementState,

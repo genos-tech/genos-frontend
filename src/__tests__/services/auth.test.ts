@@ -60,14 +60,15 @@ describe("signUp", () => {
         const mockPost = vi.fn().mockResolvedValue({ data: mockData });
         (nonAuthApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
 
-        const result = await signUp("newuser", "new@test.com", "pass123", false);
+        const result = await signUp("newuser", "new@test.com", "pass123");
 
         expect(mockPost).toHaveBeenCalledWith("/user/signup/", {
             username: "newuser",
             email: "new@test.com",
             password: "pass123",
-            is_system_user: false,
         });
+        // The page never asks for a system user: the server makes a project's own.
+        expect(mockPost.mock.calls[0][1]).not.toHaveProperty("is_system_user");
         expect(result).toEqual(mockData);
     });
 
@@ -82,22 +83,7 @@ describe("signUp", () => {
         vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
 
         const setError = vi.fn();
-        await signUp("user", "dup@test.com", "pass", false, setError);
+        await signUp("user", "dup@test.com", "pass", setError);
         expect(setError).toHaveBeenCalledWith("Please try with a different email.");
-    });
-
-    it("should show different message for system user 400 error", async () => {
-        const mockPost = vi.fn().mockRejectedValue({
-            isAxiosError: true,
-            response: { status: 400, data: { username: "already exists" } },
-        });
-        (nonAuthApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
-
-        const axios = await import("axios");
-        vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
-
-        const setError = vi.fn();
-        await signUp("sysuser", "sys@test.com", "pass", true, setError);
-        expect(setError).toHaveBeenCalledWith("Please try with a different name.");
     });
 });

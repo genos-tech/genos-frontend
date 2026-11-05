@@ -33,6 +33,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -61,6 +63,8 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -75,11 +79,10 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 type BnTaskCommentEditorProps = {
@@ -157,9 +160,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const { mentionGroups } = useMentionGroupsContext();
 
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -179,6 +184,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             // BlockNote 0.49 moved the code-block options out of
             // `useCreateBlockNote` and into the schema. We override
             // the default plain-text codeBlock with the syntax-
@@ -214,13 +220,13 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         : undefined;
 
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
     });
 
@@ -391,7 +397,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         return count;
     };
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send (MIP-1039; see bnChatEditor).
+    const [canSend, setCanSend] = useState<boolean>(false);
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     // Mirror the local line count back up to the task page so the
@@ -442,11 +449,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     const sendComment = async () => {
         if (!socket) return;
-        if (editor.document.length <= 1) return;
+        if (!hasSendableContent(editor.document)) return;
         if (!task.id) return;
         if (uploadInProgress) return;
 
-        const commentBodySnapshot = editor.document;
+        // Stored with the trailing blank line every reader expects (MIP-1039).
+        const commentBodySnapshot = withTrailingBlank(editor.document);
 
         const optimistic = {
             projectId: task.project?.projectId || null,
@@ -463,7 +471,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskComments([...taskComments, optimistic]);
         editor.replaceBlocks(editor.document, []);
         clearDraft();
-        setEditorDocLength(0);
+        setCanSend(false);
         setNumEditorLines(0);
 
         socket.emit(
@@ -589,7 +597,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
@@ -599,7 +607,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={sendComment}
                     />
 
@@ -631,7 +639,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             {!isMobile && (
                                 <BlockTypeSelect
                                     key={"blockTypeSelect"}
-                                    items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                    items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                                 />
                             )}
 

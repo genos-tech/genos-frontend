@@ -7,7 +7,7 @@ import { Milestone, Sprint } from "../types";
  *
  * Three-level sort:
  *   1. due-date ascending (`null` / `undefined` / empty string sorted last)
- *   2. custom status order (Open → WIP → Pending → Closed → unknown)
+ *   2. custom status order (Open → WIP → Blocked → Pending → Closed → unknown)
  *   3. title ascending (locale aware)
  *
  * Each level only kicks in when the previous one tied, so groups stay
@@ -21,6 +21,22 @@ import { Milestone, Sprint } from "../types";
 // statuses don't silently bubble to the top.
 export const MILESTONE_STATUS_ORDER = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
 const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
+
+/**
+ * The statuses every project milestone load asks `GET /milestone/list/` for.
+ * The API filters by them, so a status missing here never reaches the store:
+ * "Blocked" was missing (MIP-1015), and the API sets it by itself when a
+ * dependency blocks a milestone, so those milestones vanished from the
+ * sidebar, filter, picker and dashboard. "Deleted" is left out on purpose:
+ * with no `statuses` at all the API returns "Deleted"-status rows too.
+ */
+export const MILESTONE_LIST_STATUSES: readonly string[] = [
+    "Open",
+    "WIP",
+    "Blocked",
+    "Pending",
+    "Closed",
+];
 
 // Shared palette for the milestone status chip. Mirrors the table's
 // `statusOptions` swatch in `DraggableTaskTable.tsx` so the milestone
@@ -94,7 +110,7 @@ export const ENDED_SPRINT_STATUSES = new Set<Sprint["status"]>(["completed", "ar
  *     already ended (completed/archived). Closed-without-sprint and
  *     Closed-while-sprint-data-still-loading both stay so we don't
  *     flicker rows out before sprint data arrives.
- *   - Anything else (Open / WIP / Pending in any sprint or no sprint,
+ *   - Anything else (Open / WIP / Blocked / Pending in any sprint or no sprint,
  *     plus Closed in active / upcoming sprints) stays.
  *
  * Output is sorted via `compareMilestones` (3-level: due-date → status

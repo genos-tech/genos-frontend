@@ -8,13 +8,15 @@ import { useTranslation } from "../../../../i18n";
 
 interface ChildNoteCreatorProps {
     node: any;
+    // Not read here: it is part of the props so `memo` re-renders the button
+    // when the sidebar tree changes. It used to be baked into the root `key`,
+    // which remounted the button on every bump; keep it out of keys.
     timestamp: string;
     useNM: NoteManagementState;
 }
 
 export const ChildNoteCreator = memo(function ChildNoteCreator({
     node,
-    timestamp,
     useNM,
 }: ChildNoteCreatorProps) {
     const { mode } = useColorScheme();
@@ -38,7 +40,7 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
     };
 
     return (
-        <Box key={`child-creator-${node.noteId}-${timestamp}`} sx={{ py: 0.25 }}>
+        <Box sx={{ py: 0.25 }}>
             <ListItem sx={{ py: 0 }} nested>
                 <ListItemButton
                     sx={{

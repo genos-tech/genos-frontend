@@ -291,11 +291,10 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         );
     }
 
-    // `currentWindowHeight` is still required by the MessagesPane /
-    // ThreadPane prop types (ToDoPane consumes it on the chat page),
-    // but since both panes are now flex-driven inside the modal, the
-    // value isn't used for layout. Pass 0 so we don't fake a viewport
-    // height that could mislead consumers.
+    // `currentWindowHeight` is still required by the ThreadPane prop type,
+    // but since the pane is flex-driven inside the modal, the value isn't
+    // used for layout. Pass 0 so we don't fake a viewport height that could
+    // mislead consumers.
     const modalWindowHeight = 0;
 
     if (target.kind === "chatThread") {
@@ -369,7 +368,6 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         <Box sx={{ height: "100%", width: "100%" }}>
             <MessagesPane
                 currentMainChatId={target.chatId}
-                currentWindowHeight={modalWindowHeight}
                 myself={myself}
                 paneSizePCT={100}
                 setMyself={setMyself}

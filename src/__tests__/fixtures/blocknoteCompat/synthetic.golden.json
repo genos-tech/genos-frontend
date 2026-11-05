@@ -1,0 +1,2363 @@
+{
+    "readWith": "@blocknote/core 0.57.0",
+    "docs": [
+        {
+            "name": "fixture-all-types",
+            "kind": "blocks",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "h1",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "yellow",
+                        "textColor": "red",
+                        "textAlignment": "center",
+                        "level": 1,
+                        "isToggleable": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Release notes ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "for 4 Nov",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "h2",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "level": 2,
+                        "isToggleable": true
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "A toggleable heading",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "h2c",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "hidden by default",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "h3",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "level": 3,
+                        "isToggleable": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Third level",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-styles",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "bold ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "italic ",
+                            "styles": {
+                                "italic": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "underline ",
+                            "styles": {
+                                "underline": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "strike ",
+                            "styles": {
+                                "strike": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "code ",
+                            "styles": {
+                                "code": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "red ",
+                            "styles": {
+                                "textColor": "red"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "blue bg ",
+                            "styles": {
+                                "backgroundColor": "blue"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "all of it",
+                            "styles": {
+                                "bold": true,
+                                "italic": true,
+                                "underline": true,
+                                "strike": true,
+                                "textColor": "green",
+                                "backgroundColor": "purple"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-links",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "see ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://example.org/a?b=1&c=2",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a link",
+                                    "styles": {
+                                        "bold": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "text": " and ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://docs.example.net/d/1/edit",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "another",
+                                    "styles": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-chips",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "ask ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mention",
+                            "props": {
+                                "userName": "Alice",
+                                "userId": "u-1"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mentionGroup",
+                            "props": {
+                                "groupName": "eng",
+                                "groupId": "3",
+                                "memberCount": "5"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "customEmoji",
+                            "props": {
+                                "name": "parrot",
+                                "url": "https://example.test/emoji/parrot.gif"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " about ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashTask",
+                            "props": {
+                                "projectId": "1",
+                                "taskId": "42",
+                                "displayId": "PRJ-42",
+                                "title": "Ship it",
+                                "labelMode": ""
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashNote",
+                            "props": {
+                                "noteKind": "task",
+                                "noteId": "7",
+                                "title": "Plan",
+                                "projectId": "1",
+                                "taskId": "42",
+                                "chatType": "",
+                                "chatId": "",
+                                "threadId": "0"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashChat",
+                            "props": {
+                                "chatId": "c-9",
+                                "chatName": "general"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashProject",
+                            "props": {
+                                "projectId": "1",
+                                "projectName": "Alpha"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "bl1",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "blue",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "first bullet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "bl1a",
+                            "type": "bulletListItem",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "nested bullet",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "id": "bl1a1",
+                                    "type": "bulletListItem",
+                                    "props": {
+                                        "backgroundColor": "default",
+                                        "textColor": "default",
+                                        "textAlignment": "left"
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "three deep",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "id": "bl1b",
+                            "type": "numberedListItem",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "numbered under a bullet",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "bl2",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "right"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "second bullet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "nl1",
+                    "type": "numberedListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "start": 3
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "starts at three",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "nl2",
+                    "type": "numberedListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "then four",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cl1",
+                    "type": "checkListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "checked": true
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "done",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cl2",
+                    "type": "checkListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "checked": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "not yet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "tg1",
+                    "type": "toggleListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a toggle",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "tg1c",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "inside the toggle",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "q1",
+                    "type": "quote",
+                    "props": {
+                        "backgroundColor": "gray",
+                        "textColor": "default"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a quote with ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "emphasis",
+                            "styles": {
+                                "italic": true
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cb1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "typescript"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "const x: number = 1;\nconsole.log(x);",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cb2",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "text"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain text, no highlighting",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "dv1",
+                    "type": "divider",
+                    "props": {},
+                    "children": []
+                },
+                {
+                    "id": "tb1",
+                    "type": "table",
+                    "props": {
+                        "textColor": "default"
+                    },
+                    "content": {
+                        "type": "tableContent",
+                        "columnWidths": [200, null, 120],
+                        "headerRows": 1,
+                        "rows": [
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Name",
+                                                "styles": {
+                                                    "bold": true
+                                                }
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Owner",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Status",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Import",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "merged cell",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 2,
+                                            "rowspan": 1,
+                                            "backgroundColor": "green",
+                                            "textColor": "default",
+                                            "textAlignment": "center"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Export",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Bob",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "in progress",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "children": []
+                },
+                {
+                    "id": "im1",
+                    "type": "image",
+                    "props": {
+                        "textAlignment": "center",
+                        "backgroundColor": "default",
+                        "name": "diagram.png",
+                        "url": "https://example.test/files/diagram.png",
+                        "caption": "An invented diagram",
+                        "showPreview": true,
+                        "previewWidth": 300
+                    },
+                    "children": []
+                },
+                {
+                    "id": "fl1",
+                    "type": "file",
+                    "props": {
+                        "backgroundColor": "default",
+                        "name": "report.pdf",
+                        "url": "https://example.test/files/report.pdf",
+                        "caption": "Quarterly report"
+                    },
+                    "children": []
+                },
+                {
+                    "id": "al1",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "default",
+                        "type": "warning"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Heads up: warning alert",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al2",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "center",
+                        "textColor": "default",
+                        "type": "error"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "An error alert",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al3",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "blue",
+                        "type": "info"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "For information",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al4",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "default",
+                        "type": "success"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "It worked",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-aligned",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "orange",
+                        "textColor": "default",
+                        "textAlignment": "right"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "right aligned on a tinted background",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "deep0",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "level 0",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "deep1",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "level 1",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "id": "deep2",
+                                    "type": "paragraph",
+                                    "props": {
+                                        "backgroundColor": "default",
+                                        "textColor": "default",
+                                        "textAlignment": "left"
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "level 2",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "id": "deep3",
+                                            "type": "paragraph",
+                                            "props": {
+                                                "backgroundColor": "default",
+                                                "textColor": "default",
+                                                "textAlignment": "left"
+                                            },
+                                            "content": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "level 3",
+                                                    "styles": {}
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "p-empty",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b",
+            "blockCount": 27,
+            "types": {
+                "heading": 3,
+                "paragraph": 11,
+                "bulletListItem": 4,
+                "numberedListItem": 3,
+                "checkListItem": 2,
+                "toggleListItem": 1,
+                "quote": 1,
+                "codeBlock": 2,
+                "divider": 1,
+                "table": 1,
+                "image": 1,
+                "file": 1,
+                "alert": 4
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b"
+            },
+            "markdown": "# **Release notes** for 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold** *italic* underline ~~strike~~ `code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n  * nested bullet\n    * three deep\n  1. numbered under a bullet\n* second bullet\n\n3. starts at three\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n\n\n| **Name**   | Owner       | Status      |\n| ---------- | ----------- | ----------- |\n| Import     | merged cell |             |\n| Export     | Bob         | in progress |\n\n<figure><img alt=\"diagram.png\" src=\"https://example.test/files/diagram.png\"><figcaption>An invented diagram</figcaption></figure>\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
+            "markdownHash": "1443ddaab197eb959fcc12326409a40f557c4f48306bef72d16d7650b6ec8948",
+            "reparsedHash": "3514cb37a2968a77bd2be453f2f90db03057abd10c9fe8fa41da124d3ab3d776"
+        },
+        {
+            "name": "fixture-empty",
+            "kind": "blocks",
+            "ok": true,
+            "idsGenerated": true,
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f",
+            "blockCount": 1,
+            "types": {
+                "paragraph": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
+            },
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
+        },
+        {
+            "name": "fixture-one-empty-paragraph",
+            "kind": "blocks",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "e1",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c",
+            "blockCount": 1,
+            "types": {
+                "paragraph": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c"
+            },
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
+        },
+        {
+            "name": "fixture-code-only",
+            "kind": "blocks",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "c1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "sql"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "select 1;",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                }
+            ],
+            "blocksHash": "53c4b602e7c72377797a50e43c495e6c729347ba64e5dae8be44b257d2e193fd",
+            "blockCount": 1,
+            "types": {
+                "codeBlock": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "53c4b602e7c72377797a50e43c495e6c729347ba64e5dae8be44b257d2e193fd"
+            },
+            "markdown": "```sql\nselect 1;\n```\n",
+            "markdownHash": "5a914ce0482357c5215287d2a72fc2a131247bd1a1e8fa67b8a25e37283f0bd3",
+            "reparsedHash": "668c65418f484d22f39d73f9d2113269c106f42531490f61b154dea42060f1ff"
+        },
+        {
+            "name": "fixture-math-diagram",
+            "kind": "blocks",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "math-heading",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Energy ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "E=mc^2"
+                        },
+                        {
+                            "type": "text",
+                            "text": " in joules, and a ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "\\frac{a}{b}"
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "x^2 + y^2 = z^2",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block-multiline",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a = b \\\\\nc = d",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-block",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "graph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-empty",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "id": "math-in-list",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a list item with a block below it",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "math-in-list-child",
+                            "type": "mathBlock",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a^2",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ],
+            "blocksHash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770",
+            "blockCount": 6,
+            "types": {
+                "paragraph": 1,
+                "mathBlock": 3,
+                "diagram": 2,
+                "bulletListItem": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770"
+            },
+            "markdown": "Energy $E=mc^2$ **in joules, and a** $\\frac{a}{b}$\n\n```math\nx^2 + y^2 = z^2\n```\n\n```math\na = b \\\\\nc = d\n```\n\n```mermaid\ngraph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]\n```\n\n```mermaid\n```\n\n* a list item with a block below it\n\n```math\na^2\n```\n",
+            "markdownHash": "aa6d874c41a80694cd74c528ab6e9cb4728e16327cb0877a60701390bde20244",
+            "reparsedHash": "d60f64410f6346a5cd67dd260c9f3748947b21c9e8e2305961c74e9a7a248942"
+        },
+        {
+            "name": "fixture-all-types:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "h1",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "yellow",
+                        "textColor": "red",
+                        "textAlignment": "center",
+                        "level": 1,
+                        "isToggleable": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Release notes ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "for 4 Nov",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "h2",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "level": 2,
+                        "isToggleable": true
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "A toggleable heading",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "h2c",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "hidden by default",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "h3",
+                    "type": "heading",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "level": 3,
+                        "isToggleable": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Third level",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-styles",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "bold ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "italic ",
+                            "styles": {
+                                "italic": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "underline ",
+                            "styles": {
+                                "underline": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "strike ",
+                            "styles": {
+                                "strike": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "code ",
+                            "styles": {
+                                "code": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "red ",
+                            "styles": {
+                                "textColor": "red"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "blue bg ",
+                            "styles": {
+                                "backgroundColor": "blue"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": "all of it",
+                            "styles": {
+                                "bold": true,
+                                "italic": true,
+                                "underline": true,
+                                "strike": true,
+                                "textColor": "green",
+                                "backgroundColor": "purple"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-links",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "see ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://example.org/a?b=1&c=2",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a link",
+                                    "styles": {
+                                        "bold": true
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "text": " and ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "link",
+                            "href": "https://docs.example.net/d/1/edit",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "another",
+                                    "styles": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-chips",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "ask ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mention",
+                            "props": {
+                                "userName": "Alice",
+                                "userId": "u-1"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "mentionGroup",
+                            "props": {
+                                "groupName": "eng",
+                                "groupId": "3",
+                                "memberCount": "5"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "customEmoji",
+                            "props": {
+                                "name": "parrot",
+                                "url": "https://example.test/emoji/parrot.gif"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " about ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashTask",
+                            "props": {
+                                "projectId": "1",
+                                "taskId": "42",
+                                "displayId": "PRJ-42",
+                                "title": "Ship it",
+                                "labelMode": ""
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashNote",
+                            "props": {
+                                "noteKind": "task",
+                                "noteId": "7",
+                                "title": "Plan",
+                                "projectId": "1",
+                                "taskId": "42",
+                                "chatType": "",
+                                "chatId": "",
+                                "threadId": "0"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashChat",
+                            "props": {
+                                "chatId": "c-9",
+                                "chatName": "general"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": " ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "hashProject",
+                            "props": {
+                                "projectId": "1",
+                                "projectName": "Alpha"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "bl1",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "blue",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "first bullet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "bl1a",
+                            "type": "bulletListItem",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "nested bullet",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "id": "bl1a1",
+                                    "type": "bulletListItem",
+                                    "props": {
+                                        "backgroundColor": "default",
+                                        "textColor": "default",
+                                        "textAlignment": "left"
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "three deep",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "id": "bl1b",
+                            "type": "numberedListItem",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "numbered under a bullet",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "bl2",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "right"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "second bullet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "nl1",
+                    "type": "numberedListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "start": 3
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "starts at three",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "nl2",
+                    "type": "numberedListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "then four",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cl1",
+                    "type": "checkListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "checked": true
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "done",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cl2",
+                    "type": "checkListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "checked": false
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "not yet",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "tg1",
+                    "type": "toggleListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a toggle",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "tg1c",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "inside the toggle",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "q1",
+                    "type": "quote",
+                    "props": {
+                        "backgroundColor": "gray",
+                        "textColor": "default"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a quote with ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "text",
+                            "text": "emphasis",
+                            "styles": {
+                                "italic": true
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cb1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "typescript"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "const x: number = 1;\nconsole.log(x);",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "cb2",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "text"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "plain text, no highlighting",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "dv1",
+                    "type": "divider",
+                    "props": {},
+                    "children": []
+                },
+                {
+                    "id": "tb1",
+                    "type": "table",
+                    "props": {
+                        "textColor": "default"
+                    },
+                    "content": {
+                        "type": "tableContent",
+                        "columnWidths": [200, null, 120],
+                        "headerRows": 1,
+                        "rows": [
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Name",
+                                                "styles": {
+                                                    "bold": true
+                                                }
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Owner",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Status",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Import",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "merged cell",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 2,
+                                            "rowspan": 1,
+                                            "backgroundColor": "green",
+                                            "textColor": "default",
+                                            "textAlignment": "center"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "cells": [
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Export",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Bob",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    },
+                                    {
+                                        "type": "tableCell",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "in progress",
+                                                "styles": {}
+                                            }
+                                        ],
+                                        "props": {
+                                            "colspan": 1,
+                                            "rowspan": 1,
+                                            "backgroundColor": "default",
+                                            "textColor": "default",
+                                            "textAlignment": "left"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "children": []
+                },
+                {
+                    "id": "im1",
+                    "type": "image",
+                    "props": {
+                        "textAlignment": "center",
+                        "backgroundColor": "default",
+                        "name": "diagram.png",
+                        "url": "https://example.test/files/diagram.png",
+                        "caption": "An invented diagram",
+                        "showPreview": true,
+                        "previewWidth": 300
+                    },
+                    "children": []
+                },
+                {
+                    "id": "fl1",
+                    "type": "file",
+                    "props": {
+                        "backgroundColor": "default",
+                        "name": "report.pdf",
+                        "url": "https://example.test/files/report.pdf",
+                        "caption": "Quarterly report"
+                    },
+                    "children": []
+                },
+                {
+                    "id": "al1",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "default",
+                        "type": "warning"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Heads up: warning alert",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al2",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "center",
+                        "textColor": "default",
+                        "type": "error"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "An error alert",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al3",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "blue",
+                        "type": "info"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "For information",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "al4",
+                    "type": "alert",
+                    "props": {
+                        "textAlignment": "left",
+                        "textColor": "default",
+                        "type": "success"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "It worked",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "p-aligned",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "orange",
+                        "textColor": "default",
+                        "textAlignment": "right"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "right aligned on a tinted background",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "deep0",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "level 0",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "deep1",
+                            "type": "paragraph",
+                            "props": {
+                                "backgroundColor": "default",
+                                "textColor": "default",
+                                "textAlignment": "left"
+                            },
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "level 1",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "id": "deep2",
+                                    "type": "paragraph",
+                                    "props": {
+                                        "backgroundColor": "default",
+                                        "textColor": "default",
+                                        "textAlignment": "left"
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": "level 2",
+                                            "styles": {}
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "id": "deep3",
+                                            "type": "paragraph",
+                                            "props": {
+                                                "backgroundColor": "default",
+                                                "textColor": "default",
+                                                "textAlignment": "left"
+                                            },
+                                            "content": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "level 3",
+                                                    "styles": {}
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "p-empty",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b",
+            "blockCount": 27,
+            "types": {
+                "heading": 3,
+                "paragraph": 11,
+                "bulletListItem": 4,
+                "numberedListItem": 3,
+                "checkListItem": 2,
+                "toggleListItem": 1,
+                "quote": 1,
+                "codeBlock": 2,
+                "divider": 1,
+                "table": 1,
+                "image": 1,
+                "file": 1,
+                "alert": 4
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "9fa9d4e474437f0ec562aba5e338d7341e6c2f0950b8f4af9ba2fdf7c826400b"
+            },
+            "markdown": "# **Release notes** for 4 Nov\n\n## A toggleable heading\n\nhidden by default\n\n### Third level\n\nplain **bold** *italic* underline ~~strike~~ `code `red blue bg ***~~all of it~~***\n\nsee **[a link](https://example.org/a?b=1&c=2)** and [another](https://docs.example.net/d/1/edit)\n\nask @Alice @eng :parrot: about #PRJ-42 · Ship it #Plan #general #Alpha\n\n* first bullet\n  * nested bullet\n    * three deep\n  1. numbered under a bullet\n* second bullet\n\n3. starts at three\n4. then four\n\n* [x] done\n* [ ] not yet\n\na toggle\n\ninside the toggle\n\n> a quote with *emphasis*\n\n```typescript\nconst x: number = 1;\nconsole.log(x);\n```\n\n```text\nplain text, no highlighting\n```\n\n\n\n| **Name**   | Owner       | Status      |\n| ---------- | ----------- | ----------- |\n| Import     | merged cell |             |\n| Export     | Bob         | in progress |\n\n<figure><img alt=\"diagram.png\" src=\"https://example.test/files/diagram.png\"><figcaption>An invented diagram</figcaption></figure>\n\n[report.pdf](https://example.test/files/report.pdf)\n\nQuarterly report\n\nHeads up: warning alert\n\nAn error alert\n\nFor information\n\nIt worked\n\nright aligned on a tinted background\n\nlevel 0\n\nlevel 1\n\nlevel 2\n\nlevel 3\n",
+            "markdownHash": "1443ddaab197eb959fcc12326409a40f557c4f48306bef72d16d7650b6ec8948",
+            "reparsedHash": "3514cb37a2968a77bd2be453f2f90db03057abd10c9fe8fa41da124d3ab3d776"
+        },
+        {
+            "name": "fixture-empty:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "5e19878c-2088-46bb-9e32-341613fc1e52",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "6b336e3bb53ab17127f9f424a818518a2824a43b68da5523a9d6842038fe4d75",
+            "blockCount": 1,
+            "types": {
+                "paragraph": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "6b336e3bb53ab17127f9f424a818518a2824a43b68da5523a9d6842038fe4d75"
+            },
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
+        },
+        {
+            "name": "fixture-one-empty-paragraph:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "e1",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ],
+            "blocksHash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c",
+            "blockCount": 1,
+            "types": {
+                "paragraph": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "6813ac96f866917a655c5e944d7db696950cc89b539e3e804c86d3450a41b61c"
+            },
+            "markdown": "\n",
+            "markdownHash": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "reparsedHash": "b9a90700a5d627dbdeb7878289795ec6178334a4b9ea3ed99ac07724f052357f"
+        },
+        {
+            "name": "fixture-code-only:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "c1",
+                    "type": "codeBlock",
+                    "props": {
+                        "language": "sql"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "select 1;",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                }
+            ],
+            "blocksHash": "53c4b602e7c72377797a50e43c495e6c729347ba64e5dae8be44b257d2e193fd",
+            "blockCount": 1,
+            "types": {
+                "codeBlock": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "53c4b602e7c72377797a50e43c495e6c729347ba64e5dae8be44b257d2e193fd"
+            },
+            "markdown": "```sql\nselect 1;\n```\n",
+            "markdownHash": "5a914ce0482357c5215287d2a72fc2a131247bd1a1e8fa67b8a25e37283f0bd3",
+            "reparsedHash": "668c65418f484d22f39d73f9d2113269c106f42531490f61b154dea42060f1ff"
+        },
+        {
+            "name": "fixture-math-diagram:yjs",
+            "kind": "yjs",
+            "ok": true,
+            "blocks": [
+                {
+                    "id": "math-heading",
+                    "type": "paragraph",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Energy ",
+                            "styles": {}
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "E=mc^2"
+                        },
+                        {
+                            "type": "text",
+                            "text": " in joules, and a ",
+                            "styles": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "math",
+                            "props": {},
+                            "content": "\\frac{a}{b}"
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "x^2 + y^2 = z^2",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "math-block-multiline",
+                    "type": "mathBlock",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a = b \\\\\nc = d",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-block",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "graph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "id": "diagram-empty",
+                    "type": "diagram",
+                    "props": {},
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "id": "math-in-list",
+                    "type": "bulletListItem",
+                    "props": {
+                        "backgroundColor": "default",
+                        "textColor": "default",
+                        "textAlignment": "left"
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "a list item with a block below it",
+                            "styles": {}
+                        }
+                    ],
+                    "children": [
+                        {
+                            "id": "math-in-list-child",
+                            "type": "mathBlock",
+                            "props": {},
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "a^2",
+                                    "styles": {}
+                                }
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ],
+            "blocksHash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770",
+            "blockCount": 6,
+            "types": {
+                "paragraph": 1,
+                "mathBlock": 3,
+                "diagram": 2,
+                "bulletListItem": 1
+            },
+            "roundTrip": {
+                "equal": true,
+                "hash": "c68afc63bea1b7ef0f0ac43999d37a9d4ad6fcf08684d11b34f528cb31e4c770"
+            },
+            "markdown": "Energy $E=mc^2$ **in joules, and a** $\\frac{a}{b}$\n\n```math\nx^2 + y^2 = z^2\n```\n\n```math\na = b \\\\\nc = d\n```\n\n```mermaid\ngraph TD\n  A[Start] --> B{Ok?}\n  B -->|yes| C[Done]\n```\n\n```mermaid\n```\n\n* a list item with a block below it\n\n```math\na^2\n```\n",
+            "markdownHash": "aa6d874c41a80694cd74c528ab6e9cb4728e16327cb0877a60701390bde20244",
+            "reparsedHash": "d60f64410f6346a5cd67dd260c9f3748947b21c9e8e2305961c74e9a7a248942"
+        }
+    ]
+}

@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { invalidateCachedFullTask } from "../../../db/services/task-full.service";
 import { authApi } from "../../../services/api";
+import { forgetInFlightTask } from "./taskLoadInFlight";
 
 export const deleteTaskAttachment = async (
     taskId: number,
@@ -20,6 +21,7 @@ export const deleteTaskAttachment = async (
             // re-delete attempt 404s (the row is already gone
             // server-side).
             await invalidateCachedFullTask(taskId);
+            forgetInFlightTask(taskId);
             return res;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

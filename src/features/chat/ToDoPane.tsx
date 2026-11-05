@@ -5,7 +5,6 @@ import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
 import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -14,11 +13,20 @@ import { ModalManageTodoTags } from "./components/todo/ModalManageTodoTags";
 import { ModalScheduledTodos } from "./components/todo/ModalScheduledTodos";
 import { TodoMentionsProvider } from "./components/todo/titleMentions";
 import { TodoGroupCard } from "./components/todo/TodoGroupCard";
+import { TodoTagFilterBar } from "./components/todo/TodoTagFilterBar";
 import {
     countCompletedToday,
     isCompletedToday,
     selectCompletedToday,
 } from "./utils/todoCompletion";
+import {
+    filterGroupsByTags,
+    itemTagKey,
+    pruneTagFilter,
+    readTagFilter,
+    TagFilterKey,
+    writeTagFilter,
+} from "./utils/todoTagFilter";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -39,10 +47,9 @@ type ToDoPaneProps = {
     socket: Socket | null;
     useUISM: UIStateManagementState;
     useTG: UseTodoGroupsState;
-    currentWindowHeight: number;
     // True when rendered inside UrlLinkModal (ModalTodoView): the pane
-    // fills its container instead of the viewport math below, and the
-    // Pro-Tip footer is dropped to give the list room.
+    // fills its container (`height: 100%`) rather than sharing a flex column
+    // with a header above it.
     hostedInModal?: boolean;
     // Deep-link target: scroll the owning group into view and highlight
     // the item (highlight threads down to TodoItemRow).
@@ -58,13 +65,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         socket,
         useUISM,
         useTG,
-        currentWindowHeight,
         hostedInModal = false,
         focusTarget: focusTargetProp,
     } = props;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // Below `md`, the app-wide mobile cut-off. Only the header reads it.
     const isMobile = useIsMobile();
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -149,14 +156,45 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // day you can still add to. Without it, starting tomorrow's list and
     // then completing the placeholder would make the whole card disappear
     // from the Incomplete tab, taking the only place to add to it with it.
+    // The tag filter (MIP-584) narrows the items first, so the chips below it
+    // (All / Incomplete / Completed today) each apply to what the tags left.
+    // Their counts stay the whole list's, like a filter row's usually do.
+    const [tagFilter, setTagFilterState] = useState<Set<TagFilterKey>>(readTagFilter);
+    const setTagFilter = (next: Set<TagFilterKey>) => {
+        setTagFilterState(next);
+        writeTagFilter(next);
+    };
+    // A tag deleted since the filter was saved can't be un-picked from the bar,
+    // so it would filter the list for ever. Dropped as soon as the tags load.
+    useEffect(() => {
+        if (categories.length === 0) return;
+        setTagFilterState((prev) => {
+            const pruned = pruneTagFilter(prev, categories);
+            if (pruned.size === prev.size) return prev;
+            writeTagFilter(pruned);
+            return pruned;
+        });
+    }, [categories]);
+    const toggleTag = (key: TagFilterKey) => {
+        const next = new Set(tagFilter);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        setTagFilter(next);
+    };
+
+    const tagFilteredGroups = useMemo(
+        () => filterGroupsByTags(groups, tagFilter),
+        [groups, tagFilter]
+    );
+
     const displayGroups = useMemo(() => {
-        if (showCompletedToday) return selectCompletedToday(groups);
-        if (!useCM.showOnlyInCompleteTodos) return groups;
+        if (showCompletedToday) return selectCompletedToday(tagFilteredGroups);
+        if (!useCM.showOnlyInCompleteTodos) return tagFilteredGroups;
         const openDays = new Set([getLocalCurrentDate(), getLocalTomorrowDate()]);
-        return groups
+        return tagFilteredGroups
             .map((g) => ({ ...g, items: g.items.filter((i) => !i.isCompleted) }))
             .filter((g) => g.items.length > 0 || openDays.has(g.localDate));
-    }, [groups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
+    }, [tagFilteredGroups, useCM.showOnlyInCompleteTodos, showCompletedToday]);
 
     const totalItems = useMemo(() => groups.reduce((a, g) => a + g.items.length, 0), [groups]);
     const completedItems = totalItems - incompleteCount;
@@ -241,6 +279,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         if (showCompletedToday && !isCompletedToday(item)) {
             setShowCompletedToday(false);
         }
+        // And on a tag filter that hides it: the jump must not land on nothing.
+        if (tagFilter.size > 0 && !tagFilter.has(itemTagKey(item, groups))) {
+            setTagFilter(new Set());
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [focusTarget, groups, useCM.showOnlyInCompleteTodos]);
 
@@ -251,20 +293,15 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         <TodoMentionsProvider>
             <Box
                 sx={{
-                    // On mobile: no own height at all. The ancestors already
-                    // subtract both the 64px chat header and the bottom tab
-                    // bar (`outerWrapper` caps at 100dvh - --mobile-bottom-
-                    // inset), so asking for `100dvh - 64px` here made this
-                    // box about a tab-bar TALLER than the space it was given
-                    // — and since the list below sized itself independently,
-                    // the surplus showed up as dead gradient under the last
-                    // card. `flex: 1` + `minHeight: 0` takes exactly the room
-                    // left after the header/banner siblings instead.
-                    ...(hostedInModal
-                        ? { height: "100%" }
-                        : isMobile
-                          ? { flex: 1, minHeight: 0 }
-                          : { height: "calc(100dvh - 64px)" }),
+                    // The pane takes what is left in its column after the chat
+                    // header (and the retention banner when it shows), as it
+                    // always did on mobile. On desktop it asked for
+                    // `100dvh - 64px`, which is only right while the pane is alone
+                    // in a full-height column: in a split view it is taller than
+                    // its half and its bottom runs off the window. `minHeight: 0`
+                    // lets it shrink below its content so the list scrolls. The
+                    // modal has no such column, so it fills its container.
+                    ...(hostedInModal ? { height: "100%" } : { flex: 1, minHeight: 0 }),
                     display: "flex",
                     flexDirection: "column",
                     background: isDark
@@ -326,20 +363,26 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 >
                                     {t.chat.todoPane.myTodos}
                                 </Typography>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.45)"
-                                            : "rgba(0,0,0,0.45)",
-                                        fontSize: "0.75rem",
-                                    }}
-                                >
-                                    {fmt(t.chat.todoPane.completedOfTotal, {
-                                        completed: completedItems,
-                                        total: totalItems,
-                                    })}
-                                </Typography>
+                                {/* The "N of M items completed" line is a
+                                    second row under the title; it is left
+                                    out on a phone to keep the header short
+                                    (the filter chips below show counts). */}
+                                {!isMobile && (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.45)",
+                                            fontSize: "0.75rem",
+                                        }}
+                                    >
+                                        {fmt(t.chat.todoPane.completedOfTotal, {
+                                            completed: completedItems,
+                                            total: totalItems,
+                                        })}
+                                    </Typography>
+                                )}
                             </Stack>
                         </Stack>
 
@@ -431,13 +474,29 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             buttons side by side read as one control split in
                             half. */}
                             {!tomorrowExists && (
-                                <AppTooltip title={t.chat.todoPane.createTomorrowTooltip}>
+                                <AppTooltip
+                                    title={
+                                        // On a phone the label is gone, so the
+                                        // hint says what the button was called.
+                                        isMobile
+                                            ? t.chat.todoPane.startTomorrow
+                                            : t.chat.todoPane.createTomorrowTooltip
+                                    }
+                                >
                                     <IconButton
+                                        // Icon-only on a phone, where the
+                                        // label made it the largest control
+                                        // in the header. Named for assistive
+                                        // tech, since nothing is printed.
+                                        {...(isMobile
+                                            ? { "aria-label": t.chat.todoPane.startTomorrow }
+                                            : {})}
                                         size="sm"
                                         sx={{
                                             borderRadius: "10px",
-                                            px: 1.5,
-                                            py: 0.75,
+                                            ...(isMobile
+                                                ? { px: 0, py: 0 }
+                                                : { px: 1.5, py: 0.75 }),
                                             fontSize: "13px",
                                             fontWeight: 600,
                                             gap: 0.5,
@@ -457,7 +516,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         onClick={handleCreateTomorrowGroup}
                                     >
                                         <AddIcon sx={{ fontSize: "18px" }} />
-                                        {t.chat.todoPane.startTomorrow}
+                                        {!isMobile && t.chat.todoPane.startTomorrow}
                                     </IconButton>
                                 </AppTooltip>
                             )}
@@ -513,6 +572,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             </Chip>
                         </Stack>
                     </Stack>
+                    <TodoTagFilterBar
+                        categories={categories}
+                        isDark={isDark}
+                        selected={tagFilter}
+                        onClear={() => setTagFilter(new Set())}
+                        onToggle={toggleTag}
+                    />
                 </Box>
 
                 {/* Group list */}
@@ -538,6 +604,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         reminderByItemId={reminderByItemId}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        tagFilter={tagFilter}
                                         useCM={useCM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
@@ -553,24 +620,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 );
                             }}
                             style={{
-                                // Mobile joins the modal on `100%`: the pane
-                                // root is now a flex child sized by its
-                                // container, and the wrapper Box below is
-                                // `flex: 1, minHeight: 0`, so "fill the
-                                // leftover" is exact — no viewport subtraction
-                                // to drift out of step with the real chrome
-                                // (which is what left dead space here).
-                                // The keyboard is still handled: it inflates
-                                // `--mobile-bottom-inset`, which shortens
-                                // `outerWrapper`, which shortens this list.
-                                // Split panes are desktop-only, so the 0.43
-                                // branch can't apply on mobile.
-                                height:
-                                    hostedInModal || isMobile
-                                        ? "100%"
-                                        : useCM.isSubChatVisible
-                                          ? `${(currentWindowHeight - 250) * 0.43}px`
-                                          : `${currentWindowHeight - 250}px`,
+                                // Fill the wrapper above, which takes what the pane
+                                // has left after its header. This was
+                                // `currentWindowHeight - 250` (x 0.43 in a split
+                                // view), the 250 being the chat header + pane
+                                // header + footer added up by hand; the tag filter
+                                // bar made the header taller than that sum and the
+                                // list ran past the box that clips it.
+                                // The mobile keyboard still shortens it: it
+                                // inflates `--mobile-bottom-inset`, which shortens
+                                // the app's outer wrapper.
+                                height: "100%",
                             }}
                         />
                     ) : (
@@ -582,77 +642,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         />
                     )}
                 </Box>
-
-                {/* Pro Tip footer — dropped in the modal, and on mobile, to give
-                the list room. It's a static hint about asking the agent; on a
-                phone it costs a permanent band of a short screen to say
-                something you only need to read once. */}
-                {hostedInModal || isMobile ? null : (
-                    <Box
-                        sx={{
-                            mt: "auto",
-                            px: 2.5,
-                            py: 2,
-                            borderTop: "1px solid",
-                            borderColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            background: isDark
-                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-500-rgb), 0.08) 100%)"
-                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.06) 0%, rgba(var(--gp-brand-500-rgb), 0.06) 100%)",
-                        }}
-                    >
-                        <Stack alignItems="center" direction="row" spacing={2}>
-                            <Box
-                                sx={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: "10px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexShrink: 0,
-                                    backgroundColor: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                }}
-                            >
-                                <TipsAndUpdatesRoundedIcon
-                                    sx={{
-                                        fontSize: 22,
-                                        color: isDark
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                    }}
-                                />
-                            </Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography
-                                    level="title-sm"
-                                    sx={{
-                                        fontWeight: 600,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.85)"
-                                            : "rgba(0,0,0,0.8)",
-                                        mb: 0.25,
-                                    }}
-                                >
-                                    {t.chat.todoPane.proTip}
-                                </Typography>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.55)"
-                                            : "rgba(0,0,0,0.55)",
-                                    }}
-                                >
-                                    {t.chat.todoPane.spotlightTip}
-                                </Typography>
-                            </Box>
-                        </Stack>
-                    </Box>
-                )}
 
                 <ModalManageTodoTags
                     categories={categories}

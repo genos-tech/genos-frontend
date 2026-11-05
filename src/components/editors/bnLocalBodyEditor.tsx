@@ -55,6 +55,13 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+    genosTableOptions,
+    withGenosBlockSlashItems,
+} from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -69,11 +76,10 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnLocalBodyEditorProps = {
     useTEM: TeamManagementState;
@@ -116,8 +122,10 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const schema = useMemo(() => {
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 mention: CreateMentionSpec(
                     useTEM.teamMemberProfiles,
                     socket,
@@ -135,6 +143,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
             },
             blockSpecs: {
                 ...remainingBlockSpecs,
+                ...genosExtraBlockSpecs,
                 codeBlock: createCodeBlockSpec(codeBlockOptions),
             },
         });
@@ -147,13 +156,18 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
+        withGenosBlockSlashItems(
+            editor,
+            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
+        );
 
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
+        tables: genosTableOptions,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
-        extensions: [codeBlockEnterShortcut],
+        extensions: [codeFenceInputRule, linkHostCaption, tabStaysInEditor],
         dictionary,
     });
 
@@ -215,7 +229,7 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
                                 items={[
-                                    ...getBlockTypeSelectItemsWithCodeBlock(editor.dictionary),
+                                    ...getBlockTypeSelectItemsForDocuments(editor),
                                     {
                                         name: t.common.editor.alertBlock,
                                         type: "alert",

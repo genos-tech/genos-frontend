@@ -1,4 +1,4 @@
-import { ElementType, ReactElement } from "react";
+import { ElementType, ReactElement, useCallback, useRef } from "react";
 import {
     createReactInlineContentSpec,
     DefaultReactSuggestionItem,
@@ -38,6 +38,12 @@ import {
     TASK_PALETTE,
     type MentionPalette,
 } from "./mentionPalettes";
+import {
+    HASH_CHAT_SPEC_CONFIG,
+    HASH_NOTE_SPEC_CONFIG,
+    HASH_PROJECT_SPEC_CONFIG,
+    HASH_TASK_SPEC_CONFIG,
+} from "./schemaSpecConfigs";
 
 // Per-entity palettes now live in the BlockNote-free `mentionPalettes`
 // module. Re-exported here for existing consumers (LightMessageBody) that
@@ -114,157 +120,107 @@ const HashChip = ({
 // "#PRJ-12" when it was picked by its id (`labelMode: "id"`, MIP-739); the
 // hover card shows the title either way.
 export const CreateHashTaskSpec = () =>
-    createReactInlineContentSpec(
-        {
-            type: "hashTask",
-            propSchema: {
-                projectId: { default: "" },
-                taskId: { default: "" },
-                displayId: { default: "" },
-                title: { default: "" },
-                labelMode: { default: "" },
-            },
-            content: "none",
-        },
-        {
-            render: (props) => {
-                const { projectId, taskId, displayId, title, labelMode } =
-                    props.inlineContent.props;
-                const label = hashTaskLabel({ taskId, displayId, title, labelMode });
-                const href = entityRefToHref({ entityType: "task", projectId, taskId });
-                return (
-                    <AppTooltip
-                        enterDelay={250}
-                        placement="top-start"
-                        surface="none"
-                        title={
-                            <TaskMentionHoverCard
-                                displayId={displayId || taskId}
-                                projectId={projectId}
-                                taskId={taskId}
-                                title={title}
-                            />
-                        }
-                    >
-                        {/* Plain <span> anchor: Joy's Tooltip clones its child
+    createReactInlineContentSpec(HASH_TASK_SPEC_CONFIG, {
+        render: (props) => {
+            const { projectId, taskId, displayId, title, labelMode } = props.inlineContent.props;
+            const label = hashTaskLabel({ taskId, displayId, title, labelMode });
+            const href = entityRefToHref({ entityType: "task", projectId, taskId });
+            return (
+                <AppTooltip
+                    enterDelay={250}
+                    placement="top-start"
+                    surface="none"
+                    title={
+                        <TaskMentionHoverCard
+                            displayId={displayId || taskId}
+                            projectId={projectId}
+                            taskId={taskId}
+                            title={title}
+                        />
+                    }
+                >
+                    {/* Plain <span> anchor: Joy's Tooltip clones its child
                             and injects props (ref, hover handlers, a stray
                             `component`) — landing them on the styled chip
                             dropped its styling, so anchor on a bare span and
                             keep the HashChip inside untouched. */}
-                        <span>
-                            <HashChip href={href} label={label} palette={TASK_PALETTE} />
-                        </span>
-                    </AppTooltip>
-                );
-            },
-        }
-    );
+                    <span>
+                        <HashChip href={href} label={label} palette={TASK_PALETTE} />
+                    </span>
+                </AppTooltip>
+            );
+        },
+    });
 
 // Note — chip shows "#<note title>". `noteKind` drives the URL shape.
 export const CreateHashNoteSpec = () =>
-    createReactInlineContentSpec(
-        {
-            type: "hashNote",
-            propSchema: {
-                noteKind: { default: "my" },
-                noteId: { default: "" },
-                title: { default: "" },
-                projectId: { default: "" },
-                taskId: { default: "" },
-                chatType: { default: "" },
-                chatId: { default: "" },
-                threadId: { default: "0" },
-            },
-            content: "none",
+    createReactInlineContentSpec(HASH_NOTE_SPEC_CONFIG, {
+        render: (props) => {
+            const copy = getMessages().common.editor;
+            const { noteKind, noteId, title, projectId, taskId, chatType, chatId, threadId } =
+                props.inlineContent.props;
+            let ref: HashEntityRef;
+            if (noteKind === "task") {
+                ref = { entityType: "note", noteKind: "task", projectId, taskId, noteId };
+            } else if (noteKind === "chat") {
+                ref = {
+                    entityType: "note",
+                    noteKind: "chat",
+                    chatType: chatType || "gm",
+                    chatId,
+                    threadId: threadId || "0",
+                    noteId,
+                };
+            } else if (noteKind === "shared") {
+                ref = { entityType: "note", noteKind: "shared", noteId };
+            } else if (noteKind === "team") {
+                ref = { entityType: "note", noteKind: "team", noteId };
+            } else {
+                ref = { entityType: "note", noteKind: "my", noteId };
+            }
+            return (
+                <HashChip
+                    href={entityRefToHref(ref)}
+                    label={title || copy.hashNoteFallback}
+                    palette={NOTE_PALETTE}
+                />
+            );
         },
-        {
-            render: (props) => {
-                const copy = getMessages().common.editor;
-                const { noteKind, noteId, title, projectId, taskId, chatType, chatId, threadId } =
-                    props.inlineContent.props;
-                let ref: HashEntityRef;
-                if (noteKind === "task") {
-                    ref = { entityType: "note", noteKind: "task", projectId, taskId, noteId };
-                } else if (noteKind === "chat") {
-                    ref = {
-                        entityType: "note",
-                        noteKind: "chat",
-                        chatType: chatType || "gm",
-                        chatId,
-                        threadId: threadId || "0",
-                        noteId,
-                    };
-                } else if (noteKind === "shared") {
-                    ref = { entityType: "note", noteKind: "shared", noteId };
-                } else if (noteKind === "team") {
-                    ref = { entityType: "note", noteKind: "team", noteId };
-                } else {
-                    ref = { entityType: "note", noteKind: "my", noteId };
-                }
-                return (
-                    <HashChip
-                        href={entityRefToHref(ref)}
-                        label={title || copy.hashNoteFallback}
-                        palette={NOTE_PALETTE}
-                    />
-                );
-            },
-        }
-    );
+    });
 
 // Chat — GM only; chip shows "#<gm name>".
 export const CreateHashChatSpec = () =>
-    createReactInlineContentSpec(
-        {
-            type: "hashChat",
-            propSchema: {
-                chatId: { default: "" },
-                chatName: { default: "" },
-            },
-            content: "none",
+    createReactInlineContentSpec(HASH_CHAT_SPEC_CONFIG, {
+        render: (props) => {
+            const copy = getMessages().common.editor;
+            const { chatId, chatName } = props.inlineContent.props;
+            const href = entityRefToHref({ entityType: "chat", chatType: "gm", chatId });
+            return (
+                <HashChip
+                    href={href}
+                    label={chatName || copy.hashChatFallback}
+                    palette={CHAT_PALETTE}
+                />
+            );
         },
-        {
-            render: (props) => {
-                const copy = getMessages().common.editor;
-                const { chatId, chatName } = props.inlineContent.props;
-                const href = entityRefToHref({ entityType: "chat", chatType: "gm", chatId });
-                return (
-                    <HashChip
-                        href={href}
-                        label={chatName || copy.hashChatFallback}
-                        palette={CHAT_PALETTE}
-                    />
-                );
-            },
-        }
-    );
+    });
 
 // Project — chip shows "#<project name>".
 export const CreateHashProjectSpec = () =>
-    createReactInlineContentSpec(
-        {
-            type: "hashProject",
-            propSchema: {
-                projectId: { default: "" },
-                projectName: { default: "" },
-            },
-            content: "none",
+    createReactInlineContentSpec(HASH_PROJECT_SPEC_CONFIG, {
+        render: (props) => {
+            const copy = getMessages().common.editor;
+            const { projectId, projectName } = props.inlineContent.props;
+            const href = entityRefToHref({ entityType: "project", projectId });
+            return (
+                <HashChip
+                    href={href}
+                    label={projectName || copy.hashProjectFallback}
+                    palette={PROJECT_PALETTE}
+                />
+            );
         },
-        {
-            render: (props) => {
-                const copy = getMessages().common.editor;
-                const { projectId, projectName } = props.inlineContent.props;
-                const href = entityRefToHref({ entityType: "project", projectId });
-                return (
-                    <HashChip
-                        href={href}
-                        label={projectName || copy.hashProjectFallback}
-                        palette={PROJECT_PALETTE}
-                    />
-                );
-            },
-        }
-    );
+    });
 
 // ── Suggestion menu ─────────────────────────────────────────────────────
 
@@ -598,39 +554,51 @@ export const HashMentionMenuItems = (
 export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
     const data = useHashMentionData();
     const accessToken = useOptionalAccessToken();
+    // BlockNote re-runs `getItems` whenever its IDENTITY changes (its loader
+    // effect depends on `[query, getItems]`). A function made in this render
+    // changed on every render, so every unrelated data update (a socket event,
+    // the list refresh below) re-ran the loader, including the server lookup for
+    // a typed id that matches nothing: a `#kds-652` left in the editor sent a
+    // request per render, and the `refresh()` inside the loader fed the next
+    // render (MIP-1038). So the function is made once per editor and reads the
+    // latest data through this ref. The menu still shows the newest lists on the
+    // next keystroke, which is what the comment on `data.refresh()` promises.
+    const latest = useRef({ data, accessToken });
+    latest.current = { data, accessToken };
+    const getItems = useCallback(
+        async (query: string) => {
+            const { data, accessToken } = latest.current;
+            // Kick a (throttled, app-wide) re-pull of the backing
+            // lists: note metadata and the project list are otherwise
+            // loaded once per page load, so a teammate's note was
+            // missing here until a reload.
+            //
+            // Deliberately NOT awaited. `data` is the latest render's value, and
+            // BlockNote only re-runs `getItems` when the QUERY changes: awaiting
+            // would add a network beat to menu-open latency and still return the
+            // old list. Firing it here means the fetch lands while the user is
+            // still typing the name, so the next keystroke shows the item.
+            data.refresh();
+            rememberHashQuery(editor, query);
+            const items = filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query);
+            // A whole id that matches no listed task may be a closed
+            // one: ask for it (MIP-739). Awaited, unlike the refresh
+            // above — it's one row, and only for an exact id.
+            const id = fullDisplayIdIn(query);
+            if (id && data.myself && !items.some((item) => displayIdEquals(id, item.title))) {
+                const row = await lookupTaskByDisplayId(data.myself, id, accessToken);
+                if (row) return [lookedUpTaskItem(editor, row, data.projects), ...items];
+            }
+            return items;
+        },
+        [editor]
+    );
     return (
         <SuggestionMenuController
+            getItems={getItems}
             minQueryLength={2}
             suggestionMenuComponent={MentionSuggestionMenu}
             triggerCharacter={"#"}
-            getItems={async (query) => {
-                // Kick a (throttled, app-wide) re-pull of the backing
-                // lists: note metadata and the project list are otherwise
-                // loaded once per page load, so a teammate's note was
-                // missing here until a reload.
-                //
-                // Deliberately NOT awaited. `data` is this render's
-                // closure, and BlockNote only re-runs `getItems` when the
-                // QUERY changes — awaiting would add a network beat to
-                // menu-open latency and still return the old list. Firing
-                // it here means the fetch lands while the user is still
-                // typing the name, so the next keystroke shows the item.
-                data.refresh();
-                rememberHashQuery(editor, query);
-                const items = filterAndRankSuggestionItems(
-                    HashMentionMenuItems(editor, data),
-                    query
-                );
-                // A whole id that matches no listed task may be a closed
-                // one: ask for it (MIP-739). Awaited, unlike the refresh
-                // above — it's one row, and only for an exact id.
-                const id = fullDisplayIdIn(query);
-                if (id && data.myself && !items.some((item) => displayIdEquals(id, item.title))) {
-                    const row = await lookupTaskByDisplayId(data.myself, id, accessToken);
-                    if (row) return [lookedUpTaskItem(editor, row, data.projects), ...items];
-                }
-                return items;
-            }}
         />
     );
 };

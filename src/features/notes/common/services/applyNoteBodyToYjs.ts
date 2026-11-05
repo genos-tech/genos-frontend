@@ -28,15 +28,23 @@
 //
 // The conversion needs a BlockNoteEditor only as a schema holder
 // (`editor.pmSchema` exists from construction; no mount, no React).
-// The DEFAULT schema suffices: agent-written bodies come from the
-// backend's markdown_to_blocks (paragraphs / headings ≤3 / lists /
-// bold / italic / links only). Diff-deleting old nodes of custom types
-// (mentions, alerts) is a pure Yjs op that needs no schema knowledge.
+// That schema must be the NOTE EDITORS' (`createHeadlessNoteEditor`),
+// not BlockNote's default: the converter throws "node type X not found
+// in schema" on any block or inline type the schema lacks, and an agent
+// body can carry `@` mentions and `#` references (MIP-708), and the
+// body of a note a person wrote can carry alerts and team emoji. Under
+// the default schema every such body failed here (MIP-949). Diff-
+// deleting OLD nodes of custom types is a pure Yjs op, but writing NEW
+// ones needs the schema.
 
-import { BlockNoteEditor, type Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
+
+import {
+    createHeadlessNoteEditor,
+    type HeadlessNoteEditor,
+} from "../../../../components/editors/headlessNoteSchema";
 
 const COLLAB_URL = import.meta.env.VITE_COLLAB_URL;
 
@@ -49,17 +57,13 @@ const FLUSH_TIMEOUT_MS = 5000;
 const FLUSH_POLL_MS = 100;
 
 // Schema holder for blocksToYXmlFragment — headless by design (never
-// mounted), created once and reused across applies.
-let schemaHolder: BlockNoteEditor | null = null;
-const getSchemaHolder = (): BlockNoteEditor => {
-    if (!schemaHolder) {
-        schemaHolder = BlockNoteEditor.create({
-            // No collaboration option: an unmounted editor never binds a
-            // fragment, so a collab-configured one would silently not
-            // write. The fragment conversion below is editor-independent.
-            initialContent: [{ type: "paragraph" }],
-        });
-    }
+// mounted), created once and reused across applies. No collaboration
+// option on it: an unmounted editor never binds a fragment, so a
+// collab-configured one would silently not write. The fragment
+// conversion below is editor-independent.
+let schemaHolder: HeadlessNoteEditor | null = null;
+export const getSchemaHolder = (): HeadlessNoteEditor => {
+    if (!schemaHolder) schemaHolder = createHeadlessNoteEditor();
     return schemaHolder;
 };
 
@@ -70,7 +74,11 @@ const getSchemaHolder = (): BlockNoteEditor => {
 export const applyBlocksToFragment = (blocks: unknown[], fragment: Y.XmlFragment): void => {
     const replacement =
         Array.isArray(blocks) && blocks.length > 0 ? blocks : [{ type: "paragraph" }];
-    blocksToYXmlFragment(getSchemaHolder(), replacement as Block[], fragment);
+    blocksToYXmlFragment(
+        getSchemaHolder(),
+        replacement as HeadlessNoteEditor["document"],
+        fragment
+    );
 };
 
 export const noteDocumentName = (
@@ -149,7 +157,10 @@ export const applyNoteBodyToYjs = async ({
             poll();
         });
         return flushed ? "applied" : "failed";
-    } catch {
+    } catch (error) {
+        // Not silent: a body the schema can't convert used to land here
+        // with no trace (MIP-949), and the caller only sees "failed".
+        console.warn("applyNoteBodyToYjs: could not apply the body", documentName, error);
         return "failed";
     } finally {
         try {

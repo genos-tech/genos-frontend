@@ -246,6 +246,18 @@ describe("DeveloperSettingsSection", () => {
             expect(screen.queryByLabelText(ALLOW)).not.toBeInTheDocument();
         });
 
+        it("names what it covers: what can't be undone, and what changes who has access", async () => {
+            const user = userEvent.setup();
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await pickScope(user, /Read & write/);
+            expect(
+                screen.getByLabelText(
+                    /can't be undone or that change who has access \(deleting calendar events, milestones, sprints, notes and note folders; adding people to projects or approving their requests to join; sharing notes\)/i
+                )
+            ).toBeInTheDocument();
+        });
+
         it("is off on a write key unless ticked", async () => {
             const user = userEvent.setup();
             createApiKey.mockResolvedValue({ status: "created", key: "gnos_X", created: KEY });

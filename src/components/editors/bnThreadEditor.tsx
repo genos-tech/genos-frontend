@@ -32,6 +32,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -60,6 +62,8 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -74,11 +78,10 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
@@ -149,9 +152,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -171,6 +176,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             // BlockNote 0.49 moved the code-block options out of
             // `useCreateBlockNote` and into the schema. We override
             // the default plain-text codeBlock with the syntax-
@@ -206,13 +212,13 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
     });
 
@@ -306,7 +312,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     }, [pendingFiles]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send (MIP-1039; see bnChatEditor).
+    const [canSend, setCanSend] = useState<boolean>(false);
 
     // Per-thread draft cache: see `useEditorDraft` for the
     // load/save/clear lifecycle. Keyed by chatType + chatId +
@@ -326,7 +333,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
 
     const sendingThreadMessage = async () => {
-        if (editor.document.length <= 1 || uploadInProgress) return;
+        if (!hasSendableContent(editor.document) || uploadInProgress) return;
         // v3 cutover. The legacy `socket.emit("thread_message", POST,
         // ...)` + manual optimistic append + addThreadMessage IDB
         // write is replaced by `channelService.send(channelUuid,
@@ -360,7 +367,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // round-trip. channelService swaps it for the server row on
             // ack and removes it on failure (the restore below then
             // puts the text back in the composer).
-            await channelService.send(channelUuid, content, {
+            await channelService.send(channelUuid, withTrailingBlank(content), {
                 parentId: threadRootUuid,
                 bodyText,
                 echo: {
@@ -381,7 +388,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         // On failure (toast already surfaced), restore the text so it isn't
         // lost — but only if the user hasn't started a new message. Re-insert
         // a JSON deep-clone, matching how useEditorDraft restores a draft.
-        if (!sent && editor.document.length <= 1) {
+        if (!sent && !hasSendableContent(editor.document)) {
             try {
                 editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
             } catch {
@@ -466,7 +473,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
@@ -476,7 +483,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={sendingThreadMessage}
                     />
 
@@ -493,7 +500,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                             />
 
                             <BasicTextStyleButton

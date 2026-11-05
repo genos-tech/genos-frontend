@@ -153,10 +153,20 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                     </MenuItem>
                 )}
                 {(onToggleNotes || onAddSubitem) && <ListDivider />}
-                {/* First, and on every open row including children: a to-do
-                    you have to remember to look at is the case this whole
-                    feature exists for. `selected` marks a pending one so the
-                    state is visible before reading the label. */}
+                {/* From here the order is the shared one (moreMenuOrder.ts):
+                    share, personal, create, organize, delete. */}
+                {!isChild && (
+                    <MenuItem onClick={onCopyLink}>
+                        <LinkRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography level="body-sm">
+                            {linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
+                        </Typography>
+                    </MenuItem>
+                )}
+                {/* Offered on every open row including children: a to-do you
+                    have to remember to look at is the case this whole feature
+                    exists for. `selected` marks a pending one so the state is
+                    visible before reading the label. */}
                 {onRemindMe && (
                     <MenuItem selected={Boolean(reminderLabel)} onClick={onRemindMe}>
                         <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />
@@ -165,22 +175,14 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                         </Typography>
                     </MenuItem>
                 )}
-                {/* Next to the reminder, not down with copy-link/create-task:
-                    both of these answer "not now" about the same to-do —
-                    nudge me later, or carry it to tomorrow — whereas those
-                    two take the to-do somewhere else. */}
+                {/* Next to the reminder, not down with create-task: both of
+                    these answer "not now" about the same to-do — nudge me
+                    later, or carry it to tomorrow — whereas create-task
+                    takes the to-do somewhere else. */}
                 {onMoveToTomorrow && (
                     <MenuItem onClick={onMoveToTomorrow}>
                         <EventRepeatRoundedIcon sx={{ fontSize: 16 }} />
                         <Typography level="body-sm">{t.chat.todoPane.moveToTomorrow}</Typography>
-                    </MenuItem>
-                )}
-                {!isChild && (
-                    <MenuItem onClick={onCopyLink}>
-                        <LinkRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">
-                            {linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
-                        </Typography>
                     </MenuItem>
                 )}
                 {!isChild && (

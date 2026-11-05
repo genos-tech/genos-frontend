@@ -16,6 +16,10 @@ import { Socket } from "socket.io-client";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import {
+    PinnableBubbleAction,
+    useBubbleActionsPreference,
+} from "../../../../hooks/common/useBubbleActionsPreference";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -26,6 +30,7 @@ import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
+import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
 
 type BubbleMoreMenuProps = {
     accessToken: string | null;
@@ -56,6 +61,15 @@ type BubbleMoreMenuProps = {
      *  mounted for as long as this is `true`; see `overlayOpen` below. */
     onMenuOpenChange?: (open: boolean) => void;
 };
+
+const toPinnedAction = (item: MoreMenuItem): PinnedBubbleAction => ({
+    active: item.active,
+    danger: item.danger,
+    icon: item.icon,
+    id: item.id as PinnableBubbleAction,
+    label: item.label,
+    onClick: item.onClick,
+});
 
 // Chat type to URL path mapping
 const CHAT_TYPE_PATH: Record<number, string> = {
@@ -96,6 +110,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
+    const { pinned } = useBubbleActionsPreference();
 
     // This menu — and the dialogs below it — live inside the bubble's
     // hover toolbar, which the parent unmounts as soon as the cursor
@@ -180,11 +195,13 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const isProjectChat = chat.chatType === 3;
     const canDelete = message.numReplies < 2 && isOwnMessage;
 
-    // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
+    // Keys sorted alphabetically (case-insensitive) per `sort-keys`. Display
+    // order comes from `kind` (via `splitPinned`), not from this array.
     const items: MoreMenuItem[] = [
         {
             icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             id: "openTask",
+            kind: "openTask",
             label: t.chat.messageActions.openTask,
             onClick: handleOpenTaskClick,
             visible: isProjectChat && isSystemMessage && message.taskId !== null,
@@ -192,6 +209,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "reply",
+            kind: "reply",
             label: isProjectChat
                 ? t.chat.messageActions.addCommentToTask
                 : t.chat.messageActions.replyInThread,
@@ -201,6 +219,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: isFlagged,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             id: "flag",
+            kind: "flag",
             label: isFlagged
                 ? t.chat.messageActions.removeFlag
                 : t.chat.messageActions.flagForLater,
@@ -214,6 +233,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: reminder !== null,
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
             id: "remindMe",
+            kind: "remindMe",
             label: reminder
                 ? fmt(t.chat.messageActions.reminderSetFor, {
                       time: formatReminderTime(new Date(reminder.remindAt), locale),
@@ -228,6 +248,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "copyLink",
+            kind: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
             onClick: handleCopyLinkClick,
         },
@@ -235,6 +256,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             active: unwrapAll,
             icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             id: "unwrapAll",
+            kind: "unwrapAll",
             label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
             onClick: () => setUnwrapAll(!unwrapAll),
         },
@@ -248,6 +270,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         {
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             id: "edit",
+            kind: "edit",
             label: t.chat.messageActions.editMessage,
             onClick: handleEditClick,
             visible: isOwnMessage,
@@ -256,19 +279,29 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             danger: true,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             id: "delete",
+            kind: "delete",
             label: t.chat.messageActions.deleteMessage,
             onClick: handleDeleteClick,
             visible: canDelete,
         },
     ];
 
+    // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
+    // "…"; the rest stay in it. The dialogs below belong to this component,
+    // not to the menu, so a pinned Delete / Remind me opens the same ones.
+    const { pinnedItems, menuItems } = splitPinned(items, pinned);
+
     return (
-        <Box sx={{ position: "relative" }}>
-            <MoreMenu
-                items={items}
-                placement={isSent ? "bottom-end" : "bottom-start"}
-                onOpenChange={setMenuOpen}
-            />
+        <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.5 }}>
+            <BubblePinnedActions actions={pinnedItems.map(toPinnedAction)} />
+            {/* Nothing left to put in the menu (every offered action is pinned). */}
+            {menuItems.length > 0 && (
+                <MoreMenu
+                    items={menuItems}
+                    placement={isSent ? "bottom-end" : "bottom-start"}
+                    onOpenChange={setMenuOpen}
+                />
+            )}
 
             <ModalDeleteMessage
                 accessToken={accessToken}

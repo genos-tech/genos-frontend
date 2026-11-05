@@ -40,6 +40,7 @@ import { addTask } from "../../services/addTask";
 import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
+import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { useDagreLayout } from "../hooks/useDagreLayout";
@@ -757,6 +758,9 @@ const CanvasInner = ({
             //    cache — that was the root cause of "diagram edits
             //    don't show up in the preview until full page refresh".
             void invalidateCachedFullTask(taskId);
+            // Also stop sharing a `getTask` that is already running: the
+            // reload just below must start its own, not join a pre-edit one.
+            forgetInFlightTask(taskId);
 
             // 4. If the edited task IS the currently-previewed one,
             //    actively re-fetch + re-set `currentPreviewTask` so the

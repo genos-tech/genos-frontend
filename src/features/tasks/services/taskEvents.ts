@@ -42,6 +42,23 @@ export const onTaskTouched = (cb: (detail: TaskTouchedDetail) => void): (() => v
     return () => window.removeEventListener(EVENT_NAME, handler);
 };
 
+// "A task's or milestone's metadata (status, assignee, ...) was just
+// written." Separate from `genos:task-touched` because that one's `update`
+// also fires on every body autosave, and this one has to mean a save the
+// sidebar's Recents should reload for. Emitted AFTER the write has landed,
+// so a refetch sees the new status. No id: Recents reloads as a whole.
+
+const METADATA_SAVED_EVENT = "genos:task-metadata-saved";
+
+export const emitTaskMetadataSaved = (): void => {
+    window.dispatchEvent(new CustomEvent(METADATA_SAVED_EVENT));
+};
+
+export const onTaskMetadataSaved = (cb: () => void): (() => void) => {
+    window.addEventListener(METADATA_SAVED_EVENT, cb);
+    return () => window.removeEventListener(METADATA_SAVED_EVENT, cb);
+};
+
 // Coarse sibling signal: "several tasks (and possibly milestones)
 // changed at once — refetch the project". Emitted when the agent's
 // approved write tools mutate tasks outside the normal UI flows

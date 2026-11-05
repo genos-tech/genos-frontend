@@ -29,6 +29,12 @@ import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import {
+    hasSendableContent,
+    withoutTrailingBlank,
+    withTrailingBlank,
+} from "./utils/messageBlocks";
+
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -48,6 +54,8 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -62,10 +70,9 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -132,9 +139,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -154,6 +163,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             // BlockNote 0.49 moved the code-block options out of
             // `useCreateBlockNote` and into the schema. We override
             // the default plain-text codeBlock with the syntax-
@@ -169,14 +179,15 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     const dictionary = useBlockNoteDictionary();
-    const initialContent: any[] = targetComment.commentBody;
+    // Without the stored trailing blank line (MIP-1039; see bnUpdateEditor).
+    const initialContent: any[] = withoutTrailingBlank(targetComment.commentBody);
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
         initialContent: initialContent,
     });
@@ -223,7 +234,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         return count;
     };
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    const [canSend, setCanSend] = useState<boolean>(hasSendableContent(targetComment.commentBody));
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     // Mirror the local line count back up to the task page. Editor
@@ -254,7 +265,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
 
     const updateComment = async () => {
         if (socket) {
-            if (editor.document.length > 1) {
+            if (hasSendableContent(editor.document)) {
                 socket.emit(
                     "task_comment",
                     {
@@ -266,7 +277,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         // derived activity broadcast carries the friendly task id.
                         display_id: taskDisplayId,
                         comment_id: targetComment.commentId,
-                        comment_body: editor.document,
+                        comment_body: withTrailingBlank(editor.document),
                         is_private: isPrivate || false,
                     },
                     (ack: any) => {
@@ -354,7 +365,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                     }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -365,7 +376,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 >
                     <IconButton
                         color="success"
-                        disabled={editorDocLength < 2}
+                        disabled={!canSend}
                         size="sm"
                         variant="solid"
                         sx={{
@@ -412,7 +423,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                             />
 
                             <FileCaptionButton key={"fileCaptionButton"} />

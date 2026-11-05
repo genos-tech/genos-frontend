@@ -20,18 +20,21 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
+import { keepIfEqual } from "../../../../../utils/keepIfEqual";
 import {
     LinkedBranch,
-    loadLinkedBranches,
-    loadLinkedPulls,
+    tryLoadLinkedBranches,
+    tryLoadLinkedPulls,
 } from "../../../../integrations/services/github";
 import { getCachedOrFetchPrStatus } from "../../../../integrations/services/prStatusCache";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
+import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLandingContext";
 import { useTaskDeliveries } from "../../../hooks/useTaskDeliveries";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { MilestoneFolderPicker } from "../../../sprint-milestone/components/MilestoneFolderPicker";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
+import { applyMilestonePick } from "../../../utils/applyMilestonePick";
 import { deliveryPrUrls } from "../../../utils/deliveryPrUrls";
 import { ownsItsProject } from "../../../utils/taskKind";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -241,28 +244,38 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // Stored delivery links (branch / PR / state). Preview only: a task
     // being created has none, and the create form shouldn't fetch.
     const deliveries = useTaskDeliveries(myself, isPreviewMode ? taskContent.id : null);
+    // Inside a task preview the parent lands together with the preview's other
+    // loaders (see taskOpenLanding.ts); anywhere else the ticket writes at once.
+    const openLanding = useTaskOpenLanding();
     useEffect(() => {
         let cancelled = false;
+        const ticket =
+            taskContent.project && taskContent.parentTaskId != null
+                ? joinOpenLanding(openLanding, Number(taskContent.id), "parent")
+                : null;
         (async () => {
-            if (taskContent.project && taskContent.parentTaskId != null) {
+            if (ticket && taskContent.project && taskContent.parentTaskId != null) {
                 const parentTaskResult: TaskProps[] = await loadSpecificTask(
                     myself,
                     taskContent.project.projectId,
                     taskContent.parentTaskId,
                     accessToken
                 );
-                if (cancelled) return;
-                if (parentTaskResult.length === 1) {
-                    setParentTask(parentTaskResult[0]);
-                } else {
-                    setParentTask(undefined);
-                }
+                ticket.land(() => {
+                    if (cancelled) return;
+                    if (parentTaskResult.length === 1) {
+                        setParentTask(parentTaskResult[0]);
+                    } else {
+                        setParentTask(undefined);
+                    }
+                });
             } else {
                 setParentTask(undefined);
             }
         })();
         return () => {
             cancelled = true;
+            ticket?.cancel();
         };
         // Depend on the ids the lookup actually uses, not the
         // `taskContent` object: regular mode passes
@@ -292,9 +305,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             const token = ++branchesFetchTokenRef.current;
             if (opts?.bypassCache) setBranchesRefreshing(true);
             try {
-                const branches = await loadLinkedBranches(accessToken, taskContent.id, opts);
+                const branches = await tryLoadLinkedBranches(accessToken, taskContent.id, opts);
                 if (token !== branchesFetchTokenRef.current) return;
-                setLinkedBranches(branches);
+                // A failed lookup keeps what is on screen; only a real answer
+                // replaces it, and an identical one is not a state write.
+                if (branches === null) return;
+                setLinkedBranches((prev) => keepIfEqual(prev, branches));
             } finally {
                 if (token === branchesFetchTokenRef.current && opts?.bypassCache) {
                     setBranchesRefreshing(false);
@@ -310,9 +326,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     // Refetch when the user returns to the window — typical workflow is
     // create a branch on GitHub → alt-tab back → expect to see it here.
-    // The server still caches for 60s, so a bare focus doesn't bypass
-    // the cache; users can click the refresh icon for an immediate fresh
-    // fetch.
+    // A bare focus goes through the short client memo in `github.ts` (and
+    // the server's own 60 s cache), so coming back within a couple of
+    // minutes sends nothing; users can click the refresh icon for an
+    // immediate fresh fetch.
     useEffect(() => {
         const onFocus = () => {
             void fetchLinkedBranches();
@@ -365,9 +382,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         const token = ++pullsFetchTokenRef.current;
         if (opts?.bypassCache) setPullsRefreshing(true);
         try {
-            const pulls = await loadLinkedPulls(accessToken, taskContent.id, opts);
+            const pulls = await tryLoadLinkedPulls(accessToken, taskContent.id, opts);
             if (token !== pullsFetchTokenRef.current) return;
-            if (pulls.length === 0) return;
+            if (pulls === null || pulls.length === 0) return;
             const existingLinks = taskContent.links ?? [];
             const existingByUrl = new Map(existingLinks.map((l) => [l.url, l]));
 
@@ -433,9 +450,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     // Refetch when the user returns to the window — covers "open a PR
     // on GitHub for an already-linked branch → alt-tab back → expect to
-    // see the PR card here". Server cache is respected on focus; the
-    // refresh icon next to the "Links" label bypasses it for an
-    // immediate fresh fetch.
+    // see the PR card here". The client memo and the server cache are
+    // respected on focus; the refresh icon next to the "Links" label
+    // bypasses both for an immediate fresh fetch.
     useEffect(() => {
         const onFocus = () => {
             void fetchLinkedPullsRef.current();
@@ -823,23 +840,20 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 showSprint={isMilestone === true}
                                 sprintId={(taskContent as any)?.sprintId ?? null}
                                 useSM={useSM}
-                                onChangeMilestone={(mid, taskId, autoSyncedSprint) => {
-                                    // Picking a milestone may also
-                                    // auto-sync the sprint linkage —
-                                    // both updates MUST land in a
-                                    // single `setTaskContent` call so
-                                    // they don't clobber each other
-                                    // inside the same React batch
-                                    // (see the picker's
-                                    // `onChangeMilestone` doc).
-                                    setTaskContent({
-                                        ...(taskContent as any),
-                                        milestoneId: mid,
-                                        parentTaskId: taskId, // Changing the milestone -> changing the parent task too.
-                                        ...(autoSyncedSprint
-                                            ? { sprintId: autoSyncedSprint.sprintId }
-                                            : {}),
-                                    } as TaskProps);
+                                onChangeMilestone={(mid, taskId, nextSprintId) => {
+                                    // One `setTaskContent` for the milestone, its
+                                    // backing task as the parent, and the sprint the
+                                    // task has under it (`null` = none): separate
+                                    // updates clobber each other in a React batch
+                                    // (see the picker's `onChangeMilestone` doc).
+                                    setTaskContent(
+                                        applyMilestonePick(
+                                            taskContent as TaskProps,
+                                            mid,
+                                            taskId,
+                                            nextSprintId
+                                        )
+                                    );
                                     setTaskUpdated?.(true);
                                 }}
                                 onChangeSprint={(sid) => {
@@ -1056,6 +1070,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <FieldLabel isDark={isDark}>{t.tasks.delivery.label}</FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <TaskDeliveriesBlock
+                                accessToken={accessToken}
                                 deliveries={deliveries}
                                 isDark={isDark}
                                 taskStatus={taskContent.status?.status}

@@ -177,6 +177,37 @@ describe("agent NDJSON event contract", () => {
         );
     });
 
+    it("passes the delete ref and the folder ref through tool_call_result", async () => {
+        // delete_note reports `deleted: true`; delete_note_folder reports what
+        // the folder delete destroyed under its own `note_folder` key. The
+        // parser copies the payload field by field, so a key it doesn't name
+        // is silently dropped before any hook sees it.
+        const note = { note_id: 7, note_type: "personal", title: "Old", deleted: true };
+        const noteFolder = {
+            folder_id: 3,
+            deleted_folder_ids: [3, 4],
+            deleted_note_ids: [7, 8],
+            ids_truncated: false,
+        };
+        const handlers = await streamEvents([
+            { type: "tool_call_result", step: 1, tool_name: "delete_note", summary: "ok", note },
+            {
+                type: "tool_call_result",
+                step: 2,
+                tool_name: "delete_note_folder",
+                summary: "ok",
+                note_folder: noteFolder,
+            },
+            DONE,
+        ]);
+        expect(handlers.onToolResult).toHaveBeenCalledWith(
+            expect.objectContaining({ tool_name: "delete_note", note })
+        );
+        expect(handlers.onToolResult).toHaveBeenCalledWith(
+            expect.objectContaining({ tool_name: "delete_note_folder", note_folder: noteFolder })
+        );
+    });
+
     it("negative control: an unknown event type trips the unexpected-end error", async () => {
         // Proves the mechanism the contract relies on: an event the client
         // doesn't know leaves the stream without a terminal event, which
@@ -184,6 +215,26 @@ describe("agent NDJSON event contract", () => {
         const handlers = await streamEvents([{ type: "some_future_event" }]);
         expect(handlers.onError).toHaveBeenCalledTimes(1);
         expect(handlers.onDone).not.toHaveBeenCalled();
+    });
+
+    it("passes the delete_project ref through tool_call_result", async () => {
+        // The parser copies the payload field by field, so a key it doesn't
+        // name is dropped before any hook sees it. The ref is how the browser
+        // learns the server already deleted the project.
+        const project = { project_id: 42, deleted: true };
+        const handlers = await streamEvents([
+            {
+                type: "tool_call_result",
+                step: 1,
+                tool_name: "delete_project",
+                summary: "ok",
+                project,
+            },
+            DONE,
+        ]);
+        expect(handlers.onToolResult).toHaveBeenCalledWith(
+            expect.objectContaining({ tool_name: "delete_project", project })
+        );
     });
 
     it("dispatchLine case labels equal the canonical vocabulary", () => {

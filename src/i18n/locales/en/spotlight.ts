@@ -11,6 +11,7 @@ export const spotlight = {
         approve: "Approve",
         reject: "Reject",
         copyAnswer: "Copy answer",
+        copied: "Copied",
         feedbackUp: "Good answer",
         feedbackDown: "Needs work",
         retry: "Ask again",
@@ -24,6 +25,10 @@ export const spotlight = {
         streaming: "streaming…",
         awaitingApproval: "awaiting your approval",
         untitled: "(untitled)",
+        // A finished turn that has no answer text (cancelled before the first
+        // word, or a run that ended on tool steps alone). The turn says so
+        // rather than leaving the question hanging.
+        noAnswer: "(no answer)",
     },
     empty: {
         initial: "Start typing to search across chats, tasks, and notes.",
@@ -105,6 +110,9 @@ export const spotlight = {
         loading: "Loading history…",
         empty: "No past conversations yet.",
         loadFailed: "Couldn’t load this conversation.",
+        // The LIST failed to load (shown with a Retry), as opposed to one
+        // conversation above. Not `empty`: that says there are none.
+        listLoadFailed: "Couldn’t load your past conversations.",
         turnCount: "{count, plural, one {# turn} other {# turns}}",
         relativeJustNow: "just now",
         relativeMinutes: "{count, plural, one {# minute ago} other {# minutes ago}}",
@@ -113,8 +121,8 @@ export const spotlight = {
         readOnlyHint: "Read-only — start a new conversation to ask a follow-up.",
     },
     settings: {
-        title: "Spotlight settings",
-        openTooltip: "Spotlight settings — AI effort & answers",
+        title: "Genos settings",
+        openTooltip: "Genos settings — AI effort & answers",
     },
     approval: {
         titleWithTool: "Approval required: {toolName}",

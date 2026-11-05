@@ -53,7 +53,7 @@ and Railway's Nixpacks Node major should be 22 to match.
 `.github/workflows/ci.yml` runs three jobs on push / PR:
 
 - **frontend-test** (required) — `vitest run --coverage`.
-- **frontend-build** (report-only) — `npm run build` (mirrors Railway's build).
+- **frontend-build** (required) — `npm run build` (mirrors Railway's build).
 - **frontend-quality** (report-only) — `eslint .` and `prettier --check .`.
 
 > Prettier and ESLint are wired to the repo config (`.prettierrc`,

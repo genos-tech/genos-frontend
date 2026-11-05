@@ -24,6 +24,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { withoutTrailingBlank } from "../components/editors/utils/messageBlocks";
 import { canRenderLight } from "../components/messageBody/lightBodySupport";
 import { LightMessageBody } from "../components/messageBody/LightMessageBody";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
@@ -40,8 +41,8 @@ vi.mock("../context/AuthContext", async (importOriginal) => ({
 // nothing when the integration isn't connected. What's under test here
 // is the wiring — that the body finds PR urls and asks for a card — not
 // the card's own behaviour.
-vi.mock("../features/integrations/components/LinkedPrCard", () => ({
-    LinkedPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
+vi.mock("../features/integrations/components/LazyPrCard", () => ({
+    LazyPrCard: ({ url }: { url: string }) => <div data-testid="pr-card">{url}</div>,
 }));
 
 // Media download / URL-resolution seams. `downloadFile` is asserted on
@@ -79,7 +80,7 @@ const BnReference = ({ content }: { content: any[] }) => {
         inlineContentSpecs: { ...defaultInlineContentSpecs },
         blockSpecs: { ...remainingBlockSpecs, codeBlock: createCodeBlockSpec(codeBlockOptions) },
     });
-    const editor = useCreateBlockNote({ schema, initialContent: content.slice(0, -1) });
+    const editor = useCreateBlockNote({ schema, initialContent: withoutTrailingBlank(content) });
     return (
         <BlockNoteView
             editable={false}
@@ -197,6 +198,67 @@ const cases: Array<{ name: string; content: any[] }> = [
         ],
     },
     {
+        name: "numbered list that continues",
+        content: [
+            { type: "numberedListItem", content: [{ type: "text", text: "one", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "two", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "three", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered list with a start",
+        content: [
+            {
+                type: "numberedListItem",
+                props: { start: 5 },
+                content: [{ type: "text", text: "five", styles: {} }],
+            },
+            { type: "numberedListItem", content: [{ type: "text", text: "six", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered lists separated by a paragraph restart",
+        content: [
+            { type: "numberedListItem", content: [{ type: "text", text: "a", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "b", styles: {} }] },
+            { type: "paragraph", content: [{ type: "text", text: "break", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "c", styles: {} }] },
+            { type: "numberedListItem", content: [{ type: "text", text: "d", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
+        name: "numbered list nested in numbered list and a bullet between",
+        content: [
+            {
+                type: "numberedListItem",
+                content: [{ type: "text", text: "parent", styles: {} }],
+                children: [
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "x", styles: {} }],
+                    },
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "y", styles: {} }],
+                    },
+                    {
+                        type: "bulletListItem",
+                        content: [{ type: "text", text: "dot", styles: {} }],
+                    },
+                    {
+                        type: "numberedListItem",
+                        content: [{ type: "text", text: "z", styles: {} }],
+                    },
+                ],
+            },
+            { type: "numberedListItem", content: [{ type: "text", text: "next", styles: {} }] },
+            { type: "paragraph", content: [] },
+        ],
+    },
+    {
         name: "nested list",
         content: [
             {
@@ -248,14 +310,27 @@ describe("LightMessageBody fidelity vs BlockNote", () => {
         });
     }
 
-    it("drops the trailing block like BnChatPreview does", () => {
+    // MIP-1039: only a BLANK trailing block is the stored "end of message"
+    // line. A message typed since BlockNote 0.57 can end with a real line, and
+    // dropping the last block unconditionally hid it.
+    it("drops a blank trailing block, like BnChatPreview does", () => {
         const content = [
             { type: "paragraph", content: [{ type: "text", text: "kept", styles: {} }] },
-            { type: "paragraph", content: [{ type: "text", text: "dropped", styles: {} }] },
+            { type: "paragraph", content: [] },
         ];
         const { container } = render(<LightMessageBody content={content} {...ctx} />);
         expect(container.textContent).toContain("kept");
-        expect(container.textContent).not.toContain("dropped");
+        expect(container.querySelectorAll(".bn-block-outer")).toHaveLength(1);
+    });
+
+    it("keeps a last line that has text (a body with no trailing blank)", () => {
+        const content = [
+            { type: "paragraph", content: [{ type: "text", text: "first", styles: {} }] },
+            { type: "paragraph", content: [{ type: "text", text: "second", styles: {} }] },
+        ];
+        const { container } = render(<LightMessageBody content={content} {...ctx} />);
+        expect(container.textContent).toContain("first");
+        expect(container.textContent).toContain("second");
     });
 });
 
@@ -731,6 +806,19 @@ describe("canRenderLight routing", () => {
                 ])
             )
         ).toBe(true);
+    });
+
+    it("sends math and diagram blocks and inline math to the full editor (MIP-1019)", () => {
+        // The light path has no renderer for them (KaTeX, Mermaid), so a body with
+        // one must keep going through BlockNote, which does.
+        const run = [{ type: "text", text: "x", styles: {} }];
+        for (const block of [
+            { type: "mathBlock", props: {}, content: run },
+            { type: "diagram", props: {}, content: run },
+            { type: "paragraph", content: [{ type: "math", props: {}, content: "E=mc^2" }] },
+        ]) {
+            expect(canRenderLight(wrap([block])), block.type).toBe(false);
+        }
     });
 
     it("accepts mention / mentionGroup / customEmoji", () => {

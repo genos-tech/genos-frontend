@@ -332,6 +332,7 @@ export const TaskHeader = ({
                                 // / root / milestone fk) and the same
                                 // teardown of the task table view.
                                 id: "newMilestone",
+                                kind: "newMilestone",
                                 label: t.tasks.header.newMilestoneMenuItem,
                                 icon: <FlagRoundedIcon sx={{ fontSize: 18, color: "#f97316" }} />,
                                 onClick: () => {
@@ -347,12 +348,14 @@ export const TaskHeader = ({
                             },
                             {
                                 id: "newTag",
+                                kind: "newTag",
                                 label: t.tasks.header.newTagMenuItem,
                                 icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
                                 onClick: onCreateTag,
                             },
                             {
                                 id: "customizeFields",
+                                kind: "customizeFields",
                                 label: t.tasks.header.customizeFieldsMenuItem,
                                 icon: <TuneRoundedIcon sx={{ fontSize: 18 }} />,
                                 visible: isProjectOwner,
@@ -360,12 +363,14 @@ export const TaskHeader = ({
                             },
                             {
                                 id: "newProject",
+                                kind: "newProject",
                                 label: t.tasks.header.newProjectMenuItem,
                                 icon: <AddIcon sx={{ fontSize: 18 }} />,
                                 onClick: onCreateProject,
                             },
                             {
                                 id: "deleteProject",
+                                kind: "delete",
                                 label: t.tasks.header.deleteProjectMenuItem,
                                 icon: <DeleteIcon sx={{ fontSize: 18 }} />,
                                 danger: true,

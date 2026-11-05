@@ -611,6 +611,7 @@ export const NoteHeaderActions = ({
                 const items: MoreMenuItem[] = [
                     {
                         id: "shareNote",
+                        kind: "share",
                         label: t.notes.header.shareEllipsis,
                         icon: <PersonAddRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: isOwner && activeNoteId != null,
@@ -618,6 +619,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "copyNoteLink",
+                        kind: "copyLink",
                         label: t.notes.header.copyNoteLink,
                         icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: !!onCopyNoteLink,
@@ -627,6 +629,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "openTask",
+                        kind: "openTask",
                         label: t.notes.header.openTask,
                         icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: noteType === 2 && !!currentTask && !!currentTask.id,
@@ -634,6 +637,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "openInNotes",
+                        kind: "openInNotes",
                         label: t.notes.header.openInNotes,
                         icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
                         visible:
@@ -656,6 +660,7 @@ export const NoteHeaderActions = ({
                         // Hidden until the note has at least one saved
                         // version (matches the chip's own guard).
                         id: "versionHistory",
+                        kind: "versionHistory",
                         label: t.notes.history.viewVersions,
                         icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: activeNoteId != null && useNM.currentNoteVersions.length > 0,
@@ -663,6 +668,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "newNote",
+                        kind: "newNote",
                         label: t.notes.header.newNote,
                         icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: noteType === 1,
@@ -670,6 +676,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "moveToFolder",
+                        kind: "move",
                         label: t.notes.folders.moveToFolder,
                         icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 18 }} />,
                         // Owner-only: the backend rejects folder moves
@@ -679,12 +686,14 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "childNote",
+                        kind: "newChildNote",
                         label: t.notes.header.childNote,
                         icon: <AddIcon sx={{ fontSize: 18 }} />,
                         onClick: onCreateChildNote,
                     },
                     {
                         id: "importMarkdown",
+                        kind: "import",
                         label: t.notes.header.importMarkdown,
                         icon: <FileUploadRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: importContext != null,
@@ -692,6 +701,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "exportMarkdown",
+                        kind: "export",
                         label: t.notes.header.exportMarkdown,
                         icon: <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: activeNoteId != null,
@@ -701,6 +711,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "muteNote",
+                        kind: "mute",
                         label:
                             notifCtx &&
                             activeNoteId != null &&
@@ -733,6 +744,7 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "deleteNote",
+                        kind: "delete",
                         label: t.notes.header.deleteNote,
                         icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
                         danger: true,

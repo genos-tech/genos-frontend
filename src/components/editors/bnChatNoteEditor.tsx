@@ -71,6 +71,12 @@ import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+    withGenosBlockSlashItems,
+} from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -87,14 +93,12 @@ import {
 } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
+import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -179,9 +183,11 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         // This is done by picking out the blocks you want to disable
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 // Adds the mention tag.
                 mention: CreateMentionSpec(
                     useTEM.teamMemberProfiles,
@@ -200,6 +206,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             },
             blockSpecs: {
                 ...remainingBlockSpecs,
+                ...genosExtraBlockSpecs,
                 // BlockNote 0.49 moved the code-block options out of
                 // `useCreateBlockNote` and into the schema. We override
                 // the default plain-text codeBlock with the syntax-
@@ -231,7 +238,10 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
+        withGenosBlockSlashItems(
+            editor,
+            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
+        );
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
@@ -298,10 +308,9 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         initialBody: body,
         enableComments: true,
         teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
     });
     const isEditable = isNoteEditable(myRoleId, collabScope);
 
@@ -589,8 +598,8 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                                 <BlockTypeSelect
                                                     key={"blockTypeSelect"}
                                                     items={[
-                                                        ...getBlockTypeSelectItemsWithCodeBlock(
-                                                            editor.dictionary
+                                                        ...getBlockTypeSelectItemsForDocuments(
+                                                            editor
                                                         ),
                                                         {
                                                             name: t.common.editor.alertBlock,

@@ -22,6 +22,9 @@ export const genos = {
         // Shown under the header when a clicked session failed to
         // restore (outside retention, network error).
         resumeFailed: "Couldn't reopen that conversation.",
+        // The list request failed (shown with a Retry). Not `empty`: "no
+        // conversations yet" would be a claim the server never made.
+        loadFailed: "Couldn't load your ask history.",
         // Server-side search over every question in a past session, so
         // the placeholder promises asks rather than "titles" — the row
         // label is just the session's first question.

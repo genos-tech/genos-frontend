@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { DatabaseUtils } from "../../db/utils/database";
+import type { NoteChangedDetail } from "../../features/agentQA/noteWriteTools";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { deleteChatNote } from "../../features/notes/chat-notes/services/deleteChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
@@ -66,6 +67,7 @@ import { loadTeamNotesMeta } from "../../features/notes/team-notes/services/load
 import { updateTeamNoteFolder as updateTeamNoteFolderApi } from "../../features/notes/team-notes/services/updateTeamNoteFolder";
 import { onTaskTouched } from "../../features/tasks/services/taskEvents";
 import { fmt, getMessages } from "../../i18n";
+import type { ToolResultNoteFolderRef } from "../../services/agentApi";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -88,6 +90,7 @@ import {
     TeamNoteFolderProps,
     TeamNoteMetaProps,
 } from "../../types/notes";
+import { keepIfEqual } from "../../utils/keepIfEqual";
 import {
     buildChatNoteTree,
     buildMyNoteFolderForest,
@@ -102,8 +105,14 @@ import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
 import { updataTaskNoteChain } from "./taskNote";
 import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
-import { cacheFetchedNote, fillNoteCache, getCachedNote, upsertNoteCache } from "./useNoteData";
-import { NoteBucket, NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
+import {
+    cacheFetchedNote,
+    fillNoteCache,
+    getCachedNote,
+    removeFromNoteCache,
+    upsertNoteCache,
+} from "./useNoteData";
+import { NoteBucket, NoteTabsApi, noteToTab, tabIdFor, useNoteTabs } from "./useNoteTabs";
 
 // The note families the agent's write tools report (`note_type` on a
 // create_note / update_note result). Team and shared notes come back as
@@ -151,7 +160,7 @@ export interface NoteManagementState {
     setChatNoteMeta: (meta: ChatNoteMetaProps[]) => void;
     currentChatNoteChain: ChatNoteMetaTreeNode[] | undefined;
     setCurrentChatNoteChain: (chain: ChatNoteMetaTreeNode[]) => void;
-    getChatNoteMeta: () => Promise<void>;
+    getChatNoteMeta: () => Promise<boolean>;
 
     // Task notes
     currentTaskNote: TaskNoteProps | null;
@@ -160,7 +169,7 @@ export interface NoteManagementState {
     setTaskNoteMeta: (meta: TaskNoteMetaProps[]) => void;
     currentTaskNoteChain: TaskNoteMetaTreeNode[] | undefined;
     setCurrentTaskNoteChain: (chain: TaskNoteMetaTreeNode[]) => void;
-    getTaskNoteMeta: () => Promise<void>;
+    getTaskNoteMeta: () => Promise<boolean>;
 
     // My notes
     currentMyNote: MyNoteProps | null;
@@ -172,7 +181,7 @@ export interface NoteManagementState {
     patchPersonalNoteMeta: (noteId: number, title: string, tsUpdated: string) => void;
     currentMyNoteChain: MyNoteMetaTreeNode[] | undefined;
     setCurrentMyNoteChain: (chain: MyNoteMetaTreeNode[]) => void;
-    getMyNoteMeta: () => Promise<void>;
+    getMyNoteMeta: () => Promise<boolean>;
 
     // My-note sidebar folders (user-created organization layer).
     // Folders never appear in tabs/search/recents — they only shape
@@ -264,8 +273,8 @@ export interface NoteManagementState {
     teamNoteFolderForest: TeamNoteFolderForest;
     teamNoteMeta: TeamNoteMetaProps[];
     teamNoteMetaTree: MyNoteMetaTreeNode[];
-    getTeamNoteFolders: () => Promise<void>;
-    getTeamNoteMeta: () => Promise<void>;
+    getTeamNoteFolders: () => Promise<boolean>;
+    getTeamNoteMeta: () => Promise<boolean>;
     createTeamNoteFolder: (input: CreateTeamFolderInput) => Promise<TeamNoteFolderProps | null>;
     renameTeamNoteFolder: (folderId: number, name: string) => Promise<void>;
     setTeamNoteFolderVisibility: (
@@ -278,7 +287,7 @@ export interface NoteManagementState {
     sharedNoteMeta: SharedNoteMetaProps[];
     setSharedNoteMeta: (meta: SharedNoteMetaProps[]) => void;
     sharedNoteMetaTree: SharedNoteMetaTreeNode[];
-    getSharedNoteMeta: () => Promise<void>;
+    getSharedNoteMeta: () => Promise<boolean>;
 
     // Visibility states
     isTaskNoteVisible: boolean;
@@ -355,18 +364,6 @@ export interface NoteManagementState {
     resetNoteStates: () => void;
     popInitialNote: () => Promise<void>;
 }
-
-// Cheap structural equality for the meta/folder arrays a background
-// refresh re-fetches. They're small, flat, and serialized in a stable
-// server-side order, so JSON comparison is both correct and far cheaper
-// than the re-render it avoids.
-const sameJson = (a: unknown, b: unknown): boolean => {
-    try {
-        return JSON.stringify(a) === JSON.stringify(b);
-    } catch {
-        return false;
-    }
-};
 
 export const useNoteManagement = (
     myself: UserProps,
@@ -676,9 +673,21 @@ export const useNoteManagement = (
 
     const getChatNoteMeta = async () => {
         const loadedNotes: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setChatNoteMeta(loadedNotes);
-        }
+        // The loader resolves undefined when the request fails (or there is no
+        // token), so a failed refresh keeps the list it has instead of throwing.
+        // An EMPTY array is a real answer, not a failure: the endpoint is a full
+        // load (team + user only, no `since` checkpoint), so [] means "no notes".
+        // A `length > 0` guard here left the last note in the sidebar after its
+        // delete (it dates from a first version that read `loadedNotes[0]`).
+        // The write keeps the previous array for an equal answer: this runs on
+        // the 60 s `#`-mention refresh, and a fresh identity rebuilds the meta
+        // tree and re-renders the whole sidebar for nothing.
+        // The return value says whether the list was LOADED (even if empty), for the
+        // change-driven refresh: it records a "nothing new" token only for a load that
+        // worked. Existing callers ignore it.
+        if (!Array.isArray(loadedNotes)) return false;
+        setChatNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
     };
 
     initCurrentChatNoteChain({
@@ -783,9 +792,11 @@ export const useNoteManagement = (
 
     const getTaskNoteMeta = async () => {
         const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setTaskNoteMeta(loadedNotes);
-        }
+        // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loadedNotes)) return false;
+        setTaskNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
     };
 
     updataTaskNoteChain({
@@ -951,9 +962,77 @@ export const useNoteManagement = (
 
     const getMyNoteMeta = async () => {
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setMyNoteMeta(loadedNotes);
+        // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loadedNotes)) return false;
+        setMyNoteMeta((prev) => keepIfEqual(prev, loadedNotes));
+        return true;
+    };
+
+    // Recents live apart from the three meta lists, so a delete or a rename
+    // has to reach them on its own. Rows are per family, like the lists.
+    const updateRecents = (
+        family: AgentWrittenNoteType,
+        fn: <T extends { noteId: number; title: string }>(rows: T[]) => T[]
+    ) =>
+        setRecentNotes((prev) =>
+            !prev
+                ? prev
+                : family === "personal"
+                  ? { ...prev, personalNotes: fn(prev.personalNotes) }
+                  : family === "task"
+                    ? { ...prev, taskNotes: fn(prev.taskNotes) }
+                    : { ...prev, chatNotes: fn(prev.chatNotes) }
+        );
+
+    // LOCAL-ONLY cleanup for notes the server has ALREADY deleted (an approved
+    // agent delete_note / delete_note_folder). The by-id deletes above can't be
+    // reused: they call the delete endpoint first and refuse a note with
+    // children. This closes the tab / chat pane, drops the in-memory, IndexedDB
+    // and Yjs copies, and filters the note out of its meta list and Recents.
+    // The list filter is what clears the LAST note of a list without waiting on
+    // a refetch. `currentXNote` is left to closeTab and the active-tab sync
+    // effect (see deleteMyNoteById). The Yjs name is spelled out rather than
+    // taken from noteDocumentName: that module is the editor chunk.
+    const dropDeletedNotesLocally = async (family: AgentWrittenNoteType, noteIds: number[]) => {
+        const ids = new Set(noteIds);
+        if (ids.size === 0) return;
+        const kind = family === "personal" ? "my" : family;
+        const without = <T extends { noteId: number }>(rows: T[]) =>
+            rows.filter((r) => !ids.has(r.noteId));
+        for (const id of ids) {
+            tabsApi.closeTab(tabIdFor(kind, id));
+            if (family === "chat") chatPanelApi.closeTab(id);
+            removeFromNoteCache(kind, id);
         }
+        if (family === "personal") removePersonalNoteMeta(ids);
+        else if (family === "task") setTaskNoteMeta(without);
+        else setChatNoteMeta(without);
+        updateRecents(family, without);
+        await Promise.all(
+            [...ids].map(async (id) => {
+                try {
+                    if (family === "personal") await noteService.deletePersonalNote(id);
+                    else if (family === "task") await noteService.deleteTaskNote(id);
+                    else await noteService.deleteChatNote(id);
+                    await DatabaseUtils.deleteYjsDatabase(`${kind}-note:${id}`);
+                } catch {
+                    // Local cache cleanup is best-effort.
+                }
+            })
+        );
+    };
+
+    // delete_note_folder: every note it destroyed is personal-family (My and
+    // Team Notes both), and so are the folders. `ids_truncated` means the
+    // lists were capped, not that the ones given are wrong, so they are still
+    // cleaned up here and the lists the `noteChanged` listener reloads for
+    // every event (note meta, My + Team folders) settle the rest.
+    const dropDeletedFolderLocally = (ref: ToolResultNoteFolderRef) => {
+        const folderIds = new Set(ref.deleted_folder_ids);
+        setMyNoteFolders((prev) => prev.filter((f) => !folderIds.has(f.folderId)));
+        setTeamNoteFolders((prev) => prev.filter((f) => !folderIds.has(f.folderId)));
+        void dropDeletedNotesLocally("personal", ref.deleted_note_ids);
     };
 
     // External invalidator: the Spotlight / thread / note agent's
@@ -977,9 +1056,16 @@ export const useNoteManagement = (
     // session. If that push fails (collab down) and the note is the one
     // currently open, fall back to the restore flow's resync nonce so the
     // open editor writes the fresh body into Yjs itself on reconnect.
+    //
+    // The ref never carries the body, only the id: the note is ALWAYS
+    // re-read, so a restore_note_version (no proposed body in the call) takes
+    // this same path. `titleChanged` (a restore, or a rename inside an update)
+    // also pushes the new title to the surfaces that hold their own copy of
+    // it: the tab label, the Recents row and the open note's version list.
     const applyAgentNoteUpdate = async (ref: {
         note_id: number;
         note_type: AgentWrittenNoteType;
+        titleChanged?: boolean;
     }) => {
         if (!accessToken) return;
         const typeCode = ref.note_type === "task" ? 2 : ref.note_type === "chat" ? 3 : 1;
@@ -1001,6 +1087,18 @@ export const useNoteManagement = (
         // The chat page's notes panel keeps its own copy of the open note.
         if (typeCode === 3 && chatPanelApi.note?.noteId === ref.note_id) {
             chatPanelApi.setNote(fetched as ChatNoteProps);
+        }
+        if (ref.titleChanged && typeof fetched.title === "string") {
+            const kind = ref.note_type === "personal" ? "my" : ref.note_type;
+            tabsApi.updateTabTitle(ref.note_id, kind, fetched.title);
+            updateRecents(ref.note_type, (rows) =>
+                rows.map((n) => (n.noteId === ref.note_id ? { ...n, title: fetched.title } : n))
+            );
+            // The version list is one slot that follows the active tab.
+            const active = tabsApi.activeTab;
+            if (active?.kind === kind && active.noteId === ref.note_id) {
+                void loadNoteVersionsFor(typeCode, ref.note_id);
+            }
         }
         // Loaded on demand — this is a rare, already-async path (an
         // approved agent note write), so paying a chunk fetch here is
@@ -1031,10 +1129,17 @@ export const useNoteManagement = (
     getTaskNoteMetaRef.current = getTaskNoteMeta;
     const getChatNoteMetaRef = useRef(getChatNoteMeta);
     getChatNoteMetaRef.current = getChatNoteMeta;
-    // Assigned below, after `getTeamNoteMeta` is declared.
-    const getTeamNoteMetaRef = useRef<() => Promise<void>>(async () => {});
+    // Assigned below, after each of them is declared.
+    const getTeamNoteMetaRef = useRef<() => Promise<boolean>>(async () => false);
+    const getMyNoteFoldersRef = useRef<() => Promise<void>>(async () => {});
+    const getTeamNoteFoldersRef = useRef<() => Promise<boolean>>(async () => false);
+    const getFavoriteNotesMetaRef = useRef<() => Promise<void>>(async () => {});
     const applyAgentNoteUpdateRef = useRef(applyAgentNoteUpdate);
     applyAgentNoteUpdateRef.current = applyAgentNoteUpdate;
+    const dropDeletedNotesLocallyRef = useRef(dropDeletedNotesLocally);
+    dropDeletedNotesLocallyRef.current = dropDeletedNotesLocally;
+    const dropDeletedFolderLocallyRef = useRef(dropDeletedFolderLocally);
+    dropDeletedFolderLocallyRef.current = dropDeletedFolderLocally;
 
     // Keep the task-note sidebar's FOLDERS honest after a task's relations
     // change.
@@ -1066,13 +1171,26 @@ export const useNoteManagement = (
     }, []);
     useEffect(() => {
         const handler = (e: Event) => {
+            const { note: ref, noteFolder } = ((e as CustomEvent).detail ??
+                {}) as NoteChangedDetail;
+            // What the server deleted goes first, so the sidebar and the open
+            // tabs don't wait on the re-reads below.
+            if (ref?.deleted && ref.note_id && isAgentWrittenNoteType(ref.note_type)) {
+                void dropDeletedNotesLocallyRef.current(ref.note_type, [ref.note_id]);
+            }
+            if (noteFolder) dropDeletedFolderLocallyRef.current(noteFolder);
             void getMyNoteMetaRef.current();
             void getTaskNoteMetaRef.current();
             void getChatNoteMetaRef.current();
             void getTeamNoteMetaRef.current();
-            const ref = (e as CustomEvent).detail as
-                | { note_id?: number; note_type?: string; changed_fields?: string[] }
-                | undefined;
+            // The folder lists and the Favorites list are separate calls
+            // from the note meta, and the agent's folder and favorite tools
+            // (manage_note_folder, favorite_note) change only those. A
+            // sidebar click updates them from its own response, so nothing
+            // else re-reads them after an approved agent write.
+            void getMyNoteFoldersRef.current();
+            void getTeamNoteFoldersRef.current();
+            void getFavoriteNotesMetaRef.current();
             if (
                 ref?.note_id &&
                 isAgentWrittenNoteType(ref.note_type) &&
@@ -1082,6 +1200,7 @@ export const useNoteManagement = (
                 void applyAgentNoteUpdateRef.current({
                     note_id: ref.note_id,
                     note_type: ref.note_type,
+                    titleChanged: ref.changed_fields.includes("title"),
                 });
             }
         };
@@ -1097,6 +1216,7 @@ export const useNoteManagement = (
         const loaded = await loadMyNoteFolders(myself, accessToken);
         setMyNoteFolders(loaded);
     };
+    getMyNoteFoldersRef.current = getMyNoteFolders;
 
     const createMyNoteFolderAction = async (name: string, parentFolderId: number | null) => {
         if (!accessToken) return;
@@ -1470,6 +1590,7 @@ export const useNoteManagement = (
             setFavoriteNoteIds(ids);
         }
     };
+    getFavoriteNotesMetaRef.current = getFavoriteNotesMeta;
 
     const favoriteFolderIds = useMemo(
         () => new Set((favoriteNotes?.folders ?? []).map((f) => f.folderId)),
@@ -1715,12 +1836,23 @@ export const useNoteManagement = (
     // and re-renders the whole sidebar on a timer for no reason.
     const getTeamNoteFolders = async () => {
         const loaded = await loadTeamNoteFolders(myself, accessToken);
-        setTeamNoteFolders((prev) => (sameJson(prev, loaded) ? prev : loaded));
+        // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
+        // real answer ("no team folders") and empties it.
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
+        setTeamNoteFolders((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
+    getTeamNoteFoldersRef.current = getTeamNoteFolders;
 
     const getTeamNoteMeta = async () => {
         const loaded = await loadTeamNotesMeta(myself, accessToken);
-        setTeamNoteMeta((prev) => (sameJson(prev, loaded) ? prev : loaded));
+        // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
+        // real answer ("no team notes") and empties it.
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
+        setTeamNoteMeta((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
     getTeamNoteMetaRef.current = getTeamNoteMeta;
 
@@ -1838,7 +1970,11 @@ export const useNoteManagement = (
     // Shared-with-me personal notes
     const getSharedNoteMeta = async () => {
         const loaded = await loadSharedNotesMeta(myself, accessToken);
-        setSharedNoteMeta(loaded);
+        // See getChatNoteMeta: undefined on a failed request keeps the list.
+        // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        if (!Array.isArray(loaded)) return false;
+        setSharedNoteMeta((prev) => keepIfEqual(prev, loaded));
+        return true;
     };
 
     // Recent notes functions

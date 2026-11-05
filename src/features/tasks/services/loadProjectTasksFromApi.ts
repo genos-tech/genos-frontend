@@ -21,6 +21,13 @@ export interface ProjectTasksDeltaResponse {
      * changes-since request will never send it again.
      */
     totalCount?: number;
+    /**
+     * The sum of the task ids the store should hold, 0 for an empty
+     * project. A count cannot see one stale row plus one missing row; the
+     * sum can. Absent on a full answer and on an API that predates it, in
+     * which case the caller compares the count alone.
+     */
+    idSum?: number;
 }
 
 // Direct API call to `getProjectTasks`. Used by `loadProjectTasksWorker`
@@ -49,6 +56,7 @@ export const loadProjectTasksFromApi = async (
             tasks: res.data.data.tasks,
             forceFull: res.data.force_full_reload,
             totalCount: res.data.data.totalCount,
+            idSum: res.data.data.idSum,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

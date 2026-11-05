@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import Button from "@mui/joy/Button";
 import Stack from "@mui/joy/Stack";
 import { useColorScheme } from "@mui/joy/styles";
 import Switch from "@mui/joy/Switch";
@@ -9,16 +10,23 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
+import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
+import { createQuickTask } from "../../services/createQuickTask";
+import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
+import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
+import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
+import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
 import { buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
@@ -26,8 +34,15 @@ import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
+import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
+import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
 
 const materialTheme = createTheme({ cssVariables: true });
+
+const NO_TAGS: TagListProps[] = [];
+// After a quick-add create, how long the filter pipeline gets to put the new
+// card on the board before we conclude the active filters hide it.
+const QUICK_ADD_VISIBILITY_CHECK_MS = 800;
 
 // Sort tiers (priority/due-date/etc. ranking, comparator builder) now
 // live in features/tasks/utils/sortTask.ts so the sprint board and the
@@ -37,7 +52,7 @@ const materialTheme = createTheme({ cssVariables: true });
 // Column definitions. `title` is filled in at render time from the
 // `titleKey` so the board columns stay localizable while `status` stays
 // the backend enum value the filterModel keys off.
-const COLUMNS: ColumnConfig[] = [
+export const COLUMNS: ColumnConfig[] = [
     {
         id: "open",
         title: "Open",
@@ -81,44 +96,35 @@ const COLUMNS: ColumnConfig[] = [
 ];
 
 // Style helpers
-const getBoardContainerStyles = (mode: "light" | "dark" | undefined): React.CSSProperties => ({
+export const getBoardContainerStyles = (
+    mode: "light" | "dark" | undefined
+): React.CSSProperties => ({
     display: "grid",
     // One column per status, each at least COLUMN_MIN_WIDTH wide. The
     // `1fr` upper bound still shares leftover space equally when the pane
     // is roomy (so a wide board looks exactly as it always did), but the
     // `minmax` floor stops columns collapsing into unreadable slivers
     // when the window narrows or a preview pane opens alongside — past
-    // that point the board scrolls horizontally instead (`overflow: auto`
+    // that point the board scrolls horizontally instead (`overflowX`
     // below). `1fr` alone resolves its implicit `auto` minimum against
     // the content and would keep shrinking.
     gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(${COLUMN_MIN_WIDTH}px, 1fr))`,
-    // Columns stretch to the board height when the cards are short, and
-    // grow past it (scrolling the board) when they're tall — which is the
-    // default `auto` row + `align-content/items: stretch` behaviour, so
-    // it's left implicit. Deliberately NOT `minmax(100%, auto)`: a
-    // percentage row resolves against the board's content box, which
-    // shrinks when the horizontal scrollbar appears, and that feedback
-    // loop can leave a spurious ~8px vertical scrollbar alongside it.
+    // One row exactly as tall as the board, so every column fills it and
+    // scrolls its own cards (SprintBoardColumn). `minmax(0, …)` rather than
+    // plain `1fr`: a tall column must not stretch the row past the board.
+    gridTemplateRows: "minmax(0, 1fr)",
     gap: 12,
     padding: 12,
     flex: 1,
     minHeight: 0,
     width: "100%",
-    // THE scroll container for the board, on both axes — horizontally
-    // once the columns hit their min width, vertically for long columns.
-    // Deliberately the only scrollport in the subtree: @hello-pangea/dnd
-    // allows a Droppable just one scroll parent, so the columns no longer
-    // scroll themselves (see SprintBoardColumn). Owning both axes is what
-    // lets dnd auto-scroll the board sideways mid-drag, keeping
-    // off-screen columns reachable while dragging a card.
-    overflow: "auto",
-    // Reserve the vertical scrollbar's track even when it isn't needed.
-    // Without this, a column growing tall enough to need vertical scroll
-    // steals ~8px of width, which can tip columns that exactly fit into
-    // not fitting and flash a horizontal scrollbar in as well. Costs a
-    // thin always-blank gutter; buys a layout that doesn't jump as cards
-    // are added or filtered.
-    scrollbarGutter: "stable",
+    // The board scrolls sideways only, once the columns hit their min
+    // width; vertical scrolling belongs to each column. While a card is
+    // being dragged the columns stop scrolling so this is the only scroll
+    // parent dnd sees, which is what lets it scroll the board sideways to
+    // off-screen columns (see the note in SprintBoardColumn).
+    overflowX: "auto",
+    overflowY: "hidden",
     backgroundColor: mode === "dark" ? "#0a0a10" : "#f4f5f7",
     borderRadius: 12,
 });
@@ -315,6 +321,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
         [useTM]
     );
 
+    const { boardRef, lockColumnScroll, unlockColumnScroll } = useBoardDragScrollLock();
+
     // Handle drag end. Two modes: task vs milestone — milestones are
     // persisted via the milestone API (`useSM.updateExistingMilestone`),
     // not the task API, since the authoritative status lives on
@@ -460,44 +468,38 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setCurrentPreviewTaskId,
     } = useTM;
 
-    // Rapid card-click coalescing. Each click fans out ~13 TaskPreview
-    // network requests (4× activity, 2× childTasks, 2× meta, 2× tag…).
-    // Clicking 10 cards in a second pegged the backend at >100 requests
-    // and broke card selection mid-flight. The fix decouples *visual*
-    // selection (immediate) from the *preview load* (debounced 150 ms),
-    // so a rapid sequence collapses into a single fetch for the last
-    // card the user landed on while the highlight still tracks every
-    // click in real time.
+    // Rapid card-click coalescing. Each click fans out a chain of TaskPreview
+    // network requests; clicking 10 cards in a second pegged the backend and
+    // broke card selection mid-flight. The fix decouples *visual* selection
+    // (immediate: the pending ids below) from the *preview load*, which is
+    // LEADING-edge debounced: a click with no other click in the last 150 ms
+    // opens right after the next painted frame (the highlight and the pane
+    // paint first), and a rapid sequence collapses to the first card plus the
+    // card the user lands on, while the highlight still tracks every click.
     const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
     const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
-    const previewSwitchTimerRef = useRef<number | null>(null);
 
-    // Drop the pending highlight once the real preview state has caught
-    // up (timer fired, fetch kicked off). The row equality check stays
-    // honest: `selectedTaskId` below reads from useTM after this clears.
-    useEffect(() => {
-        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
-            setPendingTaskId(null);
-        }
-    }, [pendingTaskId, useTM.currentPreviewTaskId]);
-    useEffect(() => {
-        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
-            setPendingMilestoneId(null);
-        }
-    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
-
-    // Clean up any in-flight timer on unmount so we don't write into a
-    // dead component.
-    useEffect(() => {
-        return () => {
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-                previewSwitchTimerRef.current = null;
+    // The heavy half of a click: the writes that start the preview load. The
+    // pending highlight is dropped in the same batch (one commit), because
+    // the real preview state now says the same thing.
+    const switchPreview = useCallback(
+        (task: TaskTableProps) => {
+            if (task.isMilestone === true && task.milestoneId != null) {
+                setCurrentPreviewKind("milestone");
+                setCurrentPreviewMilestoneId(task.milestoneId);
+                setPendingMilestoneId(null);
+            } else if (task.id) {
+                setCurrentPreviewKind("task");
+                setCurrentPreviewTaskId(parseInt(task.id));
+                setPendingTaskId(null);
             }
-        };
-    }, []);
-
-    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
+        },
+        [setCurrentPreviewKind, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId]
+    );
+    const { call: scheduleSwitchPreview } = useLeadingDebouncedCallback(
+        switchPreview,
+        PREVIEW_SWITCH_DEBOUNCE_MS
+    );
 
     // Card whose task graph is open (null = diagram closed). One shared
     // ModalTaskDiagram at the board level; cards request it through the
@@ -528,29 +530,114 @@ export const SprintBoard = (props: SprintBoardProps) => {
             }
             setIsTaskPreviewVisible(true);
 
-            // Step 2: debounce the heavy state switch that triggers the
-            // TaskPreview fetch cascade.
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-            }
-            previewSwitchTimerRef.current = window.setTimeout(() => {
-                previewSwitchTimerRef.current = null;
-                if (isMile) {
-                    setCurrentPreviewKind("milestone");
-                    setCurrentPreviewMilestoneId(task.milestoneId as number);
-                } else if (task.id) {
-                    setCurrentPreviewKind("task");
-                    setCurrentPreviewTaskId(parseInt(task.id));
-                }
-            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+            // Step 2: start the load. The first click does it after the next
+            // painted frame, not in this batch; successive rapid clicks
+            // coalesce into a single load for the last card.
+            scheduleSwitchPreview(task);
         },
-        [
-            setIsTaskPreviewVisible,
-            setCurrentPreviewKind,
-            setCurrentPreviewMilestoneId,
-            setCurrentPreviewTaskId,
-        ]
+        [setIsTaskPreviewVisible, scheduleSwitchPreview]
     );
+
+    // ---- Create a task from the Open column (MIP-901) --------------------
+    const projectId = usePM.currentProject?.projectId ?? null;
+    const projectTags = usePM.currentProject?.projectTags ?? NO_TAGS;
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+    const toggleQuickAdd = useCallback(() => setIsQuickAddOpen((open) => !open), []);
+    const closeQuickAdd = useCallback(() => setIsQuickAddOpen(false), []);
+    // Set when the active filters hide the task that was just created.
+    const [hiddenCreatedTask, setHiddenCreatedTask] = useState<TaskTableProps | null>(null);
+    const hiddenCheckTimerRef = useRef<number | null>(null);
+    const boardTasksRef = useRef(boardTasks);
+    boardTasksRef.current = boardTasks;
+
+    // A half-open card or a stale notice points at the wrong project.
+    useEffect(() => {
+        setIsQuickAddOpen(false);
+        setHiddenCreatedTask(null);
+    }, [projectId]);
+    useEffect(
+        () => () => {
+            if (hiddenCheckTimerRef.current != null) {
+                window.clearTimeout(hiddenCheckTimerRef.current);
+            }
+        },
+        []
+    );
+
+    // The milestone the board is looking at, if exactly one: a new task is
+    // filed under it (see `pickScopedMilestoneId`).
+    const [selectedMilestoneIds, setSelectedMilestoneIdsState] = useState<number[]>([]);
+    const setSelectedMilestoneIds = useCallback((ids: number[]) => {
+        setSelectedMilestoneIdsState((prev) =>
+            prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids
+        );
+    }, []);
+    const scopedMilestoneId = pickScopedMilestoneId(
+        useTM.tableMilestoneFilterId,
+        selectedMilestoneIds
+    );
+
+    const quickAddFieldRules = useMemo(
+        () =>
+            useTM.taskFieldRules?.projectId === projectId
+                ? (useTM.taskFieldRules?.rules ?? null)
+                : null,
+        [useTM.taskFieldRules, projectId]
+    );
+    const teamMemberIds = useMemo(() => teamMembers.map((m) => m.userId), [teamMembers]);
+
+    // Errors are deliberately not caught here: the card shows its inline
+    // error (including the plan-limit message) and keeps the typed draft.
+    const handleQuickAddSubmit = async (draft: QuickAddDraft) => {
+        if (projectId == null) throw new Error("Quick add: no project selected");
+        const parent = quickAddParentFor(useTM.allTasks, scopedMilestoneId);
+        const { taskId, displayId } = await createQuickTask({
+            myself,
+            accessToken,
+            projectId: Number(projectId),
+            title: draft.title,
+            parentTaskId: parent ? Number(parent.id) : null,
+            rootTaskId: parent ? (parent.rootTaskId ?? Number(parent.id)) : null,
+            milestoneId: parent?.milestoneId ?? null,
+            assigneeId: draft.assigneeId,
+            status: draft.status,
+            priority: draft.priority,
+            effortLevel: draft.effortLevel,
+            dueDate: draft.dueDate,
+            tags: draft.tags,
+        });
+        if (taskId == null) return;
+        const optimistic = buildOptimisticQuickTask({
+            taskId,
+            displayId,
+            draft,
+            parent,
+            projectId: Number(projectId),
+            teamId: myself.teamId,
+            assignee: teamMembers.find((m) => m.userId === draft.assigneeId),
+        });
+        // Duplicate-guarded against the background reload landing first.
+        useTM.setAllTasks((prev) =>
+            prev.some((task) => String(task.id) === String(optimistic.id))
+                ? prev
+                : [...prev, optimistic]
+        );
+        if (parent) emitTaskTouched(Number(parent.id), "children");
+        useTM.setIsNewTaskCreated(true);
+
+        // Tag, member and sprint filters can hide the card that was just
+        // made, which reads as "nothing happened". Once the filter pipeline
+        // has had its turn, say so instead.
+        setHiddenCreatedTask(null);
+        if (hiddenCheckTimerRef.current != null) window.clearTimeout(hiddenCheckTimerRef.current);
+        hiddenCheckTimerRef.current = window.setTimeout(() => {
+            hiddenCheckTimerRef.current = null;
+            const shown = Object.values(boardTasksRef.current).some((column) =>
+                column.some((task) => String(task.id) === String(optimistic.id))
+            );
+            if (!shown) setHiddenCreatedTask(optimistic);
+        }, QUICK_ADD_VISIBILITY_CHECK_MS);
+    };
 
     return (
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
@@ -562,6 +649,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     setCurrentDisplayingTasks={setFilteredTasks}
                     setIsMemberFilterActive={setIsMemberFilterActive}
                     setIsMilestoneFilterActive={setIsMilestoneFilterActive}
+                    setSelectedMilestoneIds={setSelectedMilestoneIds}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     teamMembers={teamMembers}
                     useSM={useSM}
@@ -610,11 +698,48 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         </Stack>
                     </AppTooltip>
                 )}
-                <DragDropContext onDragEnd={handleDragEnd}>
-                    {/* The board owns both scrollbars now (the columns used
-                        to own the vertical one), so the themed scrollbar
-                        class moves here with them. */}
+                {hiddenCreatedTask && (
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        role="status"
+                        spacing={1}
+                        sx={{ px: 1.5, py: 0.5, flexShrink: 0 }}
+                    >
+                        <Typography level="body-sm">
+                            {fmt(t.tasks.board.quickAddHiddenByFilters, {
+                                id: formatTaskDisplayId(hiddenCreatedTask),
+                            })}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="soft"
+                            onClick={() => {
+                                handleTaskClick(hiddenCreatedTask);
+                                setHiddenCreatedTask(null);
+                            }}
+                        >
+                            {t.tasks.board.quickAddOpen}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            onClick={() => setHiddenCreatedTask(null)}
+                        >
+                            {t.tasks.board.quickAddDismiss}
+                        </Button>
+                    </Stack>
+                )}
+                <DragDropContext
+                    onBeforeCapture={lockColumnScroll}
+                    onDragEnd={(result) => {
+                        // Also fires when a drag is cancelled (Esc, no drop).
+                        unlockColumnScroll();
+                        return handleDragEnd(result);
+                    }}
+                >
                     <div
+                        ref={boardRef}
                         className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
                         style={getBoardContainerStyles(mode)}
                     >
@@ -657,8 +782,28 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                     selectedTaskId={selectedTaskId}
                                     tasks={boardTasks[column.id] || []}
                                     teamMemberProfiles={teamMemberProfiles}
+                                    quickAddSlot={
+                                        column.id === "open" && isQuickAddOpen ? (
+                                            <SprintBoardQuickAddCard
+                                                creatorUserId={myself.userId}
+                                                fieldRules={quickAddFieldRules}
+                                                projectTags={projectTags}
+                                                teamMemberIds={teamMemberIds}
+                                                projectId={
+                                                    projectId != null ? Number(projectId) : null
+                                                }
+                                                onClose={closeQuickAdd}
+                                                onSubmit={handleQuickAddSubmit}
+                                            />
+                                        ) : null
+                                    }
                                     onOpenDiagram={handleOpenDiagram}
                                     onTaskClick={handleTaskClick}
+                                    onQuickAddClick={
+                                        column.id === "open" && projectId != null
+                                            ? toggleQuickAdd
+                                            : undefined
+                                    }
                                 />
                             );
                         })}
@@ -679,9 +824,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
-                            diagramTask.title || t.tasks.diagram.untitled
-                        }`}
                         rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
@@ -689,6 +831,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         projectId={Number(
                             diagramTask.projectId ?? usePM.currentProject?.projectId
                         )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
+                            diagramTask.title || t.tasks.diagram.untitled
+                        }`}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

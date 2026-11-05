@@ -549,6 +549,24 @@ input[type="checkbox"] {
     color: #cbd5e1;
 }
 
+/* Links in the dark bubbles (MIP-1041). Without a colour of their own they take
+   the browser's default link colour for the element's `color-scheme`, and the
+   full BlockNote renderer (and every task comment) computes to `light` even in
+   dark mode, so a link was the light-scheme dark blue (#0000ee), and a visited
+   one dark purple, on a near-black bubble. The colours come from this palette's
+   own indigo family; the light bubbles keep the browser default. */
+.bn-message-bubble-box-dark a {
+    color: #a5b4fc;
+}
+
+.bn-message-bubble-box-dark a:visited {
+    color: #c4b5fd;
+}
+
+.bn-message-bubble-box-dark a:hover {
+    color: #c7d2fe;
+}
+
 /* Dark mode - Sent messages (deep indigo background #312e81) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
@@ -564,6 +582,19 @@ input[type="checkbox"] {
 .bn-message-bubble-box-dark-me [data-content-type="quote"] blockquote {
     border-left-color: #a5b4fc;
     color: #c7d2fe;
+}
+
+/* The deep indigo bubble needs lighter links than the grey one (MIP-1041). */
+.bn-message-bubble-box-dark-me a {
+    color: #c7d2fe;
+}
+
+.bn-message-bubble-box-dark-me a:visited {
+    color: #ddd6fe;
+}
+
+.bn-message-bubble-box-dark-me a:hover {
+    color: #e0e7ff;
 }
 
 /* Where an external link really goes (MIP-737). `data-link-host` is set from the
@@ -1095,10 +1126,16 @@ div[data-floating-ui-focusable] {
    ========================================================================== */
 
 /* Task comment preview - Updated for modern bubble colors */
+/* A comment body is read-only, so it has no side-menu / drag handle to leave
+   room for. BlockNote's own `.bn-editor { padding-inline: 54px }` is that room
+   for the full-page editor; the old override cut only the START side to 20px
+   and left the end at 54px, which took ~74px of every body (on a 390px phone,
+   more than half of its width). Match the chat bubbles: a hairline of padding
+   on both sides (MIP-1033). */
 .task-comment-preview-light .bn-editor {
     color: #111827; /* Dark text on white background */
     background-color: transparent;
-    padding-inline-start: 20px;
+    padding-inline: 2px;
 }
 
 .task-comment-preview-light code {
@@ -1117,7 +1154,7 @@ div[data-floating-ui-focusable] {
 .task-comment-preview-dark .bn-editor {
     color: #e0e7ff; /* Light indigo text on dark indigo background */
     background-color: transparent;
-    padding-inline-start: 20px;
+    padding-inline: 2px;
 }
 
 .task-comment-preview-dark code {
@@ -1128,6 +1165,19 @@ div[data-floating-ui-focusable] {
 /* Same pair as the dark sent bubble — identical indigo background. */
 .task-comment-preview-dark [data-content-type="quote"] blockquote {
     border-left-color: #a5b4fc;
+    color: #c7d2fe;
+}
+
+/* Link colours for the task comment, as in the dark message bubbles (MIP-1041). */
+.task-comment-preview-dark a {
+    color: #a5b4fc;
+}
+
+.task-comment-preview-dark a:visited {
+    color: #c4b5fd;
+}
+
+.task-comment-preview-dark a:hover {
     color: #c7d2fe;
 }
 
@@ -1330,7 +1380,6 @@ html,
 .bn-suggestion-menu,
 .bn-link-toolbar,
 .bn-table-handle,
-.bn-grid-suggestion-menu,
 .bn-floating-toolbar {
     z-index: 13300 !important;
 }
@@ -1387,7 +1436,6 @@ body
         .bn-table-handle,
         .bn-formatting-toolbar,
         .bn-suggestion-menu,
-        .bn-grid-suggestion-menu,
         .bn-link-toolbar,
         .bn-floating-toolbar,
         .bn-emoji-picker-popover,

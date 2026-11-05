@@ -59,6 +59,7 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
+import { MILESTONE_LIST_STATUSES } from "../../sprint-milestone/utils/sortMilestones";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
 import {
     applyRuleDefaults,
@@ -997,7 +998,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 milestoneId: null,
             });
             await useSM.loadMilestonesForProject(projectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             });
             // Pull the freshest copy (backing task / aggregates / assignees)
             // before opening the preview so MilestonePreviewInner doesn't

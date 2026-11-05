@@ -483,6 +483,7 @@ export const ChatNoteHeader = ({
                             // Version history — hidden until the note has a
                             // saved version (matches the old chip's guard).
                             id: "versionHistory",
+                            kind: "versionHistory",
                             label: t.notes.history.viewVersions,
                             icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
                             visible:
@@ -491,6 +492,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "copyNoteLink",
+                            kind: "copyLink",
                             label: t.notes.header.copyNoteLink,
                             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: !!useNM.currentChatNote,
@@ -516,12 +518,14 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "childNote",
+                            kind: "newChildNote",
                             label: t.notes.header.childNote,
                             icon: <AddIcon sx={{ fontSize: 18 }} />,
                             onClick: onCreateChildNote,
                         },
                         {
                             id: "importMarkdown",
+                            kind: "import",
                             label: t.notes.header.importMarkdown,
                             icon: <FileUploadRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: importContext != null,
@@ -529,6 +533,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "exportMarkdown",
+                            kind: "export",
                             label: t.notes.header.exportMarkdown,
                             icon: <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: activeChatNoteId != null,
@@ -538,6 +543,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "openInNotes",
+                            kind: "openInNotes",
                             label: t.notes.header.openInNotes,
                             icon: <LaunchRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: isInChatPage,
@@ -555,6 +561,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "muteNote",
+                            kind: "mute",
                             label:
                                 notifCtx &&
                                 activeChatNoteId != null &&
@@ -595,6 +602,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "deleteNote",
+                            kind: "delete",
                             label: t.notes.header.deleteNote,
                             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
                             danger: true,

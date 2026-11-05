@@ -26,7 +26,6 @@ interface MainChatPanelProps {
     useTEM: TeamManagementState;
     myself: UserProps;
     currentMainChatId: number;
-    currentWindowHeight: number;
     mainChatPanelSize: number;
     setMainChatPanelSize: (size: number) => void;
     incompleteTodoCount: number;
@@ -45,7 +44,6 @@ export const MainChatPanel = ({
     useTEM,
     myself,
     currentMainChatId,
-    currentWindowHeight,
     mainChatPanelSize,
     setMainChatPanelSize,
     incompleteTodoCount,
@@ -65,7 +63,6 @@ export const MainChatPanel = ({
             {useCM.currentMainChat && useCM.currentMainChat.chatId !== "" && (
                 <MessagesPane
                     currentMainChatId={currentMainChatId}
-                    currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
                     isToDoVisible={isToDoVisible}
                     myself={myself}

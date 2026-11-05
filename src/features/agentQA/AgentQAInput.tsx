@@ -79,7 +79,7 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
             {mention.pickerOpen && !isStreaming && (
                 <MentionSuggestionDropdown
                     anchorRef={wrapperRef}
-                    ariaLabel={labels.mentions?.ariaLabel}
+                    ariaLabel={labels.mentions.ariaLabel}
                     highlightIndex={mention.highlightIndex}
                     placement="above"
                     suggestions={mention.suggestions}

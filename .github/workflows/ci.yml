@@ -1,10 +1,14 @@
 name: CI
 
-# Rollout: `frontend-test` is the check to mark *required* first.
-# `frontend-build` and `frontend-quality` stay report-only (non-required)
-# until the in-flight refactor's production-source type errors and the
-# ~14k eslint findings are separately remediated. Report-only is achieved
-# by leaving the check out of branch protection's required list — NOT by
+# Rollout: `frontend-test` was the first check to mark *required*, and
+# `frontend-build` is named required too (MIP-898): Railway's deploy runs the
+# same `npm run build`, so a red build here is a deploy that cannot ship (it
+# happened on 2026-11-02, after a merge with every other check green). It
+# only blocks a merge once `frontend-build (required)` is in the ruleset's
+# required list, next to `frontend-test`.
+# `frontend-quality` stays report-only (non-required) until the ~14k eslint
+# findings are separately remediated. Report-only is achieved by leaving the
+# check out of branch protection's required list — NOT by
 # `continue-on-error` (which would mask a red baseline).
 #
 # Path filtering happens INSIDE the workflow (the `changes` job below +
@@ -181,7 +185,7 @@ jobs:
                   if-no-files-found: ignore
 
     frontend-build:
-        name: frontend-build (report-only)
+        name: frontend-build (required)
         needs: changes
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
@@ -201,11 +205,10 @@ jobs:
             # This step also runs `bundleGuard` (scripts/bundleGuard.ts), which
             # FAILS the build if a chunk that must stay lazy — vendor-editor
             # above all — becomes statically reachable from the entry. That has
-            # regressed twice. Because this job is report-only, a violation
-            # shows up red here but does not block the merge; it does block the
-            # Railway/Cloud Run deploy build, which is the harder stop. Marking
-            # `frontend-build` required in branch protection is what would turn
-            # it into a merge blocker.
+            # regressed twice. The same failure stops the Railway/Cloud Run
+            # deploy build, so this job belongs in the branch ruleset's
+            # required list: a violation should be caught at the merge, not
+            # discovered afterwards as a deploy that quietly did not ship.
             - name: Build (tsc -b && vite build)
               run: npm run build
               env:

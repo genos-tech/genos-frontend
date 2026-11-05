@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 import { onTasksBulkChanged } from "../../features/tasks/services/taskEvents";
+import { MILESTONE_LIST_STATUSES } from "../../features/tasks/sprint-milestone/utils/sortMilestones";
 import { useSprintMilestoneManagement } from "../tasks/useSprintMilestoneManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
 import { useProjectManagement } from "./useProjectManagement";
@@ -23,42 +24,66 @@ export const useProjectTaskManagement = ({
     // project stops applying the moment the user is somewhere else — see
     // `tableMilestoneFilterId`. usePM is constructed first precisely so
     // this is available here.
-    const useTM = useTaskManagement(myself, accessToken, usePM.currentProject?.projectId);
+    // `currentTeamId` goes in too: a read that comes back after a team switch is
+    // dropped (see `fetchProjectTasks`). So does whether the open project is the
+    // user's own team's: that is read from the team's LIST, not from the open
+    // project object, because the paths that open a project (chat, boot, the
+    // URL) do not all carry `isExternal`.
+    const openProjectId = usePM.currentProject?.projectId;
+    const listedOpenProject =
+        openProjectId == null
+            ? undefined
+            : usePM.teamProjects.find((p) => p.projectId === openProjectId);
+    const isOwnTeamProject = listedOpenProject
+        ? listedOpenProject.isExternal !== true && usePM.currentProject?.isExternal !== true
+        : undefined;
+    const useTM = useTaskManagement(myself, accessToken, openProjectId, {
+        currentTeamId,
+        isOwnTeamProject,
+    });
     const useSM = useSprintMilestoneManagement(accessToken);
 
-    // Auto-fetch project tasks when:
-    //   (a) loadProjectsAndTasks has just finished writing the tasks for the
-    //       current project into IndexedDB (signaled by tsTasksLoadedToIDB), or
-    //   (b) currentProject changed but no signal has fired (e.g. setCurrentProject
-    //       was called directly from a chat bubble or thread navigation, without
-    //       going through loadProjectsAndTasks). In that case fall back to a
-    //       short delay so any in-flight IDB write has a chance to complete.
+    // Read the open project's rows from IndexedDB into the table.
     //
-    // Previously this effect always waited a fixed 1000ms before reading from
-    // IndexedDB, which raced loadProjectTasks on slower networks. When a team
-    // switch fired loadProjectTasks > 1s of API + IDB time, the fetch ran
-    // against an empty store, allTasks was set to [], and nothing re-read the
-    // store afterward — leaving the table empty until the user refreshed.
+    //   (a) The open project CHANGED (by id): read at once, so what is already
+    //       in IndexedDB paints without waiting for the network. This used to
+    //       wait for `tsTasksLoadedToIDB` or a 1 s timer, and ran for every new
+    //       project OBJECT: a switch sets that object several times (the click,
+    //       the tag reload, a record completed from the list), up to four
+    //       950-row reads per switch.
+    //   (b) The network refresh of the open project finished writing its rows
+    //       (`tsTasksLoadedToIDB`): read them again. A refresh of any OTHER
+    //       project (the agent's bulk write, a cross-project move) changed rows
+    //       this table does not show: no read.
+    const openId = usePM.currentProject?.projectId;
     useEffect(() => {
-        if (!usePM.currentProject || !usePM.currentProject.projectId) return;
-        const projectId = usePM.currentProject.projectId;
+        if (!openId) return;
+        void useTM.fetchProjectTasks(openId);
+        localStorage.setItem("lastProjectId", openId.toString());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openId]);
 
-        const runFetch = () => {
-            useTM.fetchProjectTasks(projectId);
-            localStorage.setItem("lastProjectId", projectId.toString());
-        };
-
-        // Signal matches the active project: IDB is freshly populated, fetch now.
-        if (usePM.tsTasksLoadedToIDB?.projectId === projectId) {
-            runFetch();
+    useEffect(() => {
+        const signal = usePM.tsTasksLoadedToIDB;
+        if (!signal) return;
+        if (signal.projectId !== openId) {
+            // Rows of a project the user is not in changed under the copy that
+            // is remembered for it: forget the copy (a switch back is a miss and
+            // reads IndexedDB, which is current).
+            useTM.dropCachedProjectRows(signal.projectId);
             return;
         }
+        void useTM.fetchProjectTasks(openId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.tsTasksLoadedToIDB]);
 
-        // Fallback path: schedule a deferred fetch and clear it if the signal
-        // arrives first (which will re-trigger this effect via the dep below).
-        const timer = setTimeout(runFetch, 1000);
-        return () => clearTimeout(timer);
-    }, [usePM.currentProject, usePM.tsTasksLoadedToIDB]);
+    // A project that is gone from the team's list (deleted here or by the
+    // agent, left, or the whole list reset by a team switch) keeps no rows in
+    // memory.
+    useEffect(() => {
+        useTM.pruneCachedProjectRows(usePM.teamProjects.map((p) => p.projectId));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [usePM.teamProjects]);
 
     // Load sprint config + sprints + milestones whenever the active
     // project changes. Each loader is idempotent and replaces only its
@@ -75,7 +100,7 @@ export const useProjectTaskManagement = ({
             useSM.loadConfigForProject(projectId),
             useSM.loadSprintsForProject(projectId),
             useSM.loadMilestonesForProject(projectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             }),
         ]);
     }, [usePM.currentProject?.projectId]);
@@ -90,21 +115,30 @@ export const useProjectTaskManagement = ({
         })();
     }, [usePM.isNewProjectCreated]);
 
-    // Load updated task when preview changes
+    // A task was just created: load it and upsert its row into the table.
+    // Only for that. Opening or switching a task is the job of the "auto-load"
+    // effect further down; running this one on every preview change as well
+    // made every click fetch the same task twice more (MIP-968).
     useEffect(() => {
-        if (usePM.currentProject) {
+        if (usePM.currentProject && useTM.isNewTaskCreated === true) {
             useTM.loadUpdatedTask(usePM.currentProject.projectId);
         }
-    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
+    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated]);
 
     // Freshness strategy. Two pieces working together:
     //
-    //   (A) Window focus → refresh the project task list. The list call
-    //       is cheap and gives every row a fresh `updatedAt`. This is
-    //       the *trigger*: it makes `allTasks` authoritative.
+    //   (A) A change-driven refresh of the project task list (and its sprints)
+    //       on window focus, on a 60 s tick and when the `#` menu asks. It
+    //       lives in `useChangeRefresher`, mounted once in `App`, and is NOT
+    //       registered here any more: this hook used to add its own unthrottled
+    //       `focus` listener next to it, which reloaded the task list and the
+    //       sprints on every focus whether or not anything had changed. The
+    //       list call gives every row a fresh `updatedAt`, so it is the
+    //       *trigger* that makes `allTasks` authoritative.
     //   (B) `allTasks`-watch effect below → when the open preview's row
     //       in `allTasks` has a newer `updatedAt` than what
-    //       `currentPreviewTask` currently shows, re-run
+    //       `currentPreviewTask` currently shows (and that IS the open task),
+    //       re-run
     //       `loadUpdatedTask`. `loadSpecificTask` then compares against
     //       the IDB cache: cache up-to-date → instant hit, no API call;
     //       cache stale → API refetch. Either way the preview lands on
@@ -113,27 +147,17 @@ export const useProjectTaskManagement = ({
     // This catches everything the PM socket misses (PR-merge auto-close,
     // teammate edits via the task UI, background jobs) without paying
     // for a full task refetch every focus event.
-    useEffect(() => {
-        const onFocus = () => {
-            if (usePM.currentProject) {
-                void usePM.refreshProjectTasks(usePM.currentProject.projectId);
-                // A sprint's `status` (upcoming/active/completed) is derived
-                // server-side from today's date, so the active sprint silently
-                // rotates at a sprint boundary. Sprints are otherwise loaded
-                // only on project change, freezing a stale "active" in memory
-                // — re-fetch on focus so a tab returned to the next day picks
-                // up the new active sprint (and any freshly auto-rolled ones)
-                // without a reload. Both the milestone sprint picker and the
-                // dashboard read this shared state.
-                void useSM.loadSprintsForProject(usePM.currentProject.projectId);
-            }
-        };
-        window.addEventListener("focus", onFocus);
-        return () => window.removeEventListener("focus", onFocus);
-    }, [usePM.currentProject, useSM.loadSprintsForProject]);
+    //
+    // A sprint's `status` (upcoming/active/completed) is derived server-side
+    // from today's date, so the active sprint silently rotates at a sprint
+    // boundary and no write announces it. Returning to the tab after it
+    // happened lands on the full refresh (more than ten minutes since the
+    // last), which re-fetches the sprints; the day-change poll below covers a
+    // tab that never leaves. Both the milestone sprint picker and the dashboard
+    // read this shared state.
 
     // Sprint rotation for a tab that stays OPEN AND FOCUSED across a day
-    // boundary — the focus refresh above never fires then. Poll cheaply for a
+    // boundary — a focus refresh never fires then. Poll cheaply for a
     // change in the local calendar date and re-fetch sprints when it ticks
     // over, so the dashboard's active sprint and the milestone picker rotate
     // on their own. The date compare is a near-free string check; the network
@@ -173,7 +197,7 @@ export const useProjectTaskManagement = ({
             if (!projectId) return;
             void usePM.refreshProjectTasks(projectId);
             void useSM.loadMilestonesForProject(projectId, {
-                statuses: ["Open", "WIP", "Pending", "Closed"],
+                statuses: MILESTONE_LIST_STATUSES,
             });
             if (useTM.currentPreviewMilestoneId !== -1) {
                 void useSM.refreshMilestone(useTM.currentPreviewMilestoneId);
@@ -186,8 +210,15 @@ export const useProjectTaskManagement = ({
     // the preview is showing. Triggered by focus refresh, by PM-channel
     // updates that update `allTasks`, by initial app mount — anything
     // that puts fresh `updatedAt`s in the table.
+    //
+    // Only when `currentPreviewTask` already IS the requested task. During a
+    // switch it still holds the OUTGOING task until the new one lands, so
+    // comparing the new row against it "found" a newer row on nearly every
+    // first open or switch and loaded the task a second time, alongside the
+    // main load below (MIP-968).
     useEffect(() => {
         if (!usePM.currentProject || useTM.currentPreviewTaskId === -1) return;
+        if (String(useTM.currentPreviewTask?.id) !== String(useTM.currentPreviewTaskId)) return;
         const row = useTM.allTasks.find(
             (t) => t.id != null && String(t.id) === String(useTM.currentPreviewTaskId)
         );
@@ -264,8 +295,6 @@ export const useProjectTaskManagement = ({
         useTM.setIsTaskPreviewVisible(false);
         useTM.setIsTaskTableVisible(true);
         useTM.setCurrentTaskChain([]);
-        // taskMetaTree is derived from taskMeta — clearing taskMeta drops the tree.
-        useTM.setTaskMeta([]);
         useTM.setIsCreatingTask({
             flag: false,
             parentTaskId: null,

@@ -27,6 +27,7 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
+import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLandingContext";
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
@@ -85,6 +86,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const urlLinkModal = useUrlLinkModal();
     const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
+    const openLanding = useTaskOpenLanding();
 
     // Inline quick-create state. The button up top toggles `isQuickAdding`;
     // when on, an inline title input takes its place. Enter on a non-empty
@@ -153,16 +155,22 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         // sub-tree when the user click-storms cards faster than the
         // backend round-trip.
         let cancelled = false;
+        // Load when either the row is the active task preview, or
+        // the parent explicitly opted in via `forceLoad` (milestone
+        // preview, where `currentPreviewTaskId` is intentionally
+        // -1).
+        const shouldLoad =
+            currentTaskContent.project != null &&
+            currentTaskContent.id != null &&
+            (forceLoad || useTM.currentPreviewTaskId === currentTaskContent.id);
+        // Inside a task preview the list lands together with the preview's
+        // other loaders (see taskOpenLanding.ts); anywhere else the ticket
+        // writes at once.
+        const ticket = shouldLoad
+            ? joinOpenLanding(openLanding, Number(currentTaskContent.id), "children")
+            : null;
         (async () => {
-            // Load when either the row is the active task preview, or
-            // the parent explicitly opted in via `forceLoad` (milestone
-            // preview, where `currentPreviewTaskId` is intentionally
-            // -1).
-            const shouldLoad =
-                currentTaskContent.project != null &&
-                currentTaskContent.id != null &&
-                (forceLoad || useTM.currentPreviewTaskId === currentTaskContent.id);
-            if (!shouldLoad) return;
+            if (!ticket) return;
             const loaded: TaskProps[] =
                 (await loadSpecificChildTasks(
                     myself,
@@ -170,11 +178,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     currentTaskContent.id!,
                     accessToken
                 )) ?? [];
-            if (cancelled) return;
-            setChildTasks(loaded?.length ? loaded : []);
+            ticket.land(() => {
+                if (cancelled) return;
+                setChildTasks(loaded?.length ? loaded : []);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket?.cancel();
         };
         // Depend on the task/project ids, not the `currentTaskContent`
         // object: regular mode passes `tmpCurrentTaskContent`, whose

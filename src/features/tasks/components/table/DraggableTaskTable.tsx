@@ -13,6 +13,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import {
     tableSortOverrideFor,
@@ -26,17 +27,30 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
+import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
-import { applyTreePositionToDescendants, TreePosition } from "../../utils/cascadeTreePosition";
+import {
+    applyTreePositionToDescendants,
+    collectDescendantIds,
+    TreePosition,
+} from "../../utils/cascadeTreePosition";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
-import { buildFamilyFocusCss, DND_ACTIVE_ATTR, TASK_BODY_CLASS } from "../../utils/familyFocusCss";
+import {
+    DND_ACTIVE_ATTR,
+    installFamilyFocusStyles,
+    onFamilyFocusPointerLeave,
+    onFamilyFocusPointerOver,
+    TASK_BODY_CLASS,
+} from "../../utils/familyFocusCss";
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
+import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
+import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
 import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
@@ -134,9 +148,12 @@ export const defaultColumns: ColumnDef[] = [
         field: "pr",
         headerName: "PR",
         headerLabelKey: "pr",
-        width: 60,
-        minWidth: 48,
-        maxWidth: 100,
+        // Each chip now carries its PR number (`#443`, about 60px), and the
+        // cell wraps: a narrow column stacks the chips, a wide one (up to
+        // `maxWidth`) keeps several on one line (MIP-1032).
+        width: 96,
+        minWidth: 72,
+        maxWidth: 360,
         align: "center",
         resizable: true,
         hidden: true,
@@ -700,16 +717,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         depthMap,
     ]);
 
-    // Hover family-focus stylesheet. Rebuilt only when the visible tree
-    // changes — hovering itself runs entirely in the browser's selector engine
-    // (see `familyFocusCss.ts` for why this isn't React state).
-    const familyFocusCss = useMemo(
-        () => buildFamilyFocusCss(familyKeyByRow.values()),
-        // `displayRows` is the signal: `familyKeyByRow` is a stable Map
-        // mutated in place by the walk above, so its identity never changes.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [displayRows, familyKeyByRow]
-    );
+    // Hover family-focus: two static rules, added to the document once. The
+    // hover itself is a delegated pointer handler on the table body (see
+    // `familyFocusCss.ts` for why it is neither React state nor `:has()`).
+    useEffect(() => {
+        installFamilyFocusStyles();
+    }, []);
 
     // Close a pristine quick-add row whose anchor row left the visible
     // tree (filtered out, ancestor collapsed, project switch). A dirty
@@ -961,6 +974,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 dragged.id ?? "",
                 position
             );
+        // What the move is about to change, for putting it back if the server
+        // refuses it: the dragged row and everything under it, as each list
+        // holds them now. Only those rows go back, so an edit that landed
+        // elsewhere in the table while the request was in flight survives.
+        const priorPreview = useTM.currentPreviewTask;
+        const movedIds = new Set([
+            String(dragged.id),
+            ...collectDescendantIds(useTM.allTasks, dragged.id ?? ""),
+        ]);
+        const revertMoveIn = (before: TaskTableProps[]) => {
+            const priorRows = new Map(
+                before.filter((t) => movedIds.has(String(t.id))).map((t) => [String(t.id), t])
+            );
+            return (rows: TaskTableProps[]): TaskTableProps[] =>
+                rows.map((t) => priorRows.get(String(t.id)) ?? t);
+        };
+        const revertDisplayed = revertMoveIn(currentDisplayingTasks);
+        const revertAll = revertMoveIn(useTM.allTasks);
         setCurrentDisplayingTasks(applyMove);
         useTM.setAllTasks(applyMove);
 
@@ -995,6 +1026,26 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             await updateTaskFromTable(updated, myself, socket || null, accessToken, teamMembers);
         } catch (error) {
             console.error("Error reparenting task:", error);
+            // The server refused the move (the reason is on screen). Nothing
+            // was stored, so the optimistic move above would otherwise stay on
+            // screen as if it had been. Any other failure keeps the old
+            // log-only behaviour.
+            if (error instanceof TaskSaveRefusedError) {
+                setCurrentDisplayingTasks(revertDisplayed);
+                useTM.setAllTasks(revertAll);
+                if (priorPreview && String(priorPreview.id) === draggedId) {
+                    useTM.setCurrentPreviewTask((prev) =>
+                        prev && String(prev.id) === draggedId
+                            ? {
+                                  ...prev,
+                                  parentTaskId: priorPreview.parentTaskId,
+                                  milestoneId: priorPreview.milestoneId,
+                                  rootTaskId: priorPreview.rootTaskId,
+                              }
+                            : prev
+                    );
+                }
+            }
         }
     };
 
@@ -1058,6 +1109,21 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         },
         [sortTasks]
     );
+
+    // What `handleRowUpdate` reads AFTER its `await`. A row is memoised and its
+    // comparator ignores `onRowUpdate`, so a row that has not re-rendered keeps the
+    // callback of the render it last drew in, and everything that callback closed
+    // over is as old as that render. Reading the lists from the closure after a
+    // save wrote every row edited since back to what that render saw: edit task A,
+    // then task B, and A reverted until a reload (MIP-1034).
+    const latestForRowUpdate = useRef({
+        displaying: currentDisplayingTasks,
+        preview: useTM.currentPreviewTask,
+    });
+    latestForRowUpdate.current = {
+        displaying: currentDisplayingTasks,
+        preview: useTM.currentPreviewTask,
+    };
 
     // Handle row update
     const handleRowUpdate = async (updatedRow: TaskTableProps): Promise<TaskTableProps> => {
@@ -1185,44 +1251,58 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 prev.map((task) => (task.id === result.id ? result : task))
             );
 
-            // Update preview task if it's the current one
-            if (useTM.currentPreviewTask && useTM.currentPreviewTask.id === Number(result.id)) {
-                useTM.setCurrentPreviewTask({
-                    ...useTM.currentPreviewTask,
-                    title: result.title || useTM.currentPreviewTask.title,
-                    tags: result.tags || useTM.currentPreviewTask.tags,
-                    concatTags: result.concatTags || useTM.currentPreviewTask.concatTags,
+            // Update preview task if it's the current one. Read from the ref: the
+            // preview open NOW, not the one this callback's render saw.
+            const openPreview = latestForRowUpdate.current.preview;
+            let editedPreview: TaskProps | undefined;
+            if (openPreview && openPreview.id === Number(result.id)) {
+                editedPreview = {
+                    ...openPreview,
+                    title: result.title || openPreview.title,
+                    tags: result.tags || openPreview.tags,
+                    concatTags: result.concatTags || openPreview.concatTags,
                     assignee:
                         teamMembers.find((member) => member.userId === result.assigneeId) ||
-                        useTM.currentPreviewTask.assignee,
+                        openPreview.assignee,
                     status:
                         statuses.find((status) => status.status === result.status) ||
-                        useTM.currentPreviewTask.status,
+                        openPreview.status,
                     priority:
                         priorities.find((priority) => priority.priority === result.priority) ||
-                        useTM.currentPreviewTask.priority,
+                        openPreview.priority,
                     effortLevel:
                         effortLevels.find(
                             (effortLevel) => effortLevel.level === result.effortLevel
-                        ) || useTM.currentPreviewTask.effortLevel,
-                    dueDate: result.dueDate || useTM.currentPreviewTask.dueDate,
-                });
+                        ) || openPreview.effortLevel,
+                    dueDate: result.dueDate || openPreview.dueDate,
+                };
+                useTM.setCurrentPreviewTask(editedPreview);
             }
 
-            // Update allTasks
-            const updatedAllTasks = useTM.allTasks.map((task) =>
-                task.id === result.id ? result : task
+            // Update allTasks. A functional update, so the save lands on the list as
+            // it is now and never on the copy this (possibly old) callback captured.
+            useTM.setAllTasks((prev) =>
+                prev.map((task) => (task.id === result.id ? result : task))
             );
-            useTM.setAllTasks(updatedAllTasks);
 
-            // Trigger task update
-            if (useTM.currentPreviewTask && useTM.currentPreviewTask.id === Number(result.id)) {
-                useTM.setIsTaskUpdated(true);
+            // The open preview's row also takes the preview's own values (after
+            // the write above, as the flag loop did).
+            if (editedPreview) {
+                useTM.syncPreviewEdit(editedPreview);
             }
 
             return result;
         } catch (error) {
             console.error("Error updating row:", error);
+            // A refused save stored nothing, and every state write above comes
+            // after the await, so nothing optimistic landed: hand back the row
+            // as the table still holds it, not the edited copy.
+            if (error instanceof TaskSaveRefusedError) {
+                return (
+                    latestForRowUpdate.current.displaying.find((t) => t.id === updatedRow.id) ??
+                    updatedRow
+                );
+            }
             return updatedRow;
         }
     };
@@ -1265,40 +1345,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         });
 
         if (taskId != null) {
-            const member = teamMembers.find((m) => m.userId === draft.assigneeId);
-            const nowIso = new Date().toISOString();
-            const optimistic: TaskTableProps = {
-                id: String(taskId),
-                // Render the friendly "<code>-<n>" id straight away when the
-                // backend returned it; otherwise formatTaskDisplayId falls
-                // back to "#<id>" until the background reload reconciles.
+            const optimistic = buildOptimisticQuickTask({
+                taskId,
                 displayId,
-                title: draft.title,
-                priority: draft.priority,
-                effortLevel: draft.effortLevel,
-                createdDate: nowIso,
-                updatedAt: nowIso,
-                dueDate: draft.dueDate,
-                daysLeft: draft.dueDate
-                    ? dayjs(draft.dueDate).startOf("day").diff(dayjs().startOf("day"), "day")
-                    : null,
-                status: draft.status,
-                assigneeId: draft.assigneeId,
-                assigneeEmail: member?.userEmail ?? null,
-                assigneeName: member?.userName ?? null,
-                assigneeImgPath: member?.avatarImgPath ?? null,
-                parentTaskId: String(parent.id),
-                rootTaskId: parent.rootTaskId ?? Number(parent.id),
-                threadId: null,
-                tags: draft.tags,
-                concatTags:
-                    draft.tags.length > 0 ? draft.tags.map((tag) => tag.tagName).join(",") : null,
-                teamId: myself.teamId ?? null,
+                draft,
+                parent,
                 projectId: Number(projectId),
-                isMilestone: false,
-                milestoneId: parent.milestoneId ?? null,
-                sprintId: parent.sprintId ?? null,
-            };
+                teamId: myself.teamId,
+                assignee: teamMembers.find((m) => m.userId === draft.assigneeId),
+            });
             // Duplicate-guarded against the race where the background
             // reload lands before this insert.
             useTM.setAllTasks((prev) =>
@@ -1315,38 +1370,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     };
 
     // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:
-    // each preview switch fans out ~13 TaskPreview fetches, so clicking
+    // each preview switch fans out a chain of TaskPreview fetches, so clicking
     // many rows in quick succession (id-cell single click or row
     // double-click) used to peg the backend and break the highlight
     // mid-flight. Decouple instant visual selection from the heavy
     // preview load by holding `pendingTaskId` / `pendingMilestoneId`
-    // locally and debouncing the real setters by 150 ms — the rapid
-    // sequence collapses into a single fetch for the final row.
+    // locally. The load itself is LEADING-edge debounced: a click with no
+    // other click in the last 150 ms opens right after the next painted frame
+    // (the highlight and the pane paint first), and a rapid sequence
+    // collapses to the first row plus the row the user lands on.
     const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
     const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
-    const previewSwitchTimerRef = useRef<number | null>(null);
-
-    useEffect(() => {
-        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
-            setPendingTaskId(null);
-        }
-    }, [pendingTaskId, useTM.currentPreviewTaskId]);
-    useEffect(() => {
-        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
-            setPendingMilestoneId(null);
-        }
-    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
-
-    useEffect(() => {
-        return () => {
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-                previewSwitchTimerRef.current = null;
-            }
-        };
-    }, []);
-
-    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
 
     const {
         setIsTaskPreviewVisible: setIsTaskPreviewVisibleRow,
@@ -1354,6 +1388,28 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         setCurrentPreviewMilestoneId: setCurrentPreviewMilestoneIdRow,
         setCurrentPreviewTaskId: setCurrentPreviewTaskIdRow,
     } = useTM;
+
+    // The heavy half of a click: the writes that start the preview load. The
+    // pending highlight is dropped in the same batch (one commit), because
+    // the real preview state now says the same thing.
+    const switchPreview = useCallback(
+        (task: TaskTableProps) => {
+            if (task.isMilestone === true && task.milestoneId != null) {
+                setCurrentPreviewKindRow("milestone");
+                setCurrentPreviewMilestoneIdRow(task.milestoneId);
+                setPendingMilestoneId(null);
+            } else if (task.id != null) {
+                setCurrentPreviewKindRow("task");
+                setCurrentPreviewTaskIdRow(Number(task.id));
+                setPendingTaskId(null);
+            }
+        },
+        [setCurrentPreviewKindRow, setCurrentPreviewMilestoneIdRow, setCurrentPreviewTaskIdRow]
+    );
+    const { call: scheduleSwitchPreview } = useLeadingDebouncedCallback(
+        switchPreview,
+        PREVIEW_SWITCH_DEBOUNCE_MS
+    );
 
     const requestPreview = useCallback(
         (task: TaskTableProps) => {
@@ -1370,29 +1426,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             }
             setIsTaskPreviewVisibleRow(true);
 
-            // Step 2: debounce the fetch cascade. Successive rapid
-            // clicks coalesce into a single TaskPreview load for the
-            // last row the user landed on.
-            if (previewSwitchTimerRef.current != null) {
-                window.clearTimeout(previewSwitchTimerRef.current);
-            }
-            previewSwitchTimerRef.current = window.setTimeout(() => {
-                previewSwitchTimerRef.current = null;
-                if (isMile) {
-                    setCurrentPreviewKindRow("milestone");
-                    setCurrentPreviewMilestoneIdRow(task.milestoneId as number);
-                } else if (task.id != null) {
-                    setCurrentPreviewKindRow("task");
-                    setCurrentPreviewTaskIdRow(Number(task.id));
-                }
-            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+            // Step 2: start the load. The first click does it after the next
+            // painted frame, not in this batch; successive rapid clicks
+            // coalesce into a single load for the last row.
+            scheduleSwitchPreview(task);
         },
-        [
-            setIsTaskPreviewVisibleRow,
-            setCurrentPreviewKindRow,
-            setCurrentPreviewMilestoneIdRow,
-            setCurrentPreviewTaskIdRow,
-        ]
+        [setIsTaskPreviewVisibleRow, scheduleSwitchPreview]
     );
 
     // Resolve "is this row the selected/previewed one" HERE rather than
@@ -1715,14 +1754,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                     </div>
 
-                    {/* Hover family-focus rules for the families currently in
-                        view. Inline rather than a static .css file because the
-                        selectors name the visible root ids; empty (and so
-                        omitted) whenever fewer than two families are on screen.
-                        Kept OUTSIDE the Droppable so it never appears as a
-                        sibling among the Draggables that dnd measures. */}
-                    {familyFocusCss !== "" && <style>{familyFocusCss}</style>}
-
                     {/* Draggable Table Body */}
                     <DragDropContext
                         onDragEnd={handleDragEnd}
@@ -1747,11 +1778,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    // Scope for the hover family-focus rules:
-                                    // they match `.task-table-body:has(<row>:hover)`,
-                                    // so the class must sit on the rows' common
-                                    // parent. The drag attribute disables them
-                                    // wholesale while a row is in flight.
+                                    // Scope for the hover family-focus rules and the
+                                    // element their pointer handlers read rows
+                                    // from, so the class must sit on the rows'
+                                    // common parent. The drag attribute disables
+                                    // the rules wholesale while a row is in flight.
                                     className={TASK_BODY_CLASS}
                                     {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
                                     style={{
@@ -1766,6 +1797,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             : "transparent",
                                         transition: "background-color 0.25s ease",
                                     }}
+                                    onPointerLeave={onFamilyFocusPointerLeave}
+                                    onPointerOver={onFamilyFocusPointerOver}
                                 >
                                     <TaskTableRows
                                         childrenByParent={childrenByParentEffective}
@@ -1885,9 +1918,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
-                            diagramTask.title || t.tasks.diagram.untitled
-                        }`}
                         rootTaskId={Number(diagramTask.id)}
                         usePM={usePM}
                         useSM={useSM}
@@ -1895,6 +1925,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         projectId={Number(
                             diagramTask.projectId ?? usePM.currentProject?.projectId
                         )}
+                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
+                            diagramTask.title || t.tasks.diagram.untitled
+                        }`}
                         onClose={() => setDiagramTask(null)}
                     />
                 )}

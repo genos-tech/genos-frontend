@@ -667,6 +667,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         node: { noteId: number; title: string }
     ): MoreMenuItem => ({
         id: "export-note",
+        kind: "export",
         label: t.notes.header.exportMarkdown,
         icon: <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />,
         onClick: () => {
@@ -690,12 +691,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     ): MoreMenuItem[] => [
         {
             id: "new-note-here",
+            kind: "newNote",
             label: t.notes.folders.newNoteHere,
             icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
             onClick: onCreate,
         },
         {
             id: "import-note-here",
+            kind: "import",
             label: t.notes.header.importMarkdown,
             icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
             onClick: () => setImportModalContext(importContext),
@@ -729,6 +732,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         node: { noteId: number; title: string; children: unknown[] }
     ): MoreMenuItem => ({
         id: "delete-note",
+        kind: "delete",
         label: t.notes.header.deleteNote,
         icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
         danger: true,
@@ -786,6 +790,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             rowMenuItems={(node: MyNoteMetaTreeNode) => [
                 {
                     id: "move-to-folder",
+                    kind: "move",
                     label: t.notes.folders.moveToFolder,
                     icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
                     onClick: () =>
@@ -1000,6 +1005,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     ? [
                           {
                               id: "move-to-folder",
+                              kind: "move",
                               label: t.notes.folders.moveToFolder,
                               icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
                               onClick: () =>

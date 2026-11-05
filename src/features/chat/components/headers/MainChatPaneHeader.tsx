@@ -275,9 +275,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         // Mirror the BlockNote document shape `bnChatEditor` emits — a
         // paragraph block with a `link` inline node so the URL renders
         // as a clickable hyperlink (plain text wouldn't auto-linkify on
-        // the receive side). Trailing empty paragraph is mandatory:
-        // `BnChatPreview` does `content.slice(0, -1)` when seeding its
-        // preview editor.
+        // the receive side). It ends with the empty paragraph every stored
+        // body ends with (see `withTrailingBlank`), which the renderers drop.
         const content = [
             {
                 type: "paragraph",
@@ -512,18 +511,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuItem>
                             )}
 
-                            {/* Self-DM only: ToDo lives in the visible icon
-                                slot above, so mute is surfaced here in the
-                                overflow instead. Other chats keep mute as
-                                their visible icon and don't need this. */}
-                            {isYou === true && (
-                                <MuteMenuItem
-                                    chatType={chat.chatType}
-                                    chatId={chat.chatId}
-                                    chatName={muteLabel}
-                                />
-                            )}
-
                             {isYou === true && calendarModal && (
                                 <MenuItem onClick={calendarModal.open}>
                                     <CalendarMonthRoundedIcon
@@ -549,6 +536,18 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     />
                                     {t.chat.headers.addMembers}
                                 </MenuItem>
+                            )}
+
+                            {/* Self-DM only: ToDo lives in the visible icon
+                                slot above, so mute is surfaced here in the
+                                overflow instead. Other chats keep mute as
+                                their visible icon and don't need this. */}
+                            {isYou === true && (
+                                <MuteMenuItem
+                                    chatType={chat.chatType}
+                                    chatId={chat.chatId}
+                                    chatName={muteLabel}
+                                />
                             )}
                         </Menu>
                     </Dropdown>

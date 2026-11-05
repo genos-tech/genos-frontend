@@ -19,7 +19,6 @@ const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
 type IdentityTraits = {
     teamId?: string;
-    teamName?: string;
     role?: string;
 };
 
@@ -97,6 +96,11 @@ export const analytics = {
     reset(): void {
         if (!initialized) return;
         posthog.reset();
+    },
+
+    /** Whether the user has left analytics on. Other telemetry honours the same opt-out. */
+    isEnabled(): boolean {
+        return userEnabled;
     },
 
     setEnabled(enabled: boolean): void {

@@ -6,13 +6,13 @@ import {
     useExtension,
     useExtensionState,
     useThreads,
-    useUser,
 } from "@blocknote/react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { Avatar, Box, Chip, Sheet, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { commentFirstLine } from "./commentMentions";
+import { useCommentAuthor } from "./useCommentAuthor";
 
 // ─────────────────────────────────────────────────────────────────────────
 // A custom "show all comments" sidebar for the collaborative note editors.
@@ -95,8 +95,8 @@ type ThreadRowProps = {
 };
 
 // One thread = one row. Split into its own component because it calls
-// `useUser` (a hook) for the author — hooks can't run in a `.map()` loop.
-// `useUser` returns undefined (never throws) when the user isn't cached yet;
+// `useCommentAuthor` (a hook) for the author — hooks can't run in a `.map()` loop.
+// `useCommentAuthor` returns undefined (never throws) when the user isn't cached yet;
 // the `CommentsUserPreloader` warms these before any card/row renders, so the
 // fallback below is only ever hit transiently.
 const ThreadRow = memo(
@@ -112,7 +112,7 @@ const ThreadRow = memo(
         // started it + what it said, but how recently it was last touched.
         const firstComment = thread.comments[0];
         const lastComment = thread.comments[thread.comments.length - 1];
-        const author = useUser(firstComment?.userId ?? "");
+        const author = useCommentAuthor(firstComment?.userId ?? "");
         const preview = commentFirstLine(firstComment?.body);
         const replyCount = Math.max(0, thread.comments.length - 1);
         const authorName = author?.username || copy.unknownAuthor;

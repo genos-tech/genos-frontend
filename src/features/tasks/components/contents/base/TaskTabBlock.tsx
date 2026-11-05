@@ -323,8 +323,19 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
     // Shared look of the two buttons under the task's notes list.
     const addNoteButtonSx = {
+        // Equal share of the row whatever the label: `flex: 1` alone keeps the
+        // content as the basis, so a longer label made one button wider and
+        // taller and they ran into each other. `minWidth: 0` lets a button
+        // shrink below its label (which ellipsises, see the labels below).
+        flex: "1 1 0",
+        minWidth: 0,
+        // Joy gives a ListItemButton inside a ListItem negative margins (12px
+        // each side, and -4px on top of the first) so it can bleed into the
+        // item's padding. With two side by side that is what made them
+        // overlap and the first one taller.
+        m: 0,
         borderRadius: "10px",
-        px: 2,
+        px: 1.5,
         py: 1,
         justifyContent: "center",
         gap: 1,
@@ -696,12 +707,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     the dialog, which looked like a dead
                                     click — the reason this button used to
                                     be hidden there entirely. */}
-                                <ListItem sx={{ p: 0, mt: 0.5, gap: 1 }}>
+                                <ListItem sx={{ p: 0, mt: 0.5, gap: 1, alignItems: "stretch" }}>
                                     <ListItemButton
-                                        sx={{
-                                            ...addNoteButtonSx,
-                                            flex: 1,
-                                        }}
+                                        sx={addNoteButtonSx}
                                         onClick={async () => {
                                             if (!taskContent.project) return;
                                             if (isModalHosted && urlLinkModal) {
@@ -736,8 +744,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             }
                                         }}
                                     >
-                                        <AddRoundedIcon sx={{ fontSize: 18 }} />
-                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                        <AddRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+                                        <Typography
+                                            noWrap
+                                            level="body-sm"
+                                            sx={{ fontWeight: 600 }}
+                                        >
                                             New Note
                                         </Typography>
                                     </ListItemButton>
@@ -745,13 +757,19 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         task (MIP-850). Same dialog as the notes
                                         header's "Import Markdown…". */}
                                     <ListItemButton
-                                        sx={{ ...addNoteButtonSx, flex: 1 }}
+                                        sx={addNoteButtonSx}
                                         onClick={() => {
                                             if (taskContent.project) setImportNoteOpen(true);
                                         }}
                                     >
-                                        <UploadFileRoundedIcon sx={{ fontSize: 18 }} />
-                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                        <UploadFileRoundedIcon
+                                            sx={{ fontSize: 18, flexShrink: 0 }}
+                                        />
+                                        <Typography
+                                            noWrap
+                                            level="body-sm"
+                                            sx={{ fontWeight: 600 }}
+                                        >
                                             {t.notes.importMd.importNote}
                                         </Typography>
                                     </ListItemButton>

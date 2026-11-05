@@ -5,10 +5,11 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Badge, Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { usePendingServiceHighlight } from "../../hooks/common/usePendingServiceHighlight";
 import {
     HIDEABLE_SIDEBAR_ITEMS,
     SidebarItemKey,
@@ -16,6 +17,7 @@ import {
 } from "../../hooks/common/useSidebarVisibility";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
+import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
 import { purplePalette } from "../../theme/purplePalette";
 
 type BottomTabBarProps = {
@@ -70,7 +72,9 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const location = useLocation();
+    // What the bar lights up: the route, except between a tap and the switch
+    // committing, when it is the tab just tapped (MIP-965).
+    const { highlightPath, markPending } = usePendingServiceHighlight();
     const { isVisible } = useSidebarVisibility();
 
     if (!isMobile) return null;
@@ -125,7 +129,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 const Icon = item.icon;
                 // Guard on empty `path` — `includes("")` is true for every
                 // route, which would light up the Account tab everywhere.
-                const isActive = item.path !== "" && location.pathname.includes(item.path);
+                const isActive = item.path !== "" && highlightPath.includes(item.path);
                 const badgeCount = getBadgeCount(item.id);
 
                 return (
@@ -147,7 +151,14 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             transition: "color 0.2s ease",
                             "&:active": { opacity: 0.7 },
                         }}
-                        onClick={() => (item.path === "" ? onOpenAccount() : navigate(item.path))}
+                        onClick={() => {
+                            if (item.path === "") {
+                                onOpenAccount();
+                                return;
+                            }
+                            markPending(item.path);
+                            switchService(navigate, item.path);
+                        }}
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}

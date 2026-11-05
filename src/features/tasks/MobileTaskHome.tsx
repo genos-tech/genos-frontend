@@ -258,11 +258,11 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             >
                                 {t.tasks.mobile.refreshTasks}
                             </MenuItem>
-                            <MenuItem onClick={() => usePM.setOpenCreateProject(true)}>
-                                {t.tasks.mobile.newProject}
-                            </MenuItem>
                             <MenuItem onClick={() => useTM.setOpenCreateTag(true)}>
                                 {t.tasks.mobile.newTag}
+                            </MenuItem>
+                            <MenuItem onClick={() => usePM.setOpenCreateProject(true)}>
+                                {t.tasks.mobile.newProject}
                             </MenuItem>
                         </Menu>
                     </Dropdown>
@@ -276,15 +276,12 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     <Box sx={{ height: "100%", width: "100%" }}>
                         <TaskSidebar
                             myself={myself}
-                            setMyself={setMyself}
                             setOpenJoinProject={setOpenJoinProject}
-                            socket={socket}
                             useCM={useCM}
                             usePM={usePM}
                             useSM={useSM}
                             useTEM={useTEM}
                             useTM={useTM}
-                            useUISM={useUISM}
                         />
                     </Box>
                 )}
@@ -346,6 +343,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            holdSwitchWithLoader
                         />
                     </MobileOverlay>
                 )}

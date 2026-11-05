@@ -36,6 +36,8 @@ import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -49,10 +51,9 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnTodoPreviewProps = {
     useTEM: TeamManagementState;
@@ -98,9 +99,11 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -120,17 +123,18 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
         },
     });
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption, tabStaysInEditor],
         dictionary,
         initialContent: body,
     });
@@ -160,7 +164,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                             />
 
                             <BasicTextStyleButton

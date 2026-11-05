@@ -161,20 +161,41 @@ describe("DevelopersPage", () => {
             "list_projects",
             "list_milestones",
             "get_milestone_summary",
+            "list_sprints",
+            "get_sprint_summary",
             "get_task_blockers",
             "get_task_history",
             "find_task_by_delivery",
             "search_workspace",
             "get_note",
+            "list_my_chats",
+            "get_chat_thread",
+            "list_my_mentions",
+            "list_channel_members",
             "get_current_user",
             "get_team_members",
             "list_project_members",
+            "list_project_tags",
             "list_task_dependencies",
             "list_note_folders",
+            "list_note_access",
+            "get_note_history",
             "list_uncompleted_todos",
             "list_today_todos",
             "list_calendar_events",
             "list_calendars",
+            "get_my_blockers",
+            "list_my_inbox",
+            "get_my_throughput",
+            "get_workload_distribution",
+            "get_top_task_closers",
+            "get_task_throughput_stats",
+            "get_stale_tasks",
+            "get_team_task_summary",
+            "get_project_activity_ranking",
+            "get_milestone_assignee_counts",
+            "get_project_summary",
+            "get_my_task_summary",
             "get_pr",
             "list_pr_reviews",
             "list_pr_comments",
@@ -184,7 +205,11 @@ describe("DevelopersPage", () => {
         write: [
             "update_task",
             "add_comment",
+            "update_comment",
+            "delete_comment",
+            "restore_task_body",
             "add_task_delivery",
+            "remove_task_delivery",
             "update_task_dependencies",
             "create_task",
             "assign_task",
@@ -194,9 +219,26 @@ describe("DevelopersPage", () => {
             "update_note",
             "create_todo_item",
             "update_todo_item",
+            "delete_todo_item",
             "create_calendar_event",
             "update_calendar_event",
             "delete_calendar_event",
+            "manage_milestone",
+            "delete_milestone",
+            "manage_sprint",
+            "delete_sprint",
+            "manage_project",
+            "manage_project_members",
+            "add_project_tag",
+            "manage_project_labels",
+            "approve_join_request",
+            "decline_join_request",
+            "manage_note_folder",
+            "favorite_note",
+            "delete_note",
+            "delete_note_folder",
+            "manage_note_sharing",
+            "restore_note_version",
         ],
     };
 
@@ -214,6 +256,71 @@ describe("DevelopersPage", () => {
             ...MCP_CATALOG.read.map((name) => ({ name, type: "read" })),
             ...MCP_CATALOG.write.map((name) => ({ name, type: "write" })),
         ]);
+    });
+
+    it("describes list_note_folders as the My Notes and Team Notes folders", () => {
+        renderPage();
+        const row = [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === "list_note_folders"
+        );
+        expect(row?.textContent).toContain("The note folders in your My Notes and in Team Notes.");
+        // "Personal note" is retired from the UI: the space is My Notes.
+        expect(row?.textContent).not.toMatch(/personal/i);
+    });
+
+    it("gates the note deletes and sharing on the destructive opt-in, and not the restore", () => {
+        renderPage();
+        const rowOf = (name: string) =>
+            [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            )?.textContent ?? "";
+        for (const name of ["delete_note", "delete_note_folder", "manage_note_sharing"]) {
+            expect(rowOf(name)).toContain("destructive opt-in");
+        }
+        // A restore keeps what the note says now as a version, so it can be undone.
+        expect(rowOf("restore_note_version")).not.toContain("destructive opt-in");
+        expect(rowOf("restore_note_version")).toContain("can itself be undone");
+    });
+
+    it("says the destructive opt-in on exactly the ten tools that need it", () => {
+        renderPage();
+        const rows = [...document.querySelectorAll("tr")].filter((tr) =>
+            tr.textContent?.includes("destructive opt-in")
+        );
+        expect(rows.map((tr) => tr.querySelector("td")?.textContent)).toEqual([
+            "delete_comment",
+            "delete_todo_item",
+            "delete_calendar_event",
+            "delete_milestone",
+            "delete_sprint",
+            "manage_project_members",
+            "approve_join_request",
+            "delete_note",
+            "delete_note_folder",
+            "manage_note_sharing",
+        ]);
+    });
+
+    it("lets a person in only with the opt-in, and lets a decline through without it", () => {
+        renderPage();
+        const rowOf = (name: string) =>
+            [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            )?.textContent ?? "";
+        expect(rowOf("approve_join_request")).toContain("because it changes who has access");
+        expect(rowOf("decline_join_request")).not.toContain("destructive opt-in");
+        // Adding a tag or a label lets nobody in and destroys nothing.
+        expect(rowOf("add_project_tag")).not.toContain("destructive opt-in");
+        expect(rowOf("manage_project_labels")).not.toContain("destructive opt-in");
+    });
+
+    it("does not publish delete_project, which exists in the app only", () => {
+        renderPage();
+        expect(
+            [...document.querySelectorAll("tr")].some(
+                (tr) => tr.querySelector("td")?.textContent === "delete_project"
+            )
+        ).toBe(false);
     });
 
     it("states counts that agree with the tool table", () => {
@@ -234,5 +341,13 @@ describe("DevelopersPage", () => {
         expect(screen.getByText("No confirmation step")).toBeTruthy();
         expect(document.body.textContent).toMatch(/Over MCP none of them do/);
         expect(document.body.textContent).toMatch(/there is no undo/);
+    });
+
+    it("warns that a read-scoped key reaches the owner's chats, direct messages included", () => {
+        renderPage();
+        const text = document.body.textContent ?? "";
+        expect(text).toMatch(/read your own chats, direct messages included/);
+        expect(text).toMatch(/a read-scoped key can call both/);
+        expect(text).toMatch(/A key handed to an outside agent\s+exposes all of them/);
     });
 });

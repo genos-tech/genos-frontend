@@ -3,6 +3,8 @@ import { Socket } from "socket.io-client";
 
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
 import { addTask } from "../../features/tasks/services/addTask";
+import { emitTaskMetadataSaved } from "../../features/tasks/services/taskEvents";
+import { forgetInFlightTask } from "../../features/tasks/services/taskLoadInFlight";
 import {
     addMilestoneAssignee,
     createMilestone,
@@ -61,6 +63,7 @@ import { upsertMilestoneInList } from "../../features/tasks/sprint-milestone/uti
 const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
     if (milestone.taskId == null) return;
     void invalidateCachedFullTask(milestone.taskId);
+    forgetInFlightTask(milestone.taskId);
     const firstAssignee = milestone.assignees?.[0];
     const reporter = milestone.reporter ?? null;
     void addTask({
@@ -106,6 +109,7 @@ const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
 const removeMilestoneBackingTaskCaches = (taskId: number | null | undefined): void => {
     if (taskId == null) return;
     void invalidateCachedFullTask(taskId);
+    forgetInFlightTask(taskId);
 };
 
 export interface SprintMilestoneManagementState {
@@ -156,6 +160,16 @@ export interface SprintMilestoneManagementState {
         projectId: number,
         opts?: LoadProjectSprintsOptions
     ) => Promise<Sprint[]>;
+    /**
+     * Same load as `loadSprintsForProject`, but says whether it worked:
+     * `[]` from the one above is both "this project has no sprints" and "the
+     * request failed", and the change-driven refresh must not record a token
+     * for a load that failed.
+     */
+    refreshSprintsForProject: (
+        projectId: number,
+        opts?: LoadProjectSprintsOptions
+    ) => Promise<boolean>;
     loadMilestonesForProject: (
         projectId: number,
         opts?: LoadProjectMilestonesOptions
@@ -267,15 +281,17 @@ export const useSprintMilestoneManagement = (
         [accessToken]
     );
 
-    const loadSprintsForProject = useCallback(
-        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> => {
+    // `null` when the request failed, so a caller that has to tell that from
+    // an empty project can (see `refreshSprintsForProject`).
+    const loadSprintsChecked = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[] | null> => {
             const res = await loadProjectSprints(projectId, accessToken, opts);
             // A failed request (transient auth gap on a focus/interval
             // refresh, network blip) resolves to `undefined` — distinct from
             // a project that genuinely has zero sprints (`{ sprints: [] }`).
             // Bail WITHOUT touching state so a background refresh can never
             // blank out the picker/dashboard that already have good data.
-            if (!res) return [];
+            if (!res) return null;
             const sprints = res.sprints ?? [];
             setProjectSprintsState((prev) => ({ ...prev, [projectId]: sprints }));
             setTsLastSprintsLoaded(Date.now());
@@ -314,6 +330,18 @@ export const useSprintMilestoneManagement = (
             return sprints;
         },
         [accessToken]
+    );
+
+    const loadSprintsForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> =>
+            (await loadSprintsChecked(projectId, opts)) ?? [],
+        [loadSprintsChecked]
+    );
+
+    const refreshSprintsForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<boolean> =>
+            (await loadSprintsChecked(projectId, opts)) !== null,
+        [loadSprintsChecked]
     );
 
     const loadMilestonesForProject = useCallback(
@@ -465,6 +493,8 @@ export const useSprintMilestoneManagement = (
                 // (+ their table sync) when their editing session goes idle.
                 if (!opts?.deferStateSync) {
                     applyMilestoneToState(res.milestone);
+                    // Deferred saves are the body autosave, not a status change.
+                    emitTaskMetadataSaved();
                 }
             }
             return res?.milestone ?? null;
@@ -662,6 +692,7 @@ export const useSprintMilestoneManagement = (
         loadConfigForProject,
         saveConfig,
         loadSprintsForProject,
+        refreshSprintsForProject,
         loadMilestonesForProject,
         refreshMilestone,
         createNewSprint,

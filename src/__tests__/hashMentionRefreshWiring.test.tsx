@@ -103,3 +103,67 @@ describe("HashSuggestionMenuController", () => {
         expect(refresh).toHaveBeenCalledTimes(3);
     });
 });
+
+// MIP-1038: BlockNote re-runs `getItems` whenever its IDENTITY changes
+// (`useEffect(..., [query, getItems])`). A new function on every render made
+// every unrelated data update re-run the menu's loader, and the loader asks the
+// server for a typed id the lists don't hold, so a `#kds-652` left in the
+// editor sent a request per render, forever (each reload of the data renders
+// again, and `refresh()` inside the loader feeds the next one).
+describe("HashSuggestionMenuController: a stable loader", () => {
+    it("hands BlockNote the same getItems across re-renders and data changes", () => {
+        const first = dataWith(vi.fn());
+        const view = render(
+            <HashMentionDataProvider value={first}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+        const loader = captured.getItems;
+
+        // Same editor, new data object (what every list refresh produces).
+        view.rerender(
+            <HashMentionDataProvider value={{ ...first, projects: [] }}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+
+        expect(captured.getItems).toBe(loader);
+    });
+
+    it("still answers off the LATEST data, not the data of the render it was made in", async () => {
+        const first = dataWith(vi.fn());
+        const view = render(
+            <HashMentionDataProvider value={first}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+        const loader = captured.getItems!;
+        expect(await loader("login")).toHaveLength(1);
+
+        view.rerender(
+            <HashMentionDataProvider value={{ ...first, tasks: [] }}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+
+        // The very same function now sees the new (empty) task list.
+        expect(await loader("login")).toHaveLength(0);
+    });
+
+    it("asks for a fresh loader when the editor itself changes", () => {
+        const view = render(
+            <HashMentionDataProvider value={dataWith(vi.fn())}>
+                <HashSuggestionMenuController editor={editorStub} />
+            </HashMentionDataProvider>
+        );
+        const loader = captured.getItems;
+
+        view.rerender(
+            <HashMentionDataProvider value={dataWith(vi.fn())}>
+                <HashSuggestionMenuController editor={{ insertInlineContent: vi.fn() }} />
+            </HashMentionDataProvider>
+        );
+
+        expect(captured.getItems).not.toBe(loader);
+    });
+});

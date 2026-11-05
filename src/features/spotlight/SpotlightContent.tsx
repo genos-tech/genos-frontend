@@ -35,20 +35,15 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, CircularProgress, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
@@ -57,7 +52,6 @@ import type {
     AgentSessionDetail,
     AgentSessionSummary,
     AgentSessionTurn,
-    PendingApprovalPayload,
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
 import { purplePalette } from "../../theme/purplePalette";
@@ -73,39 +67,35 @@ import { purplePalette } from "../../theme/purplePalette";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import {
-    ApprovalCard,
-    CITATION_HREF_PREFIX,
-    citedChipSources,
+    agentMarkdownComponents,
+    agentQAUrlTransform,
+    AgentTurn,
+    buildAgentTurnLabels,
+    CitationLink,
+    DARK_TEXT_MEDIUM,
+    DARK_TEXT_SOFT,
     DARK_TEXT_STRONG,
     FeedbackThumbs,
-    formatDurationMs,
-    getToolLabel,
     markdownAnswerSx,
     MentionHighlightOverlay,
     MentionSuggestionDropdown,
     rewriteCitations,
-    ToolProgressList,
     useAgentMentionDraft,
     useAgentMentionSources,
     type AgentMentionCandidate,
     type AgentMentionRef,
+    type AgentTurnLabels,
     type AskState,
     type CompletedTurn,
-    type ToolEvent,
+    type UndoRequest,
 } from "../agentQA";
-import { agentMarkdownComponents, ExternalLink } from "../agentQA/agentMarkdown";
 import {
     isServiceDisabledByProjectScope,
     SPOTLIGHT_FILTER_SERVICES,
     type SpotlightFilterService,
 } from "./spotlightFilters";
 import { SpotlightProjectFilter, SpotlightProjectFilterSummary } from "./SpotlightProjectFilter";
-import {
-    badgeFor,
-    entitySubtitle,
-    HighlightedText,
-    SpotlightResultItem,
-} from "./SpotlightResultItem";
+import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { SpotlightResult } from "./types";
 import type { HistoryMode, SpotlightAskOrigin } from "./useSpotlight";
 
@@ -168,8 +158,12 @@ export interface SpotlightContentProps {
         mentions?: AgentMentionRef[],
         origin?: SpotlightAskOrigin
     ) => void;
-    onApprove: () => void;
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
+    // Undo one approved write of a turn (`useSpotlight.undoStep`). Required, so a
+    // host that renders Spotlight cannot forget it: the overlay and the Genos page
+    // both show the same conversation, and each needs the control to work.
+    onUndo: (request: UndoRequest) => void;
     onCancel: () => void;
     onNewConversation: () => void;
     // F1 — persist a 👍/👎 rating for a finished turn (keyed by the
@@ -193,6 +187,9 @@ export interface SpotlightContentProps {
     historySessions: AgentSessionSummary[];
     historyDetail: AgentSessionDetail | null;
     historyIsLoading: boolean;
+    // The list failed to load (not "is empty"): the History list says so and
+    // offers a retry, which is `openHistory` again.
+    historyLoadFailed: boolean;
     openHistory: () => void;
     viewHistorySession: (sessionId: string) => void;
     backToHistoryList: () => void;
@@ -234,11 +231,6 @@ export interface SpotlightContentProps {
 const QUERY_WRITE_DEBOUNCE_MS = 150;
 
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
-// Number of citation chips shown before the "+N more" expand button.
-const CHIPS_INITIAL = 4;
-
-const DARK_TEXT_MEDIUM = "#cebfeb";
-const DARK_TEXT_SOFT = "#a89bbf";
 
 // Stable empty defaults for the optional project props. Inline `[]`
 // literals would be a fresh identity every render and re-run the
@@ -278,6 +270,7 @@ export const SpotlightContent = ({
     onAsk,
     onApprove,
     onReject,
+    onUndo,
     onCancel,
     onNewConversation,
     onFeedback,
@@ -289,6 +282,7 @@ export const SpotlightContent = ({
     historySessions,
     historyDetail,
     historyIsLoading,
+    historyLoadFailed,
     openHistory,
     viewHistorySession,
     backToHistoryList,
@@ -301,6 +295,9 @@ export const SpotlightContent = ({
 }: SpotlightContentProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    // What an answer turn says, built once per locale: a new object per render
+    // would defeat the memoised turns.
+    const turnLabels = useMemo(() => buildAgentTurnLabels(t, "spotlight"), [t]);
     const isDark = mode === "dark";
     // Theme-reactive tokens (CSS variables — repaint with the active
     // color theme). Used by the page variant's card treatments; the
@@ -1220,11 +1217,13 @@ export const SpotlightContent = ({
                 askDisabled={askDisabled}
                 historyDetail={historyDetail}
                 historyIsLoading={historyIsLoading}
+                historyLoadFailed={historyLoadFailed}
                 historyMode={historyMode}
                 historySessions={historySessions}
                 isDark={isDark}
                 noteScopes={noteScopes}
                 ts={t.spotlight}
+                turnLabels={turnLabels}
                 turns={turns}
                 variant={variant}
                 onApprove={onApprove}
@@ -1235,6 +1234,8 @@ export const SpotlightContent = ({
                 onNewConversation={onNewConversation}
                 onPreview={onPreview}
                 onReject={onReject}
+                onRetryHistory={openHistory}
+                onUndo={onUndo}
                 onViewHistorySession={viewHistorySession}
             />
 
@@ -1387,8 +1388,8 @@ const EmptyHint = ({ text, tone, isDark }: { text: string; tone?: "error"; isDar
 // Renders, in document order:
 //   1. A conversation header with the "New conversation" button
 //      (visible when there's any prior turn or an active sessionId).
-//   2. Every completed turn from `turns` as an immutable <TurnView>.
-//   3. The in-flight `ask` as a current-flagged <TurnView>, if it
+//   2. Every completed turn from `turns` as an immutable <AgentTurn>.
+//   3. The in-flight `ask` as a current-flagged <AgentTurn>, if it
 //      has anything to show.
 //
 // Auto-scroll: when the user is at (or near) the bottom of the
@@ -1403,13 +1404,22 @@ interface ConversationPanelProps {
     turns: CompletedTurn[];
     isDark: boolean;
     onPreview: (r: SpotlightResult) => void;
-    onApprove: () => void;
+    onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
+    // Required: see `SpotlightContentProps.onUndo`.
+    onUndo: (request: UndoRequest) => void;
     onNewConversation: () => void;
-    onAsk: (overrideQuery?: string) => void;
+    onAsk: (
+        overrideQuery?: string,
+        mentions?: AgentMentionRef[],
+        origin?: SpotlightAskOrigin
+    ) => void;
     onFeedback?: (runId: string, rating: number) => void;
     askDisabled: boolean;
     ts: SpotlightMessages;
+    // What a turn says (see `buildAgentTurnLabels`); memoised on `t` by the
+    // caller so the turns' memo holds.
+    turnLabels: AgentTurnLabels;
     // Passed down for the source chips, which name each cited entity with
     // the same vocabulary as the result rows.
     noteScopes?: ReadonlyMap<number, "shared" | "team">;
@@ -1422,6 +1432,8 @@ interface ConversationPanelProps {
     historySessions: AgentSessionSummary[];
     historyDetail: AgentSessionDetail | null;
     historyIsLoading: boolean;
+    historyLoadFailed: boolean;
+    onRetryHistory: () => void;
     onViewHistorySession: (sessionId: string) => void;
     onBackToHistoryList: () => void;
     onCloseHistory: () => void;
@@ -1454,22 +1466,37 @@ const ConversationPanel = memo(
         onPreview,
         onApprove,
         onReject,
+        onUndo,
         onNewConversation,
         onAsk,
         onFeedback,
         askDisabled,
         ts,
+        turnLabels,
         noteScopes,
         historyMode,
         historySessions,
         historyDetail,
         historyIsLoading,
+        historyLoadFailed,
+        onRetryHistory,
         onViewHistorySession,
         onBackToHistoryList,
         onCloseHistory,
         variant = "overlay",
     }: ConversationPanelProps) => {
         const scrollRef = useRef<HTMLDivElement | null>(null);
+        // Retry composed from a ref to `onAsk`, so the finished turns see ONE
+        // identity for it. The hook's `onAsk` is re-minted whenever the draft
+        // query is written (it reads the draft), and handing that straight to
+        // the memoised turns re-rendered every one of them on each write.
+        const onAskRef = useRef(onAsk);
+        onAskRef.current = onAsk;
+        const onRetry = useCallback(
+            (askedQuery: string, mentions?: AgentMentionRef[]) =>
+                onAskRef.current(askedQuery, mentions, "retry"),
+            []
+        );
         // True when the user has scrolled away from the bottom. We pause
         // auto-follow until they return to the bottom themselves OR a new
         // turn starts (whichever happens first).
@@ -1697,8 +1724,10 @@ const ConversationPanel = memo(
                     <HistoryListView
                         isDark={isDark}
                         isLoading={historyIsLoading}
+                        loadFailed={historyLoadFailed}
                         sessions={historySessions}
                         ts={ts}
+                        onRetry={onRetryHistory}
                         onSelect={onViewHistorySession}
                     />
                 )}
@@ -1717,7 +1746,7 @@ const ConversationPanel = memo(
                 {historyMode === "closed" && (
                     <>
                         {turns.map((turn) => (
-                            <TurnView
+                            <AgentTurn
                                 key={turn.id}
                                 answer={turn.answer}
                                 answerSources={turn.answerSources}
@@ -1727,39 +1756,44 @@ const ConversationPanel = memo(
                                 elapsedMs={turn.elapsedMs}
                                 isCurrent={false}
                                 isDark={isDark}
+                                labels={turnLabels}
                                 mentions={turn.mentions}
                                 noteScopes={noteScopes}
                                 runId={turn.runId}
                                 toolEvents={turn.toolEvents}
-                                ts={ts}
-                                onAsk={onAsk}
+                                undoSteps={turn.undo}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
+                                onRetry={onRetry}
+                                onUndo={onUndo}
                             />
                         ))}
 
                         {showAsk && (
-                            <TurnView
+                            <AgentTurn
                                 answer={ask.answer}
                                 answerSources={ask.answerSources}
+                                approvalEdits={ask.approvalEdits}
+                                approvalFieldErrors={ask.approvalFieldErrors}
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
                                 elapsedMs={ask.elapsedMs}
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
+                                labels={turnLabels}
                                 mentions={ask.askedMentions}
                                 noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}
                                 runId={ask.runId}
                                 toolEvents={ask.toolEvents}
-                                ts={ts}
                                 isCurrent
                                 onApprove={onApprove}
-                                onAsk={onAsk}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
                                 onReject={onReject}
+                                onRetry={onRetry}
+                                onUndo={onUndo}
                             />
                         )}
                     </>
@@ -1769,639 +1803,12 @@ const ConversationPanel = memo(
     }
 );
 
-// ──────────────────────────────────────────────────────────────────
-// TurnView — one Q&A unit
-//
-// Past turns (`isCurrent=false`) render statically. Current turn
-// (`isCurrent=true`) additionally shows the streaming spinner, the
-// "Thinking…" placeholder while the answer is empty, and the
-// approval card when a write tool is paused.
-// ──────────────────────────────────────────────────────────────────
-
-interface TurnViewProps {
-    askedQuery: string;
-    answer: string;
-    answerSources: SpotlightResult[];
-    toolEvents: ToolEvent[];
-    askError: string | null;
-    isCurrent: boolean;
-    isStreaming?: boolean;
-    pendingApproval?: PendingApprovalPayload | null;
-    isDark: boolean;
-    // Total server-side response time from the `done` event — powers the
-    // "Answered in Xs" footnote. Null/absent for error/cancelled turns
-    // and against older backends (the line simply doesn't render).
-    elapsedMs?: number | null;
-    // Chips and inline citations share the preview handler — quick-look
-    // modal on top of Spotlight, navigate fallback (see Props.onPreview).
-    onPreview: (r: SpotlightResult) => void;
-    onApprove?: () => void;
-    onReject?: () => void;
-    // The structured mentions this turn was asked with — retry re-sends
-    // them so a "@Bob …" re-ask keeps its references block + boost.
-    mentions?: AgentMentionRef[];
-    // Pass `onAsk` rather than a pre-bound `onRetry` so the prop reference
-    // stays stable across renders of `ConversationPanel`. The retry click
-    // handler is composed inside `TurnView` from `onAsk` + `askedQuery`,
-    // so memoised past turns aren't invalidated when the current turn
-    // streams in a new `answer_delta`.
-    onAsk?: (
-        overrideQuery?: string,
-        mentions?: AgentMentionRef[],
-        origin?: SpotlightAskOrigin
-    ) => void;
-    askDisabled?: boolean;
-    // F1 — the turn's AgentRun id (from the `done` event) + the
-    // feedback submitter. Both optional: error/cancelled turns and
-    // turns persisted before run_id capture have no id, and the
-    // thumbs simply don't render.
-    runId?: string | null;
-    onFeedback?: (runId: string, rating: number) => void;
-    ts: SpotlightMessages;
-    // Lets a cited note read as "Team note" rather than "My note" — see
-    // `entitySubtitle`.
-    noteScopes?: ReadonlyMap<number, "shared" | "team">;
-}
-
-// Citation-token parsing (CITATION_PATTERN / CITATION_HREF_PREFIX /
-// rewriteCitations) is the canonical implementation in
-// `features/agentQA/citationUtils.ts` — imported above. SpotlightOverlay
-// previously kept its own byte-identical copy (chips-only strip); they've
-// now converged so the parsing rule can't drift between the two surfaces
-// (SPOTLIGHT_QUALITY_ARCHITECTURE.md §4.6).
-
-interface CitationLinkProps {
-    href?: string;
-    children?: React.ReactNode;
-    sourcesById: Map<string, SpotlightResult>;
-    onPreview: (r: SpotlightResult) => void;
-    isDark: boolean;
-}
-
-/** ReactMarkdown anchor override.
- *
- *  Inspects the rendered link's href: when it starts with our
- *  `spotlight-citation:` sentinel, it renders a styled <button> that
- *  fires `onPreview(source)` on click. Any other href (the model
- *  occasionally inlines real URLs for web-search results, or markdown
- *  the user pasted) falls through to a normal external-link anchor.
- */
-const CitationLink = ({ href, children, sourcesById, onPreview, isDark }: CitationLinkProps) => {
-    if (href && href.startsWith(CITATION_HREF_PREFIX)) {
-        const token = href.slice(CITATION_HREF_PREFIX.length);
-        const source = sourcesById.get(token);
-        if (source) {
-            return (
-                <Box
-                    component="button"
-                    type="button"
-                    sx={{
-                        // Inline-link affordance, not a chrome button.
-                        background: "none",
-                        border: "none",
-                        p: 0,
-                        cursor: "pointer",
-                        font: "inherit",
-                        color: isDark ? DARK_TEXT_STRONG : "primary.600",
-                        textDecoration: "underline",
-                        textDecorationStyle: "dotted",
-                        textUnderlineOffset: "2px",
-                        // Soft hover highlight to advertise interactivity.
-                        borderRadius: "3px",
-                        transition: "background 100ms ease",
-                        "&:hover": {
-                            background: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.10)",
-                            textDecorationStyle: "solid",
-                        },
-                        "&:focus-visible": {
-                            outline: "2px solid",
-                            outlineColor: "primary.400",
-                            outlineOffset: "1px",
-                        },
-                    }}
-                    onClick={() => onPreview(source)}
-                >
-                    {children}
-                </Box>
-            );
-        }
-        // Unresolved sentinel — shouldn't happen post-rewriteCitations,
-        // but be safe: render the children plainly without an anchor.
-        return <>{children}</>;
-    }
-    // Any other href: an external link that says where it goes.
-    return <ExternalLink href={href}>{children}</ExternalLink>;
-};
-
-const TurnViewInner = ({
-    askedQuery,
-    answer,
-    answerSources,
-    toolEvents,
-    askError,
-    isCurrent,
-    isStreaming,
-    pendingApproval,
-    isDark,
-    elapsedMs,
-    mentions,
-    onPreview,
-    onApprove,
-    onReject,
-    onAsk,
-    askDisabled,
-    runId,
-    onFeedback,
-    ts,
-    noteScopes,
-}: TurnViewProps) => {
-    // Full catalog (not the `ts` spotlight slice) for the tool_name →
-    // friendly label lookup, which lives in the `agentApproval` namespace.
-    const { t } = useTranslation();
-    const [copied, setCopied] = useState(false);
-    const [showAllSources, setShowAllSources] = useState(false);
-
-    // Compose the retry handler from the stable `onAsk` + this turn's
-    // own `askedQuery` so past turns can stay memoised across streaming
-    // updates of the current turn.
-    const onRetry = useCallback(() => {
-        if (onAsk) onAsk(askedQuery, mentions, "retry");
-    }, [onAsk, askedQuery, mentions]);
-
-    // Look-up table for `rewriteCitations` and the `a` override below.
-    // Rebuilt only when the sources array reference changes, not on
-    // every streaming `answer_delta` tick.
-    //
-    // Citation tokens captured by `CITATION_PATTERN` are always
-    // "<type>:<rest>". Task / note / project entity_ids already carry
-    // that prefix; chat entity_ids do NOT (they're built as e.g.
-    // "dm:9:thread:4" in the backend chunker). Normalise to the
-    // prefixed form so chat citations resolve too.
-    const sourcesById = useMemo(() => {
-        const m = new Map<string, SpotlightResult>();
-        for (const s of answerSources) {
-            const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
-                ? s.entity_id
-                : `${s.entity_type}:${s.entity_id}`;
-            m.set(tokenKey, s);
-        }
-        return m;
-    }, [answerSources]);
-
-    const answerForRender = useMemo(
-        () => rewriteCitations(answer, sourcesById),
-        [answer, sourcesById]
-    );
-
-    // Chip row = the sources the answer cited, in either form (inline
-    // `[prose](type:id)` link or bare `[type:id]` token); uncited retrieved
-    // sources are dropped as noise (§4.6). An inline-cited source appears
-    // both in the prose and here. `sourcesById` above is still built from
-    // ALL sources so inline links still resolve.
-    const chipSources = useMemo(
-        () => citedChipSources(answer, answerSources),
-        [answer, answerSources]
-    );
-
-    const handleCopy = useCallback(() => {
-        if (!answer) return;
-        navigator.clipboard
-            .writeText(answer)
-            .then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 2000);
-            })
-            .catch(() => {
-                /* ignore — e.g. non-secure context */
-            });
-    }, [answer]);
-
-    const showThinking = isCurrent && isStreaming && !answer && !askError;
-    // Show copy for any turn with answer text.
-    // Show retry for past turns (always) and current turn when there's an error.
-    const showCopy = Boolean(answer);
-    const showRetry = Boolean(askedQuery) && (!isCurrent || Boolean(askError));
-    // Thumbs (F1) need a run_id to key the POST, and only make sense on
-    // a finished, non-error answer.
-    const showFeedback = Boolean(runId) && Boolean(onFeedback) && !askError && !isStreaming;
-    const showActions = showCopy || showRetry || showFeedback;
-
-    return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 0.5,
-                opacity: isCurrent ? 1 : isDark ? 1 : 0.92,
-                // Reveal action buttons on hover; always visible on touch devices.
-                "& .turn-actions": { opacity: 0, transition: "opacity 0.15s" },
-                "&:hover .turn-actions": { opacity: 1 },
-                "@media (hover: none)": { "& .turn-actions": { opacity: 1 } },
-            }}
-        >
-            {askedQuery && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 0.75,
-                        opacity: isDark ? 1 : 0.88,
-                    }}
-                >
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.04em",
-                            opacity: isDark ? 1 : 0.7,
-                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                            minWidth: 18,
-                            mt: "2px",
-                        }}
-                    >
-                        {ts.conversation.turnLabelQ}
-                    </Typography>
-                    <Typography
-                        level="body-md"
-                        sx={{
-                            fontWeight: 500,
-                            whiteSpace: "pre-wrap",
-                            color: isDark ? DARK_TEXT_STRONG : undefined,
-                        }}
-                    >
-                        {askedQuery}
-                    </Typography>
-                </Box>
-            )}
-
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        opacity: isDark ? 1 : 0.75,
-                        minWidth: 18,
-                        mt: "2px",
-                        color: "primary.500",
-                    }}
-                >
-                    {ts.conversation.turnLabelA}
-                </Typography>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {isCurrent && isStreaming && !pendingApproval && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-                            <CircularProgress
-                                size="sm"
-                                sx={{ "--CircularProgress-size": "12px" }}
-                            />
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    opacity: isDark ? 1 : 0.75,
-                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                                }}
-                            >
-                                {ts.states.streaming}
-                            </Typography>
-                        </Box>
-                    )}
-                    {isCurrent && pendingApproval && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                opacity: 0.85,
-                                color: "warning.500",
-                                fontWeight: 600,
-                                mb: 0.5,
-                            }}
-                        >
-                            {ts.states.awaitingApproval}
-                        </Typography>
-                    )}
-
-                    {toolEvents.length > 0 && (
-                        <ToolProgressList events={toolEvents} isDark={isDark} />
-                    )}
-
-                    {isCurrent && pendingApproval && onApprove && onReject && (
-                        <ApprovalCard
-                            approveLabel={ts.actions.approve}
-                            isDark={isDark}
-                            pending={pendingApproval}
-                            rejectLabel={ts.actions.reject}
-                            titleText={fmt(ts.approval.titleWithTool, {
-                                toolName: getToolLabel(pendingApproval.tool_name, t),
-                            })}
-                            onApprove={onApprove}
-                            onReject={onReject}
-                        />
-                    )}
-
-                    {askError && (
-                        <Typography level="body-md" sx={{ color: "danger.500", mb: 0.5 }}>
-                            {askError}
-                        </Typography>
-                    )}
-
-                    {answer && (
-                        <Box
-                            sx={{
-                                ...markdownAnswerSx(isDark),
-                                mb: chipSources.length > 0 ? 0.75 : 0,
-                            }}
-                        >
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                // react-markdown's default `urlTransform`
-                                // allow-lists http(s)/mailto/etc and strips
-                                // unknown schemes — including our internal
-                                // `spotlight-citation:` sentinel, which would
-                                // arrive at <a> as an empty href and break
-                                // the click handler. Pass through citation
-                                // hrefs untouched; delegate everything else
-                                // to the library default so the existing
-                                // XSS guards still apply.
-                                components={{
-                                    ...agentMarkdownComponents,
-                                    a: ({ href, children }) => (
-                                        <CitationLink
-                                            href={href}
-                                            isDark={isDark}
-                                            sourcesById={sourcesById}
-                                            onPreview={onPreview}
-                                        >
-                                            {children}
-                                        </CitationLink>
-                                    ),
-                                }}
-                                urlTransform={(url) =>
-                                    url.startsWith(CITATION_HREF_PREFIX)
-                                        ? url
-                                        : defaultUrlTransform(url)
-                                }
-                            >
-                                {answerForRender}
-                            </ReactMarkdown>
-                        </Box>
-                    )}
-
-                    {showThinking && (
-                        <Typography
-                            level="body-md"
-                            sx={{
-                                opacity: isDark ? 1 : 0.75,
-                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                            }}
-                        >
-                            {ts.states.thinking}
-                        </Typography>
-                    )}
-
-                    {chipSources.length > 0 &&
-                        (() => {
-                            const visible = showAllSources
-                                ? chipSources
-                                : chipSources.slice(0, CHIPS_INITIAL);
-                            const hiddenCount = chipSources.length - CHIPS_INITIAL;
-                            return (
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        flexWrap: "wrap",
-                                        gap: 0.5,
-                                        mt: 0.5,
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {visible.map((s) => (
-                                        <Chip
-                                            key={`${s.entity_type}:${s.entity_id}`}
-                                            color="primary"
-                                            size="md"
-                                            startDecorator={_sourceIcon(s.entity_type)}
-                                            variant="solid"
-                                            sx={{
-                                                cursor: "pointer",
-                                                fontSize: "0.875rem",
-                                                maxWidth: "min(340px, 80vw)",
-                                                overflow: "hidden",
-                                                whiteSpace: "nowrap",
-                                                textOverflow: "ellipsis",
-                                                transition: "box-shadow 0.15s, transform 0.1s",
-                                                "&:hover": {
-                                                    boxShadow:
-                                                        "0 0 0 2px var(--joy-palette-primary-300)",
-                                                    transform: "translateY(-1px)",
-                                                },
-                                            }}
-                                            onClick={() => onPreview(s)}
-                                        >
-                                            <HighlightedText
-                                                extraTerms={s.matched_terms}
-                                                query={askedQuery}
-                                                text={_chipLabel(s, ts, noteScopes)}
-                                            />
-                                        </Chip>
-                                    ))}
-                                    {!showAllSources && hiddenCount > 0 && (
-                                        <Button
-                                            color="primary"
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                minHeight: 0,
-                                                py: 0,
-                                                px: 0.5,
-                                                fontSize: "0.875rem",
-                                            }}
-                                            onClick={() => setShowAllSources(true)}
-                                        >
-                                            {fmt(ts.actions.moreCount, { count: hiddenCount })}
-                                        </Button>
-                                    )}
-                                    {showAllSources && chipSources.length > CHIPS_INITIAL && (
-                                        <Button
-                                            color="neutral"
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                minHeight: 0,
-                                                py: 0,
-                                                px: 0.5,
-                                                fontSize: "0.875rem",
-                                                opacity: 0.65,
-                                            }}
-                                            onClick={() => setShowAllSources(false)}
-                                        >
-                                            {ts.actions.showLess}
-                                        </Button>
-                                    )}
-                                </Box>
-                            );
-                        })()}
-
-                    {/* Total response time (server-measured, from the
-                        `done` event). Only for finished, non-error turns —
-                        while streaming the spinner is the signal, and an
-                        errored turn's timing is noise. */}
-                    {typeof elapsedMs === "number" && !isStreaming && !askError && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                mt: 0.5,
-                                fontVariantNumeric: "tabular-nums",
-                                color: isDark ? DARK_TEXT_SOFT : undefined,
-                                opacity: isDark ? 0.9 : 0.6,
-                            }}
-                        >
-                            {fmt(ts.conversation.answeredIn, {
-                                duration: formatDurationMs(elapsedMs),
-                            })}
-                        </Typography>
-                    )}
-                </Box>
-            </Box>
-
-            {/* Per-turn action bar: 👍/👎 + Copy + Retry — fades in on hover */}
-            {showActions && (
-                <Box
-                    className="turn-actions"
-                    sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25, mt: 0.25 }}
-                >
-                    {showFeedback && (
-                        <FeedbackThumbs
-                            runId={runId}
-                            labels={{
-                                up: ts.actions.feedbackUp,
-                                down: ts.actions.feedbackDown,
-                            }}
-                            onFeedback={onFeedback}
-                        />
-                    )}
-                    {showCopy && (
-                        <AppTooltip title={ts.actions.copyAnswer}>
-                            <IconButton
-                                color={copied ? "success" : "neutral"}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                variant="plain"
-                                onClick={handleCopy}
-                            >
-                                {copied ? (
-                                    <CheckRoundedIcon sx={{ fontSize: 14 }} />
-                                ) : (
-                                    <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
-                                )}
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                    {showRetry && (
-                        <AppTooltip title={ts.actions.retry}>
-                            <IconButton
-                                color="neutral"
-                                disabled={askDisabled}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                variant="plain"
-                                onClick={onRetry}
-                            >
-                                <ReplayRoundedIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                </Box>
-            )}
-        </Box>
-    );
-};
-
-TurnViewInner.displayName = "TurnView";
-
-// Memo: prevents past turns from re-rendering on every `answer_delta`
-// of the current turn. Without it, a 5-turn conversation would re-run
-// `rewriteCitations` + ReactMarkdown for every prior turn on every
-// token of the in-flight answer. With stable props (immutable past-turn
-// snapshots) memo skips them entirely; only the current `TurnView`
-// re-renders per delta.
-const TurnView = memo(TurnViewInner);
-
-// ──────────────────────────────────────────────────────────────────
-// Source chip label helpers
-// ──────────────────────────────────────────────────────────────────
-
-function _titleSnippet(title: string | null, maxLen = 32): string {
-    if (!title) return "";
-    const t = title.trim();
-    return t.length > maxLen ? t.slice(0, maxLen) + "…" : t;
-}
-
-function _chipLabel(
-    s: SpotlightResult,
-    ts: SpotlightMessages,
-    noteScopes?: ReadonlyMap<number, "shared" | "team">
-): string {
-    const title = _titleSnippet(s.title);
-    const sep = title ? `: ${title}` : "";
-
-    // Reuse the same vocabulary the result rows use so the agent's
-    // source citations don't drift from the search-result subtitles.
-    // `entitySubtitle` returns e.g. "Direct message" / "Task" / "Chat
-    // note"; `badgeFor` returns "thread" / "comment" / null when the
-    // matched chunk was a thread reply / task comment. The full-string
-    // templates in `ts.chip.*` keep composed labels translatable rather
-    // than concatenating translated pieces.
-    const subtitle = entitySubtitle(s, ts, noteScopes);
-    const badge = badgeFor(s);
-
-    if (s.entity_type === "task" && s.task_id) {
-        const template = badge === "comment" ? ts.chip.taskComment : ts.chip.taskPlain;
-        // Prefer human-readable PRJ-123. Falls back to the raw numeric
-        // task_id only for legacy rows or tasks without a project.
-        const id = s.task_display_id || s.task_id;
-        return fmt(template, { subtitle, id, sep });
-    }
-    if (s.entity_type === "milestone") {
-        const template = badge === "comment" ? ts.chip.milestoneComment : ts.chip.milestone;
-        return fmt(template, { subtitle, sep });
-    }
-    if (s.entity_type === "chat" && s.chat_id) {
-        const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
-        return fmt(template, { subtitle, sep });
-    }
-    if (s.entity_type === "note" && s.note_id) {
-        const template = badge === "thread" ? ts.chip.noteThread : ts.chip.notePlain;
-        return fmt(template, { subtitle, sep });
-    }
-    if (s.entity_type === "project" && s.project_id) {
-        return fmt(ts.chip.projectPlain, { subtitle, sep });
-    }
-    if (s.entity_type === "todo") {
-        // Parse the date out of entity_id (`todo:YYYY-MM-DD:item:<id>` or
-        // `todo:YYYY-MM-DD`) for a short subtitle.
-        const datePart = s.entity_id.match(/^todo:(\d{4}-\d{2}-\d{2})/)?.[1];
-        const todoSubtitle = datePart
-            ? fmt(ts.entitySubtitle.todoWithDate, { date: datePart })
-            : ts.entitySubtitle.todo;
-        return fmt(ts.chip.todo, { subtitle: todoSubtitle, sep });
-    }
-    // Fallback to raw entity_id if specific ids are absent.
-    return title ? `${s.entity_id}: ${title}` : s.entity_id;
-}
-
-function _sourceIcon(entityType: string) {
-    if (entityType === "task") return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
-    if (entityType === "milestone") return <FlagRoundedIcon sx={{ fontSize: 13 }} />;
-    if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
-    if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
-    if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
-    if (entityType === "todo") return <TaskAltRoundedIcon sx={{ fontSize: 13 }} />;
-    return undefined;
-}
+// The Q&A unit itself (question, steps, answer, sources, actions) is
+// `AgentTurn`, shared with the thread and note Ask modals: see its header
+// for why only the turn is shared and the containers stay two. This panel
+// hands it the props that keep its memo working: a stable `onRetry` (the
+// hook's `onAsk` follows the draft query, so passing it straight re-rendered
+// every finished turn on each query write) and `turnLabels` memoised on `t`.
 
 // ──────────────────────────────────────────────────────────────────
 // History panel views — read-only archive of past agent sessions.
@@ -2417,12 +1824,25 @@ function _sourceIcon(entityType: string) {
 interface HistoryListViewProps {
     sessions: AgentSessionSummary[];
     isLoading: boolean;
+    // The last load failed. Rows already showing are left alone; with none,
+    // the view says it couldn't load instead of "no past conversations".
+    loadFailed: boolean;
     isDark: boolean;
     ts: SpotlightMessages;
+    onRetry: () => void;
     onSelect: (sessionId: string) => void;
 }
 
-const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryListViewProps) => {
+const HistoryListView = ({
+    sessions,
+    isLoading,
+    loadFailed,
+    isDark,
+    ts,
+    onRetry,
+    onSelect,
+}: HistoryListViewProps) => {
+    const { t } = useTranslation();
     if (isLoading && sessions.length === 0) {
         return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
@@ -2436,6 +1856,28 @@ const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryL
                 >
                     {ts.history.loading}
                 </Typography>
+            </Box>
+        );
+    }
+
+    if (sessions.length === 0 && loadFailed) {
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 1,
+                    px: 0.5,
+                    py: 1,
+                }}
+            >
+                <Typography level="body-md" sx={{ color: "danger.500", opacity: 0.95 }}>
+                    {ts.history.listLoadFailed}
+                </Typography>
+                <Button color="neutral" size="sm" variant="outlined" onClick={onRetry}>
+                    {t.common.actions.retry}
+                </Button>
             </Box>
         );
     }
@@ -2634,7 +2076,7 @@ const HistoryArchiveTurn = ({
     onPreview,
     onFeedback,
 }: HistoryArchiveTurnProps) => {
-    // Same lookup-table shape as TurnView's `sourcesById` so citation
+    // Same lookup-table shape as AgentTurn's `sourcesById` so citation
     // tokens like `[chat:dm:9:thread:4]` (whose entity_id ships
     // without the `chat:` prefix from the chunker) resolve.
     const sourcesById = useMemo(() => {
@@ -2734,11 +2176,7 @@ const HistoryArchiveTurn = ({
                                         </CitationLink>
                                     ),
                                 }}
-                                urlTransform={(url) =>
-                                    url.startsWith(CITATION_HREF_PREFIX)
-                                        ? url
-                                        : defaultUrlTransform(url)
-                                }
+                                urlTransform={agentQAUrlTransform}
                             >
                                 {answerForRender}
                             </ReactMarkdown>
@@ -2792,4 +2230,5 @@ function _relativeTime(iso: string, ts: SpotlightMessages): string {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const relativeTimeLabel = _relativeTime;
-export const sourceChipLabel = _chipLabel;
+// eslint-disable-next-line react-refresh/only-export-components
+export { sourceChipLabel } from "../agentQA";

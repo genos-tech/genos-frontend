@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BlockNoteSchema, PartialBlock } from "@blocknote/core";
-import {
-    CommentsExtension,
-    DefaultThreadStoreAuth,
-    YjsThreadStore,
-    type User,
-} from "@blocknote/core/comments";
+import { BlockNoteSchema, PartialBlock, type User } from "@blocknote/core";
+import { CommentsExtension, DefaultThreadStoreAuth } from "@blocknote/core/comments";
+import { withCollaboration, YjsThreadStore } from "@blocknote/core/yjs";
 import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
+import { genosTableOptions } from "../../components/editors/genosBlockSpecs";
+import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../../components/editors/sub/tabIndent";
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { createCollabReconnect, type CollabReconnect } from "./collabReconnect";
 
 const COLLAB_URL = import.meta.env.VITE_COLLAB_URL;
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -93,6 +92,9 @@ export function useCollaborativeBlockNote({
 
     const syncedRef = useRef(false);
     const fragmentRef = useRef<Y.XmlFragment | null>(null);
+    // The current provider's reconnect-after-refusal state (null with no
+    // provider). Read by `seedDocument`; see there.
+    const reconnectRef = useRef<CollabReconnect | null>(null);
 
     // Hocuspocus + IDB callbacks fire async. If the host component
     // unmounts (or the provider gets rebuilt due to a documentName /
@@ -142,6 +144,17 @@ export function useCollaborativeBlockNote({
     const seedDocument = useCallback(
         (fragment: Y.XmlFragment) => {
             if (seededRef.current) return;
+            // Not while a reconnect is pending (MIP-921): the collab server
+            // refused only because it could not check access, and the next
+            // attempt is likely to sync the real document. Seeding the REST
+            // copy now writes it into the Yjs doc under this client's id, and
+            // the server's own copy (seeded once, by whoever opened the
+            // document first, under another id) then syncs in beside it: the
+            // body appears twice. Every way into here (a refusal, the socket
+            // closing, a REST copy that arrives late) stops at this check.
+            // When the attempts run out the refusal is final and the seed goes
+            // ahead as it always did.
+            if (reconnectRef.current?.pending) return;
 
             const body = initialBodyRef.current;
             if (!body || body.length === 0) return;
@@ -165,16 +178,23 @@ export function useCollaborativeBlockNote({
         [isDocumentEmpty]
     );
 
-    const { doc, provider, idbProvider, fragment } = useMemo(() => {
+    const { doc, provider, idbProvider, fragment, reconnect } = useMemo(() => {
         seededRef.current = false;
         syncedRef.current = false;
         fragmentRef.current = null;
+        reconnectRef.current = null;
 
         const yjsDoc = new Y.Doc();
         const frag = yjsDoc.getXmlFragment("document-store");
 
         if (!COLLAB_URL || !accessToken) {
-            return { doc: yjsDoc, provider: null, idbProvider: null, fragment: frag };
+            return {
+                doc: yjsDoc,
+                provider: null,
+                idbProvider: null,
+                fragment: frag,
+                reconnect: null,
+            };
         }
 
         // Persist Yjs update history to IndexedDB keyed by documentName.
@@ -197,6 +217,16 @@ export function useCollaborativeBlockNote({
             }
         };
 
+        const reconnect = createCollabReconnect(
+            () => hocuspocusProvider,
+            // The last reconnect went unanswered: where a refusal would have
+            // left us, with the offline copy.
+            () => {
+                safeSetConnectionStatus("disconnected");
+                trySeedFallback();
+            }
+        );
+
         const hocuspocusProvider = new HocuspocusProvider({
             url: COLLAB_URL,
             name: documentName,
@@ -209,19 +239,34 @@ export function useCollaborativeBlockNote({
                 // If we disconnected before ever syncing, seed immediately
                 if (!syncedRef.current) trySeedFallback();
             },
-            onAuthenticationFailed: () => {
+            onAuthenticationFailed: ({ reason }) => {
+                // When the collab server could not ask the api whether we may
+                // open this document (it is restarting), this schedules a
+                // reconnect instead of leaving the person with a dead editor.
+                // Until the attempts are used up the offline copy below is
+                // held back (see `seedDocument`), so the status reads
+                // "disconnected" throughout, as it always has.
+                reconnect.refused(reason);
                 safeSetConnectionStatus("disconnected");
                 trySeedFallback();
             },
             onSynced: () => {
+                reconnect.settle();
                 safeSetConnectionStatus("connected");
                 syncedRef.current = true;
                 fragmentRef.current = frag;
                 seedDocument(frag);
             },
         });
+        reconnectRef.current = reconnect;
 
-        return { doc: yjsDoc, provider: hocuspocusProvider, idbProvider: idb, fragment: frag };
+        return {
+            doc: yjsDoc,
+            provider: hocuspocusProvider,
+            idbProvider: idb,
+            fragment: frag,
+            reconnect,
+        };
     }, [documentName, accessToken, seedDocument]);
 
     // A new provider (another document, or a refreshed token) hasn't been
@@ -300,9 +345,11 @@ export function useCollaborativeBlockNote({
     // collection caught up.
     useEffect(() => {
         return () => {
+            // First, so no reconnect fires at a provider that is going away.
+            reconnect?.cancel();
             provider?.destroy();
         };
-    }, [provider]);
+    }, [provider, reconnect]);
 
     useEffect(() => {
         return () => {
@@ -359,10 +406,14 @@ export function useCollaborativeBlockNote({
     // (see `bnMyNoteEditor`, `bnChatNoteEditor`, `bnTaskNoteEditor`,
     // `bnTaskPreview`).
     const editorOptions = useMemo(() => {
-        const extraExtensions = extensionsRef.current ?? [];
+        // Every document-style editor (notes, task bodies) indents with Tab and
+        // keeps the key when there is nothing to indent (MIP-664).
+        const extraExtensions = [...(extensionsRef.current ?? []), tabStaysInEditor];
 
         if (!provider) {
             const opts: Record<string, any> = {
+                ...TAB_INDENT_OPTIONS,
+                tables: genosTableOptions,
                 schema,
                 resolveFileUrl: resolveInsecureFileUrl,
                 dictionary,
@@ -375,24 +426,35 @@ export function useCollaborativeBlockNote({
             return opts;
         }
 
-        const opts: Record<string, any> = {
-            schema,
-            dictionary,
-            uploadFile,
-            collaboration: {
-                provider,
-                fragment,
-                user,
-            },
-        };
-
         const allExtensions = [...extraExtensions];
         if (commentsExtension) {
             allExtensions.push(commentsExtension);
         }
-        if (allExtensions.length > 0) {
-            opts.extensions = allExtensions;
-        }
+
+        // Since BlockNote 0.52 the `collaboration` option only takes effect when
+        // the options go through `withCollaboration`. This hook casts its options
+        // to `any`, so TypeScript would not notice a missing wrap: every
+        // collaborative editor would silently stop syncing. `withCollaboration`
+        // APPENDS the Yjs binding to `extensions` (so the full list has to be
+        // here already: setting `opts.extensions` after it would drop the binding),
+        // turns the built-in history off in favour of the Yjs undo, and sets the
+        // placeholder initial content.
+        const opts: Record<string, any> = withCollaboration({
+            ...TAB_INDENT_OPTIONS,
+            tables: genosTableOptions,
+            schema,
+            dictionary,
+            uploadFile,
+            ...(allExtensions.length > 0 ? { extensions: allExtensions } : {}),
+            collaboration: {
+                // Hocuspocus types `awareness` as `Awareness | null`; BlockNote's
+                // option wants `Awareness | undefined`. This hook creates the
+                // provider without `awareness: null`, so it always has one.
+                provider: provider as never,
+                fragment,
+                user,
+            },
+        });
 
         return opts;
     }, [

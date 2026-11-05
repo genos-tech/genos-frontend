@@ -71,7 +71,7 @@ export const formatCompletedAt = (iso: string): string => {
  * reviewing what is already done.
  */
 export const selectCompletedToday = (
-    groups: TodoGroupProps[],
+    groups: readonly TodoGroupProps[],
     today = getLocalCurrentDate()
 ): TodoGroupProps[] =>
     groups

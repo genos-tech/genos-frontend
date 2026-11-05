@@ -44,6 +44,7 @@ import {
     AgentQAConversation,
     AgentQAInput,
     agentQAUrlTransform,
+    buildAgentTurnLabels,
     markdownAnswerSx,
     type AgentQALabels,
 } from "../agentQA";
@@ -70,32 +71,15 @@ interface ThreadAskModalProps {
     zIndex?: number;
 }
 
-// Build the agentQA labels prop from the thread-specific i18n namespace.
-// Centralising the mapping here means a future tweak to the i18n shape
-// only touches one spot.
+// Build the labels of the conversation panel and the input from the
+// thread-specific i18n namespace. (What a turn itself says is
+// `buildAgentTurnLabels`: one contract for every host.)
 const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels => ({
     conversation: {
         empty: t.threadAsk.conversation.empty,
-        turnLabelQ: t.threadAsk.conversation.turnLabelQ,
-        turnLabelA: t.threadAsk.conversation.turnLabelA,
         placeholder: t.threadAsk.conversation.placeholder,
         send: t.threadAsk.conversation.send,
         cancel: t.threadAsk.conversation.cancel,
-    },
-    actions: {
-        approve: t.threadAsk.actions.approve,
-        reject: t.threadAsk.actions.reject,
-        copyAnswer: t.threadAsk.actions.copyAnswer,
-        copied: t.threadAsk.actions.copied,
-        retry: t.threadAsk.actions.retry,
-    },
-    states: {
-        streaming: t.threadAsk.states.streaming,
-        thinking: t.threadAsk.states.thinking,
-        answeredIn: t.threadAsk.states.answeredIn,
-    },
-    approval: {
-        titleWithTool: t.threadAsk.approval.titleWithTool,
     },
     mentions: {
         ariaLabel: t.threadAsk.mentions.ariaLabel,
@@ -153,6 +137,7 @@ export const ThreadAskModal = ({
     const [savedSignature, setSavedSignature] = useState<string | null>(null);
 
     const labels = useMemo(() => buildLabels(t), [t]);
+    const turnLabels = useMemo(() => buildAgentTurnLabels(t, "threadAsk"), [t]);
 
     const turns = state.agentQA.turns;
     const saveSignature = useMemo(() => {
@@ -409,6 +394,7 @@ export const ThreadAskModal = ({
                     isDark={isDark}
                     labels={labels}
                     state={state.agentQA}
+                    turnLabels={turnLabels}
                     onSelectSource={onSelectSource}
                 />
 

@@ -6,6 +6,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { ChannelKind } from "../../../types/channel";
 import { TaskProps } from "../../../types/tasks";
+import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { findPmChannelForProject } from "./findPmChannel";
@@ -186,7 +187,10 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                         // mention activity broadcast can render
                         // "<code>-<n>" without waiting for a refetch.
                         display_id: taskCreateData.task.displayId,
-                        ts_mentioned_at: taskCreateData.task.updatedAt,
+                        // The response is a DRF model serialisation, so the
+                        // time is `ts_updated_at` (there is no `updatedAt`).
+                        // The sockets service reads this key as required.
+                        ts_mentioned_at: taskCreateData.task.ts_updated_at,
                         // Per-user real-time toast goes to `newly_*`; the
                         // activity row stores `all_*` so prior recipients
                         // keep their feed entry across edits. Handler
@@ -264,7 +268,11 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     priority: taskContent.priority.priority,
                     effortLevel: taskContent.effortLevel.level,
                     createdDate: taskContent.createdDate || null,
-                    updatedAt: taskCreateData.task.updatedAt || null,
+                    // `ts_updated_at`, not `updatedAt` (MIP-948): the create
+                    // response is a DRF serialisation and has no `updatedAt`,
+                    // so this was always null. Written in the form a project
+                    // sync writes, see `toServerTimestamp`.
+                    updatedAt: toServerTimestamp(taskCreateData.task.ts_updated_at),
                     dueDate: taskContent.dueDate,
                     daysLeft: taskContent.daysLeft || null,
                     status: taskContent.status.status,
@@ -272,7 +280,9 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     assigneeEmail: taskContent.assignee?.userEmail ?? null,
                     assigneeName: taskContent.assignee?.userName ?? null,
                     assigneeImgPath: taskContent.assignee?.avatarImgPath ?? null,
-                    parentTaskId: String(taskContent.parentTaskId),
+                    // Null stays null, see `sendUpdatedSpecificTask` (MIP-943).
+                    parentTaskId:
+                        taskContent.parentTaskId != null ? String(taskContent.parentTaskId) : null,
                     threadId: taskContent.threadId,
                     tags: taskContent.tags,
                     concatTags: taskContent.concatTags || null,

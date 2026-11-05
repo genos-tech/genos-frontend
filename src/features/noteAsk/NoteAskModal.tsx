@@ -43,6 +43,7 @@ import {
     AgentQAConversation,
     AgentQAInput,
     agentQAUrlTransform,
+    buildAgentTurnLabels,
     markdownAnswerSx,
     type AgentQALabels,
 } from "../agentQA";
@@ -59,32 +60,15 @@ interface NoteAskModalProps {
     onSelectSource?: (source: SpotlightResult) => void;
 }
 
-// Build the agentQA labels prop from the note-specific i18n namespace.
-// Centralising the mapping here means a future tweak to the i18n shape
-// only touches one spot.
+// Build the labels of the conversation panel and the input from the
+// note-specific i18n namespace. (What a turn itself says is
+// `buildAgentTurnLabels`: one contract for every host.)
 const buildLabels = (t: ReturnType<typeof useTranslation>["t"]): AgentQALabels => ({
     conversation: {
         empty: t.noteAsk.conversation.empty,
-        turnLabelQ: t.noteAsk.conversation.turnLabelQ,
-        turnLabelA: t.noteAsk.conversation.turnLabelA,
         placeholder: t.noteAsk.conversation.placeholder,
         send: t.noteAsk.conversation.send,
         cancel: t.noteAsk.conversation.cancel,
-    },
-    actions: {
-        approve: t.noteAsk.actions.approve,
-        reject: t.noteAsk.actions.reject,
-        copyAnswer: t.noteAsk.actions.copyAnswer,
-        copied: t.noteAsk.actions.copied,
-        retry: t.noteAsk.actions.retry,
-    },
-    states: {
-        streaming: t.noteAsk.states.streaming,
-        thinking: t.noteAsk.states.thinking,
-        answeredIn: t.noteAsk.states.answeredIn,
-    },
-    approval: {
-        titleWithTool: t.noteAsk.approval.titleWithTool,
     },
     mentions: {
         ariaLabel: t.noteAsk.mentions.ariaLabel,
@@ -121,6 +105,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
     const hostZIndex = useNoteModalHostZIndex();
 
     const labels = useMemo(() => buildLabels(t), [t]);
+    const turnLabels = useMemo(() => buildAgentTurnLabels(t, "noteAsk"), [t]);
 
     const updatedLabel = useMemo(
         () => (state.summary ? formatRelative(state.summary.lastUpdatedIso, t) : ""),
@@ -265,6 +250,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                     isDark={isDark}
                     labels={labels}
                     state={state.agentQA}
+                    turnLabels={turnLabels}
                     onSelectSource={onSelectSource}
                 />
 

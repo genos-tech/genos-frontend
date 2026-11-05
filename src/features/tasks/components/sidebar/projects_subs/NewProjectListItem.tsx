@@ -3,11 +3,12 @@ import { ListItem, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
+import type { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../../i18n";
 
 type NewProjectListItemProps = {
-    usePM: ProjectManagementState;
+    // Only the "open the create-project modal" setter (MIP-971).
+    usePM: Pick<ProjectManagementState, "setOpenCreateProject">;
 };
 export const NewProjectListItem = (props: NewProjectListItemProps) => {
     const { usePM } = props;

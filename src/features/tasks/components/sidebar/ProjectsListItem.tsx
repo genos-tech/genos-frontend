@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -18,32 +18,31 @@ import {
 } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
-import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 import { distinctProjectLabels, filterAndSortProjects } from "./projectSidebarOrder";
+import type {
+    SidebarTreeCM,
+    SidebarTreePM,
+    SidebarTreeSM,
+    SidebarTreeTEM,
+    SidebarTreeTM,
+} from "./useSidebarSlices";
 
-// Cover the full set used by `useTaskManagement.fetchProjectTasks` so the
-// stale read matches what the post-network refresh will pull from IDB.
-const ALL_TASK_STATUSES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"];
-
+// The managers arrive as slices (MIP-971): TypeScript forbids reading a member
+// outside them, and `memo` skips the render of an `AppBody` pass that changed
+// none of the values below. Every prop must therefore be referentially stable
+// from the parent: slices from `useSidebarSlices`, `myself`, a `useState` setter.
 type ProjectsListItemProps = {
-    usePM: ProjectManagementState;
+    usePM: SidebarTreePM;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -51,43 +50,21 @@ type ProjectsListItemProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    useTM: TaskManagementState;
-    useSM: SprintMilestoneManagementState;
-    // Forwarded so MilestonesListItem can render `AvatarWithStatus`
-    // (which needs the team profile lookup, online-status presence,
-    // user-profile modal hook, and the dispatch socket).
-    useTEM: TeamManagementState;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
+    useTM: SidebarTreeTM;
+    useSM: SidebarTreeSM;
+    // `currentTeam` (guest check) here; `teamMemberProfiles` is forwarded so
+    // MilestonesListItem can resolve its assignee avatars.
+    useTEM: SidebarTreeTEM;
+    // Only `allChats`: the project row's avatar is its PM chat's image.
+    useCM: SidebarTreeCM;
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
-    socket: Socket | null;
 };
 
-export const ProjectsListItem = (props: ProjectsListItemProps) => {
-    const {
-        usePM,
-        setOpenJoinProject,
-        useTM,
-        useSM,
-        useTEM,
-        useCM,
-        useUISM,
-        myself,
-        setMyself,
-        socket,
-    } = props;
+export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsListItemProps) {
+    const { usePM, setOpenJoinProject, useTM, useSM, useTEM, useCM, myself } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
-
-    // Tracks the most recently clicked project so the SWR (IDB pre-read)
-    // callback can short-circuit if the user has moved on to a different
-    // project before the worker returns. Without this, rapid switches
-    // (A → B click within 50 ms) could let A's IDB read paint A's tasks
-    // *after* B is selected, leaving the user staring at the wrong
-    // project's rows until B's network fetch completed seconds later.
-    const latestClickedProjectIdRef = useRef<number | null>(null);
 
     // --- Project-label filter + always-on sort -------------------------
     // The label filter (by `projectLabels`, the team-catalog labels applied
@@ -412,93 +389,28 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     // task list.
                                                     useTM.setIsTaskDashboardVisible(false);
                                                     useTM.setIsTaskTableVisible(true);
-                                                    // Reset the task table — the SWR read below
-                                                    // will repopulate it from IDB within ~10–50 ms
-                                                    // if we have cached rows for this project, so
-                                                    // the blank state is just a brief flash on
-                                                    // first visit (when IDB has nothing yet).
-                                                    useTM.setAllTasks([]);
-
-                                                    // Record this click before kicking off the
-                                                    // async read so a later click can claim the
-                                                    // ref and invalidate our pending paint.
-                                                    latestClickedProjectIdRef.current = projectId;
-
-                                                    // Stale-while-revalidate: paint the IDB-cached
-                                                    // task set for the new project immediately so
-                                                    // the user sees rows without waiting for the
-                                                    // full network round-trip. The fresh fetch is
-                                                    // kicked off in parallel below; the existing
-                                                    // `tsTasksLoadedToIDB` effect in
-                                                    // useProjectTaskManagement will re-read IDB
-                                                    // once the network completes.
-                                                    //
-                                                    // Team-scope guard: IDB persists across team
-                                                    // switches, so without filtering on teamId we
-                                                    // could briefly render the previous team's
-                                                    // rows under a project that shares an id.
-                                                    //
-                                                    // Cross-project race guard: on rapid A → B
-                                                    // switches, A's IDB read can return after the
-                                                    // user has already clicked B. The ref check
-                                                    // drops the stale paint so we never flash
-                                                    // A's rows underneath B's selection.
-                                                    (async () => {
-                                                        const cached =
-                                                            await popSpecificProjectTasks(
-                                                                projectId,
-                                                                ALL_TASK_STATUSES
-                                                            );
-                                                        if (
-                                                            latestClickedProjectIdRef.current !==
-                                                            projectId
-                                                        ) {
-                                                            return;
-                                                        }
-                                                        // In a project another team shared
-                                                        // with us every row is filed under
-                                                        // THEIR team by design, so the
-                                                        // team-scope guard below would
-                                                        // discard the whole cache and paint
-                                                        // an empty table. Project ids are
-                                                        // global, and this read is keyed by
-                                                        // one, so the guard is not what
-                                                        // keeps these rows straight.
-                                                        const safeCached = isExternal
-                                                            ? cached
-                                                            : cached.filter(
-                                                                  (t) =>
-                                                                      String(t.teamId) ===
-                                                                      String(myself.teamId)
-                                                              );
-                                                        if (safeCached.length === 0) return;
-                                                        // Functional update so we never overwrite
-                                                        // a fresh network result that landed
-                                                        // before the IDB read returned (rare but
-                                                        // possible on a hot cache where the
-                                                        // network is faster than the worker).
-                                                        useTM.setAllTasks((prev) =>
-                                                            prev.length === 0 ? safeCached : prev
-                                                        );
-                                                    })();
-
-                                                    (async () => {
-                                                        await usePM.loadProjectsAndTasks(
-                                                            projectId
-                                                        );
-                                                        // This will be executed in the loadProjectsAndTasks,
-                                                        // but somehow this needs to update the task table...
-                                                        usePM.setCurrentProject({
-                                                            projectId: projectId,
-                                                            projectName: projectName,
-                                                            projectTags: projectTags,
-                                                            projectLabels: projectLabels,
-                                                            isPrivate: isPrivate,
-                                                            systemUserId: systemUserId,
-                                                            isExternal: isExternal,
-                                                            hostTeamName: hostTeamName,
-                                                        });
-                                                    })();
+                                                    // The project is the open one in this very
+                                                    // click, and its rows are refreshed from the
+                                                    // server in the background. The table swaps
+                                                    // to the project's remembered rows (or to
+                                                    // none) in the same render, so the previous
+                                                    // project's rows never show under this one
+                                                    // (see useTaskManagement). This used to
+                                                    // await `loadProjectsAndTasks`: the whole
+                                                    // project list first, then the tasks, then
+                                                    // set the project: two round trips in series
+                                                    // before anything changed, plus an IndexedDB
+                                                    // pre-read of its own.
+                                                    usePM.openProject({
+                                                        projectId: projectId,
+                                                        projectName: projectName,
+                                                        projectTags: projectTags,
+                                                        projectLabels: projectLabels,
+                                                        isPrivate: isPrivate,
+                                                        systemUserId: systemUserId,
+                                                        isExternal: isExternal,
+                                                        hostTeamName: hostTeamName,
+                                                    });
                                                 }
                                             }}
                                         >
@@ -539,14 +451,10 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     <MilestonesListItem
                                         currentProjectId={projectId}
                                         myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        useCM={useCM}
                                         usePM={usePM}
                                         useSM={useSM}
                                         useTEM={useTEM}
                                         useTM={useTM}
-                                        useUISM={useUISM}
                                     />
                                 </Toggler>
                             );
@@ -572,4 +480,4 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
             </Toggler>
         </ListItem>
     );
-};
+});

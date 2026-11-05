@@ -80,6 +80,9 @@ export const tasks = {
         searchPlaceholder: "Search tasks (closed & deleted excluded)...",
         searchAriaLabel: "Search Tasks",
         recents: "Recents",
+        // The per-project "show more" row under Recents: each project folder
+        // starts at five tasks and this reveals the next five.
+        recentsMore: "More",
         projects: "Projects",
         milestones: "Milestones",
         newProject: "New Project",
@@ -444,6 +447,7 @@ export const tasks = {
         closeTooltip: "Close",
         tasksInThisMilestone: "Tasks in this milestone",
         taskProgress: "Task progress",
+        taskProgressOther: "Other",
         taskButton: "Task",
         emptyMilestoneTasks: "No tasks yet. Create a task and assign it to this milestone.",
         menu: {
@@ -518,6 +522,16 @@ export const tasks = {
         sortDefault: "Default",
         sortDueDate: "Due date",
         sortPriority: "Priority",
+        // Create-a-task card in the Open column.
+        quickAddTooltip: "Create a task",
+        quickAddPlaceholder: "Task title…",
+        quickAddPriority: "Priority",
+        quickAddTags: "Tags",
+        quickAddCreate: "Create",
+        quickAddCancel: "Cancel",
+        quickAddHiddenByFilters: "Created {id}, but your current filters hide it.",
+        quickAddOpen: "Open",
+        quickAddDismiss: "Dismiss",
     },
 
     // Sub-tasks block.

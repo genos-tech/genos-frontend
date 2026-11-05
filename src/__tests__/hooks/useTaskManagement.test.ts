@@ -169,3 +169,87 @@ describe("useTaskManagement — deselect clears the stale preview object", () =>
         expect(result.current.currentPreviewTask?.id).toBe(34);
     });
 });
+
+// MIP-962: a host that hides the outgoing task while the next one loads must
+// be able to tell "still loading" from "the load finished and produced
+// nothing" — otherwise a deleted / inaccessible / cross-project task would
+// leave a permanent loader. `previewLoadFailedTaskId` is that signal.
+describe("useTaskManagement — previewLoadFailedTaskId", () => {
+    it("is set when the selected task's load comes back empty", async () => {
+        loadSpecificTaskMock.mockResolvedValue([]);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        expect(result.current.previewLoadFailedTaskId).toBeNull();
+        await act(async () => {
+            await result.current.loadTask(10, 5);
+        });
+        expect(result.current.previewLoadFailedTaskId).toBe(5);
+    });
+
+    it("is set when the loader errors (loadSpecificTask swallows and returns undefined)", async () => {
+        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+        loadSpecificTaskMock.mockResolvedValue(undefined);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        await act(async () => {
+            await result.current.loadTask(10, 5);
+        });
+        expect(result.current.previewLoadFailedTaskId).toBe(5);
+        spy.mockRestore();
+    });
+
+    it("is NOT set on success, and a retry clears an earlier failure", async () => {
+        loadSpecificTaskMock.mockResolvedValueOnce([]).mockResolvedValueOnce([mkTask(5)]);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        await act(async () => {
+            await result.current.loadTask(10, 5);
+        });
+        expect(result.current.previewLoadFailedTaskId).toBe(5);
+
+        await act(async () => {
+            await result.current.loadTask(10, 5);
+        });
+        expect(result.current.previewLoadFailedTaskId).toBeNull();
+        expect(result.current.currentPreviewTask?.id).toBe(5);
+    });
+
+    it("a failed load for a task the user already left says nothing about the new selection", async () => {
+        const dA = deferred<TaskProps[]>();
+        loadSpecificTaskMock.mockImplementation(() => dA.promise);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(1));
+        act(() => void result.current.loadTask(10, 1));
+        act(() => result.current.setCurrentPreviewTaskId(2));
+        await act(async () => {
+            dA.resolve([]);
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        expect(result.current.previewLoadFailedTaskId).toBeNull();
+    });
+
+    it("a new selection clears it at once; a same-id re-click does not", async () => {
+        loadSpecificTaskMock.mockResolvedValue([]);
+        const { result } = renderHook(() => useTaskManagement(myself, "token"));
+
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        await act(async () => {
+            await result.current.loadTask(10, 5);
+        });
+        expect(result.current.previewLoadFailedTaskId).toBe(5);
+
+        // Same id: no load re-runs, so the failure must stay (else: endless loader).
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        expect(result.current.previewLoadFailedTaskId).toBe(5);
+
+        // Different id (and back again, e.g. via a milestone): forgotten.
+        act(() => result.current.setCurrentPreviewMilestoneId(3));
+        act(() => result.current.setCurrentPreviewTaskId(5));
+        expect(result.current.previewLoadFailedTaskId).toBeNull();
+    });
+});

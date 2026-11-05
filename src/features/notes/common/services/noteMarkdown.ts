@@ -19,6 +19,7 @@ import { BlockNoteEditor, type PartialBlock } from "@blocknote/core";
 
 // Headless schema holder, created lazily and reused (editor creation is
 // not free — it builds a ProseMirror schema).
+type ParsedBlocks = Awaited<ReturnType<BlockNoteEditor["tryParseMarkdownToBlocks"]>>;
 let holder: BlockNoteEditor | null = null;
 const getHolder = (): BlockNoteEditor => {
     if (!holder) {
@@ -27,9 +28,184 @@ const getHolder = (): BlockNoteEditor => {
     return holder;
 };
 
+// BlockNote's markdown parser (replaced in 0.51) leaves the backslash escapes
+// of a link destination in the href: `[t](https://x/Foo_\(bar\))` reads as
+// `https://x/Foo_\(bar\)`, a broken address, and the serializer escapes
+// parentheses and backslashes exactly that way, so an exported note came back
+// with its links changed. CommonMark processes those escapes (any ASCII
+// punctuation) when it reads a destination; do it here.
+const ESCAPED_PUNCTUATION = /\\([!-/:-@[-`{-~])/g;
+
+type AnyRecord = Record<string, unknown>;
+
+const unescapeLinkHrefs = <T>(node: T): T => {
+    if (Array.isArray(node)) return node.map(unescapeLinkHrefs) as T;
+    if (!node || typeof node !== "object") return node;
+    const source = node as AnyRecord;
+    const out: AnyRecord = {};
+    for (const [key, value] of Object.entries(source)) out[key] = unescapeLinkHrefs(value);
+    if (source.type === "link" && typeof source.href === "string") {
+        out.href = source.href.replace(ESCAPED_PUNCTUATION, "$1");
+    }
+    return out as T;
+};
+
+// Math and diagram blocks (MIP-1019). The holder has the default schema, so the
+// parser knows neither: a fence tagged `math` or `mermaid` arrives as a code block,
+// `$$ x $$` as a paragraph and `$x$` as text. The editors' schemas have the types, so
+// the result is read back the way the API's `markdown_to_blocks` reads it (the same
+// rule, kept in step with `blocknote_md.py`, `_INLINE_MATH_RE`).
+const FENCED_BLOCK_TYPES: Record<string, string> = { math: "mathBlock", mermaid: "diagram" };
+const BLOCK_FENCES: Record<string, string> = { mathBlock: "math", diagram: "mermaid" };
+const DISPLAY_MATH = /^\$\$\s*([\s\S]*?\S)\s*\$\$$/;
+
+const isAsciiAlnum = (ch: string | undefined): boolean => !!ch && /[A-Za-z0-9]/.test(ch);
+const isSpace = (ch: string | undefined): boolean => !ch || /\s/.test(ch);
+
+/**
+ * Inline math in a run of text: `$` + a non-space, no `$` or newline inside (a
+ * backslash escapes), a non-space + `$`, and neither dollar touching an ASCII letter
+ * or digit on its outer side, so "$5 and $10" and `$HOME/$USER` stay text. Written
+ * by hand: a regex lookbehind stops older iOS Safari from even parsing this chunk.
+ */
+export const findInlineMath = (text: string): { start: number; end: number; source: string }[] => {
+    const found: { start: number; end: number; source: string }[] = [];
+    let i = 0;
+    while (i < text.length) {
+        if (text[i] !== "$") {
+            i++;
+            continue;
+        }
+        const before = text[i - 1];
+        const next = text[i + 1];
+        if (
+            isAsciiAlnum(before) ||
+            before === "\\" ||
+            before === "$" ||
+            isSpace(next) ||
+            next === "$"
+        ) {
+            i++;
+            continue;
+        }
+        let j = i + 1;
+        let close = -1;
+        while (j < text.length) {
+            const ch = text[j];
+            if (ch === "\n") break;
+            if (ch === "\\") {
+                j += 2;
+                continue;
+            }
+            if (ch === "$") {
+                const last = text[j - 1];
+                if (
+                    !isSpace(last) &&
+                    last !== "\\" &&
+                    !isAsciiAlnum(text[j + 1]) &&
+                    text[j + 1] !== "$"
+                ) {
+                    close = j;
+                }
+                break;
+            }
+            j++;
+        }
+        if (close < 0) {
+            i++;
+            continue;
+        }
+        found.push({ start: i, end: close + 1, source: text.slice(i + 1, close) });
+        i = close + 1;
+    }
+    return found;
+};
+
+const splitInlineMath = (items: unknown[]): unknown[] =>
+    items.flatMap((item) => {
+        const node = item as AnyRecord;
+        const styles = (node?.styles ?? {}) as AnyRecord;
+        if (node?.type !== "text" || typeof node.text !== "string" || styles.code) return [item];
+        const matches = findInlineMath(node.text);
+        if (matches.length === 0) return [item];
+        const out: unknown[] = [];
+        let cursor = 0;
+        for (const m of matches) {
+            if (m.start > cursor) out.push({ ...node, text: node.text.slice(cursor, m.start) });
+            out.push({ type: "math", props: {}, content: m.source });
+            cursor = m.end;
+        }
+        if (cursor < node.text.length) out.push({ ...node, text: node.text.slice(cursor) });
+        return out;
+    });
+
+const restoreMathInContent = (content: unknown): unknown => {
+    if (Array.isArray(content)) return splitInlineMath(content);
+    const table = content as AnyRecord | null;
+    if (table && typeof table === "object" && Array.isArray(table.rows)) {
+        return {
+            ...table,
+            rows: (table.rows as AnyRecord[]).map((row) => ({
+                ...row,
+                cells: ((row.cells as unknown[]) ?? []).map((cell) =>
+                    Array.isArray(cell)
+                        ? splitInlineMath(cell)
+                        : {
+                              ...(cell as AnyRecord),
+                              content: splitInlineMath(
+                                  ((cell as AnyRecord).content as unknown[]) ?? []
+                              ),
+                          }
+                ),
+            })),
+        };
+    }
+    return content;
+};
+
+const restoreMathBlocks = (blocks: unknown[]): unknown[] =>
+    blocks.map((raw) => {
+        const block = raw as AnyRecord;
+        const children = Array.isArray(block.children)
+            ? restoreMathBlocks(block.children)
+            : block.children;
+        const props = (block.props ?? {}) as AnyRecord;
+        if (block.type === "codeBlock") {
+            const target =
+                FENCED_BLOCK_TYPES[
+                    String(props.language ?? "")
+                        .trim()
+                        .toLowerCase()
+                ];
+            if (target) return { ...block, type: target, props: {}, children };
+        }
+        if (block.type === "paragraph" && Array.isArray(block.content)) {
+            const items = block.content as AnyRecord[];
+            if (
+                items.length > 0 &&
+                items.every(
+                    (i) => i.type === "text" && !Object.keys((i.styles ?? {}) as AnyRecord).length
+                )
+            ) {
+                const display = DISPLAY_MATH.exec(items.map((i) => String(i.text ?? "")).join(""));
+                if (display) {
+                    return {
+                        type: "mathBlock",
+                        props: {},
+                        content: [{ type: "text", text: display[1], styles: {} }],
+                        children,
+                    };
+                }
+            }
+        }
+        return { ...block, content: restoreMathInContent(block.content), children };
+    });
+
 /** Parse raw markdown text into BlockNote blocks for a new note body. */
 export const markdownToNoteBlocks = async (markdown: string): Promise<PartialBlock[]> => {
-    const blocks = await getHolder().tryParseMarkdownToBlocks(markdown);
+    const blocks = restoreMathBlocks(
+        unescapeLinkHrefs(await getHolder().tryParseMarkdownToBlocks(markdown))
+    ) as ParsedBlocks;
     // A note body must have at least one block (the ProseMirror doc
     // invariant every editor in this codebase maintains).
     return blocks.length > 0 ? (blocks as PartialBlock[]) : [{ type: "paragraph" }];
@@ -55,8 +231,6 @@ const DEFAULT_BLOCK_TYPES = new Set([
     "video",
     "audio",
 ]);
-
-type AnyRecord = Record<string, unknown>;
 
 // Best-effort text for a custom inline node. Prop names match the notes
 // schema specs (Mention.tsx / HashMention.tsx).
@@ -89,14 +263,34 @@ const customInlineToText = (node: AnyRecord): string => {
     }
 };
 
+// Inline math as `$source$`, what `markdownToNoteBlocks` and the API's reader read back. A
+// source with a bare `$` (LaTeX writes a dollar sign as `\\$`) cannot sit between dollars:
+// it becomes a code span instead of being dropped.
+const mathInlineToText = (content: unknown): AnyRecord => {
+    const source = String(content ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .join(" ");
+    if (!source) return { type: "text", text: "", styles: {} };
+    const bareDollar = source.split("").some((ch, i) => ch === "$" && source[i - 1] !== "\\");
+    return bareDollar
+        ? { type: "text", text: source, styles: { code: true } }
+        : { type: "text", text: `$${source}$`, styles: {} };
+};
+
 const sanitizeInline = (content: unknown): unknown => {
     if (!Array.isArray(content)) return content;
     return content.map((node) => {
         if (!node || typeof node !== "object") return node;
         const n = node as AnyRecord;
         if (n.type === "text") return n;
+        if (n.type === "math") return mathInlineToText(n.content);
         if (n.type === "link") {
-            return { ...n, content: sanitizeInline(n.content) };
+            // A raw space ends a markdown link destination, so the address
+            // would be cut at it on import (0.49 wrote it as %20).
+            const href =
+                typeof n.href === "string" ? n.href.replace(/\s/g, encodeURIComponent) : n.href;
+            return { ...n, href, content: sanitizeInline(n.content) };
         }
         // Custom inline → plain styled-less text run.
         return { type: "text", text: customInlineToText(n), styles: {} };
@@ -142,6 +336,19 @@ export const sanitizeBlocksForMarkdown = (blocks: unknown[]): PartialBlock[] => 
             return {
                 ...b,
                 content: sanitizeTableContent(b.content as AnyRecord),
+                children,
+            } as PartialBlock;
+        }
+        if (type in BLOCK_FENCES) {
+            // Math and diagram blocks hold their source as one plain text run: a code
+            // block fenced `math` / `mermaid`, which the API and the import read back.
+            const source = Array.isArray(b.content)
+                ? (b.content as AnyRecord[]).map((i) => String(i.text ?? "")).join("")
+                : "";
+            return {
+                type: "codeBlock",
+                props: { language: BLOCK_FENCES[type] },
+                content: source ? [{ type: "text", text: source, styles: {} }] : [],
                 children,
             } as PartialBlock;
         }

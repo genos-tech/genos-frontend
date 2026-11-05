@@ -111,27 +111,47 @@ const ciStateLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"])
     }
 };
 
+// A merged or closed PR is final: the list payload already says which, and
+// the detail request only adds the CI dot and the richer hover card. It is
+// three GitHub calls on the server (about 1.2 s the first time), and a table
+// mounts a dozen of them at once, most of them for PRs nobody is looking at.
+// So these rows draw from the list and ask for the detail when the chip is
+// hovered or focused (MIP-994). Open and draft PRs still ask at mount: their
+// CI is the live signal the dot exists for.
+const isFinishedPull = (pull: LinkedPull): boolean =>
+    pull.merged_at != null || pull.state === "closed";
+
 // One badge per PR. We have the URL from the server list but the
 // detailed state (merged/draft/closed) + CI signal need a second fetch
 // — that's what `prStatusCache` is for. The list response already
 // carries enough info (`state`, `draft`, `merged_at`) to render a
 // reasonable badge without the second fetch, so we use the list state
-// as a fast first-paint and upgrade once detail lands.
+// as a fast first-paint and upgrade once detail lands. For a finished PR
+// that fetch waits for the first hover or focus (`isFinishedPull`).
 const SinglePrBadge = ({
     pull,
     accessToken,
     isDark,
+    showRepo,
 }: {
     pull: LinkedPull;
     accessToken: string | null;
     isDark: boolean;
+    /** Name the repo in the label: only worth the room when the task's PRs span repos. */
+    showRepo: boolean;
 }) => {
     const { t } = useTranslation();
     const [detail, setDetail] = useState<PrStatusResult | null>(null);
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+    const finished = isFinishedPull(pull);
+    // Latches on the first hover or focus. Computed from the live `pull` too,
+    // so a PR that was finished when the row mounted and is open by the next
+    // refresh (reopened) is fetched like any open one.
+    const [asked, setAsked] = useState(false);
+    const needsDetail = asked || !finished;
 
     useEffect(() => {
-        if (!accessToken) return;
+        if (!accessToken || !needsDetail) return;
         let cancelled = false;
         (async () => {
             const r = await getCachedOrFetchPrStatus(accessToken, pull.html_url);
@@ -140,7 +160,8 @@ const SinglePrBadge = ({
         return () => {
             cancelled = true;
         };
-    }, [accessToken, pull.html_url]);
+    }, [accessToken, pull.html_url, needsDetail]);
+    const ask = () => setAsked(true);
 
     // Derive a PR state from the list payload until detail lands.
     // Mirrors the backend list shape (`state` is open/closed, `merged_at`
@@ -184,8 +205,12 @@ const SinglePrBadge = ({
                 {repoLabel} #{pull.number}
             </Box>
             <Box sx={{ fontSize: 11, color: palette.textMuted }}>{title}</Box>
+            <Box sx={{ fontSize: 11, color: palette.textMuted }}>{pull.branch}</Box>
             <Box sx={{ fontSize: 11 }}>
-                {prStateLabel(prState, t)} · {ciStateLabel(ci, t)}
+                {/* "No CI" would claim something we have not asked about yet. */}
+                {finished
+                    ? prStateLabel(prState, t)
+                    : `${prStateLabel(prState, t)} · ${ciStateLabel(ci, t)}`}
             </Box>
         </Stack>
     );
@@ -200,6 +225,7 @@ const SinglePrBadge = ({
             title={hoverTitle}
         >
             <Box
+                aria-label={`${pull.owner}/${pull.repo} #${pull.number}`}
                 component="a"
                 href={pull.html_url}
                 rel="noreferrer"
@@ -208,6 +234,10 @@ const SinglePrBadge = ({
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 0.5,
+                    // A long repo name shrinks (ellipsis below) instead of pushing
+                    // the chip wider than the column.
+                    minWidth: 0,
+                    maxWidth: "100%",
                     px: 0.75,
                     py: 0.25,
                     cursor: "pointer",
@@ -227,6 +257,8 @@ const SinglePrBadge = ({
                     },
                 }}
                 onClick={(e) => e.stopPropagation()}
+                onFocus={ask}
+                onMouseEnter={ask}
             >
                 <PrStateIcon state={prState} />
                 {/* Tiny CI dot — easier to scan at row scale than the
@@ -243,10 +275,50 @@ const SinglePrBadge = ({
                         }}
                     />
                 )}
+                {/* Which PR this is: the icon only says its state, and a task's
+                    PRs all look alike. The number never truncates; a long repo
+                    name gives way first. Spans, not divs: a div inside the chip
+                    reads as the CI dot. */}
+                <Box
+                    component="span"
+                    sx={{
+                        display: "inline-flex",
+                        minWidth: 0,
+                        gap: "2px",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {showRepo && (
+                        <Box
+                            component="span"
+                            sx={{
+                                minWidth: 0,
+                                maxWidth: 88,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                color: palette.textMuted,
+                                fontWeight: 500,
+                            }}
+                        >
+                            {pull.repo}
+                        </Box>
+                    )}
+                    <Box component="span" sx={{ flexShrink: 0 }}>
+                        #{pull.number}
+                    </Box>
+                </Box>
             </Box>
         </AppTooltip>
     );
 };
+
+// Repo, then PR number: the same order on every load, whatever order the
+// server listed them in, so a chip never jumps when the list refreshes.
+const byRepoThenNumber = (a: LinkedPull, b: LinkedPull): number =>
+    `${a.owner}/${a.repo}`.localeCompare(`${b.owner}/${b.repo}`) || a.number - b.number;
 
 // Helper used by tests / future callers that want to use the CI badge
 // component standalone. Kept exported so it doesn't get marked dead.
@@ -270,16 +342,31 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
     }, [accessToken, taskId]);
 
     if (!pulls || pulls.length === 0) return null;
+    const sorted = [...pulls].sort(byRepoThenNumber);
+    const showRepo = new Set(sorted.map((p) => `${p.owner}/${p.repo}`)).size > 1;
     return (
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexWrap: "nowrap" }}>
-            {pulls.map((pull) => (
+        // Wraps: a wide column keeps every chip on one line, a narrow one stacks
+        // them (the row grows to fit), instead of spilling past the column edge.
+        <Box
+            sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                minWidth: 0,
+                maxWidth: "100%",
+            }}
+        >
+            {sorted.map((pull) => (
                 <SinglePrBadge
                     key={pull.html_url}
                     accessToken={accessToken}
                     isDark={isDark}
                     pull={pull}
+                    showRepo={showRepo}
                 />
             ))}
-        </Stack>
+        </Box>
     );
 };

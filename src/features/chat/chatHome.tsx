@@ -449,7 +449,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 <>
                                                     <SubChatPanel
                                                         currentSubChatId={currentSubChatId}
-                                                        currentWindowHeight={height}
                                                         incompleteTodoCount={incompleteCount}
                                                         isToDoVisible={isToDoVisible}
                                                         myself={myself}
@@ -480,7 +479,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             {/* Main Chat Pane */}
                                             <MainChatPanel
                                                 currentMainChatId={currentMainChatId}
-                                                currentWindowHeight={height}
                                                 incompleteTodoCount={incompleteCount}
                                                 isToDoVisible={isToDoVisible}
                                                 mainChatPanelSize={mainChatPanelSize}

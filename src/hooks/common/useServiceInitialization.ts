@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { useChatManagement } from "../chats/useChatManagement";
 import { useInboxManagement } from "../inbox/useInboxManagement";
 import { useNoteManagement } from "../notes/useNoteManagement";
-import { useTaskManagement } from "../tasks/useTaskManagement";
 
 interface UseServiceInitializationProps {
     myself: any;
@@ -42,7 +41,10 @@ export const useServiceInitialization = ({
         [location.pathname]
     );
     const useNM = useNoteManagement(myself, accessToken);
-    const useTM = useTaskManagement(myself, accessToken);
+    // There used to be a `useTaskManagement` here too. App.tsx never read it
+    // (the real one is built in `useProjectTaskManagement`), so its 35 state
+    // slots, its effects and its boot-time `/task/meta/` request only cost
+    // renders: every setter in it re-rendered `AppBody`. Removed (MIP-971).
     const useCM = useChatManagement(myself, accessToken);
     const useIM = useInboxManagement();
     // Note: a third `useTeamManagement(myself, accessToken)` used to live
@@ -63,10 +65,7 @@ export const useServiceInitialization = ({
         useNM.initializeNoteStates();
         useNM.setIsTaskNoteVisible(false);
 
-        // Tasks (also reset in useProjectTaskManagement; this instance is local to
-        // useServiceInitialization but we keep the reset for consistency).
-        useTM.setAllTasks([]);
-        useTM.setIsTaskPreviewVisible(false);
+        // Tasks are reset in `useProjectTaskManagement`.
 
         // Chats: wipe both lists and currently-open chats so the new team starts clean.
         useCM.setAllChats([]);
@@ -100,7 +99,8 @@ export const useServiceInitialization = ({
         if (activeService === "inbox") {
             // Nothing to do here.
         } else if (activeService === "chat") {
-            useTM.setIsTaskPreviewVisible(false);
+            // Nothing to do here (the task preview is closed by
+            // `useProjectTaskManagement`).
         } else if (activeService === "tasks") {
             useNM.setIsTaskNoteVisible(false);
         } else if (activeService === "notes") {
@@ -127,9 +127,6 @@ export const useServiceInitialization = ({
             // interval. Calling `funcSetTeamMembers()` here would only
             // populate the (now-removed) orphan instance's local state.
 
-            // Load task metadata
-            useTM.getTaskMeta();
-
             // Load note metadata
             useNM.getMyNoteMeta();
             useNM.getMyNoteFolders();
@@ -140,7 +137,6 @@ export const useServiceInitialization = ({
 
     return {
         useNM,
-        useTM,
         useCM,
         useIM,
     };

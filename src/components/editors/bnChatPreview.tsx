@@ -17,8 +17,10 @@ import { Box, IconButton, Modal, ModalDialog, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { withoutTrailingBlank } from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
-import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
+import { LazyPrCard } from "../../features/integrations/components/LazyPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -32,6 +34,8 @@ import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils"
 import { AppTooltip } from "../ui/AppTooltip";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec } from "./CustomEmoji";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
@@ -84,9 +88,11 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         // This is done by picking out the blocks you want to disable
         const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 // Adds all default inline content.
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 // Adds the mention tag.
                 mention: CreateMentionSpec(
                     useTEM.teamMemberProfiles,
@@ -106,6 +112,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             blockSpecs: {
                 // remainingBlockSpecs contains all the other blocks
                 ...remainingBlockSpecs,
+                ...genosExtraBlockSpecs,
                 // BlockNote 0.49 moved the code-block options out of
                 // `useCreateBlockNote` and into the schema. We override
                 // the default plain-text codeBlock with the syntax-
@@ -123,7 +130,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         // https:// so the HTTPS SPA renders them without a Mixed-Content
         // warning (older bodies carry an http scheme; see the helper).
         resolveFileUrl: resolveInsecureFileUrl,
-        initialContent: content.slice(0, -1),
+        // Drops the stored trailing blank line, and only that: a message typed
+        // since BlockNote 0.57 may not end with one, and a blind `slice(0, -1)`
+        // hid its last real line (MIP-1039).
+        initialContent: withoutTrailingBlank(content),
     });
 
     // State for modal
@@ -137,7 +147,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const { accessToken } = useAuth();
 
     // Scan the message body for GitHub PR URLs once per content change
-    // and render a LinkedPrCard per match below the body. Memoized so
+    // and render a PR card per match below the body (loaded on hover). Memoized so
     // Virtuoso scroll re-renders don't re-walk the document. Caps at
     // MAX_PR_UNFURLS to keep noisy paste-bombs in check.
     const prUrls = useMemo(
@@ -214,7 +224,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             {prUrls.length > 0 && accessToken && (
                 <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
                     {prUrls.map((url) => (
-                        <LinkedPrCard
+                        <LazyPrCard
                             key={url}
                             accessToken={accessToken}
                             url={url}

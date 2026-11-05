@@ -152,7 +152,6 @@ export const projects: SegmentConfig = {
                 "出典リンク付きAI回答と長文要約",
             ],
             roadmap: [
-                "チャットへの送信、返信、リアクション",
                 "TaskやCalendar画面から直接Ask Genosする入口",
                 "書き込み後に作成物をすぐ開く統一導線",
                 "AIによるProject / Folder / Sprint等のより広い整理",
@@ -366,7 +365,6 @@ export const projects: SegmentConfig = {
                 "Receive source-linked AI answers and summarize long content",
             ],
             roadmap: [
-                "Sending, replying, or reacting in chat",
                 '"Ask Genos" entry points directly on task and calendar surfaces',
                 "A consistent link to open every item created by an agent write",
                 "Broader AI organization of projects, folders, sprints, and related structures",

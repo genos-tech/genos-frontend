@@ -9,20 +9,23 @@ import { UserAvatar } from "./UserAvatar";
 // Backwards-compat prop surface. The legacy `myself`, `setMyself`, `useCM`,
 // `useUISM`, and `socket` props are no longer read here — `<UserAvatar>`
 // pulls them from `<AvatarContextProvider>` — but they are kept in the
-// type so the ~15 unmigrated callsites compile unchanged.
+// type so the ~15 unmigrated callsites compile unchanged. `setMyself`,
+// `socket`, `useCM` and `useUISM` are optional: nothing reads them, and a
+// caller that holds only a slice of a manager (the task sidebar, MIP-971) has
+// no whole manager to pass. `myself` stays required: `isYou` resolves through it.
 type AvatarWithStatusProps = {
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
+    setMyself?: (value: UserProps) => void;
     avatarSize?: number;
     isYou: boolean;
     avatarUser?: UserProps;
-    socket: Socket | null;
+    socket?: Socket | null;
     isForBubble?: boolean;
     chat?: AllChatProps;
     thread?: ThreadProps;
-    useCM: ChatManagementState;
+    useCM?: ChatManagementState;
     showNameAndEmail?: boolean;
-    useUISM: UIStateManagementState;
+    useUISM?: UIStateManagementState;
     showPulseDot?: boolean;
     /**
      * Forwarded to `<UserAvatar>`. Defaults to `true` there (clicking the

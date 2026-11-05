@@ -189,6 +189,7 @@ export const TaskHomeLayout = ({
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
+                        holdSwitchWithLoader
                     />
                 </Box>
             </Panel>
@@ -387,15 +388,12 @@ export const TaskHomeLayout = ({
                 <Box sx={ls.sidebarPanel}>
                     <TaskSidebar
                         myself={myself}
-                        setMyself={setMyself}
                         setOpenJoinProject={setOpenJoinProject}
-                        socket={socket}
                         useCM={useCM}
                         usePM={usePM}
                         useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useUISM={useUISM}
                     />
                 </Box>
             </Panel>

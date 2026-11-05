@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Box, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -11,7 +10,6 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
@@ -28,56 +26,6 @@ type MobileNoteHomeProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     useSM: SprintMilestoneManagementState;
-};
-
-// Full-screen overlay shell. Mirrors MobileOverlay in MobileChatHome /
-// MobileTaskHome.
-const MobileOverlay = ({
-    children,
-    onClose,
-}: {
-    children: React.ReactNode;
-    onClose: () => void;
-}) => {
-    const { mode } = useColorScheme();
-    const { t } = useTranslation();
-    const isDark = mode === "dark";
-    return (
-        <Box
-            sx={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 1300,
-                background: isDark
-                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
-                    : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
-                display: "flex",
-                flexDirection: "column",
-                paddingBottom: "var(--mobile-bottom-inset, 60px)",
-            }}
-        >
-            <IconButton
-                aria-label={t.notes.labels.close}
-                size="sm"
-                variant="plain"
-                sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 1,
-                    borderRadius: "10px",
-                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                    "&:hover": {
-                        background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
-                    },
-                }}
-                onClick={onClose}
-            >
-                <CloseRoundedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pt: 5 }}>{children}</Box>
-        </Box>
-    );
 };
 
 export const MobileNoteHome = (props: MobileNoteHomeProps) => {
@@ -190,21 +138,22 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
             {useNM.isTaskVisibleInNote &&
                 useTM.currentPreviewTask &&
                 useNM.currentTaskNoteChain && (
+                    // The shared shell, as on the task page: Close in a header row
+                    // (the old local shell floated it over the pane and needed a 40px
+                    // spacer), no padding around the preview, no dead strip below.
                     <MobileOverlay onClose={() => useNM.setIsTaskVisibleInNote(false)}>
-                        <Box sx={{ p: 1, height: "100%", overflow: "auto" }}>
-                            <TaskPreview
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                usePM={usePM}
-                                useSM={useSM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        </Box>
+                        <TaskPreview
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                        />
                     </MobileOverlay>
                 )}
         </Box>

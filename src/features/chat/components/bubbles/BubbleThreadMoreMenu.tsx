@@ -12,7 +12,12 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 import { Socket } from "socket.io-client";
 
+import { MoreMenuKind } from "../../../../components/ui/moreMenuOrder";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import {
+    PinnableBubbleAction,
+    useBubbleActionsPreference,
+} from "../../../../hooks/common/useBubbleActionsPreference";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
@@ -21,6 +26,7 @@ import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
+import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
 
 type BubbleThreadMoreMenuProps = {
     accessToken: string | null;
@@ -50,6 +56,7 @@ type BubbleThreadMoreMenuProps = {
 
 type MenuItemConfig = {
     id: string;
+    kind: MoreMenuKind;
     label: string;
     icon: React.ReactNode;
     onClick: () => void;
@@ -96,6 +103,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatIdAndThreadId);
+    const { pinned } = useBubbleActionsPreference();
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const [focusedIndex, setFocusedIndex] = useState(-1);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -194,7 +202,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (!isOpen) return;
 
-            const items = menuItems.filter((item) => item.visible);
+            const items = dropdownItems;
 
             switch (event.key) {
                 case "Escape":
@@ -300,9 +308,11 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     // edit=cyan). The `delete` action is the only generic destructive
     // affordance and uses palette.dangerTint instead of red. The `flag` red
     // is also a cross-file functional carve-out (see chatListItemForFlagMessages).
+    // Display order comes from `kind` (via `splitPinned`), not from this array.
     const menuItems: MenuItemConfig[] = [
         {
             id: "copyLink",
+            kind: "copyLink",
             label: t.chat.messageActions.copyMessageLink,
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
@@ -313,6 +323,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "unwrapAll",
+            kind: "unwrapAll",
             label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
             icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
             onClick: () => {
@@ -327,6 +338,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "unwrapCode",
+            kind: "unwrapCode",
             label: unwrapCode ? t.chat.messageActions.wrapCode : t.chat.messageActions.unwrapCode,
             icon: <CodeIcon sx={{ fontSize: 18 }} />,
             onClick: () => {
@@ -341,6 +353,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "flag",
+            kind: "flag",
             label: isFlagged
                 ? t.chat.messageActions.removeFlag
                 : t.chat.messageActions.flagForLater,
@@ -364,6 +377,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             // once something is, because then it is a promise the app has
             // made rather than an action on offer.
             id: "remindMe",
+            kind: "remindMe",
             label: reminder
                 ? fmt(t.chat.messageActions.reminderSetFor, {
                       time: formatReminderTime(new Date(reminder.remindAt), locale),
@@ -384,6 +398,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "edit",
+            kind: "edit",
             label: t.chat.messageActions.editMessage,
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
@@ -394,6 +409,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "delete",
+            kind: "delete",
             label: t.chat.messageActions.deleteMessage,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
@@ -411,7 +427,10 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
     ];
 
-    const visibleItems = menuItems.filter((item) => item.visible);
+    // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
+    // "…"; the dropdown, and arrow-key navigation through it, keep the rest.
+    const { pinnedItems, menuItems: dropdownItems } = splitPinned(menuItems, pinned);
+    const visibleItems = dropdownItems;
 
     // Dropdown menu rendered via portal
     const dropdownMenu = isOpen
@@ -569,62 +588,78 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
           )
         : null;
 
+    // A pinned action keeps this menu's own handler (and the dialogs below).
+    const pinnedActions: PinnedBubbleAction[] = pinnedItems.map((item) => ({
+        active: item.active,
+        danger: item.danger,
+        icon: item.icon,
+        id: item.id as PinnableBubbleAction,
+        label: item.label,
+        onClick: item.onClick,
+    }));
+
     return (
-        <Box sx={{ position: "relative" }}>
-            {/* Trigger Button */}
-            <IconButton
-                ref={buttonRef}
-                aria-expanded={isOpen}
-                aria-haspopup="menu"
-                size="sm"
-                sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "8px",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    color: isOpen
-                        ? isDark
-                            ? "var(--gp-brandalt-300)"
-                            : "var(--gp-brand-700)"
-                        : isDark
-                          ? "rgba(255,255,255,0.55)"
-                          : "rgba(0,0,0,0.45)",
-                    background: isOpen
-                        ? isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.22)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.12)"
-                        : "transparent",
-                    "&:hover": {
-                        background: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.28)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                        color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
-                        transform: "scale(1.08)",
-                    },
-                    "&:focus-visible": {
-                        background: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.28)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                        color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
-                        outline: "2px solid",
-                        outlineColor: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        outlineOffset: "2px",
-                    },
-                    "&:active": {
-                        transform: "scale(0.95)",
-                    },
-                }}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (isOpen) {
-                        closeMenu();
-                    } else {
-                        openMenu();
-                    }
-                }}
-            >
-                <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
+        <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.5 }}>
+            <BubblePinnedActions actions={pinnedActions} />
+            {/* Trigger Button. Always there while something is left in the menu
+                (Unwrap code can't be pinned, so on a thread reply that holds). */}
+            {dropdownItems.length > 0 && (
+                <IconButton
+                    ref={buttonRef}
+                    aria-expanded={isOpen}
+                    aria-haspopup="menu"
+                    size="sm"
+                    sx={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "8px",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        color: isOpen
+                            ? isDark
+                                ? "var(--gp-brandalt-300)"
+                                : "var(--gp-brand-700)"
+                            : isDark
+                              ? "rgba(255,255,255,0.55)"
+                              : "rgba(0,0,0,0.45)",
+                        background: isOpen
+                            ? isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.22)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.12)"
+                            : "transparent",
+                        "&:hover": {
+                            background: isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                            color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
+                            transform: "scale(1.08)",
+                        },
+                        "&:focus-visible": {
+                            background: isDark
+                                ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                            color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
+                            outline: "2px solid",
+                            outlineColor: isDark
+                                ? "var(--gp-brandalt-400)"
+                                : "var(--gp-brand-700)",
+                            outlineOffset: "2px",
+                        },
+                        "&:active": {
+                            transform: "scale(0.95)",
+                        },
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isOpen) {
+                            closeMenu();
+                        } else {
+                            openMenu();
+                        }
+                    }}
+                >
+                    <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            )}
 
             {/* Portal-rendered dropdown menu */}
             {dropdownMenu}

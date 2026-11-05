@@ -51,12 +51,19 @@ import {
 
 import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
 import {
+    genosExtraBlockSpecs,
+    genosExtraInlineContentSpecs,
+} from "../../../components/editors/genosBlockSpecs";
+import { genosStyleSpecs } from "../../../components/editors/genosStyleSpecs";
+import {
     CreateHashChatSpec,
     CreateHashNoteSpec,
     CreateHashProjectSpec,
     CreateHashTaskSpec,
     HashSuggestionMenuController,
 } from "../../../components/editors/HashMention";
+import { linkHostCaption } from "../../../components/editors/sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { useTranslation } from "../../../i18n";
@@ -173,8 +180,10 @@ export function MessageComposerV3({
         void audio;
         void video;
         return BlockNoteSchema.create({
+            styleSpecs: genosStyleSpecs,
             inlineContentSpecs: {
                 ...defaultInlineContentSpecs,
+                ...genosExtraInlineContentSpecs,
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
                 customEmoji: CreateCustomEmojiSpec(),
@@ -183,11 +192,13 @@ export function MessageComposerV3({
                 hashChat: CreateHashChatSpec(),
                 hashProject: CreateHashProjectSpec(),
             },
-            blockSpecs: remaining,
+            blockSpecs: { ...remaining, ...genosExtraBlockSpecs },
         });
     }, [currentUserId]);
 
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
+        extensions: [linkHostCaption],
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {

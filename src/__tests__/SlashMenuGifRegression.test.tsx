@@ -8,12 +8,8 @@
  * rendered a second stacked copy on every "/".
  */
 import { act } from "react";
-import {
-    BlockNoteSchema,
-    defaultBlockSpecs,
-    filterSuggestionItems,
-    SuggestionMenu,
-} from "@blocknote/core";
+import { BlockNoteSchema, defaultBlockSpecs, filterSuggestionItems } from "@blocknote/core";
+import { SuggestionMenu } from "@blocknote/core/extensions";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     getDefaultReactSlashMenuItems,

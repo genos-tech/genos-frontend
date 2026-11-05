@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { useAdoptableTitleDraft } from "./utils/useAdoptableTitleDraft";
 import { useInitialTabIndex } from "./utils/useInitialTabIndex";
+import { usePreviewEditMirror } from "./utils/usePreviewEditMirror";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
@@ -36,6 +37,7 @@ import { useSendUpdatedTask } from "../../../../hooks/tasks/useSendUpdatedTask";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
 import { UserProps } from "../../../../types/admin";
@@ -48,15 +50,15 @@ import {
     TaskProps,
 } from "../../../../types/tasks";
 import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
-import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
-import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
+import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import { emitTasksBulkChanged, onTaskTouched } from "../../services/taskEvents";
+import { createOpenLanding, OpenLanding } from "../../services/taskOpenLanding";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -68,81 +70,25 @@ import { Milestone } from "../../sprint-milestone/types";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
+import {
+    countMilestoneTaskStatuses,
+    type MilestoneProgressKey,
+} from "../../utils/milestoneTaskProgress";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
+import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskPaneLoading } from "./base/TaskPaneLoading";
 import { TaskPreviewLayout } from "./base/TaskPreviewLayout";
+import { TaskPreviewSwitchGate } from "./base/TaskPreviewSwitchGate";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
-
-// Section divider component
-const SectionDivider = ({ isDark }: { isDark: boolean }) => (
-    <Divider
-        sx={{
-            my: 2,
-            opacity: isDark ? 0.08 : 0.12,
-        }}
-    />
-);
-
-// Section header component
-const SectionHeader = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
-    <Typography
-        level="body-xs"
-        sx={{
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            fontSize: 10,
-            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-            mb: 1,
-        }}
-    >
-        {children}
-    </Typography>
-);
-
-/**
- * "Linked pull requests" — a rich card per PR URL found in the entity's
- * Links list. Source of truth is `links`; there is no separate PR field.
- *
- * Shared by the task branch and `MilestonePreviewInner`. It lived inline
- * in the task branch only, so a milestone's PRs never rendered even
- * though milestones carry `links` exactly like tasks do (the create form
- * forwards them, and `DynamicURLManager` edits them in both previews).
- * Extracted rather than copied so the two panes can't drift again.
- *
- * Renders nothing — divider and header included — when no link parses as
- * a PR URL, so a task with only non-GitHub links is unaffected.
- */
-const LinkedPrSection = ({
-    links,
-    isDark,
-    accessToken,
-}: {
-    links: TaskProps["links"] | undefined;
-    isDark: boolean;
-    accessToken: string | null;
-}) => {
-    const { t } = useTranslation();
-    const prUrls = (links ?? []).map((l) => l.url).filter((u) => parsePrUrl(u) !== null);
-    if (prUrls.length === 0) return null;
-    return (
-        <>
-            <SectionDivider isDark={isDark} />
-            <SectionHeader isDark={isDark}>{t.tasks.linkedPr.header}</SectionHeader>
-            <Stack spacing={1}>
-                {prUrls.map((url) => (
-                    <LinkedPrCard key={url} accessToken={accessToken ?? ""} url={url} />
-                ))}
-            </Stack>
-        </>
-    );
-};
+import { LinkedPrSection } from "./LinkedPrSection";
+import { SectionDivider, SectionHeader } from "./PreviewSection";
 
 type TaskPreviewProps = {
     socket: Socket | null;
@@ -175,10 +121,24 @@ type TaskPreviewProps = {
      *  in sync (e.g. NoteHome), which must keep rendering off the working
      *  copy alone. */
     guardStaleTaskId?: boolean;
+    /** Task-page hosts (TaskHomeLayout, MobileTaskHome). Same "mismatch =
+     *  still loading" rule as `guardStaleTaskId`, tuned for a pane the user
+     *  switches tasks in all day:
+     *   - the OUTGOING task stays mounted (hidden) under the loader, so its
+     *     unsaved body / pending saves behave exactly as when it simply stayed
+     *     on screen (unmounting cancels the editor's debounced sync);
+     *   - the loader fades in after ~150 ms (CSS only), so a cache-hit swap
+     *     that lands within a frame never blinks;
+     *   - if the by-id load for the requested task FAILS (no access, deleted,
+     *     cross-project the current project can't serve) the guard lets go and
+     *     the previously loaded task shows, as before — never a permanent
+     *     spinner. Implies the guard; do not combine with `guardStaleTaskId`. */
+    holdSwitchWithLoader?: boolean;
 };
 
-export const TaskPreview = (props: TaskPreviewProps) => {
+const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => {
     const {
+        landing,
         socket,
         myself,
         setMyself,
@@ -192,6 +152,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTodoFromMessageBubble,
         hostZIndex,
         guardStaleTaskId,
+        holdSwitchWithLoader,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -221,8 +182,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // comments+notes loads (attachments arrive synchronously with the
     // task). Subsequent comment / note / attachment changes don't move
     // the user — only the user's tab click does (TaskTabBlock onChange).
+    //
+    // Keyed on the task being SHOWN (`useTM.currentPreviewTask`), the id the
+    // comment and note loaders are keyed on. It used to be keyed on
+    // `taskEditState.currentTaskId`, a copy that lags behind by an effect: the
+    // loaders captured `markCommentsLoaded` for the OLD id, the answer for the
+    // new task then failed the hook's "is this still my entity" check, and the
+    // starting tab was never re-picked after a task switch (MIP-988).
     const { tabIndex, setTabIndex, markCommentsLoaded, markNotesLoaded, reportFileCount } =
-        useInitialTabIndex(taskEditState.currentTaskId);
+        useInitialTabIndex(useTM.currentPreviewTask?.id);
 
     // Set the current preview task when the component is mounted
     useEffect(() => {
@@ -254,6 +222,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // signal comment block further down explains the ref's role.
     const currentBodyRef = useRef<PartialBlock[]>([]);
 
+    // After the server REFUSES a save, `useSendUpdatedTask` puts the working
+    // copy back to what is stored. The assignee / reporter chips keep their own
+    // copies (`usePreviewEditMirror` below re-reads them when the working copy
+    // changes), so tell them directly.
+    const handleStoredTaskRestored = useCallback(
+        (storedTask: TaskProps) => {
+            setAssignee(storedTask.assignee ?? null);
+            setReporter(storedTask.reporter || myself);
+        },
+        [myself]
+    );
+
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
         myself,
@@ -263,47 +243,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskEditState,
         // Live body source — see `handleEditorBodySync`.
         bodyRef: currentBodyRef,
+        onStoredTaskRestored: handleStoredTaskRestored,
     });
 
-    useEffect(() => {
-        // Save updated task (title, assignee, status, ..., but not task body).
-        // `syncCard = true`: this is the metadata-save path, so rebuild the PM
-        // task-card header + broadcast it so every PM viewer's card updates
-        // live (the body autosave / switch / close saves pass false).
-        //
-        // Keyed on `taskUpdateSeq`, NOT on the `taskUpdated` boolean. React
-        // coalesces `setTaskUpdated(true)` while the flag is already true, so
-        // an edit made while a previous save was still in flight produced no
-        // state change and this effect never re-ran — the edit was applied to
-        // local state (so the preview looked right) but never PUT. That is
-        // the intermittent "status reverts in the table, and on reopen":
-        // nothing had reverted, the change was simply never saved. The
-        // counter changes on every save request, so none can be swallowed.
-        // The same coalescing hazard is documented for attachments in the
-        // effect below, which worked around it for that one field only.
-        if (taskEditState.taskUpdated === true) {
-            sendUpdatedTask(false, true);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [taskEditState.taskUpdateSeq]);
-
-    // Re-trigger the save when the attachment list still contains
-    // negative-id rows after a save just completed. This handles the
-    // case where the user dropped file B *during* file A's POST: the
-    // duplicate `setTaskUpdated(true)` call gets coalesced by React
-    // while the flag is already true, so B would otherwise sit pending
-    // forever until something else flipped the flag. After A's save
-    // flips the flag back to false, this effect notices B's negative
-    // id and kicks off the next save.
-    useEffect(() => {
-        if (taskEditState.taskUpdated) return;
-        const hasPending = (taskEditState.tmpCurrentTaskContent?.attachments ?? []).some(
-            (a) => a.attachment_id < 0
-        );
-        if (hasPending) {
-            taskEditState.setTaskUpdated(true);
-        }
-    }, [taskEditState.taskUpdated, taskEditState.tmpCurrentTaskContent?.attachments]);
+    // The two effects that turn an edit into a metadata PUT (the seq-keyed
+    // save and the pending-attachment re-trigger). Their reasoning lives in
+    // `useTaskSaveTriggers`.
+    useTaskSaveTriggers(taskEditState, sendUpdatedTask);
 
     useEffect(() => {
         if (taskEditState.startIntervalUpdatingTask) {
@@ -527,14 +473,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         reportFileCount(taskEditState.uploadedFiles.length);
     }, [taskEditState.uploadedFiles.length, reportFileCount]);
 
-    useEffect(() => {
-        if (useTM.isTaskUpdated === false) {
-            useTM.setCurrentPreviewTask(taskEditState.tmpCurrentTaskContent);
-            useTM.setIsTaskUpdated(true);
-            setAssignee(taskEditState.tmpCurrentTaskContent?.assignee ?? null);
-            setReporter(taskEditState.tmpCurrentTaskContent?.reporter || myself);
-        }
-    }, [taskEditState.tmpCurrentTaskContent]);
+    // Hand the working copy to the host's slot and the table row on each EDIT,
+    // and keep the assignee / reporter chips on the people of the copy that
+    // arrived (loads included). A load pushes nothing: see the hook.
+    usePreviewEditMirror({
+        working: taskEditState.tmpCurrentTaskContent,
+        preview: useTM.currentPreviewTask,
+        myself,
+        setPreview: useTM.setCurrentPreviewTask,
+        syncRow: useTM.syncPreviewEdit,
+        setAssignee,
+        setReporter,
+    });
 
     // Get Task Notes. Cancelled-flag guard ensures a slow response
     // for an old taskId can't overwrite the fresh task's notes — the
@@ -544,8 +494,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
     useEffect(() => {
         let cancelled = false;
+        // The first answer of an open lands together with the other side
+        // loaders (see taskOpenLanding.ts); a refresh (`taskNoteMeta`) joins
+        // nothing and writes at once.
+        const ticket = useTM.currentPreviewTask?.project
+            ? landing.join(Number(useTM.currentPreviewTask.id), "notes")
+            : null;
         (async () => {
-            if (useTM.currentPreviewTask?.project) {
+            if (ticket && useTM.currentPreviewTask?.project) {
                 const loadedTaskNotes: TaskNoteProps[] =
                     (await loadTaskNotes(
                         myself,
@@ -553,10 +509,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         Number(useTM.currentPreviewTask.id),
                         accessToken
                     )) ?? [];
-                if (cancelled) return;
-                const notes = loadedTaskNotes ?? [];
-                setTaskNotes(notes);
-                markNotesLoaded(notes.length);
+                ticket.land(() => {
+                    if (cancelled) return;
+                    const notes = loadedTaskNotes ?? [];
+                    setTaskNotes(notes);
+                    markNotesLoaded(notes.length);
+                });
             } else {
                 if (cancelled) return;
                 setTaskNotes([]);
@@ -565,6 +523,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         })();
         return () => {
             cancelled = true;
+            ticket?.cancel();
         };
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
@@ -574,7 +533,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         const id = Number(useTM.currentPreviewTask?.id);
         if (!Number.isFinite(id) || id <= 0) return;
-        void useTM.loadTaskDependenciesFor(id);
+        // Lands together with the other side loaders (see taskOpenLanding.ts).
+        void useTM.loadTaskDependenciesFor(id, landing.join(id, "dependencies").land);
     }, [taskEditState.currentTaskId]);
 
     // Task comments are hoisted into `useTM` (shared with the chat
@@ -664,6 +624,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     const previewTaskId = Number(useTM.currentPreviewTask?.id);
+    const hasPreviewTaskId = Number.isFinite(previewTaskId) && previewTaskId > 0;
+    // A new open begins when the requested task's object arrives. Armed in a
+    // layout effect: those run before every passive effect of the commit, so
+    // before any loader below (or in a child block) joins. Never armed in
+    // milestone mode: the milestone preview owns its loaders.
+    useLayoutEffect(() => {
+        landing.arm(!isMilestoneMode && hasPreviewTaskId ? previewTaskId : null);
+    }, [landing, previewTaskId, hasPreviewTaskId, isMilestoneMode]);
     useEffect(() => {
         // The milestone preview owns the shared `taskComments` slot while
         // it's up — don't fight it. Leaving milestone mode flips this dep
@@ -676,18 +644,24 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             return;
         }
         // Cancelled-flag guard: stale comment loads must not clobber
-        // the freshly-selected task's data when clicks outrun fetches.
+        // the freshly-selected task's data when clicks outrun fetches. It is
+        // checked again when the write runs: a write may wait for the rest of
+        // the open (see taskOpenLanding.ts).
         let cancelled = false;
+        const ticket = landing.join(previewTaskId, "comments");
         (async () => {
             const loadedTaskComments: TaskCommentProps[] =
                 (await loadTaskComments(myself, previewTaskId, accessToken)) ?? [];
-            if (cancelled) return;
-            const comments = loadedTaskComments ?? [];
-            setTaskComments(comments);
-            markCommentsLoaded(comments.length);
+            ticket.land(() => {
+                if (cancelled) return;
+                const comments = loadedTaskComments ?? [];
+                setTaskComments(comments);
+                markCommentsLoaded(comments.length);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket.cancel();
         };
         // Keyed on the id it actually READS. It used to key on
         // `taskEditState.currentTaskId` — a copy that lags behind and, on
@@ -722,18 +696,36 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             return;
         }
         let cancelled = false;
+        const ticket = landing.join(previewTaskId, "activity");
         (async () => {
             setIsLoadingTaskActivities(true);
             const rows = await loadTaskActivities(myself, previewTaskId, accessToken);
-            if (cancelled) return;
-            setTaskActivities(rows);
-            setIsLoadingTaskActivities(false);
+            ticket.land(() => {
+                if (cancelled) return;
+                setTaskActivities(rows);
+                setIsLoadingTaskActivities(false);
+            });
         })();
         return () => {
             cancelled = true;
+            ticket.cancel();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [previewTaskId, activityRefreshNonce]);
+
+    // Every block of the preview has started its loads for this task once the
+    // working copy has caught up with the requested one (a commit's child
+    // effects run before this one). From here the writes of the open run as
+    // soon as nothing is outstanding. See taskOpenLanding.ts.
+    useEffect(() => {
+        if (
+            !isMilestoneMode &&
+            hasPreviewTaskId &&
+            Number(taskEditState.currentTaskId) === previewTaskId
+        ) {
+            landing.seal(previewTaskId);
+        }
+    }, [landing, previewTaskId, hasPreviewTaskId, isMilestoneMode, taskEditState.currentTaskId]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -837,23 +829,29 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         );
     }
 
-    // With `guardStaleTaskId`, treat a working-copy/requested-id mismatch as
-    // "still loading" so we never render the previously-loaded (stale) task
-    // during a switch or after a failed cross-project load. The switch effect
-    // (Effect ~341) syncs `tmpCurrentTaskContent` to the incoming task once
-    // `loadTask` lands, closing this window — usually within a frame on an
-    // IDB cache hit. Hosts that don't set the flag render off the working
-    // copy alone (unchanged behavior).
-    const previewIdMatchesRequested =
-        !guardStaleTaskId ||
-        useTM.currentPreviewTaskId == null ||
-        useTM.currentPreviewTaskId === -1 ||
-        String(taskEditState.tmpCurrentTaskContent?.id ?? "") ===
-            String(useTM.currentPreviewTaskId);
+    // `guardStaleTaskId` / `holdSwitchWithLoader`: treat a working-copy /
+    // requested-id mismatch as "still loading" so we never render the
+    // previously-loaded (stale) task under the new selection. The switch
+    // effect (Effect ~341) syncs `tmpCurrentTaskContent` to the incoming task
+    // once `loadTask` lands, closing the window — within a frame on an IDB
+    // cache hit, 1-2 s cold. Hosts that set neither flag render off the
+    // working copy alone (unchanged). See `getTaskPreviewPaneState`.
+    const paneState = getTaskPreviewPaneState({
+        workingCopyId: taskEditState.tmpCurrentTaskContent?.id,
+        requestedId: useTM.currentPreviewTaskId,
+        guard: !!guardStaleTaskId || !!holdSwitchWithLoader,
+        releaseOnLoadFailure: !!holdSwitchWithLoader,
+        loadFailedTaskId: useTM.previewLoadFailedTaskId,
+    });
 
     return (
-        <>
-            {taskEditState.tmpCurrentTaskContent?.id && previewIdMatchesRequested ? (
+        <TaskPreviewSwitchGate
+            holdOutgoing={!!holdSwitchWithLoader}
+            isDark={isDark}
+            loadingLabel={t.tasks.preview.loadingTask}
+            state={paneState}
+        >
+            {() => (
                 <TaskPreviewLayout
                     ref={sheetRef}
                     isDark={isDark}
@@ -946,12 +944,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 />
                             </Box>
 
-                            <LinkedPrSection
-                                accessToken={accessToken}
-                                isDark={isDark}
-                                links={taskEditState.tmpCurrentTaskContent.links}
-                            />
-
                             <SectionDivider isDark={isDark} />
 
                             <Stack direction="row">
@@ -985,7 +977,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                     setTaskBodyEdited={taskEditState.setTaskBodyEdited}
                                     setTaskBodySaved={taskEditState.setTaskBodySaved}
                                     socket={socket}
-                                    taskId={taskEditState.tmpCurrentTaskContent.id}
+                                    // Non-empty: this view only renders when the pane state has a working copy.
+                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
@@ -1042,12 +1035,34 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         />
                     }
                 />
-            ) : useTM.currentPreviewTaskId != null && useTM.currentPreviewTaskId !== -1 ? (
-                <TaskPaneLoading isDark={isDark} label={t.tasks.preview.loadingTask} />
-            ) : null}
-        </>
+            )}
+        </TaskPreviewSwitchGate>
     );
 };
+
+/**
+ * The task preview. It owns one `OpenLanding` (see taskOpenLanding.ts) and
+ * provides it to the blocks below, so the side loaders of an open (comments,
+ * activity, notes, dependencies, children, deliveries, the parent task) land
+ * in one render pass instead of one each. Blocks rendered anywhere else have
+ * no landing and write at once.
+ */
+export const TaskPreview = (props: TaskPreviewProps) => {
+    const [landing] = useState(createOpenLanding);
+    useEffect(() => () => landing.dispose(), [landing]);
+    return (
+        <TaskOpenLandingContext.Provider value={landing}>
+            <TaskPreviewBody {...props} landing={landing} />
+        </TaskOpenLandingContext.Provider>
+    );
+};
+
+// Chip colours of the "Task progress" row: the shared milestone status palette,
+// plus a neutral grey for "Other".
+const MILESTONE_PROGRESS_CHIP_COLORS: Record<MilestoneProgressKey, { color: string }> = {
+    ...MILESTONE_STATUS_CHIP_COLORS,
+    Other: { color: "#94a3b8" },
+} as Record<MilestoneProgressKey, { color: string }>;
 
 const STATUS_COLOR: Record<string, string> = {
     Open: "#0044c2",
@@ -1309,22 +1324,19 @@ const MilestonePreviewInner = ({
 
     // Per-status task counts for this milestone, computed from
     // `useTM.allTasks` (the Milestone payload only carries `tasksTotal`
-    // / `tasksClosed`, not the per-status breakdown). Statuses outside
-    // the four headline ones are silently dropped — the strip is a
-    // quick at-a-glance breakdown, not a reconciliation against
-    // `total`. Excludes the milestone's own backing task row.
+    // / `tasksClosed`, not the per-status breakdown). The chips always add
+    // up to the total: a status without a chip of its own falls into
+    // "Other" (see countMilestoneTaskStatuses). Excludes the milestone's own
+    // backing task row.
     const milestoneTaskCounts = useMemo(() => {
         if (!milestone) return null;
-        const counts = { Open: 0, WIP: 0, Pending: 0, Closed: 0 };
-        let total = 0;
+        const statuses: (string | null)[] = [];
         for (const task of useTM.allTasks) {
             if (task.milestoneId !== milestone.milestoneId) continue;
             if (task.isMilestone) continue;
-            total += 1;
-            const s = task.status;
-            if (s && s in counts) counts[s as keyof typeof counts] += 1;
+            statuses.push(task.status);
         }
-        return { counts, total };
+        return countMilestoneTaskStatuses(statuses);
     }, [milestone, useTM.allTasks]);
 
     // Pull the latest copy from the server when this milestone is
@@ -2133,7 +2145,15 @@ const MilestonePreviewInner = ({
             }
             header={
                 <>
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                    {/* Wraps: with the id chip added the row is wider than a
+                        narrow preview pane (the pane can be as small as 30%
+                        of the window), which clipped the action icons on
+                        the right. */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        sx={{ mb: 1.5, flexWrap: "wrap", gap: 1 }}
+                    >
                         <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
                         <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                             Milestone
@@ -2206,6 +2226,11 @@ const MilestonePreviewInner = ({
                                 Complete Milestone
                             </Button>
                         )}
+                        <PreviewTaskIdChip
+                            key={`milestone-id-${milestone.milestoneId}`}
+                            isDark={isDark}
+                            task={{ displayId: milestone.displayId, id: milestone.taskId }}
+                        />
                         <Chip
                             key={`milestone-status-${milestone.status}`}
                             size="md"
@@ -2313,6 +2338,7 @@ const MilestonePreviewInner = ({
                             const items: MoreMenuItem[] = [
                                 {
                                     id: "copyMilestoneLink",
+                                    kind: "copyLink",
                                     label: t.tasks.preview.menu.copyMilestoneLink,
                                     icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: async () => {
@@ -2328,6 +2354,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newTask",
+                                    kind: "newTask",
                                     label: t.tasks.preview.menu.newTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2344,6 +2371,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "openNote",
+                                    kind: "openNote",
                                     label: t.tasks.preview.menu.openNote,
                                     icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2380,6 +2408,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newTag",
+                                    kind: "newTag",
                                     label: t.tasks.preview.menu.newTag,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2388,6 +2417,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "newProject",
+                                    kind: "newProject",
                                     label: t.tasks.preview.menu.newProject,
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
@@ -2400,6 +2430,7 @@ const MilestonePreviewInner = ({
                                     // + their fan-out live) — same targetType
                                     // /store the task header's mute uses.
                                     id: "muteMilestone",
+                                    kind: "mute",
                                     label:
                                         notifCtx &&
                                         milestone.taskId != null &&
@@ -2433,6 +2464,7 @@ const MilestonePreviewInner = ({
                                 },
                                 {
                                     id: "deleteMilestone",
+                                    kind: "delete",
                                     label: t.tasks.preview.menu.deleteMilestone,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                     danger: true,
@@ -2541,8 +2573,10 @@ const MilestonePreviewInner = ({
                         empty milestones don't show a row of zeros.
                         Colors mirror the milestone status palette used
                         on the sidebar / picker (Open=blue, WIP=orange,
-                        Pending=purple, Closed=green) so the chips read
-                        consistently across the app. */}
+                        Blocked=rose, Pending=purple, Closed=green) so the
+                        chips read consistently across the app. A chip shows
+                        only for a count above zero; "Other" (grey) holds
+                        any status without a chip so they add up to the total. */}
                     {milestoneTaskCounts && milestoneTaskCounts.total > 0 && (
                         <Stack
                             direction="row"
@@ -2566,8 +2600,8 @@ const MilestonePreviewInner = ({
                             >
                                 {t.tasks.preview.taskProgress}
                             </Typography>
-                            {(["Open", "WIP", "Pending", "Closed"] as const).map((s) => {
-                                const tone = MILESTONE_STATUS_CHIP_COLORS[s];
+                            {milestoneTaskCounts.entries.map(({ status: s, count }) => {
+                                const tone = MILESTONE_PROGRESS_CHIP_COLORS[s];
                                 return (
                                     <Chip
                                         key={s}
@@ -2587,8 +2621,10 @@ const MilestonePreviewInner = ({
                                             px: 1,
                                         }}
                                     >
-                                        {taskMetaLabel(s, t.tasks.filters)}:{" "}
-                                        {milestoneTaskCounts.counts[s]}
+                                        {s === "Other"
+                                            ? t.tasks.preview.taskProgressOther
+                                            : taskMetaLabel(s, t.tasks.filters)}
+                                        : {count}
                                     </Chip>
                                 );
                             })}

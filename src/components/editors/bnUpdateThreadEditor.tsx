@@ -32,6 +32,12 @@ import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import {
+    hasSendableContent,
+    withoutTrailingBlank,
+    withTrailingBlank,
+} from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -58,6 +64,8 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -72,10 +80,9 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -128,9 +135,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const { mentionGroups } = useMentionGroupsContext();
 
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -150,6 +159,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             // BlockNote 0.49 moved the code-block options out of
             // `useCreateBlockNote` and into the schema. We override
             // the default plain-text codeBlock with the syntax-
@@ -180,15 +190,17 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     );
 
     const dictionary = useBlockNoteDictionary();
-    const initialContent: any[] = message.content;
+    // Without the stored trailing blank line, or editing shows (and saves) an
+    // extra empty line at the end (MIP-1039).
+    const initialContent: any[] = withoutTrailingBlank(message.content);
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
         initialContent: initialContent,
     });
@@ -218,7 +230,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         }
     }, [selectedEmoji]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
+    const [canSend, setCanSend] = useState<boolean>(hasSendableContent(message.content));
 
     const countLines = (nodes: any[]): number => {
         let count = 0;
@@ -247,12 +259,12 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     }, [isInEdit]);
 
     useEffect(() => {
-        const newInitialContent: any[] = message.content;
+        const newInitialContent: any[] = withoutTrailingBlank(message.content);
         editor.replaceBlocks(editor.document, newInitialContent);
     }, [message]);
 
     const sendUpdatedMessage = async () => {
-        if (editor.document.length <= 1) return;
+        if (!hasSendableContent(editor.document)) return;
         // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
         // plus a sibling `socket.emit("message", PUT, ...)` mirror at
         // `messageId === 1` (the synthetic "first thread message"
@@ -269,7 +281,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         try {
             await channelService.edit(
                 v3MessageId,
-                editor.document,
+                // Stored with the trailing blank line every reader expects (MIP-1039).
+                withTrailingBlank(editor.document),
                 getFirstLine(editor.document[0])
             );
         } catch (e) {
@@ -315,7 +328,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                     }}
                     onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -326,7 +339,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 >
                     <IconButton
                         color="success"
-                        disabled={editorDocLength < 2}
+                        disabled={!canSend}
                         size="sm"
                         variant="solid"
                         sx={{
@@ -373,7 +386,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                             />
 
                             <BasicTextStyleButton

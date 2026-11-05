@@ -143,7 +143,8 @@ const MCP_TOOLS: McpTool[] = [
         meaning: (
             <>
                 One task in full. Read <Code>content_markdown</Code> for the description — it keeps
-                headings, checklists and code fences.
+                headings, checklists and code fences. Also its start date, sprint, collaborators,
+                links and custom fields (by name).
             </>
         ),
     },
@@ -161,19 +162,34 @@ const MCP_TOOLS: McpTool[] = [
         name: "list_tasks",
         type: "read",
         meaning:
-            "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, status, priority, assignee or overdue.",
+            "Tasks you can see — your projects, plus anything you are assignee or reporter on — by project, milestone, sprint, parent task, status, priority, tag, assignee (or unassigned), a due-date range or overdue.",
     },
     {
         name: "list_projects",
         type: "read",
         meaning: "The projects you belong to, with the ids and short codes other tools take.",
     },
-    { name: "list_milestones", type: "read", meaning: "Milestones in a project, with progress." },
+    {
+        name: "list_milestones",
+        type: "read",
+        meaning: (
+            <>
+                Milestones in a project, with progress. For the milestones you are on, pass your
+                own id from <Code>get_current_user</Code> as <Code>assignee_id</Code>.
+            </>
+        ),
+    },
     {
         name: "get_milestone_summary",
         type: "read",
         meaning: "A milestone and the tasks under it.",
     },
+    {
+        name: "list_sprints",
+        type: "read",
+        meaning: "A project's sprints, with the ids that list_tasks filters by.",
+    },
+    { name: "get_sprint_summary", type: "read", meaning: "A sprint and the work in it." },
     {
         name: "get_task_blockers",
         type: "read",
@@ -198,23 +214,122 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "Search across tasks, notes, chat and todos.",
     },
     { name: "get_note", type: "read", meaning: "A note's body." },
+    {
+        name: "list_my_chats",
+        type: "read",
+        meaning:
+            "Your own direct, group and project chats, newest activity first. Find one by name.",
+    },
+    {
+        name: "get_chat_thread",
+        type: "read",
+        meaning: "Read a chat, or one thread of it, paging back through older messages.",
+    },
+    { name: "list_my_mentions", type: "read", meaning: "Chat messages that @mention you." },
+    { name: "list_channel_members", type: "read", meaning: "Who is in one chat." },
     { name: "get_current_user", type: "read", meaning: "Who the key acts as." },
     { name: "get_team_members", type: "read", meaning: "Who is in the team, for assigning." },
     { name: "list_project_members", type: "read", meaning: "Who is in one project." },
+    {
+        name: "list_project_tags",
+        type: "read",
+        meaning:
+            "A project's tags, custom fields and saved filters, and the team's project labels with their ids.",
+    },
     {
         name: "list_task_dependencies",
         type: "read",
         meaning: "Every blocker → blocked edge in a project or milestone, in one call.",
     },
-    { name: "list_note_folders", type: "read", meaning: "Your personal notes' folders." },
-    { name: "list_uncompleted_todos", type: "read", meaning: "Your open to-dos." },
-    { name: "list_today_todos", type: "read", meaning: "Your to-dos for today." },
+    {
+        name: "list_note_folders",
+        type: "read",
+        meaning: "The note folders in your My Notes and in Team Notes.",
+    },
+    {
+        name: "list_note_access",
+        type: "read",
+        meaning:
+            "Who can open a note and with what role (owner, editor or viewer), and whether you may change it. A note is named by its url, or by its id with its note_type.",
+    },
+    {
+        name: "get_note_history",
+        type: "read",
+        meaning:
+            "A note's saved versions, newest first, with who saved each, when, and a short preview, or one version in full when you pass version_no. A note is named by its url, or by its id with its note_type.",
+    },
+    {
+        name: "list_uncompleted_todos",
+        type: "read",
+        meaning: "Your open to-dos, with any pending reminder.",
+    },
+    {
+        name: "list_today_todos",
+        type: "read",
+        meaning: "Your to-dos for today, with any pending reminder.",
+    },
     {
         name: "list_calendar_events",
         type: "read",
         meaning: "Your Google Calendar events in a date range.",
     },
     { name: "list_calendars", type: "read", meaning: "Your Google Calendars." },
+    {
+        name: "get_my_blockers",
+        type: "read",
+        meaning: "What blocks you, and who you are holding up.",
+    },
+    {
+        name: "list_my_inbox",
+        type: "read",
+        meaning: "Your inbox: notifications, and the requests waiting on you.",
+    },
+    {
+        name: "get_my_throughput",
+        type: "read",
+        meaning: "How many tasks you created and closed lately.",
+    },
+    {
+        name: "get_workload_distribution",
+        type: "read",
+        meaning: "Open work per assignee, with what is overdue.",
+    },
+    {
+        name: "get_top_task_closers",
+        type: "read",
+        meaning: "Who closed the most tasks in a period.",
+    },
+    {
+        name: "get_task_throughput_stats",
+        type: "read",
+        meaning: "Tasks created and closed over a period, optionally by day or week.",
+    },
+    {
+        name: "get_stale_tasks",
+        type: "read",
+        meaning: "Open tasks nobody has touched for a while.",
+    },
+    {
+        name: "get_team_task_summary",
+        type: "read",
+        meaning: "A task rollup across every project you are in.",
+    },
+    {
+        name: "get_project_activity_ranking",
+        type: "read",
+        meaning: "Your projects ranked by tasks, open tasks or task notes.",
+    },
+    {
+        name: "get_milestone_assignee_counts",
+        type: "read",
+        meaning: "How many milestones each person is assigned to.",
+    },
+    { name: "get_project_summary", type: "read", meaning: "Task counts for one project." },
+    {
+        name: "get_my_task_summary",
+        type: "read",
+        meaning: "Your own task numbers: status, priority, overdue, due soon.",
+    },
     {
         name: "get_pr",
         type: "read",
@@ -233,15 +348,42 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Status, title, description, priority, effort, due date or milestone. A new description replaces the whole body.",
+            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators or custom fields. A new description replaces the whole body.",
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
+    {
+        name: "update_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Replace the text of one of your own comments on a task. The new text is the whole comment.",
+    },
+    {
+        name: "delete_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Delete one of your own comments on a task. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "restore_task_body",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Put a task's description back to what it was before an earlier edit. The text it replaces is kept, so a restore can itself be undone.",
+    },
     {
         name: "add_task_delivery",
         type: "write",
         taskRef: true,
         meaning:
             "Record the branch and PR delivering a task. Writing the same link twice updates it.",
+    },
+    {
+        name: "remove_task_delivery",
+        type: "write",
+        taskRef: true,
+        meaning: "Take back a branch or PR link that was recorded by hand.",
     },
     {
         name: "update_task_dependencies",
@@ -254,7 +396,8 @@ const MCP_TOOLS: McpTool[] = [
         type: "write",
         meaning: (
             <>
-                Needs a project id from <Code>list_projects</Code>.
+                Needs a project id from <Code>list_projects</Code>. Can be filed under a parent
+                task, and can set a start date, collaborators and custom fields.
             </>
         ),
     },
@@ -267,7 +410,8 @@ const MCP_TOOLS: McpTool[] = [
     {
         name: "update_tasks_bulk",
         type: "write",
-        meaning: "Priority, due date, status, effort or milestone on many tasks in one call.",
+        meaning:
+            "Priority, due date, start date, status, effort, tags or milestone on many tasks in one call.",
     },
     {
         name: "create_task_plan",
@@ -282,14 +426,126 @@ const MCP_TOOLS: McpTool[] = [
         meaning: "A new note, optionally attached to a task.",
     },
     { name: "update_note", type: "write", meaning: "A note's title or body, or its folder." },
-    { name: "create_todo_item", type: "write", meaning: "A personal to-do." },
-    { name: "update_todo_item", type: "write", meaning: "Tick off or edit a to-do." },
+    {
+        name: "create_todo_item",
+        type: "write",
+        meaning: "A personal to-do, optionally with a reminder.",
+    },
+    {
+        name: "update_todo_item",
+        type: "write",
+        meaning:
+            "Tick off or edit a to-do, move it to another day, or set or cancel its reminder.",
+    },
+    {
+        name: "delete_todo_item",
+        type: "write",
+        meaning:
+            "Permanently delete a to-do with its sub-items and reminders. Needs a key that also has the destructive opt-in.",
+    },
     { name: "create_calendar_event", type: "write", meaning: "An event on your Google Calendar." },
     { name: "update_calendar_event", type: "write", meaning: "Change a calendar event." },
     {
         name: "delete_calendar_event",
         type: "write",
-        meaning: "Delete a calendar event. Nothing on this side can bring it back.",
+        meaning:
+            "Delete a calendar event. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "manage_milestone",
+        type: "write",
+        meaning:
+            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which.",
+    },
+    {
+        name: "delete_milestone",
+        type: "write",
+        meaning:
+            "Delete a milestone. Its tasks are kept, outside any milestone. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "manage_sprint",
+        type: "write",
+        meaning:
+            "Create a sprint, or change a sprint's name or dates. The action argument picks which. Ending a sprint early is setting its end date.",
+    },
+    {
+        name: "delete_sprint",
+        type: "write",
+        meaning:
+            "Delete a sprint. Its milestones and their tasks are kept, outside any sprint. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "manage_project",
+        type: "write",
+        meaning:
+            "Create a project, or rename one or change its code, the prefix of its task ids. The action argument picks which.",
+    },
+    {
+        name: "manage_project_members",
+        type: "write",
+        meaning:
+            "Add a teammate to a project, who also gets the project's chat, or change a member's role. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "add_project_tag",
+        type: "write",
+        meaning:
+            "Add a tag to a project's tag list, so its tasks can carry it. Any member of the project may. The name is up to 20 characters, and a name that differs from an existing tag only in case is refused. A color is an optional hex like #3b82f6; the tag is grey without one. It cannot rename or delete a tag.",
+    },
+    {
+        name: "manage_project_labels",
+        type: "write",
+        meaning:
+            "Create a project label, or put labels on a project or take them off. The action argument picks which. Labels group projects and belong to the whole team, so a new one is visible to everyone in it. Only the project's owner or an editor may. It cannot rename or delete a label.",
+    },
+    {
+        name: "approve_join_request",
+        type: "write",
+        meaning:
+            "Approve someone's request to join a project: they are added to it and told, and can then see and edit it. Take the request's item_id from list_my_inbox. Project requests only. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "decline_join_request",
+        type: "write",
+        meaning:
+            "Decline someone's request to join a project: the request closes and they are told. A request that was already answered cannot be changed. Take the request's item_id from list_my_inbox. Project requests only.",
+    },
+    {
+        name: "manage_note_folder",
+        type: "write",
+        meaning:
+            "Create a folder for notes, in My Notes or Team Notes, or rename one. The action argument picks which. A new top-level Team Notes folder is private to you. It cannot move or delete a folder.",
+    },
+    {
+        name: "favorite_note",
+        type: "write",
+        meaning:
+            "Star or unstar a note, or a note folder, in your own sidebar. A note is named by its url, or by its id with its note_type. Nothing else changes.",
+    },
+    {
+        name: "delete_note",
+        type: "write",
+        meaning:
+            "Delete a note for good, with its version history. Only its author or owner may, and a note with sub-notes is refused. A note is named by its url, or by its id with its note_type. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "delete_note_folder",
+        type: "write",
+        meaning:
+            "Delete a note folder. A folder that holds notes or folders is refused unless include_contents is true, which deletes everything inside it for good. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "manage_note_sharing",
+        type: "write",
+        meaning:
+            "Share a note with a teammate as an editor or a viewer, or stop sharing it. Only its owner may, and the person is not notified. A note is named by its url, or by its id with its note_type. Needs a key that also has the destructive opt-in, because it changes who has access.",
+    },
+    {
+        name: "restore_note_version",
+        type: "write",
+        meaning:
+            "Put an earlier version of a note back, title and body. What the note says now is kept as a version first, so a restore can itself be undone. If the live editor could not be updated, the result says so. A note is named by its url, or by its id with its note_type.",
     },
 ];
 
@@ -567,6 +823,12 @@ export default function DevelopersPage() {
                         as its creator. Membership is re-checked on every request rather than
                         trusted from the key, because a key goes on naming its team after its owner
                         has been removed from that team.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Chats are the widest thing a key reaches. <Code>list_my_chats</Code> and{" "}
+                        <Code>get_chat_thread</Code> read your own chats, direct messages included,
+                        and a read-scoped key can call both. A key handed to an outside agent
+                        exposes all of them.
                     </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">

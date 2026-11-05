@@ -437,6 +437,121 @@ export const fr: DeepPartial<Messages> = {
         },
         cleared: "aucun",
         unset: "—",
+        edit: {
+            edit: "Modifier",
+            cancelEdit: "Annuler la modification",
+            reset: "Rétablir",
+            resetField: "Rétablir {field}",
+            approveWithChanges: "Approuver avec vos modifications",
+            changesCount: "{count, plural, one {# modification} other {# modifications}}",
+            hint: "Modifiez ce que vous voulez, puis approuvez. Genos exécutera ce que vous voyez ici.",
+            groupLabel: "Modifier avant d'approuver",
+            proposed: "Proposition de Genos : {value}",
+            now: "Actuellement : {value}",
+            asProposed: "{value} (tel que proposé)",
+            rejected:
+                "Certaines de vos modifications ne peuvent pas être appliquées. Rien n'a été approuvé ni exécuté : corrigez-les, puis approuvez à nouveau.",
+            tagPlaceholder: "Ajouter une étiquette",
+            addTag: "Ajouter",
+            removeTag: "Retirer l'étiquette {tag}",
+            noTags: "Aucune étiquette (elles seront toutes retirées)",
+            tagsNote:
+                "Chaque étiquette doit déjà exister dans le projet. Si l'une d'elles n'existe pas, la modification est refusée à l'exécution.",
+            edited: "Modifié",
+            row: "Ligne {n}",
+            fields: {
+                title: "Titre",
+                description: "Description",
+                addToEnd: "Texte à ajouter à la fin",
+                addToStart: "Texte à ajouter au début",
+                comment: "Commentaire",
+                content: "Contenu",
+                notes: "Notes",
+                priority: "Priorité",
+                effort: "Effort",
+                status: "Statut",
+                due: "Date d'échéance",
+                start: "Date de début",
+                day: "Jour",
+                reminder: "Rappel",
+                tags: "Étiquettes",
+            },
+            errors: {
+                required: "{field} : ce champ ne peut pas être vide.",
+                tooLong: "{field} : trop long (maximum {max} caractères).",
+                bodyTooLong: "{field} : trop long (la limite est de 256 Ko).",
+                badDate: "{field} : saisissez une date valide.",
+                dateRequired: "{field} : choisissez une date.",
+                badReminder: "{field} : saisissez une date et une heure.",
+                reminderRequired: "{field} : choisissez une date et une heure.",
+            },
+        },
+        undo: {
+            chip: "Impossible à défaire",
+            reasons: {
+                irreversible_delete: "Cela supprime définitivement l'élément.",
+                notified_people:
+                    "Cela concerne d'autres personnes, par exemple en donnant un accès ou en envoyant un message, et « Défaire » ne peut pas y revenir.",
+                no_snapshot:
+                    "Les anciennes valeurs ne sont pas conservées : il n'y a donc rien à rétablir.",
+                unsupported_fields:
+                    "Cette modification touche un élément que « Défaire » ne peut pas rétablir.",
+                not_yet: "« Défaire » n'est pas encore disponible pour ce type de modification.",
+            },
+            button: "Défaire",
+            buttonFor: "Défaire : {tool}",
+            undoing: "Annulation en cours…",
+            retry: "Réessayer",
+            notRecalled: "Ce qui a déjà été envoyé, comme les notifications, n'est pas rappelé.",
+            hints: {
+                create_task: "Supprime la tâche créée par Genos.",
+                update_task: "Rétablit les valeurs précédentes.",
+                restore_task_body: "Rétablit la description telle qu'elle était avant.",
+                add_comment: "Supprime le commentaire ajouté par Genos.",
+                create_note: "Supprime la note créée par Genos.",
+                update_note: "Rétablit le texte précédent de la note.",
+                restore_note_version:
+                    "Rétablit la version de la note que cette modification a remplacée.",
+                fallback: "Revient sur cette modification.",
+            },
+            fields: {
+                title: "Titre",
+                body: "Contenu",
+            },
+            listSeparator: ", ",
+            done: {
+                alreadyUndone: "Défait",
+                generic: "Modification défaite.",
+                restored: "Modification défaite. Rétabli : {fields}.",
+                restoredSkipped:
+                    "Modification défaite. Rétabli : {fields}. Laissé tel quel, car modifié depuis : {skipped}.",
+                deletedTask: "Modification défaite. La tâche {task} a été supprimée.",
+                deletedTaskUnnamed: "Modification défaite. La tâche a été supprimée.",
+                deletedNote: "Modification défaite. La note « {title} » a été supprimée.",
+                deletedNoteUnnamed: "Modification défaite. La note a été supprimée.",
+                deletedComment: "Modification défaite. Le commentaire a été supprimé.",
+            },
+            refused: {
+                not_found: "Genos ne retrouve plus cette modification : rien n'a été défait.",
+                not_undoable: "Cette modification ne peut pas être défaite. Rien n'a été changé.",
+                already_undone: "Cette modification a déjà été défaite.",
+                changed_since:
+                    "Cet élément a été modifié après la modification de Genos ; il a donc été laissé tel quel. Rien n'a été défait.",
+                changedSinceFields:
+                    "Rien n'a été défait. Ces éléments ont été modifiés après la modification de Genos et ont été laissés tels quels : {fields}.",
+                expired:
+                    "Il est trop tard pour défaire cette modification : cette option n'est disponible que pendant une durée limitée.",
+                permission_lost:
+                    "Vous ne pouvez plus modifier cet élément : impossible de défaire. Rien n'a été changé.",
+                throttled: "Trop de tentatives. Patientez un instant, puis réessayez.",
+                unauthorized:
+                    "Vous avez été déconnecté : rien n'a été défait. Reconnectez-vous, puis réessayez.",
+                network:
+                    "Impossible de joindre Genos : rien n'a été défait. Vérifiez votre connexion et réessayez.",
+                server: "Un problème est survenu de notre côté : rien n'a été défait. Réessayez.",
+                unknown: "Impossible de défaire cette modification.",
+            },
+        },
     },
     app: {
         features: {
@@ -476,6 +591,9 @@ export const fr: DeepPartial<Messages> = {
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
             idleReload: "Actualisation après une période d'inactivité…",
+        },
+        serviceSwitch: {
+            loading: "Chargement des données…",
         },
         meetClipboard: {
             eventTitle: "Lien Meet (événement supprimé automatiquement)",
@@ -644,8 +762,6 @@ export const fr: DeepPartial<Messages> = {
             general: "Général",
             newTagPlaceholder: "Nouvelle balise",
             delete: "Supprimer",
-            spotlightTip:
-                "Demandez à l'agent : \"que reste-t-il aujourd'hui ?\" ou « créer une tâche : … » – Spotlight peut lire, ajouter et basculer directement vos éléments.",
             completedTodayEmptyTitle: "Rien n'est encore terminé aujourd'hui",
             completedTodayEmptySubtitle:
                 "Les éléments que vous terminez aujourd'hui s'afficheront ici.",
@@ -665,8 +781,6 @@ export const fr: DeepPartial<Messages> = {
             noTodosYet: "Aucune tâche pour le moment",
             allCompletedSubtitle: "Vous avez terminé toutes vos tâches",
             createFirstSubtitle: "Créez votre première tâche pour commencer",
-            proTip: "Astuce",
-            proTipBody: "Double-cliquez sur un message pour l'ajouter à vos tâches à faire",
             save: "Enregistrer",
             saved: "Enregistré",
             copyLink: "Copier le lien",
@@ -1350,6 +1464,11 @@ export const fr: DeepPartial<Messages> = {
             alertSuccess: "Succès",
             mentionYou: "Vous",
             mentionMemberCount: "{count, plural, one {# membre} other {# membres}}",
+            mentionPerson: "Personne",
+            mentionGroupLabel: "Groupe",
+            mentionTodo: "À faire",
+            mentionDirectMessage: "Message direct",
+            mentionMultiDm: "DM multiple",
             hashTask: "Tâche · {id}",
             hashTaskProject: "Tâche · {id} · {project}",
             hashMilestone: "Jalon · {id}",
@@ -1775,6 +1894,7 @@ export const fr: DeepPartial<Messages> = {
             openLabel: "Afficher l'historique",
             closeLabel: "Masquer l'historique",
             resumeFailed: "Impossible de rouvrir cette conversation.",
+            loadFailed: "Impossible de charger l'historique.",
             searchPlaceholder: "Rechercher des demandes passées",
             searchClear: "Effacer la recherche",
             noMatches: "Aucune demande passée ne correspond à cette recherche.",
@@ -2685,7 +2805,7 @@ export const fr: DeepPartial<Messages> = {
             planUsage: "Forfait et utilisation",
             chat: "Chat",
             tasks: "Tâches",
-            spotlight: "Spotlight",
+            spotlight: "Genos",
             notifications: "Notifications",
             mentionGroups: "Groupes de mentions",
             customEmoji: "Émojis personnalisés",
@@ -2910,25 +3030,6 @@ export const fr: DeepPartial<Messages> = {
             benefitNotes: "{n} notes par mois",
             benefitNotesUnlimited: "Notes illimitées",
             benefitUpload: "Fichiers jusqu'à {mb} Mo",
-            capAgencyRead: "Genos répond à vos questions",
-            capAgencyAct: "Genos prend des mesures pour vous, avec votre approbation",
-            capAgencyOrganize: "Genos organise — tout un plan en une seule approbation",
-            capDepthQuick: "Réponses rapides",
-            capDepthThorough: "Réponses détaillées",
-            capDepthDeep: "Raisonnement profond",
-            capDepthAdaptive: "Raisonnement approfondi, réglé automatiquement par question",
-            capMemoryNone: "Se souvient de la conversation en cours",
-            capMemoryOwn: "Se souvient de vos conversations passées",
-            capMemoryTeam: "Mémorise les connaissances collectées par votre équipe",
-            capGenosHistoryDays: "Historique des conversations Genos : jours {days}",
-            capGenosHistoryUnlimited: "Historique des conversations Genos illimité",
-            capReachWeb: "Recherche sur le Web",
-            capReachCalendar: "Intégration Google Calendar",
-            capReachGithub: "Intégration GitHub",
-            capMcp: "Connecter un agent de codage AI (MCP)",
-            capDigestNone: "Résumé Proactif de Genos",
-            capDigestWeekly: "Résumé hebdomadaire de Genos",
-            capDigestDaily: "Résumé quotidien + alertes de Genos",
             creditsPacksHeading: "Besoin de plus de crédits ?",
             creditsPacksBlurb:
                 "Achetez un pack unique. Vos crédits mensuels sont utilisés en premier et les crédits achetés n'expirent jamais.",
@@ -3046,20 +3147,94 @@ export const fr: DeepPartial<Messages> = {
                 "Désactivez pour utiliser le double-clic afin de sélectionner du texte. S'applique aux messages de chat, fils et commentaires de tâches.",
         },
         spotlight: {
-            heading: "Spotlight",
+            heading: "Réponses de Genos",
             description:
-                "Spotlight recherche toujours dans vos conversations, tâches et notes. Les options ci-dessous activent les réponses LLM, comptabilisées dans votre quota quotidien.",
+                "La recherche Spotlight parcourt toujours vos conversations, tâches et notes. Les options ci-dessous déterminent si Genos peut rédiger des réponses IA et naviguer sur le web.",
             aiAnswersLabel: "Réponses IA",
             aiAnswersHelper:
-                "Permet au bouton \"Demander\" d'envoyer votre requête à l'agent. Désactivé, Spotlight ne renvoie que des résultats de recherche.",
+                "Permet au bouton « Demander » d'envoyer votre question à Genos. Désactivé, Spotlight n'affiche que des résultats de recherche.",
             webSearchLabel: "Recherche web",
             webSearchHelper:
                 "Autoriser l'agent à naviguer sur le web pour répondre. Nécessite l'activation des réponses IA.",
         },
+        genosMemory: {
+            entryHeading: "Ce dont Genos se souvient",
+            entryDescription:
+                "Voyez sur quoi Genos s'appuie pour vous répondre, supprimez vos conversations et choisissez ce qui est partagé avec votre équipe.",
+            entryOpen: "Ouvrir",
+            backToSettings: "Paramètres de Genos",
+            title: "Ce dont Genos se souvient",
+            intro: "Genos ne conserve pas de réserve distincte de « souvenirs ». Pour vous répondre, il s'appuie sur les trois éléments ci-dessous. Vous pouvez tous les consulter ici et supprimer ce que vous ne voulez pas garder.",
+            conversations: {
+                heading: "Vos conversations avec Genos",
+                description:
+                    "Genos lit les tours précédents de la conversation en cours, ainsi qu'un court résumé des tours plus anciens. Il peut aussi parcourir vos conversations passées quand une question l'exige. Tout cela est construit à partir des questions que vous avez posées à Genos, et supprimer une conversation supprime tout.",
+                listNote: "Cette liste affiche vos conversations les plus récentes.",
+                loading: "Chargement des conversations…",
+                empty: "Vous n'avez aucune conversation avec Genos dans cette équipe.",
+                loadFailed: "Impossible de charger vos conversations.",
+                deleteTooltip: "Supprimer cette conversation",
+                deleteAria: "Supprimer la conversation : {question}",
+                deleteTitle: "Supprimer cette conversation ?",
+                deleteBody:
+                    "Cette action supprime définitivement la conversation et tout ce que Genos en retient. Elle est irréversible.",
+                deleteConfirm: "Supprimer la conversation",
+                deleteAll: "Supprimer toutes les conversations",
+                deleteAllTitle: "Supprimer toutes vos conversations avec Genos ?",
+                deleteAllBody:
+                    "Cette action supprime définitivement toutes vos conversations avec Genos dans cette équipe, y compris celles lancées depuis un fil ou une note et les plus anciennes que cette liste n'affiche pas, ainsi que tout ce que Genos en retient. Vos conversations dans d'autres équipes ne sont pas touchées. Cette action est irréversible.",
+                deleteAllAck: "Je comprends que c'est irréversible",
+                deleteAllConfirm: "Tout supprimer",
+                deletedAll:
+                    "Toutes vos conversations avec Genos dans cette équipe ont été supprimées.",
+                inFlight:
+                    "Une conversation est encore en train de répondre. Attendez qu'elle se termine, puis réessayez.",
+                failed: "Impossible de supprimer. Veuillez réessayer.",
+            },
+            shared: {
+                heading: "Réponses partagées avec votre équipe",
+                switchLabel: "Laisser mes réponses aider mes coéquipiers",
+                switchHelper:
+                    "Lorsque cette option est activée, la réponse terminée à une première question peut être présentée à vos coéquipiers comme une « Réponse précédente » anonyme, s'ils peuvent voir toutes ses sources. S'applique à toutes vos équipes.",
+                toggleFailed: "Impossible de modifier ce réglage. Veuillez réessayer.",
+                offTitle: "Arrêter de partager vos réponses ?",
+                offBody:
+                    "Vos réponses existantes seront retirées de vos équipes immédiatement et les nouvelles ne seront pas partagées. Les conversations elles-mêmes sont conservées. Si vous réactivez le partage plus tard, vos réponses récentes seront de nouveau partagées peu après. Les réponses dont vous avez arrêté le partage une par une resteront non partagées.",
+                offConfirm: "Désactiver le partage",
+                loading: "Chargement des réponses partagées…",
+                loadFailed: "Impossible de charger vos réponses partagées.",
+                empty: "Aucune de vos réponses n'est partagée avec vos coéquipiers pour le moment.",
+                emptyOff: "Le partage est désactivé : aucune de vos réponses n'est partagée.",
+                audienceOnlyYou: "Vous seul pouvez la voir",
+                audienceMany: "Visible par {count} personnes, vous compris",
+                stop: "Arrêter de partager cette réponse",
+                stopTitle: "Arrêter de partager cette réponse ?",
+                stopBody:
+                    "Vos coéquipiers ne la verront plus comme une « Réponse précédente ». La conversation reste dans votre historique et cette réponse ne sera plus jamais partagée.",
+                stopConfirm: "Arrêter le partage",
+                stopFailed:
+                    "Impossible d'arrêter le partage de cette réponse. Veuillez réessayer.",
+                hasMore:
+                    "Affichage de vos {count} dernières réponses partagées. Il y en a plus que cette liste n'en montre.",
+            },
+            settingsUsed: {
+                heading: "Réglages utilisés par Genos",
+                description: "Genos lit ces deux réglages quand il vous répond.",
+                timezoneLabel: "Fuseau horaire",
+                timezoneHelper:
+                    "Sert à déterminer ce que signifient « aujourd'hui » et « cette semaine » pour vous. Il est détecté depuis votre appareil et mis à jour automatiquement ; pour le changer, modifiez le fuseau horaire de votre appareil.",
+                timezoneUnknown: "Pas encore détecté",
+                languageLabel: "Langue des réponses",
+                languageHelper:
+                    "La langue de votre application est envoyée avec chaque question pour que Genos réponde dans cette langue.",
+                changeLanguage: "Changer de langue",
+                languagePath: "Vous pouvez la changer dans {settings} › {tab} › {section}.",
+            },
+        },
         llmModel: {
             heading: "Modèle d'IA",
             description:
-                "Choisissez le LLM utilisé par l'agent Spotlight. Chaque modèle dispose d'un quota quotidien distinct qui est réinitialisé à minuit UTC.",
+                "Choisissez le LLM que Genos utilise pour vous répondre. Chaque modèle dispose d'un quota quotidien distinct qui est réinitialisé à minuit UTC.",
             providerLabel: "Provider",
             providerHelper: "Choisissez le service d'IA qui doit répondre à vos demandes.",
             modelLabel: "Modèle",
@@ -3111,9 +3286,9 @@ export const fr: DeepPartial<Messages> = {
             heading: "Confidentialité et analyses",
             description:
                 "Nous aide à comprendre quelles fonctionnalités sont utilisées afin de mieux les améliorer.",
-            shareLabel: "Partager les données d'utilisation anonymes",
+            shareLabel: "Partager les données d'utilisation",
             shareHelper:
-                "Envoie votre ID utilisateur, votre équipe et votre rôle ainsi que les pages que vous visitez. Aucun contenu de message ni clic n'est enregistré. Désactivez pour vous désinscrire totalement.",
+                "Activé par défaut. Envoie votre ID utilisateur, l'ID de votre équipe et votre rôle ainsi que les pages que vous visitez, rattachés à votre compte. Aucun contenu de message ni clic n'est enregistré. Désactivez pour vous désinscrire totalement.",
         },
         shortcuts: {
             heading: "Raccourcis clavier",
@@ -3278,6 +3453,7 @@ export const fr: DeepPartial<Messages> = {
             approve: "Approuver",
             reject: "Rejeter",
             copyAnswer: "Copier la réponse",
+            copied: "Copié",
             feedbackUp: "Bonne réponse",
             feedbackDown: "À améliorer",
             retry: "Redemander",
@@ -3291,6 +3467,7 @@ export const fr: DeepPartial<Messages> = {
             streaming: "diffusion…",
             awaitingApproval: "en attente de votre approbation",
             untitled: "(sans titre)",
+            noAnswer: "(aucune réponse)",
         },
         empty: {
             initial: "Commencez à saisir pour rechercher dans vos conversations, tâches et notes.",
@@ -3336,6 +3513,7 @@ export const fr: DeepPartial<Messages> = {
             loading: "Chargement de l'historique…",
             empty: "Aucune conversation passée pour l'instant.",
             loadFailed: "Impossible de charger cette conversation.",
+            listLoadFailed: "Impossible de charger vos conversations passées.",
             turnCount: "{count, plural, one {# tour} other {# tours}}",
             relativeJustNow: "tout à l'heure",
             relativeMinutes: "{count, plural, one {il y a # minute} other {il y a # minutes}}",
@@ -3345,8 +3523,8 @@ export const fr: DeepPartial<Messages> = {
                 "Lecture seule : démarrez une nouvelle conversation pour demander un suivi.",
         },
         settings: {
-            title: "Paramètres de Spotlight",
-            openTooltip: "Paramètres de Spotlight — modèle et réponses IA",
+            title: "Paramètres de Genos",
+            openTooltip: "Paramètres de Genos — effort de l'IA et réponses IA",
         },
         approval: {
             titleWithTool: "Approbation requise : {toolName}",
@@ -3461,6 +3639,7 @@ export const fr: DeepPartial<Messages> = {
             searchPlaceholder: "Rechercher des tâches (fermées et supprimées exclues)…",
             searchAriaLabel: "Rechercher des tâches",
             recents: "Récents",
+            recentsMore: "Plus",
             projects: "Projets",
             milestones: "Jalons",
             newProject: "Nouveau projet",
@@ -3770,6 +3949,7 @@ export const fr: DeepPartial<Messages> = {
             closeTooltip: "Fermer",
             tasksInThisMilestone: "Tâches dans ce jalon",
             taskProgress: "Progression de la tâche",
+            taskProgressOther: "Autres",
             taskButton: "Tâche",
             emptyMilestoneTasks:
                 "Aucune tâche pour le moment. Créez une tâche et assignez-la à ce jalon.",

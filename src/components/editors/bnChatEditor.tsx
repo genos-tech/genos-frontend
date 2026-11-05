@@ -32,6 +32,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { sendChatMessage } from "../../features/chat/services/sendChatMessage";
@@ -59,6 +61,8 @@ import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
+import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosStyleSpecs } from "./genosStyleSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
 import {
     CreateHashChatSpec,
@@ -73,11 +77,10 @@ import {
     MentionMenuItems,
     MentionSuggestionMenu,
 } from "./Mention";
-import {
-    codeBlockEnterShortcut,
-    getBlockTypeSelectItemsWithCodeBlock,
-} from "./sub/codeBlockExtras";
+import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { linkHostCaption } from "./sub/linkHostCaption";
+import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
@@ -156,9 +159,11 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
+        styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
+            ...genosExtraInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
                 useTEM.teamMemberProfiles,
@@ -178,6 +183,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            ...genosExtraBlockSpecs,
             // BlockNote 0.49 moved the code-block options out of
             // `useCreateBlockNote` and into the schema. We override
             // the default plain-text codeBlock with the syntax-
@@ -218,13 +224,13 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
+        ...TAB_INDENT_OPTIONS,
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         uploadFile,
-        // `codeBlockEnterShortcut` augments the built-in
-        // ``` + Space input rule with an Enter-key handler, so
-        // users get the same Markdown shortcut they expect.
-        extensions: [codeBlockEnterShortcut],
+        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
+        // block with a language that exists (see codeBlockExtras.tsx).
+        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
     });
 
@@ -320,7 +326,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     }, [pendingFiles]);
 
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    // Whether there is anything to send. A block count meant "typed something"
+    // only while BlockNote kept a real empty block at the end (MIP-1039).
+    const [canSend, setCanSend] = useState<boolean>(false);
 
     // Restore (or clear) the editor when the user navigates between
     // chats, and persist unsent typing as a per-chat draft. See
@@ -341,7 +349,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
 
     const sendingMessage = async () => {
-        if (editor.document.length > 1 && socket !== null && !uploadInProgress) {
+        if (hasSendableContent(editor.document) && socket !== null && !uploadInProgress) {
             // Capture the message, then clear the composer IMMEDIATELY —
             // don't freeze it on the server round-trip. The previous
             // `await sendChatMessage(...)` BEFORE clearing held the editor
@@ -353,7 +361,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             const sent = await sendChatMessage({
                 socket,
                 chat,
-                content,
+                content: withTrailingBlank(content),
                 myself,
                 useCM,
                 setCurrentChat,
@@ -365,7 +373,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             // mirrors exactly how useEditorDraft restores a draft from
             // storage (deserialized blocks), the path BlockNote re-hydrates
             // cleanly on every chat switch, so there's no id-reuse rejection.
-            if (!sent && editor.document.length <= 1) {
+            if (!sent && !hasSendableContent(editor.document)) {
                 try {
                     editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
                 } catch {
@@ -451,7 +459,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     onChange={() => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
-                        setEditorDocLength(editor.document.length);
+                        setCanSend(hasSendableContent(editor.document));
                         saveDraft(editor.document);
                     }}
                     onKeyDown={async (event) => {
@@ -461,7 +469,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     }}
                 >
                     <EditorSendButton
-                        disabled={editorDocLength < 2 || uploadInProgress}
+                        disabled={!canSend || uploadInProgress}
                         onSend={() => {
                             void sendingMessage();
                         }}
@@ -495,7 +503,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             {!isMobile && (
                                 <BlockTypeSelect
                                     key={"blockTypeSelect"}
-                                    items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                                    items={getBlockTypeSelectItemsWithCodeBlock(editor)}
                                 />
                             )}
 

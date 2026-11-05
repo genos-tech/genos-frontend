@@ -259,6 +259,15 @@ describe("ModalCreateTaskFromTodo — milestone", () => {
         renderModal();
         await waitFor(() => expect(loadProjectMilestones).toHaveBeenCalled());
         expect(loadProjectMilestones.mock.calls[0][0]).toBe(42);
+        // MIP-1015: a dependency-Blocked milestone is still pickable, so the
+        // list must ask for it; Deleted stays out.
+        expect([...loadProjectMilestones.mock.calls[0][2].statuses].sort()).toEqual([
+            "Blocked",
+            "Closed",
+            "Open",
+            "Pending",
+            "WIP",
+        ]);
     });
 
     it("sends the milestone and its backing task as parent AND root", async () => {
