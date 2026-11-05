@@ -15,9 +15,11 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { Milestone } from "../../sprint-milestone/types";
 import { deriveDaysLeft } from "../../utils/daysLeft";
 import { priorityChipColors, taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdText } from "../CopyableTaskId";
+import { MilestoneCardBody } from "../MilestoneCardBody";
 import { ProjectTagChip } from "../ProjectTagChip";
 
 // Style helpers
@@ -88,6 +90,12 @@ type SprintBoardCardProps = {
     // is React.memo with shallow equality).
     onOpenDiagram?: (task: TaskTableProps) => void;
     isSelected?: boolean;
+    // A milestone row's milestone (MIP-1048). With it the card draws the same
+    // body as the My Tasks "Assigned Milestones" card; without it (not loaded
+    // yet) a milestone row falls back to the plain task layout. Both props
+    // must be identity-stable in the parent (this component is React.memo).
+    milestone?: Milestone;
+    sprintName?: string | null;
 };
 
 const SprintBoardCardImpl = ({
@@ -98,6 +106,8 @@ const SprintBoardCardImpl = ({
     onTaskClick,
     onOpenDiagram,
     isSelected = false,
+    milestone,
+    sprintName = null,
 }: SprintBoardCardProps) => {
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
@@ -134,6 +144,48 @@ const SprintBoardCardImpl = ({
     // here had "Medium", which isn't a priority, and no Normal or Minimal).
     const priorityStyle = priorityChipColors(task.priority, mode === "dark");
 
+    // Open the task graph anchored on this card. Root cards only (see the prop
+    // doc) — same icon + tooltip as the preview header's trigger. ALWAYS
+    // visible (no hover reveal, per request); the card's own onClick opens the
+    // preview, hence the stopPropagation.
+    const diagramButton: React.ReactNode =
+        onOpenDiagram && task.parentTaskId == null ? (
+            <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
+                <IconButton
+                    aria-label={t.tasks.tooltips.openTaskGraph}
+                    size="sm"
+                    variant="plain"
+                    sx={{
+                        "--IconButton-size": "18px",
+                        minWidth: 18,
+                        minHeight: 18,
+                        p: 0,
+                        borderRadius: "4px",
+                        color: mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                        opacity: 0.75,
+                        "&:hover": {
+                            opacity: 1,
+                            backgroundColor:
+                                mode === "dark"
+                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
+                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                        },
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenDiagram(task);
+                    }}
+                >
+                    <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
+                </IconButton>
+            </AppTooltip>
+        ) : null;
+
+    // Milestone rows draw the shared milestone body (MIP-1048). The graph
+    // button takes the corner the My Tasks card gives to the status chip: the
+    // board's column already says the status.
+    const showMilestoneBody = task.isMilestone === true && milestone != null;
+
     return (
         <Draggable draggableId={task.id?.toString() || ""} index={index} isDragDisabled={false}>
             {(provided, snapshot) => (
@@ -149,242 +201,216 @@ const SprintBoardCardImpl = ({
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                 >
-                    {/* Header: ID + Priority */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            mb: 0.75,
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            {task.isMilestone === true && (
-                                // Visual marker so milestone backing
-                                // cards are distinguishable from regular
-                                // task cards. Same icon + color as
-                                // MilestonesListItem.tsx:155 for a
-                                // consistent milestone vocabulary
-                                // across the sidebar and the board.
-                                <FlagRoundedIcon
-                                    sx={{
-                                        fontSize: 12,
-                                        color: "#f97316",
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            )}
-                            <CopyableTaskIdText
-                                level="body-xs"
-                                task={task}
-                                sx={{
-                                    color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
-                                    fontWeight: 600,
-                                    fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
-                                    fontSize: "0.65rem",
-                                }}
-                            />
-                        </Box>
-                        {/* Top-right cluster: priority + open-graph trigger. */}
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            {priorityStyle && (
-                                <span
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: "0 6px",
-                                        borderRadius: 4,
-                                        backgroundColor: priorityStyle.bg,
-                                        color: priorityStyle.text,
-                                        fontSize: "0.55rem",
-                                        height: 16,
-                                        fontWeight: 700,
-                                        letterSpacing: "0.3px",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
-                                    {taskMetaLabel(task.priority, t.tasks.filters)}
-                                </span>
-                            )}
-                            {/* Open the task graph anchored on this card.
-                                Root cards only (see the prop doc) — same
-                                icon + tooltip as the preview header's
-                                trigger. ALWAYS visible (no hover reveal,
-                                per request); the card's own onClick opens
-                                the preview, hence the stopPropagation. */}
-                            {onOpenDiagram && task.parentTaskId == null && (
-                                <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
-                                    <IconButton
-                                        aria-label={t.tasks.tooltips.openTaskGraph}
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            "--IconButton-size": "18px",
-                                            minWidth: 18,
-                                            minHeight: 18,
-                                            p: 0,
-                                            borderRadius: "4px",
-                                            color:
-                                                mode === "dark"
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)",
-                                            opacity: 0.75,
-                                            "&:hover": {
-                                                opacity: 1,
-                                                backgroundColor:
-                                                    mode === "dark"
-                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-                                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                            },
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onOpenDiagram(task);
-                                        }}
-                                    >
-                                        <AccountTreeRoundedIcon sx={{ fontSize: 13 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            )}
-                        </Box>
-                    </Box>
-
-                    {/* Title */}
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            fontWeight: 500,
-                            mb: 0.75,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            lineHeight: 1.35,
-                            fontSize: "0.9rem",
-                            color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                        }}
-                    >
-                        {task.title}
-                    </Typography>
-
-                    {/* Tags */}
-                    {task.tags && task.tags.length > 0 && (
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-                            {task.tags.slice(0, 3).map((tag: TagListProps, idx: number) => (
-                                <ProjectTagChip
-                                    key={idx}
-                                    isDark={mode === "dark"}
-                                    label={tag.tagName}
-                                    tagColor={tag.tagColor}
-                                />
-                            ))}
-                            {task.tags.length > 3 && (
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ color: mode === "dark" ? "#888" : "#666" }}
-                                >
-                                    +{task.tags.length - 3}
-                                </Typography>
-                            )}
-                        </Box>
-                    )}
-
-                    {/* Footer: Assignee + Due date */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            mt: 0.75,
-                            pt: 0.75,
-                            borderTop:
-                                mode === "dark"
-                                    ? "1px solid rgba(255, 255, 255, 0.04)"
-                                    : "1px solid rgba(0, 0, 0, 0.04)",
-                        }}
-                    >
-                        {/* Assignee — UserAvatar pulls the freshest avatar
-                            URL and online status from AvatarContext for
-                            assigned tasks. The Joy <Avatar> fallback below
-                            is the unassigned "?" placeholder; we don't
-                            want UserAvatar's "?" + missing-profile path
-                            for that case because the card-border styling
-                            is part of the placeholder's visual identity. */}
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            {task.assigneeId ? (
-                                <UserAvatar
-                                    clickable={false}
-                                    showPulseDot={false}
-                                    size={20}
-                                    userId={task.assigneeId}
-                                />
-                            ) : (
-                                <Avatar
-                                    size="sm"
-                                    sx={{
-                                        width: 20,
-                                        height: 20,
-                                        fontSize: "0.6rem",
-                                        border:
-                                            mode === "dark"
-                                                ? "1.5px solid rgba(255, 255, 255, 0.1)"
-                                                : "1.5px solid rgba(0, 0, 0, 0.08)",
-                                    }}
-                                >
-                                    ?
-                                </Avatar>
-                            )}
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: mode === "dark" ? "#999" : "#777",
-                                    maxWidth: 70,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    fontSize: "0.65rem",
-                                }}
-                            >
-                                {assigneeName || t.tasks.board.unassigned}
-                            </Typography>
-                        </Box>
-
-                        {/* Due date — hidden for Closed tasks since
-                            the work is done and there's no remaining
-                            deadline to signal. Other statuses (Open /
-                            WIP / Pending) still show the chip; Pending
-                            cards keep it because a paused task can
-                            still have a real due date the user wants
-                            to see. */}
-                        {task.status !== "Closed" && (
+                    {showMilestoneBody ? (
+                        <MilestoneCardBody
+                            milestone={milestone}
+                            sprintName={sprintName}
+                            topRight={diagramButton}
+                        />
+                    ) : (
+                        <>
+                            {/* Header: ID + Priority */}
                             <Box
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 0.25,
-                                    color: getDaysLeftColor(freshDaysLeft),
-                                    padding: "2px 6px",
-                                    borderRadius: 4,
-                                    backgroundColor:
-                                        freshDaysLeft !== null && freshDaysLeft <= 0
-                                            ? mode === "dark"
-                                                ? "rgba(239, 68, 68, 0.15)"
-                                                : "rgba(239, 68, 68, 0.1)"
-                                            : "transparent",
+                                    justifyContent: "space-between",
+                                    mb: 0.75,
                                 }}
                             >
-                                <AccessTimeIcon sx={{ fontSize: 11 }} />
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ fontWeight: 600, fontSize: "0.6rem" }}
-                                >
-                                    {formatDaysLeft(freshDaysLeft)}
-                                </Typography>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    {task.isMilestone === true && (
+                                        // Visual marker so milestone backing
+                                        // cards are distinguishable from regular
+                                        // task cards. Same icon + color as
+                                        // MilestonesListItem.tsx:155 for a
+                                        // consistent milestone vocabulary
+                                        // across the sidebar and the board.
+                                        <FlagRoundedIcon
+                                            sx={{
+                                                fontSize: 12,
+                                                color: "#f97316",
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                    )}
+                                    <CopyableTaskIdText
+                                        level="body-xs"
+                                        task={task}
+                                        sx={{
+                                            color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
+                                            fontWeight: 600,
+                                            fontFamily:
+                                                "'SF Mono', 'Monaco', 'Consolas', monospace",
+                                            fontSize: "0.65rem",
+                                        }}
+                                    />
+                                </Box>
+                                {/* Top-right cluster: priority + open-graph trigger. */}
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    {priorityStyle && (
+                                        <span
+                                            style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "0 6px",
+                                                borderRadius: 4,
+                                                backgroundColor: priorityStyle.bg,
+                                                color: priorityStyle.text,
+                                                fontSize: "0.55rem",
+                                                height: 16,
+                                                fontWeight: 700,
+                                                letterSpacing: "0.3px",
+                                                textTransform: "uppercase",
+                                            }}
+                                        >
+                                            {taskMetaLabel(task.priority, t.tasks.filters)}
+                                        </span>
+                                    )}
+                                    {diagramButton}
+                                </Box>
                             </Box>
-                        )}
-                    </Box>
+
+                            {/* Title */}
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 500,
+                                    mb: 0.75,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    lineHeight: 1.35,
+                                    fontSize: "0.9rem",
+                                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                }}
+                            >
+                                {task.title}
+                            </Typography>
+
+                            {/* Tags */}
+                            {task.tags && task.tags.length > 0 && (
+                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+                                    {task.tags
+                                        .slice(0, 3)
+                                        .map((tag: TagListProps, idx: number) => (
+                                            <ProjectTagChip
+                                                key={idx}
+                                                isDark={mode === "dark"}
+                                                label={tag.tagName}
+                                                tagColor={tag.tagColor}
+                                            />
+                                        ))}
+                                    {task.tags.length > 3 && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: mode === "dark" ? "#888" : "#666" }}
+                                        >
+                                            +{task.tags.length - 3}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            )}
+
+                            {/* Footer: Assignee + Due date */}
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    mt: 0.75,
+                                    pt: 0.75,
+                                    borderTop:
+                                        mode === "dark"
+                                            ? "1px solid rgba(255, 255, 255, 0.04)"
+                                            : "1px solid rgba(0, 0, 0, 0.04)",
+                                }}
+                            >
+                                {/* Assignee — UserAvatar pulls the freshest avatar
+                                URL and online status from AvatarContext for
+                                assigned tasks. The Joy <Avatar> fallback below
+                                is the unassigned "?" placeholder; we don't
+                                want UserAvatar's "?" + missing-profile path
+                                for that case because the card-border styling
+                                is part of the placeholder's visual identity. */}
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                    {task.assigneeId ? (
+                                        <UserAvatar
+                                            clickable={false}
+                                            showPulseDot={false}
+                                            size={20}
+                                            userId={task.assigneeId}
+                                        />
+                                    ) : (
+                                        <Avatar
+                                            size="sm"
+                                            sx={{
+                                                width: 20,
+                                                height: 20,
+                                                fontSize: "0.6rem",
+                                                border:
+                                                    mode === "dark"
+                                                        ? "1.5px solid rgba(255, 255, 255, 0.1)"
+                                                        : "1.5px solid rgba(0, 0, 0, 0.08)",
+                                            }}
+                                        >
+                                            ?
+                                        </Avatar>
+                                    )}
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: mode === "dark" ? "#999" : "#777",
+                                            maxWidth: 70,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            fontSize: "0.65rem",
+                                        }}
+                                    >
+                                        {assigneeName || t.tasks.board.unassigned}
+                                    </Typography>
+                                </Box>
+
+                                {/* Due date — hidden for Closed tasks since
+                                the work is done and there's no remaining
+                                deadline to signal. Other statuses (Open /
+                                WIP / Pending) still show the chip; Pending
+                                cards keep it because a paused task can
+                                still have a real due date the user wants
+                                to see. */}
+                                {task.status !== "Closed" && (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 0.25,
+                                            color: getDaysLeftColor(freshDaysLeft),
+                                            padding: "2px 6px",
+                                            borderRadius: 4,
+                                            backgroundColor:
+                                                freshDaysLeft !== null && freshDaysLeft <= 0
+                                                    ? mode === "dark"
+                                                        ? "rgba(239, 68, 68, 0.15)"
+                                                        : "rgba(239, 68, 68, 0.1)"
+                                                    : "transparent",
+                                        }}
+                                    >
+                                        <AccessTimeIcon sx={{ fontSize: 11 }} />
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                                        >
+                                            {formatDaysLeft(freshDaysLeft)}
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </>
+                    )}
                 </div>
             )}
         </Draggable>

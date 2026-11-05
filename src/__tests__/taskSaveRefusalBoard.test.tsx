@@ -198,7 +198,7 @@ const renderBoard = () => {
                 teamMemberProfiles={{}}
                 teamMembers={[user]}
                 usePM={{ currentProject: { projectId: 1, projectTags: [] } } as never}
-                useSM={{} as never}
+                useSM={{ projectMilestones: {}, projectSprints: {} } as never}
                 useTM={useTM as never}
             />
         </CssVarsProvider>
