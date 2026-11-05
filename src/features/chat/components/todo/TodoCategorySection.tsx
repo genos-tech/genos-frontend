@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -16,10 +16,9 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
-import { useLinkifyPaste } from "./titleLinks";
-import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
 import { TodoItemRow } from "./TodoItemRow";
 import { todoTagColor } from "./todoTagColor";
+import { useTodoTitleField } from "./useTodoTitleField";
 
 interface TodoCategorySectionProps {
     title: string;
@@ -89,14 +88,17 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         }
     }, [highlightItemId, items]);
 
-    // Paste a URL over a selected word in the "+ Add item" field → "[word](url)".
-    const addInputRef = useRef<HTMLInputElement | null>(null);
-    const addRowRef = useRef<HTMLDivElement | null>(null);
-    useLinkifyPaste(addInputRef, newTitle, setNewTitle);
-    const mentions = useTodoTitleMentions({
-        inputRef: addInputRef,
+    // The "+ Add item" field: paste-to-link and the @/# picker (shared with
+    // every other to-do title field). Enter adds, unless the picker has it.
+    const addField = useTodoTitleField({
         value: newTitle,
         setValue: setNewTitle,
+        onKeyDown: (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleAdd();
+            }
+        },
     });
 
     // Group children under their parents so TodoItemRow renders the tree.
@@ -222,42 +224,19 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                     {/* position: relative — anchors the @/# menu and hosts
                         the token highlight overlay. */}
                     <Stack
-                        ref={addRowRef}
+                        ref={addField.anchorRef}
                         alignItems="center"
                         direction="row"
                         spacing={1}
                         sx={{ mt: 0.5, px: 1, position: "relative" }}
                     >
-                        <TodoTitleMentionLayer
-                            anchorRef={addRowRef}
-                            inputRef={addInputRef}
-                            mentions={mentions}
-                            value={newTitle}
-                        />
+                        {addField.layer}
                         <Input
+                            {...addField.inputProps}
                             placeholder={t.chat.todoPane.addItemPlaceholder}
                             size="sm"
-                            slotProps={{ input: { ref: addInputRef } }}
                             sx={{ flex: 1, fontSize: "0.85rem", "& input": { px: 0 } }}
-                            value={newTitle}
                             variant="plain"
-                            onClick={mentions.syncCaret}
-                            onKeyUp={mentions.syncCaret}
-                            onChange={(e) => {
-                                setNewTitle(e.target.value);
-                                mentions.syncCaret();
-                            }}
-                            onKeyDown={(e) => {
-                                // The picker gets first refusal on
-                                // Enter/Arrows/Escape — otherwise Enter
-                                // would add a half-typed "@ali" instead of
-                                // completing the highlighted mention.
-                                if (mentions.handleKeyDown(e)) return;
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleAdd();
-                                }
-                            }}
                         />
                         {newTitle.trim() && (
                             <IconButton

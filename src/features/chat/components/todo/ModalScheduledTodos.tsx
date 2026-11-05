@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
@@ -24,6 +25,8 @@ import dayjs from "dayjs";
 
 import { CreateTodoScheduleInput, UpdateTodoSchedulePatch } from "./services/todoSchedules";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalConfirmAction } from "../../../../components/ui/misc/ModalConfirmAction";
 import { fmt, useTranslation } from "../../../../i18n";
 import { TodoCategoryProps, TodoScheduleProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
@@ -35,13 +38,19 @@ import {
     parseRecurrence,
     type RecurrenceSpec,
 } from "../../../calendar/utils/rrule";
-import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
+import { TodoTitleText } from "./titleRender";
+import { popupLayerSx, useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoTitleField } from "./useTodoTitleField";
 
 type ModalScheduledTodosProps = {
     open: boolean;
     onClose: () => void;
     schedules: TodoScheduleProps[];
     categories: TodoCategoryProps[];
+    /** For the `@you` chip's colour in a row's title. */
+    myselfUserId?: string;
+    /** Overrides the layer; by default it follows the to-do pane's host. */
+    zIndex?: number;
     onAdd: (input: CreateTodoScheduleInput) => Promise<TodoScheduleProps | undefined>;
     onUpdate: (
         scheduleId: number,
@@ -49,6 +58,16 @@ type ModalScheduledTodosProps = {
     ) => Promise<TodoScheduleProps | undefined>;
     onRemove: (scheduleId: number) => Promise<boolean>;
 };
+
+const DAILY_SPEC: RecurrenceSpec = { ...DEFAULT_RECURRENCE, frequency: "daily" };
+
+/** A title for a sentence: "[word](url)" reads as "word". */
+const plainTitle = (title: string): string => title.replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1");
+
+/** A rule as the picker would write it, so two rules compare by meaning
+ *  rather than by how they happened to be spelled when stored. */
+const normalizedRule = (spec: RecurrenceSpec): string | undefined =>
+    buildRecurrence(spec, { allDay: true })[0];
 
 /**
  * Create and manage recurring todos.
@@ -60,42 +79,61 @@ type ModalScheduledTodosProps = {
  * rule persists as the RRULE string that picker's `buildRecurrence`
  * produces, read back with `parseRecurrence`.
  *
+ * The form at the top adds a schedule, or — after Edit on a row — changes
+ * that one (MIP-1047). Editing never touches the start date or the "created
+ * up to" cursor, so a schedule that already made today's to-do does not make
+ * a second one; the change shows from the next to-do on.
+ *
  * Self-contained like `ModalCreateTaskFromTodo`: it takes the schedule
  * list and mutators as props (owned by `useTodoGroups`) rather than
  * fetching its own, since the pane already holds that state.
  */
 export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
-    const { open, onClose, schedules, categories, onAdd, onUpdate, onRemove } = props;
+    const { open, onClose, schedules, categories, myselfUserId, onAdd, onUpdate, onRemove } =
+        props;
     const { t } = useTranslation();
     const ts = t.chat.todoPane.schedule;
     const today = getLocalCurrentDate();
+    // Inside the to-do modal this opens above it (default: the page's own layer).
+    const hostedLayer = useTodoDialogLayer();
+    const layer = props.zIndex ?? hostedLayer;
 
     const [title, setTitle] = useState("");
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
-    const titleRowRef = useRef<HTMLDivElement | null>(null);
-    const mentions = useTodoTitleMentions({
-        inputRef: titleInputRef,
-        value: title,
-        setValue: setTitle,
-        enabled: open,
-    });
     const [categoryId, setCategoryId] = useState<number | null>(null);
-    const [spec, setSpec] = useState<RecurrenceSpec>({
-        ...DEFAULT_RECURRENCE,
-        frequency: "daily",
-    });
+    const [spec, setSpec] = useState<RecurrenceSpec>(DAILY_SPEC);
+    // The schedule the form is editing, or null when it is adding.
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [deleting, setDeleting] = useState<TodoScheduleProps | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const dialogRef = useRef<HTMLDivElement | null>(null);
+
+    const editing =
+        editingId != null ? schedules.find((s) => s.scheduleId === editingId) : undefined;
+
+    const resetForm = () => {
+        setTitle("");
+        setCategoryId(null);
+        setSpec(DAILY_SPEC);
+        setEditingId(null);
+        setError(null);
+        setIsSubmitting(false);
+    };
 
     // Reset the form each time the modal opens.
     useEffect(() => {
         if (!open) return;
-        setTitle("");
-        setCategoryId(null);
-        setSpec({ ...DEFAULT_RECURRENCE, frequency: "daily" });
-        setError(null);
-        setIsSubmitting(false);
+        resetForm();
+        setDeleting(null);
     }, [open]);
+
+    // The schedule being edited went away (deleted here or elsewhere): the
+    // form has nothing left to save to, so it goes back to adding.
+    useEffect(() => {
+        if (editingId != null && !schedules.some((s) => s.scheduleId === editingId)) {
+            resetForm();
+        }
+    }, [editingId, schedules]);
 
     const submit = async () => {
         const trimmed = title.trim();
@@ -104,16 +142,35 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
             setError(ts.needsRepeat);
             return;
         }
-        setIsSubmitting(true);
-        setError(null);
         // All-day: todos are date-keyed, never timed, so the UNTIL takes
         // the date-only form.
-        const rrule = buildRecurrence(spec, { allDay: true })[0];
+        const rrule = normalizedRule(spec);
         if (!rrule) {
             setError(ts.needsRepeat);
-            setIsSubmitting(false);
             return;
         }
+        setIsSubmitting(true);
+        setError(null);
+
+        if (editing) {
+            // Send only what changed: the start date and the "created up to"
+            // cursor are never part of an edit.
+            const patch: UpdateTodoSchedulePatch = {};
+            if (trimmed !== editing.title) patch.title = trimmed;
+            if (categoryId !== editing.categoryId) patch.categoryId = categoryId;
+            if (rrule !== normalizedRule(parseRecurrence([editing.rrule]))) patch.rrule = rrule;
+            if (Object.keys(patch).length > 0) {
+                const saved = await onUpdate(editing.scheduleId, patch);
+                if (!saved) {
+                    setIsSubmitting(false);
+                    setError(ts.failed);
+                    return;
+                }
+            }
+            resetForm();
+            return;
+        }
+
         const created = await onAdd({
             title: trimmed,
             rrule,
@@ -130,138 +187,202 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
         setTitle("");
     };
 
+    // The same title field as every to-do title input: paste a URL over a
+    // selected word to link it, and the @ / # picker.
+    const titleField = useTodoTitleField({
+        value: title,
+        setValue: setTitle,
+        enabled: open,
+        onKeyDown: (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                void submit();
+            }
+        },
+    });
+
+    const beginEdit = (s: TodoScheduleProps) => {
+        setEditingId(s.scheduleId);
+        setTitle(s.title);
+        setCategoryId(s.categoryId);
+        setSpec(parseRecurrence([s.rrule]));
+        setError(null);
+        // The form is at the top and the list is long: bring it into view.
+        dialogRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+        requestAnimationFrame(() => titleField.inputRef.current?.focus());
+    };
+
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                sx={{ width: 460, maxWidth: "94vw", maxHeight: "90vh", overflow: "auto" }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                    <RepeatRoundedIcon />
-                    <Typography level="title-md">{ts.heading}</Typography>
-                </Stack>
-                <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                    {ts.description}
-                </Typography>
+        <>
+            <Modal open={open} sx={{ zIndex: layer, ...popupLayerSx(layer) }} onClose={onClose}>
+                <ModalDialog
+                    ref={dialogRef}
+                    sx={{ width: 460, maxWidth: "94vw", maxHeight: "90vh", overflow: "auto" }}
+                >
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                        {editing ? <EditRoundedIcon /> : <RepeatRoundedIcon />}
+                        <Typography level="title-md">
+                            {editing ? ts.editHeading : ts.heading}
+                        </Typography>
+                    </Stack>
+                    <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                        {ts.description}
+                    </Typography>
 
-                {error && (
-                    <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
-                        {error}
-                    </Alert>
-                )}
-
-                {/* Add form */}
-                <Stack spacing={1.5}>
-                    {/* position: relative — anchors the @/# menu. */}
-                    <FormControl ref={titleRowRef} sx={{ position: "relative" }}>
-                        <FormLabel>{ts.titleLabel}</FormLabel>
-                        <TodoTitleMentionLayer
-                            anchorRef={titleRowRef}
-                            inputRef={titleInputRef}
-                            mentions={mentions}
-                            value={title}
-                        />
-                        <Input
-                            disabled={isSubmitting}
-                            placeholder={ts.titlePlaceholder}
-                            slotProps={{ input: { ref: titleInputRef } }}
-                            value={title}
-                            autoFocus
-                            onClick={mentions.syncCaret}
-                            onKeyUp={mentions.syncCaret}
-                            onChange={(e) => {
-                                setTitle(e.target.value);
-                                mentions.syncCaret();
-                            }}
-                            onKeyDown={(e) => {
-                                // Picker first: its Escape must dismiss the
-                                // menu without closing the whole modal, and
-                                // its Enter completes a mention rather than
-                                // submitting the schedule.
-                                if (mentions.handleKeyDown(e)) return;
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    void submit();
-                                }
-                            }}
-                        />
-                    </FormControl>
-
-                    {categories.length > 0 && (
-                        <FormControl>
-                            <FormLabel>{ts.categoryLabel}</FormLabel>
-                            {/* Joy's Select value can't be null, so a -1
-                                sentinel stands in for "no tag" (category ids
-                                are positive), mapped back to null on change —
-                                the same trick SprintManagerDialog uses. */}
-                            <Select<number>
-                                disabled={isSubmitting}
-                                placeholder={ts.noCategory}
-                                value={categoryId ?? -1}
-                                onChange={(_e, next) =>
-                                    setCategoryId(next == null || next === -1 ? null : next)
-                                }
-                            >
-                                <Option value={-1}>{ts.noCategory}</Option>
-                                {categories.map((c) => (
-                                    <Option key={c.categoryId} value={c.categoryId}>
-                                        {c.name}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </FormControl>
+                    {error && (
+                        <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
+                            {error}
+                        </Alert>
                     )}
 
-                    <RepeatPicker startISO={today} value={spec} onChange={setSpec} />
-
-                    <Button
-                        disabled={isSubmitting || title.trim() === ""}
-                        loading={isSubmitting}
-                        startDecorator={<RepeatRoundedIcon />}
-                        onClick={() => void submit()}
-                    >
-                        {isSubmitting ? ts.adding : ts.add}
-                    </Button>
-                </Stack>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Existing schedules */}
-                <Typography level="title-sm" sx={{ mb: 1 }}>
-                    {ts.listHeading}
-                </Typography>
-                {schedules.length === 0 ? (
-                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                        {ts.empty}
-                    </Typography>
-                ) : (
-                    <Stack spacing={1}>
-                        {schedules.map((s) => (
-                            <ScheduleRow
-                                key={s.scheduleId}
-                                categories={categories}
-                                schedule={s}
-                                onRemove={onRemove}
-                                onUpdate={onUpdate}
+                    {/* Add / edit form */}
+                    <Stack spacing={1.5}>
+                        {/* position: relative — anchors the @/# menu. */}
+                        <FormControl ref={titleField.anchorRef} sx={{ position: "relative" }}>
+                            <FormLabel>{ts.titleLabel}</FormLabel>
+                            {titleField.layer}
+                            <Input
+                                {...titleField.inputProps}
+                                disabled={isSubmitting}
+                                placeholder={ts.titlePlaceholder}
+                                autoFocus
                             />
-                        ))}
+                        </FormControl>
+
+                        {categories.length > 0 && (
+                            <FormControl>
+                                <FormLabel>{ts.categoryLabel}</FormLabel>
+                                {/* Joy's Select value can't be null, so a -1
+                                    sentinel stands in for "no tag" (category ids
+                                    are positive), mapped back to null on change —
+                                    the same trick SprintManagerDialog uses. */}
+                                <Select<number>
+                                    disabled={isSubmitting}
+                                    placeholder={ts.noCategory}
+                                    value={categoryId ?? -1}
+                                    onChange={(_e, next) =>
+                                        setCategoryId(next == null || next === -1 ? null : next)
+                                    }
+                                >
+                                    <Option value={-1}>{ts.noCategory}</Option>
+                                    {categories.map((c) => (
+                                        <Option key={c.categoryId} value={c.categoryId}>
+                                            {c.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
+                        <RepeatPicker
+                            startISO={editing ? editing.startDate : today}
+                            value={spec}
+                            onChange={setSpec}
+                        />
+
+                        <Stack direction="row" spacing={1}>
+                            <Button
+                                disabled={isSubmitting || title.trim() === ""}
+                                loading={isSubmitting}
+                                startDecorator={
+                                    editing ? <EditRoundedIcon /> : <RepeatRoundedIcon />
+                                }
+                                sx={{ flex: 1 }}
+                                onClick={() => void submit()}
+                            >
+                                {editing ? ts.save : isSubmitting ? ts.adding : ts.add}
+                            </Button>
+                            {editing && (
+                                <Button
+                                    color="neutral"
+                                    disabled={isSubmitting}
+                                    variant="outlined"
+                                    onClick={resetForm}
+                                >
+                                    {t.common.actions.cancel}
+                                </Button>
+                            )}
+                        </Stack>
                     </Stack>
-                )}
-            </ModalDialog>
-        </Modal>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* Existing schedules */}
+                    <Typography level="title-sm" sx={{ mb: 1 }}>
+                        {ts.listHeading}
+                    </Typography>
+                    {schedules.length === 0 ? (
+                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                            {ts.empty}
+                        </Typography>
+                    ) : (
+                        <Stack spacing={1}>
+                            {schedules.map((s) => (
+                                <ScheduleRow
+                                    key={s.scheduleId}
+                                    categories={categories}
+                                    editing={s.scheduleId === editingId}
+                                    myselfUserId={myselfUserId}
+                                    schedule={s}
+                                    onAskDelete={setDeleting}
+                                    onEdit={beginEdit}
+                                    onUpdate={onUpdate}
+                                />
+                            ))}
+                        </Stack>
+                    )}
+                </ModalDialog>
+            </Modal>
+
+            {/* Delete: the app's own red confirmation, above this dialog. */}
+            <ModalConfirmAction
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={ts.delete}
+                description={ts.deleteBody}
+                entityName={deleting ? plainTitle(deleting.title) : undefined}
+                icon={
+                    <DeleteOutlineRoundedIcon
+                        sx={{ color: "rgba(var(--gp-tint-danger-rgb), 0.9)", fontSize: 28 }}
+                    />
+                }
+                open={deleting != null}
+                title={ts.deleteTitle}
+                tone="danger"
+                zIndex={layer != null ? layer + 10 : undefined}
+                onClose={() => setDeleting(null)}
+                onConfirm={async () => {
+                    if (!deleting) return;
+                    const ok = await onRemove(deleting.scheduleId);
+                    // A thrown error keeps the dialog open with a message.
+                    if (!ok) throw new Error();
+                }}
+            />
+        </>
     );
 };
 
 interface ScheduleRowProps {
     schedule: TodoScheduleProps;
     categories: TodoCategoryProps[];
+    editing: boolean;
+    myselfUserId?: string;
+    onEdit: (schedule: TodoScheduleProps) => void;
+    onAskDelete: (schedule: TodoScheduleProps) => void;
     onUpdate: (
         scheduleId: number,
         patch: UpdateTodoSchedulePatch
     ) => Promise<TodoScheduleProps | undefined>;
-    onRemove: (scheduleId: number) => Promise<boolean>;
 }
 
-const ScheduleRow = ({ schedule, categories, onUpdate, onRemove }: ScheduleRowProps) => {
+const ScheduleRow = ({
+    schedule,
+    categories,
+    editing,
+    myselfUserId,
+    onEdit,
+    onAskDelete,
+    onUpdate,
+}: ScheduleRowProps) => {
     const { t } = useTranslation();
     const ts = t.chat.todoPane.schedule;
     const [busy, setBusy] = useState(false);
@@ -275,15 +396,10 @@ const ScheduleRow = ({ schedule, categories, onUpdate, onRemove }: ScheduleRowPr
         setBusy(false);
     };
 
-    const remove = async () => {
-        if (!window.confirm(ts.deleteConfirm)) return;
-        setBusy(true);
-        await onRemove(schedule.scheduleId);
-        // No setBusy(false): the row unmounts on success.
-    };
-
     return (
         <Box
+            data-editing={editing ? "true" : undefined}
+            data-schedule-row
             sx={{
                 display: "flex",
                 alignItems: "center",
@@ -291,13 +407,16 @@ const ScheduleRow = ({ schedule, categories, onUpdate, onRemove }: ScheduleRowPr
                 p: 1,
                 borderRadius: "8px",
                 border: "1px solid",
-                borderColor: "divider",
+                // The row the form above is editing is marked.
+                borderColor: editing ? "primary.500" : "divider",
+                boxShadow: editing ? "0 0 0 1px var(--joy-palette-primary-500)" : undefined,
                 opacity: schedule.isActive ? 1 : 0.6,
             }}
         >
             <Box sx={{ flex: 1, minWidth: 0 }}>
+                {/* The title as a to-do shows it: links clickable, # / @ as chips. */}
                 <Typography level="body-sm" sx={{ fontWeight: 600 }} noWrap>
-                    {schedule.title}
+                    <TodoTitleText myselfUserId={myselfUserId} text={schedule.title} />
                 </Typography>
                 <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
@@ -315,30 +434,49 @@ const ScheduleRow = ({ schedule, categories, onUpdate, onRemove }: ScheduleRowPr
                     )}
                 </Stack>
             </Box>
-            <IconButton
-                color="neutral"
-                disabled={busy}
-                size="sm"
-                title={schedule.isActive ? ts.pause : ts.resume}
-                variant="plain"
-                onClick={() => void togglePause()}
-            >
-                {schedule.isActive ? (
-                    <PauseRoundedIcon fontSize="small" />
-                ) : (
-                    <PlayArrowRoundedIcon fontSize="small" />
-                )}
-            </IconButton>
-            <IconButton
-                color="danger"
-                disabled={busy}
-                size="sm"
-                title={ts.delete}
-                variant="plain"
-                onClick={() => void remove()}
-            >
-                <DeleteOutlineRoundedIcon fontSize="small" />
-            </IconButton>
+            {/* Three compact icon buttons: no gap, so they read as one group. */}
+            <Stack alignItems="center" direction="row" spacing={0} sx={{ flexShrink: 0 }}>
+                <AppTooltip title={ts.edit}>
+                    <IconButton
+                        aria-label={ts.edit}
+                        color="neutral"
+                        disabled={busy}
+                        size="sm"
+                        variant="plain"
+                        onClick={() => onEdit(schedule)}
+                    >
+                        <EditRoundedIcon fontSize="small" />
+                    </IconButton>
+                </AppTooltip>
+                <AppTooltip title={schedule.isActive ? ts.pause : ts.resume}>
+                    <IconButton
+                        aria-label={schedule.isActive ? ts.pause : ts.resume}
+                        color="neutral"
+                        disabled={busy}
+                        size="sm"
+                        variant="plain"
+                        onClick={() => void togglePause()}
+                    >
+                        {schedule.isActive ? (
+                            <PauseRoundedIcon fontSize="small" />
+                        ) : (
+                            <PlayArrowRoundedIcon fontSize="small" />
+                        )}
+                    </IconButton>
+                </AppTooltip>
+                <AppTooltip title={ts.delete}>
+                    <IconButton
+                        aria-label={ts.delete}
+                        color="danger"
+                        disabled={busy}
+                        size="sm"
+                        variant="plain"
+                        onClick={() => onAskDelete(schedule)}
+                    >
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                    </IconButton>
+                </AppTooltip>
+            </Stack>
         </Box>
     );
 };

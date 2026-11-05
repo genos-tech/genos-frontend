@@ -146,6 +146,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
             return (
                 <ModalTodoView
                     accessToken={rest.accessToken}
+                    hostZIndex={effectiveZIndex}
                     myself={rest.myself}
                     setMyself={rest.setMyself}
                     socket={rest.socket}

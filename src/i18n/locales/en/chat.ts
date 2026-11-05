@@ -125,7 +125,11 @@ export const chat = {
             pause: "Pause",
             resume: "Resume",
             delete: "Delete",
-            deleteConfirm: "Delete this schedule? Todos already added stay.",
+            deleteTitle: "Delete this schedule?",
+            deleteBody: "Todos already added stay.",
+            edit: "Edit",
+            editHeading: "Edit scheduled todo",
+            save: "Save changes",
             needsRepeat: "Pick how often this repeats.",
             failed: "Couldn't save the schedule. Please try again.",
             // Human-readable summary of a rule, e.g. "Daily", "Weekly on

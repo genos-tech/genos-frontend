@@ -20,6 +20,7 @@ import { TodoCategoryProps } from "../../../../types/chat";
 import { TagColorOption } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
+import { popupLayerSx, useTodoDialogLayer } from "./TodoHostLayer";
 import { todoTagColor } from "./todoTagColor";
 
 // Matches `ToDoCategory.name` (max_length=64) on the server.
@@ -135,10 +136,13 @@ export const ModalManageTodoTags = ({
         setNewName("");
     };
 
+    // Inside the to-do modal this opens above it (MIP-1047).
+    const layer = useTodoDialogLayer(10010);
+
     return (
         <Modal
             open={open}
-            sx={{ zIndex: 10010 }}
+            sx={{ zIndex: layer, ...popupLayerSx(layer) }}
             onClose={() => {
                 reset();
                 onClose();

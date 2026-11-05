@@ -944,8 +944,11 @@ export const ja: DeepPartial<Messages> = {
                 pause: "一時停止",
                 resume: "再開",
                 delete: "削除",
-                deleteConfirm:
-                    "このスケジュールを削除しますか？すでに追加された To-Do は残ります。",
+                deleteTitle: "このスケジュールを削除しますか？",
+                deleteBody: "すでに追加された To-Do は残ります。",
+                edit: "編集",
+                editHeading: "定期的な To-Do を編集",
+                save: "変更を保存",
                 needsRepeat: "リピート頻度を選択してください。",
                 failed: "スケジュールを保存できませんでした。もう一度お試しください。",
                 summaryDaily: "毎日",

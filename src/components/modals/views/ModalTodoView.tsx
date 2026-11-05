@@ -23,6 +23,8 @@ type ModalTodoViewProps = {
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
     useTG: UseTodoGroupsState;
+    /** The layer the modal sits at, so the pane's dialogs open above it. */
+    hostZIndex?: number;
 };
 
 // Renders the todo pane for a /workspace/todo/:localDate[/item/:itemId]
@@ -38,8 +40,18 @@ type ModalTodoViewProps = {
 // a local state, never the host page's global
 // `useCM.showOnlyInCompleteTodos`.
 export const ModalTodoView = (props: ModalTodoViewProps) => {
-    const { target, accessToken, myself, setMyself, socket, useTEM, useUISM, useCM, useTG } =
-        props;
+    const {
+        target,
+        accessToken,
+        myself,
+        setMyself,
+        socket,
+        useTEM,
+        useUISM,
+        useCM,
+        useTG,
+        hostZIndex,
+    } = props;
     const { t } = useTranslation();
 
     // No day in the target = the whole list, not one linked day or item.
@@ -205,6 +217,7 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
                 useTG={useTG}
                 useUISM={useUISM}
                 hostedInModal
+                hostZIndex={hostZIndex}
             />
         </Box>
     );

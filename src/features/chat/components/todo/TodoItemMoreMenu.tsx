@@ -28,6 +28,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../i18n";
 import { TodoCategoryProps } from "../../../../types/chat";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
+import { useTodoDialogLayer } from "./TodoHostLayer";
 import { todoTagColor } from "./todoTagColor";
 
 interface TodoItemMoreMenuProps {
@@ -95,6 +96,8 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
     } = props;
     const isDark = useColorScheme().mode === "dark";
     const { t } = useTranslation();
+    // Inside the to-do modal the menu opens above it (MIP-1047).
+    const layer = useTodoDialogLayer();
     const [newName, setNewName] = useState("");
     const [creating, setCreating] = useState(false);
 
@@ -127,7 +130,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                     <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
                 </MenuButton>
             </AppTooltip>
-            <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200 }}>
+            <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200, zIndex: layer }}>
                 {/* Mobile-only row actions, folded in from the inline icon
                     strip. They lead because they act on THIS row's content
                     (its notes, its steps) rather than on the row as an

@@ -22,6 +22,11 @@ type Props = {
     /** Defaults to the swap arrows, which suit "turn this into that". */
     icon?: ReactNode;
     /**
+     * "danger" is the red of the other delete / leave dialogs, for an action
+     * that destroys something. The default purple is for the rest.
+     */
+    tone?: "brand" | "danger";
+    /**
      * Stacking layer. 10010 is where the other confirmation dialogs sit,
      * which is BELOW a modal-hosted preview (10020 and up), so a preview
      * that opens this passes a layer above its own.
@@ -51,6 +56,7 @@ export const ModalConfirmAction = ({
     confirmLabel,
     cancelLabel,
     icon,
+    tone = "brand",
     zIndex = 10010,
     onConfirm,
     onClose,
@@ -61,6 +67,15 @@ export const ModalConfirmAction = ({
 
     // Nothing dismisses it while the action runs: a closed dialog would hide
     // the result of something already under way.
+    const danger = tone === "danger";
+    // The two palettes the house dialogs use: brand (Join / Create project)
+    // and danger (Leave / Delete).
+    const rgb = danger ? "var(--gp-tint-danger-rgb)" : "var(--gp-brand-500-rgb)";
+    const rgbAlt = danger ? "var(--gp-tint-danger-alt-rgb)" : "var(--gp-brandalt-500-rgb)";
+    const fill = danger
+        ? "linear-gradient(135deg, var(--gp-tint-danger-alt) 0%, var(--gp-tint-danger-deep) 100%)"
+        : "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)";
+
     const handleClose = () => {
         if (submitting) return;
         setErrorMessage(null);
@@ -101,14 +116,14 @@ export const ModalConfirmAction = ({
             onClose={handleClose}
         >
             <ModalDialog
+                data-tone={tone}
                 sx={{
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-brand-500-rgb), 0.2)",
+                    border: `1px solid rgba(${rgb}, 0.2)`,
                     borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-500-rgb), 0.1)",
+                    boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(${rgb}, 0.1)`,
                     width: { xs: "calc(100vw - 24px)", md: "auto" },
                     minWidth: { xs: 0, md: "380px" },
                     maxWidth: { xs: "100vw", md: "480px" },
@@ -127,17 +142,14 @@ export const ModalConfirmAction = ({
                         height: 56,
                         flexShrink: 0,
                         borderRadius: "14px",
-                        background:
-                            "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
-                        border: "1px solid rgba(var(--gp-brand-500-rgb), 0.25)",
+                        background: `linear-gradient(135deg, rgba(${rgb}, 0.15) 0%, rgba(${rgbAlt}, 0.15) 100%)`,
+                        border: `1px solid rgba(${rgb}, 0.25)`,
                         mx: "auto",
                         mb: 2,
                     }}
                 >
                     {icon ?? (
-                        <SwapHorizRoundedIcon
-                            sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.9)", fontSize: 28 }}
-                        />
+                        <SwapHorizRoundedIcon sx={{ color: `rgba(${rgb}, 0.9)`, fontSize: 28 }} />
                     )}
                 </Box>
 
@@ -152,8 +164,9 @@ export const ModalConfirmAction = ({
                     <Typography
                         level="title-md"
                         sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
+                            background: danger
+                                ? "linear-gradient(135deg, var(--gp-tint-danger) 0%, var(--gp-tint-danger-alt) 100%)"
+                                : "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
@@ -210,16 +223,15 @@ export const ModalConfirmAction = ({
                     <Button
                         loading={submitting}
                         sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
+                            background: fill,
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(var(--gp-brand-500-rgb), 0.3)",
+                            boxShadow: `0 4px 15px rgba(${rgb}, 0.3)`,
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)",
+                                boxShadow: `0 6px 20px rgba(${rgb}, 0.4)`,
                             },
                         }}
                         onClick={handleConfirm}
