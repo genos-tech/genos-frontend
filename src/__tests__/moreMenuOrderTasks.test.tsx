@@ -87,6 +87,80 @@ describe("task preview menu", () => {
     });
 });
 
+// MIP-1042: converting a task to a milestone. Offered for a ROOT task only, in the
+// "organize" group: after what creates things, before Mute and Delete.
+describe("task preview menu: convert to milestone", () => {
+    const renderMenu = (
+        taskOverrides: Record<string, unknown>,
+        props: Record<string, unknown> = {}
+    ) =>
+        render(
+            <MemoryRouter initialEntries={["/workspace/tasks"]}>
+                <CssVarsProvider>
+                    <TaskTitleBlock
+                        isPreviewMode={true}
+                        myself={myself}
+                        setTaskTitle={vi.fn()}
+                        taskTitle="A task"
+                        useCM={{} as never}
+                        useNM={{ taskNoteMeta: [] } as never}
+                        usePM={{} as never}
+                        useSM={
+                            { applyMilestoneToState: vi.fn(), forgetMilestone: vi.fn() } as never
+                        }
+                        useTM={{ isCreatingTask: { flag: false } } as never}
+                        useUISM={{} as never}
+                        taskContent={
+                            {
+                                id: 42,
+                                rootTaskId: 42,
+                                title: "A task",
+                                parentTaskId: null,
+                                milestoneId: null,
+                                project: { projectId: 7 },
+                                status: { status: "Open" },
+                                ...taskOverrides,
+                            } as never
+                        }
+                        {...(props as object)}
+                    />
+                </CssVarsProvider>
+            </MemoryRouter>
+        );
+    const m = en.tasks.titleBlock.menu;
+
+    it("sits after the create actions and before Mute and Delete", () => {
+        renderMenu({});
+        const labels = menuLabels();
+        expect(labels).toContain(m.convertToMilestone);
+        expect(labels.indexOf(m.convertToMilestone)).toBeGreaterThan(labels.indexOf(m.newProject));
+        expect(labels.indexOf(m.convertToMilestone)).toBeLessThan(
+            labels.indexOf(en.services.notifications.muteButton.mute)
+        );
+        expect(labels[labels.length - 1]).toBe(m.deleteTask);
+    });
+
+    it("is not offered for a sub-task", () => {
+        renderMenu({ parentTaskId: 3 });
+        expect(menuLabels()).not.toContain(m.convertToMilestone);
+    });
+
+    it("is not offered for a task inside a milestone", () => {
+        renderMenu({ milestoneId: 5 });
+        expect(menuLabels()).not.toContain(m.convertToMilestone);
+    });
+
+    it("is not offered for a milestone's own row", () => {
+        renderMenu({ isMilestone: true });
+        expect(menuLabels()).not.toContain(m.convertToMilestone);
+    });
+
+    it("is not offered where the host has no milestone store", () => {
+        renderMenu({}, { useSM: undefined });
+        expect(menuLabels()).not.toContain(m.convertToMilestone);
+    });
+});
+
 describe("project header menu", () => {
     it("creates tag and project before milestone, and ends with Delete", () => {
         const h = en.tasks.header;

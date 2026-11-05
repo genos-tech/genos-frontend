@@ -13,6 +13,7 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -54,6 +55,8 @@ import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes"
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
+import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
+import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -1273,6 +1276,8 @@ const MilestonePreviewInner = ({
     useNM,
 }: MilestonePreviewInnerProps) => {
     const { accessToken } = useAuth();
+    // Milestone -> task (MIP-1042).
+    const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
@@ -1346,6 +1351,13 @@ const MilestonePreviewInner = ({
             useSM.refreshMilestone(milestoneId);
         }
     }, [milestoneId]);
+
+    // An old link to a milestone that became a task (MIP-1042) follows the answer
+    // to the task it became (or to the milestone it became again).
+    useFollowConvertedMilestone(
+        milestoneId !== -1 ? useSM.convertedMilestones[milestoneId] : undefined,
+        useTM
+    );
 
     // Re-pull the milestone when its BACKING TASK's dependency edges
     // change. A dependency add/remove auto-flips the milestone's status
@@ -2460,6 +2472,20 @@ const MilestonePreviewInner = ({
                                                 label: milestone.title,
                                             });
                                         }
+                                    },
+                                },
+                                {
+                                    id: "convertToTask",
+                                    kind: "convert",
+                                    label: t.tasks.preview.menu.convertToTask,
+                                    icon: <SwapHorizRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: async () => {
+                                        if (!confirm(t.tasks.preview.menu.convertToTaskConfirm))
+                                            return;
+                                        await convert.toTask(
+                                            milestone.milestoneId,
+                                            milestone.projectId
+                                        );
                                     },
                                 },
                                 {

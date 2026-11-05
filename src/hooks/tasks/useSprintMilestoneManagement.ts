@@ -15,13 +15,13 @@ import {
     deleteMilestone,
     deleteMilestoneFolder,
     deleteSprint,
-    loadMilestone,
     loadMilestoneFolders,
     loadProjectMilestones,
     LoadProjectMilestonesOptions,
     loadProjectSprints,
     LoadProjectSprintsOptions,
     loadSprintConfig,
+    lookupMilestone,
     moveMilestoneToSprint,
     removeMilestoneAssignee,
     SprintConfigInput,
@@ -32,6 +32,7 @@ import {
     UpdateSprintInput,
     upsertSprintConfig,
 } from "../../features/tasks/sprint-milestone/services";
+import type { ConvertedTaskRef } from "../../features/tasks/sprint-milestone/services/convertTaskMilestone";
 import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
 import {
     Milestone,
@@ -175,6 +176,11 @@ export interface SprintMilestoneManagementState {
         opts?: LoadProjectMilestonesOptions
     ) => Promise<Milestone[]>;
     refreshMilestone: (milestoneId: number) => Promise<Milestone | null>;
+    /** Milestones that became tasks (MIP-1042), by their old id: filled when a read of
+     *  one answers "converted", so an open preview or an old link can follow it. */
+    convertedMilestones: Record<number, ConvertedTaskRef>;
+    /** Drop a milestone from local state WITHOUT deleting it on the server (it became a task). */
+    forgetMilestone: (milestoneId: number, projectId: number) => void;
 
     // CRUD
     createNewSprint: (input: CreateSprintInput) => Promise<Sprint | null>;
@@ -223,6 +229,9 @@ export const useSprintMilestoneManagement = (
     const [projectSprints, setProjectSprintsState] = useState<Record<number, Sprint[]>>({});
     const [currentSprint, setCurrentSprint] = useState<Sprint | null>(null);
 
+    const [convertedMilestones, setConvertedMilestones] = useState<
+        Record<number, ConvertedTaskRef>
+    >({});
     const [projectMilestones, setProjectMilestonesState] = useState<Record<number, Milestone[]>>(
         {}
     );
@@ -254,6 +263,7 @@ export const useSprintMilestoneManagement = (
         setProjectSprintsState({});
         setCurrentSprint(null);
         setProjectMilestonesState({});
+        setConvertedMilestones({});
         setCurrentMilestone(null);
         setProjectFolders({});
         autoSelectedSprintIdRef.current = null;
@@ -357,8 +367,11 @@ export const useSprintMilestoneManagement = (
 
     const refreshMilestone = useCallback(
         async (milestoneId: number): Promise<Milestone | null> => {
-            const res = await loadMilestone(milestoneId, accessToken);
-            const m = res?.milestone ?? null;
+            const found = await lookupMilestone(milestoneId, accessToken);
+            if (found.kind === "converted") {
+                setConvertedMilestones((prev) => ({ ...prev, [milestoneId]: found.task }));
+            }
+            const m = found.kind === "found" ? found.milestone : null;
             if (m) {
                 setProjectMilestonesState((prev) => {
                     const list = prev[m.projectId] ?? [];
@@ -604,6 +617,21 @@ export const useSprintMilestoneManagement = (
         [accessToken]
     );
 
+    const forgetMilestone = useCallback(
+        (milestoneId: number, projectId: number) => {
+            const milestoneTaskId =
+                (projectMilestones[projectId] ?? []).find((m) => m.milestoneId === milestoneId)
+                    ?.taskId ?? null;
+            setProjectMilestonesState((prev) => ({
+                ...prev,
+                [projectId]: (prev[projectId] ?? []).filter((m) => m.milestoneId !== milestoneId),
+            }));
+            setCurrentMilestone((prev) => (prev?.milestoneId === milestoneId ? null : prev));
+            removeMilestoneBackingTaskCaches(milestoneTaskId);
+        },
+        [projectMilestones]
+    );
+
     const removeMilestone = useCallback(
         async (milestoneId: number, projectId: number): Promise<boolean> => {
             // Capture the backing-task id BEFORE the milestone gets
@@ -695,6 +723,8 @@ export const useSprintMilestoneManagement = (
         refreshSprintsForProject,
         loadMilestonesForProject,
         refreshMilestone,
+        convertedMilestones,
+        forgetMilestone,
         createNewSprint,
         updateExistingSprint,
         removeSprint,

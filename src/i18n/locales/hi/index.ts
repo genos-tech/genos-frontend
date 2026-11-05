@@ -1878,6 +1878,9 @@ export const hi: DeepPartial<Messages> = {
                 newTag: "नया टैग",
                 newProject: "नया प्रोजेक्ट",
                 deleteMilestone: "माइलस्टोन हटाएँ",
+                convertToTask: "टास्क में बदलें",
+                convertToTaskConfirm:
+                    "क्या इस माइलस्टोन को टास्क में बदलें? इसके टास्क सब-टास्क के रूप में इसके नीचे रहेंगे। फ़ोल्डर और स्प्रिंट हटा दिए जाएँगे, और अन्य असाइनी सहयोगी बन जाएँगे।",
             },
             confirmDeleteMilestone: "क्या इस माइलस्टोन को हटाएँ?",
         },
@@ -2152,6 +2155,9 @@ export const hi: DeepPartial<Messages> = {
                 openNote: "नोट खोलें",
                 newTag: "नया टैग",
                 newProject: "नया प्रोजेक्ट",
+                convertToMilestone: "माइलस्टोन में बदलें",
+                convertToMilestoneConfirm:
+                    "क्या इस टास्क को माइलस्टोन में बदलें? इसके सब-टास्क इसके नीचे ही रहेंगे और माइलस्टोन में शामिल हो जाएँगे। आप इसे कभी भी वापस टास्क में बदल सकते हैं।",
                 deleteTask: "टास्क हटाएँ",
             },
         },

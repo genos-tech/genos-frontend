@@ -3960,6 +3960,9 @@ export const fr: DeepPartial<Messages> = {
                 newTag: "Nouveau tag",
                 newProject: "Nouveau projet",
                 deleteMilestone: "Supprimer le jalon",
+                convertToTask: "Convertir en tâche",
+                convertToTaskConfirm:
+                    "Convertir ce jalon en tâche ? Ses tâches restent en dessous comme sous-tâches. Le dossier et le sprint sont retirés, et les autres responsables deviennent collaborateurs.",
             },
             confirmDeleteMilestone: "Supprimer ce jalon ?",
         },
@@ -4239,6 +4242,9 @@ export const fr: DeepPartial<Messages> = {
                 openNote: "Ouvrir la note",
                 newTag: "Nouveau tag",
                 newProject: "Nouveau projet",
+                convertToMilestone: "Convertir en jalon",
+                convertToMilestoneConfirm:
+                    "Convertir cette tâche en jalon ? Ses sous-tâches restent en dessous et rejoignent le jalon. Vous pouvez la reconvertir à tout moment.",
                 deleteTask: "Supprimer la tâche",
             },
         },

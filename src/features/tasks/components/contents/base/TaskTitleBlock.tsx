@@ -12,6 +12,7 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
@@ -54,9 +55,11 @@ import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
 import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
+import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { taskMetaLabel } from "../../../utils/taskMeta";
+import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
 
@@ -124,6 +127,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    // Task -> milestone (MIP-1042). Hidden when the store isn't passed in.
+    const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
@@ -779,6 +784,30 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                 label: taskContent.title,
                                             });
                                         }
+                                    },
+                                },
+                                {
+                                    id: "convertToMilestone",
+                                    kind: "convert",
+                                    label: t.tasks.titleBlock.menu.convertToMilestone,
+                                    icon: <SwapHorizRoundedIcon sx={{ fontSize: 18 }} />,
+                                    // A root task only: a sub-task, or a task inside a
+                                    // milestone, has a place in a tree a conversion would
+                                    // have to change. Saved tasks only.
+                                    visible:
+                                        !!useSM &&
+                                        !isMilestone &&
+                                        !isSubTask &&
+                                        canConvertTaskToMilestone(taskContent),
+                                    onClick: async () => {
+                                        if (
+                                            !confirm(
+                                                t.tasks.titleBlock.menu.convertToMilestoneConfirm
+                                            )
+                                        )
+                                            return;
+                                        if (taskContent.id != null)
+                                            await convert.toMilestone(taskContent.id);
                                     },
                                 },
                                 {
