@@ -549,6 +549,24 @@ input[type="checkbox"] {
     color: #cbd5e1;
 }
 
+/* Links in the dark bubbles (MIP-1041). Without a colour of their own they take
+   the browser's default link colour for the element's `color-scheme`, and the
+   full BlockNote renderer (and every task comment) computes to `light` even in
+   dark mode, so a link was the light-scheme dark blue (#0000ee), and a visited
+   one dark purple, on a near-black bubble. The colours come from this palette's
+   own indigo family; the light bubbles keep the browser default. */
+.bn-message-bubble-box-dark a {
+    color: #a5b4fc;
+}
+
+.bn-message-bubble-box-dark a:visited {
+    color: #c4b5fd;
+}
+
+.bn-message-bubble-box-dark a:hover {
+    color: #c7d2fe;
+}
+
 /* Dark mode - Sent messages (deep indigo background #312e81) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
@@ -564,6 +582,19 @@ input[type="checkbox"] {
 .bn-message-bubble-box-dark-me [data-content-type="quote"] blockquote {
     border-left-color: #a5b4fc;
     color: #c7d2fe;
+}
+
+/* The deep indigo bubble needs lighter links than the grey one (MIP-1041). */
+.bn-message-bubble-box-dark-me a {
+    color: #c7d2fe;
+}
+
+.bn-message-bubble-box-dark-me a:visited {
+    color: #ddd6fe;
+}
+
+.bn-message-bubble-box-dark-me a:hover {
+    color: #e0e7ff;
 }
 
 /* Where an external link really goes (MIP-737). `data-link-host` is set from the
@@ -1134,6 +1165,19 @@ div[data-floating-ui-focusable] {
 /* Same pair as the dark sent bubble — identical indigo background. */
 .task-comment-preview-dark [data-content-type="quote"] blockquote {
     border-left-color: #a5b4fc;
+    color: #c7d2fe;
+}
+
+/* Link colours for the task comment, as in the dark message bubbles (MIP-1041). */
+.task-comment-preview-dark a {
+    color: #a5b4fc;
+}
+
+.task-comment-preview-dark a:visited {
+    color: #c4b5fd;
+}
+
+.task-comment-preview-dark a:hover {
     color: #c7d2fe;
 }
 
