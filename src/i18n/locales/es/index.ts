@@ -423,6 +423,7 @@ export const es: DeepPartial<Messages> = {
             hintMac: "Mantén ⌘  ·  Pulsa Ctrl para navegar  ·  Suelta ⌘ para cambiar",
             hintOther: "Mantén Alt  ·  Pulsa Ctrl para navegar  ·  Suelta Alt para cambiar",
             search: "Genos",
+            todo: "Hacer",
         },
         mobile: {
             close: "Cerca",

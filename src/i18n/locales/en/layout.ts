@@ -25,6 +25,8 @@ export const layout = {
         notes: "Notes",
         // Key name mirrors sidebar.nav.search (the "Genos" label).
         search: "Genos",
+        // The sidebar's own To-Do label (sidebar.actions.todo).
+        todo: "To-Do",
         hintMac: "Hold ⌘  ·  Tap Ctrl to cycle  ·  Release ⌘ to switch",
         hintOther: "Hold Alt  ·  Tap Ctrl to cycle  ·  Release Alt to switch",
     },

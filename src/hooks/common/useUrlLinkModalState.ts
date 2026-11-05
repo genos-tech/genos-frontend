@@ -53,6 +53,9 @@ export type UrlLinkModalState = {
         href: string,
         opts?: OpenModalByHrefOptions
     ) => "opened" | "navigated" | "external";
+    /** Opens the to-do modal on the WHOLE list (MIP-1044) — there is no href
+     *  for it, so it is opened by target rather than parsed from a link. */
+    openTodoList: (opts?: Pick<OpenModalByHrefOptions, "onOpenFullPage" | "zIndex">) => void;
     closeModal: () => void;
 };
 
@@ -130,6 +133,15 @@ export const useUrlLinkModalState = ({
         [navigate, closeModal, target, zIndex]
     );
 
+    const openTodoList = useCallback(
+        (opts?: Pick<OpenModalByHrefOptions, "onOpenFullPage" | "zIndex">) => {
+            setZIndex(opts?.zIndex);
+            setFullPage(opts?.onOpenFullPage ? { run: opts.onOpenFullPage } : null);
+            setTarget({ kind: "todo" });
+        },
+        []
+    );
+
     const openFullPage = useMemo(
         () =>
             fullPage === null
@@ -141,5 +153,5 @@ export const useUrlLinkModalState = ({
         [fullPage, closeModal]
     );
 
-    return { closeModal, openFullPage, openModalByHref, target, zIndex };
+    return { closeModal, openFullPage, openModalByHref, openTodoList, target, zIndex };
 };

@@ -26,7 +26,9 @@ type ModalTodoViewProps = {
 };
 
 // Renders the todo pane for a /workspace/todo/:localDate[/item/:itemId]
-// deep link. Unlike ModalTaskView this is NOT a snapshot: it renders
+// deep link — or, when the target has no `localDate` (MIP-1044: the quick-open
+// shortcut, the sidebar button, the service switcher), for the whole list:
+// nothing to look up, so it shows the pane straight away. Unlike ModalTaskView this is NOT a snapshot: it renders
 // against the shared `useTG`, so edits made in the modal go through the
 // same optimistic mutators and stay in sync with the main pane.
 //
@@ -40,7 +42,11 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
         props;
     const { t } = useTranslation();
 
+    // No day in the target = the whole list, not one linked day or item.
+    const wholeList = target.localDate === undefined;
+
     const targetGroup = useMemo(() => {
+        if (wholeList) return undefined;
         if (target.itemId != null) {
             const byItem = useTG.groups.find((g) =>
                 g.items.some((i) => i.itemId === target.itemId)
@@ -48,7 +54,7 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
             if (byItem) return byItem;
         }
         return useTG.groups.find((g) => g.localDate === target.localDate);
-    }, [useTG.groups, target.itemId, target.localDate]);
+    }, [useTG.groups, target.itemId, target.localDate, wholeList]);
     const targetItem =
         target.itemId != null
             ? targetGroup?.items.find((i) => i.itemId === target.itemId)
@@ -62,7 +68,11 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
     // user's todo — the endpoint is owner-scoped) → notFound.
     const [notFound, setNotFound] = useState(false);
     const [isResolving, setIsResolving] = useState(false);
-    const resolved = target.itemId != null ? targetItem !== undefined : targetGroup !== undefined;
+    const resolved = wholeList
+        ? true
+        : target.itemId != null
+          ? targetItem !== undefined
+          : targetGroup !== undefined;
 
     useEffect(() => {
         setNotFound(false);
@@ -77,17 +87,16 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
 
     useEffect(() => {
         if (resolved || notFound || useTG.isLoading || isResolving) return;
+        // Unreachable for the whole list (`resolved` is always true there);
+        // narrows `localDate` for the fetch below.
+        const localDate = target.localDate;
+        if (localDate === undefined) return;
         let cancelled = false;
         setIsResolving(true);
         (async () => {
-            const fetched = await loadTodoGroups(
-                myself,
-                accessToken,
-                target.localDate,
-                target.localDate
-            );
+            const fetched = await loadTodoGroups(myself, accessToken, localDate, localDate);
             if (cancelled) return;
-            const group = fetched?.find((g) => g.localDate === target.localDate);
+            const group = fetched?.find((g) => g.localDate === localDate);
             if (group) {
                 useTG.setGroups((prev) => {
                     const rest = prev.filter((g) => g.groupId !== group.groupId);
@@ -117,7 +126,12 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
     // render the pane until then, so the wrong tab never flashes).
     // Incomplete target → Incomplete tab; completed → All (the
     // Incomplete tab hides it); date-only link → All.
-    const [showIncomplete, setShowIncomplete] = useState<boolean | null>(null);
+    // The whole list has no target item to decide it from, so it opens on the
+    // tab the user last chose on the page (and only reads it: a chip pressed
+    // in the modal changes the modal, never the page).
+    const [showIncomplete, setShowIncomplete] = useState<boolean | null>(() =>
+        wholeList ? (useCM.showOnlyInCompleteTodos ?? false) : null
+    );
     useEffect(() => {
         if (showIncomplete !== null) return;
         if (target.itemId != null) {
@@ -178,7 +192,11 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
     return (
         <Box sx={{ height: "100%", overflow: "hidden", width: "100%" }}>
             <ToDoPane
-                focusTarget={{ itemId: target.itemId, localDate: target.localDate }}
+                focusTarget={
+                    target.localDate === undefined
+                        ? undefined
+                        : { itemId: target.itemId, localDate: target.localDate }
+                }
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}

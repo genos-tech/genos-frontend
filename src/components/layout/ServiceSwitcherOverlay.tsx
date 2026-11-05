@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Box, Sheet, Typography } from "@mui/joy";
@@ -16,7 +17,7 @@ import { isMac } from "../../utils/platform";
 // and `NAV_ITEMS` (components/layout/sidebar.tsx). All three lists must stay
 // in sync — order and ids must match.
 const OVERLAY_SERVICES: Array<{
-    labelKey: "inbox" | "chats" | "tasks" | "notes" | "search";
+    labelKey: "inbox" | "chats" | "tasks" | "notes" | "search" | "todo";
     icon: typeof AllInboxRoundedIcon;
 }> = [
     { labelKey: "inbox", icon: AllInboxRoundedIcon },
@@ -26,6 +27,9 @@ const OVERLAY_SERVICES: Array<{
     // The Genos page. `search` is the sidebar key that carries the
     // "Genos" label (kept to avoid a cross-locale rename).
     { labelKey: "search", icon: AutoAwesomeRoundedIcon },
+    // To-Do (MIP-1044): no page — a stop on it opens the to-do modal. Same
+    // icon as the sidebar's To-Do button.
+    { labelKey: "todo", icon: ChecklistRoundedIcon },
 ];
 
 type ServiceSwitcherOverlayProps = {
@@ -40,16 +44,24 @@ type ServiceSwitcherOverlayProps = {
      * leftmost (matching macOS Cmd+Tab).
      */
     mruOrder: number[];
+    /** The pointer really moved over the tile at this position. */
+    onHighlight?: (positionInMru: number) => void;
+    /** The tile at this position was clicked. */
+    onSelect?: (positionInMru: number) => void;
 };
 
 /**
- * macOS Cmd+Tab–style overlay for the global service switcher. Rendered
- * fullscreen with `pointer-events: none`, so it never intercepts clicks;
- * visibility is driven entirely by `previewIndex`.
+ * macOS Cmd+Tab–style overlay for the global service switcher. The
+ * fullscreen layer has `pointer-events: none`, so it never intercepts clicks
+ * on the page; only the sheet itself takes the pointer, so its tiles can be
+ * hovered and clicked (MIP-1044). Visibility is driven entirely by
+ * `previewIndex`.
  */
 export const ServiceSwitcherOverlay = ({
     previewIndex,
     mruOrder,
+    onHighlight,
+    onSelect,
 }: ServiceSwitcherOverlayProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -84,6 +96,7 @@ export const ServiceSwitcherOverlay = ({
             <Sheet
                 variant="soft"
                 sx={{
+                    pointerEvents: "auto",
                     px: 3,
                     py: 2.5,
                     borderRadius: "20px",
@@ -112,7 +125,20 @@ export const ServiceSwitcherOverlay = ({
                         return (
                             <Box
                                 key={serviceId}
+                                data-service-tile
+                                onClick={() => onSelect?.(position)}
+                                // `mousemove`, not `mouseenter`: the overlay appears under a
+                                // pointer that is not moving, and the browser then reports
+                                // that pointer as entering a tile, which must not steal the
+                                // highlight from the tap that raised it. Only real movement
+                                // counts.
+                                onMouseMove={(e) => {
+                                    if ((e.movementX !== 0 || e.movementY !== 0) && !isActive) {
+                                        onHighlight?.(position);
+                                    }
+                                }}
                                 sx={{
+                                    cursor: "pointer",
                                     width: 88,
                                     height: 96,
                                     display: "flex",

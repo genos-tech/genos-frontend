@@ -2225,6 +2225,7 @@ export const fr: DeepPartial<Messages> = {
             tasks: "Tâches",
             notes: "Notes",
             search: "Genos",
+            todo: "À faire",
             hintMac:
                 "Maintenir ⌘  ·  Appuyer sur Ctrl pour parcourir  ·  Relâcher ⌘ pour basculer",
             hintOther:
