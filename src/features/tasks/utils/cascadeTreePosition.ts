@@ -31,6 +31,8 @@ export type TreePosition = {
 
 // Mirrors the backend's cascade depth cap.
 const MAX_DEPTH = 10;
+// Mirrors the backend's `resolve_root_task_id` depth limit.
+const MAX_ROOT_WALK = 64;
 
 const key = (value: string | number | null | undefined): string | null =>
     value == null || value === "" ? null : String(value);
@@ -72,6 +74,45 @@ export const collectDescendantIds = (
         frontier = next;
     }
     return descendants;
+};
+
+/**
+ * The top of the parent chain a task sits in, given the parent edge it is
+ * ABOUT to have. Client-side twin of the server's `resolve_root_task_id`
+ * (task_reparent.py), including its two fallbacks: a parent that isn't in
+ * `tasks` anchors on the task itself, and a cycle in bad data anchors where it
+ * is found instead of spinning.
+ *
+ * The preview's milestone picker is the caller that needs it: it hands over the
+ * new milestone and the milestone's backing task as the parent, but never a
+ * root (the server re-derives it), so the moved row would otherwise keep the
+ * root of the place it came from.
+ */
+export const resolveRootTaskId = (
+    tasks: TreeRow[],
+    taskId: string | number,
+    parentTaskId: string | number | null | undefined
+): number => {
+    const selfKey = key(taskId);
+    let current = key(parentTaskId);
+    if (selfKey == null || current == null) return Number(taskId);
+
+    const parentOf = new Map<string, string | null>();
+    for (const task of tasks) {
+        const id = key(task.id);
+        if (id != null) parentOf.set(id, key(task.parentTaskId));
+    }
+
+    const visited = new Set<string>([selfKey]);
+    for (let depth = 0; depth < MAX_ROOT_WALK; depth++) {
+        if (visited.has(current)) return Number(current);
+        visited.add(current);
+        if (!parentOf.has(current)) return Number(taskId);
+        const next: string | null = parentOf.get(current) ?? null;
+        if (next == null) return Number(current);
+        current = next;
+    }
+    return Number(current);
 };
 
 /**
