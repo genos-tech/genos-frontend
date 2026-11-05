@@ -24,11 +24,9 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { joinTeam } from "../../../admin/services/joinTeam";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
-import { signUp } from "../../../admin/services/signup";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -123,22 +121,12 @@ export const ModalCreateProject: React.FC<Props> = ({
     };
     async function createProject(): Promise<void> {
         try {
-            // Signup for a system user for the new project
-            const _signup = async (projectEmail: string, password: string) => {
-                // Step-1: Create a system user for the new project.
-                const signUpRes = await signUp(
-                    projectName,
-                    projectEmail,
-                    password,
-                    true,
-                    setErrorMessage
-                );
-
-                // Step-2: If the system user is created successfully, create the project.
-                // System user signups always return the JWT shape (the
-                // backend skips the email-verification branch for
-                // is_system_user=True), so the user payload is present.
-                if (signUpRes && "user" in signUpRes) {
+            const _create = async () => {
+                // Step-1: Create the project. The server makes the project's
+                // system user itself, in the same transaction, and puts it on
+                // the team (MIP-1031). The page used to sign one up through the
+                // open signup endpoint and name it here.
+                {
                     const createProjectResponse = await fetch(`${base_url}/project/`, {
                         method: "POST",
                         headers: {
@@ -149,7 +137,6 @@ export const ModalCreateProject: React.FC<Props> = ({
                             team: myself.teamId,
                             project_name: projectName,
                             owner: myself.userId,
-                            project_system_user: signUpRes.user.id,
                             is_private: isPrivate,
                         }),
                     });
@@ -162,7 +149,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                             createProjectData.hint || t.tasks.modals.createProject.creationFailed
                         );
                     } else {
-                        // Step-3: Join the project.
+                        // Step-2: Join the project.
                         const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
                             method: "POST",
                             headers: {
@@ -184,15 +171,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 joinProjectData.hint || t.tasks.modals.createProject.joinFailed
                             );
                         } else {
-                            // Step-4: Join the team for the system user.
-                            const prjJoinTeamRes = await joinTeam(
-                                accessToken,
-                                myself.teamId,
-                                signUpRes.user.id,
-                                setErrorMessage
-                            );
-
-                            // Step-5: Join the team for the user.
+                            // Step-3: Join the team for the user.
                             const meJoinTeamRes = await joinTeam(
                                 accessToken,
                                 myself.teamId,
@@ -200,7 +179,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 setErrorMessage
                             );
 
-                            if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
+                            if (meJoinTeamRes && createProjectData.project_id) {
                                 // Add the selected initial members. Each is a
                                 // separate POST /project/join/ (the endpoint
                                 // takes one attendee_id); the Django
@@ -282,18 +261,13 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     usePM.loadProjectsAndTasks(createProjectData.project_id);
                                 }
                             } else {
-                                console.error("Failed to add me and/or system_user to the team");
+                                console.error("Failed to add me to the team");
                             }
                         }
                     }
-                } else {
-                    console.error("Failed to create system user for the project.");
                 }
             };
-            _signup(
-                `${myself.teamId}-${replaceSpacesWithUnderscore(projectName)}@genos.tech`,
-                `${projectName}-Bad-Password-Need-Secure-One`
-            );
+            _create();
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);
