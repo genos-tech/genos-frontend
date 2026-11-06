@@ -58,6 +58,7 @@ import {
     ScheduleOverview,
     StructureEdgeData,
     TaskGraph,
+    TaskGraphScope,
     TaskNodeData,
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
@@ -77,6 +78,9 @@ type Props = {
      * rollups) reads that resolved id off the graph rather than this prop.
      */
     rootTaskId: number;
+    /** "tree" (default) draws the anchor's whole hierarchy from the milestone down;
+     *  "task" draws only the anchor and its subtasks. */
+    scope?: TaskGraphScope;
     projectId: number;
     useTM: TaskManagementState;
     /** Needed for cross-project navigation when the user clicks a
@@ -541,6 +545,7 @@ export const buildNodesAndEdges = (
 const CanvasInner = ({
     myself,
     rootTaskId,
+    scope = "tree",
     projectId,
     useTM,
     usePM,
@@ -606,7 +611,7 @@ const CanvasInner = ({
 
     const refresh = useCallback(async () => {
         setError(null);
-        const graph = await loadTaskGraph(myself, projectId, rootTaskId, accessToken);
+        const graph = await loadTaskGraph(myself, projectId, rootTaskId, accessToken, scope);
         if (!graph) {
             setError(t.tasks.diagram.errors.load);
             setLoading(false);
@@ -658,6 +663,7 @@ const CanvasInner = ({
         myself,
         projectId,
         rootTaskId,
+        scope,
         accessToken,
         onOverviewChange,
         useSM,

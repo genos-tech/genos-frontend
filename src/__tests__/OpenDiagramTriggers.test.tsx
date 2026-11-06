@@ -4,10 +4,12 @@
  * Both surfaces host the trigger inside an element with its own click
  * behavior (the card's onClick opens the preview; the row's gutter sits
  * in a draggable), so the load-bearing contracts are:
- *   - the trigger renders ONLY on root rows/cards (depth 0 in the
- *     table, `parentTaskId == null` on the board) — sub-tasks reach
- *     their graph from the root and must not grow gutter/footer noise;
- *   - clicking it calls `onOpenDiagram(task)` WITHOUT also firing the
+ *   - on the board the trigger renders ONLY on root cards
+ *     (`parentTaskId == null`);
+ *   - in the table it renders on every root row, and on a nested row only when
+ *     that row has subtasks (MIP-1094): a root row opens its whole tree, a
+ *     nested row opens just that task and its subtasks;
+ *   - clicking it calls `onOpenDiagram(task, scope)` WITHOUT also firing the
  *     host's own click action (card → preview).
  */
 
@@ -69,7 +71,7 @@ const dnd = (ui: React.ReactNode) => (
 );
 
 describe("DraggableTaskRow open-diagram trigger", () => {
-    const renderRow = (depth: number) => {
+    const renderRow = (depth: number, hasChildren = false) => {
         const onOpenDiagram = vi.fn();
         const useTM = {
             isTaskPreviewVisible: false,
@@ -83,7 +85,7 @@ describe("DraggableTaskRow open-diagram trigger", () => {
                     columns={[]}
                     depth={depth}
                     expandedRows={new Set()}
-                    hasChildren={false}
+                    hasChildren={hasChildren}
                     index={0}
                     isSelected={false}
                     mode="light"
@@ -116,10 +118,37 @@ describe("DraggableTaskRow open-diagram trigger", () => {
         expect(onOpenDiagram.mock.calls[0][0].id).toBe("42");
     });
 
-    it("does not render on a sub-task row", () => {
+    it("a root row opens its whole tree, with or without subtasks", () => {
+        for (const hasChildren of [false, true]) {
+            const { onOpenDiagram } = renderRow(0, hasChildren);
+            const buttons = screen.getAllByRole("button", { name: "Open task graph" });
+            fireEvent.click(buttons[buttons.length - 1]);
+            expect(onOpenDiagram.mock.calls[0][1]).toBe("tree");
+        }
+    });
+
+    it("does not render on a sub-task row without subtasks", () => {
         renderRow(1);
 
         expect(screen.queryByRole("button", { name: "Open task graph" })).toBeNull();
+    });
+
+    it("renders on a sub-task row that has subtasks and opens just that task", () => {
+        const { onOpenDiagram } = renderRow(1, true);
+
+        fireEvent.click(screen.getByRole("button", { name: "Open task graph" }));
+
+        expect(onOpenDiagram).toHaveBeenCalledTimes(1);
+        expect(onOpenDiagram.mock.calls[0][0].id).toBe("42");
+        expect(onOpenDiagram.mock.calls[0][1]).toBe("task");
+    });
+
+    it("a deeper sub-task row with subtasks opens just that task too", () => {
+        const { onOpenDiagram } = renderRow(3, true);
+
+        fireEvent.click(screen.getByRole("button", { name: "Open task graph" }));
+
+        expect(onOpenDiagram.mock.calls[0][1]).toBe("task");
     });
 });
 

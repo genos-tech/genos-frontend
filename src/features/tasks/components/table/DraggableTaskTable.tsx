@@ -30,6 +30,7 @@ import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
+import type { TaskGraphScope } from "../../diagram/types";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
@@ -514,15 +515,20 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // ModalTaskDiagram at the table level instead of one per row — rows
     // only request it via the identity-stable callback below (excluded
     // from DraggableTaskRow's areEqual, same contract as openQuickAdd).
-    const [diagramTask, setDiagramTask] = useState<TaskTableProps | null>(null);
+    // `scope`: a row nested under a parent opens the graph of just that task and its
+    // subtasks; a top-level row opens its whole tree (MIP-1094).
+    const [diagramTarget, setDiagramTarget] = useState<{
+        task: TaskTableProps;
+        scope: TaskGraphScope;
+    } | null>(null);
 
     // Suppresses hover family-focus for the duration of a drag. A boolean (not
     // per-row), flipped twice per drag — so unlike a hovered-row state it can't
     // churn the row map. See `DND_ACTIVE_ATTR`.
     const [isDragActive, setIsDragActive] = useState(false);
-    const openDiagram = useCallback((task: TaskTableProps) => {
+    const openDiagram = useCallback((task: TaskTableProps, scope: TaskGraphScope) => {
         if (task.id == null) return;
-        setDiagramTask(task);
+        setDiagramTarget({ task, scope });
     }, []);
 
     const closeQuickAdd = useCallback(() => {
@@ -1906,29 +1912,30 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             </div>
 
             {/* Shared task-graph modal for the per-row gutter trigger.
-                Anchored on the row's OWN id — as every diagram caller is:
-                the loader walks up the parent chain itself. Here the
-                trigger only renders on depth-0 rows (root tasks /
-                milestones), so the row is already the top and the walk is
-                a no-op. Page-hosted surface, so the diagram's default 9999
+                Anchored on the row's OWN id. A top-level row (root task /
+                milestone) is already the top of its tree, so the tree scope
+                draws everything under it. A nested row uses the task scope:
+                only that task and its subtasks, not its milestone or
+                siblings. Page-hosted surface, so the diagram's default 9999
                 layer applies (no zIndex). */}
-            {diagramTask != null &&
-                diagramTask.id != null &&
-                (diagramTask.projectId ?? usePM.currentProject?.projectId) != null && (
+            {diagramTarget != null &&
+                diagramTarget.task.id != null &&
+                (diagramTarget.task.projectId ?? usePM.currentProject?.projectId) != null && (
                     <LazyTaskDiagram
                         myself={myself}
                         open={true}
-                        rootTaskId={Number(diagramTask.id)}
+                        rootTaskId={Number(diagramTarget.task.id)}
+                        scope={diagramTarget.scope}
                         usePM={usePM}
                         useSM={useSM}
                         useTM={useTM}
                         projectId={Number(
-                            diagramTask.projectId ?? usePM.currentProject?.projectId
+                            diagramTarget.task.projectId ?? usePM.currentProject?.projectId
                         )}
-                        rootLabel={`${formatTaskDisplayId(diagramTask)} · ${
-                            diagramTask.title || t.tasks.diagram.untitled
+                        rootLabel={`${formatTaskDisplayId(diagramTarget.task)} · ${
+                            diagramTarget.task.title || t.tasks.diagram.untitled
                         }`}
-                        onClose={() => setDiagramTask(null)}
+                        onClose={() => setDiagramTarget(null)}
                     />
                 )}
         </ThemeProvider>
