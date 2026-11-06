@@ -351,6 +351,9 @@ export type SearchTeamTasksResponse = {
     // True for milestone backing rows — the search results and the
     // sidebar Recents list render a flag icon for these.
     isMilestone?: boolean;
+    // `/search/taskByDisplayId/` only: the milestone's own id on a milestone row
+    // (a milestone opens by it). Absent on a task, and on an older backend.
+    milestoneId?: number;
     status: TaskStatusProps;
     tsUpdated: string;
 };

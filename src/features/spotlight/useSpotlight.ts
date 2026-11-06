@@ -41,7 +41,7 @@
 // `resumeSession` restores a past session from the server archive into
 // the live conversation so follow-up asks continue it server-side.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
@@ -73,7 +73,10 @@ import {
     type UndoRequest,
 } from "../agentQA";
 import { useAgentQA } from "../agentQA/useAgentQA";
+import { lookupTaskByDisplayId } from "../tasks/services/lookupTaskByDisplayId";
+import { displayIdOnlyQuery } from "../tasks/utils/taskDisplayId";
 import { askGenosToken, onAskGenosAbout, withAskGenosToken } from "./askGenosAbout";
+import { idHitPassesFilter, spotlightResultForTask, withIdHit } from "./displayIdHit";
 import {
     effectiveFilterServices,
     entityTypesForFilter,
@@ -529,6 +532,37 @@ export const useSpotlight = ({
         return () => window.clearTimeout(timer);
     }, [turns, sessionId, teamId]);
 
+    // ---- Search by task id (MIP-1040). ----
+    // OpenSearch cannot find "MIP-890" (the id is in no chunk), so a query that is
+    // NOTHING BUT an id is looked up by number, alongside the ordinary search, and the
+    // one task or milestone it finds is pinned at the top. The lookup's client caches
+    // hits and remembers misses for 30 s, so typing "MIP-8", "MIP-89", "MIP-890" costs
+    // at most one request per id. Kept in its own state so the search pipeline below is
+    // untouched; `idHit` remembers which id it answers, so a hit is never shown under
+    // a query it does not belong to (the next keystroke hides it at once).
+    const [idHit, setIdHit] = useState<{ id: string; result: SpotlightResult } | null>(null);
+    const queriedId = isOpen || isPageActive ? displayIdOnlyQuery(query) : null;
+    useEffect(() => {
+        if (!queriedId || !teamId) return;
+        let cancelled = false;
+        void lookupTaskByDisplayId({ teamId }, queriedId, accessToken).then((row) => {
+            if (cancelled) return;
+            setIdHit(row ? { id: queriedId, result: spotlightResultForTask(row) } : null);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [queriedId, teamId, accessToken]);
+    const visibleResults = useMemo(() => {
+        const hit = idHit && idHit.id === queriedId ? idHit.result : null;
+        if (!hit) return results;
+        const entityTypes = entityTypesForFilter(
+            effectiveFilterServices(filterServices, filterProjectIds)
+        );
+        const projectIds = projectIdsForFilter(filterProjectIds);
+        return idHitPassesFilter(hit, entityTypes, projectIds) ? withIdHit(results, hit) : results;
+    }, [idHit, queriedId, results, filterServices, filterProjectIds]);
+
     // ---- Debounced search on query change while the surface shows
     // (overlay open OR the Genos page active). ----
     useEffect(() => {
@@ -940,7 +974,7 @@ export const useSpotlight = ({
         close,
         query,
         setQuery,
-        results,
+        results: visibleResults,
         isLoading,
         error,
         filterServices,
