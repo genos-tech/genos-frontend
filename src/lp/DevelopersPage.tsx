@@ -213,7 +213,16 @@ const MCP_TOOLS: McpTool[] = [
         type: "read",
         meaning: "Search across tasks, notes, chat and todos.",
     },
-    { name: "get_note", type: "read", meaning: "A note's body." },
+    {
+        name: "get_note",
+        type: "read",
+        meaning: (
+            <>
+                A note&apos;s body, and its comment threads: the open ones, each with the text it
+                sits on and every reply. Resolved threads come with <Code>include_resolved</Code>.
+            </>
+        ),
+    },
     {
         name: "list_my_chats",
         type: "read",
@@ -343,6 +352,26 @@ const MCP_TOOLS: McpTool[] = [
     },
     { name: "list_pr_files", type: "read", meaning: "The files a pull request changes." },
     { name: "list_pr_commits", type: "read", meaning: "A pull request's commits." },
+    {
+        name: "get_my_briefing",
+        type: "read",
+        meaning: (
+            <>
+                Catch up in one call: what other people changed on your tasks, threads and notes
+                since you last asked (each item as a story, the busiest first), what waits on you,
+                what you wait on, today&apos;s agenda and the top three things to look at, with the
+                reasons. <Code>window</Code> is <Code>since_last</Code>, <Code>today</Code> or{" "}
+                <Code>week</Code>. Your own view only, and today&apos;s calendar is read from
+                Google each time and never stored.
+            </>
+        ),
+    },
+    {
+        name: "list_my_worklog",
+        type: "read",
+        meaning:
+            "Your own worklog for today, yesterday, the last week or a range of dates, with each entry's items. It is private to you: nobody else's worklog can be read.",
+    },
     {
         name: "update_task",
         type: "write",
@@ -547,6 +576,40 @@ const MCP_TOOLS: McpTool[] = [
         meaning:
             "Put an earlier version of a note back, title and body. What the note says now is kept as a version first, so a restore can itself be undone. If the live editor could not be updated, the result says so. A note is named by its url, or by its id with its note_type.",
     },
+    {
+        name: "capture_worklog",
+        type: "write",
+        meaning:
+            "Save what you say you did, will do, wait on or decided, in your private worklog. The note is kept exactly as written; its items (done, next, waiting, decision) link to the tasks and notes you can open. Only you can read it.",
+    },
+    {
+        name: "update_worklog_item",
+        type: "write",
+        meaning:
+            "Reword one worklog item or change its kind, confirm or reject it, or mark it resolved.",
+    },
+    {
+        name: "delete_worklog_entry",
+        type: "write",
+        meaning:
+            "Delete one worklog entry and all its items for good. Needs a key that also has the destructive opt-in.",
+    },
+];
+
+// The two MCP prompts (genos-api `origin/views/public/mcp/prompts.py`), in its order.
+const MCP_PROMPTS: Row[] = [
+    {
+        name: "catch_me_up",
+        type: "prompt",
+        meaning:
+            "What changed on your things since you last looked, what needs you and what you are waiting on, in a few lines. Takes an optional window: since_last, today or week.",
+    },
+    {
+        name: "plan_my_day",
+        type: "prompt",
+        meaning:
+            "Up to five things to focus on today, with the reasons, then your choice of what to do about them. Takes an optional focus, in your own words.",
+    },
 ];
 
 const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");
@@ -723,9 +786,10 @@ export default function DevelopersPage() {
                     </p>
                     <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
                         There is no model on this side of the connection. The endpoint is a
-                        JSON-RPC dispatcher over the same tools the in-app agent uses — your client
-                        does the reasoning, Genos answers questions about the workspace and writes
-                        what it is told to.
+                        JSON-RPC dispatcher over Genos&apos;s workspace tools — most of them the
+                        ones the in-app agent uses, plus a few made for outside clients, like the
+                        worklog and the briefing below. Your client does the reasoning; Genos
+                        answers questions about the workspace and writes what it is told to.
                     </p>
 
                     <Pre label="the whole setup">{`claude mcp add --transport http genos \\
@@ -795,6 +859,36 @@ export default function DevelopersPage() {
                         <Code>tools/list</Code> returns the {MCP_READS.length} reads only: the
                         writes are not listed at all, so an agent never plans around a tool it
                         would be refused.
+                    </p>
+
+                    <Params rows={MCP_PROMPTS} title="Prompts · commands" />
+                    <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        A client that shows MCP prompts lists these as commands; in Claude Code
+                        they are <Code>/mcp__genos__catch_me_up</Code> and{" "}
+                        <Code>/mcp__genos__plan_my_day</Code>. They run on your own model, which
+                        calls <Code>get_my_briefing</Code>, and ask it for a short answer that ends
+                        on a question you can answer in a word. They ask it to change nothing until
+                        you say yes, and a read-only key is told to describe a change instead of
+                        making it. A client that does not show prompts gets the same behaviour from
+                        the server&apos;s instructions.
+                    </p>
+
+                    <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
+                        Your worklog is private
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        The worklog is yours alone. Only the person it belongs to can read, change
+                        or delete an entry: not a teammate, not an admin, not the owner of the
+                        team, and asking for someone else&apos;s entry gets the same answer as
+                        asking for one that does not exist. A note links only to tasks and notes
+                        you can open. It goes when you delete your account, and it is in your data
+                        export.
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        The briefing is the same: it is built from what you can open and from other
+                        people&apos;s activity on those things only. Today&apos;s calendar is read
+                        from Google when you ask and goes straight into the answer. Genos does not
+                        keep your calendar events.
                     </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">

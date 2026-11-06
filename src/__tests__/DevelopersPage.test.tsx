@@ -201,6 +201,8 @@ describe("DevelopersPage", () => {
             "list_pr_comments",
             "list_pr_files",
             "list_pr_commits",
+            "get_my_briefing",
+            "list_my_worklog",
         ],
         write: [
             "update_task",
@@ -239,8 +241,15 @@ describe("DevelopersPage", () => {
             "delete_note_folder",
             "manage_note_sharing",
             "restore_note_version",
+            "capture_worklog",
+            "update_worklog_item",
+            "delete_worklog_entry",
         ],
     };
+
+    // genos-api `origin/views/public/mcp/prompts.py` PROMPTS, in order. The same
+    // kind of copy as the catalog above, for the same reason.
+    const MCP_PROMPT_NAMES = ["catch_me_up", "plan_my_day"];
 
     const mcpTable = () => {
         const label = screen.getByText("Tools · scope");
@@ -282,7 +291,7 @@ describe("DevelopersPage", () => {
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
-    it("says the destructive opt-in on exactly the ten tools that need it", () => {
+    it("says the destructive opt-in on exactly the eleven tools that need it", () => {
         renderPage();
         const rows = [...document.querySelectorAll("tr")].filter((tr) =>
             tr.textContent?.includes("destructive opt-in")
@@ -298,6 +307,7 @@ describe("DevelopersPage", () => {
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
+            "delete_worklog_entry",
         ]);
     });
 
@@ -321,6 +331,83 @@ describe("DevelopersPage", () => {
                 (tr) => tr.querySelector("td")?.textContent === "delete_project"
             )
         ).toBe(false);
+    });
+
+    // ── the secretary: briefing, worklog, prompts ────────────────────
+
+    const rowOf = (name: string) =>
+        [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === name
+        );
+
+    it("lists the secretary tools with the scope each really has", () => {
+        renderPage();
+        const typeOf = (name: string) => rowOf(name)?.querySelectorAll("td")[1].textContent;
+        expect(typeOf("get_my_briefing")).toBe("read");
+        expect(typeOf("list_my_worklog")).toBe("read");
+        expect(typeOf("capture_worklog")).toBe("write");
+        expect(typeOf("update_worklog_item")).toBe("write");
+        expect(typeOf("delete_worklog_entry")).toBe("write");
+        // Only the delete needs the opt-in: saving and rewording destroy nothing.
+        expect(rowOf("delete_worklog_entry")?.textContent).toContain("destructive opt-in");
+        expect(rowOf("capture_worklog")?.textContent).not.toContain("destructive opt-in");
+        expect(rowOf("update_worklog_item")?.textContent).not.toContain("destructive opt-in");
+    });
+
+    it("says the briefing reads the calendar live and never stores it", () => {
+        renderPage();
+        const text = rowOf("get_my_briefing")?.textContent ?? "";
+        expect(text).toContain("read from Google each time and never stored");
+        expect(text).toMatch(/since_last/);
+        expect(document.body.textContent).toMatch(/Genos does not\s+keep your calendar events/);
+    });
+
+    it("says the worklog is private to the member, in the table and in the prose", () => {
+        renderPage();
+        expect(rowOf("capture_worklog")?.textContent).toContain("Only you can read it");
+        expect(rowOf("list_my_worklog")?.textContent).toContain("private to you");
+        expect(screen.getByText("Your worklog is private")).toBeTruthy();
+        const text = document.body.textContent ?? "";
+        expect(text).toMatch(/not a teammate, not an admin, not the owner of the team/);
+        expect(text).toMatch(/same answer as asking for\s+one that does not exist/);
+        expect(text).toMatch(
+            /It goes when you delete your account, and it is in your data export/
+        );
+    });
+
+    it("lists both prompts as the commands a client shows", () => {
+        renderPage();
+        const label = screen.getByText("Prompts · commands");
+        const names = [...label.parentElement!.querySelectorAll("tr")].map(
+            (tr) => tr.querySelector("td")?.textContent
+        );
+        expect(names).toEqual(MCP_PROMPT_NAMES);
+        const text = document.body.textContent ?? "";
+        for (const name of MCP_PROMPT_NAMES) {
+            expect(text).toContain(`/mcp__genos__${name}`);
+        }
+    });
+
+    it("says what the prompts ask of the model, and that a read key only describes", () => {
+        renderPage();
+        const text = document.body.textContent ?? "";
+        expect(text).toMatch(/a short answer that ends\s+on a question you can answer in a word/);
+        expect(text).toMatch(/change nothing until\s+you say yes/);
+        expect(text).toMatch(/read-only key is told to describe a change instead of\s+making it/);
+    });
+
+    it("says a note's comment threads come back with it", () => {
+        renderPage();
+        const text = rowOf("get_note")?.textContent ?? "";
+        expect(text).toContain("comment threads");
+        expect(text).toContain("include_resolved");
+    });
+
+    it("no longer says every tool is one the in-app agent uses", () => {
+        renderPage();
+        const text = document.body.textContent ?? "";
+        expect(text).not.toMatch(/over the same tools the in-app agent uses/);
+        expect(text).toMatch(/plus a few made for outside clients/);
     });
 
     it("states counts that agree with the tool table", () => {
