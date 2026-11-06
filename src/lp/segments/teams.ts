@@ -148,12 +148,13 @@ export const teams: SegmentConfig = {
                 "会議ノート等からタスク計画を提案",
                 "タスク、ノート、Todo、予定の承認付き作成・更新",
                 "UI言語に合わせたAI回答",
+                "承認前に提案内容を編集でき、タスクとノートの書き込みはUndoできる",
             ],
             roadmap: [
                 "「金曜日に思い出させて」等のリマインダー",
                 "カスタムの週次レポート・定期ブリーフ",
                 "会議前の自動準備と会議後の自動フォロー",
-                "承認前の編集、Undo、より細かな記憶管理UI",
+                "より細かな記憶管理UI",
             ],
         },
         audience: {
@@ -366,12 +367,13 @@ export const teams: SegmentConfig = {
                 "Propose a task plan from meeting notes and related context",
                 "Create or update tasks, notes, todos, and calendar events through approval",
                 "Receive AI answers in the active interface language",
+                "Edit a proposed change before approving it, and undo task and note writes",
             ],
             roadmap: [
                 '"Remind me Friday" and other deferred reminders',
                 "Custom weekly reports and recurring briefs",
                 "Automatic meeting preparation and follow-up",
-                "Edit-before-approve, undo, and a fuller memory-control interface",
+                "A fuller memory-control interface",
             ],
         },
         audience: {
