@@ -4,8 +4,8 @@ import type { ModalTaskDiagramProps } from "./ModalTaskDiagram";
 
 // Code-split boundary for the task diagram.
 //
-// ModalTaskDiagram pulls @xyflow/react, @xyflow/system, @dagrejs/dagre
-// and the d3 modules xyflow depends on — the single heaviest dependency
+// ModalTaskDiagram pulls @xyflow/react, @xyflow/system and the d3
+// modules xyflow depends on — the single heaviest dependency
 // tree in the task feature. It was statically imported from App.tsx (and
 // from four task surfaces), which put all of it in the entry chunk, so
 // every page load paid for a modal most sessions never open.

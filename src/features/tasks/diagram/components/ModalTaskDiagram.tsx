@@ -76,7 +76,7 @@ export type ModalTaskDiagramProps = {
 // Full-screen diagram modal. Substantially larger than every other
 // modal in the codebase (the largest, SettingsModal, tops out at
 // ~700px). Graphs need real estate; we go to 94vw × 90vh so the
-// dagre tree has room to breathe. The chrome (header + close) is
+// graph has room to breathe. The chrome (header + close) is
 // kept minimal so the canvas dominates.
 const fmtDateLabel = (iso: string | null): string | null => {
     if (!iso) return null;
@@ -111,7 +111,7 @@ export const ModalTaskDiagram = ({
 
     // When on, the canvas collapses every Closed branch — a Closed task
     // and its WHOLE subtree (open descendants included) drop out, then
-    // dagre re-runs so the remaining tree fills the canvas. ON by default —
+    // the layout re-runs so the remaining tree fills the canvas. ON by default —
     // a diagram is usually opened to reason about what's LEFT to do, so
     // finished branches are tucked away until the user opts back in via the
     // header toggle (which brings every task back). The toggle stays

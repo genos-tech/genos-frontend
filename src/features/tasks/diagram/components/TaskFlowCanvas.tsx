@@ -43,7 +43,6 @@ import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
-import { useDagreLayout } from "../hooks/useDagreLayout";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { deleteDiagramTask } from "../services/deleteDiagramTask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
@@ -62,8 +61,8 @@ import {
     TaskNodeData,
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
+import { layoutDiagramNodes } from "../utils/layoutDiagram";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
-import { sortDiagramTasks } from "../utils/sortDiagramTasks";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
 import { MilestoneNodeCard } from "./MilestoneNodeCard";
@@ -446,15 +445,12 @@ export const buildNodesAndEdges = (
         (t) => !isDeletedStatus(t.status) && anchoredExternalIds.has(Number(t.id))
     );
 
-    // Pre-sort so each parent's sibling columns render ordered by task
-    // id and so blocker/blocked sibling pairs sit adjacent (blocker
-    // left of blocked). sortDiagramTasks returns each sibling group
-    // in REVERSE of the desired visual order to compensate for dagre
-    // v3's order phase, which places the LAST-added successor at the
-    // leftmost column. The structure-edges loop below walks this
-    // array verbatim when calling setEdge, so the desired-leftmost
-    // sibling is added last and ends up on the left.
-    const sortedInternalTasks = sortDiagramTasks(visibleInternalTasks, graph.dependencyEdges);
+    // Id order, so the node array (and so the paint order) is the same every
+    // time. Positions don't depend on it: `layoutDiagramNodes` places every card
+    // from the parent and dependency edges (see `layoutDiagram.ts`).
+    const sortedInternalTasks = [...visibleInternalTasks].sort(
+        (a, b) => Number(a.id) - Number(b.id)
+    );
     const sortedExternalTasks = [...visibleExternalTasks].sort(
         (a, b) => Number(a.id) - Number(b.id)
     );
@@ -471,12 +467,9 @@ export const buildNodesAndEdges = (
     // subtree with it (see `computeHiddenTaskIds`), so it never has a
     // visible child; the only way a child's parent is hidden here is the
     // pre-existing Deleted-mid-path case, where the child falls back to a
-    // root-level sibling in dagre.
+    // root-level card in the layout.
     const structureEdges: Edge[] = [];
     const visibleIdSet = new Set(sortedInternalTasks.map((t) => Number(t.id)));
-    // Iterate the SORTED list so setEdge call order reflects the
-    // desired sibling column ordering (see sortDiagramTasks for the
-    // dagre-quirk reversal).
     for (const task of sortedInternalTasks) {
         const taskId = Number(task.id);
         const parentId = task.parentTaskId == null ? null : Number(task.parentTaskId);
@@ -567,7 +560,6 @@ const CanvasInner = ({
     const { raw: rawTheme } = useColorTheme();
     const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
     const { fitView } = useReactFlow();
-    const dagreLayout = useDagreLayout();
     // True once React Flow has measured every node (real dimensions). We
     // gate viewport fitting on this — see `pendingFitRef` and the fit
     // effect below for why fitting before measurement corrupts the view.
@@ -1001,7 +993,7 @@ const CanvasInner = ({
                 newTaskIdsRef.current,
                 t.tasks.diagram.untitled
             );
-            const positioned = dagreLayout(rawNodes, rawEdges, "TB");
+            const positioned = layoutDiagramNodes(rawNodes, rawEdges);
             setNodes(positioned);
             setEdges(rawEdges);
             // Don't fit here directly: on the first assemble (modal open)
@@ -1015,7 +1007,6 @@ const CanvasInner = ({
             }
         },
         [
-            dagreLayout,
             useSM,
             projectId,
             usePM.currentProject,
