@@ -49,6 +49,21 @@ const FULL_DISPLAY_ID = /^#?([A-Za-z][A-Za-z0-9]{1,5}-\d{1,9})$/;
 export const fullDisplayIdIn = (query: string): string | null =>
     FULL_DISPLAY_ID.exec(query.trim())?.[1] ?? null;
 
+// A query that is NOTHING BUT a task id (MIP-1040: Spotlight's search by id). Spelled the
+// way people type it: case, a leading "#", a hyphen, spaces around it, a space
+// instead of it, or nothing at all when the code is letters ("mip890"). Words
+// beside the id ("MIP-890 chips") make it an ordinary search, not an id.
+const ID_ONLY = /^#?\s*([A-Za-z][A-Za-z0-9]{1,5})(?:\s*-\s*|\s+)(\d{1,9})$/;
+const ID_ONLY_COMPACT = /^#?([A-Za-z]{2,6})(\d{1,9})$/;
+
+/** The display id ("MIP-890") a query consists of, or null when it is anything else.
+ *  The number is the task's whole number: "MIP-89" is task 89, not a prefix. */
+export const displayIdOnlyQuery = (query: string): string | null => {
+    const q = query.trim();
+    const m = ID_ONLY.exec(q) ?? ID_ONLY_COMPACT.exec(q);
+    return m ? `${m[1].toUpperCase()}-${Number(m[2])}` : null;
+};
+
 /** True when the user found this task by its id rather than its title:
  *  the query matches the id and the title doesn't contain it. A chip
  *  picked this way is inserted compact (`#MIP-739`). */
