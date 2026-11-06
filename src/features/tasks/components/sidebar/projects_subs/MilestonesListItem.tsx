@@ -32,13 +32,19 @@ import {
     selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
+import { openMilestoneFromSidebar } from "../openMilestone";
 import type {
     SidebarTreePM,
     SidebarTreeSM,
     SidebarTreeTEM,
     SidebarTreeTM,
 } from "../useSidebarSlices";
-import { FolderMenu, MilestoneRowMenu } from "./MilestoneFolderMenus";
+import {
+    FavoriteMark,
+    FolderMenu,
+    MilestoneFavoriteStar,
+    MilestoneRowMenu,
+} from "./MilestoneFolderMenus";
 import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -242,45 +248,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
     const pastSprintLabel = (g: { sprintId: number | null; sprintName: string }) =>
         g.sprintId == null ? t.tasks.sidebar.noSprint : g.sprintName;
 
-    const handleOpen = (milestoneId: number) => {
-        // If the clicked milestone belongs to a different project than the
-        // one currently in focus, switch projects first. MilestonePreviewInner
-        // resolves the milestone via `useSM.projectMilestones[currentProject.projectId]`
-        // (TaskPreview.tsx:913-919), so without the switch it would never find
-        // the milestone and would fall back to the "Loading milestone…" branch
-        // that auto-closes after 3s.
-        const needsProjectSwitch = currentProjectId !== usePM.currentProject?.projectId;
-        if (needsProjectSwitch) {
-            const target = usePM.teamProjects?.find((p) => p.projectId === currentProjectId);
-            if (!target) return;
-            // Close the existing preview first: while `isTaskPreviewVisible`
-            // is true, useTaskRouting's URL-update effect skips its navigate(),
-            // which leaves `targetUrlProjectId.current` stale and lets the
-            // enforce-match effect revert the project switch.
-            useTM.closeTaskPreview();
-            useTM.setTableMilestoneFilter(null);
-            // Set in this click, not after the project list and the tasks
-            // have been awaited. The preview and the scope below are set in
-            // the same commit; the milestone is already in the sidebar's list,
-            // so the preview finds it.
-            usePM.openProject(target);
-        }
-
-        // Open the milestone preview AND scope the task table to this
-        // milestone (its backing task as the root + its children).
-        // Re-clicking a milestone in the same project toggles the
-        // table-scope off again; a cross-project click always scopes-on.
-        const isAlreadyScoped =
-            !needsProjectSwitch && useTM.tableMilestoneFilterId === milestoneId;
-        useTM.setCurrentPreviewKind("milestone");
-        useTM.setCurrentPreviewMilestoneId(milestoneId);
-        useTM.setIsTaskPreviewVisible(true);
-        // Stamped with the milestone's own project, so the scope
-        // deactivates itself if the user navigates elsewhere.
-        useTM.setTableMilestoneFilter(
-            isAlreadyScoped ? null : { milestoneId, projectId: currentProjectId }
-        );
-    };
+    const handleOpen = (milestoneId: number) =>
+        openMilestoneFromSidebar({ usePM, useTM }, milestoneId, currentProjectId);
 
     const handleAddMilestone = () => {
         useTM.setIsCreatingTask({
@@ -301,23 +270,35 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 ? t.tasks.sidebar.noSprint
                 : (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
                   t.tasks.sidebar.sprintFallback);
+        const favorited = useSM.isMilestoneFavorited(m.milestoneId);
+        const toggleFavorite = () => void useSM.toggleMilestoneFavorite(m);
         return (
             <ListItem
                 key={m.milestoneId}
                 sx={{ pl: 0, pr: LI_PR, ...rowMenuSx({ top: MS_MENU_TOP }) }}
                 endAction={
-                    // Past milestones keep their folder but are not filed from here:
-                    // they sit in the year/sprint tree, not in a folder.
-                    canFile ? (
+                    // The star and the "..." menu share the end action, so the row's
+                    // hover reveal shows both. Past milestones keep their folder but
+                    // are not filed from here: they sit in the year/sprint tree, not
+                    // in a folder, so their menu holds only the favorite item.
+                    <Stack alignItems="center" direction="row">
+                        <MilestoneFavoriteStar
+                            isFavorited={favorited}
+                            milestoneTitle={m.title}
+                            onToggle={toggleFavorite}
+                        />
                         <MilestoneRowMenu
+                            canMove={canFile}
                             currentFolderId={m.folderId ?? null}
                             folders={folders}
+                            isFavorited={favorited}
                             milestoneTitle={m.title}
                             onMoveToFolder={(folderId) =>
                                 void useSM.moveMilestoneToFolder(m.milestoneId, folderId)
                             }
+                            onToggleFavorite={toggleFavorite}
                         />
-                    ) : undefined
+                    </Stack>
                 }
             >
                 <ListItemButton
@@ -336,7 +317,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         pl: BTN_PL,
                         pr: 0.5,
                         gap: BTN_GAP,
-                        mr: canFile ? "var(--ms-menu-reserve)" : 0,
+                        // Two buttons now (star + menu), so twice the touch reserve.
+                        mr: "calc(var(--ms-menu-reserve) * 2)",
                     }}
                     onClick={() => handleOpen(m.milestoneId)}
                 >
@@ -383,6 +365,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             >
                                 {m.title}
                             </Typography>
+                            {favorited && <FavoriteMark />}
                             <Chip
                                 className={PROGRESS_CLASS}
                                 size="sm"

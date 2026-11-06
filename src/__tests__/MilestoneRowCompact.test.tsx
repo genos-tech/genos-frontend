@@ -74,6 +74,10 @@ const renderSidebar = () =>
                         projectFolders: { [P]: FOLDERS },
                         tsLastMilestonesLoaded: 1,
                         loadFoldersForProject: vi.fn().mockResolvedValue(FOLDERS),
+                        milestoneFavorites: [],
+                        isMilestoneFavorited: () => false,
+                        toggleMilestoneFavorite: vi.fn(),
+                        noteMilestoneOpened: vi.fn(),
                     } as never
                 }
             />

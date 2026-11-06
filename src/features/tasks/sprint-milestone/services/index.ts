@@ -16,6 +16,11 @@ export {
     convertTaskToMilestone,
     MILESTONE_CONVERTED_CODE,
 } from "./convertTaskMilestone";
+export {
+    loadMilestoneFavorites,
+    markMilestoneOpened,
+    setMilestoneFavorite,
+} from "./milestoneFavorites";
 export type { MilestoneLookup } from "./loadMilestone";
 export { loadMilestone, lookupMilestone } from "./loadMilestone";
 export type { LoadProjectMilestonesOptions } from "./loadProjectMilestones";

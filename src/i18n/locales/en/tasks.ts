@@ -83,6 +83,11 @@ export const tasks = {
         // The per-project "show more" row under Recents: each project folder
         // starts at five tasks and this reveals the next five.
         recentsMore: "More",
+        // Milestone favorites (MIP-1053): the folder above Recents, and the star
+        // / menu wording on a milestone (sidebar row and preview header).
+        favorites: "Favorites",
+        addToFavorites: "Add to favorites",
+        removeFromFavorites: "Remove from favorites",
         projects: "Projects",
         milestones: "Milestones",
         newProject: "New Project",

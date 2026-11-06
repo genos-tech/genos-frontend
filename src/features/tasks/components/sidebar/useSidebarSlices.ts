@@ -125,8 +125,11 @@ const TREE_SM = {
         "renameFolder",
         "removeFolder",
         "moveMilestoneToFolder",
+        // Favorites (MIP-1053): the list, and whether a given milestone is on it.
+        "milestoneFavorites",
+        "isMilestoneFavorited",
     ],
-    latest: [],
+    latest: ["toggleMilestoneFavorite", "noteMilestoneOpened"],
 } as const satisfies SliceSpec<SprintMilestoneManagementState>;
 export type SidebarTreeSM = SliceOf<SprintMilestoneManagementState, typeof TREE_SM>;
 

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
@@ -15,6 +15,7 @@ import {
     deleteMilestone,
     deleteMilestoneFolder,
     deleteSprint,
+    loadMilestoneFavorites,
     loadMilestoneFolders,
     loadProjectMilestones,
     LoadProjectMilestonesOptions,
@@ -22,8 +23,10 @@ import {
     LoadProjectSprintsOptions,
     loadSprintConfig,
     lookupMilestone,
+    markMilestoneOpened,
     moveMilestoneToSprint,
     removeMilestoneAssignee,
+    setMilestoneFavorite,
     SprintConfigInput,
     updateMilestone,
     updateMilestoneFolder,
@@ -36,6 +39,7 @@ import type { ConvertedTaskRef } from "../../features/tasks/sprint-milestone/ser
 import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
 import {
     Milestone,
+    MilestoneFavorite,
     MilestoneFolder,
     Sprint,
     SprintConfig,
@@ -149,6 +153,19 @@ export interface SprintMilestoneManagementState {
         milestoneId: number,
         folderId: number | null
     ) => Promise<Milestone | null>;
+
+    // Favorite milestones (MIP-1053), most recently opened first. Private to the
+    // user and across teams: the sidebar shows the ones whose project it lists.
+    milestoneFavorites: MilestoneFavorite[];
+    isMilestoneFavorited: (milestoneId: number) => boolean;
+    /** Star or unstar. Takes the milestone so the star shows at once, before the
+     *  list is re-read from the server. */
+    toggleMilestoneFavorite: (
+        milestone: Pick<Milestone, "milestoneId" | "title" | "projectId" | "status"> &
+            Partial<Pick<Milestone, "taskId" | "displayId">>
+    ) => Promise<void>;
+    /** The user opened a milestone: if it is a favorite it moves to the top. */
+    noteMilestoneOpened: (milestoneId: number) => void;
 
     // Mutation flags so other parts of the app can react.
     tsLastMilestonesLoaded: number | undefined;
@@ -698,6 +715,89 @@ export const useSprintMilestoneManagement = (
         [accessToken, currentMilestone]
     );
 
+    // ---- Favorites (MIP-1053) ----------------------------------------------
+    const [milestoneFavorites, setMilestoneFavorites] = useState<MilestoneFavorite[]>([]);
+    // Read inside the callbacks below, so a quick second tap sees the first.
+    const favoritesRef = useRef<MilestoneFavorite[]>([]);
+    favoritesRef.current = milestoneFavorites;
+
+    const refreshMilestoneFavorites = useCallback(async () => {
+        const res = await loadMilestoneFavorites(accessToken);
+        // A failed read resolves to `undefined`: keep the list we had.
+        if (res) setMilestoneFavorites(res.favorites ?? []);
+    }, [accessToken]);
+
+    useEffect(() => {
+        if (!accessToken) return;
+        void refreshMilestoneFavorites();
+    }, [accessToken, refreshMilestoneFavorites]);
+
+    const favoriteIds = useMemo(
+        () => new Set(milestoneFavorites.map((f) => f.milestoneId)),
+        [milestoneFavorites]
+    );
+    const isMilestoneFavorited = useCallback(
+        (milestoneId: number) => favoriteIds.has(milestoneId),
+        [favoriteIds]
+    );
+
+    const toggleMilestoneFavorite = useCallback(
+        async (
+            milestone: Parameters<SprintMilestoneManagementState["toggleMilestoneFavorite"]>[0]
+        ) => {
+            if (!accessToken) return;
+            const { milestoneId } = milestone;
+            const before = favoritesRef.current;
+            const wasFavorited = before.some((f) => f.milestoneId === milestoneId);
+            if (wasFavorited) {
+                setMilestoneFavorites((prev) => prev.filter((f) => f.milestoneId !== milestoneId));
+            } else {
+                // Shown at once; the re-read below fills in the server's view.
+                const now = new Date().toISOString();
+                setMilestoneFavorites((prev) => [
+                    {
+                        milestoneId,
+                        taskId: milestone.taskId ?? null,
+                        displayId: milestone.displayId ?? null,
+                        title: milestone.title,
+                        status: milestone.status,
+                        projectId: milestone.projectId,
+                        projectName: "",
+                        teamId: null,
+                        tsFavorited: now,
+                        tsLastOpened: null,
+                    },
+                    ...prev.filter((f) => f.milestoneId !== milestoneId),
+                ]);
+            }
+            const result = await setMilestoneFavorite(milestoneId, !wasFavorited, accessToken);
+            if (result === null) {
+                // The call failed: put the list back the way it was.
+                setMilestoneFavorites(before);
+                return;
+            }
+            // Re-read, which also fills in the project name of a new star.
+            await refreshMilestoneFavorites();
+        },
+        [accessToken, refreshMilestoneFavorites]
+    );
+
+    const noteMilestoneOpened = useCallback(
+        (milestoneId: number) => {
+            if (!favoritesRef.current.some((f) => f.milestoneId === milestoneId)) return;
+            setMilestoneFavorites((prev) => {
+                const hit = prev.find((f) => f.milestoneId === milestoneId);
+                if (!hit) return prev;
+                return [
+                    { ...hit, tsLastOpened: new Date().toISOString() },
+                    ...prev.filter((f) => f.milestoneId !== milestoneId),
+                ];
+            });
+            void markMilestoneOpened(milestoneId, accessToken);
+        },
+        [accessToken]
+    );
+
     return {
         sprintConfig,
         setSprintConfig,
@@ -715,6 +815,10 @@ export const useSprintMilestoneManagement = (
         renameFolder,
         removeFolder,
         moveMilestoneToFolder,
+        milestoneFavorites,
+        isMilestoneFavorited,
+        toggleMilestoneFavorite,
+        noteMilestoneOpened,
         tsLastMilestonesLoaded,
         tsLastSprintsLoaded,
         loadConfigForProject,

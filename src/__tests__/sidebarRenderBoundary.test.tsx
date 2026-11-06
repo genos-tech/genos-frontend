@@ -193,6 +193,10 @@ const stable = {
     renameFolder: vi.fn(async () => null),
     removeFolder: vi.fn(async () => true),
     moveMilestoneToFolder: vi.fn(async () => null),
+    // Favorites (MIP-1053): useCallbacks in the real hook.
+    isMilestoneFavorited: () => false,
+    toggleMilestoneFavorite: vi.fn(),
+    noteMilestoneOpened: vi.fn(),
     setOpenJoinProject: vi.fn(),
     setMyself: vi.fn(),
 };
@@ -225,6 +229,7 @@ type World = {
         projectSprints: Record<number, unknown[]>;
         projectMilestones: Record<number, Milestone[]>;
         projectFolders: Record<number, unknown[]>;
+        milestoneFavorites: unknown[];
         tsLastMilestonesLoaded: number | undefined;
         currentMilestone: unknown;
         // A `useCallback` on the access token: it changes when the token is refreshed.
@@ -265,6 +270,7 @@ const initialWorld = (): World => ({
         projectSprints: SPRINTS,
         projectMilestones: MILESTONES,
         projectFolders: FOLDERS,
+        milestoneFavorites: [],
         tsLastMilestonesLoaded: 1,
         currentMilestone: undefined,
         loadFoldersForProject: stable.loadFoldersForProject,
@@ -580,6 +586,41 @@ describe("a change of something the sidebar shows", () => {
             expect(after.search).toBe(before.search);
         }
     );
+
+    it("shows Favorites above Recents, and a favorite re-renders neither Recents, the views nor the search (MIP-1053)", async () => {
+        await mount();
+        // No favorites yet: no folder.
+        expect(screen.queryByTestId("sidebar-favorites")).toBeNull();
+        const before = snapshot();
+        patch({
+            sm: {
+                milestoneFavorites: [
+                    {
+                        milestoneId: 100,
+                        taskId: null,
+                        displayId: null,
+                        title: "Ship alpha",
+                        status: "Open",
+                        projectId: 1,
+                        projectName: "Alpha",
+                        teamId: null,
+                        tsFavorited: "",
+                        tsLastOpened: null,
+                    },
+                ],
+            },
+        });
+        const folder = screen.getByTestId("sidebar-favorites");
+        const recents = screen.getByText("Recents");
+        // DOCUMENT_POSITION_FOLLOWING: Recents comes after Favorites.
+        expect(
+            folder.compareDocumentPosition(recents) & Node.DOCUMENT_POSITION_FOLLOWING
+        ).toBeTruthy();
+        const after = snapshot();
+        expect(after.recents).toBe(before.recents);
+        expect(after.views).toBe(before.views);
+        expect(after.search).toBe(before.search);
+    });
 
     it("a view flag re-renders the view buttons and the Home button, and no row", async () => {
         await mount();

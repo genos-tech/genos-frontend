@@ -18,6 +18,7 @@ import { useOnTaskMetadataSaved } from "../../hooks/useOnTaskMetadataSaved";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { RECENTS_PER_PROJECT, RECENTS_STATUSES } from "../../utils/groupRecentTasks";
+import { FavoritesListItem } from "./FavoritesListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
@@ -387,6 +388,12 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                             {t.tasks.sidebar.tasksHeader}
                         </Typography>
                     </Box>
+
+                    <FavoritesListItem
+                        usePM={slices.tree.pm}
+                        useSM={slices.tree.sm}
+                        useTM={slices.tree.tm}
+                    />
 
                     <RecentsListItem
                         recentTasks={recentTasks}
