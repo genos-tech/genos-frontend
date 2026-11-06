@@ -48,6 +48,7 @@ export const RecentsListItem = memo(function RecentsListItem(props: RecentsListI
         <ListItem nested>
             <Toggler
                 defaultExpanded={false}
+                storageKey="recents"
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
                         sx={{

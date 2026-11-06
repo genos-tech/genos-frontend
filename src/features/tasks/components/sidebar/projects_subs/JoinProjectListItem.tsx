@@ -30,6 +30,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
         <Toggler
             key="toggler-OtherProjects"
             defaultExpanded={false}
+            storageKey="join-project"
             renderToggle={({ open, setOpen }) => (
                 <ListItemButton
                     color="primary"

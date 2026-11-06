@@ -33,6 +33,7 @@ import {
 } from "../../../sprint-milestone/utils/sortMilestones";
 import { taskMetaLabel } from "../../../utils/taskMeta";
 import { openMilestoneFromSidebar } from "../openMilestone";
+import { useSidebarOpen } from "../useSidebarOpen";
 import type {
     SidebarTreePM,
     SidebarTreeSM,
@@ -513,6 +514,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
             {folderGroups.map(({ folder, milestones: inFolder }) => (
                 <MilestoneTreeFolder
                     key={`folder-${folder.folderId}`}
+                    storageKey={`project:${currentProjectId}:folder:${folder.folderId}`}
                     count={inFolder.length}
                     depth={0}
                     isDark={isDark}
@@ -568,6 +570,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
             {unfiled.map((m) => renderMilestoneRow(m))}
             {pastMilestones.length > 0 && (
                 <MilestoneTreeFolder
+                    storageKey={`project:${currentProjectId}:past`}
                     count={pastMilestones.length}
                     depth={0}
                     isDark={isDark}
@@ -590,6 +593,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         return (
                             <MilestoneTreeFolder
                                 key={yearGroup.year}
+                                storageKey={`project:${currentProjectId}:past:${yearGroup.year}`}
                                 count={yearCount}
                                 depth={1}
                                 isDark={isDark}
@@ -609,6 +613,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                 {yearGroup.sprints.map((sprintGroup) => (
                                     <MilestoneTreeFolder
                                         key={sprintGroup.sprintId ?? "none"}
+                                        storageKey={`project:${currentProjectId}:past:${yearGroup.year}:${sprintGroup.sprintId ?? "none"}`}
                                         count={sprintGroup.milestones.length}
                                         depth={2}
                                         isDark={isDark}
@@ -665,6 +670,7 @@ const MilestoneTreeFolder = ({
     children,
     defaultOpen = false,
     actions,
+    storageKey,
 }: {
     icon: ReactNode;
     label: string;
@@ -677,8 +683,10 @@ const MilestoneTreeFolder = ({
     defaultOpen?: boolean;
     // Row actions (a "..." menu), laid out at the right edge by ListItem.
     actions?: ReactNode;
+    // Remembers the folder's open / closed state on this device (MIP-1055).
+    storageKey: string;
 }) => {
-    const [open, setOpen] = useState(defaultOpen);
+    const [open, setOpen] = useSidebarOpen(storageKey, defaultOpen);
     return (
         <>
             <ListItem

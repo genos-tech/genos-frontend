@@ -109,6 +109,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
             <Toggler
                 key={`toggler-TeamProjects`}
                 defaultExpanded={true}
+                storageKey="projects"
                 renderToggle={({ open, setOpen }) => (
                     // Header row = the section toggle + a SIBLING filter
                     // dropdown. The filter lives outside the ListItemButton
@@ -341,6 +342,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                 <Toggler
                                     key={`toggler-TeamProjects-${projectId}`}
                                     defaultExpanded={false}
+                                    storageKey={`project:${projectId}`}
                                     renderToggle={({ open, setOpen }) => (
                                         <ListItemButton
                                             selected={isSelected}
