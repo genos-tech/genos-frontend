@@ -112,6 +112,10 @@ describe("the sidebar's project row", () => {
             projectFolders: {},
             tsLastMilestonesLoaded: 0,
             loadFoldersForProject: vi.fn().mockResolvedValue([]),
+            milestoneFavorites: [],
+            isMilestoneFavorited: () => false,
+            toggleMilestoneFavorite: vi.fn(),
+            noteMilestoneOpened: vi.fn(),
         };
         render(
             <CssVarsProvider>
@@ -193,6 +197,10 @@ describe("a milestone of another project in the sidebar", () => {
             projectFolders: { [currentProjectId]: [] },
             tsLastMilestonesLoaded: 1,
             loadFoldersForProject: vi.fn().mockResolvedValue([]),
+            milestoneFavorites: [],
+            isMilestoneFavorited: () => false,
+            toggleMilestoneFavorite: vi.fn(),
+            noteMilestoneOpened: vi.fn(),
         };
         render(
             <CssVarsProvider>

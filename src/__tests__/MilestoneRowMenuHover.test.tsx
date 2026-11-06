@@ -63,6 +63,10 @@ const renderSidebar = () =>
                         projectFolders: { [P]: FOLDERS },
                         tsLastMilestonesLoaded: 1,
                         loadFoldersForProject: vi.fn().mockResolvedValue(FOLDERS),
+                        milestoneFavorites: [],
+                        isMilestoneFavorited: () => false,
+                        toggleMilestoneFavorite: vi.fn(),
+                        noteMilestoneOpened: vi.fn(),
                     } as never
                 }
             />
@@ -96,7 +100,9 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
         renderSidebar();
         for (const label of ["Unfiled one", "In a folder", "Q4"]) {
             const li = rowOf(label);
-            const btn = li.querySelector(".MuiListItem-endAction button") as HTMLButtonElement;
+            const btn = li.querySelector(
+                '.MuiListItem-endAction button[aria-haspopup="menu"]'
+            ) as HTMLButtonElement;
             expect(btn).not.toBeNull();
             expect(btn.disabled).toBe(false);
             expect(btn.tabIndex).not.toBe(-1);
@@ -145,11 +151,14 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
         renderSidebar();
         // Was a fixed 32px (`mr: 4`) on every menu row; now one variable that
         // is 0 for a mouse and the button's width only on touch.
-        for (const label of ["Unfiled one", "In a folder", "Q4"]) {
+        // A milestone row ends in two buttons now (the star and the menu), so it
+        // keeps twice the touch reserve (MIP-1053); a folder row still has one.
+        for (const label of ["Unfiled one", "In a folder"]) {
             const mr = getComputedStyle(buttonOf(label)).marginRight;
             expect(mr).not.toBe("32px");
-            expect(mr).toBe("var(--ms-menu-reserve)");
+            expect(mr).toBe("calc(var(--ms-menu-reserve) * 2)");
         }
+        expect(getComputedStyle(buttonOf("Q4")).marginRight).toBe("var(--ms-menu-reserve)");
         const list = document.querySelector("ul") as HTMLElement;
         expect(list).toHaveStyle({ "--ms-menu-reserve": "0px" });
         const touchReserve = rulesMatching("@media (hover: none)", "--ms-menu-reserve: 32px");
@@ -180,13 +189,20 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
         ).toBeGreaterThan(0);
     });
 
-    it("keeps the Past-milestones rows (no menu) unreserved", () => {
+    it("gives the Past-milestones rows the star and a menu with only the favorite item (MIP-1053)", () => {
         renderSidebar();
         fireEvent.click(screen.getByText("Past milestones"));
         fireEvent.click(screen.getByText("2026"));
         fireEvent.click(screen.getByText("Old sprint"));
-        expect(rowOf("Archived").querySelector(".MuiListItem-endAction")).toBeNull();
-        expect(getComputedStyle(buttonOf("Archived")).marginRight).toBe("0px");
+        const li = rowOf("Archived");
+        expect(li.querySelector(".MuiListItem-endAction")).not.toBeNull();
+        expect(li.querySelector('[data-testid="milestone-favorite-star"]')).not.toBeNull();
+        // Past milestones are not filed from here: the menu offers no folders.
+        fireEvent.click(
+            li.querySelector('.MuiListItem-endAction button[aria-haspopup="menu"]') as HTMLElement
+        );
+        expect(screen.getByText("Add to favorites")).toBeTruthy();
+        expect(screen.queryByText("Move to folder")).toBeNull();
     });
 });
 

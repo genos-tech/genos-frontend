@@ -13,6 +13,8 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
@@ -2366,6 +2368,21 @@ const MilestonePreviewInner = ({
                                             }
                                         }
                                     },
+                                },
+                                {
+                                    // Starred milestones list under "Favorites" in the
+                                    // task sidebar (MIP-1053).
+                                    id: "favoriteMilestone",
+                                    kind: "favorite",
+                                    label: useSM.isMilestoneFavorited(milestone.milestoneId)
+                                        ? t.tasks.sidebar.removeFromFavorites
+                                        : t.tasks.sidebar.addToFavorites,
+                                    icon: useSM.isMilestoneFavorited(milestone.milestoneId) ? (
+                                        <StarRoundedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />
+                                    ) : (
+                                        <StarOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                                    ),
+                                    onClick: () => void useSM.toggleMilestoneFavorite(milestone),
                                 },
                                 {
                                     id: "newTask",

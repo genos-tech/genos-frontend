@@ -118,6 +118,26 @@ export type ProjectMilestoneFoldersResponse = {
     folders: MilestoneFolder[];
 };
 
+/** A milestone the user starred (MIP-1053), as the Favorites list shows it. */
+export type MilestoneFavorite = {
+    milestoneId: number;
+    taskId: number | null;
+    displayId: string | null;
+    title: string;
+    status: string;
+    projectId: number;
+    /** Empty on a star just added in this tab, until the list is re-read. */
+    projectName: string;
+    teamId: string | null;
+    tsFavorited: string;
+    /** Null until the user opens it after starring. */
+    tsLastOpened: string | null;
+};
+
+export type MilestoneFavoritesResponse = {
+    favorites: MilestoneFavorite[];
+};
+
 export type ProjectMilestonesResponse = {
     milestones: Milestone[];
 };
