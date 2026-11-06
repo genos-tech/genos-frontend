@@ -292,7 +292,7 @@ export const admin = {
         title: "Connect {name} to Genos",
         titleUnnamed: "Connect an app to Genos",
         registeredNote: "This app wants to use Genos as you.",
-        identifiedBy: "This app is identified by {host}.",
+        identifiedBy: "This app is the one described at {url}.",
         sendBack: "When you decide, you'll be sent back to {host}.",
         anyoneCanRegister:
             "Anyone can register an app under any name. Only continue if you started this connection yourself.",

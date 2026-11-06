@@ -291,7 +291,7 @@ export const ja: DeepPartial<Messages> = {
             title: "{name} を Genos に接続",
             titleUnnamed: "アプリを Genos に接続",
             registeredNote: "このアプリはあなたとして Genos を使おうとしています。",
-            identifiedBy: "このアプリは {host} で識別されています。",
+            identifiedBy: "このアプリは {url} に記載されているものです。",
             sendBack: "決定すると {host} に戻ります。",
             anyoneCanRegister:
                 "アプリは誰でも好きな名前で登録できます。ご自身で接続を始めた場合のみ続けてください。",

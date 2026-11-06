@@ -28,7 +28,7 @@ const AVAILABLE = [
 
 const CONN = {
     id: "c1",
-    client: { name: "Claude", kind: "registered" as const, host: "" },
+    client: { name: "Claude", kind: "registered" as const, host: "", url: "" },
     scope: "write" as const,
     allowDestructive: false,
     defaultTeamId: "t1",
@@ -197,7 +197,7 @@ describe("ConnectedAppsSection", () => {
         expect(await screen.findByText("Couldn't save that change.")).toBeTruthy();
     });
 
-    it("shows the host of a client that is a metadata document", async () => {
+    it("shows the full address of a client that is a metadata document", async () => {
         listMcpConnections.mockResolvedValue({
             connections: [
                 {
@@ -205,14 +205,23 @@ describe("ConnectedAppsSection", () => {
                     client: {
                         name: "Docs",
                         kind: "metadata_document",
-                        host: "client.example.org",
+                        host: "client.vercel.app",
+                        url: "https://client.vercel.app/some/team/client.json",
                     },
                 },
             ],
             availableTeams: AVAILABLE,
         });
         render(<ConnectedAppsSection />);
-        expect(await screen.findByText("client.example.org")).toBeTruthy();
+        expect(
+            await screen.findByText("https://client.vercel.app/some/team/client.json")
+        ).toBeTruthy();
+    });
+
+    it("shows no address for a registered app", async () => {
+        render(<ConnectedAppsSection />);
+        const card = await screen.findByTestId("connected-app");
+        expect(within(card).queryByText(/https?:\/\//)).toBeNull();
     });
 
     it("offers only the teams the connection does not have yet", async () => {

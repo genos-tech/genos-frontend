@@ -453,12 +453,12 @@ export const UserProfileStatus = ({
                                         <NotificationsPausedRoundedIcon />
                                     </MenuButton>
                                 </AppTooltip>
-                                <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                                <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
                                     <NotificationPausePresetItems
                                         isPausedNow={notif.isPausedNow}
                                         pauseFor={notif.pauseFor}
-                                        pauseUntilTomorrow={notif.pauseUntilTomorrow}
                                         pauseUntilNextWeek={notif.pauseUntilNextWeek}
+                                        pauseUntilTomorrow={notif.pauseUntilTomorrow}
                                         resume={notif.resume}
                                         onCustom={openPauseCustom}
                                     />
@@ -473,8 +473,8 @@ export const UserProfileStatus = ({
                             which you can't act on for someone else. */}
                         {!openEditor && (isSelfView || customStatus !== "") && (
                             <Stack
-                                direction="row"
                                 alignItems="center"
+                                direction="row"
                                 spacing={0.5}
                                 sx={{ minWidth: 0, flexWrap: "wrap", gap: 0.5 }}
                             >
@@ -565,16 +565,16 @@ export const UserProfileStatus = ({
                                     the current choice is visible at a glance. */}
                                 <Dropdown>
                                     <MenuButton
-                                        size="sm"
-                                        variant="outlined"
                                         color="neutral"
+                                        size="sm"
                                         startDecorator={<ScheduleRoundedIcon fontSize="small" />}
+                                        variant="outlined"
                                     >
                                         {newExpiry
                                             ? formatStatusExpiry(newExpiry)
                                             : seT.clearAfterLabel}
                                     </MenuButton>
-                                    <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                                    <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
                                         <MenuItem onClick={() => setNewExpiry(null)}>
                                             {seT.clearNever}
                                         </MenuItem>
@@ -820,9 +820,9 @@ export const UserProfileStatus = ({
                     <ModalClose />
                     <Typography level="title-md">{seT.customTitle}</Typography>
                     <Input
+                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                         type="datetime-local"
                         value={expiryCustomValue}
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                         onChange={(e) => setExpiryCustomValue(e.target.value)}
                     />
                     <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
@@ -854,9 +854,9 @@ export const UserProfileStatus = ({
                         {t.services.notifications.pause.customTitle}
                     </Typography>
                     <Input
+                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                         type="datetime-local"
                         value={pauseCustomValue}
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                         onChange={(e) => setPauseCustomValue(e.target.value)}
                     />
                     <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>

@@ -21,6 +21,9 @@ export interface ConsentContext {
          *  name). "metadata_document": it is the document at `host`. */
         kind: "registered" | "metadata_document";
         host: string;
+        /** For a metadata document: the client's full address (a host alone, like a shared
+         *  hosting domain, proves little). Empty for a registered app. */
+        url: string;
         /** Where the browser is sent back to after the decision. */
         redirectHost: string;
     };
@@ -126,7 +129,12 @@ export const submitConsentDecision = async (
 
 export interface McpConnection {
     id: string;
-    client: { name: string; kind: "registered" | "metadata_document"; host: string };
+    client: {
+        name: string;
+        kind: "registered" | "metadata_document";
+        host: string;
+        url: string;
+    };
     scope: "read" | "write";
     /** Needs write. Off unless the member ticked it at consent. */
     allowDestructive: boolean;

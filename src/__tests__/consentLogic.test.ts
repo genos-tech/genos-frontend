@@ -10,6 +10,7 @@ import {
 import {
     actionForFailure,
     chooseDefaultTeam,
+    clientAddress,
     initialChoice,
     initialTeamIds,
     isSafeRedirect,
@@ -319,5 +320,27 @@ describe("what the consent page may send", () => {
             }
         }
         expect(scopesFor({ write: true, destructive: true }, ["mcp:read"])).toEqual(["mcp:read"]);
+    });
+});
+
+describe("clientAddress", () => {
+    it("is the full address for a metadata document", () => {
+        expect(
+            clientAddress({
+                kind: "metadata_document",
+                host: "a.pages.dev",
+                url: "https://a.pages.dev/x/c.json",
+            })
+        ).toBe("https://a.pages.dev/x/c.json");
+    });
+
+    it("falls back to the host when there is no address, and is empty for a registered app", () => {
+        expect(clientAddress({ kind: "metadata_document", host: "a.pages.dev" })).toBe(
+            "a.pages.dev"
+        );
+        expect(clientAddress({ kind: "registered", host: "", url: "" })).toBe("");
+        expect(
+            clientAddress({ kind: "registered", host: "x.test", url: "https://x.test/y" })
+        ).toBe("");
     });
 });

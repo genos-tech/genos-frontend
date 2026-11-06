@@ -147,3 +147,9 @@ export const scopesFor = (choice: ScopeChoice, requested: McpScopeName[]): McpSc
     if (c.destructive && requested.includes("mcp:destructive")) out.push("mcp:destructive");
     return out;
 };
+
+/** What identifies a metadata-document client: its full address, the host only if
+ *  an older API sent no address, and nothing for a registered app (anyone can
+ *  register one under any name, so there is nothing to show). */
+export const clientAddress = (client: { kind: string; host?: string; url?: string }): string =>
+    client.kind === "metadata_document" ? client.url || client.host || "" : "";

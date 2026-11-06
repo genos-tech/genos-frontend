@@ -25,6 +25,7 @@ import { rememberReturn, takeReturn } from "../../../utils/pendingReturn";
 import {
     actionForFailure,
     chooseDefaultTeam,
+    clientAddress,
     initialChoice,
     initialTeamIds,
     isSafeRedirect,
@@ -256,9 +257,12 @@ export const OAuthConsentPage = () => {
                             <Title styles={styles}>
                                 {name ? fmt(c.title, { name }) : c.titleUnnamed}
                             </Title>
-                            <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
-                                {ready.client.kind === "metadata_document" && ready.client.host
-                                    ? fmt(c.identifiedBy, { host: ready.client.host })
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: styles.subtitleColor, overflowWrap: "anywhere" }}
+                            >
+                                {clientAddress(ready.client)
+                                    ? fmt(c.identifiedBy, { url: clientAddress(ready.client) })
                                     : c.registeredNote}
                             </Typography>
                             {host && (

@@ -10,6 +10,7 @@ import {
     removeTeam,
     scopeChoiceOf,
 } from "../../features/admin/consent/connectionEdit";
+import { clientAddress } from "../../features/admin/consent/consentLogic";
 import { fmt, useTranslation } from "../../i18n";
 import {
     listMcpConnections,
@@ -145,9 +146,12 @@ export const ConnectedAppsSection = () => {
                                     <Typography level="title-sm" sx={{ wordBreak: "break-word" }}>
                                         {c.client.name || c.client.host || a.unnamed}
                                     </Typography>
-                                    {c.client.kind === "metadata_document" && c.client.host && (
-                                        <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                            {c.client.host}
+                                    {clientAddress(c.client) && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ opacity: 0.7, overflowWrap: "anywhere" }}
+                                        >
+                                            {clientAddress(c.client)}
                                         </Typography>
                                     )}
                                 </Box>

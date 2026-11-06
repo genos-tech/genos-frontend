@@ -23,7 +23,7 @@ const QUERY =
     "&code_challenge_method=S256&resource=https%3A%2F%2Fapi.example.test%2Fmcp";
 
 const CONTEXT = {
-    client: { name: "Claude", kind: "registered", host: "", redirectHost: "claude.ai" },
+    client: { name: "Claude", kind: "registered", host: "", url: "", redirectHost: "claude.ai" },
     scopes: [
         { name: "mcp:read", description: "Read" },
         { name: "mcp:write", description: "Write" },
@@ -116,7 +116,33 @@ describe("OAuthConsentPage", () => {
         expect(params.resource).toEqual(["https://api.example.test/mcp"]);
     });
 
-    it("shows the host of a client that is a metadata document, not the registered-app warning", async () => {
+    it("shows the FULL address of a metadata-document client, not only its host", async () => {
+        getConsentContext.mockResolvedValue({
+            ok: true,
+            context: {
+                ...CONTEXT,
+                client: {
+                    name: "Docs",
+                    kind: "metadata_document",
+                    host: "client.vercel.app",
+                    url: "https://client.vercel.app/some/team/client.json",
+                    redirectHost: "client.vercel.app",
+                },
+            },
+        });
+        render();
+        expect(
+            await screen.findByText(
+                /described at https:\/\/client\.vercel\.app\/some\/team\/client\.json/
+            )
+        ).toBeTruthy();
+        // A shared host proves little, so the registered-app warning is not what is shown either way.
+        expect(screen.queryByText(/Anyone can register/)).toBeNull();
+        // The callback host is still shown.
+        expect(screen.getByText(/sent back to client\.vercel\.app/)).toBeTruthy();
+    });
+
+    it("falls back to the host when an older API sends no address", async () => {
         getConsentContext.mockResolvedValue({
             ok: true,
             context: {
@@ -125,13 +151,19 @@ describe("OAuthConsentPage", () => {
                     name: "Docs",
                     kind: "metadata_document",
                     host: "client.example.org",
-                    redirectHost: "client.example.org",
+                    redirectHost: "x.test",
                 },
             },
         });
         render();
-        expect(await screen.findByText(/identified by client\.example\.org/)).toBeTruthy();
-        expect(screen.queryByText(/Anyone can register/)).toBeNull();
+        expect(await screen.findByText(/described at client\.example\.org/)).toBeTruthy();
+    });
+
+    it("a registered app shows the warning, no address, and still the callback host", async () => {
+        render();
+        expect(await screen.findByText(/Anyone can register an app under any name/)).toBeTruthy();
+        expect(screen.queryByText(/described at/)).toBeNull();
+        expect(screen.getByText(/sent back to claude\.ai/)).toBeTruthy();
     });
 
     it("allowing sends the choices and goes to the address the API answers with", async () => {
