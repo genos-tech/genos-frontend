@@ -138,14 +138,23 @@ export interface McpConnection {
     createdAt: string;
 }
 
+export interface McpConnectionList {
+    connections: McpConnection[];
+    /** Every team the member is in right now: what "add a team" may offer. */
+    availableTeams: { id: string; name: string }[];
+}
+
 export const listMcpConnections = async (
     accessToken: string | null
-): Promise<McpConnection[] | null> => {
+): Promise<McpConnectionList | null> => {
     const api = authApi(accessToken);
     if (!api) return null;
     try {
-        const res = await api.get<{ connections: McpConnection[] }>("/mcp/connections/");
-        return res.data.connections ?? [];
+        const res = await api.get<Partial<McpConnectionList>>("/mcp/connections/");
+        return {
+            connections: res.data.connections ?? [],
+            availableTeams: res.data.availableTeams ?? [],
+        };
     } catch {
         return null;
     }
@@ -157,36 +166,58 @@ export interface McpConnectionChange {
     defaultTeamId?: string;
 }
 
+/** `gone`: the connection is not there (revoked elsewhere, or not theirs): a 404.
+ *  The list is stale, so the caller refreshes it instead of reporting a failure. */
+export type McpWriteFailure = { gone: boolean; error: string | null };
+
+export type UpdateConnectionResult =
+    | { ok: true; connection: McpConnection }
+    | ({ ok: false } & McpWriteFailure);
+
+const writeFailure = (error: unknown): McpWriteFailure => {
+    const res = (error as { response?: { status?: number; data?: { error?: string } } })?.response;
+    return {
+        gone: res?.status === 404,
+        error: typeof res?.data?.error === "string" ? res.data.error : null,
+    };
+};
+
 export const updateMcpConnection = async (
     accessToken: string | null,
     id: string,
     change: McpConnectionChange
-): Promise<McpConnection | null> => {
+): Promise<UpdateConnectionResult> => {
     const api = authApi(accessToken);
-    if (!api) return null;
+    if (!api) return { ok: false, gone: false, error: null };
     try {
-        const res = await api.patch<McpConnection>(`/mcp/connections/${id}/`, {
-            ...(change.scopes ? { scopes: change.scopes } : {}),
-            ...(change.teamIds ? { team_ids: change.teamIds } : {}),
-            ...(change.defaultTeamId ? { default_team_id: change.defaultTeamId } : {}),
-        });
-        return res.data;
-    } catch {
-        return null;
+        const res = await api.patch<McpConnection>(
+            `/mcp/connections/${id}/`,
+            {
+                ...(change.scopes ? { scopes: change.scopes } : {}),
+                ...(change.teamIds ? { team_ids: change.teamIds } : {}),
+                ...(change.defaultTeamId ? { default_team_id: change.defaultTeamId } : {}),
+            },
+            SILENT
+        );
+        return { ok: true, connection: res.data };
+    } catch (error) {
+        return { ok: false, ...writeFailure(error) };
     }
 };
 
 /** Ends the connection and every token it holds: the app's next call fails. */
+export type RevokeConnectionResult = { ok: true } | ({ ok: false } & McpWriteFailure);
+
 export const revokeMcpConnection = async (
     accessToken: string | null,
     id: string
-): Promise<boolean> => {
+): Promise<RevokeConnectionResult> => {
     const api = authApi(accessToken);
-    if (!api) return false;
+    if (!api) return { ok: false, gone: false, error: null };
     try {
-        await api.delete(`/mcp/connections/${id}/`);
-        return true;
-    } catch {
-        return false;
+        await api.delete(`/mcp/connections/${id}/`, SILENT);
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, ...writeFailure(error) };
     }
 };

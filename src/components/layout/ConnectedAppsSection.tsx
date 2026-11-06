@@ -4,6 +4,8 @@ import { Alert, Box, Button, Checkbox, Chip, Radio, Sheet, Stack, Typography } f
 
 import { useAuth } from "../../context/AuthContext";
 import {
+    addableTeams,
+    addTeam,
     chooseScopes,
     removeTeam,
     scopeChoiceOf,
@@ -33,6 +35,7 @@ export const ConnectedAppsSection = () => {
 
     const [connections, setConnections] = useState<McpConnection[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
+    const [availableTeams, setAvailableTeams] = useState<{ id: string; name: string }[]>([]);
     const [editing, setEditing] = useState<string | null>(null);
     const [confirming, setConfirming] = useState<string | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
@@ -45,7 +48,8 @@ export const ConnectedAppsSection = () => {
             return;
         }
         setLoadFailed(false);
-        setConnections(list);
+        setConnections(list.connections);
+        setAvailableTeams(list.availableTeams);
     }, [accessToken]);
 
     useEffect(() => {
@@ -58,14 +62,16 @@ export const ConnectedAppsSection = () => {
     const revoke = async (id: string) => {
         setBusy(id);
         setError(null);
-        const ok = await revokeMcpConnection(accessToken, id);
+        const res = await revokeMcpConnection(accessToken, id);
         setBusy(null);
-        if (!ok) {
+        if (!res.ok && !res.gone) {
             setError(a.revokeFailed);
             return;
         }
+        // Gone already (revoked elsewhere): the list was stale, and the card goes either way.
         setConfirming(null);
         setConnections((cur) => (cur ?? []).filter((c) => c.id !== id));
+        if (!res.ok) void refresh();
     };
 
     const save = async (
@@ -74,13 +80,20 @@ export const ConnectedAppsSection = () => {
     ) => {
         setBusy(conn.id);
         setError(null);
-        const next = await updateMcpConnection(accessToken, conn.id, change);
+        const res = await updateMcpConnection(accessToken, conn.id, change);
         setBusy(null);
-        if (!next) {
-            setError(a.saveFailed);
+        if (!res.ok) {
+            if (res.gone) {
+                // Revoked elsewhere: say so and show the real list.
+                setError(a.gone);
+                setEditing(null);
+                await refresh();
+            } else {
+                setError(a.saveFailed);
+            }
             return;
         }
-        replace(next);
+        replace(res.connection);
     };
 
     return (
@@ -197,14 +210,6 @@ export const ConnectedAppsSection = () => {
                                             })
                                         }
                                     />
-                                    {c.teams.length > 0 && (
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ pt: 0.5, opacity: 0.75 }}
-                                        >
-                                            {a.teamsEditHint}
-                                        </Typography>
-                                    )}
                                     {c.teams.map((team) => (
                                         <Stack
                                             key={team.id}
@@ -257,6 +262,34 @@ export const ConnectedAppsSection = () => {
                                             </Button>
                                         </Stack>
                                     ))}
+                                    {addableTeams(c, availableTeams).length > 0 && (
+                                        <Stack spacing={0.75} sx={{ pt: 0.5 }}>
+                                            <Typography level="body-xs" sx={{ opacity: 0.75 }}>
+                                                {a.addTeamHint}
+                                            </Typography>
+                                            {addableTeams(c, availableTeams).map((team) => (
+                                                <Checkbox
+                                                    key={team.id}
+                                                    checked={false}
+                                                    disabled={busy === c.id}
+                                                    label={team.name}
+                                                    size="sm"
+                                                    sx={{ wordBreak: "break-word" }}
+                                                    slotProps={{
+                                                        input: {
+                                                            "aria-label": fmt(a.addTeamNamed, {
+                                                                team: team.name,
+                                                            }),
+                                                        },
+                                                    }}
+                                                    onChange={() => {
+                                                        const next = addTeam(c, team.id);
+                                                        if (next) void save(c, next);
+                                                    }}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    )}
                                 </Stack>
                             )}
 

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { chooseScopes, removeTeam, scopeChoiceOf } from "../features/admin/consent/connectionEdit";
+import {
+    addableTeams,
+    addTeam,
+    chooseScopes,
+    removeTeam,
+    scopeChoiceOf,
+} from "../features/admin/consent/connectionEdit";
 import {
     actionForFailure,
     chooseDefaultTeam,
@@ -285,5 +291,33 @@ describe("editing a connected app", () => {
     it("cannot remove the last team or one it does not have", () => {
         expect(removeTeam({ teams: [TEAMS[0]], defaultTeamId: "t1" }, "t1")).toBeNull();
         expect(removeTeam({ teams: TEAMS, defaultTeamId: "t1" }, "nope")).toBeNull();
+    });
+
+    it("adding a team keeps the ones it has and the default", () => {
+        const c = { teams: TEAMS.slice(0, 2), defaultTeamId: "t2" };
+        expect(addTeam(c, "t3")).toEqual({ teamIds: ["t1", "t2", "t3"], defaultTeamId: "t2" });
+        expect(addTeam(c, "t1")).toBeNull();
+    });
+
+    it("offers only the member's teams the connection lacks", () => {
+        expect(addableTeams({ teams: TEAMS.slice(0, 2) }, TEAMS)).toEqual([TEAMS[2]]);
+        expect(addableTeams({ teams: TEAMS }, TEAMS)).toEqual([]);
+        expect(addableTeams({ teams: [] }, [])).toEqual([]);
+    });
+});
+
+describe("what the consent page may send", () => {
+    it("is only ever a subset of what the context offered", () => {
+        const offered = ["mcp:read", "mcp:write"] as const;
+        // Every combination of choices, including a stale "deleting" tick.
+        for (const write of [true, false]) {
+            for (const destructive of [true, false]) {
+                const sent = scopesFor({ write, destructive }, [...offered]);
+                expect(sent.every((s) => (offered as readonly string[]).includes(s))).toBe(true);
+                expect(sent).toContain("mcp:read");
+                expect(sent).not.toContain("mcp:destructive");
+            }
+        }
+        expect(scopesFor({ write: true, destructive: true }, ["mcp:read"])).toEqual(["mcp:read"]);
     });
 });

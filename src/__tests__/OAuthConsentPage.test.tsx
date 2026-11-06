@@ -341,4 +341,39 @@ describe("OAuthConsentPage", () => {
             ).checked
         ).toBe(true);
     });
+
+    it("never sends a scope the context did not offer", async () => {
+        getConsentContext.mockResolvedValue({
+            ok: true,
+            context: { ...CONTEXT, scopes: [CONTEXT.scopes[0], CONTEXT.scopes[1]] },
+        });
+        submitConsentDecision.mockResolvedValue({
+            ok: true,
+            redirectTo: "https://claude.ai/cb?code=c",
+        });
+        render();
+        await screen.findByRole("heading", { name: /Connect Claude/ });
+        // Deleting was not asked for, so it is not even shown.
+        expect(screen.queryByRole("checkbox", { name: /Allow deleting/ })).toBeNull();
+        await userEvent.setup().click(screen.getByRole("button", { name: "Allow" }));
+        await waitFor(() => expect(submitConsentDecision).toHaveBeenCalled());
+        expect(submitConsentDecision.mock.calls[0][2].scopes).toEqual(["mcp:read", "mcp:write"]);
+    });
+
+    it("a read-only request sends read only, and shows no write choice", async () => {
+        getConsentContext.mockResolvedValue({
+            ok: true,
+            context: { ...CONTEXT, scopes: [CONTEXT.scopes[0]] },
+        });
+        submitConsentDecision.mockResolvedValue({
+            ok: true,
+            redirectTo: "https://claude.ai/cb?code=c",
+        });
+        render();
+        await screen.findByRole("heading", { name: /Connect Claude/ });
+        expect(screen.queryByRole("checkbox", { name: "Make changes" })).toBeNull();
+        await userEvent.setup().click(screen.getByRole("button", { name: "Allow" }));
+        await waitFor(() => expect(submitConsentDecision).toHaveBeenCalled());
+        expect(submitConsentDecision.mock.calls[0][2].scopes).toEqual(["mcp:read"]);
+    });
 });

@@ -127,34 +127,77 @@ describe("consent calls", () => {
 });
 
 describe("connections", () => {
-    it("lists active connections, or null when it cannot", async () => {
-        get.mockResolvedValue({ data: { connections: [{ id: "c1" }] } });
-        expect(await listMcpConnections("tok")).toEqual([{ id: "c1" }]);
+    it("lists active connections with the teams the member could add", async () => {
+        get.mockResolvedValue({
+            data: { connections: [{ id: "c1" }], availableTeams: [{ id: "t1", name: "Alpha" }] },
+        });
+        expect(await listMcpConnections("tok")).toEqual({
+            connections: [{ id: "c1" }],
+            availableTeams: [{ id: "t1", name: "Alpha" }],
+        });
+    });
+
+    it("tolerates a list without availableTeams, and returns null when it cannot load", async () => {
+        get.mockResolvedValue({ data: { connections: [] } });
+        expect(await listMcpConnections("tok")).toEqual({ connections: [], availableTeams: [] });
         get.mockRejectedValue(new Error("x"));
         expect(await listMcpConnections("tok")).toBeNull();
     });
 
     it("patches only what changed, with the API's names", async () => {
         patch.mockResolvedValue({ data: { id: "c1" } });
-        await updateMcpConnection("tok", "c1", { scopes: ["mcp:read"] });
-        expect(patch).toHaveBeenLastCalledWith("/mcp/connections/c1/", { scopes: ["mcp:read"] });
+        const quiet = { suppressErrorToast: true };
+        expect(await updateMcpConnection("tok", "c1", { scopes: ["mcp:read"] })).toEqual({
+            ok: true,
+            connection: { id: "c1" },
+        });
+        expect(patch).toHaveBeenLastCalledWith(
+            "/mcp/connections/c1/",
+            { scopes: ["mcp:read"] },
+            quiet
+        );
         await updateMcpConnection("tok", "c1", { teamIds: ["t1"], defaultTeamId: "t1" });
-        expect(patch).toHaveBeenLastCalledWith("/mcp/connections/c1/", {
-            team_ids: ["t1"],
-            default_team_id: "t1",
+        expect(patch).toHaveBeenLastCalledWith(
+            "/mcp/connections/c1/",
+            { team_ids: ["t1"], default_team_id: "t1" },
+            quiet
+        );
+    });
+
+    it("tells a connection that is gone (404) from any other failure", async () => {
+        patch.mockRejectedValue({ response: { status: 404, data: {} } });
+        expect(await updateMcpConnection("tok", "c1", { scopes: ["mcp:read"] })).toEqual({
+            ok: false,
+            gone: true,
+            error: null,
+        });
+        patch.mockRejectedValue({ response: { status: 400, data: { error: "invalid_teams" } } });
+        expect(await updateMcpConnection("tok", "c1", { teamIds: ["x"] })).toEqual({
+            ok: false,
+            gone: false,
+            error: "invalid_teams",
+        });
+        patch.mockRejectedValue(new Error("offline"));
+        expect(await updateMcpConnection("tok", "c1", { scopes: ["mcp:read"] })).toMatchObject({
+            ok: false,
+            gone: false,
         });
     });
 
-    it("returns null when an update fails", async () => {
-        patch.mockRejectedValue(new Error("x"));
-        expect(await updateMcpConnection("tok", "c1", { scopes: ["mcp:read"] })).toBeNull();
+    it("revokes with a delete, and a 404 means already gone", async () => {
+        del.mockResolvedValue({});
+        expect(await revokeMcpConnection("tok", "c1")).toEqual({ ok: true });
+        expect(del).toHaveBeenCalledWith("/mcp/connections/c1/", { suppressErrorToast: true });
+        del.mockRejectedValue({ response: { status: 404, data: {} } });
+        expect(await revokeMcpConnection("tok", "c1")).toMatchObject({ ok: false, gone: true });
+        del.mockRejectedValue(new Error("x"));
+        expect(await revokeMcpConnection("tok", "c1")).toMatchObject({ ok: false, gone: false });
     });
 
-    it("revokes with a delete", async () => {
-        del.mockResolvedValue({});
-        expect(await revokeMcpConnection("tok", "c1")).toBe(true);
-        expect(del).toHaveBeenCalledWith("/mcp/connections/c1/");
-        del.mockRejectedValue(new Error("x"));
-        expect(await revokeMcpConnection("tok", "c1")).toBe(false);
+    it("does nothing without a token", async () => {
+        expect(await listMcpConnections(null)).toBeNull();
+        expect(await updateMcpConnection(null, "c1", {})).toMatchObject({ ok: false });
+        expect(await revokeMcpConnection(null, "c1")).toMatchObject({ ok: false });
+        expect(patch).not.toHaveBeenCalled();
     });
 });

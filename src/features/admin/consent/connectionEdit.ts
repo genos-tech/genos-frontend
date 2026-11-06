@@ -36,3 +36,22 @@ export const removeTeam = (
         defaultTeamId: c.defaultTeamId === teamId ? left[0] : c.defaultTeamId,
     };
 };
+
+/** Adding a team to a connection: the teams it has plus the new one, the default
+ *  untouched. Null when the team is already there. */
+export const addTeam = (
+    c: Pick<McpConnection, "teams" | "defaultTeamId">,
+    teamId: string
+): McpConnectionChange | null => {
+    if (c.teams.some((t) => t.id === teamId)) return null;
+    return { teamIds: [...c.teams.map((t) => t.id), teamId], defaultTeamId: c.defaultTeamId };
+};
+
+/** The member's teams a connection does not have yet. */
+export const addableTeams = (
+    c: Pick<McpConnection, "teams">,
+    available: { id: string; name: string }[]
+): { id: string; name: string }[] => {
+    const have = new Set(c.teams.map((t) => t.id));
+    return available.filter((t) => !have.has(t.id));
+};
