@@ -123,6 +123,13 @@ export type DependencyEdgeData = {
     blockedTaskId: number;
 };
 
+/**
+ * What a graph draws. "tree" climbs from the anchor to the top of its parent
+ * chain (the milestone) and draws everything under it. "task" draws only the
+ * anchor and its subtasks: no milestone, no siblings (MIP-1094).
+ */
+export type TaskGraphScope = "tree" | "task";
+
 // Shape returned by `loadTaskGraph`. The deps array is parallel to the
 // tasks array — `deps[i]` belongs to `tasks[i]`. (Caller hydrates from
 // these into nodes/edges.)

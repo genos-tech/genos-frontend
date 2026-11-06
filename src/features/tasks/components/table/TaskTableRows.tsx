@@ -7,6 +7,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ProjectCustomFieldDef, TagListProps, TaskTableProps } from "../../../../types/tasks";
+import type { TaskGraphScope } from "../../diagram/types";
 import { TaskFieldRules } from "../../utils/taskFieldRules";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { ColumnDef } from "./DraggableTaskTable";
@@ -57,7 +58,7 @@ export type TaskTableRowsProps = {
     useUISM: UIStateManagementState;
     setMyself: (value: UserProps) => void;
     toggleExpand: (id: string) => void;
-    onOpenDiagram: (task: TaskTableProps) => void;
+    onOpenDiagram: (task: TaskTableProps, scope: TaskGraphScope) => void;
     onQuickAddChild: (task: TaskTableProps) => void;
     onRequestPreview: (task: TaskTableProps) => void;
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;

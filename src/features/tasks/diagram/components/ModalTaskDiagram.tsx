@@ -28,7 +28,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { DIAGRAM_DEFAULT_Z_INDEX, DiagramZIndexProvider } from "../diagramZIndex";
-import { ScheduleOverview } from "../types";
+import { ScheduleOverview, TaskGraphScope } from "../types";
 import { HEALTH_JOY_COLOR, HEALTH_TONE_COLOR } from "../utils/scheduleStatus";
 import { BurndownSparkline } from "./BurndownSparkline";
 import { TaskFlowCanvas } from "./TaskFlowCanvas";
@@ -48,6 +48,9 @@ export type ModalTaskDiagramProps = {
      * `rootTaskId` column for it, which can lag a milestone move).
      */
     rootTaskId: number;
+    /** "tree" (default): the whole hierarchy the task sits in, from its milestone down.
+     *  "task": only this task and its subtasks (MIP-1094). */
+    scope?: TaskGraphScope;
     /** Required so we can fetch project tasks in one call. */
     projectId: number;
     /** Header title — typically "<displayId> · <title>". */
@@ -87,6 +90,7 @@ export const ModalTaskDiagram = ({
     onClose,
     myself,
     rootTaskId,
+    scope,
     projectId,
     rootLabel,
     useTM,
@@ -585,6 +589,7 @@ export const ModalTaskDiagram = ({
                                 myself={myself}
                                 projectId={projectId}
                                 rootTaskId={rootTaskId}
+                                scope={scope}
                                 usePM={usePM}
                                 useSM={useSM}
                                 useTM={useTM}

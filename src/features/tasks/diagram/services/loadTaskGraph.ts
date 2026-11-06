@@ -2,7 +2,7 @@ import { UserProps } from "../../../../types/admin";
 import { TaskDependencyRef, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { loadTaskDependenciesForTasks } from "../../services/loadTaskDependencies";
-import { TaskGraph } from "../types";
+import { TaskGraph, TaskGraphScope } from "../types";
 
 const MAX_DEPTH = 10; // mirrors backend `_cascade_tree_position_to_subtasks`
 
@@ -155,14 +155,17 @@ export const loadTaskGraph = async (
     myself: UserProps,
     projectId: number,
     anchorTaskId: number,
-    accessToken: string | null
+    accessToken: string | null,
+    // "task" starts at the anchor itself instead of climbing to the chain top, so
+    // the graph is the anchor and its subtasks. Same fetch; fewer dependency lookups.
+    scope: TaskGraphScope = "tree"
 ): Promise<TaskGraph | null> => {
     const response = await loadProjectTasksFromApi(myself, projectId, accessToken, null);
     const allTasks = response?.tasks;
     if (!Array.isArray(allTasks)) return null;
 
     const byId = indexById(allTasks as TaskTableProps[]);
-    const rootTaskId = resolveChainTop(anchorTaskId, byId);
+    const rootTaskId = scope === "task" ? anchorTaskId : resolveChainTop(anchorTaskId, byId);
 
     const visibleTasks = collectDescendantTree(rootTaskId, allTasks as TaskTableProps[], byId);
     if (visibleTasks.length === 0) return null;

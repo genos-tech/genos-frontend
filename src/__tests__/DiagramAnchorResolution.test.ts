@@ -161,3 +161,83 @@ describe("loadTaskGraph anchor resolution", () => {
         expect([...requestedIds].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
     });
 });
+
+/**
+ * Scope "task" (MIP-1094): the graph of ONE task and its subtasks, opened from a
+ * nested table row. It must not climb to the milestone or draw the siblings.
+ */
+describe("loadTaskGraph scope", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        loadTaskDependenciesForTasks.mockResolvedValue({});
+        loadProjectTasksFromApi.mockResolvedValue({ tasks: CHAIN });
+    });
+
+    it("draws the anchor and its subtasks only: no milestone, no parent, no siblings", async () => {
+        const graph = await loadTaskGraph(myself, 1, 2, null, "task");
+
+        expect(graph!.rootTaskId).toBe(2);
+        expect(idsIn(graph!.tasks)).toEqual([2, 3, 4, 5]);
+    });
+
+    it("roots a deeper task at itself", async () => {
+        const graph = await loadTaskGraph(myself, 1, 3, null, "task");
+
+        expect(graph!.rootTaskId).toBe(3);
+        expect(idsIn(graph!.tasks)).toEqual([3, 4]);
+    });
+
+    it("a task without subtasks is a graph of itself", async () => {
+        const graph = await loadTaskGraph(myself, 1, 4, null, "task");
+
+        expect(graph!.rootTaskId).toBe(4);
+        expect(idsIn(graph!.tasks)).toEqual([4]);
+    });
+
+    it("the default scope is still the whole tree", async () => {
+        const graph = await loadTaskGraph(myself, 1, 3, null);
+
+        expect(graph!.rootTaskId).toBe(1);
+        expect(idsIn(graph!.tasks)).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it("looks up dependencies for the subtree only", async () => {
+        await loadTaskGraph(myself, 1, 3, null, "task");
+
+        const [requestedIds] = loadTaskDependenciesForTasks.mock.calls[0] as [number[]];
+        expect([...requestedIds].sort((a, b) => a - b)).toEqual([3, 4]);
+    });
+
+    it("returns null when the anchor isn't in the project", async () => {
+        expect(await loadTaskGraph(myself, 1, 404, null, "task")).toBeNull();
+    });
+
+    it("a sibling that blocks a subtask comes back as a ghost, with its edge", async () => {
+        // Task 5 is outside task 3's subtree but blocks task 4 inside it.
+        loadTaskDependenciesForTasks.mockResolvedValue({
+            4: {
+                blocking: [],
+                blockedBy: [
+                    {
+                        dependencyId: 77,
+                        otherTaskId: 5,
+                        displayId: "PRJ-5",
+                        title: "t5",
+                        status: { status: "Open" },
+                        assigneeUserId: null,
+                        projectId: 1,
+                        projectName: "P",
+                        isMilestone: false,
+                    },
+                ],
+            },
+        });
+
+        const graph = await loadTaskGraph(myself, 1, 3, null, "task");
+
+        expect(graph!.externalTasks.map((t) => Number(t.id))).toEqual([5]);
+        expect(graph!.dependencyEdges).toEqual([
+            expect.objectContaining({ dependencyId: 77, blockerTaskId: 5, blockedTaskId: 4 }),
+        ]);
+    });
+});

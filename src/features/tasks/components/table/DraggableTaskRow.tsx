@@ -42,6 +42,7 @@ import {
 } from "../../../../types/tasks";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
+import type { TaskGraphScope } from "../../diagram/types";
 import {
     parseCustomFieldColKey,
     resolveTagOptions,
@@ -281,7 +282,7 @@ export type DraggableTaskRowProps = {
     // sub-task rows never show it). Same identity-stability contract as
     // `onQuickAddChild`: excluded from `areEqual`, so the parent must
     // pass a `useCallback([])`-stable function.
-    onOpenDiagram: (task: TaskTableProps) => void;
+    onOpenDiagram: (task: TaskTableProps, scope: TaskGraphScope) => void;
 };
 
 const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
@@ -2529,12 +2530,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 </div>
                             </AppTooltip>
                             {/* Open the task graph anchored on this row.
-                                Root tasks / milestones only: a sub-task's
-                                graph is reachable from its root, and the
-                                icon on every nested row would just be
-                                gutter noise. Same hover-reveal CSS as the
-                                quick-add "+" (zero-re-render pattern). */}
-                            {!isChild && (
+                                A top-level row (root task / milestone) opens
+                                its whole tree. A nested row opens the graph
+                                of just that task and its subtasks, so it
+                                gets the icon only when it HAS subtasks: a
+                                leaf would open a single card (MIP-1094).
+                                Same hover-reveal CSS as the quick-add "+"
+                                (zero-re-render pattern). */}
+                            {(!isChild || hasChildren) && (
                                 <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
                                     <IconButton
                                         className="task-row-open-diagram"
@@ -2553,7 +2556,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         }}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onOpenDiagram(task);
+                                            onOpenDiagram(task, isChild ? "task" : "tree");
                                         }}
                                     >
                                         <AccountTreeRoundedIcon sx={{ fontSize: 14 }} />
