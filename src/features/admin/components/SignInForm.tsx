@@ -38,6 +38,7 @@ import {
     setPrivateProfile,
 } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
+import { takeReturn } from "../../../utils/pendingReturn";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { demoSignIn } from "../services/demoSignin";
@@ -125,7 +126,8 @@ export const SignInForm = () => {
                     await DatabaseUtils.clearTeamScopedStores();
                 }
 
-                navigate("/jointeam");
+                // Someone sent here to approve an AI app goes back to that request.
+                navigate(takeReturn() ?? "/jointeam");
             } else {
                 console.error("Failed to get userId from sign-in response:", signInRes);
             }

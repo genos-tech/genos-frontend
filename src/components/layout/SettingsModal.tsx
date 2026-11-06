@@ -100,6 +100,7 @@ import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { AccountSettingsSection } from "./AccountSettingsSection";
+import { ConnectedAppsSection } from "./ConnectedAppsSection";
 import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
@@ -2066,6 +2067,7 @@ export const SettingsModal = ({
                         value="developer"
                     >
                         <Stack spacing={2}>
+                            <ConnectedAppsSection />
                             <DeveloperSettingsSection teamId={localStorage.getItem("teamId")} />
                         </Stack>
                     </TabPanel>
