@@ -20,7 +20,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useSprintMilestoneManagement } from "../../../../hooks/tasks/useSprintMilestoneManagement";
-import { useTranslation } from "../../../../i18n";
+import { useTranslation, type Messages } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
@@ -57,16 +57,57 @@ const hasRealNotes = (notes: PartialBlock[] | null): boolean => {
     return !(Array.isArray(content) && content.length === 0);
 };
 
+/** The words of the modal. The to-do pane's own strings are the default; another
+ *  caller overrides only what differs (a heading and a description). */
+// (The catalog is `as const`, so the keys are read and the values widened to string.)
+export type CreateTaskModalCopy = {
+    [K in keyof Messages["chat"]["todoPane"]["createTask"]]: string;
+};
+
+/** What a caller learns about the task it just created, for a link to it. */
+export type CreatedTaskInfo = {
+    projectId: number;
+    /** The friendly "PRJ-12" id when the server returned one. */
+    displayId: string | null;
+    title: string;
+};
+
+// Stops the dialog's events at the Modal root. Escape is the Modal's own (it
+// closes itself and stops that key); everything else is for the dialog alone.
+const stopBubbling = (e: React.SyntheticEvent) => e.stopPropagation();
+const ISOLATE_EVENTS = {
+    onKeyDown: stopBubbling,
+    onClick: stopBubbling,
+    onMouseDown: stopBubbling,
+} as const;
+
 type ModalCreateTaskFromTodoProps = {
     open: boolean;
     onClose: () => void;
-    myself: UserProps;
+    /** Only the ids are used, so a caller above the providers (the Spotlight
+     *  overlay, which has only what sign-in left in localStorage) can pass them. */
+    myself: Pick<UserProps, "teamId" | "userId">;
     /** The to-do's title — seeds the (editable) task title. */
     todoTitle: string;
     /** The to-do's notes, carried over as the task body when non-empty. */
     todoNotes: PartialBlock[] | null;
-    /** Fires with the created task's id after a successful create. */
-    onCreated?: (taskId: number | null) => void;
+    /** Fires with the created task's id after a successful create. `info` is
+     *  new and additive: existing callers ignore it. */
+    onCreated?: (taskId: number | null, info?: CreatedTaskInfo) => void;
+    /** Override some of the to-do pane's wording. Default: none. */
+    copy?: Partial<CreateTaskModalCopy>;
+    /** The z-index to open at. Default: above the to-do host modal when there is
+     *  one, else Joy's usual layer. The Spotlight overlay sits at 13100. */
+    layer?: number;
+    /** Open the created task in the shared UrlLinkModal once it exists. Default
+     *  true (the to-do flow). A caller that offers its own "Open" says false. */
+    openCreatedTask?: boolean;
+    /** Keep keydown, click and mousedown inside the dialog from bubbling up the
+     *  REACT tree. A portal's events reach the components that rendered it, so a
+     *  modal opened from the Spotlight overlay or from another dialog would
+     *  otherwise be heard by them (Enter, a click on the backdrop). Default
+     *  false, so the to-do call sites are unchanged. */
+    isolateEvents?: boolean;
     /** Chat list — resolves each project option's avatar from its PM
      *  chat, so the picker matches the task sidebar / TaskPreview. */
     useCM?: ChatManagementState;
@@ -91,15 +132,27 @@ type ModalCreateTaskFromTodoProps = {
  * silently ticking it off would lose the user's own state.
  */
 export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => {
-    const { open, onClose, myself, todoTitle, todoNotes, onCreated, useCM } = props;
+    const {
+        open,
+        onClose,
+        myself,
+        todoTitle,
+        todoNotes,
+        onCreated,
+        useCM,
+        copy,
+        openCreatedTask = true,
+        isolateEvents = false,
+    } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     // Inside the to-do modal this opens above it (MIP-1047).
-    const layer = useTodoDialogLayer();
+    const todoHostLayer = useTodoDialogLayer();
+    const layer = props.layer ?? todoHostLayer;
     // Present on the chat surface (the to-do pane renders inside the
     // provider); null on any surface without it, where we just close.
     const urlLinkModal = useUrlLinkModal();
-    const tc = t.chat.todoPane.createTask;
+    const tc = copy ? { ...t.chat.todoPane.createTask, ...copy } : t.chat.todoPane.createTask;
 
     const [projects, setProjects] = useState<ProjectProps[]>([]);
     const [projectId, setProjectId] = useState<number | null>(null);
@@ -174,7 +227,7 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
         setIsSubmitting(true);
         setError(null);
         try {
-            const { taskId } = await createQuickTask({
+            const { taskId, displayId } = await createQuickTask({
                 myself,
                 accessToken,
                 projectId,
@@ -202,14 +255,14 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
             // the same project-scoped invalidator the agent's bulk writes
             // use; the to-do pane has no `useTM` to set the usual flag.
             emitTasksBulkChanged(projectId);
-            onCreated?.(taskId);
+            onCreated?.(taskId, { projectId, displayId, title: trimmed });
             onClose();
             // Open the new task. Without this the modal just closes and
             // a successful create is indistinguishable from a no-op —
             // there is no list on this surface for the row to appear in,
             // so opening it is both the confirmation and the way to
             // reach it. Same href shape the sub-task rows use.
-            if (taskId != null) {
+            if (taskId != null && openCreatedTask) {
                 urlLinkModal?.openModalByHref(
                     `/workspace/tasks/project/${projectId}/task/${taskId}`
                 );
@@ -226,7 +279,12 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const noProjects = !loadingProjects && projects.length === 0;
 
     return (
-        <Modal open={open} sx={{ zIndex: layer, ...popupLayerSx(layer) }} onClose={onClose}>
+        <Modal
+            open={open}
+            sx={{ zIndex: layer, ...popupLayerSx(layer) }}
+            onClose={onClose}
+            {...(isolateEvents ? ISOLATE_EVENTS : {})}
+        >
             <ModalDialog sx={{ width: 420, maxWidth: "92vw" }}>
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                     <TaskAltRoundedIcon />

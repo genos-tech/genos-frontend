@@ -59,7 +59,10 @@ type InlineNode = ({ kind: "text" } & TextRun) | LinkRun;
 //     text is the model's prose, href resolved via `sourceToUrl`
 //   - bare `[type:id]` citation tokens (fallback) → link whose text is the
 //     source title
-const tokenizeInline = (text: string, sourcesById: Map<string, SpotlightResult>): InlineNode[] => {
+const tokenizeInline = (
+    text: string,
+    sourcesById: ReadonlyMap<string, SpotlightResult>
+): InlineNode[] => {
     if (!text) return [];
 
     // Pass 1: extract citation tokens, replacing them with link nodes.
@@ -161,7 +164,10 @@ const inlineNodesToContent = (nodes: InlineNode[]): any[] => {
 };
 
 // One block (or zero, if the text was empty).
-const makeParagraph = (text: string, sourcesById: Map<string, SpotlightResult>): PartialBlock => ({
+const makeParagraph = (
+    text: string,
+    sourcesById: ReadonlyMap<string, SpotlightResult>
+): PartialBlock => ({
     type: "paragraph",
     props: PARA_PROPS,
     content: inlineNodesToContent(tokenizeInline(text, sourcesById)),
@@ -171,7 +177,7 @@ const makeParagraph = (text: string, sourcesById: Map<string, SpotlightResult>):
 const makeHeading = (
     text: string,
     level: 1 | 2 | 3,
-    sourcesById: Map<string, SpotlightResult>
+    sourcesById: ReadonlyMap<string, SpotlightResult>
 ): PartialBlock => ({
     type: "heading",
     props: { ...HEADING_PROPS, level },
@@ -179,14 +185,20 @@ const makeHeading = (
     children: [],
 });
 
-const makeBullet = (text: string, sourcesById: Map<string, SpotlightResult>): PartialBlock => ({
+const makeBullet = (
+    text: string,
+    sourcesById: ReadonlyMap<string, SpotlightResult>
+): PartialBlock => ({
     type: "bulletListItem",
     props: PARA_PROPS,
     content: inlineNodesToContent(tokenizeInline(text, sourcesById)),
     children: [],
 });
 
-const makeNumbered = (text: string, sourcesById: Map<string, SpotlightResult>): PartialBlock => ({
+const makeNumbered = (
+    text: string,
+    sourcesById: ReadonlyMap<string, SpotlightResult>
+): PartialBlock => ({
     type: "numberedListItem",
     props: PARA_PROPS,
     content: inlineNodesToContent(tokenizeInline(text, sourcesById)),
@@ -198,7 +210,7 @@ const makeNumbered = (text: string, sourcesById: Map<string, SpotlightResult>): 
 // the caller can append to the result without checking emptiness.
 export const markdownToBlocks = (
     markdown: string,
-    sourcesById: Map<string, SpotlightResult> = new Map()
+    sourcesById: ReadonlyMap<string, SpotlightResult> = new Map()
 ): PartialBlock[] => {
     const text = (markdown || "").trim();
     if (!text) {

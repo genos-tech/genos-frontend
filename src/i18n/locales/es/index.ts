@@ -3909,6 +3909,34 @@ export const es: DeepPartial<Messages> = {
             pinFailed: "No se pudo cambiar ese pin.",
         },
     },
+    agentSave: {
+        note: {
+            button: "Guardar como nota",
+            tooltip: "Guarda esta respuesta como nota en Mis notas",
+            saving: "Guardando en Mis notas…",
+            saved: "Guardada en Mis notas",
+            open: "Abrir",
+            retry: "Reintentar",
+            failed: "No se pudo guardar la nota. Inténtalo de nuevo.",
+            tooLong: "Esta respuesta es demasiado larga para guardarla como nota.",
+            limitReached:
+                "Has alcanzado el límite de notas de tu plan. Consulta Ajustes → Plan y uso.",
+            intro: "Respuesta de Genos a: {question}",
+            fallbackTitle: "Respuesta de Genos",
+        },
+        task: {
+            button: "Guardar como tarea",
+            tooltip: "Crea una tarea a partir de esta respuesta",
+            saved: "Tarea creada",
+            open: "Abrir",
+            tooLong: "Esta respuesta es demasiado larga para convertirla en tarea.",
+            modal: {
+                heading: "Crear una tarea a partir de esta respuesta",
+                description:
+                    "Copia la respuesta en la descripción de la nueva tarea. La respuesta se queda donde está.",
+            },
+        },
+    },
     threadAsk: {
         headerButton: {
             label: "Preguntar",

@@ -22,6 +22,7 @@ import { AgentTurn } from "./AgentTurn";
 import type { AgentTurnLabels } from "./agentTurnLabels";
 import { buildSourcesById, sourceToUrl } from "./citationUtils";
 import type { AgentMentionRef } from "./mentions/types";
+import { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/SaveAnswerActions";
 import type { AgentQALabels, UseAgentQAReturn } from "./types";
 import type { UndoRequest } from "./undoSteps";
 
@@ -157,6 +158,8 @@ export const AgentQAConversation = ({
                     runId={turn.runId}
                     sourcesById={sourcesById}
                     toolEvents={turn.toolEvents}
+                    renderAnswerStatus={renderSaveAnswerStatus}
+                    renderExtraActions={renderSaveAnswerActions}
                     undoSteps={turn.undo}
                     onFeedback={onFeedback}
                     onPreview={onPreview}
@@ -188,6 +191,8 @@ export const AgentQAConversation = ({
                     onPreview={onPreview}
                     onReject={state.onReject}
                     onRetry={onRetry}
+                    renderAnswerStatus={renderSaveAnswerStatus}
+                    renderExtraActions={renderSaveAnswerActions}
                     onUndo={onUndo}
                 />
             ) : null}

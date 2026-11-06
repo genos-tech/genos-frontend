@@ -4897,6 +4897,32 @@ export const ja: DeepPartial<Messages> = {
             chocolate: "チョコレート",
         },
     },
+    agentSave: {
+        note: {
+            button: "ノートとして保存",
+            tooltip: "この回答をマイノートにノートとして保存します",
+            saving: "マイノートに保存中…",
+            saved: "マイノートに保存しました",
+            open: "開く",
+            retry: "もう一度試す",
+            failed: "ノートを保存できませんでした。もう一度お試しください。",
+            tooLong: "この回答は長すぎるため、ノートとして保存できません。",
+            limitReached: "ノートの上限に達しました。設定 → プランと使用量をご確認ください。",
+            intro: "「{question}」へのGenosの回答",
+            fallbackTitle: "Genosの回答",
+        },
+        task: {
+            button: "タスクとして保存",
+            tooltip: "この回答からタスクを作成します",
+            saved: "タスクを作成しました",
+            open: "開く",
+            tooLong: "この回答は長すぎるため、タスクにできません。",
+            modal: {
+                heading: "この回答からタスクを作成",
+                description: "回答を新しいタスクの説明にコピーします。回答はそのまま残ります。",
+            },
+        },
+    },
     threadAsk: {
         headerButton: {
             label: "質問する",

@@ -4672,6 +4672,34 @@ export const fr: DeepPartial<Messages> = {
             chocolate: "Chocolat",
         },
     },
+    agentSave: {
+        note: {
+            button: "Enregistrer comme note",
+            tooltip: "Enregistre cette réponse comme note dans Mes notes",
+            saving: "Enregistrement dans Mes notes…",
+            saved: "Enregistrée dans Mes notes",
+            open: "Ouvrir",
+            retry: "Réessayer",
+            failed: "Impossible d'enregistrer la note. Veuillez réessayer.",
+            tooLong: "Cette réponse est trop longue pour être enregistrée comme note.",
+            limitReached:
+                "Vous avez atteint la limite de notes de votre forfait. Voir Paramètres → Forfait et utilisation.",
+            intro: "Réponse de Genos à : {question}",
+            fallbackTitle: "Réponse de Genos",
+        },
+        task: {
+            button: "Enregistrer comme tâche",
+            tooltip: "Crée une tâche à partir de cette réponse",
+            saved: "Tâche créée",
+            open: "Ouvrir",
+            tooLong: "Cette réponse est trop longue pour devenir une tâche.",
+            modal: {
+                heading: "Créer une tâche à partir de cette réponse",
+                description:
+                    "Copie la réponse dans la description de la nouvelle tâche. La réponse reste où elle est.",
+            },
+        },
+    },
     threadAsk: {
         headerButton: {
             label: "Demander",
