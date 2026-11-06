@@ -44,6 +44,10 @@
     /* Editor Colors */
     --editor-light-bg: rgb(214, 214, 214);
     --editor-dark-bg: #1f1f1f;
+    /* The floating comment card on a dark editor: a step lighter than the page,
+       with an edge that shows (MIP-1064). */
+    --comment-card-dark-bg: #2b2b2b;
+    --comment-card-dark-border: #4a4a4a;
     --editor-placeholder-light: #9c9c9c;
     --editor-placeholder-dark: #909090;
 
@@ -998,6 +1002,20 @@ input[type="checkbox"] {
 .bn-thread {
     max-width: 420px;
     word-break: break-word;
+}
+
+/* Dark mode: the card was the editor's own colour. BlockNote's dark theme makes
+   the menu background and the editor background the same #1f1f1f, and its border
+   (#161616) darker than both, so an open comment card on a dark note was the same
+   black as the page behind it and could not be found (MIP-1064). A step lighter,
+   with a border that shows. The floating card lives in the editor's portal, which
+   carries `data-color-scheme` and `bn-mantine` on one element, hence the compound
+   selector. It has to out-specify BlockNote's `.bn-mantine .bn-thread`: that
+   stylesheet loads with the lazy editor chunk, after this one, so a tie loses.
+   Light mode is untouched. */
+.bn-mantine[data-color-scheme="dark"] .bn-thread {
+    background-color: var(--comment-card-dark-bg);
+    border-color: var(--comment-card-dark-border);
 }
 
 /* Thread comments section – scrollable when many comments */
