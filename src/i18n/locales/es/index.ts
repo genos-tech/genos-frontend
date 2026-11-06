@@ -1884,6 +1884,7 @@ export const es: DeepPartial<Messages> = {
             emptyMilestoneTasks: "Aún no hay tareas. Crea una y asígnala a este hito.",
             menu: {
                 copyMilestoneLink: "Copiar enlace del hito",
+                askGenos: "Preguntar a Genos sobre este hito",
                 newTask: "Nueva tarea",
                 openNote: "Abrir nota",
                 newTag: "Nueva etiqueta",
@@ -2032,6 +2033,7 @@ export const es: DeepPartial<Messages> = {
             closeTooltip: "Cerrar",
             menu: {
                 copyTaskLink: "Copiar enlace de la tarea",
+                askGenos: "Preguntar a Genos sobre esta tarea",
                 openThread: "Abrir hilo",
                 newTask: "Nueva tarea",
                 newSubTask: "Nueva subtarea",

@@ -176,6 +176,10 @@ export interface UseAgentMentionDraftReturn {
     highlightRanges: MentionTokenMatch[];
     /** Clear picked refs + dismissal (e.g. surface closed). */
     reset: () => void;
+    /** Lock refs that were put into the text from outside the picker ("Ask
+     *  Genos about this task" seeds `#PRJ-12 `). They go with the ask like a
+     *  picked one, whether or not the entity is in the candidate pool. */
+    adopt: (refs: AgentMentionRef[]) => void;
 }
 
 export function useAgentMentionDraft({
@@ -386,6 +390,12 @@ export function useAgentMentionDraft({
         setHighlightIndex(0);
     }, []);
 
+    const adopt = useCallback((refs: AgentMentionRef[]) => {
+        if (refs.length === 0) return;
+        for (const ref of refs) pickedRef.current.set(mentionKey(ref), ref);
+        setPicksVersion((v) => v + 1);
+    }, []);
+
     return {
         pickerOpen: suggestions.length > 0,
         suggestions,
@@ -398,5 +408,6 @@ export function useAgentMentionDraft({
         consumeMentions,
         highlightRanges,
         reset,
+        adopt,
     };
 }

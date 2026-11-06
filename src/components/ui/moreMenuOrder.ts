@@ -18,7 +18,10 @@
  */
 export const MORE_MENU_GROUPS = [
     // Go to, or respond to, the thing itself.
-    { group: "open", kinds: ["reply", "openTask", "openThread", "openNote", "openInNotes"] },
+    {
+        group: "open",
+        kinds: ["reply", "openTask", "openThread", "openNote", "openInNotes", "askGenos"],
+    },
     { group: "share", kinds: ["share", "copyLink"] },
     // Marks that are yours alone, not the object's.
     { group: "personal", kinds: ["favorite", "flag", "remindMe"] },

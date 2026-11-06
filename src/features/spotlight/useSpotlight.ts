@@ -73,6 +73,7 @@ import {
     type UndoRequest,
 } from "../agentQA";
 import { useAgentQA } from "../agentQA/useAgentQA";
+import { askGenosToken, onAskGenosAbout, withAskGenosToken } from "./askGenosAbout";
 import {
     effectiveFilterServices,
     entityTypesForFilter,
@@ -430,6 +431,26 @@ export const useSpotlight = ({
             // Ignore corrupt / missing localStorage entries.
         }
     }, [teamId, resetConversation]);
+
+    // ---- "Ask Genos about this task / milestone" (a task menu item). ----
+    // The menu is far from here, so it raises `genos:ask-about`. Put the task in
+    // the draft as `#PRJ-12 ` and bring the ask up: the overlay, or the page's
+    // input when the Genos page is already on screen (the overlay would show the
+    // conversation twice, see the Cmd-K handler above). The ref itself waits in
+    // `askGenosAbout`'s queue for the input that mounts; the user types the
+    // question and presses Ask, nothing is sent here.
+    useEffect(
+        () =>
+            onAskGenosAbout((ref) => {
+                setQuery((prev) => withAskGenosToken(prev, askGenosToken(ref)));
+                if (isPageActiveRef.current) {
+                    pageInputFocusRef.current?.();
+                } else {
+                    setIsOpen(true);
+                }
+            }),
+        []
+    );
 
     // ---- Overlay close: clear transient results, preserve the draft
     // query, the conversation, AND any in-flight answer. ----

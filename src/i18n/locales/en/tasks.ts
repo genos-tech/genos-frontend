@@ -454,6 +454,7 @@ export const tasks = {
         emptyMilestoneTasks: "No tasks yet. Create a task and assign it to this milestone.",
         menu: {
             copyMilestoneLink: "Copy milestone link",
+            askGenos: "Ask Genos about this milestone",
             newTask: "New Task",
             openNote: "Open Note",
             newTag: "New Tag",
@@ -787,6 +788,7 @@ export const tasks = {
         closeTooltip: "Close",
         menu: {
             copyTaskLink: "Copy task link",
+            askGenos: "Ask Genos about this task",
             openThread: "Open Thread",
             newTask: "New Task",
             newSubTask: "New Sub Task",

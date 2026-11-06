@@ -89,6 +89,7 @@ import {
     type CompletedTurn,
     type UndoRequest,
 } from "../agentQA";
+import { takePendingAskRefs } from "./askGenosAbout";
 import {
     isServiceDisabledByProjectScope,
     SPOTLIGHT_FILTER_SERVICES,
@@ -484,6 +485,30 @@ export const SpotlightContent = ({
         entities: mentionSources.entities,
         lookupTask: mentionSources.lookupTask,
     });
+    // "Ask Genos about this task": `useSpotlight` already put `#PRJ-12 ` in the
+    // draft; the ref waits in a queue for the input that mounts (the overlay is
+    // not mounted while closed). Lock it as a picked mention, put the cursor
+    // after the token and focus, so the person types the question and presses
+    // Ask. Runs on mount and whenever the draft is written from outside, which
+    // is how an already-mounted Genos page hears about it too.
+    const { adopt: adoptMentions, setCaret: setMentionCaret } = mention;
+    useEffect(() => {
+        const refs = takePendingAskRefs();
+        if (refs.length === 0) return;
+        adoptMentions(refs);
+        // The textarea takes the seeded text on the render after this one
+        // (`localInput` follows `query`), so place the cursor then.
+        const timer = window.setTimeout(() => {
+            const ta = inputRef.current;
+            if (!ta) return;
+            ta.focus();
+            const end = ta.value.length;
+            ta.setSelectionRange(end, end);
+            setMentionCaret(end);
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, [query, adoptMentions, setMentionCaret]);
+
     // Submit path: cancel any pending debounced query write (the ask
     // supplies its own text; a post-ask write would just trigger a stray
     // search + App re-render) and hand the CURRENT input to the hook as
