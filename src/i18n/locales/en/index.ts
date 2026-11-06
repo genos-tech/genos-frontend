@@ -1,5 +1,6 @@
 import { admin } from "./admin";
 import { agentApproval } from "./agentApproval";
+import { agentSave } from "./agentSave";
 import { app } from "./app";
 import { calendar } from "./calendar";
 import { chat } from "./chat";
@@ -38,6 +39,7 @@ export const en = {
     services,
     admin,
     agentApproval,
+    agentSave,
     calendar,
     history,
     featuresPage,

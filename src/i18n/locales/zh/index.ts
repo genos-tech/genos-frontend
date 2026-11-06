@@ -4468,6 +4468,32 @@ export const zh: DeepPartial<Messages> = {
             chocolate: "巧克力",
         },
     },
+    agentSave: {
+        note: {
+            button: "保存为笔记",
+            tooltip: "将此回答作为笔记保存到我的笔记",
+            saving: "正在保存到我的笔记…",
+            saved: "已保存到我的笔记",
+            open: "打开",
+            retry: "重试",
+            failed: "无法保存笔记，请重试。",
+            tooLong: "此回答太长，无法保存为笔记。",
+            limitReached: "您已达到套餐的笔记数量上限。请查看设置 → 套餐与用量。",
+            intro: "Genos 对“{question}”的回答",
+            fallbackTitle: "Genos 的回答",
+        },
+        task: {
+            button: "保存为任务",
+            tooltip: "根据此回答创建任务",
+            saved: "任务已创建",
+            open: "打开",
+            tooLong: "此回答太长，无法创建为任务。",
+            modal: {
+                heading: "根据此回答创建任务",
+                description: "将回答复制到新任务的描述中。原回答保持不变。",
+            },
+        },
+    },
     threadAsk: {
         headerButton: {
             label: "问",

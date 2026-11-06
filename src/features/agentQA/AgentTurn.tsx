@@ -35,7 +35,12 @@
 //
 // EXTENSION POINTS (so a later change does not reopen this file)
 //   - `renderExtraActions`: extra buttons in the per-turn action bar ("Save as
-//     note", "Undo"); handed everything an action needs to know about the turn.
+//     note", "Save as task"); handed everything an action needs to know about the
+//     turn, including the host's `onPreview` so an action that makes something can
+//     link to it the way a click on a source does.
+//   - `renderAnswerStatus`: a status line for those actions under the answer, not
+//     in the bar (which fades out when the pointer leaves): what became of a click
+//     has to stay on screen. Same context, same identity rule.
 //   - `onApprove`: typed as the ApprovalCard's own `onApprove`, handed to it
 //     untouched. The card calls it `onApprove(edits)` when the person changed
 //     a field before approving (edit before approve), so the payload flows
@@ -105,6 +110,15 @@ export interface AgentTurnActionContext {
     // The host cannot start another ask right now (a turn is streaming or
     // awaiting approval).
     askDisabled: boolean;
+    // A write of this turn is waiting for the person's decision: the answer
+    // text is not final yet.
+    awaitingApproval: boolean;
+    // The lookup the turn resolves its citations with: the host's
+    // conversation-wide one when it gave one, else this turn's own.
+    sourcesById: ReadonlyMap<string, SpotlightResult>;
+    // What a click on a source does on this host (preview, navigate, close the
+    // overlay). An action that makes something and links to it reuses it.
+    onPreview: (source: SpotlightResult) => void;
 }
 
 export interface AgentTurnProps {
@@ -164,6 +178,11 @@ export interface AgentTurnProps {
     // Keep the function's identity stable; it is called on every render of
     // the turn.
     renderExtraActions?: (ctx: AgentTurnActionContext) => React.ReactNode;
+    // A status line for those actions, under the answer and outside the
+    // hover-revealed bar: a result the person must be able to see ("Saved to
+    // My Notes", "Couldn't save") cannot sit where it fades out. Same
+    // identity rule as `renderExtraActions`.
+    renderAnswerStatus?: (ctx: AgentTurnActionContext) => React.ReactNode;
 }
 
 // The markdown parse, on its own memo boundary. The turn re-renders for plenty
@@ -231,6 +250,7 @@ const AgentTurnInner = ({
     onFeedback,
     onUndo,
     renderExtraActions,
+    renderAnswerStatus,
 }: AgentTurnProps) => {
     const [copied, setCopied] = useState(false);
     const copiedTimerRef = useRef<number | null>(null);
@@ -315,19 +335,22 @@ const AgentTurnInner = ({
     // finished, non-error answer.
     const showFeedback = Boolean(runId) && Boolean(onFeedback) && !askError && !isStreaming;
 
-    const extraActions = renderExtraActions
-        ? renderExtraActions({
-              askedQuery,
-              answer,
-              answerSources,
-              toolEvents,
-              runId,
-              isCurrent,
-              isStreaming: Boolean(isStreaming),
-              hasError: Boolean(askError),
-              askDisabled: Boolean(askDisabled),
-          })
-        : null;
+    const actionContext = (): AgentTurnActionContext => ({
+        askedQuery,
+        answer,
+        answerSources,
+        toolEvents,
+        runId,
+        isCurrent,
+        isStreaming: Boolean(isStreaming),
+        hasError: Boolean(askError),
+        askDisabled: Boolean(askDisabled),
+        awaitingApproval: Boolean(pendingApproval),
+        sourcesById,
+        onPreview,
+    });
+    const extraActions = renderExtraActions ? renderExtraActions(actionContext()) : null;
+    const answerStatus = renderAnswerStatus ? renderAnswerStatus(actionContext()) : null;
     const showActions = showCopy || showRetry || showFeedback || Boolean(extraActions);
 
     return (
@@ -501,6 +524,8 @@ const AgentTurnInner = ({
                         sources={chipSources}
                         onOpen={onPreview}
                     />
+
+                    {answerStatus}
 
                     {/* Total response time (server-measured, from the
                         `done` event). Only for finished, non-error turns —

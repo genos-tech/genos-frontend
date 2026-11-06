@@ -7,7 +7,8 @@ import { taskContentTemplate } from "../utils/taskTemplates";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type CreateQuickTaskProps = {
-    myself: UserProps;
+    // Only the ids are read.
+    myself: Pick<UserProps, "teamId" | "userId">;
     accessToken: string | null;
     projectId: number;
     title: string;

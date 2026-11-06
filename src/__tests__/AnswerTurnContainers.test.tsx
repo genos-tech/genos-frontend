@@ -495,6 +495,9 @@ describe("one turn, one rendering", () => {
             "the fix",
             "Task PRJ-12: Fix login redirect",
             "Milestone: Beta launch",
+            // The host's extra actions come first in the bar: Save as note / task.
+            "Save as note",
+            "Save as task",
             "Good answer",
             "Needs work",
             "Copy answer",

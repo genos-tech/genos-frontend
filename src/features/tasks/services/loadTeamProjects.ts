@@ -3,7 +3,10 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
-export const loadTeamProjects = async (myself: UserProps, accessToken: string | null) => {
+export const loadTeamProjects = async (
+    myself: Pick<UserProps, "teamId" | "userId">,
+    accessToken: string | null
+) => {
     // Skip when the user hasn't joined / been hydrated with a team
     // yet. Otherwise template-literal interpolation turns a
     // null/undefined teamId into the literal string "null", which the

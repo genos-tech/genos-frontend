@@ -79,6 +79,8 @@ import {
     markdownAnswerSx,
     MentionHighlightOverlay,
     MentionSuggestionDropdown,
+    renderSaveAnswerActions,
+    renderSaveAnswerStatus,
     rewriteCitations,
     useAgentMentionDraft,
     useAgentMentionSources,
@@ -1761,6 +1763,8 @@ const ConversationPanel = memo(
                                 noteScopes={noteScopes}
                                 runId={turn.runId}
                                 toolEvents={turn.toolEvents}
+                                renderAnswerStatus={renderSaveAnswerStatus}
+                                renderExtraActions={renderSaveAnswerActions}
                                 undoSteps={turn.undo}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
@@ -1793,6 +1797,8 @@ const ConversationPanel = memo(
                                 onPreview={onPreview}
                                 onReject={onReject}
                                 onRetry={onRetry}
+                                renderAnswerStatus={renderSaveAnswerStatus}
+                                renderExtraActions={renderSaveAnswerActions}
                                 onUndo={onUndo}
                             />
                         )}
