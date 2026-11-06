@@ -20,7 +20,7 @@ name: CI
 # the deploy job below rides `needs: frontend-test`, and a detection bug
 # must never be able to skip a deploy.
 #
-# `frontend-test` is a thin gate over a 3-way vitest shard matrix, kept as
+# `frontend-test` is a thin gate over a 4-way vitest shard matrix, kept as
 # its own job so the required context name stays stable. Coverage moved to
 # its own report-only job when the tests were sharded. See each job.
 
@@ -80,7 +80,7 @@ jobs:
                       echo "code=false" >> "$GITHUB_OUTPUT"
                   fi
 
-    # Vitest, split three ways. The suite is ~45s of work on a dev machine but
+    # Vitest, split four ways. The suite is ~45s of work on a dev machine but
     # took 10 MINUTES here, and almost none of that was the test count: a
     # 2-vCPU runner makes vitest choose a single worker (see the pool comment
     # in vite.config.ts), so it ran serially, and this runner is ~2.5x slower
@@ -88,15 +88,26 @@ jobs:
     #
     # Two fixes, and this is the second: `vite.config.ts` now floors the pool
     # at 2 workers (214s -> 148s on 2 cores), and the shards below cut the
-    # remainder across three runners. Shards come out even — 84 files each,
-    # 40-46s — because vitest balances by file.
+    # remainder across runners (MIP-1095: three, then four, after the slowest
+    # shard was still 4 minutes against 2.5 for the fastest). Shards come out
+    # even by file count, because vitest balances by file, not by time.
+    #
+    # A pull request runs only the tests its change can affect (MIP-1095): the
+    # "Choose the tests" step diffs the PR and, when every changed file is a source
+    # file `vitest related` can follow, runs just the tests that import one of them,
+    # plus every test that reads files from disk (guards and config checks, which
+    # have no import to follow). ANYTHING else — a push to main, a config, the
+    # lockfile, an asset, a delete or rename, a diff it cannot read — runs the whole
+    # suite. See scripts/ci-test-selection.mjs for the rules and why each is there.
+    # The shard flag is applied after the selection, so a small change still spreads
+    # across the shards.
     #
     # Coverage is deliberately NOT collected here. Combining it across shards
     # needs blob reports plus a merge job, and it gates nothing (no
     # thresholds; it's an uploaded artifact), so it lives in its own
     # report-only job and stays off the path to a merge.
     frontend-test-shards:
-        name: frontend-test shard ${{ matrix.shard }}/3
+        name: frontend-test shard ${{ matrix.shard }}/4
         needs: changes
         if: needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
@@ -104,17 +115,46 @@ jobs:
             # Report every failing shard, not just the first to go red.
             fail-fast: false
             matrix:
-                shard: [1, 2, 3]
+                # The count appears three times: this list, the job name above
+                # and `--shard=N/4` below. Change them together.
+                shard: [1, 2, 3, 4]
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  # A pull request is checked out as a merge commit, so one
+                  # extra commit of history gives the diff against its first
+                  # parent, which is exactly what the PR changes.
+                  fetch-depth: 2
             - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
             - run: npm ci
-            - name: Vitest (shard ${{ matrix.shard }}/3)
-              run: npx vitest run --shard=${{ matrix.shard }}/3
+            # Fails open: if this step breaks for any reason, no mode is set and
+            # the next step runs the whole suite.
+            - name: Choose the tests
+              id: select
+              run: |
+                  node scripts/ci-test-selection.mjs --files-out "$RUNNER_TEMP/related.txt" >> "$GITHUB_OUTPUT" \
+                      || echo "mode=all" >> "$GITHUB_OUTPUT"
+            - name: Vitest (shard ${{ matrix.shard }}/4)
+              env:
+                  MODE: ${{ steps.select.outputs.mode }}
+                  REASON: ${{ steps.select.outputs.reason }}
+              run: |
+                  echo "Tests: ${MODE:-all} (${REASON:-no selection was made})"
+                  {
+                      echo "### Frontend tests, shard ${{ matrix.shard }}/4: ${MODE:-all}"
+                      echo "${REASON:-no selection was made}"
+                  } >> "$GITHUB_STEP_SUMMARY"
+                  if [ "$MODE" = "related" ]; then
+                      # --passWithNoTests: a small change leaves some shards empty.
+                      xargs npx vitest related --run --passWithNoTests \
+                          --shard=${{ matrix.shard }}/4 < "$RUNNER_TEMP/related.txt"
+                  else
+                      npx vitest run --shard=${{ matrix.shard }}/4
+                  fi
 
     # Single stable check context for the shards above.
     #
