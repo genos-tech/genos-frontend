@@ -4163,6 +4163,7 @@ export const ja: DeepPartial<Messages> = {
                 "まだタスクはありません。タスクを作成してこのマイルストーンに割り当ててください。",
             menu: {
                 copyMilestoneLink: "マイルストーンのリンクをコピー",
+                askGenos: "このマイルストーンについてGenosに質問",
                 newTask: "新規タスク",
                 openNote: "ノートを開く",
                 newTag: "新規タグ",
@@ -4469,6 +4470,7 @@ export const ja: DeepPartial<Messages> = {
             closeTooltip: "閉じる",
             menu: {
                 copyTaskLink: "タスクのリンクをコピー",
+                askGenos: "このタスクについてGenosに質問",
                 openThread: "スレッドを開く",
                 newTask: "新規タスク",
                 newSubTask: "新規サブタスク",

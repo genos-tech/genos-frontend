@@ -76,6 +76,7 @@ describe("task preview menu", () => {
         expect(menuLabels()).toEqual([
             m.openThread,
             m.openNote,
+            m.askGenos,
             m.copyTaskLink,
             m.newTask,
             m.newSubTask,

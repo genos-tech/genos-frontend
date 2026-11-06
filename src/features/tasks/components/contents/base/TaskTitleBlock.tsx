@@ -53,6 +53,8 @@ import { useNotificationsContext } from "../../../../../services/notifications/N
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
+import { askGenosRefForTask } from "../../../../spotlight/askGenosAbout";
+import { askGenosMenuItem } from "../../../../spotlight/askGenosMenuItem";
 import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
@@ -152,6 +154,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     // regardless of what URL the modal was opened over.
     const isModalHosted = hostZIndex != null;
     const showHeaderActions = isModalHosted || !location.pathname.includes("/workspace/chat");
+    // This task as an @/# mention for "Ask Genos about this task" (null when it has no
+    // id or nothing to call it by).
+    const askRef = askGenosRefForTask({
+        id: taskContent.id,
+        displayId: taskContent.displayId,
+        title: taskContent.title,
+    });
     // "Check thread" opens the origin thread in the UrlLinkModal (the
     // clicked-link→modal convention) instead of navigating the whole
     // app to the chat page — the user stays on the task they were
@@ -641,6 +650,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         }
                                     },
                                 },
+                                // Page-hosted only, like the items below: the link-preview modal
+                                // traps focus, so the ask that opens above it could not take the
+                                // keyboard. A saved task only. Opens the Genos ask with this task as
+                                // a `#` mention in the draft; nothing is sent until the person
+                                // presses Ask.
+                                askGenosMenuItem({
+                                    askRef,
+                                    label: t.tasks.titleBlock.menu.askGenos,
+                                    visible: !isModalHosted && useTM.isCreatingTask.flag !== true,
+                                }),
                                 {
                                     id: "openThread",
                                     kind: "openThread",

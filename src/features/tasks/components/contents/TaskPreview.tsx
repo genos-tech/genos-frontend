@@ -54,6 +54,8 @@ import {
 } from "../../../../types/tasks";
 import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
+import { askGenosRefForTask } from "../../../spotlight/askGenosAbout";
+import { askGenosMenuItem } from "../../../spotlight/askGenosMenuItem";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
@@ -2352,7 +2354,22 @@ const MilestonePreviewInner = ({
                             </AppTooltip>
                         )}
                         {(() => {
+                            // The milestone as a `#` mention for "Ask Genos about this
+                            // milestone": a milestone is its backing task to the server.
+                            const askRef = askGenosRefForTask({
+                                id: milestone.taskId,
+                                displayId: milestone.displayId,
+                                title: milestone.title,
+                                isMilestone: true,
+                            });
                             const items: MoreMenuItem[] = [
+                                // Page-hosted only: the link-preview modal traps focus, so the
+                                // ask that opens above it could not take the keyboard.
+                                askGenosMenuItem({
+                                    askRef,
+                                    label: t.tasks.preview.menu.askGenos,
+                                    visible: hostZIndex == null,
+                                }),
                                 {
                                     id: "copyMilestoneLink",
                                     kind: "copyLink",

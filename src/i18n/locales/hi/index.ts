@@ -1881,6 +1881,7 @@ export const hi: DeepPartial<Messages> = {
                 "अभी कोई टास्क नहीं। एक टास्क बनाएँ और उसे इस माइलस्टोन को असाइन करें।",
             menu: {
                 copyMilestoneLink: "माइलस्टोन लिंक कॉपी करें",
+                askGenos: "इस माइलस्टोन के बारे में Genos से पूछें",
                 newTask: "नया टास्क",
                 openNote: "नोट खोलें",
                 newTag: "नया टैग",
@@ -2158,6 +2159,7 @@ export const hi: DeepPartial<Messages> = {
             closeTooltip: "बंद करें",
             menu: {
                 copyTaskLink: "टास्क लिंक कॉपी करें",
+                askGenos: "इस टास्क के बारे में Genos से पूछें",
                 openThread: "थ्रेड खोलें",
                 newTask: "नया टास्क",
                 newSubTask: "नया सब टास्क",

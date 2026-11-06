@@ -3780,6 +3780,7 @@ export const zh: DeepPartial<Messages> = {
             emptyMilestoneTasks: "暂无任务。创建任务并指定到此里程碑。",
             menu: {
                 copyMilestoneLink: "复制里程碑链接",
+                askGenos: "就此里程碑询问 Genos",
                 newTask: "新建任务",
                 openNote: "打开笔记",
                 newTag: "新建标签",
@@ -4052,6 +4053,7 @@ export const zh: DeepPartial<Messages> = {
             closeTooltip: "关闭",
             menu: {
                 copyTaskLink: "复制任务链接",
+                askGenos: "就此任务询问 Genos",
                 openThread: "打开话题",
                 newTask: "新建任务",
                 newSubTask: "新建子任务",

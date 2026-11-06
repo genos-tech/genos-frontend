@@ -1858,6 +1858,7 @@ export const ar: DeepPartial<Messages> = {
             emptyMilestoneTasks: "لا توجد مهام بعد. أنشئ مهمة وأسندها إلى هذا المعلم.",
             menu: {
                 copyMilestoneLink: "نسخ رابط المعلم",
+                askGenos: "اسأل Genos عن هذا المعلم",
                 newTask: "مهمة جديدة",
                 openNote: "فتح الملاحظة",
                 newTag: "وسم جديد",
@@ -2005,6 +2006,7 @@ export const ar: DeepPartial<Messages> = {
             closeTooltip: "إغلاق",
             menu: {
                 copyTaskLink: "نسخ رابط المهمة",
+                askGenos: "اسأل Genos عن هذه المهمة",
                 openThread: "فتح الموضوع",
                 newTask: "مهمة جديدة",
                 newSubTask: "مهمة فرعية جديدة",

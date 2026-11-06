@@ -3962,6 +3962,7 @@ export const fr: DeepPartial<Messages> = {
                 "Aucune tâche pour le moment. Créez une tâche et assignez-la à ce jalon.",
             menu: {
                 copyMilestoneLink: "Copier le lien du jalon",
+                askGenos: "Demander à Genos à propos de ce jalon",
                 newTask: "Nouvelle tâche",
                 openNote: "Ouvrir la note",
                 newTag: "Nouveau tag",
@@ -4244,6 +4245,7 @@ export const fr: DeepPartial<Messages> = {
             closeTooltip: "Fermer",
             menu: {
                 copyTaskLink: "Copier le lien de la tâche",
+                askGenos: "Demander à Genos à propos de cette tâche",
                 openThread: "Ouvrir le fil",
                 newTask: "Nouvelle tâche",
                 newSubTask: "Nouvelle sous-tâche",
