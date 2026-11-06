@@ -16,7 +16,7 @@
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RecentsListItem } from "../features/tasks/components/sidebar/RecentsListItem";
 import {
@@ -92,6 +92,10 @@ const rowsOf = (projectName: string) =>
     screen.queryAllByText(new RegExp(`^${projectName} #\\d+$`));
 const moreButton = (projectName: string) =>
     screen.queryByRole("button", { name: `More (${projectName})` });
+
+// A folder remembers whether it is open (MIP-1055), and jsdom's storage lasts for
+// the whole file: each test starts from the defaults.
+beforeEach(() => localStorage.clear());
 
 describe("Recents project folders", () => {
     it("starts every project folder closed, with no task rows mounted", () => {

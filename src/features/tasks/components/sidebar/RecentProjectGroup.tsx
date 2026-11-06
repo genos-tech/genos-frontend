@@ -18,6 +18,7 @@ import {
 } from "../../utils/groupRecentTasks";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { CopyableTaskIdChip } from "../CopyableTaskId";
+import { useSidebarOpen } from "./useSidebarOpen";
 
 type RecentProjectGroupProps = {
     group: RecentTaskGroup;
@@ -47,7 +48,17 @@ export const RecentProjectGroup = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
 
-    const [open, setOpen] = useState(false);
+    // The user's choice is remembered on this device (MIP-1055). The reveal below
+    // is NOT part of it: opening the folder of the task they have open is
+    // passing, and saving it would reopen the folder on every later visit.
+    const [chosenOpen, setChosenOpen] = useSidebarOpen(`recents:${group.projectId}`, false);
+    const [revealed, setRevealed] = useState(false);
+    const open = chosenOpen || revealed;
+    const setOpen = (next: boolean) => {
+        setChosenOpen(next);
+        // Closing wins over a reveal that happened earlier.
+        if (!next) setRevealed(false);
+    };
     const [visibleCount, setVisibleCount] = useState(RECENTS_INITIAL_VISIBLE);
 
     const selectedIndex =
@@ -68,7 +79,7 @@ export const RecentProjectGroup = ({
     // must not re-open a folder the user has just closed.
     useEffect(() => {
         if (!hasSelected) return;
-        setOpen(true);
+        setRevealed(true);
         setVisibleCount((count) => recentsVisibleToReveal(count, selectedIndex));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasSelected, selectedTaskId]);

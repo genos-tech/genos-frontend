@@ -622,6 +622,33 @@ describe("a change of something the sidebar shows", () => {
         expect(after.search).toBe(before.search);
     });
 
+    // MIP-1055: each folder of the real sidebar saves under its own id.
+    it("saves the open state of Recents, Projects, a project and Join project under their own ids", async () => {
+        localStorage.clear();
+        await mount();
+        const key = `genos.taskSidebar.open.v1.${localStorage.getItem("userId") || "anon"}`;
+        const saved = () => JSON.parse(localStorage.getItem(key) ?? "{}");
+        const toggle = (label: string) =>
+            fireEvent.click(
+                screen
+                    .getAllByText(label)
+                    .map((e) => e.closest("[role=button]"))
+                    .find((e) => e) as HTMLElement
+            );
+        toggle("Recents");
+        expect(saved()).toEqual({ recents: true });
+        // Projects starts open; closing it is a choice worth keeping.
+        toggle("Projects");
+        expect(saved()).toEqual({ recents: true, projects: false });
+        toggle("Projects");
+        toggle("Alpha");
+        expect(saved()).toMatchObject({ projects: true, "project:1": true });
+        // Another project is a separate entry.
+        expect(saved()["project:2"]).toBeUndefined();
+        toggle("Join Project");
+        expect(saved()["join-project"]).toBe(true);
+    });
+
     it("a view flag re-renders the view buttons and the Home button, and no row", async () => {
         await mount();
         const before = snapshot();

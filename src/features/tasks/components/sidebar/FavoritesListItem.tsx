@@ -78,6 +78,7 @@ export const FavoritesListItem = memo(function FavoritesListItem({
     return (
         <ListItem data-testid="sidebar-favorites" nested>
             <Toggler
+                storageKey="favorites"
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
                         sx={{

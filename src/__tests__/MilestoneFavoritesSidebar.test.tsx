@@ -109,6 +109,24 @@ describe("the Favorites folder", () => {
         expect(screen.queryByText("Favorites")).toBeNull();
     });
 
+    it("starts open, and a folder the user closes stays closed after a reload (MIP-1055)", () => {
+        localStorage.clear();
+        // A closed `Toggler` keeps its rows mounted and collapses them to zero
+        // height, so "open" is the grid wrapper's row size.
+        const isOpen = () =>
+            getComputedStyle(
+                screen.getByText("Alpha launch").closest("ul")?.parentElement as HTMLElement
+            ).gridTemplateRows === "1fr";
+        const first = mountFavorites({ favorites: [fav(1, 1, "Alpha launch")] });
+        expect(isOpen()).toBe(true);
+        fireEvent.click(screen.getByText("Favorites"));
+        expect(isOpen()).toBe(false);
+        first.unmount();
+        mountFavorites({ favorites: [fav(1, 1, "Alpha launch")] });
+        expect(isOpen()).toBe(false);
+        localStorage.clear();
+    });
+
     it("lists the favorites in the order it was given, with project and status", () => {
         mountFavorites({ favorites: [fav(2, 2, "Beta launch"), fav(1, 1, "Alpha launch")] });
         expect(screen.getByText("Favorites")).toBeTruthy();
