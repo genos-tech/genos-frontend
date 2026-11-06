@@ -1,19 +1,16 @@
 /**
- * Sidebar Recents: 20 tasks per PROJECT (not 20 in total).
+ * Sidebar Recents: the tasks the user OPENED, 20 per PROJECT (not 20 in total).
  *
- * Two client pieces matter: the request must carry `top_n_per_project`, and
- * the grouping must key on projectId so two projects that happen to share a
- * name stay separate groups.
+ * The grouping must key on projectId so two projects that happen to share a name
+ * stay separate groups, and order by when the user opened a task (`tsOpened`), not
+ * by when anyone last edited it (MIP-1063). `loadTeamTaskList`'s per-project
+ * parameter stays for its other callers.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadTeamTaskList } from "../features/tasks/services/loadTaskSearchList";
-import {
-    groupRecentTasks,
-    RECENTS_PER_PROJECT,
-    RECENTS_STATUSES,
-} from "../features/tasks/utils/groupRecentTasks";
+import { groupRecentTasks, RECENTS_PER_PROJECT } from "../features/tasks/utils/groupRecentTasks";
 import { UserProps } from "../types/admin";
 import { SearchTeamTasksResponse } from "../types/tasks";
 
@@ -26,7 +23,8 @@ const task = (
     taskId: number,
     projectId: number,
     projectName: string,
-    tsUpdated: string
+    tsOpened: string | undefined,
+    tsUpdated = "2026-01-01T00:00:00Z"
 ): SearchTeamTasksResponse =>
     ({
         taskId,
@@ -37,6 +35,7 @@ const task = (
         title: `t${taskId}`,
         status: {},
         tsUpdated,
+        tsOpened,
     }) as unknown as SearchTeamTasksResponse;
 
 describe("loadTeamTaskList top_n_per_project", () => {
@@ -58,14 +57,8 @@ describe("loadTeamTaskList top_n_per_project", () => {
     });
 });
 
-describe("what Recents asks for", () => {
-    it("includes finished tasks, so one can be checked right after closing it", () => {
-        expect(RECENTS_STATUSES.split(",").sort()).toEqual(
-            ["blocked", "closed", "deleted", "open", "pending", "wip"].sort()
-        );
-    });
-
-    it("keeps the per-project limit", () => {
+describe("the per-project limit", () => {
+    it("is 20", () => {
         expect(RECENTS_PER_PROJECT).toBe(20);
     });
 });
@@ -92,8 +85,34 @@ describe("groupRecentTasks", () => {
         const groups = groupRecentTasks(rows);
         expect(groups).toHaveLength(2);
         expect(groups.reduce((n, g) => n + g.tasks.length, 0)).toBe(40);
-        // Most recently updated project first; tasks newest first.
+        // Most recently opened project first; tasks newest open first.
         expect(groups[0].projectId).toBe(11);
         expect(groups[0].tasks[0].taskId).toBe(119);
+    });
+
+    it("orders by when the task was opened, not by when it was last edited", () => {
+        const groups = groupRecentTasks([
+            // Edited yesterday but opened a week ago ...
+            task(1, 10, "A", "2026-01-01T00:00:00Z", "2026-02-09T00:00:00Z"),
+            // ... opened today, last edited long ago.
+            task(2, 10, "A", "2026-02-10T00:00:00Z", "2025-01-01T00:00:00Z"),
+        ]);
+        expect(groups[0].tasks.map((t) => t.taskId)).toEqual([2, 1]);
+    });
+
+    it("lists the project you opened something in most recently first", () => {
+        const groups = groupRecentTasks([
+            task(1, 10, "Edited a lot", "2026-01-01T00:00:00Z", "2026-03-01T00:00:00Z"),
+            task(2, 11, "Opened today", "2026-02-10T00:00:00Z", "2025-01-01T00:00:00Z"),
+        ]);
+        expect(groups.map((g) => g.projectId)).toEqual([11, 10]);
+    });
+
+    it("sorts a row with no open time last instead of first", () => {
+        const groups = groupRecentTasks([
+            task(1, 10, "A", undefined, "2026-03-01T00:00:00Z"),
+            task(2, 10, "A", "2025-01-01T00:00:00Z"),
+        ]);
+        expect(groups[0].tasks.map((t) => t.taskId)).toEqual([2, 1]);
     });
 });

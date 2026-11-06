@@ -61,6 +61,7 @@ import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
+import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -633,6 +634,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const setTaskComments = useTM.setTaskComments;
     const previewTaskId = Number(useTM.currentPreviewTask?.id);
     const hasPreviewTaskId = Number.isFinite(previewTaskId) && previewTaskId > 0;
+    // The user is looking at this task: Recents lists it first (MIP-1063). A
+    // milestone is recorded by its own preview below, which knows its backing task.
+    useRecordTaskOpen(!isMilestoneMode && hasPreviewTaskId ? previewTaskId : null);
     // A new open begins when the requested task's object arrives. Armed in a
     // layout effect: those run before every passive effect of the commit, so
     // before any loader below (or in a child block) joins. Never armed in
@@ -1319,6 +1323,10 @@ const MilestonePreviewInner = ({
         }
         return null;
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, milestoneId]);
+
+    // The user is looking at this milestone: Recents lists its backing task first
+    // (MIP-1063). Only once the milestone has loaded and says which task backs it.
+    useRecordTaskOpen(milestone?.taskId ?? null);
 
     // The project this milestone actually belongs to, which needn't be the
     // page's current project — see the fallback scan above. Now that a

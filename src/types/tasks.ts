@@ -356,6 +356,8 @@ export type SearchTeamTasksResponse = {
     milestoneId?: number;
     status: TaskStatusProps;
     tsUpdated: string;
+    // `/task/recent/` only: when the signed-in user last opened the task.
+    tsOpened?: string;
 };
 
 export type FileProps = {
