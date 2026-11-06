@@ -9,7 +9,7 @@ type ParentChildEdgeData = {
 };
 
 // Solid purple smooth-step with no arrow head. Parent-child has no
-// implicit "direction" beyond the dagre vertical layout — drawing an
+// implicit "direction" beyond the layout's top-to-bottom tree — drawing an
 // arrow would imply meaning that doesn't exist. The label stays off
 // these by design (the legend covers it; labeling every parent edge
 // in a 30-node tree would clutter the canvas). Hover tooltip via
