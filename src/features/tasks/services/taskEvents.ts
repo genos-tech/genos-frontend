@@ -103,3 +103,19 @@ export const onTasksBulkChanged = (cb: (detail: TasksBulkChangedDetail) => void)
     window.addEventListener(BULK_EVENT_NAME, handler);
     return () => window.removeEventListener(BULK_EVENT_NAME, handler);
 };
+
+// "The user just opened a task" (MIP-1063). Emitted once the server has
+// recorded the open, so the sidebar's Recents reloads and sees it. The sidebar
+// is not mounted on every surface that opens a task (modals, mobile), so the
+// recorder cannot call it directly. No id: Recents reloads as a whole.
+
+const TASK_OPENED_EVENT = "genos:task-opened";
+
+export const emitTaskOpened = (): void => {
+    window.dispatchEvent(new CustomEvent(TASK_OPENED_EVENT));
+};
+
+export const onTaskOpened = (cb: () => void): (() => void) => {
+    window.addEventListener(TASK_OPENED_EVENT, cb);
+    return () => window.removeEventListener(TASK_OPENED_EVENT, cb);
+};

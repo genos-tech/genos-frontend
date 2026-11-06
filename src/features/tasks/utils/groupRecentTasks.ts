@@ -1,8 +1,8 @@
 import { SearchTeamTasksResponse } from "../../../types/tasks";
 
-// Every status: the point of Recents includes checking a task right after
-// closing or deleting it. Finished tasks count towards the per-project limit.
-export const RECENTS_STATUSES = "open,wip,blocked,pending,closed,deleted";
+// The server returns every status (`GET /task/recent/`): the point of Recents
+// includes checking a task right after closing or deleting it. Finished tasks
+// count towards the per-project limit.
 export const RECENTS_PER_PROJECT = 20;
 
 // A project folder under Recents shows this many tasks when opened, and the
@@ -26,6 +26,13 @@ export const recentsVisibleToReveal = (visible: number, index: number): number =
     return Math.ceil((index + 1) / RECENTS_MORE_STEP) * RECENTS_MORE_STEP;
 };
 
+// When the user opened the task, as a sort key. A row without it sorts last, not
+// "newest" (NaN would make the order depend on the engine).
+const openedAt = (task: SearchTeamTasksResponse | undefined): number => {
+    const time = task?.tsOpened ? new Date(task.tsOpened).getTime() : NaN;
+    return Number.isFinite(time) ? time : 0;
+};
+
 export type RecentTaskGroup = {
     projectId: number;
     projectName: string;
@@ -34,7 +41,7 @@ export type RecentTaskGroup = {
 };
 
 /**
- * Group the sidebar's Recents by project, newest first.
+ * Group the sidebar's Recents by project, most recently OPENED first.
  *
  * Keyed by `projectId`, not `projectName`: two projects may share a name and
  * must stay separate groups (the old name key merged them).
@@ -58,17 +65,11 @@ export const groupRecentTasks = (recentTasks: SearchTeamTasksResponse[]): Recent
 
     const result = Array.from(groups.values());
 
-    // Tasks within each group by tsUpdated descending.
+    // Tasks within each group by tsOpened descending.
     result.forEach((group) => {
-        group.tasks.sort(
-            (a, b) => new Date(b.tsUpdated).getTime() - new Date(a.tsUpdated).getTime()
-        );
+        group.tasks.sort((a, b) => openedAt(b) - openedAt(a));
     });
 
-    // Groups by their most recent task's tsUpdated descending.
-    return result.sort((a, b) => {
-        const aLatest = a.tasks[0]?.tsUpdated ?? "";
-        const bLatest = b.tasks[0]?.tsUpdated ?? "";
-        return new Date(bLatest).getTime() - new Date(aLatest).getTime();
-    });
+    // Groups by their most recently opened task, newest first.
+    return result.sort((a, b) => openedAt(b.tasks[0]) - openedAt(a.tasks[0]));
 };

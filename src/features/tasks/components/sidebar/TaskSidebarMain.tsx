@@ -15,9 +15,10 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
 import { useOnTaskMetadataSaved } from "../../hooks/useOnTaskMetadataSaved";
+import { useOnTaskOpened } from "../../hooks/useOnTaskOpened";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
-import { RECENTS_PER_PROJECT, RECENTS_STATUSES } from "../../utils/groupRecentTasks";
+import { loadRecentTasks } from "../../services/recentTasks";
 import { FavoritesListItem } from "./FavoritesListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
@@ -125,30 +126,26 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
     }, [loading]);
     // =======================================================================
 
+    // Recents = the tasks THIS user opened, newest open first (MIP-1063). The
+    // server caps it at 20 per project and checks access on every read, so
+    // there is no client-side slice: it would keep only the first project or two.
     const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
     const updateRecentTasks = () => {
-        // 20 per PROJECT, not 20 in total. The server returns them sorted by
-        // project, so there must be no client-side slice here: it would keep
-        // only the first project or two.
         (async () => {
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                myself,
-                -1,
-                RECENTS_STATUSES,
-                RECENTS_PER_PROJECT,
-                accessToken,
-                true,
-                RECENTS_PER_PROJECT
-            );
+            const loadedTasks = await loadRecentTasks(myself, accessToken);
             // A failed request resolves to undefined; keep the last list.
-            if (!Array.isArray(loadedTeamTasks)) return;
-            setRecentTasks([...loadedTeamTasks]);
+            if (!loadedTasks) return;
+            setRecentTasks([...loadedTasks]);
         })();
     };
 
     useEffect(() => {
         updateRecentTasks();
-    }, [useTM.currentPreviewTaskId]);
+    }, [myself?.teamId, accessToken]);
+
+    // An open is recorded by the task preview wherever it is shown (this sidebar
+    // is not mounted for a modal or on mobile), then announced here.
+    useOnTaskOpened(updateRecentTasks, RECENTS_RELOAD_DEBOUNCE_MS);
 
     // Changing the status of the task you have open doesn't change the
     // previewed id, so the effect above alone would leave its row showing the

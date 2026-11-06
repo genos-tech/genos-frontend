@@ -44,7 +44,10 @@ const projectTasks = (
         taskId: projectId * 1000 + i + 1,
         title: `${projectName} #${i + 1}`,
         status: { status: "open", color: "", textColor: "" },
-        tsUpdated: new Date(newestAt - i * 60_000).toISOString(),
+        // Opened newest first; edited long after, so a sort on tsUpdated would
+        // not give this order.
+        tsOpened: new Date(newestAt - i * 60_000).toISOString(),
+        tsUpdated: new Date(newestAt + 86_400_000 + i * 60_000).toISOString(),
     })) as unknown as SearchTeamTasksResponse[];
 
 const T0 = Date.UTC(2026, 0, 1);

@@ -26,6 +26,8 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskSidebar } from "../features/tasks/components/sidebar/TaskSidebarMain";
+import { loadRecentTasks } from "../features/tasks/services/recentTasks";
+import { emitTaskOpened } from "../features/tasks/services/taskEvents";
 import type { Milestone } from "../features/tasks/sprint-milestone/types";
 import type { UserProps } from "../types/admin";
 import type { ProjectProps } from "../types/tasks";
@@ -109,6 +111,7 @@ const RECENT = [
         title: "Recent one",
         status: { status: "open", color: "", textColor: "" },
         tsUpdated: "2026-01-02T00:00:00.000Z",
+        tsOpened: "2026-01-02T00:00:00.000Z",
     },
     {
         projectId: 3,
@@ -119,6 +122,7 @@ const RECENT = [
         title: "Recent two",
         status: { status: "open", color: "", textColor: "" },
         tsUpdated: "2026-01-01T00:00:00.000Z",
+        tsOpened: "2026-01-01T00:00:00.000Z",
     },
 ];
 
@@ -127,7 +131,12 @@ vi.mock("../features/tasks/services/loadProjectTags", () => ({
     loadProjectTags: (...a: unknown[]) => (loadTags as (...x: unknown[]) => unknown)(...a),
 }));
 vi.mock("../features/tasks/services/loadTaskSearchList", () => ({
-    loadTeamTaskList: vi.fn(async () => RECENT),
+    loadTeamTaskList: vi.fn(async () => []),
+}));
+// Recents comes from the tasks the user opened (MIP-1063).
+vi.mock("../features/tasks/services/recentTasks", () => ({
+    loadRecentTasks: vi.fn(async () => RECENT),
+    recordTaskOpen: vi.fn(async () => true),
 }));
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
@@ -431,7 +440,7 @@ describe("an AppBody render that changes nothing the sidebar shows", () => {
             projectRows: before.projectRows,
             milestoneRows: before.milestoneRows,
         });
-        // The sidebar's own body does render: it holds the recents reload keyed on the id.
+        // The sidebar's own body does render: the highlight follows the id.
         expect(snapshot().shell).toBeGreaterThan(before.shell);
         expect(snapshot().recents).toBeGreaterThan(before.recents);
         // The task is in Recents: its folder opens by itself and the row is current.
@@ -452,6 +461,33 @@ describe("an AppBody render that changes nothing the sidebar shows", () => {
         patch({ tm: { currentPreviewTaskId: 3002 } });
         patch({ tm: { currentPreviewTaskId: 3001 } });
         expect(tree()).toEqual(before);
+    });
+});
+
+describe("when Recents reloads (MIP-1063)", () => {
+    const settle = (ms: number) =>
+        act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, ms));
+        });
+
+    it("reloads once the preview has had an open recorded, once for a burst", async () => {
+        await mount();
+        const loaded = vi.mocked(loadRecentTasks).mock.calls.length;
+        await act(async () => {
+            emitTaskOpened();
+            emitTaskOpened();
+            emitTaskOpened();
+        });
+        await settle(700);
+        expect(vi.mocked(loadRecentTasks).mock.calls.length).toBe(loaded + 1);
+    });
+
+    it("does not reload for a change of the previewed id alone: the open is recorded by the preview", async () => {
+        await mount();
+        const loaded = vi.mocked(loadRecentTasks).mock.calls.length;
+        patch({ tm: { currentPreviewTaskId: 3002, isTaskPreviewVisible: true } });
+        await settle(700);
+        expect(vi.mocked(loadRecentTasks).mock.calls.length).toBe(loaded);
     });
 });
 
