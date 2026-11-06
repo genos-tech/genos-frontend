@@ -159,13 +159,16 @@ jobs:
                   echo "::error::vitest shards reported '$SHARDS'"
                   exit 1
 
-    # Coverage, off the critical path: report-only and unsharded, so its
-    # runtime never delays a merge. Split out of `frontend-test` when that
-    # became sharded (see above).
+    # Coverage, report-only and unsharded. It runs on pushes to main only, not on
+    # pull requests (MIP-1095): at ~11 minutes against ~4 for the three test
+    # shards, it was the longest job in every PR run (the PR's wall time was this
+    # job, not the tests), yet it gates nothing (no thresholds) and is not a
+    # required check. A skipped job reports success, so nothing waits on it.
+    # The report is still uploaded for every merge to main.
     frontend-coverage:
         name: frontend-coverage (report-only)
         needs: changes
-        if: needs.changes.outputs.code == 'true'
+        if: github.event_name == 'push' && needs.changes.outputs.code == 'true'
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
