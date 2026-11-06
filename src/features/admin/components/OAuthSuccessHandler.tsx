@@ -11,6 +11,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
+import { takeReturn } from "../../../utils/pendingReturn";
 
 interface MeResponse {
     id: string;
@@ -131,7 +132,8 @@ export const OAuthSuccessHandler = () => {
                     await DatabaseUtils.clearTeamScopedStores();
                 }
 
-                navigate(next, { replace: true });
+                // An AI app's consent request waiting for this sign-in goes first.
+                navigate(takeReturn() ?? next, { replace: true });
             } catch (err) {
                 console.error("OAuth post-login user fetch failed:", err);
                 if (!cancelled) setError(oauth.profileFailed);

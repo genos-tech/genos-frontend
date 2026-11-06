@@ -11,6 +11,7 @@ import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { AcceptInviteHandler } from "./features/admin/components/AcceptInviteHandler";
 import { AuthShell } from "./features/admin/components/AuthShell";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
+import { OAuthConsentPage } from "./features/admin/components/OAuthConsentPage";
 import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHandler";
 import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
 import { SignInForm } from "./features/admin/components/SignInForm";
@@ -180,6 +181,12 @@ const tree = (
                     {OAUTH_INTEGRATIONS_ENABLED && (
                         <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
                     )}
+
+                    {/* An AI app (Claude, ChatGPT…) asks for access: the API sends the
+                        browser here. Outside both guards on purpose: a signed-out
+                        visitor is sent to sign in and brought back with the query
+                        intact (utils/pendingReturn), which neither guard does. */}
+                    <Route element={<OAuthConsentPage />} path="/oauth/consent" />
 
                     {/* Email verification — outside guards because the user
                         is not signed in yet. After verifying they're sent
