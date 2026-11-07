@@ -166,6 +166,93 @@ describe("ModalFrame", () => {
         });
     });
 
+    describe("sizes and layout options (MIP-1126 batch 1)", () => {
+        const css = () => cssOf(dialog());
+        // jsdom keeps every @media block but drops the query itself, so a
+        // responsive property shows up as one declaration per breakpoint, in
+        // order (xs, sm, md, lg). The sequence is what is pinned here.
+        const seq = (prop: string) =>
+            (css().match(new RegExp(`(?<![-\\w])${prop}: [^;]+`, "g")) ?? [])
+                .map((d) => d.slice(prop.length + 2))
+                // Joy's own base rule for the same property.
+                .filter((v) => !v.includes("--Card-padding"));
+
+        it("keeps the fixed widths and the 24px phone inset", () => {
+            mount({ size: "md" });
+            expect(seq("width")).toEqual(["calc(100vw - 24px)", "480px"]);
+            expect(seq("max-height")).toEqual(["calc(100dvh - 32px)"]);
+        });
+
+        it("xl is the Settings ladder: 550, 700, 920", () => {
+            mount({ size: "xl" });
+            expect(seq("width")).toEqual(["calc(100vw - 24px)", "550px", "700px", "920px"]);
+        });
+
+        it("profile is 1000px from md up", () => {
+            mount({ size: "profile" });
+            expect(seq("width")).toEqual(["calc(100vw - 24px)", "1000px"]);
+        });
+
+        it("fullScreenOnMobile fills the screen below md with square corners", () => {
+            mount({ size: "profile", fullScreenOnMobile: true });
+            expect(seq("width")).toEqual(["100vw", "1000px"]);
+            expect(seq("height")).toEqual(["100dvh", "auto"]);
+            expect(seq("max-height")).toEqual(["100dvh", "calc(100dvh - 32px)"]);
+            expect(seq("border-radius").slice(-2)).toEqual(["0px", "var(--g-radius-lg)"]);
+        });
+
+        it("is an inset card on a phone by default", () => {
+            mount({ size: "profile" });
+            expect(seq("height")).toEqual([]);
+            expect(seq("border-radius").slice(-1)).toEqual(["var(--g-radius-lg)"]);
+            expect(seq("border-radius")).not.toContain("0px");
+        });
+
+        it("clearBottomBar leaves room for the mobile tab bar, nothing else does", () => {
+            mount({ clearBottomBar: true });
+            expect(seq("max-height")).toEqual([
+                "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
+                "calc(100dvh - 32px)",
+            ]);
+        });
+
+        it("flush drops the body padding; the default keeps 20px", () => {
+            const body = () => screen.getByText("Body content").parentElement!;
+            const view = mount();
+            expect(cssOf(body())).toContain("padding: 8px 20px");
+            view.unmount();
+            mount({ flush: true });
+            expect(cssOf(body())).toContain("padding: 0px;");
+        });
+
+        it("headerDivider draws one hairline under the header, off by default", () => {
+            const header = () =>
+                screen.getByRole("heading", { name: "Rename project" }).parentElement!
+                    .parentElement!;
+            const view = mount();
+            expect(cssOf(header())).not.toContain("border-bottom");
+            view.unmount();
+            mount({ headerDivider: true });
+            expect(cssOf(header())).toContain("border-bottom: 1px solid var(--g-border-subtle)");
+        });
+
+        it("headerAccessory sits between the title and the close button", () => {
+            mount({ headerAccessory: <span data-testid="chip">External</span> });
+            const chip = screen.getByTestId("chip");
+            const close = screen.getByRole("button", { name: "Close" });
+            const after = (a: Node, b: Node) =>
+                Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+            expect(after(screen.getByRole("heading"), chip)).toBe(true);
+            expect(after(chip, close)).toBe(true);
+        });
+
+        it("none of it brings a gradient or a second shadow", () => {
+            mount({ size: "profile", fullScreenOnMobile: true, headerDivider: true, flush: true });
+            expect(css()).not.toMatch(/gradient/i);
+            expect(css().match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+        });
+    });
+
     describe("events stay inside the portal", () => {
         const host = () => {
             const onKeyDown = vi.fn();
