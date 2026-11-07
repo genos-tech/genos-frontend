@@ -4,6 +4,8 @@ export {
     NAV_ICON_SIZE,
     NAV_INDENT_STEP,
     NAV_KEEP_CLASS,
+    NAV_OVERLAY_BG,
+    NAV_OVERLAY_FADE,
     navNestedListSx,
     NAV_ROW_GAP,
     NAV_PAD_X,
