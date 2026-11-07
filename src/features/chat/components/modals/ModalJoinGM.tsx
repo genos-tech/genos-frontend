@@ -1,19 +1,15 @@
 import React, { useState } from "react";
-import { keyframes } from "@emotion/react";
 import GroupsIcon from "@mui/icons-material/Groups";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import SendIcon from "@mui/icons-material/Send";
-import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { getMessages, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinGMParams = {
@@ -125,160 +121,58 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
     };
 
     return (
-        <Modal
+        <ModalFrame
+            icon={<GroupsIcon sx={{ color: g.accent.text }} />}
             open={openJoinGM.flag}
-            sx={{
-                zIndex: 10010,
-                backdropFilter: "blur(4px)",
-                // Transparent: Joy's own Backdrop slot already paints
-                // `palette.background.backdrop` + blur(8px). Stacking a
-                // second 50% black on the modal root composited to ~75%,
-                // which read as a solid black page. Matches ModalUserProfile.
-                backgroundColor: "transparent",
-            }}
-            onClose={() => setOpenJoinGM(disableOpenJoinGMParams)}
-        >
-            <ModalDialog
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background:
-                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-brand-500-rgb), 0.2)",
-                    borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-500-rgb), 0.1)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "360px" },
-                    maxWidth: "100vw",
-                    p: { xs: 2, md: 3 },
-                    textAlign: "center",
-                }}
-            >
-                {/* Icon */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 56,
-                        height: 56,
-                        borderRadius: "14px",
-                        background:
-                            "linear-gradient(135deg, rgba(var(--gp-brand-500-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
-                        border: "1px solid rgba(var(--gp-brand-500-rgb), 0.25)",
-                        mx: "auto",
-                        mb: 2,
-                    }}
-                >
-                    <GroupsIcon
-                        sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.9)", fontSize: 28 }}
-                    />
-                </Box>
-
-                {/* Title */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 1,
-                        mb: 1,
-                    }}
-                >
-                    <LockOutlineIcon
-                        sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.7)", fontSize: 18 }}
-                    />
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            color: "rgba(255, 255, 255, 0.5)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                        }}
-                    >
-                        {t.chat.modals.joinGM.privateGroupLabel}
-                    </Typography>
-                </Box>
-
-                <Typography
-                    level="h4"
-                    sx={{
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontWeight: 600,
-                        mb: 0.5,
-                    }}
-                >
-                    {t.chat.modals.joinGM.requestToJoin}
-                </Typography>
-
-                <Typography
-                    level="h3"
-                    sx={{
-                        background:
-                            "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        fontWeight: 700,
-                        mb: 2.5,
-                    }}
-                >
-                    {openJoinGM.chatName}
-                </Typography>
-
-                {/* Error Alert */}
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
-                            textAlign: "left",
-                        }}
-                    >
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                {/* Action Buttons */}
-                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
+            size="sm"
+            title={t.chat.modals.joinGM.requestToJoin}
+            zIndex={10010}
+            actions={
+                <>
                     <Button
+                        color="neutral"
                         variant="plain"
-                        sx={{
-                            color: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: "10px",
-                            px: 3,
-                            "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                color: "rgba(255, 255, 255, 0.9)",
-                            },
-                        }}
                         onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
                     >
                         {t.chat.modals.joinGM.cancel}
                     </Button>
                     <Button
                         endDecorator={<SendIcon sx={{ fontSize: 16 }} />}
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
-                            borderRadius: "10px",
-                            px: 3,
-                            fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(var(--gp-brand-500-rgb), 0.3)",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)",
-                            },
-                        }}
                         onClick={handleJoinGM}
                     >
                         {t.chat.modals.joinGM.sendRequest}
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={() => setOpenJoinGM(disableOpenJoinGMParams)}
+        >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <LockOutlineIcon sx={{ color: g.text.tertiary, fontSize: 16 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: g.text.secondary,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                    }}
+                >
+                    {t.chat.modals.joinGM.privateGroupLabel}
+                </Typography>
+            </Box>
+
+            <Typography
+                level="title-lg"
+                sx={{ color: g.text.primary, mb: 1, overflowWrap: "anywhere" }}
+            >
+                {openJoinGM.chatName}
+            </Typography>
+
+            {/* Error Alert */}
+            {errorMessage && (
+                <Alert color="danger" sx={{ mt: 1 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };
