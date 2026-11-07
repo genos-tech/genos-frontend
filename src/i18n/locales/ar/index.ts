@@ -353,7 +353,7 @@ export const ar: DeepPartial<Messages> = {
     },
     sidebar: {
         nav: {
-            inbox: "صندوق الوارد",
+            inbox: "الوارد",
             chats: "المحادثات",
             tasks: "المهام",
             notes: "الملاحظات",
@@ -392,7 +392,7 @@ export const ar: DeepPartial<Messages> = {
             todo: "المهام",
             history: "تاريخ",
             settings: "إعدادات",
-            signOut: "تسجيل الخروج",
+            signOut: "خروج",
         },
         signOutConfirm: {
             title: "هل ترغب في تسجيل الخروج من مساحة العمل هذه؟",

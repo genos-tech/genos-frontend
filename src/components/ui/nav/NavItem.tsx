@@ -12,6 +12,7 @@ import {
     NAV_KEEP_CLASS,
     NAV_PAD_X,
     NAV_ROW_GAP,
+    navButtonPlateOffSx,
     navFocusSx,
     navIndentLength,
     navRowSx,
@@ -230,19 +231,13 @@ export const NavItem = ({
                     paddingInlineEnd: hasActions && !actionsInPlace ? 0 : `${NAV_PAD_X}px`,
                     gap: 1,
                     borderRadius: "inherit",
-                    background: "transparent",
-                    color: "inherit",
+                    // Joy paints its own hover/active plate on the button; the row
+                    // box (which carries the look) is the only plate.
+                    ...navButtonPlateOffSx,
                     font: "inherit",
                     letterSpacing: "inherit",
                     textAlign: "start",
                     alignItems: "center",
-                    // Joy paints its own hover/active plate on the button with a
-                    // selector that out-ranks ours; its variables are read first,
-                    // so the row box (which carries the look) is the only plate.
-                    "--variant-plainHoverBg": "transparent",
-                    "--variant-plainActiveBg": "transparent",
-                    "--variant-plainHoverColor": "inherit",
-                    "&:hover, &:active": { background: "transparent", color: "inherit" },
                     ...navFocusSx,
                 }}
                 onKeyDown={handleKeyDown}
