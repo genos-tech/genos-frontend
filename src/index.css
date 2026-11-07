@@ -68,7 +68,10 @@
         font-weight: var(--font-weight);
         color-scheme: light dark;
         color: var(--color-text);
-        background-color: var(--color-background);
+        /* The same canvas Joy's CssBaseline paints on <body> (the role), so
+           an over-scroll never shows a second color. The old value stays as
+           the fallback until the token stylesheet is injected. */
+        background-color: var(--g-bg, var(--color-background));
         font-synthesis: none;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;

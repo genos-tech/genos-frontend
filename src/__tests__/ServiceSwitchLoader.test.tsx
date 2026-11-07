@@ -383,7 +383,9 @@ describe("how the loader looks", () => {
         const sheet = screen.getByRole("status");
         const surface = cssOf(sheet);
         // The surface: the Homes' own look, no delay, no entrance animation.
-        expect(surface).toMatch(/linear-gradient\(180deg/);
+        // (Flat canvas token since MIP-1118; it was a vertical gradient.)
+        expect(surface).toMatch(/background:var\(--gp-(dark|light)-bg\)/);
+        expect(surface).not.toMatch(/gradient/);
         expect(surface).not.toMatch(/\d+ms both/);
         expect(surface).not.toContain("slideIn");
         // sheet children: two decor boxes, the dots, then the caption.
