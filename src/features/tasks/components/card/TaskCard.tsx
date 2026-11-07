@@ -6,6 +6,7 @@ import { useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
+import { domPropsOf } from "./domProps";
 import { dueDisplay } from "./due";
 import { AssigneeAvatar, DueText, MilestoneFlag, TagStrip, TaskIdText, TaskTitle } from "./parts";
 import type { TaskCardTask } from "./types";
@@ -40,13 +41,7 @@ export const TaskCardFrame = forwardRef<HTMLDivElement, FrameProps>(function Tas
     { children, selected = false, dragging = false, onOpen, label, ...rest },
     ref
 ) {
-    // A wrapping Tooltip also hands down its own className, style and `sx`
-    // (the tooltip chip's border and background); they would replace the
-    // surface's own, so they are dropped here.
-    const domProps: Record<string, unknown> = { ...rest };
-    delete domProps.className;
-    delete domProps.style;
-    delete domProps.sx;
+    const domProps = domPropsOf(rest);
     const interactive = onOpen
         ? {
               role: "button",

@@ -656,12 +656,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread, PM always (a PM thread IS a task thread).
                     Clicking opens the task preview. */}
                 {threadTaskMeta && currentThreadTaskId !== -1 && (
-                    <TaskInfoPill
-                        isDark={isDark}
-                        styles={styles}
-                        task={threadTaskMeta}
-                        onOpen={openTaskFromMeta}
-                    />
+                    <TaskInfoPill task={threadTaskMeta} onOpen={openTaskFromMeta} />
                 )}
 
                 {/* Ask about this thread — opens the AI Q&A modal. Always

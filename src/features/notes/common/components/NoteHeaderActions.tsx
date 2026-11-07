@@ -421,14 +421,7 @@ export const NoteHeaderActions = ({
                         </Box>
                     </AppTooltip>
 
-                    {!isMobile && (
-                        <TaskInfoPill
-                            isDark={isDark}
-                            styles={styles}
-                            task={currentTask}
-                            onOpen={onOpenTask}
-                        />
-                    )}
+                    {!isMobile && <TaskInfoPill task={currentTask} onOpen={onOpenTask} />}
                 </Stack>
             )}
 
