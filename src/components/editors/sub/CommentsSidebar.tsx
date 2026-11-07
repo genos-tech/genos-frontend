@@ -11,6 +11,8 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { Avatar, Box, Chip, Sheet, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
+import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { commentFirstLine } from "./commentMentions";
 import { useCommentAuthor } from "./useCommentAuthor";
 
@@ -86,6 +88,19 @@ const useRelativeTime = () => {
     };
 };
 
+const noWrap = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } as const;
+
+// A list row in a narrow panel, not a full-width chat row: rounded, padded all
+// round, no accent bar (the rest comes from the shared Bubble).
+const rowSx = {
+    borderInlineStartWidth: 0,
+    borderRadius: g.radius.sm,
+    cursor: "pointer",
+    px: 1,
+    py: 1,
+    width: "100%",
+} as const;
+
 type ThreadRowProps = {
     thread: ThreadData;
     referenceText: string;
@@ -119,10 +134,51 @@ const ThreadRow = memo(
         const lastActivityAt = lastComment?.createdAt ?? thread.createdAt;
 
         return (
-            <Box
-                component="button"
-                type="button"
+            <Bubble
+                align="stacked"
                 aria-pressed={selected}
+                component="button"
+                layout="compact"
+                selected={selected}
+                sx={rowSx}
+                avatar={
+                    <Avatar size="sm" src={author?.avatarUrl || undefined}>
+                        {authorName.charAt(0).toUpperCase()}
+                    </Avatar>
+                }
+                footer={
+                    replyCount > 0 || thread.resolved ? (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
+                            {thread.resolved && (
+                                <Chip
+                                    color="success"
+                                    size="sm"
+                                    variant="soft"
+                                    startDecorator={
+                                        <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
+                                    }
+                                >
+                                    {copy.resolved}
+                                </Chip>
+                            )}
+                            {replyCount > 0 && (
+                                <BubbleMeta>{fmt(copy.replies, { count: replyCount })}</BubbleMeta>
+                            )}
+                        </Box>
+                    ) : undefined
+                }
+                header={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                        <BubbleAuthor sx={{ flex: 1, minWidth: 0, ...noWrap }}>
+                            {authorName}
+                        </BubbleAuthor>
+                        <BubbleMeta sx={{ flexShrink: 0 }}>
+                            {formatRelative(lastActivityAt)}
+                        </BubbleMeta>
+                    </Box>
+                }
+                grouped
+                interactive
                 onClick={() => onSelect(thread.id)}
                 onMouseEnter={() => onHover(thread.id)}
                 // The floating comment card wires floating-ui `useDismiss` with
@@ -136,96 +192,40 @@ const ThreadRow = memo(
                 // reconciliation effect stays correct even without this, but this
                 // removes the visible flicker at the source.
                 onPointerDown={(event) => event.stopPropagation()}
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 0.5,
-                    width: "100%",
-                    textAlign: "start",
-                    border: "none",
-                    borderRadius: "sm",
-                    p: 1,
-                    cursor: "pointer",
-                    bgcolor: selected ? "primary.softBg" : "transparent",
-                    font: "inherit",
-                    color: "text.primary",
-                    "&:hover": {
-                        bgcolor: selected ? "primary.softBg" : "background.level1",
-                    },
-                    "&:focus-visible": {
-                        outline: "2px solid",
-                        outlineColor: "primary.outlinedBorder",
-                        outlineOffset: "-2px",
-                    },
-                }}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
-                    <Avatar size="sm" src={author?.avatarUrl || undefined}>
-                        {authorName.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Typography
-                        level="title-sm"
-                        noWrap
-                        sx={{ flex: 1, minWidth: 0, fontWeight: 600 }}
-                    >
-                        {authorName}
-                    </Typography>
-                    <Typography level="body-xs" sx={{ color: "text.tertiary", flexShrink: 0 }}>
-                        {formatRelative(lastActivityAt)}
-                    </Typography>
-                </Box>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0 }}>
+                    {referenceText && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                maxWidth: "100%",
+                                color: g.text.secondary,
+                                borderInlineStart: "2px solid",
+                                borderColor: g.border.default,
+                                ps: 1,
+                                fontStyle: "italic",
+                            }}
+                            noWrap
+                        >
+                            {referenceText}
+                        </Typography>
+                    )}
 
-                {referenceText && (
                     <Typography
-                        level="body-xs"
-                        noWrap
+                        level="body-sm"
                         sx={{
-                            maxWidth: "100%",
-                            color: "text.secondary",
-                            borderInlineStart: "2px solid",
-                            borderColor: "neutral.outlinedBorder",
-                            pl: 1,
-                            fontStyle: "italic",
+                            width: "100%",
+                            color: preview ? g.text.primary : g.text.tertiary,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
                         }}
                     >
-                        {referenceText}
+                        {preview || copy.emptyComment}
                     </Typography>
-                )}
-
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        width: "100%",
-                        color: preview ? "text.primary" : "text.tertiary",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                    }}
-                >
-                    {preview || copy.emptyComment}
-                </Typography>
-
-                {(replyCount > 0 || thread.resolved) && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
-                        {thread.resolved && (
-                            <Chip
-                                color="success"
-                                size="sm"
-                                variant="soft"
-                                startDecorator={<CheckCircleRoundedIcon sx={{ fontSize: 14 }} />}
-                            >
-                                {copy.resolved}
-                            </Chip>
-                        )}
-                        {replyCount > 0 && (
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {fmt(copy.replies, { count: replyCount })}
-                            </Typography>
-                        )}
-                    </Box>
-                )}
-            </Box>
+                </Box>
+            </Bubble>
         );
     }
 );
@@ -380,9 +380,9 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
 
     return (
         <Sheet
+            aria-label={copy.title}
             className="bn-comments-sidebar"
             role="complementary"
-            aria-label={copy.title}
             sx={{
                 width: COMMENTS_SIDEBAR_WIDTH,
                 flexShrink: 0,
@@ -414,7 +414,7 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
                     flexShrink: 0,
                 }}
             >
-                <Typography level="title-sm" sx={{ fontWeight: 700 }}>
+                <Typography level="title-sm" sx={{ fontWeight: 600 }}>
                     {rows.length > 0
                         ? fmt(copy.titleWithCount, { count: rows.length })
                         : copy.title}
@@ -440,11 +440,11 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
                         {rows.map(({ thread, referenceText }) => (
                             <ThreadRow
                                 key={thread.id}
-                                thread={thread}
                                 referenceText={referenceText}
                                 selected={thread.id === selectedThreadId}
-                                onSelect={handleSelect}
+                                thread={thread}
                                 onHover={handleHover}
+                                onSelect={handleSelect}
                             />
                         ))}
                     </Box>
