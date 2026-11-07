@@ -1,6 +1,7 @@
 import { extendTheme } from "@mui/joy/styles";
 
 import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId } from "./themePalettes";
+import { FONT_STACKS } from "./tokens/scales";
 
 // Brand-surface palette. The single source of truth for brand-surface colors
 // across `components/ui/styles/commonStyle.ts` and every feature in
@@ -261,6 +262,13 @@ export const buildJoyTheme = (
     const soft = (alpha: number) => `rgba(${brandRgb}, ${alpha})`;
     return extendTheme({
         direction,
+        // Joy's default is Inter with an unloaded system fallback. Geist
+        // (with Noto Sans JP for Japanese) is the app's typeface.
+        fontFamily: {
+            body: FONT_STACKS.geist,
+            display: FONT_STACKS.geist,
+            code: FONT_STACKS.mono,
+        },
         colorSchemes: {
             dark: {
                 palette: {

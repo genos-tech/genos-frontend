@@ -15,6 +15,7 @@ import { buildJoyTheme } from "./purplePalette";
 import { getRtlCache } from "./rtlCache";
 import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId, ThemePrimitives } from "./themePalettes";
 import { applyThemeId, installActiveTheme, storeThemeId } from "./themeStyles";
+import { installDesignTokens } from "./tokens/tokenStyles";
 
 /**
  * Owns which color theme is active.
@@ -36,6 +37,9 @@ import { applyThemeId, installActiveTheme, storeThemeId } from "./themeStyles";
  */
 
 const INITIAL_THEME_ID = installActiveTheme();
+// The `--g-*` design tokens (MIP-1106). Same timing and reason: before React
+// mounts, so the first paint already has them.
+installDesignTokens();
 
 interface ColorThemeContextValue {
     themeId: ThemeId;

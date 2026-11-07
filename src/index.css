@@ -10,7 +10,8 @@
     :root {
         /* Typography */
         --font-family:
-            Inter, "Noto Sans JP Variable", system-ui, Avenir, Helvetica, Arial, sans-serif;
+            "Geist Variable", "Noto Sans JP Variable", -apple-system, BlinkMacSystemFont,
+            "Hiragino Sans", "Segoe UI", sans-serif;
         --line-height: 1.5;
         --font-weight: 400;
 

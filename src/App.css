@@ -1405,6 +1405,18 @@ html,
     --bn-ui-base-z-index: 13300 !important;
 }
 
+/* BlockNote ships its own typeface: `.bn-root { --bn-font-family: Inter … }`
+   and `.bn-default-styles { font-family: Inter … }`. Its stylesheet loads
+   later than ours (editor chunk), so `html` in front wins on specificity
+   instead of load order. Editors, menus and composers then use the app's
+   Geist like everything else. */
+html .bn-root {
+    --bn-font-family: var(--g-font-body);
+}
+html .bn-default-styles {
+    font-family: var(--g-font-body);
+}
+
 .bn-side-menu,
 .bn-formatting-toolbar,
 .bn-suggestion-menu,
