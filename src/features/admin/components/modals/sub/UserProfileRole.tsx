@@ -3,6 +3,7 @@ import { Autocomplete, Button, Chip, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../i18n";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -84,7 +85,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         variant="outlined"
                         sx={{
                             borderRadius: "sm",
-                            fontWeight: "bold",
+                            fontWeight: 600,
                         }}
                         onClick={() => {
                             setOpenRoleEditor(false);
@@ -109,7 +110,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         }
                     }}
                 >
-                    <Typography fontWeight="bold">{roleValue}</Typography>
+                    <Typography fontWeight={600}>{roleValue}</Typography>
                 </Button>
             )}
         </>
