@@ -15,8 +15,6 @@ import {
     Chip,
     IconButton,
     Input,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Stack,
@@ -25,12 +23,14 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import {
     refreshProjectCustomFields,
     useProjectCustomFields,
 } from "../../../../hooks/tasks/useProjectCustomFields";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import {
     CustomFieldOption,
     CustomFieldType,
@@ -210,9 +210,6 @@ export const ModalManageCustomFields: React.FC<Props> = ({
 
     const typeLabel = (type: CustomFieldType): string => msgs.types[type];
 
-    const border = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
-    const faint = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
-
     // Modal layer (page-hosted default 10010; host+10 when opened above a
     // UrlLinkModal-hosted preview). Portaled popups inside — the
     // field-type Select's listbox and the tag-option ColorPickerMenu —
@@ -223,350 +220,323 @@ export const ModalManageCustomFields: React.FC<Props> = ({
     const popupZ = modalZ + 1;
 
     return (
-        <Modal open={open} sx={{ zIndex: modalZ }} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="md"
-                sx={{
-                    width: { xs: "calc(100vw - 24px)", md: 560 },
-                    maxWidth: "96vw",
-                    maxHeight: "82vh",
-                    overflowY: "auto",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                {/* Header */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
-                    <TuneRoundedIcon sx={{ fontSize: 20, color: faint }} />
-                    <Typography level="title-md" sx={{ flex: 1 }}>
-                        {msgs.manageHeading}
+        <ModalFrame
+            description={msgs.manageDescription}
+            icon={<TuneRoundedIcon sx={{ color: g.text.secondary }} />}
+            open={open}
+            size="lg"
+            title={msgs.manageHeading}
+            zIndex={modalZ}
+            onClose={onClose}
+        >
+            {errorMessage && (
+                <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+
+            {/* Field list */}
+            <Stack spacing={0.75}>
+                {sorted.length === 0 && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.tertiary, textAlign: "center", py: 2 }}
+                    >
+                        {msgs.noFieldsYet}
                     </Typography>
-                    <IconButton size="sm" variant="plain" onClick={onClose}>
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                </Stack>
-                <Typography level="body-xs" sx={{ mb: 1.5, color: faint }}>
-                    {msgs.manageDescription}
-                </Typography>
-
-                {errorMessage && (
-                    <Alert color="danger" size="sm" sx={{ mb: 1.5, borderRadius: "8px" }}>
-                        {errorMessage}
-                    </Alert>
                 )}
-
-                {/* Field list */}
-                <Stack spacing={0.75}>
-                    {sorted.length === 0 && (
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: faint, textAlign: "center", py: 2 }}
-                        >
-                            {msgs.noFieldsYet}
-                        </Typography>
-                    )}
-                    {sorted.map((field, index) => (
-                        <Box
-                            key={field.fieldId}
-                            sx={{
-                                border: "1px solid",
-                                borderColor: border,
-                                borderRadius: "10px",
-                                p: 1,
-                            }}
-                        >
-                            <Stack alignItems="center" direction="row" spacing={0.75}>
-                                {/* Reorder */}
-                                <Stack spacing={-0.5}>
-                                    <IconButton
-                                        disabled={busy || index === 0}
-                                        size="sm"
-                                        sx={{ "--IconButton-size": "20px", minHeight: 20 }}
-                                        variant="plain"
-                                        onClick={() => handleMove(index, -1)}
-                                    >
-                                        <KeyboardArrowUpRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                    <IconButton
-                                        disabled={busy || index === sorted.length - 1}
-                                        size="sm"
-                                        sx={{ "--IconButton-size": "20px", minHeight: 20 }}
-                                        variant="plain"
-                                        onClick={() => handleMove(index, 1)}
-                                    >
-                                        <KeyboardArrowDownRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                </Stack>
-
-                                {/* Tag fields expand to their options editor */}
-                                {field.fieldType === "tag" ? (
-                                    <IconButton
-                                        size="sm"
-                                        sx={{ "--IconButton-size": "22px" }}
-                                        variant="plain"
-                                        onClick={() =>
-                                            setExpandedOptionsId(
-                                                expandedOptionsId === field.fieldId
-                                                    ? null
-                                                    : field.fieldId
-                                            )
-                                        }
-                                    >
-                                        {expandedOptionsId === field.fieldId ? (
-                                            <KeyboardArrowDownRoundedIcon sx={{ fontSize: 16 }} />
-                                        ) : (
-                                            <KeyboardArrowRightRoundedIcon sx={{ fontSize: 16 }} />
-                                        )}
-                                    </IconButton>
-                                ) : (
-                                    <Box sx={{ width: 22 }} />
-                                )}
-
-                                {editingFieldId === field.fieldId ? (
-                                    <>
-                                        <Input
-                                            size="sm"
-                                            sx={{ flex: 1 }}
-                                            value={editName}
-                                            autoFocus
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") handleRename(field);
-                                                if (e.key === "Escape") setEditingFieldId(null);
-                                            }}
-                                        />
-                                        <IconButton
-                                            disabled={busy || !editName.trim()}
-                                            size="sm"
-                                            variant="plain"
-                                            onClick={() => handleRename(field)}
-                                        >
-                                            <CheckRoundedIcon sx={{ fontSize: 17 }} />
-                                        </IconButton>
-                                        <IconButton
-                                            size="sm"
-                                            variant="plain"
-                                            onClick={() => setEditingFieldId(null)}
-                                        >
-                                            <CloseRoundedIcon sx={{ fontSize: 17 }} />
-                                        </IconButton>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ flex: 1, fontWeight: 600, minWidth: 0 }}
-                                            noWrap
-                                        >
-                                            {field.fieldName}
-                                        </Typography>
-                                        <Chip
-                                            size="sm"
-                                            sx={{ fontSize: "0.68rem", borderRadius: "5px" }}
-                                            variant="soft"
-                                        >
-                                            {typeLabel(field.fieldType)}
-                                        </Chip>
-                                        {confirmDeleteId === field.fieldId ? (
-                                            <>
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{ color: "danger.400" }}
-                                                >
-                                                    {msgs.deletePrompt}
-                                                </Typography>
-                                                <Button
-                                                    color="danger"
-                                                    disabled={busy}
-                                                    size="sm"
-                                                    sx={{ minHeight: 24, fontSize: "0.7rem" }}
-                                                    variant="soft"
-                                                    onClick={() => handleDelete(field.fieldId)}
-                                                >
-                                                    {msgs.deleteYes}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    sx={{ minHeight: 24, fontSize: "0.7rem" }}
-                                                    variant="plain"
-                                                    onClick={() => setConfirmDeleteId(null)}
-                                                >
-                                                    {msgs.deleteNo}
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <AppTooltip title={msgs.renameTooltip}>
-                                                    <IconButton
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() => {
-                                                            setEditingFieldId(field.fieldId);
-                                                            setEditName(field.fieldName);
-                                                            setConfirmDeleteId(null);
-                                                        }}
-                                                    >
-                                                        <EditRoundedIcon sx={{ fontSize: 15 }} />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                                <AppTooltip title={msgs.deleteTooltip}>
-                                                    <IconButton
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() => {
-                                                            setConfirmDeleteId(field.fieldId);
-                                                            setEditingFieldId(null);
-                                                        }}
-                                                    >
-                                                        <DeleteOutlineRoundedIcon
-                                                            sx={{ fontSize: 15 }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </>
-                                        )}
-                                    </>
-                                )}
+                {sorted.map((field, index) => (
+                    <Box
+                        key={field.fieldId}
+                        sx={{
+                            border: "1px solid",
+                            borderColor: g.border.default,
+                            borderRadius: g.radius.md,
+                            p: 1,
+                        }}
+                    >
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
+                            {/* Reorder */}
+                            <Stack spacing={-0.5}>
+                                <IconButton
+                                    disabled={busy || index === 0}
+                                    size="sm"
+                                    sx={{ "--IconButton-size": "20px", minHeight: 20 }}
+                                    variant="plain"
+                                    onClick={() => handleMove(index, -1)}
+                                >
+                                    <KeyboardArrowUpRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                                <IconButton
+                                    disabled={busy || index === sorted.length - 1}
+                                    size="sm"
+                                    sx={{ "--IconButton-size": "20px", minHeight: 20 }}
+                                    variant="plain"
+                                    onClick={() => handleMove(index, 1)}
+                                >
+                                    <KeyboardArrowDownRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
                             </Stack>
 
-                            {/* Options editor (tag fields, expanded) */}
-                            {field.fieldType === "tag" && expandedOptionsId === field.fieldId && (
-                                <Box sx={{ mt: 1, pl: 4.5 }}>
-                                    <Stack spacing={0.5}>
-                                        {field.options.map((option) => (
-                                            <Stack
-                                                key={option.id}
-                                                alignItems="center"
-                                                direction="row"
-                                                spacing={1}
+                            {/* Tag fields expand to their options editor */}
+                            {field.fieldType === "tag" ? (
+                                <IconButton
+                                    size="sm"
+                                    sx={{ "--IconButton-size": "22px" }}
+                                    variant="plain"
+                                    onClick={() =>
+                                        setExpandedOptionsId(
+                                            expandedOptionsId === field.fieldId
+                                                ? null
+                                                : field.fieldId
+                                        )
+                                    }
+                                >
+                                    {expandedOptionsId === field.fieldId ? (
+                                        <KeyboardArrowDownRoundedIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                        <KeyboardArrowRightRoundedIcon sx={{ fontSize: 16 }} />
+                                    )}
+                                </IconButton>
+                            ) : (
+                                <Box sx={{ width: 22 }} />
+                            )}
+
+                            {editingFieldId === field.fieldId ? (
+                                <>
+                                    <Input
+                                        size="sm"
+                                        sx={{ flex: 1 }}
+                                        value={editName}
+                                        autoFocus
+                                        onChange={(e) => setEditName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") handleRename(field);
+                                            if (e.key === "Escape") setEditingFieldId(null);
+                                        }}
+                                    />
+                                    <IconButton
+                                        disabled={busy || !editName.trim()}
+                                        size="sm"
+                                        variant="plain"
+                                        onClick={() => handleRename(field)}
+                                    >
+                                        <CheckRoundedIcon sx={{ fontSize: 17 }} />
+                                    </IconButton>
+                                    <IconButton
+                                        size="sm"
+                                        variant="plain"
+                                        onClick={() => setEditingFieldId(null)}
+                                    >
+                                        <CloseRoundedIcon sx={{ fontSize: 17 }} />
+                                    </IconButton>
+                                </>
+                            ) : (
+                                <>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{ flex: 1, fontWeight: 600, minWidth: 0 }}
+                                        noWrap
+                                    >
+                                        {field.fieldName}
+                                    </Typography>
+                                    <Chip
+                                        size="sm"
+                                        sx={{ fontSize: "0.68rem", borderRadius: "5px" }}
+                                        variant="soft"
+                                    >
+                                        {typeLabel(field.fieldType)}
+                                    </Chip>
+                                    {confirmDeleteId === field.fieldId ? (
+                                        <>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "danger.400" }}
                                             >
-                                                <ProjectTagChip
-                                                    isDark={isDark}
-                                                    label={option.label}
-                                                    tagColor={option.color}
-                                                />
-                                                <Box sx={{ flex: 1 }} />
-                                                <AppTooltip title={msgs.deleteOptionTooltip}>
-                                                    <IconButton
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() =>
-                                                            void writeOptions(
-                                                                field,
-                                                                field.options.filter(
-                                                                    (o) => o.id !== option.id
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        <DeleteOutlineRoundedIcon
-                                                            sx={{ fontSize: 14 }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </Stack>
-                                        ))}
-                                        {/* Add option */}
-                                        <Stack alignItems="center" direction="row" spacing={0.75}>
-                                            <Input
-                                                placeholder={msgs.optionNamePlaceholder}
+                                                {msgs.deletePrompt}
+                                            </Typography>
+                                            <Button
+                                                color="danger"
+                                                disabled={busy}
                                                 size="sm"
-                                                sx={{ flex: 1 }}
-                                                value={newOptionLabel}
-                                                onChange={(e) => setNewOptionLabel(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") handleAddOption(field);
-                                                }}
-                                            />
-                                            <ColorPickerMenu
-                                                zIndex={popupZ}
-                                                onSelectColor={(color) =>
-                                                    setNewOptionColor({
-                                                        chipColor: color.value,
-                                                        textColor: color.textColor,
-                                                    })
-                                                }
-                                            />
+                                                sx={{ minHeight: 24, fontSize: "0.7rem" }}
+                                                variant="soft"
+                                                onClick={() => handleDelete(field.fieldId)}
+                                            >
+                                                {msgs.deleteYes}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                sx={{ minHeight: 24, fontSize: "0.7rem" }}
+                                                variant="plain"
+                                                onClick={() => setConfirmDeleteId(null)}
+                                            >
+                                                {msgs.deleteNo}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <AppTooltip title={msgs.renameTooltip}>
+                                                <IconButton
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() => {
+                                                        setEditingFieldId(field.fieldId);
+                                                        setEditName(field.fieldName);
+                                                        setConfirmDeleteId(null);
+                                                    }}
+                                                >
+                                                    <EditRoundedIcon sx={{ fontSize: 15 }} />
+                                                </IconButton>
+                                            </AppTooltip>
+                                            <AppTooltip title={msgs.deleteTooltip}>
+                                                <IconButton
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() => {
+                                                        setConfirmDeleteId(field.fieldId);
+                                                        setEditingFieldId(null);
+                                                    }}
+                                                >
+                                                    <DeleteOutlineRoundedIcon
+                                                        sx={{ fontSize: 15 }}
+                                                    />
+                                                </IconButton>
+                                            </AppTooltip>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </Stack>
+
+                        {/* Options editor (tag fields, expanded) */}
+                        {field.fieldType === "tag" && expandedOptionsId === field.fieldId && (
+                            <Box sx={{ mt: 1, pl: 4.5 }}>
+                                <Stack spacing={0.5}>
+                                    {field.options.map((option) => (
+                                        <Stack
+                                            key={option.id}
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={1}
+                                        >
                                             <ProjectTagChip
                                                 isDark={isDark}
-                                                label={newOptionLabel || msgs.optionPreviewName}
-                                                tagColor={newOptionColor.chipColor}
+                                                label={option.label}
+                                                tagColor={option.color}
                                             />
-                                            <Button
-                                                disabled={busy || newOptionLabel.trim() === ""}
-                                                size="sm"
-                                                variant="soft"
-                                                startDecorator={
-                                                    <AddRoundedIcon sx={{ fontSize: 15 }} />
-                                                }
-                                                sx={{
-                                                    minHeight: 28,
-                                                    fontSize: "0.72rem",
-                                                }}
-                                                onClick={() => handleAddOption(field)}
-                                            >
-                                                {msgs.addOption}
-                                            </Button>
+                                            <Box sx={{ flex: 1 }} />
+                                            <AppTooltip title={msgs.deleteOptionTooltip}>
+                                                <IconButton
+                                                    disabled={busy}
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() =>
+                                                        void writeOptions(
+                                                            field,
+                                                            field.options.filter(
+                                                                (o) => o.id !== option.id
+                                                            )
+                                                        )
+                                                    }
+                                                >
+                                                    <DeleteOutlineRoundedIcon
+                                                        sx={{ fontSize: 14 }}
+                                                    />
+                                                </IconButton>
+                                            </AppTooltip>
                                         </Stack>
+                                    ))}
+                                    {/* Add option */}
+                                    <Stack alignItems="center" direction="row" spacing={0.75}>
+                                        <Input
+                                            placeholder={msgs.optionNamePlaceholder}
+                                            size="sm"
+                                            sx={{ flex: 1 }}
+                                            value={newOptionLabel}
+                                            onChange={(e) => setNewOptionLabel(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") handleAddOption(field);
+                                            }}
+                                        />
+                                        <ColorPickerMenu
+                                            zIndex={popupZ}
+                                            onSelectColor={(color) =>
+                                                setNewOptionColor({
+                                                    chipColor: color.value,
+                                                    textColor: color.textColor,
+                                                })
+                                            }
+                                        />
+                                        <ProjectTagChip
+                                            isDark={isDark}
+                                            label={newOptionLabel || msgs.optionPreviewName}
+                                            tagColor={newOptionColor.chipColor}
+                                        />
+                                        <Button
+                                            disabled={busy || newOptionLabel.trim() === ""}
+                                            size="sm"
+                                            sx={{ minHeight: 28, fontSize: "0.72rem" }}
+                                            variant="soft"
+                                            startDecorator={
+                                                <AddRoundedIcon sx={{ fontSize: 15 }} />
+                                            }
+                                            onClick={() => handleAddOption(field)}
+                                        >
+                                            {msgs.addOption}
+                                        </Button>
                                     </Stack>
-                                </Box>
-                            )}
-                        </Box>
-                    ))}
-                </Stack>
+                                </Stack>
+                            </Box>
+                        )}
+                    </Box>
+                ))}
+            </Stack>
 
-                {/* Add field */}
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={0.75}
-                    sx={{
-                        mt: 1.5,
-                        pt: 1.5,
-                        borderTop: "1px solid",
-                        borderColor: border,
+            {/* Add field */}
+            <Stack
+                alignItems="center"
+                direction="row"
+                spacing={0.75}
+                sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid", borderColor: g.border.default }}
+            >
+                <Input
+                    placeholder={msgs.fieldNamePlaceholder}
+                    size="sm"
+                    sx={{ flex: 1 }}
+                    value={newFieldName}
+                    onChange={(e) => setNewFieldName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddField();
+                    }}
+                />
+                <Select
+                    size="sm"
+                    // Listbox portals to <body>, so lift it above the
+                    // modal dialog or it opens invisibly behind it.
+                    slotProps={{ listbox: { sx: { zIndex: popupZ } } }}
+                    sx={{ minWidth: 110 }}
+                    value={newFieldType}
+                    onChange={(_e, value) => {
+                        if (value) setNewFieldType(value);
                     }}
                 >
-                    <Input
-                        placeholder={msgs.fieldNamePlaceholder}
-                        size="sm"
-                        sx={{ flex: 1 }}
-                        value={newFieldName}
-                        onChange={(e) => setNewFieldName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") handleAddField();
-                        }}
-                    />
-                    <Select
-                        size="sm"
-                        // Listbox portals to <body>, so lift it above the
-                        // modal dialog or it opens invisibly behind it.
-                        slotProps={{ listbox: { sx: { zIndex: popupZ } } }}
-                        sx={{ minWidth: 110 }}
-                        value={newFieldType}
-                        onChange={(_e, value) => {
-                            if (value) setNewFieldType(value);
-                        }}
-                    >
-                        {FIELD_TYPES.map((type) => (
-                            <Option key={type} value={type}>
-                                {typeLabel(type)}
-                            </Option>
-                        ))}
-                    </Select>
-                    <Button
-                        disabled={busy || newFieldName.trim() === ""}
-                        size="sm"
-                        startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="solid"
-                        onClick={handleAddField}
-                    >
-                        {msgs.addField}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                    {FIELD_TYPES.map((type) => (
+                        <Option key={type} value={type}>
+                            {typeLabel(type)}
+                        </Option>
+                    ))}
+                </Select>
+                <Button
+                    disabled={busy || newFieldName.trim() === ""}
+                    size="sm"
+                    startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="solid"
+                    onClick={handleAddField}
+                >
+                    {msgs.addField}
+                </Button>
+            </Stack>
+        </ModalFrame>
     );
 };
