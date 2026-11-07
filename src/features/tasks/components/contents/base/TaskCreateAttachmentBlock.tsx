@@ -1,11 +1,11 @@
 import React, { useRef, useState } from "react";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
-import { Box, IconButton, Modal, ModalDialog, Typography, useColorScheme } from "@mui/joy";
+import { Box, IconButton, Typography, useColorScheme } from "@mui/joy";
 
+import { ImageZoomModal } from "../../../../../components/messageBody/ImageZoomModal";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import {
@@ -383,56 +383,11 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                 </IconButton>
             </Box>
 
-            <Modal
-                open={!!selectedImage}
-                sx={{ zIndex: 10010 }}
+            <ImageZoomModal
+                src={selectedImage}
                 onClose={() => setSelectedImage(null)}
-            >
-                <ModalDialog
-                    sx={{
-                        borderRadius: "16px",
-                        p: 0,
-                        overflow: "hidden",
-                        background: isDark ? "rgba(22,22,28,0.95)" : "rgba(255,255,255,0.98)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-                        boxShadow: "0 24px 48px rgba(0,0,0,0.3)",
-                    }}
-                >
-                    {selectedImage && (
-                        <Box sx={{ position: "relative" }}>
-                            <img
-                                alt="preview"
-                                src={selectedImage}
-                                style={{
-                                    display: "block",
-                                    maxWidth: "80vw",
-                                    maxHeight: "80vh",
-                                }}
-                            />
-                            <AppTooltip placement="left" title={t.tasks.tooltips.download}>
-                                <IconButton
-                                    variant="solid"
-                                    sx={{
-                                        position: "absolute",
-                                        top: 12,
-                                        right: 12,
-                                        borderRadius: "10px",
-                                        background: "rgba(0,0,0,0.6)",
-                                        backdropFilter: "blur(8px)",
-                                        "&:hover": {
-                                            background: "rgba(0,0,0,0.8)",
-                                        },
-                                    }}
-                                    onClick={() => handleDownload(selectedImage)}
-                                >
-                                    <DownloadRoundedIcon sx={{ color: "white" }} />
-                                </IconButton>
-                            </AppTooltip>
-                        </Box>
-                    )}
-                </ModalDialog>
-            </Modal>
+                onDownload={handleDownload}
+            />
         </Box>
     );
 };

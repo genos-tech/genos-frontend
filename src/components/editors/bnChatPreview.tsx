@@ -4,8 +4,7 @@ import "@blocknote/mantine/style.css";
 import { useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog, Stack } from "@mui/joy";
+import { Box, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -19,11 +18,9 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { AppTooltip } from "../ui/AppTooltip";
+import { ImageZoomModal } from "../messageBody/ImageZoomModal";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useGenosSchema } from "./genos/genosSchema";
 import { useGenosEditor } from "./genos/useGenosEditor";
@@ -47,7 +44,6 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const { useTEM, myself, setMyself, socket, content, isSent, customClassName, useUISM, useCM } =
         props;
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
     const dictionary = useBlockNoteDictionary();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
@@ -108,13 +104,6 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const handleImageClick = (src: string) => {
         setSelectedImage(src);
         setOpened(true);
-    };
-
-    const handleDownload = async (
-        url: string,
-        filename = `chat-message-image-${getLocalCurrentTimestamp()}.png`
-    ) => {
-        await downloadFile(url, filename);
     };
 
     const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -179,33 +168,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 </Stack>
             )}
 
-            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
-                <ModalDialog>
-                    {selectedImage ? (
-                        <Box>
-                            <img
-                                alt={t.common.editor.imagePreviewAlt}
-                                src={selectedImage}
-                                style={{
-                                    maxWidth: "80vw",
-                                    maxHeight: "80vh",
-                                    display: "block",
-                                }}
-                            />
-                            <AppTooltip placement="top" size="sm" title={t.common.editor.download}>
-                                <IconButton
-                                    color="neutral"
-                                    sx={{ position: "absolute", top: "10px", right: "10px" }}
-                                    variant="solid"
-                                    onClick={() => handleDownload(selectedImage)}
-                                >
-                                    <DownloadIcon />
-                                </IconButton>
-                            </AppTooltip>
-                        </Box>
-                    ) : null}
-                </ModalDialog>
-            </Modal>
+            <ImageZoomModal src={opened ? selectedImage : null} onClose={() => setOpened(false)} />
         </Box>
     );
 };

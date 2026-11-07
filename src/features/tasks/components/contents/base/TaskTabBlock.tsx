@@ -3,7 +3,6 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
@@ -15,8 +14,6 @@ import {
     List,
     ListItem,
     ListItemButton,
-    Modal,
-    ModalDialog,
     Stack,
     TabList,
     TabPanel,
@@ -28,6 +25,7 @@ import Tab, { tabClasses } from "@mui/joy/Tab";
 import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { ImageZoomModal } from "../../../../../components/messageBody/ImageZoomModal";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUploadProgress";
@@ -49,7 +47,6 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../../types/tasks";
-import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
 import { AttachmentActionsMenu } from "../../../../notes/common/components/AttachmentActionsMenu";
 import { ModalImportMarkdown } from "../../../../notes/common/components/ModalImportMarkdown";
@@ -284,13 +281,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setOpened(true);
     };
 
-    const handleDownload = async (
-        url: string,
-        filename = `task-attachment-image-${getLocalCurrentTimestamp()}.png`
-    ) => {
-        await downloadFile(url, filename);
-    };
-
     // Tab configuration. Activity sits in the trailing slot so the
     // existing 0/1/2 indices that other components reference (e.g.
     // direct setTabIndex calls when opening notes from the sidebar)
@@ -408,11 +398,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                               }
                             : null
                     }
+                    onTaskNoteCreated={handleImportedNote}
                     onClose={() => {
                         setImportNoteOpen(false);
                         setImportAttachment(null);
                     }}
-                    onTaskNoteCreated={handleImportedNote}
                 />
             )}
             <Tabs
@@ -746,9 +736,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     >
                                         <AddRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
                                         <Typography
-                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
+                                            noWrap
                                         >
                                             New Note
                                         </Typography>
@@ -766,9 +756,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             sx={{ fontSize: 18, flexShrink: 0 }}
                                         />
                                         <Typography
-                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
+                                            noWrap
                                         >
                                             {t.notes.importMd.importNote}
                                         </Typography>
@@ -1124,63 +1114,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </Box>
 
                         {/* Image Preview Modal */}
-                        <Modal
-                            open={opened}
-                            sx={{ zIndex: 10010 }}
+                        <ImageZoomModal
+                            filenameStem="task-attachment-image"
+                            src={opened ? selectedImage : null}
                             onClose={() => setOpened(false)}
-                        >
-                            <ModalDialog
-                                sx={{
-                                    borderRadius: "16px",
-                                    p: 0,
-                                    overflow: "hidden",
-                                    background: isDark
-                                        ? "rgba(22,22,28,0.95)"
-                                        : "rgba(255,255,255,0.98)",
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.1)"
-                                        : "rgba(0,0,0,0.1)",
-                                    boxShadow: "0 24px 48px rgba(0,0,0,0.3)",
-                                }}
-                            >
-                                {selectedImage && (
-                                    <Box sx={{ position: "relative" }}>
-                                        <img
-                                            alt="preview"
-                                            src={selectedImage}
-                                            style={{
-                                                display: "block",
-                                                maxWidth: "80vw",
-                                                maxHeight: "80vh",
-                                            }}
-                                        />
-                                        <AppTooltip
-                                            placement="left"
-                                            title={t.tasks.tabs.downloadTooltip}
-                                        >
-                                            <IconButton
-                                                variant="solid"
-                                                sx={{
-                                                    position: "absolute",
-                                                    top: 12,
-                                                    right: 12,
-                                                    borderRadius: "10px",
-                                                    background: "rgba(0,0,0,0.6)",
-                                                    backdropFilter: "blur(8px)",
-                                                    "&:hover": {
-                                                        background: "rgba(0,0,0,0.8)",
-                                                    },
-                                                }}
-                                                onClick={() => handleDownload(selectedImage)}
-                                            >
-                                                <DownloadRoundedIcon sx={{ color: "white" }} />
-                                            </IconButton>
-                                        </AppTooltip>
-                                    </Box>
-                                )}
-                            </ModalDialog>
-                        </Modal>
+                        />
                     </TabPanel>
 
                     {/* Activity Tab — structured audit log. The fetch
