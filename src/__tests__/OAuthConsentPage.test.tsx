@@ -257,9 +257,10 @@ describe("OAuthConsentPage", () => {
         expect((screen.getByRole("button", { name: "Allow" }) as HTMLButtonElement).disabled).toBe(
             true
         );
-        expect(screen.getByRole("link", { name: "See plans" }).getAttribute("href")).toBe(
-            "/plans"
-        );
+        // OpenAI's guidelines forbid linking to a page that starts an upgrade: the notice
+        // explains the limit and says where plan details are, with no link.
+        expect(screen.queryByRole("link", { name: /plans/i })).toBeNull();
+        expect(screen.queryByText(/upgrade/i)).toBeNull();
     });
 
     it("shows the plan message when the decision is refused for the plan", async () => {

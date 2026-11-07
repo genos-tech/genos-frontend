@@ -297,16 +297,6 @@ export const OAuthConsentPage = () => {
                             >
                                 <Typography level="title-sm">{c.planTitle}</Typography>
                                 <Typography level="body-sm">{c.planBody}</Typography>
-                                <Typography
-                                    component="a"
-                                    href="/plans"
-                                    level="body-sm"
-                                    rel="noreferrer"
-                                    sx={{ textDecoration: "underline" }}
-                                    target="_blank"
-                                >
-                                    {c.planCta}
-                                </Typography>
                             </Alert>
                         )}
 

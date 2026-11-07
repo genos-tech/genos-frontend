@@ -307,8 +307,8 @@ export const ja: DeepPartial<Messages> = {
             allow: "許可",
             deny: "拒否",
             planTitle: "現在のプランでは利用できません",
-            planBody: "AI アプリの接続は Pro プラン以上で利用できます。",
-            planCta: "プランを見る",
+            planBody:
+                "AI アプリの接続は Pro プラン以上で利用できます。プランの詳細は Genos の「設定 → プランと使用状況」にあります。",
             noTeams: "先に Genos でチームに参加してから、もう一度接続してください。",
             invalidTitle: "このリンクは不完全です",
             invalidBody: "接続するアプリから、もう一度接続を始めてください。",
