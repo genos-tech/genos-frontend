@@ -1157,7 +1157,7 @@ export const zh: DeepPartial<Messages> = {
     },
     common: {
         feedback: {
-            loading: "加载中",
+            loading: "加载中…",
             toast: {
                 region: "通知",
                 undo: "撤销",

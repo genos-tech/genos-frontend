@@ -7,7 +7,7 @@ import type { DeepPartial, Messages } from "../../types";
 export const es: DeepPartial<Messages> = {
     common: {
         feedback: {
-            loading: "Cargando",
+            loading: "Cargando…",
             toast: {
                 region: "Notificaciones",
                 undo: "Deshacer",

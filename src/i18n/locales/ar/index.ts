@@ -8,7 +8,7 @@ import type { DeepPartial, Messages } from "../../types";
 export const ar: DeepPartial<Messages> = {
     common: {
         feedback: {
-            loading: "جارٍ التحميل",
+            loading: "جارٍ التحميل…",
             toast: {
                 region: "الإشعارات",
                 undo: "تراجع",

@@ -1,6 +1,6 @@
 export const common = {
     feedback: {
-        loading: "Loading",
+        loading: "Loading…",
         toast: {
             region: "Notifications",
             undo: "Undo",

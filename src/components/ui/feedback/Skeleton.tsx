@@ -27,6 +27,14 @@ type SkeletonRowsProps = {
     label?: string;
 };
 
+// Joy's pulse is decoration: still under `prefers-reduced-motion`.
+const still = {
+    "@media (prefers-reduced-motion: reduce)": {
+        animation: "none",
+        "&::after": { animation: "none" },
+    },
+} as const;
+
 // Widths cycle so a column of bars does not read as a rigid grid.
 const WIDTHS = ["72%", "56%", "64%", "48%", "68%", "52%"];
 
@@ -58,18 +66,18 @@ export const SkeletonRows = ({
                         minWidth: 0,
                     }}
                 >
-                    {avatar && <Skeleton height={28} variant="circular" width={28} />}
+                    {avatar && <Skeleton height={28} sx={still} variant="circular" width={28} />}
                     <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
                         <Skeleton
                             height={12}
-                            sx={{ borderRadius: g.radius.xs }}
+                            sx={{ borderRadius: g.radius.xs, ...still }}
                             variant="rectangular"
                             width={WIDTHS[i % WIDTHS.length]}
                         />
                         {twoLines && (
                             <Skeleton
                                 height={10}
-                                sx={{ borderRadius: g.radius.xs }}
+                                sx={{ borderRadius: g.radius.xs, ...still }}
                                 variant="rectangular"
                                 width={WIDTHS[(i + 3) % WIDTHS.length]}
                             />
@@ -98,7 +106,7 @@ export const SkeletonLines = ({ lines = 3, label }: SkeletonLinesProps) => {
                 <Skeleton
                     key={i}
                     height={12}
-                    sx={{ borderRadius: g.radius.xs }}
+                    sx={{ borderRadius: g.radius.xs, ...still }}
                     variant="rectangular"
                     width={i === lines - 1 ? "55%" : "100%"}
                 />

@@ -7,7 +7,7 @@ import type { DeepPartial, Messages } from "../../types";
 export const hi: DeepPartial<Messages> = {
     common: {
         feedback: {
-            loading: "लोड हो रहा है",
+            loading: "लोड हो रहा है…",
             toast: {
                 region: "सूचनाएँ",
                 undo: "पूर्ववत करें",

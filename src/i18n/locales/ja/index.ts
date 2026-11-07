@@ -1363,7 +1363,7 @@ export const ja: DeepPartial<Messages> = {
     },
     common: {
         feedback: {
-            loading: "読み込み中",
+            loading: "読み込み中…",
             toast: {
                 region: "通知",
                 undo: "元に戻す",

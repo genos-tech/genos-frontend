@@ -1218,7 +1218,7 @@ export const fr: DeepPartial<Messages> = {
     },
     common: {
         feedback: {
-            loading: "Chargement",
+            loading: "Chargement…",
             toast: {
                 region: "Notifications",
                 undo: "Annuler",
