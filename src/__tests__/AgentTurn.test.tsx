@@ -130,7 +130,6 @@ const baseProps = (over: Partial<AgentTurnProps> = {}): AgentTurnProps => ({
     answerSources: [],
     askError: null,
     isCurrent: false,
-    isDark: false,
     labels: en(),
     toolEvents: [],
     onPreview: vi.fn(),

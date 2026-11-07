@@ -20,7 +20,7 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, diffValue, MetaChip } from "./previewHelpers";
 
@@ -39,9 +39,8 @@ const FIELDS = [
 
 type Action = "create" | "update" | "create_folder" | "rename_folder" | "delete_folder";
 
-export const ManageMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageMilestonePreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const action = (asString(args.action) ?? "create") as Action;
     const currents = args.current as Record<string, unknown> | undefined;
 
@@ -105,13 +104,13 @@ export const ManageMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) =
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {action === "update" || action === "rename_folder" ? (
-                    <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : action === "delete_folder" ? (
-                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
+                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
                 ) : (
-                    <FlagRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <FlagRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
                 {chips.map((c) => (
@@ -120,12 +119,12 @@ export const ManageMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) =
             </Box>
 
             {title ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {titleWas && titleWas !== title ? (
                         <>
                             <Box
                                 component="span"
-                                sx={{ textDecoration: "line-through", color: palette.textMuted }}
+                                sx={{ textDecoration: "line-through", color: g.text.secondary }}
                             >
                                 {titleWas}
                             </Box>
@@ -143,9 +142,9 @@ export const ManageMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) =
                         overflowY: "auto",
                         pl: 1.25,
                         borderLeft: "2px solid",
-                        borderColor: palette.borderMuted,
+                        borderColor: g.border.subtle,
                         fontSize: "0.8125rem",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                         whiteSpace: "pre-wrap",
                         overflowWrap: "anywhere",
                     }}
@@ -157,9 +156,8 @@ export const ManageMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) =
     );
 };
 
-export const DeleteMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteMilestonePreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const current = args.current as { title?: string; tasks?: number } | undefined;
 
     const chips: string[] = [];
@@ -169,8 +167,8 @@ export const DeleteMilestonePreview = ({ args, isDark }: ApprovalPreviewProps) =
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.deleteMilestone, {
                         milestone: current?.title ?? asString(args.milestone_id) ?? "",
                     })}

@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { placeValue } from "./previewHelpers";
 
@@ -54,9 +54,8 @@ interface BulkUpdatePreviewProps extends ApprovalPreviewProps {
     };
 }
 
-export const BulkUpdatePreview = ({ args, isDark, editor }: BulkUpdatePreviewProps) => {
+export const BulkUpdatePreview = ({ args, editor }: BulkUpdatePreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const updates = (Array.isArray(args.updates) ? args.updates : []) as BulkUpdateRow[];
 
     const renderValue = (v: string | number | string[] | null | undefined): string => {
@@ -66,7 +65,7 @@ export const BulkUpdatePreview = ({ args, isDark, editor }: BulkUpdatePreviewPro
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75, mb: 0.75 }}>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {fmt(t.agentApproval.updatesHeader, { count: updates.length })}
             </Typography>
             {updates.map((row, i) => {
@@ -78,10 +77,13 @@ export const BulkUpdatePreview = ({ args, isDark, editor }: BulkUpdatePreviewPro
                         sx={{
                             pl: 1,
                             borderLeft: "2px solid",
-                            borderColor: palette.borderMuted,
+                            borderColor: g.border.subtle,
                         }}
                     >
-                        <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                        <Typography
+                            level="body-sm"
+                            sx={{ fontWeight: 600, color: g.text.primary }}
+                        >
                             {row.display_id ? `${row.display_id} ` : ""}
                             {row.title || `#${row.task_id ?? "?"}`}
                         </Typography>
@@ -116,14 +118,14 @@ export const BulkUpdatePreview = ({ args, isDark, editor }: BulkUpdatePreviewPro
                                         <Typography
                                             key={field}
                                             level="body-xs"
-                                            sx={{ color: palette.text }}
+                                            sx={{ color: g.text.primary }}
                                         >
                                             {t.agentApproval.fieldLabels[field]}:{" "}
                                             <Box
                                                 component="span"
                                                 sx={{
                                                     textDecoration: "line-through",
-                                                    color: palette.textMuted,
+                                                    color: g.text.secondary,
                                                 }}
                                             >
                                                 {renderValue(row.current?.[field])}
@@ -137,14 +139,14 @@ export const BulkUpdatePreview = ({ args, isDark, editor }: BulkUpdatePreviewPro
                                 )}
                             </Box>
                         ) : (
-                            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                 {t.agentApproval.noChanges}
                             </Typography>
                         )}
                         {row.rationale ? (
                             <Typography
                                 level="body-xs"
-                                sx={{ color: palette.textMuted, fontStyle: "italic" }}
+                                sx={{ color: g.text.secondary, fontStyle: "italic" }}
                             >
                                 {row.rationale}
                             </Typography>

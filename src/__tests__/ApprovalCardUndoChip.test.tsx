@@ -20,7 +20,7 @@ import { ApprovalCard } from "../features/agentQA/ApprovalCard";
 import { getMessages } from "../i18n";
 import { UNDO_REASONS, type PendingApprovalPayload } from "../services/agentApi";
 
-const mount = (over: Partial<PendingApprovalPayload>, isDark = false) => {
+const mount = (over: Partial<PendingApprovalPayload>) => {
     const pending: PendingApprovalPayload = {
         step: 1,
         tool_name: "delete_note",
@@ -33,7 +33,6 @@ const mount = (over: Partial<PendingApprovalPayload>, isDark = false) => {
         <CssVarsProvider>
             <ApprovalCard
                 approveLabel="Approve"
-                isDark={isDark}
                 pending={pending}
                 rejectLabel="Reject"
                 titleText="Approval required"
@@ -161,10 +160,5 @@ describe("the card around it", () => {
         expect(chip()).toBeTruthy();
         expect(screen.getByRole("button", { name: "Approve" })).toBeTruthy();
         expect(screen.getByRole("button", { name: "Reject" })).toBeTruthy();
-    });
-
-    it("renders in dark mode too", () => {
-        mount({ undoable: false, undo_reason: "irreversible_delete" }, true);
-        expect(chip()).toBeTruthy();
     });
 });

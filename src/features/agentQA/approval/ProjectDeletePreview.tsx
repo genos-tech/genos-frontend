@@ -18,13 +18,12 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString } from "./previewHelpers";
 
-export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
+export const DeleteProjectPreview = ({ args, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const destroyed = t.tasks.modals.deleteProject;
 
     const byId = asString(args.project_id);
@@ -52,8 +51,8 @@ export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPrevie
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
             </Box>
@@ -61,13 +60,13 @@ export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPrevie
             {showGiven ? (
                 <Typography
                     level="body-xs"
-                    sx={{ color: differs ? palette.dangerTint : palette.textMuted }}
+                    sx={{ color: differs ? g.danger.text : g.text.secondary }}
                 >
                     {fmt(t.agentApproval.projectNameGiven, { name: given })}
                 </Typography>
             ) : null}
             {differs ? (
-                <Typography level="body-xs" sx={{ color: palette.dangerTint, fontWeight: 600 }}>
+                <Typography level="body-xs" sx={{ color: g.danger.text, fontWeight: 600 }}>
                     {t.agentApproval.projectNameDiffers}
                 </Typography>
             ) : null}
@@ -76,13 +75,13 @@ export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPrevie
                 sx={{
                     p: 1,
                     borderRadius: "8px",
-                    background: palette.dangerTintBg,
-                    border: `1px solid ${palette.dangerTintBorder}`,
+                    background: g.danger.subtle,
+                    border: `1px solid ${g.danger.border}`,
                 }}
             >
                 <Typography
                     level="body-xs"
-                    sx={{ color: palette.dangerTint, fontWeight: 700, mb: 0.5 }}
+                    sx={{ color: g.danger.text, fontWeight: 700, mb: 0.5 }}
                 >
                     {destroyed.destroyedTitle}
                 </Typography>
@@ -92,7 +91,7 @@ export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPrevie
                         listStyle: "disc",
                         pl: 2.5,
                         m: 0,
-                        "& li": { color: palette.text, fontSize: "0.75rem", lineHeight: 1.6 },
+                        "& li": { color: g.text.primary, fontSize: "0.75rem", lineHeight: 1.6 },
                     }}
                 >
                     <li>{destroyed.destroyedMilestones}</li>
@@ -100,12 +99,12 @@ export const DeleteProjectPreview = ({ args, isDark, undoKnown }: ApprovalPrevie
                     <li>{destroyed.destroyedSprints}</li>
                     <li>{destroyed.destroyedMembersTags}</li>
                 </Box>
-                <Typography level="body-xs" sx={{ color: palette.textMuted, mt: 0.75 }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary, mt: 0.75 }}>
                     {destroyed.chatNote}
                 </Typography>
             </Box>
             {undoKnown ? null : (
-                <Typography level="body-xs" sx={{ color: palette.dangerTint, fontWeight: 600 }}>
+                <Typography level="body-xs" sx={{ color: g.danger.text, fontWeight: 600 }}>
                     {t.agentApproval.cannotUndo}
                 </Typography>
             )}

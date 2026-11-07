@@ -15,19 +15,16 @@ import { Box, Chip, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import type { PendingApprovalPayload } from "../../../services/agentApi";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 
 export const UndoChip = ({
     pending,
-    isDark,
 }: {
     pending: Pick<PendingApprovalPayload, "undoable" | "undo_reason">;
-    isDark: boolean;
 }) => {
     const { t } = useTranslation();
     if (pending.undoable !== false) return null;
 
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const reasons = t.agentApproval.undo.reasons as Record<string, string>;
     const code = pending.undo_reason ?? "";
     const strong = code === "irreversible_delete";
@@ -54,10 +51,10 @@ export const UndoChip = ({
                     "--Chip-minHeight": "20px",
                     ...(strong
                         ? {
-                              color: palette.dangerTint,
-                              background: palette.dangerTintBg,
+                              color: g.danger.text,
+                              background: g.danger.subtle,
                               border: "1px solid",
-                              borderColor: palette.dangerTintBorder,
+                              borderColor: g.danger.border,
                           }
                         : {}),
                 }}
@@ -66,7 +63,7 @@ export const UndoChip = ({
             </Chip>
             <Typography
                 level="body-xs"
-                sx={{ color: strong ? palette.dangerTint : palette.textMuted, minWidth: 0 }}
+                sx={{ color: strong ? g.danger.text : g.text.secondary, minWidth: 0 }}
             >
                 {reason}
             </Typography>

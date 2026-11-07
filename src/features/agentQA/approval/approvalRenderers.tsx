@@ -40,7 +40,6 @@ import { UpdateTaskPreview } from "./UpdateTaskPreview";
 
 export interface ApprovalPreviewProps {
     args: Record<string, unknown>;
-    isDark: boolean;
     // The backend predicts whether the write can be undone, and the card says so
     // itself (`UndoChip`). A preview that used to say "cannot be undone" leaves it
     // out then, so the card does not say it twice. Absent (older backends): as before.

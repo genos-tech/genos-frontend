@@ -13,7 +13,7 @@ import { Box, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import { agentMarkdownComponents } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip } from "./previewHelpers";
@@ -47,15 +47,12 @@ const TaskRow = ({
     task,
     allTasks,
     isSubtask,
-    isDark,
 }: {
     task: PlanTaskArg;
     allTasks: PlanTaskArg[];
     isSubtask: boolean;
-    isDark: boolean;
 }) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [showBody, setShowBody] = useState(false);
 
     const blockedBy = (task.blocked_by_indexes || [])
@@ -71,7 +68,7 @@ const TaskRow = ({
     return (
         <Box sx={{ ml: isSubtask ? 2.25 : 0 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {isSubtask ? "↳ " : ""}
                     {task.title || "—"}
                 </Typography>
@@ -92,7 +89,7 @@ const TaskRow = ({
                             display: "inline-flex",
                             alignItems: "center",
                             p: 0,
-                            color: palette.textMuted,
+                            color: g.text.secondary,
                         }}
                         onClick={() => setShowBody((s) => !s)}
                     >
@@ -105,7 +102,7 @@ const TaskRow = ({
                 ) : null}
             </Box>
             {blockedBy.length > 0 && (
-                <Typography level="body-xs" sx={{ color: palette.textMuted, ml: 1.5 }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary, ml: 1.5 }}>
                     {fmt(t.agentApproval.blockedBy, { tasks: blockedBy.join(", ") })}
                 </Typography>
             )}
@@ -115,7 +112,7 @@ const TaskRow = ({
                         ml: 1.5,
                         mt: 0.25,
                         fontSize: "0.8125rem",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                         "& p": { m: 0 },
                         "& ul, & ol": { m: 0, pl: 2.5 },
                     }}
@@ -129,9 +126,8 @@ const TaskRow = ({
     );
 };
 
-export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const TaskPlanPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const tasks = (Array.isArray(args.tasks) ? args.tasks : []) as PlanTaskArg[];
     const milestone = (
@@ -157,18 +153,18 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             {projectLabel ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.project}: {projectLabel}
                 </Typography>
             ) : null}
 
             {(milestone || existingMilestone) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                    <FlagRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                    <FlagRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                    <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                         {milestone?.title || existingMilestone}
                     </Typography>
-                    <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                         {milestone
                             ? t.agentApproval.newMilestone
                             : t.agentApproval.existingMilestone}
@@ -181,7 +177,7 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
 
             {parentTask ? (
                 // Sub-task mode: the whole batch nests under this task.
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.subtasksOf, { task: parentTask })}
                 </Typography>
             ) : null}
@@ -194,7 +190,7 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                     pl: milestone || existingMilestone || parentTask ? 1.25 : 0,
                     borderLeft:
                         milestone || existingMilestone || parentTask ? "2px solid" : "none",
-                    borderColor: palette.borderMuted,
+                    borderColor: g.border.subtle,
                 }}
             >
                 {tasks
@@ -213,17 +209,11 @@ export const TaskPlanPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                             .map(({ child, j }) => ({ task: child, isSubtask: true, key: j })),
                     ])
                     .map(({ task, isSubtask, key }) => (
-                        <TaskRow
-                            key={key}
-                            allTasks={tasks}
-                            isDark={isDark}
-                            isSubtask={isSubtask}
-                            task={task}
-                        />
+                        <TaskRow key={key} allTasks={tasks} isSubtask={isSubtask} task={task} />
                     ))}
             </Box>
 
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {fmt(t.agentApproval.planFooter, { tasks: tasks.length, deps: depCount })}
             </Typography>
         </Box>

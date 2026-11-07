@@ -20,7 +20,7 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip } from "./previewHelpers";
 
@@ -29,9 +29,8 @@ import { asString, MetaChip } from "./previewHelpers";
 const isUnstar = (v: unknown): boolean =>
     v === false || (typeof v === "string" && v.trim().toLowerCase() === "false");
 
-export const ManageNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageNoteFolderPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isRename = asString(args.action) === "rename";
     const name = asString(args.name) ?? "";
 
@@ -39,8 +38,8 @@ export const ManageNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) 
         return (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                    <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                    <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                    <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                         {fmt(t.agentApproval.renameNoteFolder, {
                             folder: asString(args.folder_id) || t.agentApproval.thisFolder,
                             name,
@@ -72,8 +71,8 @@ export const ManageNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <CreateNewFolderRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <CreateNewFolderRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.newNoteFolder, { name })}
                 </Typography>
                 {chips.map((c) => (
@@ -81,7 +80,7 @@ export const ManageNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) 
                 ))}
             </Box>
             {teamPrivate ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.noteFolderTeamPrivate}
                 </Typography>
             ) : null}
@@ -89,9 +88,8 @@ export const ManageNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) 
     );
 };
 
-export const FavoriteNotePreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const FavoriteNotePreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const unstar = isUnstar(args.favorite);
 
     // The note's title when the caller may read the note, else the folder
@@ -108,11 +106,11 @@ export const FavoriteNotePreview = ({ args, isDark }: ApprovalPreviewProps) => {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {unstar ? (
-                    <StarOutlineRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <StarOutlineRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : (
-                    <StarRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <StarRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(unstar ? t.agentApproval.removeFavorite : t.agentApproval.addFavorite, {
                         item,
                     })}

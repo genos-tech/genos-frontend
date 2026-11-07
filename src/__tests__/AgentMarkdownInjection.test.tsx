@@ -101,12 +101,7 @@ describe("each surface that renders model output", () => {
                 components={{
                     ...agentMarkdownComponents,
                     a: ({ href, children }) => (
-                        <CitationLink
-                            href={href}
-                            isDark={false}
-                            sourcesById={new Map()}
-                            onPreview={vi.fn()}
-                        >
+                        <CitationLink href={href} sourcesById={new Map()} onPreview={vi.fn()}>
                             {children}
                         </CitationLink>
                     ),
@@ -128,7 +123,6 @@ describe("each surface that renders model output", () => {
                     askedQuery="what is the status?"
                     askError={null}
                     isCurrent={false}
-                    isDark={false}
                     labels={buildAgentTurnLabels(getMessages("en"), "spotlight")}
                     toolEvents={[]}
                     onPreview={vi.fn()}
@@ -161,7 +155,6 @@ describe("each surface that renders model output", () => {
             <CssVarsProvider>
                 <ApprovalCard
                     approveLabel="Approve"
-                    isDark={false}
                     pending={pending}
                     rejectLabel="Reject"
                     titleText="Approval required"

@@ -16,15 +16,10 @@
 import { Box, Chip, CircularProgress, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import { clipText, parsePath, showValue, specFor } from "./approval/editableFields";
-import { DARK_TEXT_STRONG } from "./markdownAnswerSx";
 import { getToolLabel } from "./toolLabels";
 import type { ToolEvent } from "./types";
-
-// Mid-strength dark-mode body color used only here; kept local rather
-// than threading through markdownAnswerSx since it's an intermediate
-// state (pending-tool label) the typography block doesn't cover.
-const DARK_TEXT_MEDIUM = "#cebfeb";
 
 // "230ms" below a second, "1.8s" above — SI notation, deliberately not
 // localized (matches how every locale reads durations in tech UIs, so
@@ -34,10 +29,9 @@ export const formatDurationMs = (ms: number): string =>
 
 interface ToolProgressListProps {
     events: ToolEvent[];
-    isDark: boolean;
 }
 
-export const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
+export const ToolProgressList = ({ events }: ToolProgressListProps) => {
     if (events.length === 0) return null;
     return (
         <Box
@@ -48,11 +42,11 @@ export const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
                 mb: 0.75,
                 pl: 0.25,
                 borderLeft: "2px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                borderColor: g.border.subtle,
             }}
         >
             {events.map((e) => (
-                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} isDark={isDark} />
+                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} />
             ))}
         </Box>
     );
@@ -62,7 +56,7 @@ export const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
 // bulk row `PRJ-12 · Priority: High`. A long body is clipped to a few words; the
 // values are the ones typed, so no `current -> new` is shown (the snapshot a
 // card carries describes the proposal, not the edit).
-const EditedValues = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
+const EditedValues = ({ event }: { event: ToolEvent }) => {
     const { t } = useTranslation();
     const edited = event.edited_arguments;
     if (!event.edited || !edited) return null;
@@ -92,8 +86,6 @@ const EditedValues = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) 
             text: `${where}${label}: ${spec.kind === "body" ? clipText(shown) : shown}`,
         };
     });
-    const muted = isDark ? DARK_TEXT_MEDIUM : "text.tertiary";
-
     return (
         <Box
             sx={{
@@ -118,7 +110,7 @@ const EditedValues = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) 
                 <Typography
                     key={path}
                     level="body-xs"
-                    sx={{ color: muted, overflowWrap: "anywhere", minWidth: 0 }}
+                    sx={{ color: g.text.secondary, overflowWrap: "anywhere", minWidth: 0 }}
                 >
                     {text}
                 </Typography>
@@ -127,7 +119,7 @@ const EditedValues = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) 
     );
 };
 
-const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
+const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
     const { t } = useTranslation();
     const isPending = event.status === "pending";
     const isError = event.status === "error";
@@ -178,14 +170,11 @@ const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean 
                 <Typography
                     level="body-sm"
                     sx={{
-                        opacity: isPending ? (isDark ? 1 : 0.8) : 1,
                         color: isError
-                            ? "danger.500"
-                            : isDark
-                              ? isPending
-                                  ? DARK_TEXT_MEDIUM
-                                  : DARK_TEXT_STRONG
-                              : undefined,
+                            ? g.danger.text
+                            : isPending
+                              ? g.text.secondary
+                              : g.text.primary,
                     }}
                 >
                     {isError ? `${getToolLabel(event.tool_name, t)}: ${event.error}` : label}
@@ -200,15 +189,14 @@ const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean 
                             flexShrink: 0,
                             whiteSpace: "nowrap",
                             fontVariantNumeric: "tabular-nums",
-                            color: isDark ? DARK_TEXT_MEDIUM : "text.tertiary",
-                            opacity: isDark ? 0.8 : 1,
+                            color: g.text.secondary,
                         }}
                     >
                         {formatDurationMs(event.duration_ms)}
                     </Typography>
                 )}
             </Box>
-            {!isPending && !isError && <EditedValues event={event} isDark={isDark} />}
+            {!isPending && !isError && <EditedValues event={event} />}
         </>
     );
 };

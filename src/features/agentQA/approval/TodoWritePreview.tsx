@@ -17,7 +17,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, diffValue, MetaChip, shortTime } from "./previewHelpers";
 
@@ -31,21 +31,18 @@ const Shell = ({
     icon,
     title,
     chips,
-    isDark,
     children,
 }: {
     icon: ReactNode;
     title: string;
     chips: string[];
-    isDark: boolean;
     children?: ReactNode;
 }) => {
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {icon}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {title}
                 </Typography>
                 {chips.map((c) => (
@@ -57,8 +54,7 @@ const Shell = ({
     );
 };
 
-const NotesBody = ({ text, isDark }: { text: string; isDark: boolean }) => {
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
+const NotesBody = ({ text }: { text: string }) => {
     return (
         <Box
             sx={{
@@ -66,9 +62,9 @@ const NotesBody = ({ text, isDark }: { text: string; isDark: boolean }) => {
                 overflowY: "auto",
                 pl: 1.25,
                 borderLeft: "2px solid",
-                borderColor: palette.borderMuted,
+                borderColor: g.border.subtle,
                 fontSize: "0.8125rem",
-                color: palette.textMuted,
+                color: g.text.secondary,
                 whiteSpace: "pre-wrap",
                 overflowWrap: "anywhere",
             }}
@@ -96,9 +92,8 @@ const useProposedReminder = (args: Record<string, unknown>) => {
 
 const currentOf = (args: Record<string, unknown>) => args.current as Current | undefined;
 
-export const UpdateTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const UpdateTodoPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const current = currentOf(args);
     const reminder = useProposedReminder(args);
 
@@ -140,23 +135,21 @@ export const UpdateTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Shell
             chips={chips}
-            icon={<EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />}
-            isDark={isDark}
+            icon={<EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />}
             title={fmt(t.agentApproval.updateTodo, { item: asString(args.item_id) ?? "" })}
         >
             {title ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {title}
                 </Typography>
             ) : null}
-            {notes ? <NotesBody isDark={isDark} text={notes} /> : null}
+            {notes ? <NotesBody text={notes} /> : null}
         </Shell>
     );
 };
 
-export const CreateTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const CreateTodoPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const reminder = useProposedReminder(args);
 
     const chips: string[] = [];
@@ -173,25 +166,21 @@ export const CreateTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Shell
             chips={chips}
-            icon={
-                <CheckCircleOutlineRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-            }
-            isDark={isDark}
+            icon={<CheckCircleOutlineRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />}
             title={t.agentApproval.newTodo}
         >
             {title ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {title}
                 </Typography>
             ) : null}
-            {notes ? <NotesBody isDark={isDark} text={notes} /> : null}
+            {notes ? <NotesBody text={notes} /> : null}
         </Shell>
     );
 };
 
-export const DeleteTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteTodoPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const current = currentOf(args);
 
     const chips: string[] = [];
@@ -204,8 +193,7 @@ export const DeleteTodoPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Shell
             chips={chips}
-            icon={<DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />}
-            isDark={isDark}
+            icon={<DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />}
             title={fmt(t.agentApproval.deleteTodo, { item: asString(args.item_id) ?? "" })}
         />
     );

@@ -394,7 +394,6 @@ describe("render budget at the host", () => {
     const conversation = (state: UseAgentQAReturn) => (
         <CssVarsProvider>
             <AgentQAConversation
-                isDark={false}
                 state={state}
                 turnLabels={turnLabels}
                 labels={{

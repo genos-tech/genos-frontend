@@ -160,7 +160,6 @@ describe.each(LOCALES)("the editors in %s", (locale) => {
                 <I18nProvider>
                     <ApprovalCard
                         approveLabel="APPROVE"
-                        isDark={false}
                         rejectLabel="REJECT"
                         titleText="TITLE"
                         pending={{

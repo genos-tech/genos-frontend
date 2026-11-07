@@ -81,7 +81,6 @@ const baseProps = (over: Partial<AgentTurnProps> = {}): AgentTurnProps => ({
     answerSources: [],
     askError: null,
     isCurrent: false,
-    isDark: false,
     labels: labels(),
     toolEvents: [write(2, "update_task", 4711)],
     runId: RUN,

@@ -19,7 +19,6 @@ const renderCard = (tool_name: string, args: Record<string, unknown>) => {
         <CssVarsProvider>
             <ApprovalCard
                 approveLabel="Approve"
-                isDark={false}
                 pending={pending}
                 rejectLabel="Reject"
                 titleText={`Approval required: ${tool_name}`}

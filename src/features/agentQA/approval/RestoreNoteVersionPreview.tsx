@@ -13,13 +13,12 @@ import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString } from "./previewHelpers";
 
-export const RestoreNoteVersionPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const RestoreNoteVersionPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const title = asString(args.note_title);
     const noteId = asString(args.note_id);
     const versionNo = asString(args.version_no);
@@ -39,12 +38,12 @@ export const RestoreNoteVersionPreview = ({ args, isDark }: ApprovalPreviewProps
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <RestoreRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <RestoreRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {t.agentApproval.restoreNoteKeepsCurrent}
             </Typography>
         </Box>

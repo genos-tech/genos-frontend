@@ -26,12 +26,7 @@ export {
 } from "./citationUtils";
 export { CitationLink } from "./CitationLink";
 export { FeedbackThumbs } from "./FeedbackThumbs";
-export {
-    DARK_TEXT_MEDIUM,
-    DARK_TEXT_SOFT,
-    DARK_TEXT_STRONG,
-    markdownAnswerSx,
-} from "./markdownAnswerSx";
+export { markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
 export { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/SaveAnswerActions";
 export {

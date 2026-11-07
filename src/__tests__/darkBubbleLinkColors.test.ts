@@ -6,11 +6,17 @@
  * comment) computes to `light` even in dark mode: a dark blue link, and a dark
  * purple visited one, on a near-black bubble (about 2:1; 4.5:1 is the AA floor).
  * jsdom cannot compute a stylesheet's cascade, so this reads the rules out of
- * App.css and checks their colours against the backgrounds they sit on.
+ * App.css and checks their colours against the backgrounds they sit on: since
+ * MIP-1130 those are the shared Bubble's token fills, in every color theme
+ * (MIP-1166), not the three fixed backgrounds the palettes were tuned for.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+
+import { THEME_IDS } from "../theme/themePalettes";
+import { composite, contrast } from "../theme/tokens/color";
+import { buildRoles } from "../theme/tokens/roles";
 
 const css = readFileSync(join(__dirname, "../App.css"), "utf8");
 
@@ -21,33 +27,43 @@ const colorOf = (selector: string): string | null => {
     return color ? color[1] : null;
 };
 
-const luminance = (hex: string): number => {
-    const [r, g, b] = [1, 3, 5].map((i) => {
-        const v = parseInt(hex.slice(i, i + 2), 16) / 255;
-        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-const contrast = (a: string, b: string): number => {
-    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-    return (hi + 0.05) / (lo + 0.05);
+// The dark message and comment palettes in App.css still carry fixed colors (the
+// editor chrome is not token-based), but since MIP-1130 they no longer sit on the
+// fixed backgrounds they were tuned for (#1f2937, #312e81, #0b0d0e): every bubble
+// is the shared `Bubble`, whose fills are theme tokens. So the backgrounds below
+// are the real ones, per color theme: the page and the surface, each with the
+// hover fill, the sent tint (accent), the open-thread tint (accent) and the
+// deep-link tint (success) composited over it.
+const darkFills = (id: (typeof THEME_IDS)[number]): Record<string, string> => {
+    const r = buildRoles(id, "dark");
+    const tints = { accent: r.accentSubtle, success: r.success.subtle };
+    const base = { bg: r.bg, surface: r.surface };
+    return Object.fromEntries(
+        Object.entries(base).flatMap(([bn, b]) => [
+            [bn, b],
+            [`${bn}+hover`, composite(r.hover.hex, r.hover.a, b)],
+            ...Object.entries(tints).map(([tn, t]) => [`${bn}+${tn}`, composite(t.hex, t.a, b)]),
+        ])
+    );
 };
 
-// Each dark palette, and the backgrounds its links can sit on. The comment has
-// no bubble of its own: it sits on the page, from pure black up to the grey
-// task pane.
+// Each dark palette in App.css. They all sit on the same fills now, whichever
+// bubble look (compact row, received or sent balloon, task comment) hosts them.
 const PALETTES = [
-    { name: "received bubble", root: ".bn-message-bubble-box-dark", on: ["#1f2937", "#0b0d0e"] },
-    { name: "sent bubble", root: ".bn-message-bubble-box-dark-me", on: ["#312e81", "#0b0d0e"] },
-    {
-        name: "task comment",
-        root: ".task-comment-preview-dark",
-        on: ["#000000", "#0b0d0e", "#1f1f1f"],
-    },
+    { name: "message bubble", root: ".bn-message-bubble-box-dark" },
+    { name: "sent message bubble", root: ".bn-message-bubble-box-dark-me" },
+    { name: "task comment", root: ".task-comment-preview-dark" },
 ];
 
+const DARK_THEMES = THEME_IDS.map((id) => [id, darkFills(id)] as const);
+
+const worst = (color: string, fills: Record<string, string>) =>
+    Object.entries(fills)
+        .map(([n, bg]) => ({ n, ratio: contrast(color, bg) }))
+        .sort((x, y) => x.ratio - y.ratio)[0];
+
 describe("links in the dark bubbles", () => {
-    for (const { name, root, on } of PALETTES) {
+    for (const { name, root } of PALETTES) {
         for (const [state, suffix] of [
             ["link", " a"],
             ["visited link", " a:visited"],
@@ -57,25 +73,64 @@ describe("links in the dark bubbles", () => {
                 expect(colorOf(`${root}${suffix}`), `${root}${suffix}`).not.toBeNull();
             });
 
-            it(`${name}: the ${state} reads at 4.5:1 or better on every background it sits on`, () => {
-                const color = colorOf(`${root}${suffix}`)!;
-                for (const background of on) {
-                    expect(
-                        contrast(color, background),
-                        `${color} on ${background}`
-                    ).toBeGreaterThanOrEqual(4.5);
+            it.each(DARK_THEMES)(
+                `${name}: the ${state} reads at 4.5:1 or better on every fill a bubble has in the %s theme`,
+                (_id, fills) => {
+                    const color = colorOf(`${root}${suffix}`)!;
+                    const w = worst(color, fills);
+                    expect(w.ratio, `${color} on ${w.n}`).toBeGreaterThanOrEqual(4.5);
                 }
-            });
+            );
         }
     }
 
     it("the browser's default light-scheme link blue would not have passed (the test can fail)", () => {
-        expect(contrast("#0000ee", "#0b0d0e")).toBeLessThan(4.5);
-        expect(contrast("#551a8b", "#0b0d0e")).toBeLessThan(4.5);
+        for (const [, fills] of DARK_THEMES) {
+            expect(worst("#0000ee", fills).ratio).toBeLessThan(4.5);
+            expect(worst("#551a8b", fills).ratio).toBeLessThan(4.5);
+        }
     });
 
     it("leaves the light bubbles on the default link colour", () => {
         expect(colorOf(".bn-message-bubble-box-light a")).toBeNull();
         expect(colorOf(".task-comment-preview-light a")).toBeNull();
     });
+});
+
+describe("text and code in the dark bubbles", () => {
+    for (const { name, root } of PALETTES) {
+        it.each(DARK_THEMES)(`${name}: body text reads at 4.5:1 in the %s theme`, (_id, fills) => {
+            const color = colorOf(`${root} .bn-editor`)!;
+            expect(color, `${root} .bn-editor`).not.toBeNull();
+            const w = worst(color, fills);
+            expect(w.ratio, `${color} on ${w.n}`).toBeGreaterThanOrEqual(4.5);
+        });
+
+        it.each(DARK_THEMES)(
+            `${name}: inline code reads at 4.5:1 in the %s theme`,
+            (_id, fills) => {
+                // The code chip is a translucent fill over the bubble: reading the rule
+                // gives its color; its own background is white or black at an alpha.
+                const rule = css.match(
+                    new RegExp(`(?:^|\\n)${root.replace(/[\\.]/g, "\\$&")} code\\s*\\{([^}]*)\\}`)
+                );
+                const fg = rule?.[1].match(/(?:^|[;\s])color:\s*(#[0-9a-fA-F]{6})\b/)?.[1];
+                const bgm = rule?.[1].match(
+                    /background-color:\s*rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/
+                );
+                expect(fg, `${root} code color`).toBeTruthy();
+                expect(bgm, `${root} code background`).toBeTruthy();
+                const hex =
+                    "#" +
+                    [bgm![1], bgm![2], bgm![3]]
+                        .map((v) => Number(v).toString(16).padStart(2, "0"))
+                        .join("");
+                const a = Number(bgm![4]);
+                const bad = Object.entries(fills)
+                    .map(([n, f]) => ({ n, ratio: contrast(fg!, composite(hex, a, f)) }))
+                    .filter((x) => x.ratio < 4.5);
+                expect(bad).toEqual([]);
+            }
+        );
+    }
 });

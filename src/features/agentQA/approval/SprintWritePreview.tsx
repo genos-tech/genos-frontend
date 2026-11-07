@@ -20,15 +20,14 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip, placeValue } from "./previewHelpers";
 
 const DATE_FIELDS = ["start_date", "end_date"] as const;
 
-export const ManageSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageSprintPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isUpdate = asString(args.action) === "update";
     const labels = t.agentApproval.sprintFieldLabels;
 
@@ -56,11 +55,11 @@ export const ManageSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {isUpdate ? (
-                    <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : (
-                    <DirectionsRunRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <DirectionsRunRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
                 {chips.map((c) => (
@@ -69,7 +68,7 @@ export const ManageSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
             </Box>
 
             {!isUpdate && name ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {name}
                 </Typography>
             ) : null}
@@ -77,20 +76,19 @@ export const ManageSprintPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     );
 };
 
-export const DeleteSprintPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
+export const DeleteSprintPreview = ({ args, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.deleteSprint, { sprint: asString(args.sprint_id) ?? "" })}
                 </Typography>
                 {undoKnown ? null : <MetaChip label={t.agentApproval.cannotUndo} />}
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {t.agentApproval.sprintMilestonesKept}
             </Typography>
         </Box>
