@@ -484,8 +484,8 @@ export const SavedFiltersMenu = ({
                                     <AppTooltip title={ts.overwriteTooltip}>
                                         <IconButton
                                             size="sm"
-                                            variant="plain"
                                             sx={{ ...ICON_BUTTON_SX, color: styles.mutedText }}
+                                            variant="plain"
                                             onClick={(e) => {
                                                 // Every action here must stop
                                                 // propagation: the row itself
@@ -506,8 +506,8 @@ export const SavedFiltersMenu = ({
                                     <AppTooltip title={ts.renameTooltip}>
                                         <IconButton
                                             size="sm"
-                                            variant="plain"
                                             sx={{ ...ICON_BUTTON_SX, color: styles.mutedText }}
+                                            variant="plain"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 openRenameDialog(row);
