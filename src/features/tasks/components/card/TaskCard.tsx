@@ -206,14 +206,18 @@ export const TaskCard = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {task.assigneeId ? (
-                                    <AssigneeName
-                                        fallback={task.assigneeName || ""}
-                                        id={task.assigneeId}
-                                    />
-                                ) : (
-                                    t.tasks.board.unassigned
-                                )}
+                                {/* The RTL name island (Arabic part 1, #739): the name keeps its
+                                    reading order and truncates at its own end. */}
+                                <bdi className="g-bidi-island">
+                                    {task.assigneeId ? (
+                                        <AssigneeName
+                                            fallback={task.assigneeName || ""}
+                                            id={task.assigneeId}
+                                        />
+                                    ) : (
+                                        t.tasks.board.unassigned
+                                    )}
+                                </bdi>
                             </Box>
                         </Box>
                     ) : (
