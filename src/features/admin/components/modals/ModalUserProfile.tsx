@@ -3,7 +3,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
-    Avatar,
     Box,
     Button,
     Card,
@@ -22,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../components/ui/avatars/AvatarContext";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
@@ -38,6 +38,7 @@ import { ChannelKind, type Channel } from "../../../../types/channel";
 import type { ChatProps } from "../../../../types/chat";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { initialOf } from "../../../../utils/initials";
 import { loadTeamMemberInfo } from "../../services/loadTeamMemberInfo";
 import { UserProfileAbout } from "./sub/UserProfileAbout";
 import { UserProfileLocalTime } from "./sub/UserProfileLocalTime";
@@ -403,11 +404,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                             alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
-                                        <Avatar
+                                        <BaseAvatar
+                                            size={{ xs: "xxl", md: "hero" }}
                                             src={buildAvatarSrc(profileUser?.avatarImgPath)}
                                             sx={{
-                                                width: { xs: 100, md: 150 },
-                                                height: { xs: 100, md: 150 },
                                                 fontSize: { xs: "36px", md: "48px" },
                                                 boxShadow: styles.avatarGlow,
                                                 border: `3px solid ${styles.border}`,
@@ -422,8 +422,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                             }}
                                             onClick={() => setOpenUserProfile(true)}
                                         >
-                                            {profileUser?.userName[0]}
-                                        </Avatar>
+                                            {initialOf(profileUser?.userName)}
+                                        </BaseAvatar>
 
                                         {myself.userId === profileUser?.userId && (
                                             <Box

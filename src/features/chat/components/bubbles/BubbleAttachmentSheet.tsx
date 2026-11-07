@@ -1,6 +1,7 @@
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { BubbleMeta } from "../../../../components/ui/bubble";
 import { g, type } from "../../../../theme/tokens";
 
@@ -35,10 +36,9 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
             }}
         >
             <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                <Avatar
+                <BaseAvatar
+                    size="lg"
                     sx={{
-                        width: 42,
-                        height: 42,
                         bgcolor: g.accent.subtle,
                         border: "1px solid",
                         borderColor: g.accent.border,
@@ -51,7 +51,7 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
                             "--Icon-color": g.accent.text,
                         }}
                     />
-                </Avatar>
+                </BaseAvatar>
                 <Box sx={{ minWidth: 0 }}>
                     <Typography
                         sx={{

@@ -1,5 +1,6 @@
-import { Avatar, Divider, Stack, Typography } from "@mui/joy";
+import { Divider, Stack, Typography } from "@mui/joy";
 
+import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { PrDetailResponse } from "../services/prTypes";
@@ -102,13 +103,7 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
 
             {author && (
                 <Stack alignItems="center" direction="row" spacing={1}>
-                    {avatar && (
-                        <Avatar
-                            size="sm"
-                            src={avatar}
-                            sx={{ width: 20, height: 20, fontSize: 10 }}
-                        />
-                    )}
+                    {avatar && <BaseAvatar size="xs" src={avatar} />}
                     <Typography level="body-xs" sx={{ color: palette.text }}>
                         {fmt(t.integrations.pullRequest.hover.openedBy, {
                             author,

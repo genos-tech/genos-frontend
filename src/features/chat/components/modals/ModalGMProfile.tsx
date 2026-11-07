@@ -16,7 +16,6 @@ import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
-    Avatar,
     Box,
     Button,
     Card,
@@ -37,6 +36,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useUserProfile } from "../../../../components/ui/avatars/AvatarContext";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
@@ -603,11 +603,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
-                                        <Avatar
+                                        <BaseAvatar
+                                            size="display"
                                             src={avatarSrc}
                                             sx={{
-                                                width: 180,
-                                                height: 180,
                                                 fontSize: "50px",
                                                 boxShadow: styles.avatarGlow,
                                                 border: `3px solid ${styles.border}`,
@@ -621,7 +620,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             }}
                                         >
                                             <GroupsRoundedIcon sx={{ fontSize: 100 }} />
-                                        </Avatar>
+                                        </BaseAvatar>
 
                                         {/* Edit Button — owner/editor only, matching
                                             the backend gate on the v3 channel image

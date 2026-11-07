@@ -6,10 +6,10 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../../components/ui/avatars/ProjectAvatar";
@@ -89,11 +89,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 />
             );
         } else {
-            return (
-                <Avatar size="sm">
-                    {((chat?.chatName || activity.chatName || "?")[0] ?? "?").toUpperCase()}
-                </Avatar>
-            );
+            return <BaseAvatar name={chat?.chatName || activity.chatName} />;
         }
     }
 
@@ -114,9 +110,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         } else {
             return (
-                <Avatar size="sm">
+                <BaseAvatar>
                     <GroupsIcon />
-                </Avatar>
+                </BaseAvatar>
             );
         }
     }
@@ -137,9 +133,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         } else {
             return (
-                <Avatar size="sm">
+                <BaseAvatar>
                     <AssignmentIcon />
-                </Avatar>
+                </BaseAvatar>
             );
         }
     }
@@ -161,9 +157,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         } else {
             return (
-                <Avatar size="sm">
+                <BaseAvatar>
                     <AssignmentRoundedIcon />
-                </Avatar>
+                </BaseAvatar>
             );
         }
     }
@@ -180,9 +176,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         } else {
             return (
-                <Avatar size="sm">
+                <BaseAvatar>
                     <PeopleRoundedIcon />
-                </Avatar>
+                </BaseAvatar>
             );
         }
     }
@@ -207,23 +203,17 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         }
         return (
-            <Avatar size="sm" sx={{ background: "rgba(234, 88, 12, 0.15)", color: "#ea580c" }}>
+            <BaseAvatar tone="warning">
                 <AssignmentRoundedIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     }
     if (activity.chatType === 6) {
         // Personal note mention (shared)
         return (
-            <Avatar
-                size="sm"
-                sx={{
-                    background: "rgba(var(--gp-brand-700-rgb), 0.15)",
-                    color: "var(--gp-brand-700)",
-                }}
-            >
+            <BaseAvatar tone="accent">
                 <StickyNote2RoundedIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     }
     if (activity.chatType === 7) {
@@ -244,9 +234,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             );
         }
         return (
-            <Avatar size="sm" sx={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>
+            <BaseAvatar tone="success">
                 <NoteAltRoundedIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     }
     if (activity.chatType === 8) {
@@ -325,9 +315,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
 
         // Fallback: tinted icon when chat data isn't loaded yet.
         return (
-            <Avatar size="sm" sx={{ background: "rgba(2, 132, 199, 0.15)", color: "#0284c7" }}>
+            <BaseAvatar tone="info">
                 <DescriptionRoundedIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     }
 

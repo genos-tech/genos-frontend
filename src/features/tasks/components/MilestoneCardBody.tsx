@@ -1,11 +1,11 @@
 import { ReactNode } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { AvatarGroup, Box, LinearProgress, Typography } from "@mui/joy";
-import Avatar from "@mui/joy/Avatar";
+import { Box, LinearProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ResolvedUserName } from "../../../components/ui/avatars/AvatarContext";
+import { AvatarGroup, BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../i18n";
 import { TagListProps } from "../../../types/tasks";
@@ -259,11 +259,9 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
                         </>
                     ) : (
                         <>
-                            <Avatar
-                                size="sm"
+                            <BaseAvatar
+                                size="xs"
                                 sx={{
-                                    width: 20,
-                                    height: 20,
                                     fontSize: "0.6rem",
                                     border: isDark
                                         ? "1.5px solid rgba(255, 255, 255, 0.1)"
@@ -271,7 +269,7 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
                                 }}
                             >
                                 ?
-                            </Avatar>
+                            </BaseAvatar>
                             <Typography
                                 level="body-xs"
                                 sx={{ color: isDark ? "#999" : "#777", fontSize: "0.65rem" }}

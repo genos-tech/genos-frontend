@@ -1,17 +1,9 @@
 import { useMemo } from "react";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import {
-    Autocomplete,
-    Avatar,
-    AvatarGroup,
-    Box,
-    Chip,
-    LinearProgress,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Autocomplete, Box, Chip, LinearProgress, Stack, Typography } from "@mui/joy";
 
+import { AvatarGroup, BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
@@ -335,19 +327,13 @@ export const SprintMilestonePicker = ({
                                                 />
                                             </Box>
                                             {m.assignees && m.assignees.length > 0 && (
-                                                <AvatarGroup
-                                                    size="sm"
-                                                    sx={{ "--Avatar-size": "18px" }}
-                                                >
+                                                <AvatarGroup size="sm">
                                                     {m.assignees.slice(0, 3).map((a) => (
-                                                        <Avatar
+                                                        <BaseAvatar
                                                             key={String(a.userId)}
-                                                            sx={{ fontSize: 10 }}
-                                                        >
-                                                            {(
-                                                                a.username?.[0] || "?"
-                                                            ).toUpperCase()}
-                                                        </Avatar>
+                                                            name={a.username}
+                                                            size="xs"
+                                                        />
                                                     ))}
                                                 </AvatarGroup>
                                             )}

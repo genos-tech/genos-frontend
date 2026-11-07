@@ -42,13 +42,13 @@ import {
 } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
-import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -3934,20 +3934,14 @@ export const TaskHomeContent = ({
                                                                                 }
                                                                             />
                                                                         ) : (
-                                                                            <Avatar
+                                                                            <BaseAvatar
+                                                                                name={a.name}
                                                                                 size="sm"
                                                                                 src={
                                                                                     a.imgPath ||
                                                                                     undefined
                                                                                 }
-                                                                                sx={{
-                                                                                    width: 26,
-                                                                                    height: 26,
-                                                                                }}
-                                                                            >
-                                                                                {(a.name ||
-                                                                                    "?")[0]?.toUpperCase()}
-                                                                            </Avatar>
+                                                                            />
                                                                         )}
                                                                         <Typography
                                                                             level="body-sm"
