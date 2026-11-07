@@ -3,36 +3,12 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    AddCommentButton,
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    BlockTypeSelectItem,
-    blockTypeSelectItems,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    FormattingToolbarController,
-    getDefaultReactSlashMenuItems,
-    SideMenu,
-    SideMenuController,
-    SuggestionMenuController,
-    TableCellMergeButton,
-    TextAlignButton,
-} from "@blocknote/react";
+import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
@@ -49,7 +25,6 @@ import { UserProps } from "../../types/admin";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -58,14 +33,11 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { withGenosBlockSlashItems } from "./genosBlockSpecs";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosDocumentToolbar } from "./genos/GenosToolbars";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { linkHostCaption } from "./sub/linkHostCaption";
@@ -184,15 +156,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             }),
         [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
     );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGenosBlockSlashItems(
-            editor,
-            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
-        );
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
@@ -501,106 +464,23 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     />
                     <FormattingToolbarController
                         formattingToolbar={() => (
-                            <FormattingToolbar>
-                                <BlockTypeSelect
-                                    key={"blockTypeSelect"}
-                                    items={[
-                                        // Gets the default Block Type Select items.
-                                        ...getBlockTypeSelectItemsForDocuments(editor),
-                                        // Adds an item for the Alert block.
-                                        {
-                                            name: t.common.editor.alertBlock,
-                                            type: "alert",
-                                            icon: RiAlertFill,
-                                        } satisfies BlockTypeSelectItem,
-                                    ]}
-                                />
-
-                                <BasicTextStyleButton
-                                    key={"boldStyleButton"}
-                                    basicTextStyle={"bold"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"italicStyleButton"}
-                                    basicTextStyle={"italic"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"underlineStyleButton"}
-                                    basicTextStyle={"underline"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"strikeStyleButton"}
-                                    basicTextStyle={"strike"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"codeStyleButton"}
-                                    basicTextStyle={"code"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignLeftButton"}
-                                    textAlignment={"left"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignCenterButton"}
-                                    textAlignment={"center"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignRightButton"}
-                                    textAlignment={"right"}
-                                />
-                                <ColorStyleButton key={"colorStyleButton"} />
-                                <CreateLinkButton key={"createLinkButton"} />
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                                <FileCaptionButton key={"fileCaptionButton"} />
-                                <FileReplaceButton key={"fileReplaceButton"} />
-                                {threadStore && <AddCommentButton key={"addCommentButton"} />}
-                                <FileDeleteButton key={"fileDeleteButton"} />
-                                <FileDownloadButton key={"fileDownloadButton"} />
-                                <FilePreviewButton key={"filePreviewButton"} />
-                                <FileRenameButton key={"fileRenameButton"} />
-                                <TableCellMergeButton key={"tableCellMergeButton"} />
-                            </FormattingToolbar>
+                            <GenosDocumentToolbar
+                                editor={editor}
+                                hasComments={!!threadStore}
+                                setShowGifPicker={setShowGifPicker}
+                            />
                         )}
                     />
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
-                                    editor,
-                                    useTEM.teamMembers,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        getItems={async (query) =>
-                            filterSuggestionItems(
-                                getCustomSlashMenuItems(
-                                    editor as unknown as typeof schema.BlockNoteEditor
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                            teamMembers: useTEM.teamMembers,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "document", setShowGifPicker }}
                     />
 
                     {threadStore && (
