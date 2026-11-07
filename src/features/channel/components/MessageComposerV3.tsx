@@ -50,6 +50,7 @@ import {
 
 import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
 import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
+import { codeFenceInputRule } from "../../../components/editors/sub/codeBlockExtras";
 import { linkHostCaption } from "../../../components/editors/sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
@@ -174,7 +175,10 @@ export function MessageComposerV3({
 
     const editor = useCreateBlockNote({
         ...TAB_INDENT_OPTIONS,
-        extensions: [linkHostCaption],
+        // `codeFenceInputRule`: the schema now has the highlighted code block, and BlockNote's own
+        // ``` rule puts an UNKNOWN typed language in it, which wedges the editor (see
+        // codeBlockExtras.tsx). Every editor with that block carries this rule.
+        extensions: [codeFenceInputRule, linkHostCaption],
         schema,
         resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {
