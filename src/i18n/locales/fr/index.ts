@@ -3502,8 +3502,8 @@ export const fr: DeepPartial<Messages> = {
     },
     sidebar: {
         nav: {
-            inbox: "Boîte de réception",
-            chats: "Conversations",
+            inbox: "Réception",
+            chats: "Chats",
             tasks: "Tâches",
             notes: "Notes",
             account: "Compte",
@@ -3513,8 +3513,8 @@ export const fr: DeepPartial<Messages> = {
         actions: {
             todo: "À faire",
             history: "Histoire",
-            settings: "Paramètres",
-            signOut: "Se déconnecter",
+            settings: "Réglages",
+            signOut: "Quitter",
         },
         tooltips: {
             settings: "Paramètres",
