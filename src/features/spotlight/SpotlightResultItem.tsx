@@ -17,6 +17,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { fmt, useTranslation, type Messages } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
+import { g } from "../../theme/tokens";
 import type { ProjectProps } from "../../types/tasks";
 import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
 import { TaskStatusChip } from "../tasks/components/TaskStatusChip";
@@ -97,13 +98,6 @@ const ENTITY_ICON_GRADIENT: Record<string, string> = {
     // from the live workspace entities above.
     spotlight_answer: "linear-gradient(135deg, var(--gp-brand-400) 0%, #db2777 100%)",
 };
-
-// Dark-mode text colors tuned for the translucent purple sheet behind
-// the Spotlight overlay. Replaces opacity-based dimming, which muddies
-// text against the translucent background.
-const DARK_TEXT_STRONG = "#f1e8ff";
-const DARK_TEXT_MEDIUM = "#cebfeb";
-const DARK_TEXT_SOFT = "#a89bbf";
 
 // Friendly label shown next to the icon for context (e.g. "DM",
 // "Group chat", "Personal note"). Exported so the agent's source-chip
@@ -418,7 +412,7 @@ const SpotlightResultItemInner = ({
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
-                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                            color: g.text.primary,
                         }}
                     >
                         {result.title ? (
@@ -434,8 +428,7 @@ const SpotlightResultItemInner = ({
                     <Typography
                         level="body-sm"
                         sx={{
-                            opacity: isDark ? 1 : 0.55,
-                            color: isDark ? DARK_TEXT_SOFT : undefined,
+                            color: g.text.tertiary,
                             // A deep folder path must not push the title out.
                             ...(contextPathLabel(result)
                                 ? {
@@ -526,8 +519,7 @@ const SpotlightResultItemInner = ({
                         level="body-sm"
                         sx={{
                             mt: 0.25,
-                            opacity: isDark ? 1 : 0.75,
-                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            color: g.text.secondary,
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
@@ -535,7 +527,7 @@ const SpotlightResultItemInner = ({
                         }}
                     >
                         <HighlightedText
-                            boldColor={isDark ? DARK_TEXT_STRONG : undefined}
+                            boldColor={g.text.primary}
                             extraTerms={result.matched_terms}
                             query={query}
                             text={windowAroundMatch(result.snippet, query, result.matched_terms)}

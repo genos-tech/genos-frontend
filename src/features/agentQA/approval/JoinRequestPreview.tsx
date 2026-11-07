@@ -16,7 +16,7 @@ import PersonOffRoundedIcon from "@mui/icons-material/PersonOffRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation, type Messages } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString } from "./previewHelpers";
 
@@ -28,40 +28,38 @@ const requestPhrase = (raw: unknown, t: Messages): string => {
     return fmt(t.agentApproval.joinRequestNamed, { request: text });
 };
 
-export const ApproveJoinRequestPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ApproveJoinRequestPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.approveJoinRequest, {
                         request: requestPhrase(args.inbox_item_id, t),
                     })}
                 </Typography>
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {t.agentApproval.approveJoinRequestEffect}
             </Typography>
         </Box>
     );
 };
 
-export const DeclineJoinRequestPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeclineJoinRequestPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <PersonOffRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <PersonOffRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.declineJoinRequest, {
                         request: requestPhrase(args.inbox_item_id, t),
                     })}
                 </Typography>
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {t.agentApproval.declineJoinRequestEffect}
             </Typography>
         </Box>

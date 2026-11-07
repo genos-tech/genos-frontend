@@ -142,7 +142,6 @@ const turnLabels = buildAgentTurnLabels(getMessages("en"), "threadAsk");
 
 const conversation = (state: UseAgentQAReturn) => (
     <AgentQAConversation
-        isDark={false}
         state={state}
         turnLabels={turnLabels}
         labels={{

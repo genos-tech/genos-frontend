@@ -83,7 +83,6 @@ const renderConversation = (
     } as unknown as UseAgentQAReturn;
     const conversation = (
         <AgentQAConversation
-            isDark={false}
             labels={labels}
             state={state}
             turnLabels={buildAgentTurnLabels(getMessages("en"), "threadAsk")}

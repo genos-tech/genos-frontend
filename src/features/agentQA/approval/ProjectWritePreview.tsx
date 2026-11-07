@@ -23,7 +23,7 @@ import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip, placeValue } from "./previewHelpers";
 
@@ -32,9 +32,8 @@ const UPDATE_FIELDS = ["name", "code"] as const;
 const isPrivate = (v: unknown): boolean =>
     v === true || (typeof v === "string" && v.trim().toLowerCase() === "true");
 
-export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageProjectPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isUpdate = asString(args.action) === "update";
     const labels = t.agentApproval.projectFieldLabels;
 
@@ -68,13 +67,11 @@ export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {isUpdate ? (
-                    <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : (
-                    <CreateNewFolderRoundedIcon
-                        sx={{ fontSize: 16, color: palette.warningTint }}
-                    />
+                    <CreateNewFolderRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
                 {chips.map((c) => (
@@ -83,13 +80,13 @@ export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
             </Box>
 
             {!isUpdate && name ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {name}
                 </Typography>
             ) : null}
 
             {people.length > 0 ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {fmt(t.agentApproval.projectPeopleAdded, {
                         count: people.length,
                         people: people.join(", "),
@@ -98,7 +95,7 @@ export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
             ) : null}
 
             {isUpdate && args.code !== undefined && args.code !== null ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.projectCodeHint}
                 </Typography>
             ) : null}
@@ -106,9 +103,8 @@ export const ManageProjectPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     );
 };
 
-export const ManageProjectMembersPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageProjectMembersPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isSetRole = asString(args.action) === "set_role";
     const role = asString(args.role);
     const vars = {
@@ -127,11 +123,11 @@ export const ManageProjectMembersPreview = ({ args, isDark }: ApprovalPreviewPro
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {isSetRole ? (
-                    <ManageAccountsRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <ManageAccountsRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : (
-                    <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
                 {isSetRole && role && role !== "editor" && role !== "viewer" ? (
@@ -139,7 +135,7 @@ export const ManageProjectMembersPreview = ({ args, isDark }: ApprovalPreviewPro
                 ) : null}
             </Box>
             {!isSetRole ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.projectMemberGetsChat}
                 </Typography>
             ) : null}

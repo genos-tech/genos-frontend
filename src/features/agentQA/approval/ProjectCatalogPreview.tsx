@@ -25,7 +25,7 @@ import NewLabelRoundedIcon from "@mui/icons-material/NewLabelRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectLabelChips";
 import { ProjectTagChip } from "../../tasks/components/ProjectTagChip";
 import { getContrastTextColor } from "../../tasks/utils/contrastTextColor";
@@ -48,9 +48,8 @@ const resolveColor = (raw: unknown, fallback: string): { color: string; rejected
     return { color: fallback, rejected: typeof raw === "string" ? raw : JSON.stringify(raw) };
 };
 
-export const AddProjectTagPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const AddProjectTagPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const name = asString(args.tag_name);
     const project = asString(args.project_id);
     const { color, rejected } = resolveColor(args.color, DEFAULT_TAG_COLOR);
@@ -58,19 +57,19 @@ export const AddProjectTagPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
-                <LocalOfferRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <LocalOfferRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {t.agentApproval.addProjectTag}
                 </Typography>
-                {name ? <ProjectTagChip isDark={isDark} label={name} tagColor={color} /> : null}
+                {name ? <ProjectTagChip label={name} tagColor={color} /> : null}
                 {project ? (
-                    <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                         {fmt(t.agentApproval.projectTagOn, { project })}
                     </Typography>
                 ) : null}
             </Box>
             {rejected !== undefined ? (
-                <Typography level="body-xs" sx={{ color: palette.dangerTint }}>
+                <Typography level="body-xs" sx={{ color: g.danger.text }}>
                     {fmt(t.agentApproval.projectColorInvalid, { color: rejected })}
                 </Typography>
             ) : null}
@@ -78,9 +77,8 @@ export const AddProjectTagPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     );
 };
 
-export const ManageProjectLabelsPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageProjectLabelsPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const action = asString(args.action);
     const project = asString(args.project_id) ?? t.agentApproval.thisProject;
 
@@ -90,8 +88,8 @@ export const ManageProjectLabelsPreview = ({ args, isDark }: ApprovalPreviewProp
         return (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
-                    <NewLabelRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                    <NewLabelRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                    <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                         {t.agentApproval.newProjectLabel}
                     </Typography>
                     {name ? (
@@ -108,11 +106,11 @@ export const ManageProjectLabelsPreview = ({ args, isDark }: ApprovalPreviewProp
                         />
                     ) : null}
                 </Box>
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.projectLabelTeamWide}
                 </Typography>
                 {rejected !== undefined ? (
-                    <Typography level="body-xs" sx={{ color: palette.dangerTint }}>
+                    <Typography level="body-xs" sx={{ color: g.danger.text }}>
                         {fmt(t.agentApproval.projectColorInvalid, { color: rejected })}
                     </Typography>
                 ) : null}
@@ -131,8 +129,8 @@ export const ManageProjectLabelsPreview = ({ args, isDark }: ApprovalPreviewProp
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <LabelRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <LabelRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
             </Box>

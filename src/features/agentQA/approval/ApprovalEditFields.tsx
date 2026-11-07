@@ -29,7 +29,7 @@ import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import { Box, Button, Chip, ChipDelete, Typography } from "@mui/joy";
 
 import { fmt, useTranslation, type Messages } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { focusRing, g } from "../../../theme/tokens";
 import { taskMetaLabel } from "../../tasks/utils/taskMeta";
 import {
     clipText,
@@ -41,9 +41,7 @@ import {
 } from "./editableFields";
 import type { ApprovalEdit } from "./useApprovalEdit";
 
-type Palette = (typeof purplePalette)["light"];
-
-const controlSx = (palette: Palette, isDark: boolean, invalid: boolean) => ({
+const controlSx = (invalid: boolean) => ({
     width: "100%",
     boxSizing: "border-box" as const,
     font: "inherit",
@@ -53,15 +51,13 @@ const controlSx = (palette: Palette, isDark: boolean, invalid: boolean) => ({
     py: 0.625,
     borderRadius: "8px",
     border: "1px solid",
-    borderColor: invalid ? palette.dangerTint : palette.inputBorder,
-    background: palette.inputBg,
-    color: palette.text,
-    // Native pickers and the <select> list follow the app's dark mode.
-    colorScheme: isDark ? "dark" : "light",
+    borderColor: invalid ? g.danger.text : g.border.default,
+    background: g.surface.default,
+    color: g.text.primary,
     "&:focus": {
-        outline: "none",
-        borderColor: invalid ? palette.dangerTint : palette.inputFocusBorder,
-        boxShadow: palette.inputFocusShadow,
+        ...focusRing,
+        outlineOffset: 0,
+        borderColor: invalid ? g.danger.text : g.focus,
     },
 });
 
@@ -87,7 +83,6 @@ const Frame = ({
     controlId,
     label,
     wide,
-    palette,
     dirty,
     resetLabel,
     onReset,
@@ -99,7 +94,6 @@ const Frame = ({
     controlId: string;
     label: string;
     wide: boolean;
-    palette: Palette;
     dirty: boolean;
     resetLabel: string;
     onReset: () => void;
@@ -127,7 +121,7 @@ const Frame = ({
                         fontSize: "0.75rem",
                         fontWeight: 700,
                         letterSpacing: "0.02em",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                     }}
                 >
                     {label}
@@ -150,7 +144,7 @@ const Frame = ({
                 <Typography
                     key={hint}
                     level="body-xs"
-                    sx={{ color: palette.textMuted, overflowWrap: "anywhere" }}
+                    sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
                 >
                     {hint}
                 </Typography>
@@ -161,7 +155,7 @@ const Frame = ({
                 aria-live="polite"
                 id={errorId}
                 level="body-xs"
-                sx={{ color: palette.dangerTint, overflowWrap: "anywhere" }}
+                sx={{ color: g.danger.text, overflowWrap: "anywhere" }}
             >
                 {error ?? ""}
             </Typography>
@@ -173,16 +167,12 @@ const TagsEditor = ({
     id,
     value,
     onChange,
-    palette,
-    isDark,
     describedBy,
     invalid,
 }: {
     id: string;
     value: string[];
     onChange: (next: string[]) => void;
-    palette: Palette;
-    isDark: boolean;
     describedBy: string;
     invalid: boolean;
 }) => {
@@ -202,7 +192,7 @@ const TagsEditor = ({
                 sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
             >
                 {value.length === 0 ? (
-                    <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                         {t.agentApproval.edit.noTags}
                     </Typography>
                 ) : null}
@@ -231,7 +221,7 @@ const TagsEditor = ({
                     data-approval-field=""
                     id={id}
                     placeholder={t.agentApproval.edit.tagPlaceholder}
-                    sx={controlSx(palette, isDark, invalid)}
+                    sx={controlSx(invalid)}
                     type="text"
                     onBlur={(e: React.FocusEvent<HTMLInputElement>) => commit(e.currentTarget)}
                     onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
@@ -263,15 +253,13 @@ interface EditorProps {
     field: EditableField;
     args: Record<string, unknown>;
     idPrefix: string;
-    isDark: boolean;
     // A bulk row names its fields by the row, which the group heading carries.
     wide?: boolean;
 }
 
 /** One field: its label, control, Reset, hint and problem sentence. */
-export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: EditorProps) => {
+export const FieldEditor = ({ edit, field, args, idPrefix, wide }: EditorProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const show = useShowValue();
     const { path, spec } = field;
     const timeZone = typeof args.time_zone === "string" ? args.time_zone : undefined;
@@ -325,7 +313,7 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
                 <Box
                     {...common}
                     component="input"
-                    sx={controlSx(palette, isDark, invalid)}
+                    sx={controlSx(invalid)}
                     type="text"
                     value={text}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -342,7 +330,7 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
                     rows={spec.label === "comment" ? 3 : 5}
                     value={text}
                     sx={{
-                        ...controlSx(palette, isDark, invalid),
+                        ...controlSx(invalid),
                         resize: "vertical",
                         minHeight: 64,
                         maxHeight: 360,
@@ -365,7 +353,7 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
                 <Box
                     {...common}
                     component="select"
-                    sx={controlSx(palette, isDark, invalid)}
+                    sx={controlSx(invalid)}
                     value={text}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                         edit.set(path, e.target.value)
@@ -394,7 +382,7 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
                     {...common}
                     component="input"
                     max={spec.kind === "date" ? "9999-12-31" : "9999-12-31T23:59"}
-                    sx={controlSx(palette, isDark, invalid)}
+                    sx={controlSx(invalid)}
                     type={spec.kind === "date" ? "date" : "datetime-local"}
                     value={text}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -411,8 +399,6 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
                     describedBy={errorId}
                     id={controlId}
                     invalid={invalid}
-                    isDark={isDark}
-                    palette={palette}
                     value={Array.isArray(draft) ? draft : []}
                     onChange={(next) => edit.set(path, next)}
                 />
@@ -430,7 +416,6 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
             errorId={errorId}
             hints={hints}
             label={labelText}
-            palette={palette}
             resetLabel={fmt(t.agentApproval.edit.resetField, { field: labelText })}
             wide={wide ?? (spec.kind === "text" || spec.kind === "body" || spec.kind === "tags")}
             onReset={() => edit.reset(path)}
@@ -444,11 +429,9 @@ export const FieldEditor = ({ edit, field, args, idPrefix, isDark, wide }: Edito
 export const EditFieldList = ({
     edit,
     args,
-    isDark,
 }: {
     edit: ApprovalEdit;
     args: Record<string, unknown>;
-    isDark: boolean;
 }) => {
     const idPrefix = useId();
     const flat = edit.fields.filter((f) => f.row === undefined);
@@ -464,14 +447,7 @@ export const EditFieldList = ({
             }}
         >
             {flat.map((f) => (
-                <FieldEditor
-                    key={f.path}
-                    args={args}
-                    edit={edit}
-                    field={f}
-                    idPrefix={idPrefix}
-                    isDark={isDark}
-                />
+                <FieldEditor key={f.path} args={args} edit={edit} field={f} idPrefix={idPrefix} />
             ))}
         </Box>
     );
@@ -484,27 +460,18 @@ export const EditFieldList = ({
 export const BulkRowField = ({
     edit,
     args,
-    isDark,
     idPrefix,
     row,
     name,
 }: {
     edit: ApprovalEdit;
     args: Record<string, unknown>;
-    isDark: boolean;
     idPrefix: string;
     row: number;
     name: string;
 }) => {
     const field = edit.fields.find((f) => f.row === row && f.field === name);
     return field ? (
-        <FieldEditor
-            args={args}
-            edit={edit}
-            field={field}
-            idPrefix={idPrefix}
-            isDark={isDark}
-            wide={false}
-        />
+        <FieldEditor args={args} edit={edit} field={field} idPrefix={idPrefix} wide={false} />
     ) : null;
 };

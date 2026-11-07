@@ -57,15 +57,7 @@ import type {
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
 import { purplePalette } from "../../theme/purplePalette";
-// Dark-mode text colors tuned for legibility against the translucent
-// purple sheet background (rgba(var(--gp-dark-surface-a-rgb), 0.92)). These replace
-// opacity-based dimming, which compounds with the bg translucency to
-// produce muddy, hard-to-read text.
-//
-// `DARK_TEXT_STRONG` is re-imported from the shared markdownAnswerSx
-// module (now in features/agentQA/) so the body text colour in the
-// typography block stays in lock-step with every other "answer surface"
-// (ThreadAskModal etc.) that renders the same theme.
+import { g } from "../../theme/tokens";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import {
@@ -74,9 +66,6 @@ import {
     AgentTurn,
     buildAgentTurnLabels,
     CitationLink,
-    DARK_TEXT_MEDIUM,
-    DARK_TEXT_SOFT,
-    DARK_TEXT_STRONG,
     FeedbackThumbs,
     markdownAnswerSx,
     MentionHighlightOverlay,
@@ -759,7 +748,7 @@ export const SpotlightContent = ({
                             border: "none",
                             outline: "none",
                             background: "transparent",
-                            color: isDark ? DARK_TEXT_STRONG : "inherit",
+                            color: g.text.primary,
                             fontSize: { xs: "0.9375rem", sm: "1.0625rem" },
                             fontFamily: "inherit",
                             // Native browsers add ~5px padding around
@@ -775,9 +764,7 @@ export const SpotlightContent = ({
                             // pushing the rest of the overlay off-screen.
                             overflowY: "auto",
                             lineHeight: 1.4,
-                            "::placeholder": isDark
-                                ? { color: DARK_TEXT_SOFT, opacity: 1 }
-                                : { opacity: 0.6 },
+                            "::placeholder": { color: g.text.tertiary, opacity: 1 },
                         }}
                         onClick={syncMentionCaret}
                         onKeyUp={syncMentionCaret}
@@ -1060,8 +1047,7 @@ export const SpotlightContent = ({
                                 fontWeight: 700,
                                 mr: 0.25,
                                 whiteSpace: "nowrap",
-                                color: isDark ? DARK_TEXT_SOFT : undefined,
-                                opacity: isDark ? 1 : 0.6,
+                                color: g.text.tertiary,
                             }}
                         >
                             {t.spotlight.starters.label}
@@ -1085,8 +1071,8 @@ export const SpotlightContent = ({
                                     maxWidth: { xs: "100%", sm: 340 },
                                     ...(isDark
                                         ? {
-                                              color: DARK_TEXT_MEDIUM,
-                                              backgroundColor: "rgba(255,255,255,0.07)",
+                                              color: g.text.secondary,
+                                              backgroundColor: g.hover,
                                           }
                                         : {}),
                                 }}
@@ -1136,8 +1122,7 @@ export const SpotlightContent = ({
                             fontWeight: 700,
                             mr: 0.25,
                             whiteSpace: "nowrap",
-                            color: isDark ? DARK_TEXT_SOFT : undefined,
-                            opacity: isDark ? 1 : 0.6,
+                            color: g.text.tertiary,
                         }}
                     >
                         {t.spotlight.filter.label}
@@ -1188,8 +1173,8 @@ export const SpotlightContent = ({
                                         // ones an explicit bg + readable text.
                                         ...(isDark && !active
                                             ? {
-                                                  color: DARK_TEXT_MEDIUM,
-                                                  backgroundColor: "rgba(255,255,255,0.07)",
+                                                  color: g.text.secondary,
+                                                  backgroundColor: g.hover,
                                               }
                                             : {}),
                                         ...(scopeDisabled ? { opacity: 0.45 } : {}),
@@ -1341,8 +1326,7 @@ export const SpotlightContent = ({
                         <Typography
                             level="body-md"
                             sx={{
-                                opacity: isDark ? 1 : 0.75,
-                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                                color: g.text.secondary,
                             }}
                         >
                             {t.spotlight.states.searching}
@@ -1350,10 +1334,10 @@ export const SpotlightContent = ({
                     </Box>
                 )}
 
-                {hasQuery && error && <EmptyHint isDark={isDark} text={error} tone="error" />}
+                {hasQuery && error && <EmptyHint text={error} tone="error" />}
 
                 {hasQuery && !isLoading && !error && !hasResults && (
-                    <EmptyHint isDark={isDark} text={t.spotlight.empty.noMatches} />
+                    <EmptyHint text={t.spotlight.empty.noMatches} />
                 )}
 
                 {hasResults && (
@@ -1397,13 +1381,12 @@ export const SpotlightContent = ({
     );
 };
 
-const EmptyHint = ({ text, tone, isDark }: { text: string; tone?: "error"; isDark?: boolean }) => (
+const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
     <Box sx={{ px: 1.5, py: 1.25 }}>
         <Typography
             level="body-md"
             sx={{
-                opacity: tone === "error" ? 0.95 : isDark ? 1 : 0.72,
-                color: tone === "error" ? "danger.500" : isDark ? DARK_TEXT_MEDIUM : undefined,
+                color: tone === "error" ? g.danger.text : g.text.secondary,
             }}
         >
             {text}
@@ -1665,8 +1648,7 @@ const ConversationPanel = memo(
                         <Typography
                             level="body-sm"
                             sx={{
-                                opacity: isDark ? 1 : 0.85,
-                                color: isDark ? DARK_TEXT_STRONG : undefined,
+                                color: g.text.primary,
                                 fontWeight: 600,
                                 textTransform: "uppercase",
                             }}
@@ -1786,7 +1768,6 @@ const ConversationPanel = memo(
                                 askError={turn.askError}
                                 elapsedMs={turn.elapsedMs}
                                 isCurrent={false}
-                                isDark={isDark}
                                 labels={turnLabels}
                                 layout={turnLayout}
                                 mentions={turn.mentions}
@@ -1813,7 +1794,6 @@ const ConversationPanel = memo(
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
                                 elapsedMs={ask.elapsedMs}
-                                isDark={isDark}
                                 isStreaming={ask.isStreaming}
                                 labels={turnLabels}
                                 layout={turnLayout}
@@ -1911,8 +1891,7 @@ const HistoryListView = ({
             <Typography
                 level="body-md"
                 sx={{
-                    opacity: isDark ? 1 : 0.75,
-                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                    color: g.text.secondary,
                     px: 0.5,
                     py: 1,
                 }}
@@ -1939,7 +1918,7 @@ const HistoryListView = ({
                         py: 0.875,
                         cursor: "pointer",
                         font: "inherit",
-                        color: isDark ? DARK_TEXT_STRONG : "inherit",
+                        color: g.text.primary,
                         display: "flex",
                         flexDirection: "column",
                         gap: 0.25,
@@ -1964,7 +1943,7 @@ const HistoryListView = ({
                         level="body-md"
                         sx={{
                             fontWeight: 500,
-                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                            color: g.text.primary,
                             // Two-line clamp keeps the row compact when
                             // the first query is long.
                             display: "-webkit-box",
@@ -1981,8 +1960,7 @@ const HistoryListView = ({
                             alignItems: "center",
                             gap: 0.75,
                             fontSize: "0.8125rem",
-                            opacity: isDark ? 0.9 : 0.65,
-                            color: isDark ? DARK_TEXT_SOFT : undefined,
+                            color: g.text.tertiary,
                         }}
                     >
                         <Box component="span">{_relativeTime(s.last_active_at, ts)}</Box>
@@ -2047,8 +2025,7 @@ const HistorySessionDetailView = ({
             <Typography
                 level="body-xs"
                 sx={{
-                    opacity: isDark ? 0.85 : 0.65,
-                    color: isDark ? DARK_TEXT_SOFT : undefined,
+                    color: g.text.tertiary,
                     fontStyle: "italic",
                 }}
             >
@@ -2130,8 +2107,7 @@ const HistoryArchiveTurn = ({
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            opacity: isDark ? 1 : 0.7,
-                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            color: g.text.secondary,
                             minWidth: 18,
                             mt: "2px",
                         }}
@@ -2143,7 +2119,7 @@ const HistoryArchiveTurn = ({
                         sx={{
                             fontWeight: 500,
                             whiteSpace: "pre-wrap",
-                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                            color: g.text.primary,
                         }}
                     >
                         {turn.query}
@@ -2179,7 +2155,6 @@ const HistoryArchiveTurn = ({
                                     a: ({ href, children }) => (
                                         <CitationLink
                                             href={href}
-                                            isDark={isDark}
                                             sourcesById={sourcesById}
                                             onPreview={onPreview}
                                         >

@@ -15,20 +15,19 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip } from "./previewHelpers";
 
-export const UpdateCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const UpdateCommentPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const body = asString(args.body_text);
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.updateComment, {
                         comment: asString(args.comment_id) ?? "",
                         task: asString(args.task_id) ?? "",
@@ -43,9 +42,9 @@ export const UpdateCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => 
                         overflowY: "auto",
                         pl: 1.25,
                         borderLeft: "2px solid",
-                        borderColor: palette.borderMuted,
+                        borderColor: g.border.subtle,
                         fontSize: "0.8125rem",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                         whiteSpace: "pre-wrap",
                         overflowWrap: "anywhere",
                     }}
@@ -57,15 +56,14 @@ export const UpdateCommentPreview = ({ args, isDark }: ApprovalPreviewProps) => 
     );
 };
 
-export const DeleteCommentPreview = ({ args, isDark, undoKnown }: ApprovalPreviewProps) => {
+export const DeleteCommentPreview = ({ args, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.deleteComment, {
                         comment: asString(args.comment_id) ?? "",
                         task: asString(args.task_id) ?? "",

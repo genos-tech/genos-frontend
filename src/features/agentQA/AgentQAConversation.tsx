@@ -32,7 +32,6 @@ interface AgentQAConversationProps {
     labels: AgentQALabels;
     // The words of a turn (see `buildAgentTurnLabels`). Memoise on `t`.
     turnLabels: AgentTurnLabels;
-    isDark: boolean;
     onSelectSource?: (source: SpotlightResult) => void;
     // Note id -> sidebar space, so a cited team note reads "Team note". The
     // modals don't have it yet; absent, every personal note reads "My note".
@@ -46,7 +45,6 @@ export const AgentQAConversation = ({
     state,
     labels,
     turnLabels,
-    isDark,
     onSelectSource,
     noteScopes,
 }: AgentQAConversationProps) => {
@@ -154,7 +152,6 @@ export const AgentQAConversation = ({
                     askError={turn.askError}
                     elapsedMs={turn.elapsedMs}
                     isCurrent={false}
-                    isDark={isDark}
                     labels={turnLabels}
                     layout={layout}
                     mentions={turn.mentions}
@@ -180,7 +177,6 @@ export const AgentQAConversation = ({
                     askedQuery={ask.askedQuery}
                     askError={ask.askError}
                     elapsedMs={ask.elapsedMs}
-                    isDark={isDark}
                     isStreaming={ask.isStreaming}
                     labels={turnLabels}
                     layout={layout}

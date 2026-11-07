@@ -391,7 +391,6 @@ export const ThreadAskModal = ({
                     {t.threadAsk.conversation.header}
                 </Typography>
                 <AgentQAConversation
-                    isDark={isDark}
                     labels={labels}
                     state={state.agentQA}
                     turnLabels={turnLabels}

@@ -17,26 +17,19 @@
 
 import { Box } from "@mui/joy";
 
+import { focusRing, g } from "../../theme/tokens";
 import type { SpotlightResult } from "../spotlight/types";
 import { ExternalLink } from "./agentMarkdown";
 import { CITATION_HREF_PREFIX } from "./citationUtils";
-import { DARK_TEXT_STRONG } from "./markdownAnswerSx";
 
 interface CitationLinkProps {
     href?: string;
     children?: React.ReactNode;
     sourcesById: ReadonlyMap<string, SpotlightResult>;
     onPreview: (r: SpotlightResult) => void;
-    isDark: boolean;
 }
 
-export const CitationLink = ({
-    href,
-    children,
-    sourcesById,
-    onPreview,
-    isDark,
-}: CitationLinkProps) => {
+export const CitationLink = ({ href, children, sourcesById, onPreview }: CitationLinkProps) => {
     if (href && href.startsWith(CITATION_HREF_PREFIX)) {
         const token = href.slice(CITATION_HREF_PREFIX.length);
         const source = sourcesById.get(token);
@@ -52,7 +45,7 @@ export const CitationLink = ({
                         p: 0,
                         cursor: "pointer",
                         font: "inherit",
-                        color: isDark ? DARK_TEXT_STRONG : "primary.600",
+                        color: g.accent.text,
                         textDecoration: "underline",
                         textDecorationStyle: "dotted",
                         textUnderlineOffset: "2px",
@@ -60,14 +53,11 @@ export const CitationLink = ({
                         borderRadius: "3px",
                         transition: "background 100ms ease",
                         "&:hover": {
-                            background: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.10)",
+                            background: g.accent.subtle,
                             textDecorationStyle: "solid",
                         },
                         "&:focus-visible": {
-                            outline: "2px solid",
-                            outlineColor: "primary.400",
+                            ...focusRing,
                             outlineOffset: "1px",
                         },
                     }}

@@ -189,7 +189,6 @@ describe.each(LOCALES)("in %s", (locale) => {
                 <I18nProvider>
                     <ApprovalCard
                         approveLabel="APPROVE"
-                        isDark={false}
                         rejectLabel="REJECT"
                         titleText="TITLE"
                         pending={{
@@ -241,7 +240,6 @@ describe.each(LOCALES)("in %s", (locale) => {
                     askedQuery="Q"
                     askError={null}
                     isCurrent={false}
-                    isDark={false}
                     labels={labels}
                     runId="r"
                     toolEvents={[

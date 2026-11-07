@@ -247,7 +247,6 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                     {t.noteAsk.conversation.header}
                 </Typography>
                 <AgentQAConversation
-                    isDark={isDark}
                     labels={labels}
                     state={state.agentQA}
                     turnLabels={turnLabels}

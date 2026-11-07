@@ -24,7 +24,7 @@ import PersonRemoveRoundedIcon from "@mui/icons-material/PersonRemoveRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip } from "./previewHelpers";
 
@@ -32,9 +32,8 @@ import { asString, MetaChip } from "./previewHelpers";
 const isTrue = (v: unknown): boolean =>
     v === true || (typeof v === "string" && v.trim().toLowerCase() === "true");
 
-export const DeleteNotePreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteNotePreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const title = asString(args.note_title);
     const noteId = asString(args.note_id);
 
@@ -51,40 +50,39 @@ export const DeleteNotePreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.dangerTint }}>
+            <Typography level="body-xs" sx={{ color: g.danger.text }}>
                 {t.agentApproval.deleteNoteWarning}
             </Typography>
         </Box>
     );
 };
 
-export const DeleteNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const DeleteNoteFolderPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const folder = asString(args.folder_id);
     const includeContents = isTrue(args.include_contents);
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: palette.dangerTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: g.danger.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {folder
                         ? fmt(t.agentApproval.deleteNoteFolder, { folder })
                         : t.agentApproval.deleteThisNoteFolder}
                 </Typography>
             </Box>
             {includeContents ? (
-                <Typography level="body-xs" sx={{ color: palette.dangerTint }}>
+                <Typography level="body-xs" sx={{ color: g.danger.text }}>
                     {t.agentApproval.deleteNoteFolderContents}
                 </Typography>
             ) : (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.deleteNoteFolderOnlyEmpty}
                 </Typography>
             )}
@@ -92,9 +90,8 @@ export const DeleteNoteFolderPreview = ({ args, isDark }: ApprovalPreviewProps) 
     );
 };
 
-export const ManageNoteSharingPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const ManageNoteSharingPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const isUnshare = asString(args.action) === "unshare";
     const role = asString(args.role);
     const noteId = asString(args.note_id);
@@ -118,11 +115,11 @@ export const ManageNoteSharingPreview = ({ args, isDark }: ApprovalPreviewProps)
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                 {isUnshare ? (
-                    <PersonRemoveRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <PersonRemoveRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 ) : (
-                    <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
+                    <PersonAddAltRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
                 )}
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {heading}
                 </Typography>
                 {!isUnshare && role && role !== "editor" && role !== "viewer" ? (
@@ -130,7 +127,7 @@ export const ManageNoteSharingPreview = ({ args, isDark }: ApprovalPreviewProps)
                 ) : null}
             </Box>
             {!isUnshare ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {t.agentApproval.noteShareNotNotified}
                 </Typography>
             ) : null}

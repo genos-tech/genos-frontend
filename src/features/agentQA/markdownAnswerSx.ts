@@ -8,16 +8,6 @@
 
 import { g } from "../../theme/tokens";
 
-// Dark-mode body-text colour. Re-exported so consumers that share the
-// same look (badges, secondary labels) can keep importing from one
-// module — no risk of the two drifting apart.
-export const DARK_TEXT_STRONG = "#f1e8ff";
-// Dimmer dark-mode tiers for labels and captions (the answer turn's Q gutter,
-// spinner caption, timing line; Spotlight's history views). Tuned against the
-// translucent purple Spotlight sheet, where opacity-based dimming goes muddy.
-export const DARK_TEXT_MEDIUM = "#cebfeb";
-export const DARK_TEXT_SOFT = "#a89bbf";
-
 // Roles, not values (MIP-1130): the answer reads the same tokens as every
 // message and comment, so it follows the theme and mode in CSS and takes no
 // `isDark`.

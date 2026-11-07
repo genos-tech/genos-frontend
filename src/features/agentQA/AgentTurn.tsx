@@ -18,7 +18,7 @@
 //
 // PROPS-ONLY
 //   No context is read and no host is known. Every word arrives in `labels`
-//   (see `AgentTurnLabels`), colour in `isDark`, and every action goes out
+//   (see `AgentTurnLabels`), colour in the theme tokens, and every action goes out
 //   through a callback, so the turn renders identically above or inside the
 //   providers. (`ToolProgressList` and the approval previews read the i18n
 //   context, which is mounted at the very root.)
@@ -152,7 +152,6 @@ export interface AgentTurnProps {
     // (`CompletedTurn.undo`); a live turn needs none, its `toolEvents` say.
     // Pass the turn's own array, never one built inline (identity matters to the memo).
     undoSteps?: readonly UndoStepRef[];
-    isDark: boolean;
     // The user's bubble-style preference, as a plain prop: the turn reads no
     // context (see PROPS-ONLY). Hosts read `useBubbleStylePreference()`, which
     // changes only when the preference does, never while typing.
@@ -199,12 +198,10 @@ export interface AgentTurnProps {
 const AnswerMarkdown = memo(
     ({
         text,
-        isDark,
         sourcesById,
         onPreview,
     }: {
         text: string;
-        isDark: boolean;
         sourcesById: ReadonlyMap<string, SpotlightResult>;
         onPreview: (source: SpotlightResult) => void;
     }) => (
@@ -214,12 +211,7 @@ const AnswerMarkdown = memo(
             components={{
                 ...agentMarkdownComponents,
                 a: ({ href, children }) => (
-                    <CitationLink
-                        href={href}
-                        isDark={isDark}
-                        sourcesById={sourcesById}
-                        onPreview={onPreview}
-                    >
+                    <CitationLink href={href} sourcesById={sourcesById} onPreview={onPreview}>
                         {children}
                     </CitationLink>
                 ),
@@ -244,7 +236,6 @@ const AgentTurnInner = ({
     approvalFieldErrors,
     approvalEdits,
     undoSteps,
-    isDark,
     layout = "compact",
     labels,
     elapsedMs,
@@ -504,19 +495,12 @@ const AgentTurnInner = ({
                             </Typography>
                         )}
 
-                        {toolEvents.length > 0 && (
-                            <ToolProgressList events={toolEvents} isDark={isDark} />
-                        )}
+                        {toolEvents.length > 0 && <ToolProgressList events={toolEvents} />}
 
                         {/* Undo: always on screen (not in the hover-revealed action
                         bar), one control per approved write, newest first. */}
                         {onUndo && undoList.length > 0 && (
-                            <UndoSlot
-                                isDark={isDark}
-                                labels={labels}
-                                steps={undoList}
-                                onUndo={onUndo}
-                            />
+                            <UndoSlot labels={labels} steps={undoList} onUndo={onUndo} />
                         )}
 
                         {isCurrent && pendingApproval && onApprove && onReject && (
@@ -525,7 +509,6 @@ const AgentTurnInner = ({
                                 key={pendingApproval.approval_token}
                                 approveLabel={labels.actions.approve}
                                 fieldErrors={approvalFieldErrors}
-                                isDark={isDark}
                                 pending={pendingApproval}
                                 rejectLabel={labels.actions.reject}
                                 restoredEdits={approvalEdits}
@@ -551,7 +534,6 @@ const AgentTurnInner = ({
                                 }}
                             >
                                 <AnswerMarkdown
-                                    isDark={isDark}
                                     sourcesById={sourcesById}
                                     text={answerForRender}
                                     onPreview={onPreview}

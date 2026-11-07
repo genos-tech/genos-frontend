@@ -11,25 +11,24 @@ import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { asString, MetaChip } from "./previewHelpers";
 
-export const RestoreTaskBodyPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const RestoreTaskBodyPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const entry = asString(args.activity_id);
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <RestoreRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <RestoreRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.restoreTaskBody, { task: asString(args.task_id) ?? "" })}
                 </Typography>
                 {entry ? <MetaChip label={fmt(t.agentApproval.historyEntry, { entry })} /> : null}
             </Box>
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                 {t.agentApproval.restoreKeepsCurrent}
             </Typography>
         </Box>

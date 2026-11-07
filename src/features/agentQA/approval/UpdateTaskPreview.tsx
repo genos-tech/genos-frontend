@@ -21,7 +21,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { diffValue, MetaChip, placeValue } from "./previewHelpers";
 
@@ -47,9 +47,8 @@ interface CustomFieldEntry {
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
 
-export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const UpdateTaskPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const taskLabel = asString(args.task_id);
     const title = asString(args.title);
@@ -110,8 +109,8 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <EditRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <EditRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {fmt(t.agentApproval.updateTask, { task: taskLabel ?? "" })}
                 </Typography>
                 {chips.map((c) => (
@@ -120,7 +119,7 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
             </Box>
 
             {title ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {title}
                 </Typography>
             ) : null}
@@ -132,9 +131,9 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                         overflowY: "auto",
                         pl: 1.25,
                         borderLeft: "2px solid",
-                        borderColor: palette.borderMuted,
+                        borderColor: g.border.subtle,
                         fontSize: "0.8125rem",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                         // Plain text (not markdown) — preserve line breaks.
                         whiteSpace: "pre-wrap",
                         overflowWrap: "anywhere",
@@ -146,7 +145,7 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
 
             {added.map(({ label, text }) => (
                 <Box key={label} sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
-                    <Typography level="body-xs" sx={{ color: palette.textMuted, fontWeight: 700 }}>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary, fontWeight: 700 }}>
                         {label}
                     </Typography>
                     <Box
@@ -155,9 +154,9 @@ export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                             overflowY: "auto",
                             pl: 1.25,
                             borderLeft: "2px solid",
-                            borderColor: palette.borderMuted,
+                            borderColor: g.border.subtle,
                             fontSize: "0.8125rem",
-                            color: palette.textMuted,
+                            color: g.text.secondary,
                             whiteSpace: "pre-wrap",
                             overflowWrap: "anywhere",
                         }}

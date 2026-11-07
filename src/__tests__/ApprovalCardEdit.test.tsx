@@ -22,12 +22,11 @@ interface Opts {
     tool: string;
     args: Record<string, unknown>;
     editable?: string[];
-    isDark?: boolean;
     fieldErrors?: Record<string, string> | null;
     restoredEdits?: Record<string, unknown> | null;
 }
 
-const mount = ({ tool, args, editable, isDark = false, fieldErrors, restoredEdits }: Opts) => {
+const mount = ({ tool, args, editable, fieldErrors, restoredEdits }: Opts) => {
     const onApprove = vi.fn();
     const onReject = vi.fn();
     const pending: PendingApprovalPayload = {
@@ -45,7 +44,6 @@ const mount = ({ tool, args, editable, isDark = false, fieldErrors, restoredEdit
                 <ApprovalCard
                     approveLabel="Approve"
                     fieldErrors={fieldErrors}
-                    isDark={isDark}
                     pending={pending}
                     rejectLabel="Reject"
                     restoredEdits={restoredEdits}
@@ -902,18 +900,7 @@ describe("after the server refused the edits (a restored card)", () => {
     });
 });
 
-describe("dark mode, and the narrow screen", () => {
-    it("renders the editors in dark mode", () => {
-        mount({
-            tool: "update_task",
-            args: UPDATE_TASK,
-            editable: UPDATE_TASK_EDITABLE,
-            isDark: true,
-        });
-        openEdit();
-        expect(screen.getByLabelText("Title")).toBeTruthy();
-    });
-
+describe("the narrow screen", () => {
     it("uses native controls (the browser draws the pickers: no portal under a 13100 overlay)", () => {
         mount({ tool: "update_task", args: UPDATE_TASK, editable: UPDATE_TASK_EDITABLE });
         openEdit();

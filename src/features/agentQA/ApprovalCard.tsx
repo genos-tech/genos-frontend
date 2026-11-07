@@ -41,7 +41,7 @@ import { Box, Button, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../i18n";
 import type { PendingApprovalPayload } from "../../services/agentApi";
-import { purplePalette } from "../../theme/purplePalette";
+import { g } from "../../theme/tokens";
 import { BulkRowField, EditFieldList } from "./approval/ApprovalEditFields";
 import { getApprovalRenderer } from "./approval/approvalRenderers";
 import { BulkUpdatePreview } from "./approval/BulkUpdatePreview";
@@ -51,7 +51,6 @@ import { useApprovalEdit } from "./approval/useApprovalEdit";
 
 interface ApprovalCardProps {
     pending: PendingApprovalPayload;
-    isDark: boolean;
     // `editedArgs` carries ONLY the fields the person changed, `{path: value}`;
     // absent = approve as proposed.
     onApprove: (editedArgs?: Record<string, unknown>) => void;
@@ -69,7 +68,6 @@ interface ApprovalCardProps {
 
 export const ApprovalCard = ({
     pending,
-    isDark,
     onApprove,
     onReject,
     titleText,
@@ -81,7 +79,6 @@ export const ApprovalCard = ({
     const { t } = useTranslation();
     const args = pending.arguments || {};
     const argEntries = Object.entries(args);
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const PreviewRenderer = getApprovalRenderer(pending.tool_name);
     const edit = useApprovalEdit({
         tool: pending.tool_name,
@@ -148,7 +145,6 @@ export const ApprovalCard = ({
         isBulk && editing ? (
             <BulkUpdatePreview
                 args={shownArgs}
-                isDark={isDark}
                 editor={{
                     has: (row, field) =>
                         edit.fields.some((f) => f.row === row && f.field === field),
@@ -157,7 +153,6 @@ export const ApprovalCard = ({
                             args={args}
                             edit={edit}
                             idPrefix={idPrefix}
-                            isDark={isDark}
                             name={field}
                             row={row}
                         />
@@ -167,11 +162,7 @@ export const ApprovalCard = ({
         ) : PreviewRenderer ? (
             // A backend that predicts undo says it once, in the chip below: the
             // previews that used to say "cannot be undone" themselves stop.
-            <PreviewRenderer
-                args={shownArgs}
-                isDark={isDark}
-                undoKnown={pending.undoable !== undefined}
-            />
+            <PreviewRenderer args={shownArgs} undoKnown={pending.undoable !== undefined} />
         ) : (
             argEntries.length > 0 && (
                 <Box
@@ -209,8 +200,8 @@ export const ApprovalCard = ({
                 py: 1,
                 borderRadius: "10px",
                 border: "1px solid",
-                borderColor: palette.warningTintBorder,
-                background: palette.warningTintBg,
+                borderColor: g.warning.border,
+                background: g.warning.subtle,
             }}
             onKeyDown={onKeyDown}
         >
@@ -220,7 +211,7 @@ export const ApprovalCard = ({
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
-                    color: palette.warningTint,
+                    color: g.warning.text,
                     mb: 0.5,
                 }}
             >
@@ -238,9 +229,9 @@ export const ApprovalCard = ({
                         py: 0.5,
                         borderRadius: "8px",
                         border: "1px solid",
-                        borderColor: palette.dangerTintBorder,
-                        background: palette.dangerTintBg,
-                        color: palette.dangerTint,
+                        borderColor: g.danger.border,
+                        background: g.danger.subtle,
+                        color: g.danger.text,
                         fontSize: "0.8125rem",
                     }}
                 >
@@ -256,7 +247,7 @@ export const ApprovalCard = ({
             ) : null}
 
             {editing ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted, mb: 0.5 }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary, mb: 0.5 }}>
                     {t.agentApproval.edit.hint}
                 </Typography>
             ) : null}
@@ -265,11 +256,11 @@ export const ApprovalCard = ({
 
             {editing && !isBulk ? (
                 <Box aria-label={t.agentApproval.edit.groupLabel} role="group">
-                    <EditFieldList args={args} edit={edit} isDark={isDark} />
+                    <EditFieldList args={args} edit={edit} />
                 </Box>
             ) : null}
 
-            <UndoChip isDark={isDark} pending={pending} />
+            <UndoChip pending={pending} />
 
             <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
                 <Button
@@ -321,7 +312,7 @@ export const ApprovalCard = ({
                     <Typography
                         aria-live="polite"
                         level="body-xs"
-                        sx={{ color: palette.textMuted, ml: 0.25 }}
+                        sx={{ color: g.text.secondary, ml: 0.25 }}
                     >
                         {edit.changeCount > 0
                             ? fmt(t.agentApproval.edit.changesCount, { count: edit.changeCount })

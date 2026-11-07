@@ -10,16 +10,15 @@ import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip, placeValue } from "./previewHelpers";
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
 
-export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
+export const CreateTaskPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const title = asString(args.title);
     const body = asString(args.content_text);
@@ -59,8 +58,8 @@ export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <AddTaskRoundedIcon sx={{ fontSize: 16, color: palette.warningTint }} />
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: palette.text }}>
+                <AddTaskRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
+                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
                     {t.agentApproval.newTask}
                 </Typography>
                 {chips.map((c) => (
@@ -69,7 +68,7 @@ export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
             </Box>
 
             {title ? (
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: palette.text }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {title}
                 </Typography>
             ) : null}
@@ -81,9 +80,9 @@ export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
                         overflowY: "auto",
                         pl: 1.25,
                         borderLeft: "2px solid",
-                        borderColor: palette.borderMuted,
+                        borderColor: g.border.subtle,
                         fontSize: "0.8125rem",
-                        color: palette.textMuted,
+                        color: g.text.secondary,
                         // Plain text (not markdown) — preserve the author's
                         // line breaks without letting a long line overflow.
                         whiteSpace: "pre-wrap",

@@ -33,7 +33,7 @@ import { Box, Button, CircularProgress, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { fmt } from "../../i18n";
-import { purplePalette } from "../../theme/purplePalette";
+import { g } from "../../theme/tokens";
 import type { AgentTurnLabels } from "./agentTurnLabels";
 import { isPastAvailable, type UndoRequest, type UndoStepRef } from "./undoSteps";
 import { getUndoState, subscribeUndo } from "./undoStore";
@@ -43,11 +43,10 @@ interface UndoControlProps {
     // Several writes in the turn: each says which one it undoes.
     labelled: boolean;
     labels: AgentTurnLabels;
-    isDark: boolean;
     onUndo: (request: UndoRequest) => void;
 }
 
-const UndoControl = memo(({ step, labelled, labels, isDark, onUndo }: UndoControlProps) => {
+const UndoControl = memo(({ step, labelled, labels, onUndo }: UndoControlProps) => {
     const { stepId, runId, toolName, undoneAt, availableUntil } = step;
     const subscribe = useCallback(
         (listener: () => void) => subscribeUndo(stepId, listener),
@@ -56,7 +55,6 @@ const UndoControl = memo(({ step, labelled, labels, isDark, onUndo }: UndoContro
     const getSnapshot = useCallback(() => getUndoState(stepId), [stepId]);
     const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const u = labels.undo;
     const tool = labels.approval.toolLabel(toolName);
 
@@ -72,14 +70,14 @@ const UndoControl = memo(({ step, labelled, labels, isDark, onUndo }: UndoContro
         >
             {tone === "done" ? (
                 <CheckRoundedIcon
-                    sx={{ fontSize: 16, mt: "1px", color: palette.successTint, flexShrink: 0 }}
+                    sx={{ fontSize: 16, mt: "1px", color: g.success.text, flexShrink: 0 }}
                 />
             ) : (
                 <InfoOutlinedIcon
-                    sx={{ fontSize: 16, mt: "1px", color: palette.warningTint, flexShrink: 0 }}
+                    sx={{ fontSize: 16, mt: "1px", color: g.warning.text, flexShrink: 0 }}
                 />
             )}
-            <Typography level="body-xs" sx={{ color: palette.textMuted, minWidth: 0 }}>
+            <Typography level="body-xs" sx={{ color: g.text.secondary, minWidth: 0 }}>
                 {text}
             </Typography>
         </Box>
@@ -139,7 +137,7 @@ const UndoControl = memo(({ step, labelled, labels, isDark, onUndo }: UndoContro
             sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}
         >
             {labelled ? (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                     {tool}
                 </Typography>
             ) : null}
@@ -152,18 +150,16 @@ UndoControl.displayName = "UndoControl";
 interface UndoSlotProps {
     steps: readonly UndoStepRef[];
     labels: AgentTurnLabels;
-    isDark: boolean;
     onUndo: (request: UndoRequest) => void;
 }
 
-export const UndoSlot = ({ steps, labels, isDark, onUndo }: UndoSlotProps) => {
+export const UndoSlot = ({ steps, labels, onUndo }: UndoSlotProps) => {
     if (steps.length === 0) return null;
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5, mb: 0.5 }}>
             {steps.map((step) => (
                 <UndoControl
                     key={step.stepId}
-                    isDark={isDark}
                     labelled={steps.length > 1}
                     labels={labels}
                     step={step}
