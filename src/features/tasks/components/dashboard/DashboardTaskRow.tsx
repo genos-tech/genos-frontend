@@ -37,7 +37,7 @@ const SLOT_WIDTH = {
     due: 80,
     priority: 58,
     sprint: 130,
-    status: 70,
+    status: 92,
 } as const;
 
 // Structural, so both `EffectiveTask` (dashboard) and any future caller

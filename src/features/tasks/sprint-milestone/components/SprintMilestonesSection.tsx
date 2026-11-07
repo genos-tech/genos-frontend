@@ -11,21 +11,11 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { STATUS_FILL } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { Milestone, Sprint } from "../types";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-const STATUS_COLOR: Record<string, string> = {
-    Open: "#0044c2",
-    WIP: "#ff8c00",
-    // Same tone as MILESTONE_STATUS_CHIP_COLORS.Blocked; without it a
-    // dependency-Blocked milestone fell back to the grey used for Deleted.
-    Blocked: "#e11d48",
-    Pending: "#b900ff",
-    Closed: "#1dc200",
-    Deleted: "#94a3b8",
-};
 
 type Props = {
     selectedSprint: Sprint | null;
@@ -111,7 +101,7 @@ export const SprintMilestonesSection = ({
                         const total = m.tasksTotal ?? 0;
                         const closed = m.tasksClosed ?? 0;
                         const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
-                        const statusColor = STATUS_COLOR[m.status as string] ?? "#94a3b8";
+                        const statusColor = STATUS_FILL[m.status as string] ?? "#94a3b8";
                         return (
                             <Card
                                 key={m.milestoneId}

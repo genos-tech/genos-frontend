@@ -18,12 +18,12 @@
 // "clear this field" sentinels and render as a clear rather than a blank.
 
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import { Box, Chip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { diffValue, placeValue } from "./previewHelpers";
+import { diffValue, MetaChip, placeValue } from "./previewHelpers";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];
@@ -46,12 +46,6 @@ interface CustomFieldEntry {
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
-
-const MetaChip = ({ label }: { label: string }) => (
-    <Chip size="sm" sx={{ fontSize: "0.75rem", "--Chip-minHeight": "18px" }} variant="soft">
-        {label}
-    </Chip>
-);
 
 export const UpdateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const { t } = useTranslation();

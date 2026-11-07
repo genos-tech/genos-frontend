@@ -27,9 +27,10 @@ const cat = (id: number, name: string, color = "#808080", textColor = "white") =
         tsUpdatedAt: "2026-07-12T00:00:00Z",
     }) as TodoCategoryProps;
 
-// jsdom serialises an inline rgba() border; the chip's border is the colour
-// at 0.8 alpha in light mode, so read the red/green/blue channels back.
-const borderOf = (el: HTMLElement) => el.style.borderColor;
+// The tag chip is neutral and carries the tag colour as a small dot beside the
+// label (MIP-1122); jsdom serialises it as rgb(r, g, b), so read it back.
+const borderOf = (el: HTMLElement) =>
+    (el.parentElement!.querySelector('span[aria-hidden="true"]') as HTMLElement).style.background;
 
 const renderSection = (categoryId: number | null, categories: TodoCategoryProps[]) =>
     render(
@@ -59,7 +60,7 @@ describe("TodoCategorySection — tag chip", () => {
     it("shows a tag's name as a chip in its colour", () => {
         renderSection(7, [cat(7, "Deep work", "#ff2323")]);
         const chip = screen.getByText("Deep work");
-        // The chip is a styled span carrying the tag colour in its border.
+        // The chip is a styled span carrying the tag colour in its dot.
         expect(chip.tagName).toBe("SPAN");
         expect(borderOf(chip)).toContain("255, 35, 35");
     });

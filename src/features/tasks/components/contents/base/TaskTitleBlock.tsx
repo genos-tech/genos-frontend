@@ -58,6 +58,7 @@ import { askGenosMenuItem } from "../../../../spotlight/askGenosMenuItem";
 import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
+import { statusSolid } from "../../../meta/taskTone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { taskMetaLabel } from "../../../utils/taskMeta";
@@ -423,7 +424,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
                                         },
                                     }}
-                                    onClick={() => handleStatusChange("WIP", "#ff8c00")}
+                                    onClick={() =>
+                                        handleStatusChange("WIP", statusSolid("WIP").color)
+                                    }
                                 >
                                     Start Task
                                 </Button>
@@ -456,7 +459,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
                                     },
                                 }}
-                                onClick={() => handleStatusChange("Closed", "#1dc200")}
+                                onClick={() =>
+                                    handleStatusChange("Closed", statusSolid("Closed").color)
+                                }
                             >
                                 Complete Task
                             </Button>

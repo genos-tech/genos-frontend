@@ -1,24 +1,25 @@
 import { alpha } from "@mui/system";
 
 import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../../types/tasks";
+import { prioritySolid, statusSolid } from "../meta/taskTone";
 
+// Colors come from the one tone source (MIP-1122): a solid fill and its label
+// color, the same on every surface that shows the status.
 export const statuses: TaskStatusProps[] = [
-    { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
-    { code: 0, status: "WIP", color: "#ff8c00", textColor: "white" },
-    // Rose, deliberately distinct from Deleted's bright red — the two
-    // rarely co-occur in a view, but the chips must stay tellable-apart.
-    { code: 0, status: "Blocked", color: "#e11d48", textColor: "white" },
-    { code: 0, status: "Pending", color: "#b900ff", textColor: "white" },
-    { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
-    { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },
+    { code: 0, status: "Open", ...statusSolid("Open") },
+    { code: 0, status: "WIP", ...statusSolid("WIP") },
+    { code: 0, status: "Blocked", ...statusSolid("Blocked") },
+    { code: 0, status: "Pending", ...statusSolid("Pending") },
+    { code: 0, status: "Closed", ...statusSolid("Closed") },
+    { code: 0, status: "Deleted", ...statusSolid("Deleted") },
 ];
 
 export const priorities: TaskPriorityProps[] = [
-    { code: 0, priority: "Minimal", color: "#9CA3AF", textColor: "white" },
-    { code: 0, priority: "Low", color: "#34D399", textColor: "white" },
-    { code: 0, priority: "Normal", color: "#3B82F6", textColor: "white" },
-    { code: 0, priority: "High", color: "#F59E0B", textColor: "white" },
-    { code: 0, priority: "Critical", color: "#EF4444", textColor: "white" },
+    { code: 0, priority: "Minimal", ...prioritySolid("Minimal") },
+    { code: 0, priority: "Low", ...prioritySolid("Low") },
+    { code: 0, priority: "Normal", ...prioritySolid("Normal") },
+    { code: 0, priority: "High", ...prioritySolid("High") },
+    { code: 0, priority: "Critical", ...prioritySolid("Critical") },
 ];
 
 /**

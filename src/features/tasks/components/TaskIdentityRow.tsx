@@ -5,6 +5,7 @@ import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../i18n";
 import { TaskStatusProps } from "../../../types/tasks";
+import { statusSolid } from "../meta/taskTone";
 import { taskMetaLabel } from "../utils/taskMeta";
 import { CopyableTaskIdChip } from "./CopyableTaskId";
 
@@ -43,7 +44,7 @@ type TaskIdentityRowProps = {
 
 // Statuses the backend hasn't colored still need a chip that reads as a
 // chip rather than a transparent gap.
-const FALLBACK_STATUS_COLOR = "#0044c2";
+const FALLBACK_STATUS_COLOR = statusSolid("Open").color;
 
 export const TaskIdentityRow = ({ task, title, status, isMilestone }: TaskIdentityRowProps) => {
     const { mode } = useColorScheme();

@@ -1,6 +1,7 @@
 import { GridFilterModel } from "@mui/x-data-grid";
 
 import { TaskTypesProps } from "../../../types/tasks";
+import { PRIORITY_TONE, STATUS_TONE, Tone, toneBase, toneSolid } from "../meta/taskTone";
 
 export const taskTypes: TaskTypesProps = {
     all: {
@@ -30,6 +31,17 @@ export type FilterProps = {
     darkModeColor: string;
 };
 
+/**
+ * Filter-chip colors from the one tone source (MIP-1122). The filter menu does
+ * `alpha()` math on them, so they are real hex: a solid fill in light mode and
+ * the lighter 500 stop in dark mode (the old convention, kept so the chips do
+ * not change shape). "All" is neutral; "Expired" (past due) is danger.
+ */
+const filterColors = (tone: Tone) => ({
+    lightModeColor: toneSolid(tone).bg,
+    darkModeColor: tone === "neutral" ? toneBase("muted") : toneBase(tone),
+});
+
 export const predefinedStatusFilters: FilterProps[] = [
     {
         label: "All",
@@ -37,8 +49,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [],
         },
-        lightModeColor: "#6b7280",
-        darkModeColor: "#9ca3af",
+        ...filterColors("neutral"),
     },
     {
         label: "Open",
@@ -46,8 +57,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Open" }],
         },
-        lightModeColor: "#002bff",
-        darkModeColor: "#2b80ffff",
+        ...filterColors(STATUS_TONE.Open),
     },
     {
         label: "WIP",
@@ -55,8 +65,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "WIP" }],
         },
-        lightModeColor: "#ff8c00",
-        darkModeColor: "#ff8c00",
+        ...filterColors(STATUS_TONE.WIP),
     },
     {
         label: "Blocked",
@@ -64,8 +73,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Blocked" }],
         },
-        lightModeColor: "#e11d48",
-        darkModeColor: "#fb7185",
+        ...filterColors(STATUS_TONE.Blocked),
     },
     {
         label: "Pending",
@@ -73,8 +81,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Pending" }],
         },
-        lightModeColor: "#b900ff",
-        darkModeColor: "#b900ff",
+        ...filterColors(STATUS_TONE.Pending),
     },
     {
         label: "Closed",
@@ -82,8 +89,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Closed" }],
         },
-        lightModeColor: "#1dc200",
-        darkModeColor: "#1dc200",
+        ...filterColors(STATUS_TONE.Closed),
     },
     {
         label: "Expired",
@@ -91,8 +97,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Expired" }],
         },
-        lightModeColor: "#ff2323",
-        darkModeColor: "#ff2323",
+        ...filterColors("danger"),
     },
     {
         label: "Deleted",
@@ -100,8 +105,7 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Deleted" }],
         },
-        lightModeColor: "#ff2323",
-        darkModeColor: "#ff2323",
+        ...filterColors(STATUS_TONE.Deleted),
     },
 ];
 
@@ -112,8 +116,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [],
         },
-        lightModeColor: "#6b7280",
-        darkModeColor: "#9ca3af",
+        ...filterColors("neutral"),
     },
     {
         label: "Minimal",
@@ -121,8 +124,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Minimal" }],
         },
-        lightModeColor: "#9CA3AF",
-        darkModeColor: "#9CA3AF",
+        ...filterColors(PRIORITY_TONE.Minimal),
     },
     {
         label: "Low",
@@ -130,8 +132,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Low" }],
         },
-        lightModeColor: "#34D399",
-        darkModeColor: "#34D399",
+        ...filterColors(PRIORITY_TONE.Low),
     },
     {
         label: "Normal",
@@ -139,8 +140,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Normal" }],
         },
-        lightModeColor: "#3B82F6",
-        darkModeColor: "#3B82F6",
+        ...filterColors(PRIORITY_TONE.Normal),
     },
     {
         label: "High",
@@ -148,8 +148,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "High" }],
         },
-        lightModeColor: "#F59E0B",
-        darkModeColor: "#F59E0B",
+        ...filterColors(PRIORITY_TONE.High),
     },
     {
         label: "Critical",
@@ -157,8 +156,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Critical" }],
         },
-        lightModeColor: "#EF4444",
-        darkModeColor: "#EF4444",
+        ...filterColors(PRIORITY_TONE.Critical),
     },
 ];
 
