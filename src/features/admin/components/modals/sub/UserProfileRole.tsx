@@ -3,7 +3,6 @@ import { Autocomplete, Button, Chip, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../i18n";
-import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 

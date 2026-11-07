@@ -103,12 +103,12 @@ export const ModalExportFolder = ({
 
     return (
         <ModalFrame
+            description={target?.name}
             dismissible={!running}
             icon={<FolderZipRoundedIcon sx={{ color: g.accent.text }} />}
             open={target != null}
             size="md"
             title={t.notes.exportZip.heading}
-            description={target?.name}
             actions={
                 result != null ? (
                     <Button onClick={handleClose}>{t.notes.exportZip.done}</Button>

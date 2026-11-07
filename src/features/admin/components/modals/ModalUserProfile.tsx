@@ -318,8 +318,6 @@ export const UserProfile = (props: UserProfileProps) => {
                 size="profile"
                 title={profileTitle}
                 zIndex={PROFILE_MODAL_Z_INDEX}
-                flush
-                fullScreenOnMobile
                 actions={
                     <AppTooltip
                         title={
@@ -347,6 +345,8 @@ export const UserProfile = (props: UserProfileProps) => {
                         </Button>
                     </AppTooltip>
                 }
+                flush
+                fullScreenOnMobile
                 onClose={() => setOpenUserProfile(false)}
             >
                 {/* `useFixedPosition` portals the picker to document.body

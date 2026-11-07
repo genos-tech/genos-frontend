@@ -75,6 +75,8 @@ const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = 
 
 /** Where page-level dialogs have always sat. */
 export const MODAL_FRAME_DEFAULT_Z_INDEX = 10010;
+/** Joy's own modal layer, below which its default popup rule is already right. */
+const JOY_MODAL_LAYER = 1300;
 /** Lift over a host's layer: clears the host dialog and its dropdown (host + 1). */
 export const MODAL_FRAME_HOST_OFFSET = 2;
 
@@ -184,8 +186,16 @@ export const ModalFrame = ({
             sx={{
                 zIndex: layer,
                 // Joy pins the pickers a dialog opens to calc(modal + 1);
-                // keep them above this layer too.
+                // keep them above this layer too. Select and Autocomplete
+                // listboxes portal to <body> as SIBLINGS of this root, so the
+                // variable also has to be written for them (Joy's own rule
+                // does exactly that, with the default layer); the inline popups
+                // inherit it from the root. Only a dialog raised above Joy's
+                // layer needs the sibling rule, and only for its lifetime.
                 "--unstable_popup-zIndex": layer + 10,
+                ...(layer > JOY_MODAL_LAYER && {
+                    '& ~ [role="listbox"]': { "--unstable_popup-zIndex": layer + 10 },
+                }),
                 // The blur lives on the root; Joy's Backdrop slot paints the dim.
                 backdropFilter: "blur(4px)",
                 backgroundColor: "transparent",

@@ -111,14 +111,13 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
 
     return (
         <ModalFrame
-            headerDivider
             closeLabel={t.noteAsk.modal.close}
             description={noteTitle ? noteTitle : undefined}
+            hostZIndex={hostZIndex}
             icon={<AutoAwesomeRoundedIcon sx={{ color: g.accent.text }} />}
             open={state.isOpen}
             size="xl"
             title={t.noteAsk.modal.title}
-            hostZIndex={hostZIndex}
             zIndex={theme.zIndex.modal}
             actions={
                 <Button
@@ -130,6 +129,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                     {t.noteAsk.conversation.clear}
                 </Button>
             }
+            headerDivider
             onClose={state.close}
         >
             {/* Summary */}

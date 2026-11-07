@@ -71,7 +71,6 @@ export const ModalMilestoneFolder = ({ state, onClose, onCreate, onRename, onDel
 
     return (
         <ModalFrame
-            open
             size="sm"
             title={title}
             zIndex={10010}
@@ -94,6 +93,7 @@ export const ModalMilestoneFolder = ({ state, onClose, onCreate, onRename, onDel
                     </Button>
                 </>
             }
+            open
             onClose={onClose}
         >
             {state.mode === "delete" ? (

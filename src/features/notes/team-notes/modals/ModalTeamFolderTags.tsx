@@ -193,9 +193,6 @@ export const ModalTeamFolderTags = (props: Props) => {
             open={open}
             size="md"
             title={fmt(t.notes.teamNotes.tagsTitle, { name: folder?.name ?? "" })}
-            description={t.notes.teamNotes.tagsHint}
-            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
-            zIndex={theme.zIndex.modal}
             actions={
                 <>
                     <Button color="neutral" variant="plain" onClick={onClose}>
@@ -207,6 +204,9 @@ export const ModalTeamFolderTags = (props: Props) => {
                 </>
             }
             onClose={onClose}
+            description={t.notes.teamNotes.tagsHint}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
         >
             <Stack spacing={0.5} sx={{ maxHeight: 300, overflowY: "auto" }}>
                 {allTags.length === 0 && (
@@ -227,10 +227,10 @@ export const ModalTeamFolderTags = (props: Props) => {
                         >
                             {isEditing ? (
                                 <Input
-                                    autoFocus
                                     size="sm"
                                     sx={{ flex: 1 }}
                                     value={editName}
+                                    autoFocus
                                     onChange={(e) => setEditName(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") void commitRename(tag.tagId);

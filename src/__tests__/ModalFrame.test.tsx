@@ -145,6 +145,23 @@ describe("ModalFrame", () => {
             mount({ hostZIndex: 10020 });
             expect(cssOf(root())).toContain("--unstable_popup-zIndex: 10032");
         });
+
+        it("writes the picker layer for the listboxes that portal to <body> as siblings (above Joy's layer only)", () => {
+            // Select / Autocomplete listboxes are not inside this root, so the variable on it
+            // does not reach them; Joy's own sibling rule would leave them at 1301, under a
+            // dialog raised above 1300 (the Genos settings over Spotlight, a note child dialog).
+            mount({ hostZIndex: 10020 });
+            expect(cssOf(root())).toMatch(
+                /~\s*\[role="listbox"\]\s*\{[^}]*--unstable_popup-zIndex: 10032/
+            );
+        });
+
+        it("leaves Joy's own sibling rule alone at Joy's default layer", () => {
+            mount({ zIndex: 1300 });
+            expect(cssOf(root())).not.toMatch(
+                /~\s*\[role="listbox"\]\s*\{[^}]*--unstable_popup-zIndex: 13/
+            );
+        });
     });
 
     describe("flat surface", () => {

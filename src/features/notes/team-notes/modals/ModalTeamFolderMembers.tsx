@@ -26,7 +26,6 @@ import { useMentionGroupsContext } from "../../../../context/MentionGroupsContex
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
     NoteFolderInviteGroup,
@@ -462,14 +461,14 @@ export const ModalTeamFolderMembers = (props: Props) => {
                     refused. Renders nothing at all for an unshared folder. */}
             {folder && (
                 <ObjectSharesSection
-                    borderColor={g.border.default}
+                    borderColor="var(--g-border)"
                     hostTeamId={folder.hostTeamId ?? myself.teamId}
-                    labelColor={g.text.tertiary}
+                    labelColor="var(--g-text-tertiary)"
                     myUserId={myself.userId}
                     objectId={String(folder.folderId)}
                     objectType="note_folder"
                     socket={socket}
-                    valueColor={g.text.primary}
+                    valueColor="var(--g-text)"
                     canOffer={
                         canManageTeam && folder.visibility === "private" && !isExternalFolder
                     }
