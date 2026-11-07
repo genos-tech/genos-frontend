@@ -1,3 +1,4 @@
+import "@fontsource-variable/geist/index.css";
 import "@fontsource-variable/noto-sans-jp/index.css";
 import "./index.css";
 

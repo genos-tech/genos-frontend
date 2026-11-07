@@ -130,8 +130,8 @@ export const JoinTeamFormStyles = {
         accentColorRgb: D.accentSoftRgb,
         textColor: D.text,
         subtitleColor: D.textMuted,
-        listItemBg: "rgba(var(--gp-brand-700-rgb), 0.05)",
-        listItemBorder: "rgba(var(--gp-brand-700-rgb), 0.1)",
+        listItemBg: D.hoverBg,
+        listItemBorder: D.borderMuted,
         listItemHover: D.hoverBg,
         successBg: D.successTintBg,
         successBorder: D.successTintBorder,
@@ -160,8 +160,8 @@ export const JoinTeamFormStyles = {
         accentColorRgb: L.accentRgb,
         textColor: L.text,
         subtitleColor: L.textMuted,
-        listItemBg: "rgba(var(--gp-brand-700-rgb), 0.03)",
-        listItemBorder: "rgba(var(--gp-brand-700-rgb), 0.08)",
+        listItemBg: L.hoverBg,
+        listItemBorder: L.borderMuted,
         listItemHover: L.hoverBg,
         successBg: L.successTintBg,
         successBorder: L.successTintBorder,
@@ -214,7 +214,7 @@ export const HeaderStyles = {
         logoShadow: D.shadowSoft,
         titleGradient: D.titleGradient,
         subtitleColor: D.textMuted,
-        containerBg: "rgba(var(--gp-dark-surface-b-rgb), 0.6)",
+        containerBg: D.surface,
         containerBorder: D.border,
         starColor: D.warningTint,
     },
@@ -223,7 +223,7 @@ export const HeaderStyles = {
         logoShadow: L.shadowSoft,
         titleGradient: L.titleGradient,
         subtitleColor: L.textMuted,
-        containerBg: "rgba(255,255,255,0.7)",
+        containerBg: L.surface,
         containerBorder: L.border,
         starColor: L.warningTint,
     },
@@ -351,7 +351,7 @@ export const NoteHeaderActionsStyles = {
         accentColor: D.accentSoft,
         accentColorRgb: D.accentSoftRgb,
         glowColor: D.glow,
-        chipBg: "rgba(var(--gp-brand-700-rgb), 0.15)",
+        chipBg: D.chipBg,
         chipBorder: D.chipBorder,
         avatarBg: D.hoverBg,
         avatarBorder: D.border,
@@ -373,7 +373,7 @@ export const NoteHeaderActionsStyles = {
         accentColor: L.accent,
         accentColorRgb: L.accentRgb,
         glowColor: L.glow,
-        chipBg: "rgba(var(--gp-brand-700-rgb), 0.1)",
+        chipBg: L.chipBg,
         chipBorder: L.chipBorder,
         avatarBg: L.hoverBg,
         avatarBorder: L.border,
@@ -429,11 +429,10 @@ export const ProfileModalStyles = {
         labelColor: D.textMuted,
         valueColor: D.text,
         hoverBg: D.hoverBg,
-        avatarGlow:
-            "0 0 40px rgba(var(--gp-brand-700-rgb), 0.4), 0 0 80px rgba(var(--gp-brandalt-500-rgb), 0.2)",
+        avatarGlow: D.shadow,
         accentColor: D.accentSoft,
         accentColorRgb: D.accentSoftRgb,
-        inputBg: "rgba(var(--gp-dark-surface-b-rgb), 0.95)",
+        inputBg: D.inputBg,
     },
     light: {
         bg: L.surface,
@@ -444,19 +443,18 @@ export const ProfileModalStyles = {
         labelColor: L.textMuted,
         valueColor: L.text,
         hoverBg: L.hoverBg,
-        avatarGlow:
-            "0 0 40px rgba(var(--gp-brand-700-rgb), 0.2), 0 0 80px rgba(var(--gp-brandalt-500-rgb), 0.1)",
+        avatarGlow: L.shadow,
         accentColor: L.accent,
         accentColorRgb: L.accentRgb,
-        inputBg: "rgba(255,255,255,0.95)",
+        inputBg: L.inputBg,
     },
 };
 
 export const TeamDropdownStyles = {
     dark: {
-        avatarBorder: "rgba(var(--gp-brand-700-rgb), 0.4)",
-        avatarShadow: "0 2px 12px rgba(var(--gp-brand-700-rgb), 0.3)",
-        avatarHoverShadow: "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.5)",
+        avatarBorder: D.borderStrong,
+        avatarShadow: D.shadowSoft,
+        avatarHoverShadow: D.shadow,
         menuBg: D.menuBg,
         menuBorder: D.borderStrong,
         menuShadow: D.shadow,
@@ -472,9 +470,9 @@ export const TeamDropdownStyles = {
         dividerColor: D.divider,
     },
     light: {
-        avatarBorder: "rgba(var(--gp-brand-700-rgb), 0.3)",
-        avatarShadow: "0 2px 12px rgba(var(--gp-brand-700-rgb), 0.15)",
-        avatarHoverShadow: "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.3)",
+        avatarBorder: L.borderStrong,
+        avatarShadow: L.shadowSoft,
+        avatarHoverShadow: L.shadow,
         menuBg: L.menuBg,
         menuBorder: L.border,
         menuShadow: L.shadow,
@@ -494,7 +492,7 @@ export const TaskFilterMenuStyles = {
     dark: {
         containerBg: D.surfaceElevated,
         containerBorder: D.border,
-        buttonBg: "rgba(var(--gp-dark-surface-c-rgb), 0.8)",
+        buttonBg: D.buttonBg,
         buttonHoverBg: D.hoverBg,
         menuBg: D.menuBg,
         menuBorder: D.menuBorder,
@@ -507,7 +505,7 @@ export const TaskFilterMenuStyles = {
     light: {
         containerBg: L.surfaceElevated,
         containerBorder: L.border,
-        buttonBg: "rgba(255,255,255,0.9)",
+        buttonBg: L.buttonBg,
         buttonHoverBg: L.hoverBg,
         menuBg: L.menuBg,
         menuBorder: L.menuBorder,
@@ -553,32 +551,9 @@ export const LayoutStyles = {
             flex: 1,
             display: "flex",
             flexDirection: "column" as const,
-            background:
-                "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)",
+            background: D.bg,
             position: "relative" as const,
             overflow: "hidden" as const,
-        },
-
-        // Subtle radial glow decorations (position: absolute, pointerEvents: none)
-        decorTopRight: {
-            position: "absolute" as const,
-            top: 0,
-            right: 0,
-            width: "50%",
-            height: "60%",
-            pointerEvents: "none" as const,
-            background:
-                "radial-gradient(ellipse at top right, rgba(var(--gp-brand-700-rgb), 0.06) 0%, transparent 60%)",
-        },
-        decorBottomLeft: {
-            position: "absolute" as const,
-            bottom: 0,
-            left: 0,
-            width: "40%",
-            height: "40%",
-            pointerEvents: "none" as const,
-            background:
-                "radial-gradient(ellipse at bottom left, rgba(var(--gp-brandalt-500-rgb), 0.04) 0%, transparent 60%)",
         },
 
         // Box that wraps a sidebar Panel (the left resizable column)
@@ -615,31 +590,9 @@ export const LayoutStyles = {
             flex: 1,
             display: "flex",
             flexDirection: "column" as const,
-            background:
-                "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
+            background: L.bg,
             position: "relative" as const,
             overflow: "hidden" as const,
-        },
-
-        decorTopRight: {
-            position: "absolute" as const,
-            top: 0,
-            right: 0,
-            width: "50%",
-            height: "60%",
-            pointerEvents: "none" as const,
-            background:
-                "radial-gradient(ellipse at top right, rgba(var(--gp-brand-700-rgb), 0.04) 0%, transparent 60%)",
-        },
-        decorBottomLeft: {
-            position: "absolute" as const,
-            bottom: 0,
-            left: 0,
-            width: "40%",
-            height: "40%",
-            pointerEvents: "none" as const,
-            background:
-                "radial-gradient(ellipse at bottom left, rgba(var(--gp-brand-700-rgb), 0.03) 0%, transparent 60%)",
         },
 
         sidebarPanel: {

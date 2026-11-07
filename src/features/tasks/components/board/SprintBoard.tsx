@@ -16,6 +16,7 @@ import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPref
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { FONT_STACKS } from "../../../../theme/tokens/scales";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
@@ -38,7 +39,12 @@ import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoard
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
 
-const materialTheme = createTheme({ cssVariables: true });
+// Material's default is a Roboto stack that is never loaded; this surface
+// would otherwise be a third typeface next to Joy's Geist.
+const materialTheme = createTheme({
+    cssVariables: true,
+    typography: { fontFamily: FONT_STACKS.geist },
+});
 
 const NO_TAGS: TagListProps[] = [];
 // After a quick-add create, how long the filter pipeline gets to put the new

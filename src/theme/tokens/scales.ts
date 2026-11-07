@@ -76,8 +76,10 @@ export const MOTION = {
 
 /** Font stacks. The body face is Geist (Ken, 2026-11-07, chosen over
  *  Inter at the P1 review). Geist has no Japanese glyphs, so CJK falls
- *  through to the system face, then Noto Sans JP. */
+ *  through to Noto Sans JP, which the app already loads: Japanese then
+ *  looks the same on every platform. `index.css` repeats this string
+ *  (it must resolve before any script runs); a test keeps them equal. */
 export const FONT_STACKS = {
-    geist: '"Geist Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", "Segoe UI", sans-serif',
+    geist: '"Geist Variable", "Noto Sans JP Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif',
     mono: 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace',
 } as const;

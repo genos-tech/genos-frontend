@@ -23,6 +23,8 @@ import {
     ThemeId,
     ThemePrimitives,
 } from "./themePalettes";
+import { resolvedPrimitives, TINT_WARNING } from "./tokens/primitives";
+import { alphaCss, buildRoles, Mode } from "./tokens/roles";
 
 export const THEME_STORAGE_KEY = "genos-color-theme";
 
@@ -31,9 +33,23 @@ const STYLE_ELEMENT_ID = "genos-theme-vars";
 /** `--gp-<mode>-<name>` for per-mode primitives. Components already choose
  *  the mode in JS (`isDark ? palette.dark : palette.light`), so both sets
  *  are always defined and the JS picks which name to reference. */
-const modeVars = (mode: "dark" | "light", p: ModePrimitives): string[] => {
+const modeVars = (mode: Mode, p: ModePrimitives, id: ThemeId): string[] => {
     const v = (name: string, value: string) => `--gp-${mode}-${name}: ${value};`;
+    // Flat neutral lines, fills and depth from the design roles (MIP-1118).
+    // Emitted per MODE namespace, not as aliases of the mode-resolved
+    // `--g-*`: components pick `palette.dark` or `palette.light` in JS, and
+    // a surface that forces one must not flip with the page's mode.
+    const r = buildRoles(id, mode);
     return [
+        v("ink-rgb", r.inkRgb),
+        v("border-subtle", alphaCss(r.borderSubtle)),
+        v("border", alphaCss(r.border)),
+        v("border-strong", alphaCss(r.borderStrong)),
+        v("hover", alphaCss(r.hover)),
+        v("active", alphaCss(r.active)),
+        v("shadow-sm", r.shadowSm),
+        v("shadow-md", r.shadowMd),
+        v("shadow-lg", r.shadowLg),
         v("accent", p.accent),
         v("accent-rgb", p.accentRgb),
         v("accent-strong", p.accentStrong),
@@ -86,9 +102,11 @@ const rampVars = (t: ThemePrimitives): string[] => [
     `--gp-tint-danger-alt-rgb: ${rgbTriplet(t.tintDangerAlt)};`,
     `--gp-tint-danger-deep: ${t.tintDangerDeep};`,
     `--gp-tint-danger-deep-rgb: ${rgbTriplet(t.tintDangerDeep)};`,
+    `--gp-tint-warning: ${TINT_WARNING};`,
+    `--gp-tint-warning-rgb: ${rgbTriplet(TINT_WARNING)};`,
 ];
 
-const themeVars = (t: ThemePrimitives): string[] => [
+const themeVars = (t: ThemePrimitives, id: ThemeId): string[] => [
     `--gp-brand-rgb: ${t.brandRgb};`,
     `--gp-brand-alt-rgb: ${t.brandAltRgb};`,
     `--gp-grad-from: ${t.gradFrom};`,
@@ -96,15 +114,15 @@ const themeVars = (t: ThemePrimitives): string[] => [
     `--gp-grad-from-hover: ${t.gradFromHover};`,
     `--gp-grad-to-hover: ${t.gradToHover};`,
     ...rampVars(t),
-    ...modeVars("dark", t.dark),
-    ...modeVars("light", t.light),
+    ...modeVars("dark", t.dark, id),
+    ...modeVars("light", t.light, id),
 ];
 
 /** The full stylesheet. Exported for the unit test, which asserts every
  *  theme defines every variable the palette references. */
 export const buildThemeStylesheet = (): string => {
     const blocks = (Object.keys(THEME_PRIMITIVES) as ThemeId[]).map((id) => {
-        const body = themeVars(THEME_PRIMITIVES[id]).join("\n    ");
+        const body = themeVars(resolvedPrimitives(id), id).join("\n    ");
         // The default also lands on bare `:root`, so a missing/unknown
         // `data-theme` degrades to the shipped look rather than to
         // unresolved variables (which would render as transparent).

@@ -49,6 +49,14 @@ import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
 
+/**
+ * Side padding of every rail button. The rail is 68px wide and its labels
+ * are 0.65rem; at the old 10px, Geist's wider "Sign out" no longer fit and
+ * wrapped onto two lines. Four leaves room for it (and for longer labels in
+ * other languages) without moving the icon or shrinking the hit target.
+ */
+const RAIL_BUTTON_PX = 0.5;
+
 // Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
 // `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
 // tooltip displays the combo the listener actually responds to.
@@ -286,7 +294,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     flexDirection: "column",
                                     alignItems: "center",
                                     py: 1,
-                                    px: 1.25,
+                                    px: RAIL_BUTTON_PX,
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     background: genosActive
@@ -407,7 +415,7 @@ export const Sidebar = (props: SidebarProps) => {
                                                 flexDirection: "column",
                                                 alignItems: "center",
                                                 py: 1,
-                                                px: 1.25,
+                                                px: RAIL_BUTTON_PX,
                                                 borderRadius: "12px",
                                                 transition:
                                                     "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -546,7 +554,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         flexDirection: "column",
                                         alignItems: "center",
                                         py: 1,
-                                        px: 1.25,
+                                        px: RAIL_BUTTON_PX,
                                         borderRadius: "12px",
                                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                         "&:hover": {
@@ -612,7 +620,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     flexDirection: "column",
                                     alignItems: "center",
                                     py: 1,
-                                    px: 1.25,
+                                    px: RAIL_BUTTON_PX,
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
@@ -670,7 +678,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     flexDirection: "column",
                                     alignItems: "center",
                                     py: 1,
-                                    px: 1.25,
+                                    px: RAIL_BUTTON_PX,
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
@@ -724,7 +732,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     flexDirection: "column",
                                     alignItems: "center",
                                     py: 1,
-                                    px: 1.25,
+                                    px: RAIL_BUTTON_PX,
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {

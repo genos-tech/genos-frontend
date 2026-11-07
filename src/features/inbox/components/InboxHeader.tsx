@@ -31,7 +31,7 @@ export const InboxHeader = () => {
                 overflow: "hidden",
             }}
         >
-            {/* Subtle gradient accent line at top */}
+            {/* Subtle accent line at top (flat: titleGradient is a text color now) */}
             <Box
                 sx={{
                     position: "absolute",
@@ -39,7 +39,7 @@ export const InboxHeader = () => {
                     left: 0,
                     right: 0,
                     height: "2px",
-                    background: palette.titleGradient,
+                    background: palette.accent,
                     opacity: 0.8,
                 }}
             />

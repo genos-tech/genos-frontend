@@ -383,12 +383,15 @@ describe("how the loader looks", () => {
         const sheet = screen.getByRole("status");
         const surface = cssOf(sheet);
         // The surface: the Homes' own look, no delay, no entrance animation.
-        expect(surface).toMatch(/linear-gradient\(180deg/);
+        // (Flat canvas token since MIP-1118; it was a vertical gradient.)
+        expect(surface).toMatch(/background:var\(--gp-(dark|light)-bg\)/);
+        expect(surface).not.toMatch(/gradient/);
         expect(surface).not.toMatch(/\d+ms both/);
         expect(surface).not.toContain("slideIn");
-        // sheet children: two decor boxes, the dots, then the caption.
+        // sheet children: the dots, then the caption (the two ambient glow
+        // boxes that used to come first are gone, MIP-1118).
         const delayed = new RegExp(`0\\.2s ease-out ${LOADING_INDICATOR_DELAY_MS}ms both`);
-        for (const el of [sheet.children[2] as HTMLElement, screen.getByText(LABEL)]) {
+        for (const el of [sheet.children[0] as HTMLElement, screen.getByText(LABEL)]) {
             const css = cssOf(el);
             expect(css).toMatch(delayed);
             expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
@@ -397,8 +400,6 @@ describe("how the loader looks", () => {
         // One delay for both switch loaders (MIP-962's task switch and this).
         expect(LOADING_INDICATOR_DELAY_MS).toBe(150);
         expect(LOADING_INDICATOR_DELAY_MS).toBe(SWITCH_LOADER_DELAY_MS);
-        // The decor boxes are part of the surface: not delayed.
-        expect(cssOf(sheet.children[0] as HTMLElement)).not.toMatch(/\d+ms both/);
     });
 
     it("desktop: covers the content area only; the rail stays clickable; right-to-left safe", () => {

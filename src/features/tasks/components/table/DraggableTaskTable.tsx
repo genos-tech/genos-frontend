@@ -26,6 +26,7 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { FONT_STACKS } from "../../../../theme/tokens/scales";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
@@ -61,7 +62,12 @@ import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 import { TaskTableRows } from "./TaskTableRows";
 
-const materialTheme = createTheme({ cssVariables: true });
+// Material's default is a Roboto stack that is never loaded; this surface
+// would otherwise be a third typeface next to Joy's Geist.
+const materialTheme = createTheme({
+    cssVariables: true,
+    typography: { fontFamily: FONT_STACKS.geist },
+});
 
 // Shared empty fallback so a project without tags doesn't mint a new array
 // identity on every render (see `quickAddProjectTags`).

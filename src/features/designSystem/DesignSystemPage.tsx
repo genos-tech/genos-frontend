@@ -14,8 +14,6 @@
  * also how P2 will wire Joy to them.
  */
 
-import "@fontsource-variable/geist/index.css";
-
 import { ReactNode, useMemo, useState } from "react";
 import AddRounded from "@mui/icons-material/AddRounded";
 import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
@@ -34,7 +32,6 @@ import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
 import { composite, contrast } from "../../theme/tokens/color";
 import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
 import { MOTION, RADIUS } from "../../theme/tokens/scales";
-import { installDesignTokens } from "../../theme/tokens/tokenStyles";
 import {
     Button,
     EmptyState,
@@ -50,8 +47,6 @@ import {
     TaskRow,
     Text,
 } from "./samples";
-
-installDesignTokens();
 
 /** The accent each theme renders with. It doesn't depend on mode, and the
  *  picker would otherwise rebuild every theme's roles on each click. */

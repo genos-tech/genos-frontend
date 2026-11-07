@@ -143,6 +143,18 @@ describe("token stylesheet", () => {
         }
     });
 
+    it("first paint follows a dark OS until Joy sets data-joy-color-scheme (no white flash)", () => {
+        // Joy sets the attribute when React mounts; there is no init script.
+        const media = css.slice(css.indexOf("@media (prefers-color-scheme: dark)"));
+        expect(media).toContain(":root:not([data-joy-color-scheme])");
+        const dark = buildRoles("purple", "dark");
+        expect(media).toContain(`--g-bg: ${dark.bg};`);
+        // Every theme gets its own, and it only applies while the attribute is absent.
+        for (const id of THEME_IDS) {
+            expect(media).toContain(`:root[data-theme="${id}"]:not([data-joy-color-scheme])`);
+        }
+    });
+
     it("resolves without data-theme (purple fallback on bare :root)", () => {
         expect(css).toMatch(/^:root,\n:root\[data-joy-color-scheme="light"\]/m);
         expect(css).toMatch(/^:root\[data-joy-color-scheme="dark"\],/m);

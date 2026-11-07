@@ -105,9 +105,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     return (
         <Box sx={LayoutStyles.outerWrapper}>
             <Sheet sx={ls.serviceSurface}>
-                <Box sx={ls.decorTopRight} />
-                <Box sx={ls.decorBottomLeft} />
-
                 {isMobile ? (
                     <MobileTaskHome
                         isActiveRoute={isActiveRoute}

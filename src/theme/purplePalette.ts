@@ -1,6 +1,16 @@
 import { extendTheme } from "@mui/joy/styles";
 
-import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId } from "./themePalettes";
+import { DEFAULT_THEME_ID, ThemeId } from "./themePalettes";
+import { joyComponents } from "./tokens/joyComponents";
+import { joyPalette } from "./tokens/joyPalette";
+import {
+    joyFontSize,
+    joyFontWeight,
+    joyRadius,
+    joyShadow,
+    joyTypography,
+} from "./tokens/joyScales";
+import { FONT_STACKS } from "./tokens/scales";
 
 // Brand-surface palette. The single source of truth for brand-surface colors
 // across `components/ui/styles/commonStyle.ts` and every feature in
@@ -77,7 +87,7 @@ export type PurpleTokens = {
     textMuted: string;
     textSubtle: string;
 
-    // Semantic tints (all accent-analogous — see palette doctrine above)
+    // Semantic tints: real status hues (red / green / amber), flat
     dangerTint: string;
     dangerTintBg: string;
     dangerTintBgHover: string;
@@ -129,7 +139,6 @@ export type PurpleTokens = {
 
 // Mode-independent brand stops.
 const BRAND = "var(--gp-brand-rgb)";
-const BRAND_ALT = "var(--gp-brand-alt-rgb)";
 const GRAD = "linear-gradient(135deg, var(--gp-grad-from) 0%, var(--gp-grad-to) 100%)";
 const GRAD_HOVER =
     "linear-gradient(135deg, var(--gp-grad-from-hover) 0%, var(--gp-grad-to-hover) 100%)";
@@ -148,13 +157,15 @@ const tokensFor = (mode: "dark" | "light"): PurpleTokens => {
     const a = <T>(dark: T, light: T): T => (isDark ? dark : light);
 
     return {
-        // Surfaces
+        // Surfaces: FLAT. A surface is one color (it was a two-stop,
+        // semi-transparent gradient). Depth is a border and a shadow.
         bg: v("bg"),
-        surface: `linear-gradient(145deg, rgba(${rgb("surface-a")},${a("0.95", "0.98")}) 0%, rgba(${rgb("surface-b")},${a("0.98", "0.99")}) 100%)`,
-        surfaceElevated: `linear-gradient(135deg, rgba(${a(rgb("surface-c"), rgb("surface-a"))},${a("0.9", "0.95")}) 0%, rgba(${a(rgb("surface-a"), rgb("surface-c"))},${a("0.95", "0.92")}) 100%)`,
-        surfaceSolid: `rgba(${rgb("surface-a")}, ${a("0.95", "0.98")})`,
+        surface: `rgb(${rgb("surface-a")})`,
+        surfaceElevated: `rgb(${rgb("surface-c")})`,
+        surfaceSolid: `rgb(${rgb("surface-a")})`,
 
-        // Accent
+        // Accent (theme-driven). Unchanged: the brand ramp is not part of
+        // the flattening.
         accent: v("accent"),
         accentStrong: v("accent-strong"),
         accentSoft: v("accent-soft"),
@@ -164,71 +175,75 @@ const tokensFor = (mode: "dark" | "light"): PurpleTokens => {
         accentMutedRgb: rgb("accent-muted"),
         brandRgb: BRAND,
 
-        // Gradients
+        // Gradients: only the brand button's survive (Ken, 2026-11-07).
+        // `titleGradient` keeps its name for its 14 call sites, which all
+        // paint it with the `background:` shorthand and clip it to text;
+        // a flat color is valid there, so titles are now plain text color.
         accentGradient: GRAD,
         accentGradientHover: GRAD_HOVER,
-        titleGradient: `linear-gradient(90deg, ${a(v("accent-soft"), v("accent-strong"))} 0%, ${v("accent")} 50%, ${a(v("accent-muted"), v("accent-soft"))} 100%)`,
+        titleGradient: v("text"),
 
-        // Structure
-        border: `rgba(${BRAND}, ${a("0.2", "0.15")})`,
-        borderStrong: `rgba(${BRAND}, ${a("0.35", "0.25")})`,
-        borderMuted: `rgba(${BRAND}, ${a("0.12", "0.08")})`,
-        divider: `rgba(${BRAND}, ${a("0.12", "0.1")})`,
+        // Structure: neutral ink at a fixed alpha per strength, not the
+        // brand hue. The values come from the design roles.
+        border: v("border"),
+        borderStrong: v("border-strong"),
+        borderMuted: v("border-subtle"),
+        divider: v("border-subtle"),
 
-        // Text
+        // Text: opaque. These had 0.9 and 0.7 alpha baked in, which nothing
+        // measured; the contrast the tests hold is the solid color's.
         text: v("text"),
-        textMuted: `rgba(${rgb("text-muted")}, 0.9)`,
-        textSubtle: `rgba(${rgb("text-subtle")}, 0.7)`,
+        textMuted: `rgb(${rgb("text-muted")})`,
+        textSubtle: `rgb(${rgb("text-subtle")})`,
 
-        // Semantic tints
+        // Semantic tints: real status hues as a flat translucent fill (they
+        // were two-stop gradients in the accent's own neighbourhood).
         dangerTint: v("danger-tint"),
-        dangerTintBg: `linear-gradient(135deg, rgba(${rgb("danger-tint")},${a("0.15", "0.08")}) 0%, rgba(${rgb("danger-tint-alt")},${a("0.15", "0.08")}) 100%)`,
-        dangerTintBgHover: `linear-gradient(135deg, rgba(${rgb("danger-tint")},${a("0.25", "0.15")}) 0%, rgba(${rgb("danger-tint-alt")},${a("0.25", "0.15")}) 100%)`,
-        dangerTintBorder: `rgba(${rgb("danger-tint")}, ${a("0.3", "0.2")})`,
+        dangerTintBg: `rgba(${rgb("danger-tint")}, ${a("0.14", "0.08")})`,
+        dangerTintBgHover: `rgba(${rgb("danger-tint")}, ${a("0.22", "0.14")})`,
+        dangerTintBorder: `rgba(${rgb("danger-tint")}, ${a("0.3", "0.22")})`,
 
         successTint: v("success-tint"),
-        successTintBg: `linear-gradient(135deg, rgba(${rgb("success-tint")},${a("0.12", "0.08")}) 0%, rgba(${rgb("success-tint-alt")},${a("0.12", "0.08")}) 100%)`,
-        successTintBorder: `rgba(${rgb("success-tint")}, ${a("0.3", "0.2")})`,
+        successTintBg: `rgba(${rgb("success-tint")}, ${a("0.12", "0.08")})`,
+        successTintBorder: `rgba(${rgb("success-tint")}, ${a("0.3", "0.22")})`,
 
         warningTint: v("warning-tint"),
-        warningTintBg: `linear-gradient(135deg, rgba(${rgb("warning-tint")},${a("0.12", "0.08")}) 0%, rgba(${rgb("warning-tint-alt")},${a("0.12", "0.08")}) 100%)`,
-        warningTintBorder: `rgba(${rgb("warning-tint")}, ${a("0.3", "0.2")})`,
+        warningTintBg: `rgba(${rgb("warning-tint")}, ${a("0.12", "0.08")})`,
+        warningTintBorder: `rgba(${rgb("warning-tint")}, ${a("0.3", "0.22")})`,
 
-        // Effects
-        glow: `rgba(${BRAND}, ${a("0.25", "0.15")})`,
-        shadow: a(
-            `0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(${BRAND},0.12)`,
-            `0 8px 32px rgba(${BRAND},0.12), 0 0 60px rgba(${BRAND},0.05)`
-        ),
-        shadowSoft: `0 4px 16px rgba(${BRAND}, ${a("0.4", "0.3")})`,
+        // Effects: quiet depth, no glow.
+        glow: `rgba(${rgb("ink")}, ${a("0.12", "0.06")})`,
+        shadow: v("shadow-lg"),
+        shadowSoft: v("shadow-md"),
         accentRingStrong: `rgba(${rgb("accent")}, ${a("0.85", "0.7")})`,
         accentRingSoft: `rgba(${rgb("accent")}, ${a("0.35", "0.25")})`,
 
         // Inputs
-        inputBg: `rgba(${rgb("input-bg")}, ${a("0.4", "0.92")})`,
-        inputBorder: `rgba(${BRAND}, 0.2)`,
+        inputBg: `rgb(${rgb("input-bg")})`,
+        inputBorder: v("border"),
         inputFocusBorder: a(v("accent-soft"), v("accent")),
         inputFocusShadow: `0 0 0 3px rgba(${BRAND}, ${a("0.25", "0.12")})`,
 
-        // Hover / pressed
-        hoverBg: `rgba(${BRAND}, ${a("0.15", "0.08")})`,
-        activeBg: `rgba(${BRAND}, ${a("0.25", "0.15")})`,
+        // Hover / pressed: neutral ink
+        hoverBg: v("hover"),
+        activeBg: v("active"),
 
-        // Chip / badge
-        chipBg: `linear-gradient(135deg, rgba(${BRAND},${a("0.15", "0.08")}) 0%, rgba(${BRAND_ALT},${a("0.15", "0.08")}) 100%)`,
-        chipBorder: `rgba(${BRAND}, ${a("0.3", "0.2")})`,
+        // Chips: a quiet neutral fill and the standard border
+        chipBg: v("hover"),
+        chipBorder: v("border"),
 
-        // Buttons
-        buttonBg: `linear-gradient(135deg, rgba(${BRAND},${a("0.15", "0.08")}) 0%, rgba(${BRAND_ALT},${a("0.15", "0.08")}) 100%)`,
-        buttonBgHover: `linear-gradient(135deg, rgba(${BRAND},${a("0.28", "0.18")}) 0%, rgba(${BRAND_ALT},${a("0.28", "0.18")}) 100%)`,
-        buttonBorder: `rgba(${BRAND}, ${a("0.3", "0.2")})`,
+        // Buttons: a secondary button is a surface with a border; the
+        // PRIMARY keeps the brand gradient.
+        buttonBg: `rgb(${rgb("surface-a")})`,
+        buttonBgHover: `rgb(${rgb("surface-b")})`,
+        buttonBorder: v("border"),
         primaryButtonBg: GRAD,
         primaryButtonHover: GRAD_HOVER,
-        primaryButtonShadow: `0 4px 16px rgba(${BRAND}, ${a("0.4", "0.3")})`,
+        primaryButtonShadow: v("shadow-sm"),
 
-        // Menus
-        menuBg: `linear-gradient(180deg, rgba(${rgb("surface-a")},0.98) 0%, rgba(${rgb("surface-b")},0.99) 100%)`,
-        menuBorder: `rgba(${BRAND}, ${a("0.18", "0.12")})`,
+        // Menus (dropdowns, popovers)
+        menuBg: `rgb(${rgb("surface-c")})`,
+        menuBorder: v("border"),
     };
 };
 
@@ -257,54 +272,30 @@ export const buildJoyTheme = (
     // because it isn't expressed as CSS.
     direction: "ltr" | "rtl" = "ltr"
 ) => {
-    const { ramp, brandRgb } = THEME_PRIMITIVES[themeId];
-    const soft = (alpha: number) => `rgba(${brandRgb}, ${alpha})`;
     return extendTheme({
         direction,
-        colorSchemes: {
-            dark: {
-                palette: {
-                    primary: {
-                        ...ramp,
-                        solidBg: "var(--joy-palette-primary-600)",
-                        solidHoverBg: "var(--joy-palette-primary-500)",
-                        solidActiveBg: "var(--joy-palette-primary-700)",
-                        outlinedBorder: "var(--joy-palette-primary-700)",
-                        outlinedColor: "var(--joy-palette-primary-300)",
-                        outlinedHoverBg: "var(--joy-palette-primary-800)",
-                        outlinedActiveBg: "var(--joy-palette-primary-900)",
-                        softColor: "var(--joy-palette-primary-200)",
-                        softBg: soft(0.18),
-                        softHoverBg: soft(0.28),
-                        softActiveBg: soft(0.35),
-                        plainColor: "var(--joy-palette-primary-300)",
-                        plainHoverBg: soft(0.12),
-                        plainActiveBg: soft(0.2),
-                    },
-                },
-            },
-            light: {
-                palette: {
-                    primary: {
-                        ...ramp,
-                        solidBg: "var(--joy-palette-primary-700)",
-                        solidHoverBg: "var(--joy-palette-primary-600)",
-                        solidActiveBg: "var(--joy-palette-primary-800)",
-                        outlinedBorder: "var(--joy-palette-primary-500)",
-                        outlinedColor: "var(--joy-palette-primary-700)",
-                        outlinedHoverBg: "var(--joy-palette-primary-100)",
-                        outlinedActiveBg: "var(--joy-palette-primary-200)",
-                        softColor: "var(--joy-palette-primary-800)",
-                        softBg: "var(--joy-palette-primary-100)",
-                        softHoverBg: "var(--joy-palette-primary-200)",
-                        softActiveBg: soft(0.25),
-                        plainColor: "var(--joy-palette-primary-700)",
-                        plainHoverBg: "var(--joy-palette-primary-100)",
-                        plainActiveBg: "var(--joy-palette-primary-200)",
-                    },
-                },
-            },
+        // Joy's default is Inter with an unloaded system fallback. Geist
+        // (with Noto Sans JP for Japanese) is the app's typeface.
+        fontFamily: {
+            body: FONT_STACKS.geist,
+            display: FONT_STACKS.geist,
+            code: FONT_STACKS.mono,
         },
+        // Type levels, weights, radius and shadows come from the design
+        // tokens (see `tokens/joyScales.ts`).
+        typography: joyTypography,
+        fontSize: joyFontSize,
+        fontWeight: joyFontWeight,
+        radius: joyRadius,
+        shadow: joyShadow,
+        // Palettes come from the design roles, per theme and mode, so Joy
+        // components and the `--g-*` tokens can never disagree (see
+        // `tokens/joyPalette.ts` for the decisions behind each mapping).
+        colorSchemes: {
+            dark: { palette: joyPalette(themeId, "dark") },
+            light: { palette: joyPalette(themeId, "light") },
+        },
+        components: joyComponents,
         // Tooltips portal to <body> at the Joy `tooltip` z-index token (default
         // 1550). Several app surfaces use much higher hardcoded z-indexes —
         // ServiceSwitcherOverlay (13000), the Spotlight overlay (13100) and the
