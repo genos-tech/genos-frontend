@@ -3,7 +3,6 @@ import "@blocknote/mantine/style.css";
 
 import { useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -28,7 +27,6 @@ import { channelService } from "../../services/channel/channelService";
 import { notifyActionError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -40,9 +38,7 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
+import { useGenosEditor } from "./genos/useGenosEditor";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -121,16 +117,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     // Without the stored trailing blank line, or editing shows (and saves) an
     // extra empty line at the end (MIP-1039).
     const initialContent: any[] = withoutTrailingBlank(message.content);
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
+    const editor = useGenosEditor({
+        surface: "composer",
         schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        uploadFile,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
         dictionary,
-        initialContent: initialContent,
+        uploadFile,
+        initialContent,
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
