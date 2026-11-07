@@ -172,12 +172,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     if (useNM.tabItems.length === 0) {
         return (
             <EmptyState
-                body={t.notes.emptyState.body}
+                body={t.notes.placeholder.chooseMyNoteOrCreate}
                 data-empty="notes"
                 icon={<DescriptionOutlinedIcon />}
-                title={t.notes.emptyState.title}
+                title={t.notes.placeholder.noNoteSelectedTitle}
                 action={{
-                    label: t.notes.header.newNote,
+                    label: t.notes.placeholder.newMyNote,
                     onClick: handleCreateNewNote,
                     icon: <AddRoundedIcon />,
                 }}

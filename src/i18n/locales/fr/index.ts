@@ -2308,10 +2308,6 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "Aucune note ouverte",
-            body: "Choisissez une note dans la barre latérale ou créez-en une.",
-        },
         list: {
             empty: "Aucune note pour le moment",
             newNote: "Nouvelle note",

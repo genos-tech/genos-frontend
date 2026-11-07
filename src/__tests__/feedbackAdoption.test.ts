@@ -44,6 +44,10 @@ describe("feedback adoption", () => {
         expect(shared("features/chat/ToDoPane.tsx")).toBe(true);
         expect(shared("features/chat/components/sidebar/ChatList.tsx")).toBe(true);
         expect(shared("features/notes/my-notes/components/MyNoteMain.tsx")).toBe(true);
+        // The ones people actually meet: no note open, no chat open, empty inbox.
+        expect(shared("features/notes/common/components/NoteContentRenderer.tsx")).toBe(true);
+        expect(shared("features/chat/components/panels/SelectChatPanel.tsx")).toBe(true);
+        expect(shared("features/inbox/components/InboxSection.tsx")).toBe(true);
         expect(
             files.some(({ f }) => f === "features/notes/common/components/EmptyState.tsx")
         ).toBe(false);

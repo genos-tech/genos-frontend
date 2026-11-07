@@ -2653,10 +2653,6 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "لا توجد ملاحظة مفتوحة",
-            body: "اختر ملاحظة من الشريط الجانبي أو أنشئ ملاحظة جديدة.",
-        },
         accessRequest: {
             privateBadge: "ملاحظة خاصة",
             heading: "ليس لديك صلاحية الوصول إلى هذه الملاحظة",

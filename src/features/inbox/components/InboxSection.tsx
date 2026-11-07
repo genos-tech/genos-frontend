@@ -1,13 +1,13 @@
 import { forwardRef, useEffect } from "react";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
@@ -40,7 +40,6 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
         const { mode } = useColorScheme();
         const { t } = useTranslation();
         const isDark = mode === "dark";
-        const palette = isDark ? purplePalette.dark : purplePalette.light;
         const navigate = useNavigate();
         const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
         const resolvedEmptyTitle = emptyTitle ?? t.inbox.section.defaultEmptyTitle;
@@ -137,97 +136,13 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                         }}
                     />
                 ) : (
-                    <Box
-                        sx={{
-                            height: "100%",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            px: 3,
-                            animation: "fadeIn 0.5s ease-out",
-                            "@keyframes fadeIn": {
-                                from: { opacity: 0 },
-                                to: { opacity: 1 },
-                            },
-                        }}
-                    >
-                        {/* Empty State Illustration */}
-                        <Box
-                            sx={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: isDark
-                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.08) 100%)"
-                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.04) 100%)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.15)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                mb: 2.5,
-                                position: "relative",
-                                "&::before": {
-                                    content: '""',
-                                    position: "absolute",
-                                    inset: -8,
-                                    borderRadius: "50%",
-                                    border: "1px dashed",
-                                    borderColor: isDark
-                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.15)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                                    animation: "rotate 20s linear infinite",
-                                },
-                                "@keyframes rotate": {
-                                    from: { transform: "rotate(0deg)" },
-                                    to: { transform: "rotate(360deg)" },
-                                },
-                            }}
-                        >
-                            {isRequest ? (
-                                <CheckCircleOutlineRoundedIcon
-                                    sx={{
-                                        fontSize: 36,
-                                        color: palette.accentSoft,
-                                        opacity: 0.8,
-                                    }}
-                                />
-                            ) : (
-                                <InboxRoundedIcon
-                                    sx={{
-                                        fontSize: 36,
-                                        color: palette.accentSoft,
-                                        opacity: 0.8,
-                                    }}
-                                />
-                            )}
-                        </Box>
-
-                        <Typography
-                            level="title-md"
-                            sx={{
-                                fontWeight: 600,
-                                color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
-                                mb: 0.5,
-                                textAlign: "center",
-                            }}
-                        >
-                            {resolvedEmptyTitle}
-                        </Typography>
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                textAlign: "center",
-                                maxWidth: 200,
-                            }}
-                        >
-                            {resolvedEmptySubtitle}
-                        </Typography>
-                    </Box>
+                    <EmptyState
+                        body={resolvedEmptySubtitle}
+                        data-empty="inbox"
+                        icon={isRequest ? <CheckCircleOutlineRoundedIcon /> : <InboxRoundedIcon />}
+                        title={resolvedEmptyTitle}
+                        fill
+                    />
                 )}
             </Box>
         );

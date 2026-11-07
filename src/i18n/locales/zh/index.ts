@@ -2210,10 +2210,6 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "没有打开的笔记",
-            body: "从侧边栏选择一篇笔记，或新建一篇。",
-        },
         list: {
             empty: "暂无笔记",
             newNote: "新建笔记",

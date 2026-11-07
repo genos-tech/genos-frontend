@@ -2675,10 +2675,6 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "कोई नोट खुला नहीं है",
-            body: "साइडबार से कोई नोट चुनें या नया नोट बनाएँ।",
-        },
         list: {
             empty: "अभी कोई नोट नहीं",
             newNote: "नया नोट",

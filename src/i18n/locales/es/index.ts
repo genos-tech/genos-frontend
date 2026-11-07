@@ -2690,10 +2690,6 @@ export const es: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "Ninguna nota abierta",
-            body: "Elige una nota en la barra lateral o crea una nueva.",
-        },
         accessRequest: {
             privateBadge: "Nota privada",
             heading: "No tienes acceso a esta nota",

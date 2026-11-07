@@ -2488,10 +2488,6 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     notes: {
-        emptyState: {
-            title: "開いているノートはありません",
-            body: "サイドバーからノートを選ぶか、新しいノートを作成してください。",
-        },
         list: {
             empty: "ノートはまだありません",
             newNote: "新規ノート",

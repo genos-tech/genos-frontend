@@ -28,8 +28,6 @@ const KEYS = [
     "common.feedback.toast.undo",
     "chat.threadTabs.ariaLabel",
     "inbox.tabs.ariaLabel",
-    "notes.emptyState.title",
-    "notes.emptyState.body",
 ] as const;
 
 const OTHERS = { ja, es, fr, zh, ar, hi } as const;
@@ -53,10 +51,6 @@ describe("feedback strings", () => {
             }
         });
     }
-
-    it("the empty-state copy says what to do next (a verb in the body)", () => {
-        expect(get(en, "notes.emptyState.body")).toMatch(/pick|start|create/i);
-    });
 
     it("no new toast or empty-state string apologizes", () => {
         for (const k of KEYS) expect(get(en, k), k).not.toMatch(/sorry|oops|unfortunately/i);

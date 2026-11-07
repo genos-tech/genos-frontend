@@ -1,8 +1,4 @@
 export const notes = {
-    emptyState: {
-        title: "No note open",
-        body: "Pick a note from the sidebar, or start a new one.",
-    },
     list: {
         empty: "No notes yet",
         newNote: "New note",
