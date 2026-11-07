@@ -4062,6 +4062,7 @@ export const zh: DeepPartial<Messages> = {
             none: "没有任何",
         },
         filterButtons: {
+            title: "筛选",
             status: "状态：{value}",
             tags: "标签： {value}",
             priority: "优先级：{value}",

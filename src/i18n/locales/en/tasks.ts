@@ -641,6 +641,7 @@ export const tasks = {
         none: "None",
     },
     filterButtons: {
+        title: "Filters",
         status: "Status: {value}",
         tags: "Tags: {value}",
         priority: "Priority: {value}",

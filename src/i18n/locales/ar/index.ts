@@ -2437,6 +2437,7 @@ export const ar: DeepPartial<Messages> = {
             none: "لا أحد",
         },
         filterButtons: {
+            title: "عوامل التصفية",
             status: "الحالة: {value}",
             tags: "العلامات: {value}",
             priority: "الأولوية: {value}",

@@ -158,7 +158,7 @@ type FilterChipButtonProps = {
     /** "+N": how many more are chosen beyond the one named. */
     extra?: number;
     active: boolean;
-} & Omit<MenuButtonProps, "children" | "variant" | "color" | "sx">;
+} & Omit<MenuButtonProps, "children" | "variant" | "color" | "sx" | "value">;
 
 export const FilterChipButton = forwardRef<HTMLButtonElement, FilterChipButtonProps>(
     function FilterChipButton({ field, value, extra = 0, active, ...props }, ref) {

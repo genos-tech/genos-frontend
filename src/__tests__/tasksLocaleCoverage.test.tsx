@@ -156,7 +156,6 @@ const walk = (dir: string): string[] =>
  * part 2). Remove an entry when its file is done so the guard covers it too.
  */
 const NOT_YET = new Set([
-    "table/TaskFilterMenu.tsx",
     "table/SavedFiltersMenu.tsx",
     "table/filterBarParts.tsx",
     "table/DraggableTaskRow.tsx",
@@ -215,6 +214,8 @@ describe("names are bidi-isolated", () => {
             ["{assigneeName || t.tasks.board.unassigned}"],
         ],
         ["features/tasks/components/dashboard/TaskVelocitySection.tsx", ["{m.name}"]],
+        // The member filter's menu rows (MIP-1135); the chip's value is wrapped inline.
+        ["features/tasks/components/table/TaskFilterMenu.tsx", ["{m.userName}"]],
         ["features/tasks/components/autocompletes/MultiMemberPicker.tsx", ["{user.userName}"]],
         ["features/tasks/components/contents/base/CustomFieldsBlock.tsx", ["{option.userName}"]],
         ["features/tasks/components/modals/ModalCreateProject.tsx", ["{member.userName}"]],

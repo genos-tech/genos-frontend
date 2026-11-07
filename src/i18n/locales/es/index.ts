@@ -2472,6 +2472,7 @@ export const es: DeepPartial<Messages> = {
             none: "Ninguno",
         },
         filterButtons: {
+            title: "Filtros",
             status: "Estado: {value}",
             tags: "Etiquetas: {value}",
             priority: "Prioridad: {value}",

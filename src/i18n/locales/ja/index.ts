@@ -4523,6 +4523,7 @@ export const ja: DeepPartial<Messages> = {
             none: "なし",
         },
         filterButtons: {
+            title: "フィルター",
             status: "ステータス: {value}",
             tags: "タグ: {value}",
             priority: "優先度: {value}",

@@ -1727,7 +1727,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             letterSpacing: "0.05em",
                         }}
                     >
-                        Filters
+                        {t.tasks.filterButtons.title}
                     </Typography>
 
                     {/* How-it-works explainer. The rules aren't guessable
@@ -1868,7 +1868,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 <FilterChipButton
                                     active={!sprintFilterIsAll}
                                     extra={selectedSprintKeys.length - 1}
-                                    field="Sprint"
+                                    field={t.tasks.fields.sprint}
                                     value={sprintFilterButtonLabel}
                                 />
                             </AppTooltip>
@@ -2065,7 +2065,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             >
                                 <FilterChipButton
                                     extra={selectedMilestoneKeys.length - 1}
-                                    field="Milestone"
+                                    field={t.tasks.fields.milestone}
                                     value={milestoneFilterButtonLabel}
                                     active={
                                         !(
@@ -2767,13 +2767,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             >
                                 <FilterChipButton
                                     extra={selectedMemberKeys.length - 1}
-                                    field="Member"
-                                    value={memberFilterButtonLabel}
+                                    field={t.tasks.dashboard.member}
                                     active={
                                         !(
                                             selectedMemberKeys.length === 1 &&
                                             selectedMemberKeys[0] === MEMBER_ALL
                                         )
+                                    }
+                                    value={
+                                        <bdi className="g-bidi-island">
+                                            {memberFilterButtonLabel}
+                                        </bdi>
                                     }
                                 />
                             </AppTooltip>
@@ -2908,7 +2912,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                         minWidth: 0,
                                                     }}
                                                 >
-                                                    {m.userName}
+                                                    <bdi className="g-bidi-island">
+                                                        {m.userName}
+                                                    </bdi>
                                                 </Typography>
                                                 {isSelected && (
                                                     <Box
