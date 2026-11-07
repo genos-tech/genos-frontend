@@ -17,13 +17,9 @@ import {
     IconButton,
     Input,
     ListItemButton,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -35,15 +31,14 @@ import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSize
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import {
-    PROFILE_MODAL_Z_INDEX,
-    ProfileModalStyles,
-} from "../../../../components/ui/styles/commonStyle";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -92,11 +87,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
@@ -316,916 +308,756 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Modal
+            <ModalFrame
                 open={openModalTeamProfile}
-                sx={{
-                    zIndex: 10001,
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "transparent",
-                }}
+                size="profile"
+                title={fmt(t.admin.teamProfile.title, { teamName: teamProfile.teamName })}
+                zIndex={PROFILE_MODAL_Z_INDEX}
+                flush
+                fullScreenOnMobile
                 onClose={() => setOpenModalTeamProfile(false)}
             >
-                <ModalDialog
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                <Stack
+                    spacing={4}
                     sx={{
-                        background: styles.bg,
-                        border: `1px solid ${styles.border}`,
-                        boxShadow: styles.shadow,
-                        borderRadius: { xs: "0", md: "20px" },
-                        overflow: "auto",
-                        transition: "all 0.3s ease",
-                        // Fill the viewport on mobile so the modal feels
-                        // native; cap at 1000px on desktop to match the
-                        // original layout.
-                        width: { xs: "100vw", md: "auto" },
-                        height: { xs: "100dvh", md: "auto" },
-                        maxWidth: { xs: "100vw", md: "1000px" },
-                        maxHeight: { xs: "100dvh", md: "90vh" },
-                        m: { xs: 0, md: "auto" },
+                        display: "flex",
+                        mx: "auto",
+                        px: { xs: 2, md: 6 },
+                        py: { xs: 2, md: 3 },
                     }}
                 >
-                    <Box
+                    <Card
                         sx={{
-                            flex: 1,
-                            width: { xs: "100%", md: "1000px" },
-                            maxWidth: "100%",
+                            background: g.surface.default,
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            boxShadow: "none",
                         }}
                     >
-                        <Box
+                        <Stack
+                            alignItems={{ xs: "stretch", md: "flex-start" }}
+                            direction={{ xs: "column", md: "row" }}
                             sx={{
-                                position: "sticky",
-                                top: { sm: -100, md: -110 },
-                                zIndex: 9995,
+                                display: "flex",
+                                my: 1,
+                                width: "100%",
+                                minWidth: 0,
                             }}
                         >
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 1,
-                                    px: { xs: 2, md: 3 },
+                                    pl: { xs: 0, md: "20px" },
+                                    pr: { xs: 0, md: "40px" },
+                                    mb: { xs: 2, md: 0 },
+                                    position: "relative",
+                                    display: "inline-block",
+                                    alignSelf: { xs: "center", md: "auto" },
                                 }}
                             >
-                                <Typography
-                                    component="h1"
-                                    level="h2"
+                                <BaseAvatar
+                                    size="display"
+                                    src={buildAvatarSrc(teamProfile.teamImgPath)}
                                     sx={{
-                                        mt: 1,
-                                        mb: 1,
-                                        flex: 1,
-                                        minWidth: 0,
-                                        background: styles.headerGradient,
-                                        backgroundClip: "text",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.02em",
-                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
+                                        fontSize: "50px",
+                                        border: `3px solid ${g.border.default}`,
                                     }}
-                                    noWrap
                                 >
-                                    {fmt(t.admin.teamProfile.title, {
-                                        teamName: teamProfile.teamName,
-                                    })}
-                                </Typography>
-                                {/* Close button — without it mobile users
-                                    have no way to dismiss the modal,
-                                    since it's full-screen on xs and
-                                    there's no backdrop to click. */}
-                                <ModalClose
-                                    variant="plain"
-                                    sx={{
-                                        position: "static",
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            </Box>
-                        </Box>
+                                    <AssignmentIcon sx={{ fontSize: 100 }} />
+                                </BaseAvatar>
 
-                        <Stack
-                            spacing={4}
-                            sx={{
-                                display: "flex",
-                                mx: "auto",
-                                px: { xs: 2, md: 6 },
-                                py: { xs: 2, md: 3 },
-                            }}
-                        >
-                            <Card
-                                sx={{
-                                    background: styles.cardBg,
-                                    border: `1px solid ${styles.border}`,
-                                    borderRadius: "16px",
-                                    boxShadow: isDark
-                                        ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
-                                    transition: "all 0.3s ease",
-                                    "&:hover": {
-                                        boxShadow: isDark
-                                            ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
-                                    },
-                                }}
-                            >
-                                <Stack
-                                    alignItems={{ xs: "stretch", md: "flex-start" }}
-                                    direction={{ xs: "column", md: "row" }}
-                                    sx={{
-                                        display: "flex",
-                                        my: 1,
-                                        width: "100%",
-                                        minWidth: 0,
-                                    }}
-                                >
+                                {canManage && (
                                     <Box
                                         sx={{
-                                            pl: { xs: 0, md: "20px" },
-                                            pr: { xs: 0, md: "40px" },
-                                            mb: { xs: 2, md: 0 },
-                                            position: "relative",
-                                            display: "inline-block",
-                                            alignSelf: { xs: "center", md: "auto" },
+                                            position: "absolute",
+                                            top: 150,
+                                            right: 30,
                                         }}
                                     >
-                                        <BaseAvatar
-                                            size="display"
-                                            src={buildAvatarSrc(teamProfile.teamImgPath)}
-                                            sx={{
-                                                fontSize: "50px",
-                                                boxShadow: styles.avatarGlow,
-                                                border: `3px solid ${styles.border}`,
-                                                transition: "all 0.3s ease",
-                                                "&:hover": {
-                                                    transform: "scale(1.02)",
-                                                    boxShadow: isDark
-                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.15)",
-                                                },
-                                            }}
+                                        <input
+                                            ref={inputRef}
+                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                            multiple={false}
+                                            style={{ display: "none" }}
+                                            type="file"
+                                            onChange={handleSelectedFiles}
+                                        />
+                                        <AppTooltip
+                                            size="sm"
+                                            title={t.admin.teamProfile.editTeamImage}
                                         >
-                                            <AssignmentIcon sx={{ fontSize: 100 }} />
-                                        </BaseAvatar>
-
-                                        {canManage && (
-                                            <Box
+                                            <IconButton
+                                                variant="soft"
                                                 sx={{
-                                                    position: "absolute",
-                                                    top: 150,
-                                                    right: 30,
+                                                    background: g.accent.subtle,
+                                                    border: `1px solid ${g.border.default}`,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.accent.border,
+                                                        transform: "scale(1.1)",
+                                                    },
+                                                }}
+                                                onClick={() => {
+                                                    handleButtonClick();
                                                 }}
                                             >
-                                                <input
-                                                    ref={inputRef}
-                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                    multiple={false}
-                                                    style={{ display: "none" }}
-                                                    type="file"
-                                                    onChange={handleSelectedFiles}
+                                                <EditIcon
+                                                    sx={{
+                                                        fontSize: "30px",
+                                                        color: g.accent.text,
+                                                    }}
                                                 />
-                                                <AppTooltip
-                                                    size="sm"
-                                                    title={t.admin.teamProfile.editTeamImage}
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    flexGrow: 1,
+                                    minWidth: 0,
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                }}
+                            >
+                                <Stack direction="column" spacing={1.5}>
+                                    <Stack direction="row" spacing={4}>
+                                        <FormControl sx={{ flex: 1 }}>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.admin.teamProfile.teamName}
+                                            </FormLabel>
+                                            {nameEditMode ? (
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1}
                                                 >
-                                                    <IconButton
-                                                        variant="soft"
-                                                        sx={{
-                                                            background: isDark
-                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
-                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brandalt-500-rgb), 0.08) 100%)",
-                                                            border: `1px solid ${styles.border}`,
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.5) 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.25) 0%, rgba(var(--gp-brandalt-500-rgb), 0.25) 100%)",
-                                                                transform: "scale(1.1)",
+                                                    <Input
+                                                        size="sm"
+                                                        value={nameDraft}
+                                                        slotProps={{
+                                                            input: {
+                                                                onKeyDown: (e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        void handleNameSave();
+                                                                    }
+                                                                    if (e.key === "Escape") {
+                                                                        setNameEditMode(false);
+                                                                        setNameError(null);
+                                                                    }
+                                                                },
                                                             },
                                                         }}
-                                                        onClick={() => {
-                                                            handleButtonClick();
-                                                        }}
-                                                    >
-                                                        <EditIcon
-                                                            sx={{
-                                                                fontSize: "30px",
-                                                                color: styles.accentColor,
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    <Stack
-                                        spacing={2}
-                                        sx={{
-                                            flexGrow: 1,
-                                            minWidth: 0,
-                                            width: "100%",
-                                            maxWidth: "100%",
-                                        }}
-                                    >
-                                        <Stack direction="column" spacing={1.5}>
-                                            <Stack direction="row" spacing={4}>
-                                                <FormControl sx={{ flex: 1 }}>
-                                                    <FormLabel
+                                                        onChange={(e) =>
+                                                            setNameDraft(e.target.value)
+                                                        }
+                                                        // Pin keydown to the inner <input>
+                                                        // via slotProps so Enter/Escape
+                                                        // always land on the typing
+                                                        // target — Joy Input's outer
+                                                        // onKeyDown wrapper can miss
+                                                        // synthetic events that bubble
+                                                        // through composed slots.
                                                         sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
+                                                            flex: 1,
+                                                            "--Input-radius": g.radius.md,
+                                                        }}
+                                                        autoFocus
+                                                    />
+                                                    <Button
+                                                        loading={nameSaving}
+                                                        size="sm"
+                                                        variant="solid"
+                                                        onClick={handleNameSave}
+                                                    >
+                                                        {t.common.profileEdit.save}
+                                                    </Button>
+                                                    <Button
+                                                        color="neutral"
+                                                        size="sm"
+                                                        variant="plain"
+                                                        onClick={() => {
+                                                            setNameEditMode(false);
+                                                            setNameError(null);
                                                         }}
                                                     >
-                                                        {t.admin.teamProfile.teamName}
-                                                    </FormLabel>
-                                                    {nameEditMode ? (
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
+                                                        {t.common.profileEdit.cancel}
+                                                    </Button>
+                                                </Stack>
+                                            ) : (
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            flex: 1,
+                                                            px: 2,
+                                                            py: 1,
+                                                            borderRadius: g.radius.md,
+                                                            background: g.bg.subtle,
+                                                            border: `1px solid ${g.border.default}`,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: g.text.primary,
+                                                                fontSize: "18px",
+                                                            }}
                                                         >
-                                                            <Input
-                                                                size="sm"
-                                                                value={nameDraft}
-                                                                slotProps={{
-                                                                    input: {
-                                                                        onKeyDown: (e) => {
-                                                                            if (
-                                                                                e.key === "Enter"
-                                                                            ) {
-                                                                                e.preventDefault();
-                                                                                void handleNameSave();
-                                                                            }
-                                                                            if (
-                                                                                e.key === "Escape"
-                                                                            ) {
-                                                                                setNameEditMode(
-                                                                                    false
-                                                                                );
-                                                                                setNameError(null);
-                                                                            }
-                                                                        },
-                                                                    },
-                                                                }}
-                                                                onChange={(e) =>
-                                                                    setNameDraft(e.target.value)
-                                                                }
-                                                                // Pin keydown to the inner <input>
-                                                                // via slotProps so Enter/Escape
-                                                                // always land on the typing
-                                                                // target — Joy Input's outer
-                                                                // onKeyDown wrapper can miss
-                                                                // synthetic events that bubble
-                                                                // through composed slots.
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    "--Input-radius": "8px",
-                                                                }}
-                                                                autoFocus
-                                                            />
-                                                            <Button
-                                                                loading={nameSaving}
-                                                                size="sm"
-                                                                variant="solid"
-                                                                onClick={handleNameSave}
-                                                            >
-                                                                {t.common.profileEdit.save}
-                                                            </Button>
-                                                            <Button
-                                                                color="neutral"
+                                                            {teamProfile.teamName}
+                                                        </Typography>
+                                                    </Box>
+                                                    {canManage && (
+                                                        <AppTooltip
+                                                            size="sm"
+                                                            title={t.common.profileEdit.rename}
+                                                        >
+                                                            <IconButton
                                                                 size="sm"
                                                                 variant="plain"
                                                                 onClick={() => {
-                                                                    setNameEditMode(false);
+                                                                    setNameDraft(
+                                                                        teamProfile.teamName
+                                                                    );
                                                                     setNameError(null);
+                                                                    setNameEditMode(true);
                                                                 }}
                                                             >
-                                                                {t.common.profileEdit.cancel}
-                                                            </Button>
-                                                        </Stack>
-                                                    ) : (
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                        >
-                                                            <Box
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    px: 2,
-                                                                    py: 1,
-                                                                    borderRadius: "8px",
-                                                                    background: isDark
-                                                                        ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                                        : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                                    border: `1px solid ${styles.border}`,
-                                                                }}
-                                                            >
-                                                                <Typography
-                                                                    fontWeight="bold"
-                                                                    sx={{
-                                                                        userSelect: "text",
-                                                                        color: styles.valueColor,
-                                                                        fontSize: "18px",
-                                                                    }}
-                                                                >
-                                                                    {teamProfile.teamName}
-                                                                </Typography>
-                                                            </Box>
-                                                            {canManage && (
-                                                                <AppTooltip
-                                                                    size="sm"
-                                                                    title={
-                                                                        t.common.profileEdit.rename
-                                                                    }
-                                                                >
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        onClick={() => {
-                                                                            setNameDraft(
-                                                                                teamProfile.teamName
-                                                                            );
-                                                                            setNameError(null);
-                                                                            setNameEditMode(true);
-                                                                        }}
-                                                                    >
-                                                                        <EditIcon
-                                                                            sx={{ fontSize: 18 }}
-                                                                        />
-                                                                    </IconButton>
-                                                                </AppTooltip>
-                                                            )}
-                                                        </Stack>
+                                                                <EditIcon sx={{ fontSize: 18 }} />
+                                                            </IconButton>
+                                                        </AppTooltip>
                                                     )}
-                                                    {nameError && (
-                                                        <Typography
-                                                            level="body-xs"
-                                                            sx={{
-                                                                color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                                mt: 0.5,
-                                                            }}
-                                                        >
-                                                            {nameError}
-                                                        </Typography>
-                                                    )}
-                                                </FormControl>
-                                            </Stack>
+                                                </Stack>
+                                            )}
+                                            {nameError && (
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: g.danger.text,
+                                                        mt: 0.5,
+                                                    }}
+                                                >
+                                                    {nameError}
+                                                </Typography>
+                                            )}
+                                        </FormControl>
+                                    </Stack>
 
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.teamProfile.teamId}
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        display: "inline-flex",
-                                                        px: 2,
-                                                        py: 0.5,
-                                                        borderRadius: "8px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.3)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        fontFamily: "monospace",
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.labelColor,
-                                                            fontSize: "13px",
-                                                            fontFamily: "monospace",
-                                                        }}
-                                                    >
-                                                        {teamProfile.teamId}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.admin.teamProfile.teamId}
+                                        </FormLabel>
+                                        <Box
+                                            sx={{
+                                                display: "inline-flex",
+                                                px: 2,
+                                                py: 0.5,
+                                                borderRadius: g.radius.md,
+                                                background: g.bg.subtle,
+                                                border: `1px solid ${g.border.default}`,
+                                                fontFamily: "monospace",
+                                            }}
+                                        >
+                                            <Typography
+                                                fontWeight={600}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: g.text.secondary,
+                                                    fontSize: "13px",
+                                                    fontFamily: "monospace",
+                                                }}
+                                            >
+                                                {teamProfile.teamId}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
 
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.teamProfile.owner}
-                                                </FormLabel>
-                                                {/* Name + email on one (wrap-friendly) row,
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.admin.teamProfile.owner}
+                                        </FormLabel>
+                                        {/* Name + email on one (wrap-friendly) row,
                                                     Transfer button on its own row below,
                                                     right-aligned. Keeps long usernames from
                                                     wrapping mid-line and gives each element
                                                     breathing room. */}
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={2}
-                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={2}
+                                            sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                        >
+                                            <Button
+                                                color="neutral"
+                                                variant="plain"
+                                                sx={{
+                                                    justifyContent: "flex-start",
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.md,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.hover,
+                                                    },
+                                                }}
+                                                onClick={() => {
+                                                    setAvatarUserId(teamProfile.teamOwnerId);
+                                                    setOpenUserProfile(true);
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        fontSize: "20px",
+                                                        color: g.text.primary,
+                                                        whiteSpace: "nowrap",
+                                                    }}
                                                 >
-                                                    <Button
-                                                        color="neutral"
-                                                        variant="plain"
+                                                    {
+                                                        useTEM.teamMemberProfiles[
+                                                            teamProfile?.teamOwnerId
+                                                        ]?.userName
+                                                    }
+                                                </Typography>
+                                            </Button>
+                                            <Typography
+                                                component="a"
+                                                href={`mailto:${
+                                                    useTEM.teamMemberProfiles[
+                                                        teamProfile?.teamOwnerId
+                                                    ]?.userEmail
+                                                }`}
+                                                startDecorator={
+                                                    <EmailRoundedIcon
+                                                        fontSize="small"
                                                         sx={{
-                                                            justifyContent: "flex-start",
-                                                            px: 1.5,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: styles.hoverBg,
-                                                            },
+                                                            color: g.accent.text,
                                                         }}
-                                                        onClick={() => {
-                                                            setAvatarUserId(
-                                                                teamProfile.teamOwnerId
-                                                            );
-                                                            setOpenUserProfile(true);
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                fontSize: "20px",
-                                                                color: styles.valueColor,
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
-                                                            {
-                                                                useTEM.teamMemberProfiles[
-                                                                    teamProfile?.teamOwnerId
-                                                                ]?.userName
-                                                            }
-                                                        </Typography>
-                                                    </Button>
-                                                    <Typography
-                                                        component="a"
-                                                        href={`mailto:${
-                                                            useTEM.teamMemberProfiles[
-                                                                teamProfile?.teamOwnerId
-                                                            ]?.userEmail
-                                                        }`}
-                                                        startDecorator={
-                                                            <EmailRoundedIcon
-                                                                fontSize="small"
-                                                                sx={{
-                                                                    color: styles.accentColor,
-                                                                }}
-                                                            />
-                                                        }
-                                                        sx={{
-                                                            textDecoration: "none",
-                                                            color: styles.valueColor,
-                                                            cursor: "pointer",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                color: styles.accentColor,
-                                                            },
-                                                        }}
-                                                    >
-                                                        {
-                                                            useTEM.teamMemberProfiles[
-                                                                teamProfile?.teamOwnerId
-                                                            ]?.userEmail
-                                                        }
-                                                    </Typography>
-                                                </Stack>
-                                                {/* Invite is ordinary management (this was THE
+                                                    />
+                                                }
+                                                sx={{
+                                                    textDecoration: "none",
+                                                    color: g.text.primary,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        color: g.accent.text,
+                                                    },
+                                                }}
+                                            >
+                                                {
+                                                    useTEM.teamMemberProfiles[
+                                                        teamProfile?.teamOwnerId
+                                                    ]?.userEmail
+                                                }
+                                            </Typography>
+                                        </Stack>
+                                        {/* Invite is ordinary management (this was THE
                                                     bottleneck — one person for every new hire),
                                                     so editors get it. Transferring ownership is
                                                     ownership itself and stays with the owner. */}
-                                                {canManage && (
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            justifyContent: "flex-end",
-                                                            flexWrap: "wrap",
-                                                            gap: 1,
-                                                            mt: 1,
-                                                            mb: 1.5,
-                                                        }}
+                                        {canManage && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "flex-end",
+                                                    flexWrap: "wrap",
+                                                    gap: 1,
+                                                    mt: 1,
+                                                    mb: 1.5,
+                                                }}
+                                            >
+                                                <Button
+                                                    size="sm"
+                                                    variant="solid"
+                                                    startDecorator={
+                                                        <PersonAddAltRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        borderRadius: g.radius.md,
+                                                        fontWeight: 600,
+                                                        background: g.brand.gradient,
+                                                        "&:hover": {
+                                                            background: g.brand.gradientHover,
+                                                        },
+                                                    }}
+                                                    onClick={() => setOpenInvite(true)}
+                                                >
+                                                    {t.admin.inviteMembers.openButton}
+                                                </Button>
+                                                {isTeamOwner && (
+                                                    <Button
+                                                        color="neutral"
+                                                        size="sm"
+                                                        sx={{ borderRadius: g.radius.md }}
+                                                        variant="outlined"
+                                                        startDecorator={
+                                                            <SwapHorizRoundedIcon
+                                                                sx={{ fontSize: 16 }}
+                                                            />
+                                                        }
+                                                        onClick={() => setOpenTransfer(true)}
                                                     >
-                                                        <Button
-                                                            size="sm"
-                                                            variant="solid"
-                                                            startDecorator={
-                                                                <PersonAddAltRoundedIcon
-                                                                    sx={{ fontSize: 16 }}
-                                                                />
-                                                            }
-                                                            sx={{
-                                                                borderRadius: "8px",
-                                                                fontWeight: 600,
-                                                                background:
-                                                                    "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                                                                "&:hover": {
-                                                                    background:
-                                                                        "linear-gradient(135deg, var(--gp-brandalt-500) 0%, var(--gp-brand-700) 100%)",
-                                                                },
-                                                            }}
-                                                            onClick={() => setOpenInvite(true)}
-                                                        >
-                                                            {t.admin.inviteMembers.openButton}
-                                                        </Button>
-                                                        {isTeamOwner && (
-                                                            <Button
-                                                                color="neutral"
-                                                                size="sm"
-                                                                sx={{ borderRadius: "8px" }}
-                                                                variant="outlined"
-                                                                startDecorator={
-                                                                    <SwapHorizRoundedIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                }
-                                                                onClick={() =>
-                                                                    setOpenTransfer(true)
-                                                                }
-                                                            >
-                                                                {
-                                                                    t.common.profileEdit
-                                                                        .transferOwner
-                                                                }
-                                                            </Button>
-                                                        )}
-                                                        {/* Recovery for an absent owner —
+                                                        {t.common.profileEdit.transferOwner}
+                                                    </Button>
+                                                )}
+                                                {/* Recovery for an absent owner —
                                                             offered only to an editor with no
                                                             claim already open. It sits beside
                                                             Transfer ownership because they're
                                                             the same act from opposite ends;
                                                             the confirm modal carries the part
                                                             that makes them different. */}
-                                                        {ownershipClaim.panel.kind ===
-                                                            "request" && (
-                                                            <Button
-                                                                color="warning"
-                                                                size="sm"
-                                                                sx={{ borderRadius: "8px" }}
-                                                                variant="outlined"
-                                                                startDecorator={
-                                                                    <ShieldRoundedIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                }
-                                                                onClick={() =>
-                                                                    setOpenClaimRequest(true)
-                                                                }
-                                                            >
-                                                                {t.common.profileEdit.claimRequest}
-                                                            </Button>
-                                                        )}
-                                                    </Box>
+                                                {ownershipClaim.panel.kind === "request" && (
+                                                    <Button
+                                                        color="warning"
+                                                        size="sm"
+                                                        sx={{ borderRadius: g.radius.md }}
+                                                        variant="outlined"
+                                                        startDecorator={
+                                                            <ShieldRoundedIcon
+                                                                sx={{ fontSize: 16 }}
+                                                            />
+                                                        }
+                                                        onClick={() => setOpenClaimRequest(true)}
+                                                    >
+                                                        {t.common.profileEdit.claimRequest}
+                                                    </Button>
                                                 )}
-                                                {/* Recovery for an absent owner. Sits under
+                                            </Box>
+                                        )}
+                                        {/* Recovery for an absent owner. Sits under
                                                     the owner's details because that's where
                                                     you look when you realise the person
                                                     named there has gone. Renders nothing
                                                     unless there's something to say. */}
-                                                <TeamOwnershipClaimPanel
-                                                    claim={ownershipClaim}
-                                                    onOwnershipTaken={() =>
-                                                        setTeamProfile({
-                                                            ...teamProfile,
-                                                            teamOwnerId: myself.userId,
-                                                        })
-                                                    }
-                                                />
-                                            </FormControl>
+                                        <TeamOwnershipClaimPanel
+                                            claim={ownershipClaim}
+                                            onOwnershipTaken={() =>
+                                                setTeamProfile({
+                                                    ...teamProfile,
+                                                    teamOwnerId: myself.userId,
+                                                })
+                                            }
+                                        />
+                                    </FormControl>
 
-                                            {visibleMembers.length > 0 && (
-                                                // The member list is a SIBLING of the
-                                                // FormControl, not a child. Joy allows only one
-                                                // control component per FormControl, and the
-                                                // list now holds a role <Select> per row — with
-                                                // the search <Input> that was two controls in
-                                                // one instance ("A FormControl can contain only
-                                                // one control component" in the console).
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        flexDirection: "column",
+                                    {visibleMembers.length > 0 && (
+                                        // The member list is a SIBLING of the
+                                        // FormControl, not a child. Joy allows only one
+                                        // control component per FormControl, and the
+                                        // list now holds a role <Select> per row — with
+                                        // the search <Input> that was two controls in
+                                        // one instance ("A FormControl can contain only
+                                        // one control component" in the console).
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                            }}
+                                        >
+                                            <FormControl>
+                                                <Stack
+                                                    direction={{ xs: "column", sm: "row" }}
+                                                    justifyContent="space-between"
+                                                    spacing={{ xs: 1, sm: 0 }}
+                                                    sx={{ mb: 1 }}
+                                                    alignItems={{
+                                                        xs: "stretch",
+                                                        sm: "center",
                                                     }}
                                                 >
-                                                    <FormControl>
-                                                        <Stack
-                                                            direction={{ xs: "column", sm: "row" }}
-                                                            justifyContent="space-between"
-                                                            spacing={{ xs: 1, sm: 0 }}
-                                                            sx={{ mb: 1 }}
-                                                            alignItems={{
-                                                                xs: "stretch",
-                                                                sm: "center",
-                                                            }}
-                                                        >
-                                                            <FormLabel
-                                                                sx={{
-                                                                    color: styles.labelColor,
-                                                                    fontSize: "0.75rem",
-                                                                    fontWeight: 600,
-                                                                    textTransform: "uppercase",
-                                                                    letterSpacing: "0.05em",
-                                                                    mb: 0,
-                                                                }}
-                                                            >
-                                                                {fmt(t.admin.teamProfile.members, {
-                                                                    filtered:
-                                                                        filteredMembers.length,
-                                                                    total: visibleMembers.length,
-                                                                })}
-                                                            </FormLabel>
-                                                            <Input
-                                                                value={memberSearchQuery}
-                                                                endDecorator={
-                                                                    memberSearchQuery && (
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            variant="plain"
-                                                                            sx={{
-                                                                                minWidth: "24px",
-                                                                                minHeight: "24px",
-                                                                                borderRadius:
-                                                                                    "50%",
-                                                                            }}
-                                                                            onClick={() =>
-                                                                                setMemberSearchQuery(
-                                                                                    ""
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <CloseIcon
-                                                                                sx={{
-                                                                                    fontSize:
-                                                                                        "16px",
-                                                                                }}
-                                                                            />
-                                                                        </IconButton>
-                                                                    )
-                                                                }
-                                                                placeholder={
-                                                                    t.admin.teamProfile
-                                                                        .searchMembers
-                                                                }
-                                                                startDecorator={
-                                                                    <SearchIcon
-                                                                        sx={{
-                                                                            color: styles.accentColor,
-                                                                            fontSize: "18px",
-                                                                        }}
-                                                                    />
-                                                                }
-                                                                sx={{
-                                                                    width: {
-                                                                        xs: "100%",
-                                                                        sm: "220px",
-                                                                    },
-                                                                    maxWidth: "100%",
-                                                                    "--Input-focusedThickness":
-                                                                        "1px",
-                                                                    "--Input-radius": "8px",
-                                                                    background: isDark
-                                                                        ? "rgba(0,0,0,0.3)"
-                                                                        : "rgba(255,255,255,0.8)",
-                                                                    border: `1px solid ${styles.border}`,
-                                                                    fontSize: "14px",
-                                                                    transition: "all 0.2s ease",
-                                                                    "&:hover": {
-                                                                        borderColor:
-                                                                            styles.accentColor,
-                                                                    },
-                                                                    "&:focus-within": {
-                                                                        borderColor:
-                                                                            styles.accentColor,
-                                                                        boxShadow: isDark
-                                                                            ? "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.2)"
-                                                                            : "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.1)",
-                                                                    },
-                                                                }}
-                                                                onChange={(e) =>
-                                                                    setMemberSearchQuery(
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                            />
-                                                        </Stack>
-                                                    </FormControl>
-                                                    <Box
-                                                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                                    <FormLabel
                                                         sx={{
-                                                            maxHeight: "300px",
-                                                            overflow: "auto",
-                                                            background: isDark
-                                                                ? "rgba(0,0,0,0.2)"
-                                                                : "rgba(var(--gp-brand-700-rgb), 0.03)",
-                                                            borderRadius: "12px",
-                                                            border: `1px solid ${styles.border}`,
-                                                            p: 1,
+                                                            color: g.text.secondary,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0,
                                                         }}
                                                     >
-                                                        {filteredMembers.length > 0 ? (
-                                                            filteredMembers.map((member) => (
-                                                                <ListItemButton
-                                                                    key={`team-member-${member.userId}`}
+                                                        {fmt(t.admin.teamProfile.members, {
+                                                            filtered: filteredMembers.length,
+                                                            total: visibleMembers.length,
+                                                        })}
+                                                    </FormLabel>
+                                                    <Input
+                                                        value={memberSearchQuery}
+                                                        endDecorator={
+                                                            memberSearchQuery && (
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
                                                                     sx={{
-                                                                        ml: 1,
-                                                                        my: 0.3,
-                                                                        borderRadius: "8px",
-                                                                        transition:
-                                                                            "all 0.2s ease",
-                                                                        "&:hover": {
-                                                                            background:
-                                                                                styles.hoverBg,
-                                                                        },
+                                                                        minWidth: "24px",
+                                                                        minHeight: "24px",
+                                                                        borderRadius: "50%",
                                                                     }}
-                                                                    onClick={() => {
-                                                                        setAvatarUserId(
-                                                                            member.userId
-                                                                        );
-                                                                        setOpenUserProfile(true);
-                                                                    }}
+                                                                    onClick={() =>
+                                                                        setMemberSearchQuery("")
+                                                                    }
                                                                 >
-                                                                    <AvatarWithStatus
-                                                                        avatarUser={member}
-                                                                        clickable={false}
-                                                                        isYou={false}
-                                                                        myself={myself}
-                                                                        setMyself={setMyself}
-                                                                        showNameAndEmail={true}
-                                                                        socket={socket}
-                                                                        useCM={useCM}
-                                                                        useUISM={useUISM}
+                                                                    <CloseIcon
+                                                                        sx={{
+                                                                            fontSize: "16px",
+                                                                        }}
                                                                     />
-                                                                    {/* Role sits at the row's
+                                                                </IconButton>
+                                                            )
+                                                        }
+                                                        placeholder={
+                                                            t.admin.teamProfile.searchMembers
+                                                        }
+                                                        startDecorator={
+                                                            <SearchIcon
+                                                                sx={{
+                                                                    color: g.accent.text,
+                                                                    fontSize: "18px",
+                                                                }}
+                                                            />
+                                                        }
+                                                        sx={{
+                                                            width: {
+                                                                xs: "100%",
+                                                                sm: "220px",
+                                                            },
+                                                            maxWidth: "100%",
+                                                            "--Input-focusedThickness": "1px",
+                                                            "--Input-radius": g.radius.md,
+                                                            background: g.bg.subtle,
+                                                            border: `1px solid ${g.border.default}`,
+                                                            fontSize: "14px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                borderColor: g.accent.text,
+                                                            },
+                                                            "&:focus-within": {
+                                                                borderColor: g.accent.text,
+                                                            },
+                                                        }}
+                                                        onChange={(e) =>
+                                                            setMemberSearchQuery(e.target.value)
+                                                        }
+                                                    />
+                                                </Stack>
+                                            </FormControl>
+                                            <Box
+                                                sx={{
+                                                    maxHeight: "300px",
+                                                    overflow: "auto",
+                                                    background: "transparent",
+                                                    borderRadius: g.radius.md,
+                                                    border: `1px solid ${g.border.default}`,
+                                                    p: 1,
+                                                }}
+                                            >
+                                                {filteredMembers.length > 0 ? (
+                                                    filteredMembers.map((member) => (
+                                                        <ListItemButton
+                                                            key={`team-member-${member.userId}`}
+                                                            sx={{
+                                                                ml: 1,
+                                                                my: 0.3,
+                                                                borderRadius: g.radius.md,
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    background: g.hover,
+                                                                },
+                                                            }}
+                                                            onClick={() => {
+                                                                setAvatarUserId(member.userId);
+                                                                setOpenUserProfile(true);
+                                                            }}
+                                                        >
+                                                            <AvatarWithStatus
+                                                                avatarUser={member}
+                                                                clickable={false}
+                                                                isYou={false}
+                                                                myself={myself}
+                                                                setMyself={setMyself}
+                                                                showNameAndEmail={true}
+                                                                socket={socket}
+                                                                useCM={useCM}
+                                                                useUISM={useUISM}
+                                                            />
+                                                            {/* Role sits at the row's
                                                                         trailing edge: a chip for
                                                                         everyone, a picker for
                                                                         managers. The owner always
                                                                         renders as a chip — their
                                                                         role changes by transfer,
                                                                         not by this control. */}
-                                                                    <Box
-                                                                        sx={{ ml: "auto", pl: 1 }}
-                                                                    >
-                                                                        <MemberRoleControl
-                                                                            canManage={canManage}
-                                                                            userId={member.userId}
-                                                                            isSelf={
-                                                                                member.userId ===
-                                                                                myself.userId
-                                                                            }
-                                                                            memberRole={
-                                                                                member.memberRole
-                                                                            }
-                                                                            ownerUserId={
-                                                                                teamProfile.teamOwnerId
-                                                                            }
-                                                                            popupZIndex={
-                                                                                PROFILE_MODAL_Z_INDEX +
-                                                                                2
-                                                                            }
-                                                                            onChange={
-                                                                                handleMemberRoleChange
-                                                                            }
-                                                                        />
-                                                                    </Box>
-                                                                </ListItemButton>
-                                                            ))
-                                                        ) : (
-                                                            <Box
-                                                                sx={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center",
-                                                                    py: 3,
-                                                                    color: styles.labelColor,
-                                                                }}
-                                                            >
-                                                                <Typography level="body-sm">
-                                                                    {fmt(
-                                                                        t.admin.teamProfile
-                                                                            .noMembersFound,
-                                                                        {
-                                                                            query: memberSearchQuery,
-                                                                        }
-                                                                    )}
-                                                                </Typography>
+                                                            <Box sx={{ ml: "auto", pl: 1 }}>
+                                                                <MemberRoleControl
+                                                                    canManage={canManage}
+                                                                    memberRole={member.memberRole}
+                                                                    userId={member.userId}
+                                                                    isSelf={
+                                                                        member.userId ===
+                                                                        myself.userId
+                                                                    }
+                                                                    ownerUserId={
+                                                                        teamProfile.teamOwnerId
+                                                                    }
+                                                                    popupZIndex={
+                                                                        PROFILE_MODAL_Z_INDEX + 2
+                                                                    }
+                                                                    onChange={
+                                                                        handleMemberRoleChange
+                                                                    }
+                                                                />
                                                             </Box>
-                                                        )}
+                                                        </ListItemButton>
+                                                    ))
+                                                ) : (
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            py: 3,
+                                                            color: g.text.secondary,
+                                                        }}
+                                                    >
+                                                        <Typography level="body-sm">
+                                                            {fmt(
+                                                                t.admin.teamProfile.noMembersFound,
+                                                                {
+                                                                    query: memberSearchQuery,
+                                                                }
+                                                            )}
+                                                        </Typography>
                                                     </Box>
-                                                </Box>
-                                            )}
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    )}
 
-                                            {/* Sits after the member list because it
+                                    {/* Sits after the member list because it
                                                 is the same question one level up —
                                                 who this team works with — and before
                                                 the created date, which is trivia. */}
-                                            <ConnectedTeamsPanel
-                                                borderColor={styles.border}
-                                                canDisconnect={isTeamOwner}
-                                                canManage={canManage}
-                                                connections={teamConnections}
-                                                labelColor={styles.labelColor}
-                                                myTeamId={teamProfile.teamId}
-                                                valueColor={styles.valueColor}
-                                            />
+                                    <ConnectedTeamsPanel
+                                        borderColor={g.border.default}
+                                        canDisconnect={isTeamOwner}
+                                        canManage={canManage}
+                                        connections={teamConnections}
+                                        labelColor={g.text.secondary}
+                                        myTeamId={teamProfile.teamId}
+                                        valueColor={g.text.primary}
+                                    />
 
-                                            <FormControl sx={{ mt: 1 }}>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.teamProfile.createdDate}
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        display: "inline-flex",
-                                                        px: 2,
-                                                        py: 0.5,
-                                                        borderRadius: "8px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.valueColor,
-                                                        }}
-                                                    >
-                                                        {extractYYYYMMDD(teamProfile.tsCreatedAt)}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
+                                    <FormControl sx={{ mt: 1 }}>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.admin.teamProfile.createdDate}
+                                        </FormLabel>
+                                        <Box
+                                            sx={{
+                                                display: "inline-flex",
+                                                px: 2,
+                                                py: 0.5,
+                                                borderRadius: g.radius.md,
+                                                background: g.bg.subtle,
+                                                border: `1px solid ${g.border.default}`,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontWeight={600}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: g.text.primary,
+                                                }}
+                                            >
+                                                {extractYYYYMMDD(teamProfile.tsCreatedAt)}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
 
-                                            {/* Nothing to leave when there is no
+                                    {/* Nothing to leave when there is no
                                                 membership: a guest is here through a
                                                 shared object, and `/team/leave/`
                                                 would find no row to soft-delete. */}
-                                            {!isTeamOwner && !teamProfile.isGuest && (
-                                                <Box
-                                                    sx={{
-                                                        mt: 2,
-                                                        display: "flex",
-                                                        justifyContent: "flex-end",
-                                                    }}
-                                                >
-                                                    <Button
-                                                        color="danger"
-                                                        variant="outlined"
-                                                        startDecorator={
-                                                            <LogoutRoundedIcon fontSize="small" />
-                                                        }
-                                                        sx={{
-                                                            borderRadius: "10px",
-                                                            borderColor:
-                                                                "rgba(var(--gp-tint-danger-rgb), 0.4)",
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                            "&:hover": {
-                                                                background:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.08)",
-                                                                borderColor:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.6)",
-                                                            },
-                                                        }}
-                                                        onClick={() => setOpenLeaveConfirm(true)}
-                                                    >
-                                                        {t.common.actions.leave}
-                                                    </Button>
-                                                </Box>
-                                            )}
-                                        </Stack>
-                                    </Stack>
+                                    {!isTeamOwner && !teamProfile.isGuest && (
+                                        <Box
+                                            sx={{
+                                                mt: 2,
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Button
+                                                color="danger"
+                                                variant="outlined"
+                                                startDecorator={
+                                                    <LogoutRoundedIcon fontSize="small" />
+                                                }
+                                                sx={{
+                                                    borderRadius: g.radius.sm,
+                                                    borderColor: g.danger.border,
+                                                    color: g.danger.text,
+                                                    "&:hover": {
+                                                        background: g.danger.subtle,
+                                                        borderColor: g.danger.border,
+                                                    },
+                                                }}
+                                                onClick={() => setOpenLeaveConfirm(true)}
+                                            >
+                                                {t.common.actions.leave}
+                                            </Button>
+                                        </Box>
+                                    )}
                                 </Stack>
-                            </Card>
+                            </Stack>
                         </Stack>
-                    </Box>
-                </ModalDialog>
-            </Modal>
+                    </Card>
+                </Stack>
+            </ModalFrame>
             <ModalLeaveConfirm
                 description={t.common.leaveConfirm.teamDescription}
                 entityName={teamProfile.teamName}
