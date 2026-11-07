@@ -33,6 +33,19 @@ describe("BaseAvatar", () => {
         );
     });
 
+    it("a no-picture circle has a visible fill and a hairline ring (MIP-1185)", () => {
+        render(<BaseAvatar data-testid="a" name="Ken" />);
+        const css = getComputedStyle(screen.getByTestId("a"));
+        // Joy's soft neutral is nearly the raised dialog surface in light mode.
+        expect(css.backgroundColor).toBe("var(--g-bg-subtle)");
+        expect(css.boxShadow).toContain("inset 0 0 0 1px var(--g-border");
+        // A status tone keeps its own tint instead.
+        render(<BaseAvatar data-testid="b" name="Ken" tone="success" />);
+        expect(getComputedStyle(screen.getByTestId("b")).backgroundColor).not.toBe(
+            "var(--g-bg-subtle)"
+        );
+    });
+
     it("defaults to the md step", () => {
         render(<BaseAvatar data-testid="a" name="Ken" />);
         expect(getComputedStyle(screen.getByTestId("a")).getPropertyValue("--Avatar-size")).toBe(

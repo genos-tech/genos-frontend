@@ -8,12 +8,10 @@ import { Socket } from "socket.io-client";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinModalParams = {
@@ -42,10 +40,8 @@ type Props = {
         systemUserId: string;
     }) => void;
     usePM: ProjectManagementState;
-    useCM: ChatManagementState;
 };
 export const ModalJoinProject: React.FC<Props> = ({
-    useCM,
     usePM,
     socket,
     myself,
