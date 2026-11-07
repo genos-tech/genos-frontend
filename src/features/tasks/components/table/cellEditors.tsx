@@ -172,16 +172,16 @@ export const ChipSelect = ({
             size="sm"
             value={value}
             {...(open !== undefined ? { listboxOpen: open } : {})}
+            sx={[fieldSx, { minWidth, width: fullWidth ? "100%" : undefined }]}
+            renderValue={(selected) =>
+                all.find((o) => o.value === (selected?.value ?? value))?.node ?? null
+            }
             slotProps={{
                 listbox: { sx: popupSx },
                 // The closed select shows the chip at its natural width: a chip's own
                 // minimum (for the option list) would truncate it in a narrow cell.
                 button: { sx: { "& .pill-chip": { minWidth: 0, px: "4px", gap: "2px" } } },
             }}
-            sx={[fieldSx, { minWidth, width: fullWidth ? "100%" : undefined }]}
-            renderValue={(selected) =>
-                all.find((o) => o.value === (selected?.value ?? value))?.node ?? null
-            }
             onChange={(_, next) => {
                 if (next !== null && next !== undefined) onChange(next);
             }}
