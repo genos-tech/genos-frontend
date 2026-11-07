@@ -1,7 +1,8 @@
 import { useState } from "react";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
-import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Box, Button, Stack, Typography } from "@mui/joy";
 
+import { ConfirmDialog } from "../../../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../../i18n";
 import { TaskActivityProps } from "../../../../../../types/tasks";
@@ -83,27 +84,17 @@ export const RestoreBodyControl = ({ taskId, activity }: Props) => {
                     {r.button}
                 </Button>
             </Stack>
-            <Modal open={open} onClose={close}>
-                <ModalDialog size="md" sx={{ maxWidth: 440 }}>
-                    <Typography level="title-md">{r.confirmTitle}</Typography>
-                    <Typography level="body-sm" sx={{ mt: 1 }}>
-                        {r.confirmBody}
-                    </Typography>
-                    {error && (
-                        <Alert color="danger" size="sm" sx={{ mt: 1.5 }}>
-                            {error}
-                        </Alert>
-                    )}
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
-                        <Button disabled={busy} variant="plain" onClick={close}>
-                            {r.cancel}
-                        </Button>
-                        <Button loading={busy} onClick={confirm}>
-                            {r.confirm}
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+            <ConfirmDialog
+                busy={busy}
+                cancelLabel={r.cancel}
+                confirmLabel={r.confirm}
+                description={r.confirmBody}
+                error={error}
+                open={open}
+                title={r.confirmTitle}
+                onClose={close}
+                onConfirm={confirm}
+            />
         </Box>
     );
 };

@@ -15,20 +15,13 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {
     Box,
     Button,
     Chip,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
     FormControl,
     IconButton,
     Input,
-    Modal,
-    ModalDialog,
     Snackbar,
     Stack,
     Typography,
@@ -38,6 +31,7 @@ import { alpha } from "@mui/system";
 import { useLocation } from "react-router-dom";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
@@ -50,6 +44,7 @@ import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSp
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
@@ -897,31 +892,19 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                   - Hide → close the form but keep the draft so the user
                     can resume on next open (`performHide`)
                   - Keep editing → cancel the modal, stay in the form */}
-            <Modal
+            <ModalFrame
                 open={showCloseDiscardConfirm}
-                onClose={() => setShowCloseDiscardConfirm(false)}
-            >
-                <ModalDialog role="alertdialog" variant="outlined">
-                    <DialogTitle>
-                        <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
-                        Close this draft?
-                    </DialogTitle>
-                    <Divider />
-                    <DialogContent>
-                        You can discard your changes, hide the form (your draft is saved so you can
-                        resume later), or keep editing.
-                    </DialogContent>
-                    <DialogActions>
+                role="alertdialog"
+                size="sm"
+                title="Close this draft?"
+                actions={
+                    <>
                         <Button
-                            color="danger"
-                            startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                            variant="solid"
-                            onClick={() => {
-                                setShowCloseDiscardConfirm(false);
-                                performClose();
-                            }}
+                            color="neutral"
+                            variant="outlined"
+                            onClick={() => setShowCloseDiscardConfirm(false)}
                         >
-                            Discard draft
+                            Keep editing
                         </Button>
                         <Button
                             color="primary"
@@ -935,15 +918,30 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             Hide (save draft)
                         </Button>
                         <Button
-                            color="neutral"
-                            variant="plain"
-                            onClick={() => setShowCloseDiscardConfirm(false)}
+                            startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                            variant="solid"
+                            sx={{
+                                background: g.danger.solid,
+                                color: g.danger.solidFg,
+                                "&:hover": {
+                                    background: g.danger.solid,
+                                    filter: "brightness(0.94)",
+                                },
+                            }}
+                            onClick={() => {
+                                setShowCloseDiscardConfirm(false);
+                                performClose();
+                            }}
                         >
-                            Keep editing
+                            Discard draft
                         </Button>
-                    </DialogActions>
-                </ModalDialog>
-            </Modal>
+                    </>
+                }
+                onClose={() => setShowCloseDiscardConfirm(false)}
+            >
+                You can discard your changes, hide the form (your draft is saved so you can resume
+                later), or keep editing.
+            </ModalFrame>
 
             {/* Title Input */}
             <FormControl sx={{ width: "100%" }} required>

@@ -56,6 +56,8 @@ type Props = {
     confirmPhrase?: string;
     /** Names the field; falls back to the phrase itself. Pass it localized. */
     confirmPhraseLabel?: string;
+    /** Under the phrase field (a password the same action needs, say). */
+    afterPhrase?: ReactNode;
     /** Caller-owned in-flight flag (the caller runs the action itself). */
     busy?: boolean;
     /** Caller-owned error (the caller catches its own failures). */
@@ -88,6 +90,7 @@ export const ConfirmDialog = ({
     destructive = false,
     confirmPhrase,
     confirmPhraseLabel,
+    afterPhrase,
     busy: busyProp = false,
     error: errorProp = null,
     confirmDisabled = false,
@@ -252,6 +255,7 @@ export const ConfirmDialog = ({
                     />
                 </Box>
             )}
+            {afterPhrase}
             {error && (
                 <Alert
                     color="danger"

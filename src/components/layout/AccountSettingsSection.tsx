@@ -29,8 +29,6 @@ import {
     FormControl,
     FormLabel,
     Input,
-    Modal,
-    ModalDialog,
     Sheet,
     Stack,
     Typography,
@@ -50,6 +48,7 @@ import { useSignOut } from "../../hooks/common/useSignOut";
 import { useTranslation } from "../../i18n";
 import { Team, UserProps } from "../../types/admin";
 import { ModalLeaveConfirm } from "../ui/misc/ModalLeaveConfirm";
+import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { MySecurityActivity } from "./MySecurityActivity";
 
 const CONFIRM_WORD = "DELETE";
@@ -80,7 +79,6 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
     const [exporting, setExporting] = useState(false);
     const [exportError, setExportError] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const [typed, setTyped] = useState("");
     const [password, setPassword] = useState("");
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -152,8 +150,6 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
         setTeams((prev) => prev.filter((entry) => entry.teamId !== team.teamId));
         return true;
     };
-
-    const canSubmit = typed === CONFIRM_WORD && (!status?.requiresPassword || password.length > 0);
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -312,7 +308,6 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                             startDecorator={<DeleteForeverRoundedIcon />}
                             variant="soft"
                             onClick={() => {
-                                setTyped("");
                                 setPassword("");
                                 setDeleteError(null);
                                 setConfirmOpen(true);
@@ -333,35 +328,19 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                 onConfirm={() => (leaveTarget ? handleLeave(leaveTarget) : Promise.resolve(false))}
             />
 
-            <Modal open={confirmOpen} onClose={() => !deleting && setConfirmOpen(false)}>
-                <ModalDialog sx={{ maxWidth: 460 }} variant="outlined">
-                    <Typography level="title-md" sx={{ color: "danger.500" }}>
-                        {m.confirmHeading}
-                    </Typography>
-                    <Typography level="body-sm">{m.confirmBody}</Typography>
-                    <Stack component="ul" spacing={0.5} sx={{ pl: 2.5, my: 0.5 }}>
-                        <Typography component="li" level="body-xs">
-                            {m.confirmBullet1}
-                        </Typography>
-                        <Typography component="li" level="body-xs">
-                            {m.confirmBullet2}
-                        </Typography>
-                        <Typography component="li" level="body-xs">
-                            {m.confirmBullet3}
-                        </Typography>
-                    </Stack>
-
-                    <FormControl sx={{ mt: 1 }}>
-                        <FormLabel>{m.confirmTypeLabel}</FormLabel>
-                        <Input
-                            autoComplete="off"
-                            placeholder={CONFIRM_WORD}
-                            value={typed}
-                            onChange={(e) => setTyped(e.target.value)}
-                        />
-                    </FormControl>
-
-                    {status?.requiresPassword && (
+            <ConfirmDialog
+                busy={deleting}
+                cancelLabel={m.cancel}
+                confirmDisabled={!!status?.requiresPassword && password.length === 0}
+                confirmLabel={m.confirmDeleteButton}
+                confirmPhrase={CONFIRM_WORD}
+                confirmPhraseLabel={m.confirmTypeLabel}
+                description={m.confirmBody}
+                error={deleteError}
+                open={confirmOpen}
+                title={m.confirmHeading}
+                afterPhrase={
+                    status?.requiresPassword && (
                         <FormControl sx={{ mt: 1.5 }}>
                             <FormLabel>{m.confirmPasswordLabel}</FormLabel>
                             <Input
@@ -371,35 +350,24 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </FormControl>
-                    )}
-
-                    {deleteError && (
-                        <Alert color="danger" size="sm" sx={{ mt: 1.5 }}>
-                            {deleteError}
-                        </Alert>
-                    )}
-
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button
-                            disabled={deleting}
-                            size="sm"
-                            variant="plain"
-                            onClick={() => setConfirmOpen(false)}
-                        >
-                            {m.cancel}
-                        </Button>
-                        <Button
-                            color="danger"
-                            disabled={!canSubmit}
-                            loading={deleting}
-                            size="sm"
-                            onClick={handleDelete}
-                        >
-                            {m.confirmDeleteButton}
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+                    )
+                }
+                destructive
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={handleDelete}
+            >
+                <Stack component="ul" spacing={0.5} sx={{ pl: 2.5, my: 0.5 }}>
+                    <Typography component="li" level="body-xs">
+                        {m.confirmBullet1}
+                    </Typography>
+                    <Typography component="li" level="body-xs">
+                        {m.confirmBullet2}
+                    </Typography>
+                    <Typography component="li" level="body-xs">
+                        {m.confirmBullet3}
+                    </Typography>
+                </Stack>
+            </ConfirmDialog>
         </Stack>
     );
 };

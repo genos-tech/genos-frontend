@@ -6,21 +6,7 @@ import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import {
-    Box,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Drawer,
-    Modal,
-    ModalClose,
-    ModalDialog,
-    Sheet,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Divider, Drawer, ModalClose, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -38,6 +24,7 @@ import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import { Team, TeamProfileProps, UserProps } from "../../types/admin";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { SettingsModal } from "./SettingsModal";
 
 type MobileAccountSheetProps = {
@@ -364,42 +351,25 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
 
             {/* Mirrors the sidebar's confirm: sign-out clears local storage,
                 drafts, and history, so it must never be a single stray tap. */}
-            <Modal open={signOutOpen} onClose={() => !signOutBusy && setSignOutOpen(false)}>
-                <ModalDialog sx={{ width: "calc(100vw - 32px)", maxWidth: 420 }}>
-                    <DialogTitle>{t.sidebar.signOutConfirm.title}</DialogTitle>
-                    <Divider />
-                    <DialogContent>
-                        <Typography level="body-sm" sx={{ pt: 1 }}>
-                            {t.sidebar.signOutConfirm.body}
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            color="neutral"
-                            disabled={signOutBusy}
-                            variant="plain"
-                            onClick={() => setSignOutOpen(false)}
-                        >
-                            {t.sidebar.signOutConfirm.cancel}
-                        </Button>
-                        <Button
-                            color="danger"
-                            loading={signOutBusy}
-                            onClick={async () => {
-                                setSignOutBusy(true);
-                                try {
-                                    await signOut();
-                                } finally {
-                                    setSignOutBusy(false);
-                                    setSignOutOpen(false);
-                                }
-                            }}
-                        >
-                            {t.sidebar.signOutConfirm.confirm}
-                        </Button>
-                    </DialogActions>
-                </ModalDialog>
-            </Modal>
+            <ConfirmDialog
+                busy={signOutBusy}
+                cancelLabel={t.sidebar.signOutConfirm.cancel}
+                confirmLabel={t.sidebar.signOutConfirm.confirm}
+                description={t.sidebar.signOutConfirm.body}
+                open={signOutOpen}
+                title={t.sidebar.signOutConfirm.title}
+                destructive
+                onClose={() => setSignOutOpen(false)}
+                onConfirm={async () => {
+                    setSignOutBusy(true);
+                    try {
+                        await signOut();
+                    } finally {
+                        setSignOutBusy(false);
+                        setSignOutOpen(false);
+                    }
+                }}
+            />
         </>
     );
 };

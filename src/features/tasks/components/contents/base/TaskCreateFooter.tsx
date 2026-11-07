@@ -1,21 +1,12 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
-import {
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Modal,
-    ModalDialog,
-    Stack,
-} from "@mui/joy";
+import { Button, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../../../../components/ui/modal/ConfirmDialog";
 import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersistenceRegistry";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
@@ -269,36 +260,16 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                     Cancel
                 </Button>
 
-                <Modal open={showDiscardConfirm} onClose={() => setShowDiscardConfirm(false)}>
-                    <ModalDialog role="alertdialog" variant="outlined">
-                        <DialogTitle>
-                            <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
-                            Discard this draft?
-                        </DialogTitle>
-                        <Divider />
-                        <DialogContent>
-                            Your title, body, and attachments will be lost. This can&apos;t be
-                            undone.
-                        </DialogContent>
-                        <DialogActions>
-                            <Button
-                                color="danger"
-                                startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                                variant="solid"
-                                onClick={confirmDiscard}
-                            >
-                                Discard draft
-                            </Button>
-                            <Button
-                                color="neutral"
-                                variant="plain"
-                                onClick={() => setShowDiscardConfirm(false)}
-                            >
-                                Keep editing
-                            </Button>
-                        </DialogActions>
-                    </ModalDialog>
-                </Modal>
+                <ConfirmDialog
+                    cancelLabel="Keep editing"
+                    confirmLabel="Discard draft"
+                    description="Your title, body, and attachments will be lost. This can't be undone."
+                    open={showDiscardConfirm}
+                    title="Discard this draft?"
+                    destructive
+                    onClose={() => setShowDiscardConfirm(false)}
+                    onConfirm={confirmDiscard}
+                />
                 <AppTooltip title={isDisabled ? "Create Task" : `Create Task (${shortcutLabel})`}>
                     <Button
                         disabled={isDisabled}
