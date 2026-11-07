@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { IconButton, Stack, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -12,7 +15,6 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { EmptyState } from "../../common/components/EmptyState";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
 import {
@@ -168,7 +170,20 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     // If no tabs at all, show empty state with create button
     if (useNM.tabItems.length === 0) {
-        return <EmptyState onCreateNewNote={handleCreateNewNote} />;
+        return (
+            <EmptyState
+                action={{
+                    label: t.notes.header.newNote,
+                    onClick: handleCreateNewNote,
+                    icon: <AddRoundedIcon />,
+                }}
+                body={t.notes.emptyState.body}
+                data-empty="notes"
+                icon={<DescriptionOutlinedIcon />}
+                title={t.notes.emptyState.title}
+                fill
+            />
+        );
     }
 
     // If tabs exist but currentMyNote is not loaded yet, return null

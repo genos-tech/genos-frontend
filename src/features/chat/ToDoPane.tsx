@@ -30,6 +30,7 @@ import {
 } from "./utils/todoTagFilter";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -633,8 +634,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 }}
                             />
                         ) : (
-                            <EmptyState
-                                isDark={isDark}
+                            <TodoEmpty
                                 showCompletedToday={showCompletedToday}
                                 showIncompleteOnly={useCM.showOnlyInCompleteTodos}
                                 onAddTodayClick={handleCreateTodayGroup}
@@ -667,85 +667,46 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     );
 };
 
-interface EmptyStateProps {
+interface TodoEmptyProps {
     showIncompleteOnly: boolean;
     showCompletedToday: boolean;
     onAddTodayClick: () => void;
-    isDark: boolean;
 }
 
-const EmptyState = ({
+const TodoEmpty = ({
     showIncompleteOnly,
     showCompletedToday,
     onAddTodayClick,
-    isDark,
-}: EmptyStateProps) => {
+}: TodoEmptyProps) => {
     const { t } = useTranslation();
     return (
-        <Stack
-            alignItems="center"
-            justifyContent="center"
-            spacing={2}
-            sx={{ height: "100%", py: 8 }}
-        >
-            <Box
-                sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: "16px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                }}
-            >
-                <CheckCircleOutlineRoundedIcon
-                    sx={{
-                        fontSize: 32,
-                        color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
-                    }}
-                />
-            </Box>
-            <Stack alignItems="center" spacing={0.5}>
-                <Typography
-                    level="title-sm"
-                    sx={{
-                        fontWeight: 600,
-                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                    }}
-                >
-                    {showCompletedToday
-                        ? t.chat.todoPane.completedTodayEmptyTitle
-                        : showIncompleteOnly
-                          ? t.chat.todoPane.allCaughtUp
-                          : t.chat.todoPane.noTodosYet}
-                </Typography>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                        textAlign: "center",
-                        maxWidth: 240,
-                    }}
-                >
-                    {showCompletedToday
-                        ? t.chat.todoPane.completedTodayEmptySubtitle
-                        : showIncompleteOnly
-                          ? t.chat.todoPane.incompleteEmptySubtitle
-                          : t.chat.todoPane.emptySubtitle}
-                </Typography>
-                {!showIncompleteOnly && !showCompletedToday && (
-                    <IconButton
-                        size="sm"
-                        sx={{ mt: 1, borderRadius: "8px", px: 1.5 }}
-                        variant="soft"
-                        onClick={onAddTodayClick}
-                    >
-                        <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        {t.chat.todoPane.startToday}
-                    </IconButton>
-                )}
-            </Stack>
-        </Stack>
+        <EmptyState
+            action={
+                !showIncompleteOnly && !showCompletedToday
+                    ? {
+                          label: t.chat.todoPane.startToday,
+                          onClick: onAddTodayClick,
+                          icon: <AddIcon />,
+                      }
+                    : undefined
+            }
+            body={
+                showCompletedToday
+                    ? t.chat.todoPane.completedTodayEmptySubtitle
+                    : showIncompleteOnly
+                      ? t.chat.todoPane.incompleteEmptySubtitle
+                      : t.chat.todoPane.emptySubtitle
+            }
+            data-empty="todo"
+            icon={<CheckCircleOutlineRoundedIcon />}
+            title={
+                showCompletedToday
+                    ? t.chat.todoPane.completedTodayEmptyTitle
+                    : showIncompleteOnly
+                      ? t.chat.todoPane.allCaughtUp
+                      : t.chat.todoPane.noTodosYet
+            }
+            fill
+        />
     );
 };
