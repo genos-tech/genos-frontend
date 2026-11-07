@@ -153,7 +153,9 @@ export const ModalRemindMe = ({
                         variant="soft"
                         onClick={() => void commit(at)}
                     >
-                        <Box sx={{ flex: 1, textAlign: "start", ms: 1 }}>{m.presets[id]}</Box>
+                        <Box sx={{ flex: 1, textAlign: "start", marginInlineStart: "8px" }}>
+                            {m.presets[id]}
+                        </Box>
                         <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                             {formatReminderTime(at, locale)}
                         </Typography>

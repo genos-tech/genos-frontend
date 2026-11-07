@@ -12,13 +12,12 @@
 // this modal, so the dialog is pinned above it (13200). Joy's default
 // Modal z-index (~1300) would otherwise render it *behind* Spotlight.
 
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import { Box, Divider, IconButton, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { LlmModelSection, SpotlightSection } from "../../components/layout/SettingsModal";
+import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import { GenosSettingsPanel } from "../genos/memory/GenosSettingsPanel";
 
 interface Props {
@@ -29,56 +28,27 @@ interface Props {
     teamId: string;
 }
 
+// The frame writes the picker layer (13210) above this layer on the modal
+// root, so the Select popups clear the dialog (they used to be pinned to 13300).
+const SPOTLIGHT_SETTINGS_Z_INDEX = 13200;
+
 export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     return (
-        <Modal
+        <ModalFrame
+            headerDivider
+            icon={<SettingsRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                // Above the Spotlight overlay (13100), which remains open
-                // behind us.
-                zIndex: 13200,
-                // Joy pins the Select/Autocomplete listbox popup z-index to
-                // `calc(theme.zIndex.modal + 1)` (≈1301) via a
-                // `--unstable_popup-zIndex` CSS var it stamps on the modal
-                // root AND on sibling portaled `[role="listbox"]` nodes — it
-                // does NOT track this `sx` z-index override. Left as-is the
-                // model-picker dropdowns would open at 1301, *behind* this
-                // 13200 dialog and be unclickable. Re-stamp the same var in
-                // both scopes above the dialog so the popups win.
-                "--unstable_popup-zIndex": 13300,
-                '& ~ [role="listbox"]': { "--unstable_popup-zIndex": 13300 },
-            }}
+            size="md"
+            title={t.spotlight.settings.title}
+            // Above the Spotlight overlay (13100), which remains open behind us.
+            zIndex={SPOTLIGHT_SETTINGS_Z_INDEX}
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="md"
-                sx={{
-                    width: { xs: "92vw", sm: 480 },
-                    maxHeight: "85vh",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <SettingsRoundedIcon />
-                    <Typography level="title-lg">{t.spotlight.settings.title}</Typography>
-                    <Box sx={{ flex: 1 }} />
-                    <IconButton variant="plain" onClick={onClose}>
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-                <GenosSettingsPanel teamId={teamId}>
-                    <LlmModelSection />
-                    <SpotlightSection />
-                </GenosSettingsPanel>
-            </ModalDialog>
-        </Modal>
+            <GenosSettingsPanel teamId={teamId}>
+                <LlmModelSection />
+                <SpotlightSection />
+            </GenosSettingsPanel>
+        </ModalFrame>
     );
 };

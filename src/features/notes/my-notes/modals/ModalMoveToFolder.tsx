@@ -2,24 +2,12 @@ import { useMemo, useState } from "react";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import {
-    Box,
-    Button,
-    List,
-    ListItem,
-    ListItemButton,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Button, List, ListItem, ListItemButton, Typography } from "@mui/joy";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { MyNoteFolderProps } from "../../../../types/notes";
 import { collectDescendantFolderIds } from "../../../../utils/note";
 
@@ -84,8 +72,6 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
         onSelect,
     } = props;
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const hostZIndex = useNoteModalHostZIndex();
 
     const [selected, setSelected] = useState<number | null>(currentFolderId);
@@ -100,90 +86,22 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
     );
 
     const rowSx = (isSelected: boolean, isDisabled: boolean) => ({
-        borderRadius: "8px",
+        borderRadius: g.radius.md,
         gap: 1,
         py: 0.5,
         opacity: isDisabled ? 0.4 : 1,
-        backgroundColor: isSelected
-            ? isDark
-                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                : "rgba(var(--gp-brand-700-rgb), 0.1)"
-            : "transparent",
+        backgroundColor: isSelected ? g.accent.subtle : "transparent",
     });
 
     return (
-        <Modal
+        <ModalFrame
+            hostZIndex={hostZIndex}
+            icon={<DriveFileMoveRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                zIndex: 10010,
-                backdropFilter: "blur(4px)",
-                ...noteModalChildStackSx(hostZIndex),
-            }}
-            onClose={onClose}
-        >
-            <ModalDialog
-                sx={{
-                    borderRadius: "16px",
-                    width: { xs: "calc(100vw - 24px)", md: "400px" },
-                    p: { xs: 2, md: 3 },
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <DriveFileMoveRoundedIcon
-                        sx={{
-                            fontSize: 20,
-                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        }}
-                    />
-                    <Typography level="title-lg">{t.notes.folders.moveTitle}</Typography>
-                </Stack>
-
-                {showDetachHint && (
-                    <Typography level="body-xs" sx={{ mb: 1, opacity: 0.7 }}>
-                        {t.notes.folders.moveNoteHint}
-                    </Typography>
-                )}
-
-                <Box
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{ maxHeight: "40vh", overflowY: "auto" }}
-                >
-                    <List size="sm" sx={{ gap: 0.25 }}>
-                        <ListItem>
-                            <ListItemButton
-                                sx={rowSx(selected === null, false)}
-                                onClick={() => setSelected(null)}
-                            >
-                                <HomeRoundedIcon sx={{ fontSize: 16 }} />
-                                <Typography level="body-sm">
-                                    {t.notes.folders.rootLabel}
-                                </Typography>
-                            </ListItemButton>
-                        </ListItem>
-                        {rows.map(({ folder, depth }) => {
-                            const isDisabled = disabledIds.has(folder.folderId);
-                            return (
-                                <ListItem key={folder.folderId}>
-                                    <ListItemButton
-                                        disabled={isDisabled}
-                                        sx={{
-                                            ...rowSx(selected === folder.folderId, isDisabled),
-                                            pl: 1 + depth * 2,
-                                        }}
-                                        onClick={() => setSelected(folder.folderId)}
-                                    >
-                                        <FolderRoundedIcon sx={{ fontSize: 16 }} />
-                                        <Typography level="body-sm" noWrap>
-                                            {folder.name}
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
-                            );
-                        })}
-                    </List>
-                </Box>
-
-                <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
+            size="sm"
+            title={t.notes.folders.moveTitle}
+            actions={
+                <>
                     <Button color="neutral" variant="plain" onClick={onClose}>
                         {t.notes.folders.cancel}
                     </Button>
@@ -196,8 +114,49 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
                     >
                         {t.notes.folders.move}
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={onClose}
+        >
+            {showDetachHint && (
+                <Typography level="body-xs" sx={{ mb: 1, color: g.text.secondary }}>
+                    {t.notes.folders.moveNoteHint}
+                </Typography>
+            )}
+
+            <Box sx={{ maxHeight: "40vh", overflowY: "auto" }}>
+                <List size="sm" sx={{ gap: 0.25 }}>
+                    <ListItem>
+                        <ListItemButton
+                            sx={rowSx(selected === null, false)}
+                            onClick={() => setSelected(null)}
+                        >
+                            <HomeRoundedIcon sx={{ fontSize: 16 }} />
+                            <Typography level="body-sm">{t.notes.folders.rootLabel}</Typography>
+                        </ListItemButton>
+                    </ListItem>
+                    {rows.map(({ folder, depth }) => {
+                        const isDisabled = disabledIds.has(folder.folderId);
+                        return (
+                            <ListItem key={folder.folderId}>
+                                <ListItemButton
+                                    disabled={isDisabled}
+                                    sx={{
+                                        ...rowSx(selected === folder.folderId, isDisabled),
+                                        paddingInlineStart: `${(1 + depth * 2) * 8}px`,
+                                    }}
+                                    onClick={() => setSelected(folder.folderId)}
+                                >
+                                    <FolderRoundedIcon sx={{ fontSize: 16 }} />
+                                    <Typography level="body-sm" noWrap>
+                                        {folder.name}
+                                    </Typography>
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Box>
+        </ModalFrame>
     );
 };

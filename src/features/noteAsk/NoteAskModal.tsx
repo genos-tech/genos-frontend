@@ -15,29 +15,16 @@
 
 import { useMemo } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Divider,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, CircularProgress, Divider, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../components/modals/noteModalHostZIndex";
+import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import {
     agentMarkdownComponents,
     AgentQAConversation,
@@ -99,9 +86,8 @@ const formatPlural = (template: string, count: number): string => {
 };
 
 export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
-    const { mode } = useColorScheme();
+    const theme = useTheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const hostZIndex = useNoteModalHostZIndex();
 
     const labels = useMemo(() => buildLabels(t), [t]);
@@ -124,160 +110,123 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
     const noteTitle = state.summary?.noteTitle || "";
 
     return (
-        <Modal open={state.isOpen} sx={noteModalChildStackSx(hostZIndex)} onClose={state.close}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
-                sx={{
-                    width: { xs: "92vw", sm: 620, md: 800 },
-                    maxHeight: "90vh",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                {/* Header */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <AutoAwesomeRoundedIcon />
-                    <Typography level="title-lg">{t.noteAsk.modal.title}</Typography>
-                    {noteTitle ? (
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: "text.tertiary", minWidth: 0 }}
-                            noWrap
-                        >
-                            · {noteTitle}
-                        </Typography>
-                    ) : null}
-                    <Box sx={{ flex: 1 }} />
-                    <IconButton
-                        aria-label={t.noteAsk.modal.close}
-                        variant="plain"
-                        onClick={state.close}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
+        <ModalFrame
+            headerDivider
+            closeLabel={t.noteAsk.modal.close}
+            description={noteTitle ? noteTitle : undefined}
+            icon={<AutoAwesomeRoundedIcon sx={{ color: g.accent.text }} />}
+            open={state.isOpen}
+            size="xl"
+            title={t.noteAsk.modal.title}
+            hostZIndex={hostZIndex}
+            zIndex={theme.zIndex.modal}
+            actions={
+                <Button
+                    color="neutral"
+                    disabled={turnsCount === 0 && !hasInFlightAnswer}
+                    variant="plain"
+                    onClick={state.agentQA.clearConversation}
+                >
+                    {t.noteAsk.conversation.clear}
+                </Button>
+            }
+            onClose={state.close}
+        >
+            {/* Summary */}
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1, mt: 0.5 }}>
+                <Typography level="title-sm">{t.noteAsk.summary.sectionTitle}</Typography>
+                {state.summary && !state.summaryLoading ? (
+                    <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                        {updatedLabel}
+                    </Typography>
+                ) : null}
+                <Box sx={{ flex: 1 }} />
+                <Button
+                    disabled={state.summaryLoading || !state.summary}
+                    size="sm"
+                    startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="plain"
+                    onClick={state.refreshSummary}
+                >
+                    {t.noteAsk.summary.refresh}
+                </Button>
+            </Stack>
 
-                {/* Summary */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1, mt: 0.5 }}>
-                    <Typography level="title-sm">{t.noteAsk.summary.sectionTitle}</Typography>
-                    {state.summary && !state.summaryLoading ? (
-                        <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                            {updatedLabel}
-                        </Typography>
-                    ) : null}
-                    <Box sx={{ flex: 1 }} />
-                    <Button
-                        disabled={state.summaryLoading || !state.summary}
-                        size="sm"
-                        startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="plain"
-                        onClick={state.refreshSummary}
-                    >
-                        {t.noteAsk.summary.refresh}
-                    </Button>
+            {state.summaryLoading && !state.summary ? (
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
+                    <CircularProgress size="sm" />
+                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
+                        {t.noteAsk.summary.loading}
+                    </Typography>
                 </Stack>
+            ) : null}
 
-                {state.summaryLoading && !state.summary ? (
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
-                        <CircularProgress size="sm" />
-                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                            {t.noteAsk.summary.loading}
-                        </Typography>
+            {state.summaryError ? (
+                <Alert color="danger" sx={{ mb: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Typography level="body-sm">{state.summaryError}</Typography>
+                        <Button size="sm" variant="soft" onClick={state.refreshSummary}>
+                            {t.noteAsk.errors.retry}
+                        </Button>
                     </Stack>
-                ) : null}
+                </Alert>
+            ) : null}
 
-                {state.summaryError ? (
-                    <Alert color="danger" sx={{ mb: 1 }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-sm">{state.summaryError}</Typography>
-                            <Button size="sm" variant="soft" onClick={state.refreshSummary}>
-                                {t.noteAsk.errors.retry}
-                            </Button>
-                        </Stack>
-                    </Alert>
-                ) : null}
-
-                {state.summary ? (
-                    <Box
-                        sx={{
-                            ...markdownAnswerSx(),
-                            px: 1.25,
-                            py: 1,
-                            borderRadius: "md",
-                            bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                        }}
+            {state.summary ? (
+                <Box
+                    sx={{
+                        ...markdownAnswerSx(),
+                        px: 1.25,
+                        py: 1,
+                        borderRadius: "md",
+                        bgcolor: g.hover,
+                    }}
+                >
+                    <ReactMarkdown
+                        components={agentMarkdownComponents}
+                        remarkPlugins={[remarkGfm]}
+                        urlTransform={agentQAUrlTransform}
                     >
-                        <ReactMarkdown
-                            components={agentMarkdownComponents}
-                            remarkPlugins={[remarkGfm]}
-                            urlTransform={agentQAUrlTransform}
-                        >
-                            {state.summary.text}
-                        </ReactMarkdown>
-                    </Box>
-                ) : null}
-
-                {state.staleSummary ? (
-                    <Alert color="warning" sx={{ mt: 1 }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-sm">
-                                {t.noteAsk.summary.stale.banner}
-                            </Typography>
-                            <Button
-                                color="warning"
-                                disabled={state.summaryLoading}
-                                size="sm"
-                                variant="soft"
-                                onClick={state.refreshSummary}
-                            >
-                                {t.noteAsk.summary.stale.refreshAction}
-                            </Button>
-                        </Stack>
-                    </Alert>
-                ) : null}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Conversation */}
-                <Typography level="title-sm" sx={{ mb: 1 }}>
-                    {t.noteAsk.conversation.header}
-                </Typography>
-                <AgentQAConversation
-                    labels={labels}
-                    state={state.agentQA}
-                    turnLabels={turnLabels}
-                    onSelectSource={onSelectSource}
-                />
-
-                {/* Input — disabled until the summary loads so the
-                    agent's system prompt has the summary to inject. */}
-                <Box sx={{ mt: 1 }}>
-                    <AgentQAInput
-                        disabled={!state.summary}
-                        labels={labels}
-                        state={state.agentQA}
-                    />
+                        {state.summary.text}
+                    </ReactMarkdown>
                 </Box>
+            ) : null}
 
-                <Divider sx={{ my: 2 }} />
+            {state.staleSummary ? (
+                <Alert color="warning" sx={{ mt: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Typography level="body-sm">{t.noteAsk.summary.stale.banner}</Typography>
+                        <Button
+                            color="warning"
+                            disabled={state.summaryLoading}
+                            size="sm"
+                            variant="soft"
+                            onClick={state.refreshSummary}
+                        >
+                            {t.noteAsk.summary.stale.refreshAction}
+                        </Button>
+                    </Stack>
+                </Alert>
+            ) : null}
 
-                {/* Footer — Clear only (no save button per design). */}
-                <Stack alignItems="center" direction="row" spacing={1}>
-                    <Box sx={{ flex: 1 }} />
-                    <Button
-                        color="neutral"
-                        disabled={turnsCount === 0 && !hasInFlightAnswer}
-                        variant="plain"
-                        onClick={state.agentQA.clearConversation}
-                    >
-                        {t.noteAsk.conversation.clear}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+            <Divider sx={{ my: 2 }} />
+
+            {/* Conversation */}
+            <Typography level="title-sm" sx={{ mb: 1 }}>
+                {t.noteAsk.conversation.header}
+            </Typography>
+            <AgentQAConversation
+                labels={labels}
+                state={state.agentQA}
+                turnLabels={turnLabels}
+                onSelectSource={onSelectSource}
+            />
+
+            {/* Input — disabled until the summary loads so the
+                    agent's system prompt has the summary to inject. */}
+            <Box sx={{ mt: 1 }}>
+                <AgentQAInput disabled={!state.summary} labels={labels} state={state.agentQA} />
+            </Box>
+        </ModalFrame>
     );
 };

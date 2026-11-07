@@ -5,19 +5,17 @@ import {
     Chip,
     FormLabel,
     Input,
-    Modal,
-    ModalDialog,
     Radio,
     RadioGroup,
     Stack,
     Typography,
 } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { NoteFolderVisibility } from "../../../../types/notes";
 import { useTeamConnections } from "../../../admin/components/team/useTeamConnections";
 
@@ -63,6 +61,7 @@ export const ModalTeamFolderName = (props: Props) => {
         props;
     const { t } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
+    const theme = useTheme();
 
     const isChild = mode === "create-child";
     const [name, setName] = useState(initialName ?? "");
@@ -108,146 +107,147 @@ export const ModalTeamFolderName = (props: Props) => {
     const title = mode === "rename" ? t.notes.folders.renameTitle : t.notes.teamNotes.newFolder;
 
     return (
-        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 380, maxWidth: 460 }}>
-                <Typography level="title-md">{title}</Typography>
-
-                <Stack spacing={2} sx={{ mt: 1 }}>
-                    <Input
-                        autoFocus
-                        placeholder={t.notes.folders.folderNamePlaceholder}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") submit();
-                        }}
-                    />
-
-                    {mode !== "rename" && (
-                        <Box>
-                            <FormLabel sx={{ mb: 1 }}>
-                                {t.notes.teamNotes.visibilityLabel}
-                            </FormLabel>
-                            <RadioGroup
-                                value={
-                                    shareExternally
-                                        ? "external"
-                                        : visibility === null
-                                          ? "inherit"
-                                          : visibility
-                                }
-                                onChange={(e) => choose(e.target.value)}
-                            >
-                                <Stack spacing={1.25}>
-                                    {isChild && (
-                                        <OptionRow
-                                            hint={t.notes.teamNotes.visibilityInheritHint}
-                                            value="inherit"
-                                            label={
-                                                parentName
-                                                    ? fmt(t.notes.teamNotes.visibilityInherit, {
-                                                          name: parentName,
-                                                      })
-                                                    : t.notes.teamNotes.visibilityInherit
-                                            }
-                                        />
-                                    )}
-                                    <OptionRow
-                                        hint={t.notes.teamNotes.visibilityPublicHint}
-                                        label={t.notes.teamNotes.visibilityPublic}
-                                        value="public"
-                                    />
-                                    <OptionRow
-                                        hint={t.notes.teamNotes.visibilityPrivateHint}
-                                        label={t.notes.teamNotes.visibilityPrivate}
-                                        value="private"
-                                    />
-                                    {/* Absent, not disabled, when there is
-                                        nobody to share with: an option that
-                                        can only ever be empty is worse than
-                                        one that isn't there, and connections
-                                        are made in team settings. */}
-                                    {connectedTeams.length > 0 && (
-                                        <Box>
-                                            <OptionRow
-                                                hint={t.notes.teamNotes.visibilityExternalHint}
-                                                label={t.notes.teamNotes.visibilityExternal}
-                                                value="external"
-                                            />
-                                            {shareExternally && (
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        flexWrap: "wrap",
-                                                        gap: 0.75,
-                                                        ml: 3.5,
-                                                        mt: 1,
-                                                    }}
-                                                >
-                                                    {connectedTeams.map((connection) => {
-                                                        const selected = guestTeamIds.includes(
-                                                            connection.teamId
-                                                        );
-                                                        return (
-                                                            <Chip
-                                                                key={connection.teamId}
-                                                                color={
-                                                                    selected
-                                                                        ? "primary"
-                                                                        : "neutral"
-                                                                }
-                                                                size="sm"
-                                                                variant={
-                                                                    selected ? "solid" : "outlined"
-                                                                }
-                                                                onClick={() =>
-                                                                    setGuestTeamIds((prev) =>
-                                                                        prev.includes(
-                                                                            connection.teamId
-                                                                        )
-                                                                            ? prev.filter(
-                                                                                  (id) =>
-                                                                                      id !==
-                                                                                      connection.teamId
-                                                                              )
-                                                                            : [
-                                                                                  ...prev,
-                                                                                  connection.teamId,
-                                                                              ]
-                                                                    )
-                                                                }
-                                                            >
-                                                                {connection.teamName}
-                                                            </Chip>
-                                                        );
-                                                    })}
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    )}
-                                </Stack>
-                            </RadioGroup>
-                        </Box>
-                    )}
-                </Stack>
-
-                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 2 }}>
+        <ModalFrame
+            hostZIndex={hostZIndex}
+            open={open}
+            size="md"
+            title={title}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
+            actions={
+                <>
                     <Button color="neutral" variant="plain" onClick={onClose}>
                         {t.notes.folders.cancel}
                     </Button>
                     <Button disabled={!isValid} onClick={submit}>
                         {mode === "rename" ? t.notes.folders.save : t.notes.folders.create}
                     </Button>
-                </Box>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={onClose}
+        >
+            <Stack spacing={2}>
+                <Input
+                    autoFocus
+                    placeholder={t.notes.folders.folderNamePlaceholder}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") submit();
+                    }}
+                />
+
+                {mode !== "rename" && (
+                    <Box>
+                        <FormLabel sx={{ mb: 1 }}>{t.notes.teamNotes.visibilityLabel}</FormLabel>
+                        <RadioGroup
+                            value={
+                                shareExternally
+                                    ? "external"
+                                    : visibility === null
+                                      ? "inherit"
+                                      : visibility
+                            }
+                            onChange={(e) => choose(e.target.value)}
+                        >
+                            <Stack spacing={1.25}>
+                                {isChild && (
+                                    <OptionRow
+                                        hint={t.notes.teamNotes.visibilityInheritHint}
+                                        value="inherit"
+                                        label={
+                                            parentName
+                                                ? fmt(t.notes.teamNotes.visibilityInherit, {
+                                                      name: parentName,
+                                                  })
+                                                : t.notes.teamNotes.visibilityInherit
+                                        }
+                                    />
+                                )}
+                                <OptionRow
+                                    hint={t.notes.teamNotes.visibilityPublicHint}
+                                    label={t.notes.teamNotes.visibilityPublic}
+                                    value="public"
+                                />
+                                <OptionRow
+                                    hint={t.notes.teamNotes.visibilityPrivateHint}
+                                    label={t.notes.teamNotes.visibilityPrivate}
+                                    value="private"
+                                />
+                                {/* Absent, not disabled, when there is
+                                        nobody to share with: an option that
+                                        can only ever be empty is worse than
+                                        one that isn't there, and connections
+                                        are made in team settings. */}
+                                {connectedTeams.length > 0 && (
+                                    <Box>
+                                        <OptionRow
+                                            hint={t.notes.teamNotes.visibilityExternalHint}
+                                            label={t.notes.teamNotes.visibilityExternal}
+                                            value="external"
+                                        />
+                                        {shareExternally && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexWrap: "wrap",
+                                                    gap: 0.75,
+                                                    marginInlineStart: "28px",
+                                                    mt: 1,
+                                                }}
+                                            >
+                                                {connectedTeams.map((connection) => {
+                                                    const selected = guestTeamIds.includes(
+                                                        connection.teamId
+                                                    );
+                                                    return (
+                                                        <Chip
+                                                            key={connection.teamId}
+                                                            color={
+                                                                selected ? "primary" : "neutral"
+                                                            }
+                                                            size="sm"
+                                                            variant={
+                                                                selected ? "solid" : "outlined"
+                                                            }
+                                                            onClick={() =>
+                                                                setGuestTeamIds((prev) =>
+                                                                    prev.includes(
+                                                                        connection.teamId
+                                                                    )
+                                                                        ? prev.filter(
+                                                                              (id) =>
+                                                                                  id !==
+                                                                                  connection.teamId
+                                                                          )
+                                                                        : [
+                                                                              ...prev,
+                                                                              connection.teamId,
+                                                                          ]
+                                                                )
+                                                            }
+                                                        >
+                                                            {connection.teamName}
+                                                        </Chip>
+                                                    );
+                                                })}
+                                            </Box>
+                                        )}
+                                    </Box>
+                                )}
+                            </Stack>
+                        </RadioGroup>
+                    </Box>
+                )}
+            </Stack>
+        </ModalFrame>
     );
 };
 
 const OptionRow = (props: { value: string; label: string; hint: string }) => (
     <Box>
         <Radio label={props.label} size="sm" value={props.value} />
-        <Typography level="body-xs" sx={{ ml: 3.5, opacity: 0.7 }}>
+        <Typography level="body-xs" sx={{ marginInlineStart: "28px", color: g.text.secondary }}>
             {props.hint}
         </Typography>
     </Box>
