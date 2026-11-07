@@ -37,7 +37,7 @@ interface TaskHeaderProps {
     useTEM: TeamManagementState;
     usePM: ProjectManagementState;
     onCreateProject: () => void;
-    onCreateTag: () => void;
+    onManageTags: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
     useTM: TaskManagementState;
@@ -56,7 +56,7 @@ export const TaskHeader = ({
     useTEM,
     usePM,
     onCreateProject,
-    onCreateTag,
+    onManageTags,
     onDeleteProject,
     onCloseTaskHome,
     useTM,
@@ -347,11 +347,11 @@ export const TaskHeader = ({
                                 },
                             },
                             {
-                                id: "newTag",
-                                kind: "newTag",
-                                label: t.tasks.header.newTagMenuItem,
+                                id: "manageTags",
+                                kind: "tags",
+                                label: t.tasks.header.manageTagsMenuItem,
                                 icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
-                                onClick: onCreateTag,
+                                onClick: onManageTags,
                             },
                             {
                                 id: "customizeFields",

@@ -219,8 +219,8 @@ export interface TaskManagementState {
     setTaskCommentLines: Dispatch<SetStateAction<number>>;
 
     // Tag and project creation
-    openCreateTag: boolean;
-    setOpenCreateTag: (open: boolean) => void;
+    openManageTags: boolean;
+    setOpenManageTags: (open: boolean) => void;
     isNewTagCreated: boolean;
     setIsNewTagCreated: (created: boolean) => void;
     /**
@@ -536,7 +536,7 @@ export const useTaskManagement = (
     );
 
     // Tag and project creation
-    const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [openManageTags, setOpenManageTags] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
     const [tagsRevision, setTagsRevision] = useState(0);
     // Functional update so two tag mutations in the same tick can't collapse
@@ -1248,8 +1248,8 @@ export const useTaskManagement = (
         setTaskCommentLines,
 
         // Tag and project creation
-        openCreateTag,
-        setOpenCreateTag,
+        openManageTags,
+        setOpenManageTags,
         isNewTagCreated,
         setIsNewTagCreated,
         tagsRevision,

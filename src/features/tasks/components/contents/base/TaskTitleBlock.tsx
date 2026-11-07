@@ -746,13 +746,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     },
                                 },
                                 {
-                                    id: "newTag",
-                                    kind: "newTag",
-                                    label: t.tasks.titleBlock.menu.newTag,
+                                    // Create, rename, recolor and delete tags: one place
+                                    // (the old "New Tag" item and the two icon buttons in
+                                    // the tags row are gone; MIP-1174).
+                                    id: "manageTags",
+                                    kind: "tags",
+                                    label: t.tasks.titleBlock.menu.manageTags,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: !isModalHosted,
                                     onClick: () => {
-                                        useTM.setOpenCreateTag(true);
+                                        useTM.setOpenManageTags(true);
                                     },
                                 },
                                 {

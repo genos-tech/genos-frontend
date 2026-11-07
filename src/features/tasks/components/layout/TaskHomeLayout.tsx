@@ -50,7 +50,7 @@ interface TaskHomeLayoutProps {
 
     // Header props
     onCreateProject: () => void;
-    onCreateTag: () => void;
+    onManageTags: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
     setOpenJoinProject: (value: {
@@ -75,7 +75,7 @@ export const TaskHomeLayout = ({
     socket,
     isActiveRoute,
     onCreateProject,
-    onCreateTag,
+    onManageTags,
     onDeleteProject,
     onCloseTaskHome,
     setOpenJoinProject,
@@ -112,8 +112,8 @@ export const TaskHomeLayout = ({
                         useUISM={useUISM}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
-                        onCreateTag={onCreateTag}
                         onDeleteProject={onDeleteProject}
+                        onManageTags={onManageTags}
                     />
                     {useTM.isTaskTableVisible && (
                         <>

@@ -63,7 +63,6 @@ describe("orderMoreMenuItems", () => {
                 "newSubfolder",
                 "newMilestone",
                 "newProject",
-                "newTag",
                 "newChildNote",
                 "newNote",
                 "newSubTask",
@@ -97,7 +96,6 @@ describe("orderMoreMenuItems", () => {
             "newSubTask",
             "newNote",
             "newChildNote",
-            "newTag",
             "newProject",
             "newMilestone",
             "newSubfolder",
@@ -119,7 +117,7 @@ describe("orderMoreMenuItems", () => {
             { id: "remove", danger: true },
             ofKind("copyLink"),
             { id: "deleteTagged", kind: "delete", danger: true },
-            { id: "dangerousCreate", kind: "newTag", danger: true },
+            { id: "dangerousCreate", kind: "newProject", danger: true },
             ofKind("reply"),
         ];
         const ordered = ids(orderMoreMenuItems(items));

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { keyframes } from "@emotion/react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -35,6 +36,10 @@ const fadeIn = keyframes`
 `;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
+// `editingTag` while a NEW tag is being typed (no real tag can have this name).
+const NEW_TAG = "\u0000new";
+const NEW_TAG_COLOR = { chipColor: "#ff2323", textColor: "white" };
 
 type Props = {
     myself: UserProps;
@@ -79,6 +84,65 @@ export const ModalManageTags: React.FC<Props> = ({
         setEditColor({ chipColor: tag.tagColor, textColor: tag.tagTextColor });
         setConfirmDelete(null);
         setErrorMessage(null);
+    };
+
+    const startCreate = () => {
+        setEditingTag(NEW_TAG);
+        setEditName("");
+        setEditColor(NEW_TAG_COLOR);
+        setConfirmDelete(null);
+        setErrorMessage(null);
+    };
+
+    // Create a tag here, in the same row editor used to rename one (it used to be a
+    // separate "New Tag" modal and an icon button in the task preview; MIP-1174).
+    const saveCreate = async () => {
+        const trimmed = editName.trim();
+        if (!trimmed) {
+            setErrorMessage(t.tasks.modals.createTag.nameEmpty);
+            return;
+        }
+        if (/\s/.test(trimmed)) {
+            setErrorMessage(t.tasks.modals.createTag.nameNoSpaces);
+            return;
+        }
+        try {
+            const response = await fetch(`${base_url}/project/tag/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    team_id: myself.teamId,
+                    project_id: usePM.currentProject?.projectId ?? -1,
+                    tag_name: trimmed,
+                    tag_color: editColor.chipColor,
+                    tag_text_color: editColor.textColor,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                console.error(data);
+                throw new Error(data.hint || t.tasks.modals.createTag.creationFailed);
+            }
+            setProjectTags([
+                ...projectTags,
+                {
+                    tagName: trimmed,
+                    tagColor: editColor.chipColor,
+                    tagTextColor: editColor.textColor,
+                },
+            ]);
+            setEditingTag(null);
+            setErrorMessage(null);
+            useTM.setIsNewTagCreated(true);
+            // Republish the project's tag list so the filter bar's Tags dropdown and every
+            // tag autocomplete see the new tag without a reload.
+            useTM.bumpTagsRevision();
+        } catch (error) {
+            setErrorMessage(`${error}`);
+        }
     };
 
     const cancelEdit = () => {
@@ -162,6 +226,84 @@ export const ModalManageTags: React.FC<Props> = ({
         }
     };
 
+    // The name + color editor of one tag row, shared by "edit" and "new".
+    const editFields = (onSave: () => void) => (
+        <>
+            <Input
+                size="sm"
+                value={editName}
+                sx={{
+                    flex: 1,
+                    "--Input-focusedThickness": "1px",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "8px",
+                    color: "#e0e0e0",
+                    "& input::placeholder": {
+                        color: "rgba(255,255,255,0.4)",
+                    },
+                }}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && editName.trim()) {
+                        onSave();
+                    } else if (e.key === "Escape") {
+                        cancelEdit();
+                    }
+                }}
+            />
+            <ColorPickerMenu
+                onSelectColor={(color) =>
+                    setEditColor({
+                        chipColor: color.value,
+                        textColor: color.textColor,
+                    })
+                }
+            />
+            <Chip
+                size="sm"
+                variant="outlined"
+                sx={{
+                    borderWidth: "2px",
+                    borderColor: alpha(editColor.chipColor, 0.6),
+                    backgroundColor: alpha(editColor.chipColor, 0.1),
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.7rem",
+                }}
+            >
+                {editName || t.tasks.modals.manageTags.previewName}
+            </Chip>
+            <AppTooltip title={t.tasks.modals.manageTags.saveTooltip}>
+                <IconButton
+                    disabled={!editName.trim()}
+                    size="sm"
+                    variant="plain"
+                    sx={{
+                        color: "rgba(var(--gp-brand-700-rgb), 0.8)",
+                        "&:hover": { color: "var(--gp-brand-700)" },
+                    }}
+                    onClick={() => onSave()}
+                >
+                    <CheckRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            </AppTooltip>
+            <AppTooltip title={t.tasks.modals.manageTags.cancelTooltip}>
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    sx={{
+                        color: "rgba(255,255,255,0.4)",
+                        "&:hover": { color: "rgba(255,255,255,0.8)" },
+                    }}
+                    onClick={cancelEdit}
+                >
+                    <CloseRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            </AppTooltip>
+        </>
+    );
+
     return (
         <Modal
             open={open}
@@ -226,6 +368,15 @@ export const ModalManageTags: React.FC<Props> = ({
                     >
                         {t.tasks.modals.manageTags.heading}
                     </Typography>
+                    <Button
+                        disabled={editingTag === NEW_TAG}
+                        size="sm"
+                        startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
+                        variant="soft"
+                        onClick={startCreate}
+                    >
+                        {t.tasks.modals.manageTags.newTag}
+                    </Button>
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -263,7 +414,23 @@ export const ModalManageTags: React.FC<Props> = ({
                         pr: 0.5,
                     }}
                 >
-                    {projectTags.length === 0 && (
+                    {editingTag === NEW_TAG && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                p: 1,
+                                borderRadius: "10px",
+                                backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.08)",
+                                border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
+                            }}
+                        >
+                            {editFields(saveCreate)}
+                        </Box>
+                    )}
+
+                    {projectTags.length === 0 && editingTag !== NEW_TAG && (
                         <Typography
                             level="body-sm"
                             sx={{ color: "rgba(255,255,255,0.4)", textAlign: "center", py: 3 }}
@@ -297,80 +464,7 @@ export const ModalManageTags: React.FC<Props> = ({
                             }}
                         >
                             {editingTag === tag.tagName ? (
-                                <>
-                                    <Input
-                                        size="sm"
-                                        value={editName}
-                                        sx={{
-                                            flex: 1,
-                                            "--Input-focusedThickness": "1px",
-                                            backgroundColor: "rgba(255,255,255,0.05)",
-                                            border: "1px solid rgba(255,255,255,0.1)",
-                                            borderRadius: "8px",
-                                            color: "#e0e0e0",
-                                            "& input::placeholder": {
-                                                color: "rgba(255,255,255,0.4)",
-                                            },
-                                        }}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" && editName.trim()) {
-                                                saveEdit(tag.tagName);
-                                            } else if (e.key === "Escape") {
-                                                cancelEdit();
-                                            }
-                                        }}
-                                    />
-                                    <ColorPickerMenu
-                                        onSelectColor={(color) =>
-                                            setEditColor({
-                                                chipColor: color.value,
-                                                textColor: color.textColor,
-                                            })
-                                        }
-                                    />
-                                    <Chip
-                                        size="sm"
-                                        variant="outlined"
-                                        sx={{
-                                            borderWidth: "2px",
-                                            borderColor: alpha(editColor.chipColor, 0.6),
-                                            backgroundColor: alpha(editColor.chipColor, 0.1),
-                                            color: "#fff",
-                                            fontWeight: 600,
-                                            fontSize: "0.7rem",
-                                        }}
-                                    >
-                                        {editName || t.tasks.modals.manageTags.previewName}
-                                    </Chip>
-                                    <AppTooltip title={t.tasks.modals.manageTags.saveTooltip}>
-                                        <IconButton
-                                            disabled={!editName.trim()}
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                color: "rgba(var(--gp-brand-700-rgb), 0.8)",
-                                                "&:hover": { color: "var(--gp-brand-700)" },
-                                            }}
-                                            onClick={() => saveEdit(tag.tagName)}
-                                        >
-                                            <CheckRoundedIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
-                                    </AppTooltip>
-                                    <AppTooltip title={t.tasks.modals.manageTags.cancelTooltip}>
-                                        <IconButton
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                color: "rgba(255,255,255,0.4)",
-                                                "&:hover": { color: "rgba(255,255,255,0.8)" },
-                                            }}
-                                            onClick={cancelEdit}
-                                        >
-                                            <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
-                                    </AppTooltip>
-                                </>
+                                editFields(() => saveEdit(tag.tagName))
                             ) : (
                                 <>
                                     <Chip

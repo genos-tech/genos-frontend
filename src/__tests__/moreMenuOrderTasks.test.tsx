@@ -80,8 +80,8 @@ describe("task preview menu", () => {
             m.copyTaskLink,
             m.newTask,
             m.newSubTask,
-            m.newTag,
             m.newProject,
+            m.manageTags,
             en.services.notifications.muteButton.mute,
             m.deleteTask,
         ]);
@@ -189,16 +189,16 @@ describe("project header menu", () => {
                         }
                         onCloseTaskHome={vi.fn()}
                         onCreateProject={vi.fn()}
-                        onCreateTag={vi.fn()}
+                        onManageTags={vi.fn()}
                         onDeleteProject={vi.fn()}
                     />
                 </CssVarsProvider>
             </MemoryRouter>
         );
         expect(menuLabels()).toEqual([
-            h.newTagMenuItem,
             h.newProjectMenuItem,
             h.newMilestoneMenuItem,
+            h.manageTagsMenuItem,
             h.customizeFieldsMenuItem,
             h.deleteProjectMenuItem,
         ]);

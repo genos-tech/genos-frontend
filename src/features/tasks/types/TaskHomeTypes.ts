@@ -79,7 +79,7 @@ export interface TaskHeaderProps {
     onSearchChange: (value: any) => void;
     handleCreateTask: () => void;
     onCreateProject: () => void;
-    onCreateTag: () => void;
+    onManageTags: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
     isTaskPreviewVisible: boolean;
