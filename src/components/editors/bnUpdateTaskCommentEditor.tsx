@@ -4,7 +4,6 @@ import "../../App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -26,7 +25,6 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps } from "../../types/tasks";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
@@ -34,9 +32,7 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
+import { useGenosEditor } from "./genos/useGenosEditor";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -110,16 +106,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line (MIP-1039; see bnUpdateEditor).
     const initialContent: any[] = withoutTrailingBlank(targetComment.commentBody);
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
-        dictionary,
-        initialContent: initialContent,
-    });
+    const editor = useGenosEditor({ surface: "composer", schema, dictionary, initialContent });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
