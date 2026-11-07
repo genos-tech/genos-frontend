@@ -42,22 +42,15 @@ import "@blocknote/mantine/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { DefaultReactSuggestionItem, SuggestionMenuController } from "@blocknote/react";
 
 import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
+import { useGenosEditor } from "../../../components/editors/genos/useGenosEditor";
 import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
-import { codeFenceInputRule } from "../../../components/editors/sub/codeBlockExtras";
-import { linkHostCaption } from "../../../components/editors/sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
-import { resolveInsecureFileUrl } from "../../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { createMentionGroupSpecV3, createMentionSpecV3 } from "./MentionV3";
@@ -173,14 +166,12 @@ export function MessageComposerV3({
         [currentUserId]
     );
 
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        // `codeFenceInputRule`: the schema now has the highlighted code block, and BlockNote's own
-        // ``` rule puts an UNKNOWN typed language in it, which wedges the editor (see
-        // codeBlockExtras.tsx). Every editor with that block carries this rule.
-        extensions: [codeFenceInputRule, linkHostCaption],
+    // The same editing rules as every composer (Tab indents, the ``` fence rule that keeps an
+    // unknown typed language from wedging the highlighted code block, the link-host caption):
+    // they come with the `composer` surface instead of a copy of the list here.
+    const editor = useGenosEditor({
+        surface: "composer",
         schema,
-        resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {
             placeholders: {
                 emptyDocument: placeholder,

@@ -11,7 +11,12 @@ import { codeFenceInputRule } from "../sub/codeBlockExtras";
 import { buildCommentSchema } from "../sub/CommentEditorWithMentions";
 import { linkHostCaption } from "../sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../sub/tabIndent";
-import { GenosMentionContext, GenosSchema, useGenosSchema } from "./genosSchema";
+import {
+    GenosMentionContext,
+    GenosSchema,
+    mentionContextDeps,
+    useGenosSchema,
+} from "./genosSchema";
 
 type GenosDictionary = ReturnType<typeof useBlockNoteDictionary>;
 
@@ -105,7 +110,7 @@ export const useGenosCollabEditor = ({
     const commentSchema = useMemo(
         () => buildCommentSchema(ctx),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [ctx.teamMemberProfiles, ctx.socket, ctx.myself, ctx.setMyself, ctx.useUISM, ctx.useCM]
+        mentionContextDeps(ctx)
     );
     const collabUser = useMemo(
         () => ({ name: myself.userName, color: getUserColor(myself.userId) }),

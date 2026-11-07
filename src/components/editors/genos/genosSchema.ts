@@ -84,18 +84,19 @@ export const createLegacyMentionSpecs = (ctx: GenosMentionContext): GenosMention
  * mention chip closes over change; for the collaborative editors, whose hook takes the
  * schema as an input. Either way this adds no state and no subscription to the host.
  */
+/** The values the legacy mention chip closes over: the deps a rebuilt schema (and the comment
+ *  schema, which holds its own chip) must follow. One list, so they cannot drift apart. */
+export const mentionContextDeps = (ctx: GenosMentionContext) => [
+    ctx.teamMemberProfiles,
+    ctx.socket,
+    ctx.myself,
+    ctx.setMyself,
+    ctx.useUISM,
+    ctx.useCM,
+];
+
 export const useGenosSchema = (ctx: GenosMentionContext, rebuild: "mount" | "live") => {
-    const deps =
-        rebuild === "live"
-            ? [
-                  ctx.teamMemberProfiles,
-                  ctx.socket,
-                  ctx.myself,
-                  ctx.setMyself,
-                  ctx.useUISM,
-                  ctx.useCM,
-              ]
-            : [];
+    const deps = rebuild === "live" ? mentionContextDeps(ctx) : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
     return useMemo(() => createGenosSchema(createLegacyMentionSpecs(ctx)), deps);
 };
