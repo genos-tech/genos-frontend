@@ -20,7 +20,7 @@ const Slot = ({
     hideOnXs = false,
     children,
 }: {
-    width: number;
+    width: number | { xs: number; sm: number };
     hideOnXs?: boolean;
     children?: ReactNode;
 }) => (
@@ -110,8 +110,22 @@ export const TaskListItem = ({
             {compact ? (
                 <StatusLabel status={shownStatus} iconOnly />
             ) : (
-                <Slot width={SLOT.status}>
-                    <StatusLabel status={shownStatus} />
+                // On a phone the status is its icon: the word would take the title's room.
+                <Slot width={{ xs: 16, sm: SLOT.status }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            // Visually hidden, not display:none, so the status keeps its name.
+                            "& [data-status-word]": {
+                                position: { xs: "absolute", sm: "static" },
+                                width: { xs: 1, sm: "auto" },
+                                height: { xs: 1, sm: "auto" },
+                                clipPath: { xs: "inset(50%)", sm: "none" },
+                            },
+                        }}
+                    >
+                        <StatusLabel status={shownStatus} />
+                    </Box>
                 </Slot>
             )}
             {!compact && <TaskIdText task={task} />}

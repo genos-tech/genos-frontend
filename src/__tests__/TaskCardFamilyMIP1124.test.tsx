@@ -446,6 +446,18 @@ describe("TaskListItem", () => {
         expect(screen.getByTestId("sprint-chip").textContent).toBe("No Sprint");
     });
 
+    it("on a phone the row's status is its icon, but the word stays for screen readers", () => {
+        const { container } = render(
+            withContext(<TaskListItem task={task({ status: "Blocked" })} onOpen={() => {}} />)
+        );
+        const word = container.querySelector("[data-status-word]") as HTMLElement;
+        expect(word.textContent).toBe("Blocked");
+        const css = cssOf(word.parentElement!.parentElement as HTMLElement);
+        expect(css).toContain("data-status-word");
+        expect(css).toContain("clip-path");
+        expect(css).not.toMatch(/data-status-word[^}]*display:\s*none/);
+    });
+
     it("compact: status icon, title and the due date only", () => {
         render(
             withContext(
