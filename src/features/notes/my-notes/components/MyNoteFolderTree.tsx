@@ -1,5 +1,4 @@
 import { memo, ReactNode, useState } from "react";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
@@ -9,12 +8,14 @@ import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import FolderZipRoundedIcon from "@mui/icons-material/FolderZipRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
-import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, List, ListItem, Typography } from "@mui/joy";
 
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { MyNoteFolderTreeNode, MyNoteMetaTreeNode } from "../../../../types/notes";
 import {
     FolderFavoriteStar,
@@ -57,8 +58,6 @@ type MyNoteFolderTreeProps = {
 // hover "⋯" menu with the folder actions.
 function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
     const { folder, useNM, actions, renderNote, depth = 0 } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     const isExpanded = useNM.isFolderExpanded(folder.folderId);
@@ -70,160 +69,92 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
     const isHighlighted = useNM.highlightedFolderId === folder.folderId;
 
     const headerRow = (isDraggingOver: boolean) => (
-        <ListItemButton
+        <NavItem
+            as="div"
             data-note-folder-id={folder.folderId}
-            sx={{
-                borderRadius: "8px",
-                py: 0.5,
-                px: 1,
-                my: 0.25,
-                gap: 0.75,
-                minHeight: 32,
-                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                backgroundColor: isDraggingOver
-                    ? isDark
-                        ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                        : "rgba(var(--gp-brand-700-rgb), 0.1)"
-                    : isDark
-                      ? "rgba(255,255,255,0.02)"
-                      : "rgba(0,0,0,0.01)",
-                outline: isDraggingOver ? "1px dashed" : "none",
-                outlineColor: isDark
-                    ? "rgba(var(--gp-brandalt-400-rgb), 0.7)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                ...(isHighlighted && !isDraggingOver ? highlightedFolderSx(isDark) : {}),
-                // Hover-only on real pointers — sticky :hover on touch
-                // eats the first tap (folder won't expand until tap #2).
-                "@media (hover: hover) and (pointer: fine)": {
-                    "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                        "& .folder-menu-btn": {
-                            opacity: 1,
-                        },
-                    },
-                },
-            }}
+            expanded={isExpanded}
+            icon={<FolderIcon />}
+            label={folder.name}
+            // Keep the "..." trigger visible while its portal menu is open.
+            actionsVisible={menuOpen}
+            // A folder you drag a note over takes the accent tint and a dashed
+            // ring; the folder a "jump to folder" landed on flashes the tint.
+            sx={
+                isDraggingOver
+                    ? { background: g.accent.subtle, outline: `1px dashed ${g.accent.border}` }
+                    : isHighlighted
+                      ? highlightedFolderSx
+                      : undefined
+            }
+            actions={
+                <>
+                    <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
+                    <Box onClick={(e) => e.stopPropagation()}>
+                        <MoreMenu
+                            iconFontSize={14}
+                            placement="bottom-end"
+                            triggerSize={20}
+                            items={[
+                                {
+                                    id: "new-note-here",
+                                    kind: "newNote",
+                                    label: t.notes.folders.newNoteHere,
+                                    icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
+                                    onClick: () => actions.onCreateNoteHere(folder.folderId),
+                                },
+                                {
+                                    id: "import-note-here",
+                                    kind: "import",
+                                    label: t.notes.header.importMarkdown,
+                                    icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
+                                    onClick: () => actions.onImportNoteHere(folder.folderId),
+                                },
+                                {
+                                    id: "export-folder",
+                                    kind: "export",
+                                    label: t.notes.exportZip.menuItem,
+                                    icon: <FolderZipRoundedIcon sx={{ fontSize: 16 }} />,
+                                    onClick: () => actions.onExportFolder(folder),
+                                },
+                                {
+                                    id: "new-subfolder",
+                                    kind: "newSubfolder",
+                                    label: t.notes.folders.newSubfolder,
+                                    icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
+                                    onClick: () => actions.onCreateSubfolder(folder.folderId),
+                                },
+                                {
+                                    id: "rename",
+                                    kind: "rename",
+                                    label: t.notes.folders.rename,
+                                    icon: (
+                                        <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                    ),
+                                    onClick: () => actions.onRenameFolder(folder),
+                                },
+                                {
+                                    id: "move",
+                                    kind: "move",
+                                    label: t.notes.folders.moveFolder,
+                                    icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                                    onClick: () => actions.onMoveFolder(folder),
+                                },
+                                {
+                                    id: "delete",
+                                    kind: "delete",
+                                    label: t.notes.folders.deleteFolder,
+                                    icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
+                                    danger: true,
+                                    onClick: () => actions.onDeleteFolder(folder),
+                                },
+                            ]}
+                            onOpenChange={setMenuOpen}
+                        />
+                    </Box>
+                </>
+            }
             onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
-        >
-            {/* Chevron */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 16,
-                    height: 16,
-                    borderRadius: "4px",
-                    flexShrink: 0,
-                }}
-            >
-                <ChevronRightRoundedIcon
-                    sx={{
-                        fontSize: 13,
-                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                        transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                    }}
-                />
-            </Box>
-
-            <FolderIcon
-                sx={{
-                    fontSize: 14,
-                    color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                    flexShrink: 0,
-                }}
-            />
-
-            <ListItemContent sx={{ minWidth: 0 }}>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        fontWeight: 600,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                        fontSize: "0.75rem",
-                        letterSpacing: "-0.01em",
-                    }}
-                >
-                    {folder.name}
-                </Typography>
-            </ListItemContent>
-
-            <FolderFavoriteStar folderId={folder.folderId} isDark={isDark} useNM={useNM} />
-
-            {/* Hover-revealed folder actions; always visible on touch. */}
-            <Box
-                className="folder-menu-btn"
-                sx={{
-                    opacity: menuOpen ? 1 : 0,
-                    transition: "opacity 0.15s ease",
-                    "@media (hover: none)": { opacity: 1 },
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <MoreMenu
-                    iconFontSize={14}
-                    placement="bottom-end"
-                    triggerSize={20}
-                    items={[
-                        {
-                            id: "new-note-here",
-                            kind: "newNote",
-                            label: t.notes.folders.newNoteHere,
-                            icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onCreateNoteHere(folder.folderId),
-                        },
-                        {
-                            id: "import-note-here",
-                            kind: "import",
-                            label: t.notes.header.importMarkdown,
-                            icon: <FileUploadRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onImportNoteHere(folder.folderId),
-                        },
-                        {
-                            id: "export-folder",
-                            kind: "export",
-                            label: t.notes.exportZip.menuItem,
-                            icon: <FolderZipRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onExportFolder(folder),
-                        },
-                        {
-                            id: "new-subfolder",
-                            kind: "newSubfolder",
-                            label: t.notes.folders.newSubfolder,
-                            icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onCreateSubfolder(folder.folderId),
-                        },
-                        {
-                            id: "rename",
-                            kind: "rename",
-                            label: t.notes.folders.rename,
-                            icon: <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onRenameFolder(folder),
-                        },
-                        {
-                            id: "move",
-                            kind: "move",
-                            label: t.notes.folders.moveFolder,
-                            icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
-                            onClick: () => actions.onMoveFolder(folder),
-                        },
-                        {
-                            id: "delete",
-                            kind: "delete",
-                            label: t.notes.folders.deleteFolder,
-                            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
-                            danger: true,
-                            onClick: () => actions.onDeleteFolder(folder),
-                        },
-                    ]}
-                    onOpenChange={setMenuOpen}
-                />
-            </Box>
-        </ListItemButton>
+        />
     );
 
     return (
@@ -239,12 +170,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                     subtrees pay zero render cost — same trade-off as
                     NoteTreeRenderer). */}
                 {isExpanded && (
-                    <List
-                        sx={{
-                            pl: 1.5,
-                            "--List-nestedInsetStart": "16px",
-                        }}
-                    >
+                    <List sx={navNestedListSx}>
                         {folder.childFolders.map((child) => (
                             <MyNoteFolderTree
                                 key={`folder-${child.folderId}`}
@@ -277,7 +203,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                                     px: 1.5,
                                     py: 0.5,
                                     fontStyle: "italic",
-                                    color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                                    color: g.text.tertiary,
                                 }}
                             >
                                 {t.notes.folders.emptyFolder}

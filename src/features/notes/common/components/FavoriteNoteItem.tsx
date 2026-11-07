@@ -1,13 +1,15 @@
 import { memo } from "react";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { Box, IconButton, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { IconButton } from "@mui/joy";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { useNoteUnread } from "../context/NoteUnreadContext";
+import { NoteDot } from "./NoteDot";
 
 interface FavoriteNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -16,8 +18,6 @@ interface FavoriteNoteItemProps {
 }
 
 function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemProps) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, note.noteId);
@@ -85,132 +85,34 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
     const subLabel = getSubLabel();
 
     return (
-        <ListItem
-            sx={{
-                position: "relative",
-                "--ListItem-paddingY": "0",
-                "--ListItem-paddingX": "0",
-            }}
-        >
-            <ListItemButton
-                selected={isSelected}
-                sx={{
-                    borderRadius: "8px",
-                    py: 0.5,
-                    px: 1,
-                    my: 0.125,
-                    gap: 0.75,
-                    minHeight: 30,
-                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                    // Hover-only on real pointers — sticky :hover on touch
-                    // eats the first tap (note won't open until tap #2).
-                    "@media (hover: hover) and (pointer: fine)": {
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.05)"
-                                : "rgba(0,0,0,0.03)",
-                            "& .favorite-remove-btn": {
-                                opacity: 1,
-                            },
-                        },
-                    },
-                    "&.Mui-selected": {
-                        backgroundColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.12)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                        "@media (hover: hover) and (pointer: fine)": {
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                            },
-                        },
-                    },
-                }}
-                onClick={handleClick}
-            >
-                {/* Note indicator dot — red when there's an unread @mention. */}
-                <Box
-                    sx={{
-                        width: hasUnread ? 8 : 6,
-                        height: hasUnread ? 8 : 6,
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                        backgroundColor: hasUnread
-                            ? isDark
-                                ? "var(--gp-brandalt-400)"
-                                : "var(--gp-brand-700)"
-                            : isSelected
-                              ? isDark
-                                  ? "var(--gp-brandalt-400)"
-                                  : "var(--gp-brand-800)"
-                              : isDark
-                                ? "rgba(255,255,255,0.2)"
-                                : "rgba(0,0,0,0.15)",
-                        transition: "all 0.2s ease",
-                    }}
-                />
-
-                <ListItemContent sx={{ minWidth: 0 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            fontWeight: isSelected ? 500 : 400,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
-                            fontSize: "0.775rem",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        {note.title || t.notes.defaults.untitled}
-                    </Typography>
-                    {subLabel && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                                fontSize: "0.65rem",
-                            }}
-                        >
-                            {subLabel}
-                        </Typography>
-                    )}
-                </ListItemContent>
-
-                {/* Remove from favorites button — hover-revealed on
-                    desktop, always visible on touch. */}
+        <NavItem
+            as="div"
+            selected={isSelected}
+            unread={hasUnread}
+            icon={<NoteDot unread={hasUnread} />}
+            label={note.title || t.notes.defaults.untitled}
+            lines={subLabel ? 2 : 1}
+            secondary={subLabel}
+            // Remove-from-favorites: hover-revealed on desktop, always visible
+            // on touch.
+            actions={
                 <IconButton
                     className="favorite-remove-btn"
-                    color="warning"
                     size="sm"
                     variant="plain"
                     sx={{
-                        opacity: 0,
                         minWidth: 20,
                         minHeight: 20,
-                        borderRadius: "4px",
-                        transition: "opacity 0.15s ease",
-                        "@media (hover: none)": { opacity: 1 },
-                        "@media (hover: hover) and (pointer: fine)": {
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(245,158,11,0.15)"
-                                    : "rgba(245,158,11,0.1)",
-                            },
-                        },
+                        borderRadius: g.radius.xs,
+                        "--IconButton-size": "20px",
                     }}
                     onClick={handleRemoveFavorite}
                 >
-                    <StarRoundedIcon sx={{ fontSize: 14, color: "#f59e0b" }} />
+                    <StarRoundedIcon sx={{ fontSize: 14, color: g.warning.solid }} />
                 </IconButton>
-            </ListItemButton>
-        </ListItem>
+            }
+            onClick={handleClick}
+        />
     );
 }
 

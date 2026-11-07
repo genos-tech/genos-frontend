@@ -1,4 +1,4 @@
-import { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
+import { KeyboardEvent, MouseEvent, ReactNode, Ref, SyntheticEvent } from "react";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import { Box, ListItem, ListItemButton } from "@mui/joy";
 import type { ListItemButtonProps } from "@mui/joy/ListItemButton";
@@ -28,21 +28,24 @@ export type SectionHeaderProps = {
     /** `true` is open. Leave undefined for a heading that does not collapse. */
     expanded?: boolean;
     /** Toggle handler for a collapsible heading. */
-    onToggle?: (event: MouseEvent | KeyboardEvent) => void;
+    onToggleExpanded?: (event: SyntheticEvent) => void;
     /** Beside the heading, always visible (a filter, a "+"). */
     actions?: ReactNode;
     as?: "li" | "div";
     sx?: SxProps;
     rootProps?: Record<string, unknown>;
     ref?: Ref<HTMLElement>;
-} & Omit<ListItemButtonProps, "children" | "sx" | "ref" | "color" | "variant" | "onToggle">;
+} & Omit<
+    ListItemButtonProps,
+    "children" | "sx" | "ref" | "color" | "variant" | "onToggleExpanded"
+>;
 
 export const SectionHeader = ({
     label,
     icon,
     count,
     expanded,
-    onToggle,
+    onToggleExpanded,
     actions,
     as = "li",
     sx,
@@ -185,7 +188,7 @@ export const SectionHeader = ({
                     }}
                     onClick={(event) => {
                         onClick?.(event);
-                        onToggle?.(event);
+                        onToggleExpanded?.(event);
                     }}
                 >
                     {content}

@@ -160,11 +160,17 @@ describe("NavItem", () => {
             expect(css).toContain("opacity: 0");
             // jsdom flattens @media: the touch rule shows as a second rule.
             expect(css).toContain("opacity: 1");
-            expect(cssOf(row())).toContain(":focus-within .NavItem-actions");
+            expect(cssOf(row())).toMatch(/:focus-within \.NavItem-actions\s*>\s*\*/);
             cleanup();
             mount({ actions: <span>a</span>, actionsVisible: true });
             expect(cssOf(screen.getByText("a").parentElement as Element)).toContain("opacity: 1");
         });
+    });
+
+    it("an action that carries state opts out of the fade", () => {
+        mount({ actions: <span>a</span> });
+        const css = cssOf(screen.getByText("a").parentElement as Element);
+        expect(css).toContain(":not(.NavItem-keep)");
     });
 
     describe("unread", () => {
@@ -209,27 +215,27 @@ describe("NavItem", () => {
 
         it("a separate chevron target toggles without activating the row", () => {
             const onClick = vi.fn();
-            const onToggle = vi.fn();
-            const { container } = mount({ expanded: false, onClick, onToggle });
+            const onToggleExpanded = vi.fn();
+            const { container } = mount({ expanded: false, onClick, onToggleExpanded });
             fireEvent.click(container.querySelector(".NavItem-chevron") as Element);
-            expect(onToggle).toHaveBeenCalledTimes(1);
+            expect(onToggleExpanded).toHaveBeenCalledTimes(1);
             expect(onClick).not.toHaveBeenCalled();
         });
 
         it("arrow keys open and close, and only when they would change something", () => {
-            const onToggle = vi.fn();
-            mount({ expanded: false, onToggle });
+            const onToggleExpanded = vi.fn();
+            mount({ expanded: false, onToggleExpanded });
             fireEvent.keyDown(button(), { key: "ArrowLeft" });
-            expect(onToggle).not.toHaveBeenCalled();
+            expect(onToggleExpanded).not.toHaveBeenCalled();
             fireEvent.keyDown(button(), { key: "ArrowRight" });
-            expect(onToggle).toHaveBeenCalledTimes(1);
+            expect(onToggleExpanded).toHaveBeenCalledTimes(1);
             cleanup();
-            onToggle.mockClear();
-            mount({ expanded: true, onToggle });
+            onToggleExpanded.mockClear();
+            mount({ expanded: true, onToggleExpanded });
             fireEvent.keyDown(button(), { key: "ArrowRight" });
-            expect(onToggle).not.toHaveBeenCalled();
+            expect(onToggleExpanded).not.toHaveBeenCalled();
             fireEvent.keyDown(button(), { key: "ArrowLeft" });
-            expect(onToggle).toHaveBeenCalledTimes(1);
+            expect(onToggleExpanded).toHaveBeenCalledTimes(1);
         });
 
         it("keeps the caller's own onKeyDown", () => {
@@ -276,16 +282,16 @@ describe("NavItem", () => {
 
 describe("SectionHeader", () => {
     it("a collapsible heading is a button that reports and toggles its state", () => {
-        const onToggle = vi.fn();
+        const onToggleExpanded = vi.fn();
         render(
             <CssVarsProvider>
-                <SectionHeader expanded label="Projects" onToggle={onToggle} />
+                <SectionHeader expanded label="Projects" onToggleExpanded={onToggleExpanded} />
             </CssVarsProvider>
         );
         const toggle = screen.getByRole("button", { name: "Projects" });
         expect(toggle).toHaveAttribute("aria-expanded", "true");
         fireEvent.click(toggle);
-        expect(onToggle).toHaveBeenCalledTimes(1);
+        expect(onToggleExpanded).toHaveBeenCalledTimes(1);
     });
 
     it("a plain heading is only text", () => {
@@ -305,7 +311,7 @@ describe("SectionHeader", () => {
                     actions={<button aria-label="Filter" type="button" />}
                     expanded={false}
                     label="Projects"
-                    onToggle={vi.fn()}
+                    onToggleExpanded={vi.fn()}
                 />
             </CssVarsProvider>
         );

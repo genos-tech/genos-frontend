@@ -4,6 +4,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { NAV_KEEP_CLASS } from "../components/ui/nav/navStyles";
 import { FavoriteFolderItem } from "../features/notes/common/components/FavoriteFolderItem";
 import { FolderFavoriteStar } from "../features/notes/common/components/FolderFavoriteStar";
 import { folderChain } from "../features/notes/common/utils/folderChain";
@@ -22,7 +23,7 @@ describe("folder favorite star", () => {
         const rowClick = vi.fn();
         render(
             <div onClick={rowClick}>
-                <FolderFavoriteStar folderId={7} isDark={false} useNM={useNM} />
+                <FolderFavoriteStar folderId={7} useNM={useNM} />
             </div>
         );
         fireEvent.click(screen.getByTestId("folder-favorite-7"));
@@ -30,13 +31,11 @@ describe("folder favorite star", () => {
         expect(rowClick).not.toHaveBeenCalled();
     });
 
-    it("stays visible once starred, hover-revealed otherwise", () => {
-        const { rerender } = render(
-            <FolderFavoriteStar folderId={7} isDark={false} useNM={nm()} />
-        );
-        expect(screen.getByTestId("folder-favorite-7").className).toContain("folder-menu-btn");
-        rerender(<FolderFavoriteStar folderId={7} isDark={false} useNM={nm([7])} />);
-        expect(screen.getByTestId("folder-favorite-7").className).not.toContain("folder-menu-btn");
+    it("stays visible once starred (opts out of the row's action fade), fades otherwise", () => {
+        const { rerender } = render(<FolderFavoriteStar folderId={7} useNM={nm()} />);
+        expect(screen.getByTestId("folder-favorite-7").className).not.toContain(NAV_KEEP_CLASS);
+        rerender(<FolderFavoriteStar folderId={7} useNM={nm([7])} />);
+        expect(screen.getByTestId("folder-favorite-7").className).toContain(NAV_KEEP_CLASS);
     });
 });
 
@@ -55,7 +54,6 @@ describe("favorite folder row", () => {
                     parentFolderId: 1,
                     isExternal: false,
                 }}
-                isDark={false}
                 spaceLabel="Team Notes"
                 useNM={useNM}
             />

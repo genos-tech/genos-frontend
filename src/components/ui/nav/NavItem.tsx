@@ -1,4 +1,4 @@
-import { KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
+import { KeyboardEvent, MouseEvent, ReactNode, Ref, SyntheticEvent } from "react";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import { Box, ListItem, ListItemButton } from "@mui/joy";
 import type { ListItemButtonProps } from "@mui/joy/ListItemButton";
@@ -8,7 +8,9 @@ import { g, type } from "../../../theme/tokens";
 import {
     NAV_HOVER_MEDIA,
     NAV_ICON_SIZE,
+    NAV_KEEP_CLASS,
     NAV_PAD_X,
+    NAV_ROW_GAP,
     navFocusSx,
     navIndentLength,
     navRowSx,
@@ -46,8 +48,8 @@ export type NavItemProps = {
     /** Row actions. Hidden until hover or keyboard focus on a pointer device,
      *  always shown on touch. Rendered beside the row button, not in it. */
     actions?: ReactNode;
-    /** Keep `actions` shown: a menu is open, or the state they carry (a pin)
-     *  has to stay visible. */
+    /** Keep `actions` shown: a menu is open. (An action that carries state, a
+     *  lit star or a pin, stays visible by itself: give it `NAV_KEEP_CLASS`.) */
     actionsVisible?: boolean;
     selected?: boolean;
     /** Unread: bolder label and an accent bar on the row's leading edge. */
@@ -59,7 +61,7 @@ export type NavItemProps = {
     /** A leaf in a tree where siblings have a chevron: keep their column. */
     reserveChevron?: boolean;
     /** Makes the chevron its own click target. Without it the row toggles. */
-    onToggle?: (event: MouseEvent | KeyboardEvent) => void;
+    onToggleExpanded?: (event: SyntheticEvent) => void;
     /** `1`: one density row. `2`: a documented multiple, grows with content. */
     lines?: 1 | 2;
     /** `dashed` is a "new ..." affordance, an outline instead of a fill. */
@@ -93,7 +95,7 @@ export const NavItem = ({
     indent,
     expanded,
     reserveChevron = false,
-    onToggle,
+    onToggleExpanded,
     lines = 1,
     variant = "default",
     as = "li",
@@ -113,13 +115,13 @@ export const NavItem = ({
     // keyboard route to a chevron that is a separate mouse target.
     const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
         onKeyDown?.(event as KeyboardEvent<HTMLDivElement>);
-        if (event.defaultPrevented || !onToggle || !expandable) return;
+        if (event.defaultPrevented || !onToggleExpanded || !expandable) return;
         const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
         const open = rtl ? "ArrowLeft" : "ArrowRight";
         const close = rtl ? "ArrowRight" : "ArrowLeft";
         if ((event.key === open && !expanded) || (event.key === close && expanded)) {
             event.preventDefault();
-            onToggle(event);
+            onToggleExpanded(event);
         }
     };
 
@@ -135,7 +137,8 @@ export const NavItem = ({
                         // ListItem brings its own padding and nesting maths;
                         // the row owns all of it.
                         p: 0,
-                        m: 0,
+                        marginBlock: `${NAV_ROW_GAP}px`,
+                        marginInline: 0,
                         minWidth: 0,
                         position: "relative",
                         display: "flex",
@@ -151,9 +154,9 @@ export const NavItem = ({
                                 },
                             },
                         }),
-                        "&:focus-within .NavItem-actions": { opacity: 1 },
+                        "&:focus-within .NavItem-actions > *": { opacity: 1 },
                         [NAV_HOVER_MEDIA]: {
-                            "&:hover .NavItem-actions": { opacity: 1 },
+                            "&:hover .NavItem-actions > *": { opacity: 1 },
                         },
                     },
                     ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
@@ -180,6 +183,9 @@ export const NavItem = ({
                 />
             )}
             <ListItemButton
+                // `selected` also puts Joy's Mui-selected class on the button: tests and
+                // a few selectors outside the row key on it. Its plate is off (below).
+                selected={selected}
                 aria-current={selected ? current : undefined}
                 aria-expanded={expandable ? expanded : undefined}
                 color="neutral"
@@ -228,7 +234,7 @@ export const NavItem = ({
                             borderRadius: g.radius.xs,
                             visibility: expandable ? "visible" : "hidden",
                             color: g.text.tertiary,
-                            ...(onToggle && {
+                            ...(onToggleExpanded && {
                                 cursor: "pointer",
                                 [NAV_HOVER_MEDIA]: { "&:hover": { background: g.active } },
                             }),
@@ -243,10 +249,10 @@ export const NavItem = ({
                             },
                         }}
                         onClick={
-                            onToggle
+                            onToggleExpanded
                                 ? (event: MouseEvent) => {
                                       stop(event);
-                                      onToggle(event);
+                                      onToggleExpanded(event);
                                   }
                                 : undefined
                         }
@@ -368,10 +374,14 @@ export const NavItem = ({
                         flexShrink: 0,
                         gap: 0.25,
                         paddingInlineEnd: 0.5,
-                        opacity: actionsVisible ? 1 : 0,
-                        transition: `opacity ${g.motion.fast} ${g.ease}`,
+                        // Each action fades; one that carries state (a lit star)
+                        // opts out with NAV_KEEP_CLASS and stays put.
+                        [`& > *:not(.${NAV_KEEP_CLASS})`]: {
+                            opacity: actionsVisible ? 1 : 0,
+                            transition: `opacity ${g.motion.fast} ${g.ease}`,
+                        },
                         // No hover to reveal them on touch.
-                        "@media (hover: none)": { opacity: 1 },
+                        "@media (hover: none)": { "& > *": { opacity: 1 } },
                     }}
                 >
                     {actions}

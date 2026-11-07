@@ -4,9 +4,8 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import { Box, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
@@ -22,42 +21,23 @@ interface RecentNoteItemProps {
 function getTypeIcon(noteType: number) {
     switch (noteType) {
         case 1:
-            return <WindowRoundedIcon sx={{ fontSize: 14 }} />;
+            return <WindowRoundedIcon />;
         case 2:
-            return <AssignmentRoundedIcon sx={{ fontSize: 14 }} />;
+            return <AssignmentRoundedIcon />;
         case 3:
-            return <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />;
+            return <QuestionAnswerRoundedIcon />;
         // Sidebar buckets over note_type 1 — they need their own glyphs
         // or every shared / team note reads as a My note.
         case 4:
-            return <ShareRoundedIcon sx={{ fontSize: 14 }} />;
+            return <ShareRoundedIcon />;
         case 8:
-            return <GroupsRoundedIcon sx={{ fontSize: 14 }} />;
+            return <GroupsRoundedIcon />;
         default:
             return null;
     }
 }
 
-function getTypeColor(noteType: number, isDark: boolean) {
-    switch (noteType) {
-        case 1:
-            return isDark ? "#818cf8" : "#6366f1";
-        case 2:
-            return isDark ? "#4ade80" : "#22c55e";
-        case 3:
-            return isDark ? "#fb923c" : "#f97316";
-        case 4:
-            return isDark ? "#38bdf8" : "#0ea5e9";
-        case 8:
-            return isDark ? "#c084fc" : "#a855f7";
-        default:
-            return isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
-    }
-}
-
 function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, note.noteId);
@@ -115,111 +95,18 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
     };
 
     const subLabel = getSubLabel();
-    const typeColor = getTypeColor(noteType, isDark);
 
     return (
-        <ListItem
-            sx={{
-                position: "relative",
-                "--ListItem-paddingY": "0",
-                "--ListItem-paddingX": "0",
-            }}
-        >
-            <ListItemButton
-                selected={isSelected}
-                sx={{
-                    borderRadius: "8px",
-                    py: 0.5,
-                    px: 1,
-                    my: 0.125,
-                    gap: 0.75,
-                    minHeight: 30,
-                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                    // Hover-only on real pointers — sticky :hover on touch
-                    // can eat the first tap before the note opens.
-                    "@media (hover: hover) and (pointer: fine)": {
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.05)"
-                                : "rgba(0,0,0,0.03)",
-                        },
-                    },
-                    "&.Mui-selected": {
-                        backgroundColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.12)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                        "@media (hover: hover) and (pointer: fine)": {
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                            },
-                        },
-                    },
-                }}
-                onClick={handleClick}
-            >
-                {/* Type icon */}
-                <Box
-                    sx={{
-                        width: 18,
-                        height: 18,
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: typeColor,
-                    }}
-                >
-                    {getTypeIcon(noteType)}
-                </Box>
-
-                <ListItemContent sx={{ minWidth: 0 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            fontWeight: isSelected ? 500 : 400,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
-                            fontSize: "0.775rem",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        {note.title || t.notes.defaults.untitled}
-                    </Typography>
-                    {subLabel && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                                fontSize: "0.65rem",
-                            }}
-                        >
-                            {subLabel}
-                        </Typography>
-                    )}
-                </ListItemContent>
-                {hasUnread && (
-                    <Box
-                        sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            flexShrink: 0,
-                            backgroundColor: isDark
-                                ? "var(--gp-brandalt-400)"
-                                : "var(--gp-brand-700)",
-                        }}
-                    />
-                )}
-            </ListItemButton>
-        </ListItem>
+        <NavItem
+            as="div"
+            selected={isSelected}
+            unread={hasUnread}
+            icon={getTypeIcon(noteType)}
+            label={note.title || t.notes.defaults.untitled}
+            lines={subLabel ? 2 : 1}
+            secondary={subLabel}
+            onClick={handleClick}
+        />
     );
 }
 

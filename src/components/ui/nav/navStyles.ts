@@ -30,6 +30,22 @@ export const NAV_TWO_LINE_FACTOR = 1.5;
 /** Horizontal padding of a row, in px (the 4px grid: 8). */
 export const NAV_PAD_X = 8;
 
+/** Space above and below a row, in px: rows sit 2px apart. */
+export const NAV_ROW_GAP = 1;
+/** Class for an action that carries state and so is never hidden. */
+export const NAV_KEEP_CLASS = "NavItem-keep";
+
+/** The list that holds a folder's children: one tree level in, with a hairline
+ *  guide. Joy's own nested inset is switched off, the row owns its indent. */
+export const navNestedListSx = {
+    "--List-nestedInsetStart": "0px",
+    "--List-padding": "0px",
+    "--List-gap": "0px",
+    marginInlineStart: "8px",
+    paddingInlineStart: "7px",
+    borderInlineStart: `1px solid ${g.border.subtle}`,
+} as const;
+
 /** Matches every way a row says "I am the selected one": NavItem's own
  *  attribute, a Joy Tab (`aria-selected`) and Joy's `Mui-selected`. */
 export const NAV_SELECTED = '&[data-selected="true"], &[aria-selected="true"], &.Mui-selected';
