@@ -89,7 +89,7 @@ describe("Bubble actions toolbar", () => {
         );
         expect(screen.queryByText("act")).toBeNull();
         rerender(
-            <Bubble actions={<button>act</button>} actionsOpen layout="compact">
+            <Bubble actions={<button>act</button>} layout="compact" actionsOpen>
                 x
             </Bubble>
         );
@@ -113,8 +113,8 @@ describe("Bubble actions toolbar", () => {
             render(
                 <Bubble
                     actions={<button>act</button>}
-                    actionsOpen
                     layout={layout}
+                    actionsOpen
                     onClick={onClick}
                     onDoubleClick={onDoubleClick}
                 >

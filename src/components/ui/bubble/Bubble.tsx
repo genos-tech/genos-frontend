@@ -53,9 +53,10 @@ export type BubbleProps = {
     /** The avatar. `"reserve"` keeps its column empty so a grouped follow-up
      *  message lines up under the first; omit for no column at all. */
     avatar?: ReactNode | "reserve";
-    /** `"gutter"`: the text sits beside the avatar (below `md` the body spans
-     *  the full width under it, MIP-1033). `"stacked"`: the avatar sits in the
-     *  header line and the body takes the full width. Compact layout only. */
+    /** `"gutter"` (the compact row's default): the text sits beside the avatar
+     *  (below `md` the body spans the full width under it, MIP-1033).
+     *  `"stacked"` (the balloon's default): the avatar sits in the header line
+     *  and the body takes the full width. */
     align?: "gutter" | "stacked";
     /** The author line: `BubbleAuthor` + `BubbleMeta`, or a task-card header. */
     header?: ReactNode;
@@ -77,6 +78,8 @@ export type BubbleProps = {
     tail?: boolean;
     /** Space between the author line and the body, in theme spacing units. */
     bodyOffset?: number;
+    /** Space above the footer when the text sits beside the avatar. */
+    footerOffset?: number;
     /** Rendered inside the root, outside the visual surface (emoji picker, a
      *  delete dialog), so it survives the toolbar unmounting. */
     overlay?: ReactNode;
@@ -193,7 +196,7 @@ export const Bubble = (props: BubbleProps) => {
         emphasis = false,
         selected = false,
         avatar,
-        align = "gutter",
+        align: alignProp,
         header,
         children,
         footer,
@@ -203,6 +206,7 @@ export const Bubble = (props: BubbleProps) => {
         interactive = false,
         tail = true,
         bodyOffset = 0.25,
+        footerOffset = 0.5,
         overlay,
         rootRef,
         toolbarRef,
@@ -221,19 +225,28 @@ export const Bubble = (props: BubbleProps) => {
         ) : null;
     const reveal = actions != null && actionsOpen === undefined ? cssRevealed : null;
 
+    const align = alignProp ?? (layout === "compact" ? "gutter" : "stacked");
     const hasGutter = avatar !== undefined && avatar !== null && avatar !== false;
 
     const content =
-        layout === "compact" && align === "stacked" ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0 }}>
+        align === "stacked" ? (
+            <Box sx={{ minWidth: 0 }}>
                 {(hasGutter || header != null) && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            minWidth: 0,
+                            mb: bodyOffset,
+                        }}
+                    >
                         {hasGutter && <Box sx={{ flexShrink: 0 }}>{gutterNode(avatar)}</Box>}
                         <Box sx={{ flex: 1, minWidth: 0 }}>{header}</Box>
                     </Box>
                 )}
                 {children}
-                {footer}
+                {footer != null && <Box sx={{ mt: footerOffset }}>{footer}</Box>}
             </Box>
         ) : hasGutter ? (
             // One grid, not a media-query restructure: the avatar spans the
@@ -267,7 +280,7 @@ export const Bubble = (props: BubbleProps) => {
                             gridColumn: { xs: "1 / -1", md: 2 },
                             gridRow: 3,
                             minWidth: 0,
-                            mt: 0.5,
+                            mt: footerOffset,
                         }}
                     >
                         {footer}

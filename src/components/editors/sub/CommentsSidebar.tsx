@@ -136,6 +136,7 @@ const ThreadRow = memo(
         return (
             <Bubble
                 align="stacked"
+                bodyOffset={0.5}
                 aria-pressed={selected}
                 component="button"
                 layout="compact"
@@ -148,7 +149,7 @@ const ThreadRow = memo(
                 }
                 footer={
                     replyCount > 0 || thread.resolved ? (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             {thread.resolved && (
                                 <Chip
                                     color="success"
