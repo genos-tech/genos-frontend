@@ -130,11 +130,14 @@ describe.each(cards)("priority chip on the $name", ({ renderCard }) => {
         // Hard-coded on purpose: the tests above read the same list the cards
         // do, so on their own they would pass for any colours.
         const expected: Record<string, string> = {
+            // MIP-1122: the priorities come from the one tone source. Low was
+            // green (it meant "done" everywhere else) and is gray now; Normal
+            // is the tokens' blue and Critical the one red.
             Minimal: "rgba(156, 163, 175, 0.75)",
-            Low: "rgba(52, 211, 153, 0.75)",
-            Normal: "rgba(59, 130, 246, 0.75)",
+            Low: "rgba(107, 114, 128, 0.75)",
+            Normal: "rgba(37, 99, 235, 0.75)",
             High: "rgba(245, 158, 11, 0.75)",
-            Critical: "rgba(239, 68, 68, 0.75)",
+            Critical: "rgba(220, 38, 38, 0.75)",
         };
         for (const [priority, rgba] of Object.entries(expected)) {
             const { unmount } = renderCard(priority);
@@ -143,9 +146,23 @@ describe.each(cards)("priority chip on the $name", ({ renderCard }) => {
         }
     });
 
-    it("uses the table's white label colour", () => {
-        renderCard("Normal");
-        expect(screen.getByText("Normal").style.color).toBe(normalised("white"));
+    it.each(REAL_PRIORITIES)("labels the %s chip with the table's label colour", (priority) => {
+        renderCard(priority);
+        const meta = priorities.find((p) => p.priority === priority)!;
+        expect(screen.getByText(priority).style.color).toBe(normalised(meta.textColor as string));
+    });
+
+    it("white where it reads, near-black where white would fail AA (amber and light gray)", () => {
+        const labelOf = (p: string) => {
+            const { unmount } = renderCard(p);
+            const c = screen.getByText(p).style.color;
+            unmount();
+            return c;
+        };
+        expect(labelOf("Normal")).toBe(normalised("#ffffff"));
+        expect(labelOf("Critical")).toBe(normalised("#ffffff"));
+        expect(labelOf("High")).toBe(normalised("#111114"));
+        expect(labelOf("Minimal")).toBe(normalised("#111114"));
     });
 
     it("uses the table's lighter tint in dark mode", () => {

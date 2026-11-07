@@ -45,6 +45,7 @@ import { TagListProps, TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
+import { statusSolid } from "../../meta/taskTone";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import { loadProjectTaskTemplates } from "../../services/loadProjectTaskTemplates";
 import { loadProjectTaskFieldRules } from "../../services/projectTaskFieldRules";
@@ -807,8 +808,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 status: {
                     code: 0,
                     status: "Open",
-                    color: "#0044c2",
-                    textColor: "white",
+                    ...statusSolid("Open"),
                 },
                 priority: { code: -1, priority: "", color: "", textColor: "" },
                 effortLevel: { code: -1, level: "", color: "", textColor: "" },

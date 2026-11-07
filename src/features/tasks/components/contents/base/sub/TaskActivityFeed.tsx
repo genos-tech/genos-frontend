@@ -32,8 +32,11 @@ import {
     TaskActivityProps,
     TaskTableProps,
 } from "../../../../../../types/tasks";
+import { isPriorityName, isStatusName } from "../../../../meta/taskTone";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
+import { PriorityIcon } from "../../../meta/PriorityIcon";
+import { StatusLabel } from "../../../meta/StatusLabel";
 import { RestoreBodyControl } from "./RestoreBodyControl";
 
 type ActivityMessages = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
@@ -844,6 +847,11 @@ const ValueChip = ({
     isDark: boolean;
 }) => {
     const { t } = useTranslation();
+    // A status or priority is drawn the way it is everywhere else (MIP-1122).
+    if (fieldName === "status" && isStatusName(label)) return <StatusLabel status={label} />;
+    if (fieldName === "priority" && isPriorityName(label)) {
+        return <PriorityIcon priority={label} showLabel />;
+    }
     const palette = paletteFor(fieldName, label);
     const displayLabel =
         fieldName === "status" || fieldName === "priority" || fieldName === "effort_level"

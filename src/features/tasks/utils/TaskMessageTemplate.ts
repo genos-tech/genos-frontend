@@ -1,14 +1,20 @@
 import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { priorityTone, statusTone, Tone } from "../meta/taskTone";
 import { Milestone } from "../sprint-milestone/types";
 import { effortLevels, priorities, statuses } from "./taskMeta";
 
 // BlockNote ships a fixed palette for `textColor` (see
 // `@blocknote/core/src/editor/defaultColors.ts`). Anything else gets
 // passed through as a CSS color string and breaks the dark/light
-// theming, so we map taskMeta's hex codes to the closest named slot
-// here. Keep this table in sync if `taskMeta.ts` ever picks new colors.
+// theming, so a value maps to the closest named slot here.
+//
+// Statuses and priorities map by TONE (MIP-1122), not by hex: this used to be a
+// hex lookup that had to be "kept in sync" with taskMeta, and when the
+// status colors moved onto the design tokens it would have silently lost
+// every color. Only effort levels, which still carry their own hex palette,
+// use the hex table below.
 type BlockNoteTextColor =
     | "default"
     | "gray"
@@ -27,17 +33,21 @@ type BlockNoteTextColor =
 // through the alphabetical `sort-keys` rule which produces a less
 // readable order for arbitrary hex strings.
 const HEX_TO_BLOCKNOTE_PALETTE: Record<string, BlockNoteTextColor> = Object.fromEntries([
-    ["#0044c2", "blue"], // status Open
-    ["#ff8c00", "orange"], // status WIP
-    ["#b900ff", "purple"], // status Pending
-    ["#1dc200", "green"], // status Closed
-    ["#ff2323", "red"], // status Deleted
-    ["#9CA3AF", "gray"], // Minimal (priority/effort)
-    ["#34D399", "green"], // Low (priority/effort)
-    ["#3B82F6", "blue"], // Normal (priority) / Moderate (effort)
-    ["#F59E0B", "orange"], // High (priority/effort)
-    ["#EF4444", "red"], // Critical (priority) / Extensive (effort)
+    ["#9CA3AF", "gray"], // Minimal (effort)
+    ["#34D399", "green"], // Low (effort)
+    ["#3B82F6", "blue"], // Moderate (effort)
+    ["#F59E0B", "orange"], // High (effort)
+    ["#EF4444", "red"], // Extensive (effort)
 ] as const);
+
+const TONE_TO_BLOCKNOTE: Record<Tone, BlockNoteTextColor> = {
+    danger: "red",
+    info: "blue",
+    muted: "gray",
+    neutral: "gray",
+    success: "green",
+    warning: "orange",
+};
 
 const paletteFromHex = (hex: string | null | undefined): BlockNoteTextColor => {
     if (!hex) return "default";
@@ -63,16 +73,17 @@ const NEUTRAL_FALLBACK_CHIP: ColoredValueChip = {
 // chat colours always match the rest of the task UI. Whatever label
 // the backend sends is the same key we look up — no second translation
 // table to drift.
-const buildChipLookup = <T extends { color: string | null }>(
+const buildChipLookup = <T>(
     items: readonly T[],
-    labelOf: (item: T) => string | null
+    labelOf: (item: T) => string | null,
+    colorOf: (item: T) => BlockNoteTextColor
 ): Record<string, ColoredValueChip> => {
     const out: Record<string, ColoredValueChip> = {};
     for (const item of items) {
         const label = labelOf(item);
         if (!label) continue;
         out[label] = {
-            styles: { bold: true, textColor: paletteFromHex(item.color) },
+            styles: { bold: true, textColor: colorOf(item) },
             text: label,
             type: "text",
         };
@@ -80,9 +91,21 @@ const buildChipLookup = <T extends { color: string | null }>(
     return out;
 };
 
-const STATUS_CHIPS = buildChipLookup(statuses, (s) => s.status);
-const PRIORITY_CHIPS = buildChipLookup(priorities, (p) => p.priority);
-const EFFORT_CHIPS = buildChipLookup(effortLevels, (e) => e.level);
+const STATUS_CHIPS = buildChipLookup(
+    statuses,
+    (s) => s.status,
+    (s) => TONE_TO_BLOCKNOTE[statusTone(s.status)]
+);
+const PRIORITY_CHIPS = buildChipLookup(
+    priorities,
+    (p) => p.priority,
+    (p) => TONE_TO_BLOCKNOTE[priorityTone(p.priority)]
+);
+const EFFORT_CHIPS = buildChipLookup(
+    effortLevels,
+    (e) => e.level,
+    (e) => paletteFromHex(e.color)
+);
 
 const getStatusChip = (key: string | null | undefined): ColoredValueChip =>
     (key && STATUS_CHIPS[key]) || NEUTRAL_FALLBACK_CHIP;

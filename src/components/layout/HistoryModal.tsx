@@ -28,9 +28,9 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
     ChatHistoryEntry,
@@ -445,48 +445,6 @@ const CHIP_COLORS = {
     milestone: { light: "var(--gp-brand-700)", dark: "var(--gp-brandalt-400)" },
 } as const;
 
-// Canonical task-status palette used everywhere else in the app
-// (TaskPreview, SprintMilestonesSection, SprintManagerDialog). Keep
-// these in sync — the user reads the same color in the row as on the
-// task page itself.
-const STATUS_COLOR: Record<string, string> = {
-    Open: "#0044c2",
-    WIP: "#ff8c00",
-    Pending: "#b900ff",
-    Closed: "#1dc200",
-    Deleted: "#94a3b8",
-};
-
-// Matches the chip styling in TaskTitleBlock.tsx: solid-feel saturated
-// soft background (alpha 0.65 light / 0.25 dark), white text, soft 8px
-// radius border that picks up the same status color. Sized to match
-// `SmallChip` (size="sm" + 6px inline padding + 18px min-height +
-// 0.65rem text) so the row's chip stack reads as one consistent set;
-// only the saturated bg / white text distinguishes the status chip
-// as the row's primary signal.
-const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean }) => {
-    const color = STATUS_COLOR[status.trim()] ?? "#94a3b8";
-    return (
-        <Chip
-            size="sm"
-            variant="soft"
-            sx={{
-                "--Chip-paddingInline": "6px",
-                "--Chip-minHeight": "18px",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "0.65rem",
-                backgroundColor: alpha(color, isDark ? 0.25 : 0.65),
-                color: "#ffffff",
-                border: "1px solid",
-                borderColor: alpha(color, isDark ? 0.3 : 0.25),
-            }}
-        >
-            {status}
-        </Chip>
-    );
-};
-
 export const HistoryModal = ({
     open,
     onClose,
@@ -593,7 +551,7 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`task-${entry.taskId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
-                        chips={status ? <TaskStatusChip isDark={isDark} status={status} /> : null}
+                        chips={status ? <StatusLabel status={status} /> : null}
                         isDark={isDark}
                         relativeMessages={t.history.relative}
                         label={entry.label}

@@ -43,6 +43,7 @@ import {
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import type { TaskGraphScope } from "../../diagram/types";
+import { toneSolid } from "../../meta/taskTone";
 import {
     parseCustomFieldColKey,
     resolveTagOptions,
@@ -2131,8 +2132,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         label={t.tasks.filters.expired}
                         size="small"
                         sx={{
-                            backgroundColor: alpha("#ff2323", mode === "dark" ? 0.5 : 0.75),
-                            color: "white",
+                            // Past due is the danger tone (it was "#ff2323"), not Deleted's gray.
+                            backgroundColor: alpha(
+                                toneSolid("danger").bg,
+                                mode === "dark" ? 0.5 : 0.75
+                            ),
+                            color: toneSolid("danger").fg,
                             fontWeight: "bold",
                             borderRadius: "6px",
                         }}

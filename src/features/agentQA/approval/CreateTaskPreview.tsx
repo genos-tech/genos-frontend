@@ -7,21 +7,15 @@
 // than parsed.
 
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
-import { Box, Chip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { placeValue } from "./previewHelpers";
+import { MetaChip, placeValue } from "./previewHelpers";
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
-
-const MetaChip = ({ label }: { label: string }) => (
-    <Chip size="sm" sx={{ fontSize: "0.75rem", "--Chip-minHeight": "18px" }} variant="soft">
-        {label}
-    </Chip>
-);
 
 export const CreateTaskPreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const { t } = useTranslation();

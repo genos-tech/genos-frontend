@@ -1,3 +1,4 @@
+import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
 
 /**
@@ -45,15 +46,15 @@ export const MILESTONE_LIST_STATUSES: readonly string[] = [
 // (`TaskFilterMenu`) and any future surface that needs to render a
 // milestone status badge. Anything outside this map falls back to the
 // `Open` tone so an unknown / future status still renders sensibly.
+// Derived from the one tone source (MIP-1122), so a milestone's Pending reads as
+// a task's Pending. (Milestones auto-Block when a dependency blocks them.)
 export const MILESTONE_STATUS_CHIP_COLORS: Record<string, { color: string; textColor: string }> = {
-    Open: { color: "#0044c2", textColor: "#ffffff" },
-    WIP: { color: "#ff8c00", textColor: "#ffffff" },
-    // Milestones auto-Block too now (dependency-driven) — without this a
-    // blocked milestone chip fell back to the Open tone.
-    Blocked: { color: "#e11d48", textColor: "#ffffff" },
-    Pending: { color: "#b900ff", textColor: "#ffffff" },
-    Closed: { color: "#1dc200", textColor: "#ffffff" },
-    Deleted: { color: "#ff2323", textColor: "#ffffff" },
+    Open: statusSolid("Open"),
+    WIP: statusSolid("WIP"),
+    Blocked: statusSolid("Blocked"),
+    Pending: statusSolid("Pending"),
+    Closed: statusSolid("Closed"),
+    Deleted: statusSolid("Deleted"),
 };
 
 /** Resolve the chip palette for a milestone status, falling back to the `Open` tone. */

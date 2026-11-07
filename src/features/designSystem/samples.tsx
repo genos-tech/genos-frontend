@@ -12,16 +12,14 @@
 
 import { ReactNode } from "react";
 import AddRounded from "@mui/icons-material/AddRounded";
-import BlockRounded from "@mui/icons-material/BlockRounded";
-import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import KeyboardArrowDownRounded from "@mui/icons-material/KeyboardArrowDownRounded";
-import PauseCircleOutlineRounded from "@mui/icons-material/PauseCircleOutlineRounded";
-import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
-import SignalCellularAltRounded from "@mui/icons-material/SignalCellularAltRounded";
-import TimelapseRounded from "@mui/icons-material/TimelapseRounded";
 import Box, { BoxProps } from "@mui/joy/Box";
 
 import { focusRing, g, type, TypeLevel } from "../../theme/tokens";
+import { PriorityIcon } from "../tasks/components/meta/PriorityIcon";
+import { StatusLabel } from "../tasks/components/meta/StatusLabel";
+import { Tag } from "../tasks/components/meta/Tag";
+import { StatusName } from "../tasks/meta/taskTone";
 
 const interactive = {
     transition: `background-color ${g.motion.fast} ${g.ease}, border-color ${g.motion.fast} ${g.ease}, color ${g.motion.fast} ${g.ease}`,
@@ -165,69 +163,9 @@ export const Input = ({
     />
 );
 
-/** Task status. Color lives in the ICON only; the label stays neutral, so
- *  a table of fifty rows doesn't turn into fifty colored pills. */
-export const STATUSES = {
-    Open: { icon: RadioButtonUncheckedRounded, color: g.info.text },
-    WIP: { icon: TimelapseRounded, color: g.warning.text },
-    Blocked: { icon: BlockRounded, color: g.danger.text },
-    Pending: { icon: PauseCircleOutlineRounded, color: g.text.tertiary },
-    Closed: { icon: CheckCircleRounded, color: g.success.text },
-} as const;
-export type Status = keyof typeof STATUSES;
-
-export const StatusLabel = ({
-    status,
-    iconOnly = false,
-}: {
-    status: Status;
-    iconOnly?: boolean;
-}) => {
-    const { icon: Icon, color } = STATUSES[status];
-    return (
-        <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
-            <Icon
-                // MUI renders titleAccess as <title> + role="img"; without
-                // it the icon is aria-hidden (decorative next to the label).
-                sx={{ fontSize: 16, color, flexShrink: 0 }}
-                titleAccess={iconOnly ? status : undefined}
-            />
-            {!iconOnly && (
-                <Text component="span" level="body-sm" tone="secondary">
-                    {status}
-                </Text>
-            )}
-        </Box>
-    );
-};
-
-/** Tags: neutral chips with a small color dot. The tag's own color (set by
- *  the user in the tag picker) is the dot, not the border and text. */
-export const Tag = ({ label, color }: { label: string; color: string }) => (
-    <Box
-        component="span"
-        sx={{
-            ...type("body-xs"),
-            fontWeight: 500,
-            color: g.text.secondary,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 0.625,
-            height: 20,
-            px: 0.75,
-            borderRadius: g.radius.xs,
-            border: `1px solid ${g.border.default}`,
-            background: g.surface.default,
-            whiteSpace: "nowrap",
-        }}
-    >
-        <Box
-            component="span"
-            sx={{ width: 6, height: 6, borderRadius: g.radius.full, background: color }}
-        />
-        {label}
-    </Box>
-);
+/** Task status, priority and tag: the SHARED components the app uses
+ *  (MIP-1122), re-exported so this page shows exactly what ships. */
+export { PriorityIcon, StatusLabel, Tag };
 
 /** Filter chip: field name + chosen value, never truncated to "Stat…".
  *  The bar wraps instead of clipping. An active filter is the only one
@@ -374,10 +312,10 @@ export const Avatar = ({ name, size = 20 }: { name: string; size?: number }) => 
 export type SampleTask = {
     id: string;
     title: string;
-    status: Status;
+    status: StatusName;
     tags?: { label: string; color: string }[];
     assignee: string;
-    priority?: "High" | "Critical";
+    priority?: "Minimal" | "Low" | "Normal" | "High" | "Critical";
 };
 
 /** A task-table row (53px today). Its height is `g.row.current`: 36px by
@@ -440,15 +378,7 @@ export const TaskRow = ({
                 ))}
             </Box>
         )}
-        {task.priority && (
-            <SignalCellularAltRounded
-                titleAccess={`${task.priority} priority`}
-                sx={{
-                    fontSize: 16,
-                    color: task.priority === "Critical" ? g.danger.text : g.warning.text,
-                }}
-            />
-        )}
+        <PriorityIcon priority={task.priority} />
         <Avatar name={task.assignee} />
     </Box>
 );

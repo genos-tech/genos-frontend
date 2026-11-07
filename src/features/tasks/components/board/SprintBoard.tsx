@@ -20,6 +20,7 @@ import { FONT_STACKS } from "../../../../theme/tokens/scales";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
+import { STATUS_TONE, statusSolid, toneSoftBg } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
@@ -65,40 +66,40 @@ export const COLUMNS: ColumnConfig[] = [
         title: "Open",
         titleKey: "columnOpen",
         status: "Open",
-        color: "#0044c2",
-        bgColor: "rgba(0, 68, 194, 0.1)",
+        color: statusSolid("Open").color,
+        bgColor: toneSoftBg(STATUS_TONE.Open, 0.1),
     },
     {
         id: "wip",
         title: "Work In Progress",
         titleKey: "columnWip",
         status: "WIP",
-        color: "#ff8c00",
-        bgColor: "rgba(255, 140, 0, 0.1)",
+        color: statusSolid("WIP").color,
+        bgColor: toneSoftBg(STATUS_TONE.WIP, 0.1),
     },
     {
         id: "blocked",
         title: "Blocked",
         titleKey: "columnBlocked",
         status: "Blocked",
-        color: "#e11d48",
-        bgColor: "rgba(225, 29, 72, 0.1)",
+        color: statusSolid("Blocked").color,
+        bgColor: toneSoftBg(STATUS_TONE.Blocked, 0.1),
     },
     {
         id: "closed",
         title: "Closed",
         titleKey: "columnClosed",
         status: "Closed",
-        color: "#1dc200",
-        bgColor: "rgba(29, 194, 0, 0.1)",
+        color: statusSolid("Closed").color,
+        bgColor: toneSoftBg(STATUS_TONE.Closed, 0.1),
     },
     {
         id: "pending",
         title: "Pending",
         titleKey: "columnPending",
         status: "Pending",
-        color: "#b900ff",
-        bgColor: "rgba(185, 0, 255, 0.1)",
+        color: statusSolid("Pending").color,
+        bgColor: toneSoftBg(STATUS_TONE.Pending, 0.1),
     },
 ];
 

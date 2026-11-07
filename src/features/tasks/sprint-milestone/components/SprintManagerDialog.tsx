@@ -23,18 +23,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
+import { STATUS_FILL } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { Sprint } from "../types";
 import { MILESTONE_LIST_STATUSES } from "../utils/sortMilestones";
 import { DeleteSprintModal } from "./DeleteSprintModal";
-
-const STATUS_COLOR: Record<string, string> = {
-    Open: "#0044c2",
-    WIP: "#ff8c00",
-    Pending: "#b900ff",
-    Closed: "#1dc200",
-    Deleted: "#94a3b8",
-};
 
 type Props = {
     open: boolean;
@@ -230,8 +223,8 @@ const SprintRow = ({
                                     size="sm"
                                     variant="soft"
                                     sx={{
-                                        color: STATUS_COLOR[m.status as string] ?? "#94a3b8",
-                                        backgroundColor: `${STATUS_COLOR[m.status as string] ?? "#94a3b8"}1A`,
+                                        color: STATUS_FILL[m.status as string] ?? "#94a3b8",
+                                        backgroundColor: `${STATUS_FILL[m.status as string] ?? "#94a3b8"}1A`,
                                     }}
                                 >
                                     {taskMetaLabel(m.status, t.tasks.filters)}

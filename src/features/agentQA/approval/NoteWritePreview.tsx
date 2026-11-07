@@ -9,22 +9,17 @@
 // note's create carries a server-resolved `chat_name`.
 
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import { Box, Chip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { agentMarkdownComponents, ExternalLink } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
+import { MetaChip } from "./previewHelpers";
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
-
-const MetaChip = ({ label }: { label: string }) => (
-    <Chip size="sm" sx={{ fontSize: "0.75rem", "--Chip-minHeight": "18px" }} variant="soft">
-        {label}
-    </Chip>
-);
 
 export const NoteWritePreview = ({ args, isDark }: ApprovalPreviewProps) => {
     const { t } = useTranslation();

@@ -72,13 +72,26 @@ describe("TaskActivityFeed -- the 'created' row (MIP-947)", () => {
         expect(screen.queryByText(/\{"title"/)).toBeNull();
     });
 
-    it("colours the starting status like every other status chip", () => {
-        // The created row has no field_name, so the chip must be told it is a
-        // status to get the status swatch (WIP is #ff8c00 in taskMeta).
+    it("draws the starting status like every other status: the shared label, in its tone", () => {
+        // The created row has no field_name, so the value must be told it is a
+        // status to get the status treatment (WIP is the warning tone, MIP-1122).
         renderFeed([row({ newValue: { title: TITLE, status: "WIP", is_milestone: false } })]);
-        const chip = screen.getByText("WIP").closest(".MuiChip-root") as HTMLElement;
-        expect(chip).toBeTruthy();
-        expect(getComputedStyle(chip).backgroundColor).toBe("rgb(255, 140, 0)");
+        const icon = screen
+            .getByText("WIP")
+            .parentElement!.querySelector('span[aria-hidden="true"]') as HTMLElement;
+        expect(icon).toBeTruthy();
+        expect(icon.style.color).toBe("var(--g-warning-text)");
+    });
+
+    it("a status whose tone is the muted one (Deleted) still gets the shared label", () => {
+        // `Deleted` and `Minimal` are muted but are real values: the feed once
+        // tested "tone is not muted" for "is a known status" and skipped both.
+        renderFeed([row({ newValue: { title: TITLE, status: "Deleted", is_milestone: false } })]);
+        const icon = screen
+            .getByText("Deleted")
+            .parentElement!.querySelector('span[aria-hidden="true"]') as HTMLElement;
+        expect(icon).toBeTruthy();
+        expect(icon.style.color).toBe("var(--g-text-tertiary)");
     });
 
     it("renders a created row with no value as just the sentence", () => {

@@ -62,6 +62,7 @@ import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
+import { STATUS_FILL, statusTone, toneSolid } from "../../meta/taskTone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -1076,18 +1077,6 @@ const MILESTONE_PROGRESS_CHIP_COLORS: Record<MilestoneProgressKey, { color: stri
     Other: { color: "#94a3b8" },
 } as Record<MilestoneProgressKey, { color: string }>;
 
-const STATUS_COLOR: Record<string, string> = {
-    Open: "#0044c2",
-    WIP: "#ff8c00",
-    // Milestones auto-Block too now (dependency-driven). Without this the
-    // chip fell through to the grey "#94a3b8" fallback; match the task
-    // "Blocked" tone from taskMeta.statuses.
-    Blocked: "#e11d48",
-    Pending: "#b900ff",
-    Closed: "#1dc200",
-    Deleted: "#94a3b8",
-};
-
 type MilestonePreviewInnerProps = {
     milestoneId: number;
     /** See TaskPreviewProps.hostZIndex. */
@@ -1147,7 +1136,7 @@ const milestoneToTaskProps = (
         status: {
             code: 0,
             status: m.status as string,
-            color: STATUS_COLOR[m.status as string] ?? "#94a3b8",
+            color: STATUS_FILL[m.status as string] ?? "#94a3b8",
             textColor: "white",
         },
         priority: {
@@ -2268,13 +2257,18 @@ const MilestonePreviewInner = ({
                                 fontSize: "0.75rem",
                                 px: 1.5,
                                 backgroundColor: alpha(
-                                    STATUS_COLOR[milestone.status as string] ?? "#666",
+                                    STATUS_FILL[milestone.status as string] ?? "#666",
                                     isDark ? 0.25 : 0.65
                                 ),
-                                color: "#ffffff",
+                                // White on the dark-mode tint; on the light-mode tint the
+                                // tone's own label color (near-black on amber, where white
+                                // fails AA). Was white in both.
+                                color: isDark
+                                    ? "#ffffff"
+                                    : toneSolid(statusTone(milestone.status as string)).fg,
                                 border: "1px solid",
                                 borderColor: alpha(
-                                    STATUS_COLOR[milestone.status as string] ?? "#666",
+                                    STATUS_FILL[milestone.status as string] ?? "#666",
                                     isDark ? 0.3 : 0.25
                                 ),
                             }}
