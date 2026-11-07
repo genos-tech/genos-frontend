@@ -2,25 +2,8 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useEffect, useRef, useState } from "react";
-import { filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    getDefaultReactSlashMenuItems,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -46,7 +29,6 @@ import { notifyActionError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -55,13 +37,10 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
-import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosChatToolbar } from "./genos/GenosToolbars";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
@@ -122,12 +101,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         },
         "mount"
     );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
@@ -338,90 +311,23 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             p: 0.7,
                         }}
                     >
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
-                            />
-
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            {/* Extra button to toggle code styles */}
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-
-                            {/* Extra button to toggle blue text & background */}
-                            {!isMobile && (
-                                <CustomEmojiToolbar
-                                    key={"customButton"}
-                                    setShowEmojiPicker={setShowEmojiPicker}
-                                />
-                            )}
-                            {!isMobile && (
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                            )}
-                        </FormattingToolbar>
+                        <GenosChatToolbar
+                            editor={editor}
+                            isMobile={isMobile}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setShowGifPicker={setShowGifPicker}
+                        />
                     </Box>
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
-                                    editor,
-                                    useTEM.teamMembers,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        // Replaces the default Slash Menu items with our custom ones.
-                        getItems={async (query) =>
-                            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                            teamMembers: useTEM.teamMembers,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>
