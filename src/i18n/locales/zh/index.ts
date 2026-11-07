@@ -1885,6 +1885,7 @@ export const zh: DeepPartial<Messages> = {
             externalShare: "与你的团队共享",
             messageReminder: "提醒",
             todoReminder: "待办提醒",
+            genosReport: "Genos 报告",
         },
         messageReminder: {
             headline: "你要求提醒你这条消息。",

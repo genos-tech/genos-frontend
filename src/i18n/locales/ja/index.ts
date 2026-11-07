@@ -2115,6 +2115,7 @@ export const ja: DeepPartial<Messages> = {
             externalShare: "チームと共有",
             messageReminder: "リマインダー",
             todoReminder: "To-Do リマインダー",
+            genosReport: "Genos レポート",
         },
         messageReminder: {
             headline: "このメッセージのリマインダーです。",

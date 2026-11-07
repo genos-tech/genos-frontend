@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
@@ -34,8 +35,10 @@ import {
     respondToExternalShare,
     respondToTeamConnection,
 } from "../../admin/services/teamConnections";
+import { GENOS_REPORT_ITEM_TYPE } from "../utils/genosReport";
 import { isActivityItemType } from "../utils/inboxItemTypes";
 import { DigestHeadline } from "./DigestHeadline";
+import { GenosReportBody } from "./GenosReportBody";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
 import { InboxTargetChip } from "./InboxTargetChip";
 
@@ -57,7 +60,11 @@ type RequestLabelKey =
     | "teamConnection"
     | "externalShare"
     | "messageReminder"
-    | "todoReminder";
+    | "todoReminder"
+    | "genosReport";
+
+// What Genos itself files in your inbox (the digest, a schedule's report).
+const GENOS_WRITES_TO_YOU = { dark: "#c084fc", light: "#9333ea" };
 
 const ITEM_TYPE_CONFIG: Record<
     number,
@@ -113,7 +120,7 @@ const ITEM_TYPE_CONFIG: Record<
     6: {
         labelKey: "digest",
         icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: { dark: "#c084fc", light: "#9333ea" },
+        colorScheme: GENOS_WRITES_TO_YOU,
     },
     // Cross-team sharing (7, 8). Teal, apart from the in-team request
     // hues above, because the thing that matters about these two is that
@@ -140,6 +147,15 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 14 }} />,
         colorScheme: { dark: "#c4b5fd", light: "#7c3aed" },
     },
+    // The report a member's own schedule produced (MIP-1149). Genos's
+    // colour, like the digest it sits beside on the Activities tab; the
+    // icon and the label tell the two apart. An activity, so no
+    // approve/reject; its body is `{title, text, sections}`.
+    10: {
+        labelKey: "genosReport",
+        icon: <ArticleRoundedIcon sx={{ fontSize: 14 }} />,
+        colorScheme: GENOS_WRITES_TO_YOU,
+    },
 };
 
 /** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
@@ -157,6 +173,9 @@ const EXTERNAL_SHARE = 8;
  *  `item_optionals.kind` says which. See `origin/services/message_reminders.py`
  *  and `origin/services/todo_reminders.py`. */
 const MESSAGE_REMINDER = 9;
+
+/** `item_type` for a schedule's report. See `utils/genosReport.ts`. */
+const GENOS_REPORT = GENOS_REPORT_ITEM_TYPE;
 
 /** `item_optionals.kind` for the to-do flavour of the type above. */
 const TODO_REMINDER_KIND = "todo_reminder";
@@ -246,6 +265,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const legacyBody =
         inboxItem.itemType !== DIGEST &&
         inboxItem.itemType !== MESSAGE_REMINDER &&
+        inboxItem.itemType !== GENOS_REPORT &&
         !Array.isArray(inboxItem.itemBody)
             ? (inboxItem.itemBody as unknown as { title?: string; text?: string } | null)
             : null;
@@ -497,6 +517,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         />
                     </Suspense>
                 )}
+                {inboxItem.itemType === GENOS_REPORT && (
+                    <GenosReportBody itemBody={inboxItem.itemBody} />
+                )}
                 {legacyText !== "" && (
                     <Typography
                         level="body-sm"
@@ -554,6 +577,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Stack>
                 )}
                 {inboxItem.itemType !== DIGEST &&
+                    inboxItem.itemType !== GENOS_REPORT &&
                     Array.isArray(inboxItem.itemBody) &&
                     inboxItem.itemBody[0]?.content?.length > 0 && (
                         <Box

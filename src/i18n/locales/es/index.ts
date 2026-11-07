@@ -2958,6 +2958,7 @@ export const es: DeepPartial<Messages> = {
             digest: "Resumen Genos",
             teamConnection: "Conexión de equipo",
             externalShare: "Compartido con tu equipo",
+            genosReport: "Informe de Genos",
         },
         messageReminder: {
             headline: "Pediste que te recordáramos este mensaje.",

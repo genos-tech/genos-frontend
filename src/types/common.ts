@@ -31,6 +31,10 @@ export type ReactionProps = {
 //              lent to your team; accepting admits nobody until your
 //              managers add people). 7 and 8 are answered over HTTP —
 //              `respondToTeamConnection` / `respondToExternalShare`.
+// itemType:9 : Reminder that came due (a message's or a to-do's).
+// itemType:10: Genos report: what a member's own schedule produced. NOT a
+//              request; `itemBody` is {title, text, sections} (`text` is the
+//              one-line summary). See `features/inbox/utils/genosReport.ts`.
 export type InboxItemProps = {
     itemId: number;
     itemBody: PartialBlock[] | any[];

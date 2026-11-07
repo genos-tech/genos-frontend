@@ -2916,6 +2916,7 @@ export const ar: DeepPartial<Messages> = {
             digest: "Genos هضم",
             teamConnection: "اتصال الفريق",
             externalShare: "مشتركة مع فريقك",
+            genosReport: "تقرير Genos",
         },
         messageReminder: {
             headline: "لقد طلبت تذكيرك بهذه الرسالة.",
