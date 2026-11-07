@@ -8,27 +8,25 @@ import {
     CircularProgress,
     Divider,
     IconButton,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Stack,
     Typography,
 } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 import type { Socket } from "socket.io-client";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PersonPicker } from "../../../../components/ui/PersonPicker";
 import { useAuth } from "../../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
     NoteFolderInviteGroup,
@@ -88,6 +86,7 @@ export const ModalTeamFolderMembers = (props: Props) => {
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const hostZIndex = useNoteModalHostZIndex();
+    const theme = useTheme();
     const { mentionGroups } = useMentionGroupsContext();
 
     const [members, setMembers] = useState<TeamNoteFolderMemberProps[]>([]);
@@ -254,206 +253,206 @@ export const ModalTeamFolderMembers = (props: Props) => {
     };
 
     return (
-        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 460, maxWidth: 560 }}>
-                <Typography level="title-md">
-                    {fmt(t.notes.teamNotes.membersTitle, { name: folder?.name ?? "" })}
-                </Typography>
-
-                {loading ? (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-                        <CircularProgress size="sm" />
-                    </Box>
-                ) : (
-                    <Stack spacing={1} sx={{ mt: 1, maxHeight: 260, overflowY: "auto" }}>
-                        {members.length === 0 && (
-                            <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
-                                {t.notes.teamNotes.noMembers}
-                            </Typography>
-                        )}
-                        {members.map((m) => {
-                            const via = groupLabel(m);
-                            const isSelf = m.userId === myself.userId;
-                            return (
-                                <Box
-                                    key={m.userId}
-                                    sx={{ alignItems: "center", display: "flex", gap: 1 }}
-                                >
-                                    {/* No presence dot: a roster row is
+        <ModalFrame
+            hostZIndex={hostZIndex}
+            open={open}
+            size="md"
+            title={fmt(t.notes.teamNotes.membersTitle, { name: folder?.name ?? "" })}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
+            actions={
+                <Button color="neutral" variant="plain" onClick={onClose}>
+                    {t.notes.sharing.done}
+                </Button>
+            }
+            onClose={onClose}
+        >
+            {loading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                    <CircularProgress size="sm" />
+                </Box>
+            ) : (
+                <Stack spacing={1} sx={{ mt: 1, maxHeight: 260, overflowY: "auto" }}>
+                    {members.length === 0 && (
+                        <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
+                            {t.notes.teamNotes.noMembers}
+                        </Typography>
+                    )}
+                    {members.map((m) => {
+                        const via = groupLabel(m);
+                        const isSelf = m.userId === myself.userId;
+                        return (
+                            <Box
+                                key={m.userId}
+                                sx={{ alignItems: "center", display: "flex", gap: 1 }}
+                            >
+                                {/* No presence dot: a roster row is
                                         about access, not availability. */}
-                                    <UserAvatar showPulseDot={false} size={26} userId={m.userId} />
-                                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                                        <Typography level="body-sm" noWrap>
-                                            {m.userName}
-                                            {isSelf ? ` (${t.notes.sharing.you})` : ""}
+                                <UserAvatar showPulseDot={false} size={26} userId={m.userId} />
+                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                    <Typography level="body-sm" noWrap>
+                                        {m.userName}
+                                        {isSelf ? ` (${t.notes.sharing.you})` : ""}
+                                    </Typography>
+                                    {via && (
+                                        <Typography level="body-xs" sx={{ opacity: 0.65 }}>
+                                            {fmt(t.notes.teamNotes.invitedViaGroup, {
+                                                group: via,
+                                            })}
                                         </Typography>
-                                        {via && (
-                                            <Typography level="body-xs" sx={{ opacity: 0.65 }}>
-                                                {fmt(t.notes.teamNotes.invitedViaGroup, {
-                                                    group: via,
-                                                })}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    <Chip size="sm" variant="soft">
-                                        {m.roleId === ROLE_OWNER
-                                            ? t.notes.sharing.roles.owner
-                                            : m.roleId === ROLE_EDITOR
-                                              ? t.notes.sharing.roles.editor
-                                              : t.notes.sharing.roles.viewer}
-                                    </Chip>
-                                    {canManage && m.roleId !== ROLE_OWNER && (
-                                        <AppTooltip title={t.notes.teamNotes.removeAccess}>
-                                            <IconButton
-                                                color="danger"
-                                                disabled={saving}
-                                                size="sm"
-                                                variant="plain"
-                                                onClick={() => void revoke(m.userId)}
-                                            >
-                                                <PersonRemoveRoundedIcon sx={{ fontSize: 16 }} />
-                                            </IconButton>
-                                        </AppTooltip>
                                     )}
                                 </Box>
-                            );
-                        })}
-                    </Stack>
-                )}
-
-                {canManage && (
-                    <>
-                        <Divider sx={{ my: 1.5 }} />
-
-                        <Typography level="title-sm">{t.notes.teamNotes.addGroup}</Typography>
-                        <Typography level="body-xs" sx={{ mb: 0.5, opacity: 0.7 }}>
-                            {t.notes.teamNotes.groupsHint}
-                        </Typography>
-                        <Select
-                            placeholder={t.notes.teamNotes.addGroup}
-                            size="sm"
-                            startDecorator={<GroupRoundedIcon sx={{ fontSize: 16 }} />}
-                            value={null}
-                            onChange={(_, value) => {
-                                const opt = availableGroups.find((o) => o.key === value);
-                                if (!opt) return;
-                                setPendingGroups((prev) => [
-                                    ...prev,
-                                    { type: opt.type, id: opt.id },
-                                ]);
-                            }}
-                        >
-                            {availableGroups.map((g) => (
-                                <Option key={g.key} value={g.key}>
-                                    {g.label}
-                                    {g.memberUserIds
-                                        ? ` · ${g.memberUserIds.length}`
-                                        : ` · ${
-                                              g.type === "project"
-                                                  ? t.notes.teamNotes.sourceProject
-                                                  : t.notes.teamNotes.sourceGm
-                                          }`}
-                                </Option>
-                            ))}
-                        </Select>
-
-                        <Typography level="title-sm" sx={{ mt: 1.5 }}>
-                            {t.notes.teamNotes.addPeople}
-                        </Typography>
-                        <PersonPicker
-                            myUserId={myself.userId}
-                            options={candidates}
-                            placeholder={t.notes.sharing.searchPlaceholder}
-                            onPick={(person) =>
-                                setPendingUserIds((prev) => [...prev, person.userId])
-                            }
-                        />
-
-                        {/* What the pending selection actually resolves to,
-                            so a group add is never a blind action. */}
-                        {(pendingGroups.length > 0 || pendingUserIds.length > 0) && (
-                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
-                                {pendingGroups.map((g) => {
-                                    const opt = groupOptions.find(
-                                        (o) => o.type === g.type && o.id === g.id
-                                    );
-                                    return (
-                                        <Chip
-                                            key={`g-${g.type}-${g.id}`}
-                                            color="primary"
+                                <Chip size="sm" variant="soft">
+                                    {m.roleId === ROLE_OWNER
+                                        ? t.notes.sharing.roles.owner
+                                        : m.roleId === ROLE_EDITOR
+                                          ? t.notes.sharing.roles.editor
+                                          : t.notes.sharing.roles.viewer}
+                                </Chip>
+                                {canManage && m.roleId !== ROLE_OWNER && (
+                                    <AppTooltip title={t.notes.teamNotes.removeAccess}>
+                                        <IconButton
+                                            color="danger"
+                                            disabled={saving}
                                             size="sm"
-                                            variant="soft"
-                                            onClick={() =>
-                                                setPendingGroups((prev) =>
-                                                    prev.filter(
-                                                        (p) =>
-                                                            !(p.type === g.type && p.id === g.id)
-                                                    )
-                                                )
-                                            }
+                                            variant="plain"
+                                            onClick={() => void revoke(m.userId)}
                                         >
-                                            {opt?.label ?? g.id} ✕
-                                        </Chip>
-                                    );
-                                })}
-                                {pendingUserIds.map((uid) => {
-                                    const m = (useTEM.teamMembers ?? []).find(
-                                        (x) => x.userId === uid
-                                    );
-                                    return (
-                                        <Chip
-                                            key={`u-${uid}`}
-                                            size="sm"
-                                            variant="soft"
-                                            onClick={() =>
-                                                setPendingUserIds((prev) =>
-                                                    prev.filter((p) => p !== uid)
-                                                )
-                                            }
-                                        >
-                                            {m?.userName ?? uid} ✕
-                                        </Chip>
-                                    );
-                                })}
-                            </Box>
-                        )}
-
-                        <Box sx={{ alignItems: "center", display: "flex", gap: 1, mt: 1.5 }}>
-                            <Select
-                                size="sm"
-                                sx={{ minWidth: 120 }}
-                                value={inviteRole}
-                                onChange={(_, v) => setInviteRole(Number(v) || ROLE_EDITOR)}
-                            >
-                                <Option value={ROLE_EDITOR}>{t.notes.sharing.roles.editor}</Option>
-                                <Option value={ROLE_VIEWER}>{t.notes.sharing.roles.viewer}</Option>
-                            </Select>
-                            <Box sx={{ flexGrow: 1 }}>
-                                {(previewUserIds.length > 0 || pendingGroups.length > 0) && (
-                                    <Typography level="body-xs" sx={{ opacity: 0.75 }}>
-                                        {previewIsExact
-                                            ? fmt(t.notes.teamNotes.memberCount, {
-                                                  count: previewUserIds.length,
-                                              })
-                                            : t.notes.teamNotes.memberCountApprox}
-                                    </Typography>
+                                            <PersonRemoveRoundedIcon sx={{ fontSize: 16 }} />
+                                        </IconButton>
+                                    </AppTooltip>
                                 )}
                             </Box>
-                            <Button
-                                loading={saving}
-                                disabled={
-                                    saving ||
-                                    (pendingUserIds.length === 0 && pendingGroups.length === 0)
-                                }
-                                onClick={() => void submit()}
-                            >
-                                {t.notes.sharing.invite}
-                            </Button>
-                        </Box>
-                    </>
-                )}
+                        );
+                    })}
+                </Stack>
+            )}
 
-                {/* Cross-team sharing, under the roster because it is the
+            {canManage && (
+                <>
+                    <Divider sx={{ my: 1.5 }} />
+
+                    <Typography level="title-sm">{t.notes.teamNotes.addGroup}</Typography>
+                    <Typography level="body-xs" sx={{ mb: 0.5, opacity: 0.7 }}>
+                        {t.notes.teamNotes.groupsHint}
+                    </Typography>
+                    <Select
+                        placeholder={t.notes.teamNotes.addGroup}
+                        size="sm"
+                        startDecorator={<GroupRoundedIcon sx={{ fontSize: 16 }} />}
+                        value={null}
+                        onChange={(_, value) => {
+                            const opt = availableGroups.find((o) => o.key === value);
+                            if (!opt) return;
+                            setPendingGroups((prev) => [...prev, { type: opt.type, id: opt.id }]);
+                        }}
+                    >
+                        {availableGroups.map((g) => (
+                            <Option key={g.key} value={g.key}>
+                                {g.label}
+                                {g.memberUserIds
+                                    ? ` · ${g.memberUserIds.length}`
+                                    : ` · ${
+                                          g.type === "project"
+                                              ? t.notes.teamNotes.sourceProject
+                                              : t.notes.teamNotes.sourceGm
+                                      }`}
+                            </Option>
+                        ))}
+                    </Select>
+
+                    <Typography level="title-sm" sx={{ mt: 1.5 }}>
+                        {t.notes.teamNotes.addPeople}
+                    </Typography>
+                    <PersonPicker
+                        myUserId={myself.userId}
+                        options={candidates}
+                        placeholder={t.notes.sharing.searchPlaceholder}
+                        onPick={(person) => setPendingUserIds((prev) => [...prev, person.userId])}
+                    />
+
+                    {/* What the pending selection actually resolves to,
+                            so a group add is never a blind action. */}
+                    {(pendingGroups.length > 0 || pendingUserIds.length > 0) && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+                            {pendingGroups.map((g) => {
+                                const opt = groupOptions.find(
+                                    (o) => o.type === g.type && o.id === g.id
+                                );
+                                return (
+                                    <Chip
+                                        key={`g-${g.type}-${g.id}`}
+                                        color="primary"
+                                        size="sm"
+                                        variant="soft"
+                                        onClick={() =>
+                                            setPendingGroups((prev) =>
+                                                prev.filter(
+                                                    (p) => !(p.type === g.type && p.id === g.id)
+                                                )
+                                            )
+                                        }
+                                    >
+                                        {opt?.label ?? g.id} ✕
+                                    </Chip>
+                                );
+                            })}
+                            {pendingUserIds.map((uid) => {
+                                const m = (useTEM.teamMembers ?? []).find((x) => x.userId === uid);
+                                return (
+                                    <Chip
+                                        key={`u-${uid}`}
+                                        size="sm"
+                                        variant="soft"
+                                        onClick={() =>
+                                            setPendingUserIds((prev) =>
+                                                prev.filter((p) => p !== uid)
+                                            )
+                                        }
+                                    >
+                                        {m?.userName ?? uid} ✕
+                                    </Chip>
+                                );
+                            })}
+                        </Box>
+                    )}
+
+                    <Box sx={{ alignItems: "center", display: "flex", gap: 1, mt: 1.5 }}>
+                        <Select
+                            size="sm"
+                            sx={{ minWidth: 120 }}
+                            value={inviteRole}
+                            onChange={(_, v) => setInviteRole(Number(v) || ROLE_EDITOR)}
+                        >
+                            <Option value={ROLE_EDITOR}>{t.notes.sharing.roles.editor}</Option>
+                            <Option value={ROLE_VIEWER}>{t.notes.sharing.roles.viewer}</Option>
+                        </Select>
+                        <Box sx={{ flexGrow: 1 }}>
+                            {(previewUserIds.length > 0 || pendingGroups.length > 0) && (
+                                <Typography level="body-xs" sx={{ opacity: 0.75 }}>
+                                    {previewIsExact
+                                        ? fmt(t.notes.teamNotes.memberCount, {
+                                              count: previewUserIds.length,
+                                          })
+                                        : t.notes.teamNotes.memberCountApprox}
+                                </Typography>
+                            )}
+                        </Box>
+                        <Button
+                            loading={saving}
+                            disabled={
+                                saving ||
+                                (pendingUserIds.length === 0 && pendingGroups.length === 0)
+                            }
+                            onClick={() => void submit()}
+                        >
+                            {t.notes.sharing.invite}
+                        </Button>
+                    </Box>
+                </>
+            )}
+
+            {/* Cross-team sharing, under the roster because it is the
                     same question about a different unit: the list above is
                     people, this is whole organizations. Only a PRIVATE
                     folder can be lent out — public means "every host member
@@ -461,28 +460,21 @@ export const ModalTeamFolderMembers = (props: Props) => {
                     would make the folder's ACL mean two things at once — so
                     the offer control is withheld rather than shown and
                     refused. Renders nothing at all for an unshared folder. */}
-                {folder && (
-                    <ObjectSharesSection
-                        borderColor="var(--joy-palette-divider)"
-                        hostTeamId={folder.hostTeamId ?? myself.teamId}
-                        labelColor="var(--joy-palette-text-tertiary)"
-                        myUserId={myself.userId}
-                        objectId={String(folder.folderId)}
-                        objectType="note_folder"
-                        socket={socket}
-                        valueColor="var(--joy-palette-text-primary)"
-                        canOffer={
-                            canManageTeam && folder.visibility === "private" && !isExternalFolder
-                        }
-                    />
-                )}
-
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                    <Button color="neutral" variant="plain" onClick={onClose}>
-                        {t.notes.sharing.done}
-                    </Button>
-                </Box>
-            </ModalDialog>
-        </Modal>
+            {folder && (
+                <ObjectSharesSection
+                    borderColor={g.border.default}
+                    hostTeamId={folder.hostTeamId ?? myself.teamId}
+                    labelColor={g.text.tertiary}
+                    myUserId={myself.userId}
+                    objectId={String(folder.folderId)}
+                    objectType="note_folder"
+                    socket={socket}
+                    valueColor={g.text.primary}
+                    canOffer={
+                        canManageTeam && folder.visibility === "private" && !isExternalFolder
+                    }
+                />
+            )}
+        </ModalFrame>
     );
 };

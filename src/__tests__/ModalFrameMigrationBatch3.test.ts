@@ -31,6 +31,11 @@ const FRAMES = {
     moveToFolder: "features/notes/my-notes/modals/ModalMoveToFolder.tsx",
     teamFolderName: "features/notes/team-notes/modals/ModalTeamFolderName.tsx",
     exportFolder: "features/notes/common/components/ModalExportFolder.tsx",
+    teamFolderTags: "features/notes/team-notes/modals/ModalTeamFolderTags.tsx",
+    teamFolderMembers: "features/notes/team-notes/modals/ModalTeamFolderMembers.tsx",
+    milestoneFolder: "features/tasks/components/sidebar/projects_subs/ModalMilestoneFolder.tsx",
+    mentionGroup: "components/layout/MentionGroupModal.tsx",
+    shareMeetLink: "features/chat/components/modals/ModalShareMeetLink.tsx",
     noteAsk: "features/noteAsk/NoteAskModal.tsx",
     threadAsk: "features/threadAsk/ThreadAskModal.tsx",
     spotlightSettings: "features/spotlight/SpotlightSettingsModal.tsx",
@@ -108,11 +113,14 @@ describe("migrated dialogs (batch 3)", () => {
             expect(move).not.toMatch(/zIndex=/);
             expect(move).toMatch(/hostZIndex=\{hostZIndex\}/);
             expect(code(FRAMES.exportFolder)).not.toMatch(/zIndex=/);
+            expect(code(FRAMES.milestoneFolder)).toMatch(/zIndex=\{10010\}/);
+            expect(code(FRAMES.shareMeetLink)).toMatch(/zIndex=\{10010\}/);
         });
 
         it("dialogs that were on Joy's default layer stay there", () => {
             expect(code(FRAMES.sprintConfig)).toMatch(joyLayer);
             expect(code(FRAMES.calendarEvent)).toMatch(joyLayer);
+            expect(code(FRAMES.mentionGroup)).toMatch(joyLayer);
         });
 
         it("to-do pane dialogs follow the to-do host, else their own layer", () => {
@@ -133,6 +141,8 @@ describe("migrated dialogs (batch 3)", () => {
                 FRAMES.noteHistory,
                 FRAMES.noteSharing,
                 FRAMES.teamFolderName,
+                FRAMES.teamFolderTags,
+                FRAMES.teamFolderMembers,
                 FRAMES.noteAsk,
             ]) {
                 const text = code(f);
@@ -155,6 +165,32 @@ describe("migrated dialogs (batch 3)", () => {
         it("profile dialogs: the user profile is on the profile layer, its time pickers above it", () => {
             expect(code(FRAMES.userProfile)).toMatch(/zIndex=\{PROFILE_MODAL_Z_INDEX\}/);
             expect(code(FRAMES.userProfileStatus).match(/zIndex=\{10020\}/g)).toHaveLength(2);
+        });
+    });
+
+    describe("UrlLinkModal (the preview host) keeps its own frame and its host arithmetic", () => {
+        // It is not a ModalFrame: the views inside carry their own headers and it floats an
+        // "open full page" and an X over them. Only its surface reads the tokens now.
+        const text = code("components/modals/UrlLinkModal.tsx");
+
+        it("reads the tokens", () => {
+            expect(text).not.toMatch(/rgba\(\s*\d/);
+            expect(text).not.toMatch(/isDark|useColorScheme|theme\.palette\.mode/);
+            expect(text).toMatch(/boxShadow: g\.shadow\.lg/);
+            expect(text).toMatch(/borderRadius: g\.radius\.lg/);
+        });
+
+        it("still stacks at its `zIndex` (default 10020) and lifts Joy's listbox popups +10", () => {
+            expect(text).toMatch(/const effectiveZIndex = zIndex \?\? 10020/);
+            expect(text).toMatch(/zIndex: effectiveZIndex,/);
+            expect(text).toMatch(/"--unstable_popup-zIndex": effectiveZIndex \+ 10/);
+            expect(text).toMatch(
+                /'& ~ \[role="listbox"\]': \{ "--unstable_popup-zIndex": effectiveZIndex \+ 10 \}/
+            );
+        });
+
+        it("passes the same layer to every view as `hostZIndex`", () => {
+            expect(text.match(/hostZIndex=\{effectiveZIndex\}/g)).toHaveLength(5);
         });
     });
 

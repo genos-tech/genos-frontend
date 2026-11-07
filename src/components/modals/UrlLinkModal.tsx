@@ -1,7 +1,6 @@
 import { lazy, Suspense } from "react";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import { CircularProgress, IconButton, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -14,6 +13,7 @@ import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMiles
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -46,21 +46,20 @@ const ViewLoadingFallback = () => (
     </Stack>
 );
 
-// Shared look for chrome that floats over whichever view is mounted:
-// translucent + blurred so it stays legible against the header (or the
-// content) scrolling underneath it. Both background and colour are
-// per-mode — a hardcoded white-on-white made the ✕ vanish in dark mode,
-// where Joy's default icon colour is already light.
-const floatingChromeSx = (isDark: boolean) => ({
+// Shared look for chrome that floats over whichever view is mounted: a flat
+// raised chip with one thin line, so it stays legible against the header (or
+// the content) scrolling underneath it, in both color schemes (tokens switch
+// with the mode; a hardcoded white-on-white once made the X vanish in dark).
+const floatingChromeSx = {
     zIndex: 2,
-    backdropFilter: "blur(6px)",
-    backgroundColor: isDark ? "rgba(15, 15, 22, 0.6)" : "rgba(255, 255, 255, 0.6)",
-    color: isDark ? "rgba(255, 255, 255, 0.92)" : "rgba(15, 23, 42, 0.78)",
+    backgroundColor: g.surface.raised,
+    border: `1px solid ${g.border.default}`,
+    color: g.text.secondary,
     "&:hover": {
-        backgroundColor: isDark ? "rgba(15, 15, 22, 0.85)" : "rgba(255, 255, 255, 0.85)",
-        color: isDark ? "rgba(255, 255, 255, 1)" : "rgba(15, 23, 42, 1)",
+        backgroundColor: g.hover,
+        color: g.text.primary,
     },
-});
+} as const;
 
 type UrlLinkModalProps = {
     target: ModalTarget | null;
@@ -96,8 +95,6 @@ type UrlLinkModalProps = {
 // via `onClose`. Sizing is viewport-relative so the dialog stays usable
 // on a wide range of screen sizes without overflowing.
 export const UrlLinkModal = (props: UrlLinkModalProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const { target, onClose, onOpenFullPage, zIndex, useTG, ...rest } = props;
     const effectiveZIndex = zIndex ?? 10020;
@@ -205,18 +202,17 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                 backdrop: {
                     sx: {
                         backdropFilter: "blur(2px)",
-                        backgroundColor: "rgba(0, 0, 0, 0.45)",
+                        backgroundColor: g.scrim,
                     },
                 },
             }}
             onClose={onClose}
         >
             <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 // `fullscreen` pins the dialog to all four edges of the modal
                 // root, so no height / width / centring transform is set for it.
                 layout={fullScreen ? "fullscreen" : "center"}
-                sx={(theme) => ({
+                sx={{
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -234,20 +230,13 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                                   "max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))",
                           }
                         : {
-                              border: "1px solid",
-                              borderColor:
-                                  theme.palette.mode === "dark"
-                                      ? "rgba(255, 255, 255, 0.08)"
-                                      : "rgba(0, 0, 0, 0.06)",
-                              borderRadius: "20px",
-                              boxShadow:
-                                  theme.palette.mode === "dark"
-                                      ? "0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)"
-                                      : "0 24px 60px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)",
+                              border: `1px solid ${g.border.default}`,
+                              borderRadius: g.radius.lg,
+                              boxShadow: g.shadow.lg,
                               height: "min(900px, 88vh)",
                               width: "min(1200px, 92vw)",
                           }),
-                })}
+                }}
             >
                 {/* Both labels open BELOW their button: this chrome is
                     flush against the dialog's top edge, so the default
@@ -261,15 +250,15 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                             aria-label={t.common.modalView.openFullPage}
                             size="md"
                             variant="plain"
-                            sx={(theme) => ({
-                                ...floatingChromeSx(theme.palette.mode === "dark"),
+                            sx={{
+                                ...floatingChromeSx,
                                 // Immediately left of the ✕ (12 + its 36px
                                 // width + an 8px gap). Both sit in the same
                                 // corner the views keep clear for chrome.
                                 position: "absolute",
                                 right: 56,
                                 top: 12,
-                            })}
+                            }}
                             onClick={onOpenFullPage}
                         >
                             <LaunchRoundedIcon sx={{ fontSize: 18 }} />
@@ -282,11 +271,11 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                         // tooltip is only a description — so name it here
                         // too, matching the label the tooltip shows.
                         aria-label={t.common.actions.close}
-                        sx={(theme) => ({
-                            ...floatingChromeSx(theme.palette.mode === "dark"),
+                        sx={{
+                            ...floatingChromeSx,
                             right: 12,
                             top: 12,
-                        })}
+                        }}
                     />
                 </AppTooltip>
                 <Suspense fallback={<ViewLoadingFallback />}>{renderBody()}</Suspense>
