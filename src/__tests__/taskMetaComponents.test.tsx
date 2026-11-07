@@ -69,6 +69,24 @@ describe("StatusLabel", () => {
         expect(() => render(<StatusLabel status={null} />)).not.toThrow();
     });
 
+    it("an unknown status shows its words and a neutral dash, never an Open circle", () => {
+        const { container, getByText } = render(<StatusLabel status="Review" />);
+        expect(getByText("Review")).toBeTruthy();
+        expect(container.querySelector("svg")!.getAttribute("data-testid")).toBe(
+            "HorizontalRuleRoundedIcon"
+        );
+        expect(iconWrapper(container).style.color).toBe("var(--g-text-secondary)");
+    });
+
+    it("no status at all is a dash, not an icon with no words", () => {
+        for (const empty of [null, undefined, "", "  "]) {
+            const { container, unmount } = render(<StatusLabel status={empty} />);
+            expect(container.textContent).toBe("—");
+            expect(container.querySelector("svg")).toBeNull();
+            unmount();
+        }
+    });
+
     it("shows the translated name, not the stored value", async () => {
         localStorage.setItem(LOCALE_STORAGE_KEY, "ja");
         await loadLocale("ja");
@@ -87,6 +105,14 @@ describe("StatusLabel", () => {
 });
 
 describe("PriorityIcon", () => {
+    it.each(["toString", "constructor", "__proto__"])(
+        "%s (an inherited member) renders nothing",
+        (p) => {
+            const { container } = render(<PriorityIcon priority={p} />);
+            expect(container.innerHTML).toBe("");
+        }
+    );
+
     it.each([undefined, null, "", "Medium", "urgent"])(
         "%s renders nothing (shown only when set)",
         (p) => {
@@ -160,6 +186,15 @@ describe("Tag", () => {
         expect(chip.style.border).toContain("var(--g-border");
         expect(chip.style.color).toContain("var(--g-text-secondary");
         expect(getByText("frontend")).toBeTruthy();
+    });
+
+    it("a missing or empty color still draws a visible neutral dot", () => {
+        for (const color of ["", undefined as unknown as string]) {
+            const { container, unmount } = render(<Tag color={color} label="x" />);
+            const dot = container.querySelector('span[aria-hidden="true"]') as HTMLElement;
+            expect(dot.style.background).toContain("var(--g-text-tertiary");
+            unmount();
+        }
     });
 
     it("a long label truncates instead of pushing the row wider", () => {

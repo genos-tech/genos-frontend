@@ -32,7 +32,7 @@ import {
     TaskActivityProps,
     TaskTableProps,
 } from "../../../../../../types/tasks";
-import { priorityTone, statusTone } from "../../../../meta/taskTone";
+import { isPriorityName, isStatusName } from "../../../../meta/taskTone";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
@@ -848,10 +848,8 @@ const ValueChip = ({
 }) => {
     const { t } = useTranslation();
     // A status or priority is drawn the way it is everywhere else (MIP-1122).
-    if (fieldName === "status" && statusTone(label, "muted") !== "muted") {
-        return <StatusLabel status={label} />;
-    }
-    if (fieldName === "priority" && priorityTone(label, "muted") !== "muted") {
+    if (fieldName === "status" && isStatusName(label)) return <StatusLabel status={label} />;
+    if (fieldName === "priority" && isPriorityName(label)) {
         return <PriorityIcon priority={label} showLabel />;
     }
     const palette = paletteFor(fieldName, label);

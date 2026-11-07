@@ -173,6 +173,17 @@ describe("chat task messages keep their colors", () => {
     });
 });
 
+describe("an expired (past-due) task", () => {
+    it("is drawn in the danger tone in the row too, not Deleted's gray", () => {
+        // It was a hard-coded red; mapping that hex to "Deleted" made it gray
+        // with white text. The row and the filter chip must agree.
+        const code = read("features/tasks/components/table/DraggableTaskRow.tsx");
+        const chip = code.slice(code.indexOf("t.tasks.filters.expired"));
+        expect(chip.slice(0, 600)).toContain('toneSolid("danger")');
+        expect(chip.slice(0, 600)).not.toContain('statusSolid("Deleted")');
+    });
+});
+
 describe("the migrated files do not re-declare the old status hexes", () => {
     const OLD = ["#0044c2", "#ff8c00", "#e11d48", "#b900ff", "#1dc200", "#ff2323"];
     const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");

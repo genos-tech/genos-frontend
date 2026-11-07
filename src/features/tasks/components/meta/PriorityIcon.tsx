@@ -1,7 +1,7 @@
 import PriorityHighRoundedIcon from "@mui/icons-material/PriorityHighRounded";
 
 import { useTranslation } from "../../../../i18n";
-import { PRIORITY_TONE, PriorityName, priorityTone, toneCss } from "../../meta/taskTone";
+import { isPriorityName, PriorityName, priorityTone, toneCss } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
 
 /** Filled bars out of four. MUI's own one-bar signal icon is a single short
@@ -52,8 +52,8 @@ type PriorityIconProps = {
  */
 export const PriorityIcon = ({ priority, showLabel = false, size = 16 }: PriorityIconProps) => {
     const { t } = useTranslation();
-    const name = (priority ?? "").trim() as PriorityName;
-    if (!name || !(name in PRIORITY_TONE)) return null;
+    if (!isPriorityName(priority)) return null;
+    const name = priority.trim() as PriorityName;
     const label = taskMetaLabel(name, t.tasks.filters) || name;
     return (
         <span

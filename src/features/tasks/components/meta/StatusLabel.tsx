@@ -23,6 +23,8 @@ type StatusLabelProps = {
 export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusLabelProps) => {
     const { t } = useTranslation();
     const name = (status ?? "").trim();
+    // No status at all: the dash the old chip showed, not an icon with no words.
+    if (!name) return <span style={{ color: "var(--g-text-tertiary)" }}>—</span>;
     const label = taskMetaLabel(name, t.tasks.filters) || name;
     const tone = statusTone(name);
     return (

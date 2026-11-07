@@ -10,6 +10,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+    isPriorityName,
+    isStatusName,
     PRIORITY_NAMES,
     PRIORITY_TONE,
     priorityTone,
@@ -60,6 +62,26 @@ describe("the mapping", () => {
         expect(statusTone(undefined, "info")).toBe("info");
         expect(priorityTone("Medium")).toBe("neutral"); // a legacy label
         expect(statusTone("  WIP ")).toBe("warning");
+    });
+
+    it.each(["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"])(
+        "%j is not a status or a priority (strings from the backend or an LLM must not find inherited members)",
+        (name) => {
+            expect(isStatusName(name)).toBe(false);
+            expect(isPriorityName(name)).toBe(false);
+            expect(statusTone(name)).toBe("neutral");
+            expect(priorityTone(name, "info")).toBe("info");
+        }
+    );
+
+    it("Deleted and Minimal ARE known, though their tone is the muted one", () => {
+        // "is the tone not muted?" is not "is it a status": it dropped both.
+        expect(isStatusName("Deleted")).toBe(true);
+        expect(isPriorityName("Minimal")).toBe(true);
+        expect(statusTone("Deleted")).toBe("muted");
+        expect(isStatusName("")).toBe(false);
+        expect(isStatusName(undefined)).toBe(false);
+        expect(isStatusName(" WIP ")).toBe(true);
     });
 
     it("the tones that tell people to act are not shared with calm ones", () => {

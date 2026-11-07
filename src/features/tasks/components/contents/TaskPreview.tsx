@@ -62,7 +62,7 @@ import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
-import { STATUS_FILL } from "../../meta/taskTone";
+import { STATUS_FILL, statusTone, toneSolid } from "../../meta/taskTone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -2260,7 +2260,12 @@ const MilestonePreviewInner = ({
                                     STATUS_FILL[milestone.status as string] ?? "#666",
                                     isDark ? 0.25 : 0.65
                                 ),
-                                color: "#ffffff",
+                                // White on the dark-mode tint; on the light-mode tint the
+                                // tone's own label color (near-black on amber, where white
+                                // fails AA). Was white in both.
+                                color: isDark
+                                    ? "#ffffff"
+                                    : toneSolid(statusTone(milestone.status as string)).fg,
                                 border: "1px solid",
                                 borderColor: alpha(
                                     STATUS_FILL[milestone.status as string] ?? "#666",

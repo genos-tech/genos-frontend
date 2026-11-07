@@ -83,6 +83,17 @@ describe("TaskActivityFeed -- the 'created' row (MIP-947)", () => {
         expect(icon.style.color).toBe("var(--g-warning-text)");
     });
 
+    it("a status whose tone is the muted one (Deleted) still gets the shared label", () => {
+        // `Deleted` and `Minimal` are muted but are real values: the feed once
+        // tested "tone is not muted" for "is a known status" and skipped both.
+        renderFeed([row({ newValue: { title: TITLE, status: "Deleted", is_milestone: false } })]);
+        const icon = screen
+            .getByText("Deleted")
+            .parentElement!.querySelector('span[aria-hidden="true"]') as HTMLElement;
+        expect(icon).toBeTruthy();
+        expect(icon.style.color).toBe("var(--g-text-tertiary)");
+    });
+
     it("renders a created row with no value as just the sentence", () => {
         renderFeed([row({ newValue: null })]);
         expect(screen.getByText("Ken")).toBeTruthy();

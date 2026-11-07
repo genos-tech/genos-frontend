@@ -61,15 +61,28 @@ export const PRIORITY_TONE: Record<PriorityName, Tone> = {
     Critical: "danger",
 };
 
+// Own-property checks, never `obj[key]`: a status or priority string can come
+// from the backend or an LLM, and "constructor" / "toString" would otherwise
+// find an inherited function on a plain object.
+const own = (o: object, key: string): boolean => Object.prototype.hasOwnProperty.call(o, key);
+
+/** Whether a string is one of the app's statuses (exact, trimmed). `Deleted`
+ *  is one: use this, not "is the tone not muted", to ask. */
+export const isStatusName = (status: string | null | undefined): status is StatusName =>
+    own(STATUS_TONE, (status ?? "").trim());
+
+export const isPriorityName = (priority: string | null | undefined): priority is PriorityName =>
+    own(PRIORITY_TONE, (priority ?? "").trim());
+
 /** The tone of a status; anything unknown (a legacy or future value) is
  *  `fallback`, which callers set to what they used to fall back to. */
 export const statusTone = (status: string | null | undefined, fallback: Tone = "neutral"): Tone =>
-    STATUS_TONE[(status ?? "").trim() as StatusName] ?? fallback;
+    isStatusName(status) ? STATUS_TONE[status.trim() as StatusName] : fallback;
 
 export const priorityTone = (
     priority: string | null | undefined,
     fallback: Tone = "neutral"
-): Tone => PRIORITY_TONE[(priority ?? "").trim() as PriorityName] ?? fallback;
+): Tone => (isPriorityName(priority) ? PRIORITY_TONE[priority.trim() as PriorityName] : fallback);
 
 // --- real colors -----------------------------------------------------------
 

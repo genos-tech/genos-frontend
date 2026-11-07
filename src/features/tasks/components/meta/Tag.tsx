@@ -48,7 +48,8 @@ export const Tag = ({
                 width: 5,
                 height: 5,
                 borderRadius: "50%",
-                background: color,
+                // No color, or an invalid one, still gets a visible neutral dot.
+                background: color || "var(--g-text-tertiary, #9ca3af)",
             }}
         />
         <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
