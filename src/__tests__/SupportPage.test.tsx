@@ -16,7 +16,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { en } from "../i18n/locales/en";
 import { ja } from "../i18n/locales/ja";
-import SupportPage, { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "../lp/SupportPage";
+import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "../lp/supportLabels";
+import SupportPage from "../lp/SupportPage";
 
 const renderPage = () =>
     render(
@@ -43,8 +44,10 @@ describe("SupportPage", () => {
         expect(SUPPORT_EMAIL).toBe("genos.support@genosai.dev");
         const link = screen.getByRole("link", { name: SUPPORT_EMAIL });
         expect(link.getAttribute("href")).toBe(`mailto:${SUPPORT_EMAIL}`);
-        // The link text is the address itself, so it is also readable and copyable as text.
-        expect(container.textContent).toContain(SUPPORT_EMAIL);
+        // The address also appears as plain text OUTSIDE the link, to copy if the link does nothing.
+        const plain = screen.getByTestId("support-email-text");
+        expect(plain.textContent).toBe(SUPPORT_EMAIL);
+        expect(plain.closest("a")).toBeNull();
         // It is the only mailto on the page.
         expect(container.querySelectorAll('a[href^="mailto:"]').length).toBe(1);
     });

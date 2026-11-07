@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useLpLang, type Lang } from "./lpLang";
+import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "./supportLabels";
 
 /**
  * `/support` — how to get help with Genos.
@@ -16,38 +17,12 @@ import { useLpLang, type Lang } from "./lpLang";
  * promise, no phone number, no chat widget, no contact form (there is no
  * backend for one). Do not add any of those unless they really exist.
  *
- * The "Connected AI apps" steps quote the app's own labels. They are the
+ * The "Connected AI apps" steps quote the app's own labels (`supportLabels.ts`). They are the
  * strings in `settings.tabs.developer` and `settings.connectedApps` (en/settings.ts
  * and ja/index.ts), shown by SettingsModal and ConnectedAppsSection. If those
  * labels change, change them here too; SupportPage.test.tsx compares the two,
  * so a rename fails the test instead of leaving the page pointing at nothing.
  */
-
-export const SUPPORT_EMAIL = "genos.support@genosai.dev";
-
-/** Labels of the Connected apps screen, exactly as the app shows them. */
-export const SUPPORT_UI_LABELS: Record<Lang, Record<string, string>> = {
-    en: {
-        settings: "Settings",
-        developer: "Developer",
-        connectedApps: "Connected apps",
-        change: "Change",
-        revoke: "Revoke",
-        scopeRead: "Read",
-        scopeWrite: "Read & write",
-        canDelete: "Can delete",
-    },
-    ja: {
-        settings: "設定",
-        developer: "Developer",
-        connectedApps: "接続済みアプリ",
-        change: "変更",
-        revoke: "取り消す",
-        scopeRead: "Read",
-        scopeWrite: "Read & write",
-        canDelete: "削除可",
-    },
-};
 
 const linkClass = "underline hover:text-violet-700 dark:hover:text-white";
 
@@ -68,6 +43,7 @@ const COPY: Record<
         lead: string;
         contactHeading: string;
         contactBody: string;
+        contactCopy: string;
         includeHeading: string;
         includeItems: string[];
         includeNote: string;
@@ -88,6 +64,7 @@ const COPY: Record<
         lead: "If something in Genos is not working, or you have a question about your account, write to us by email.",
         contactHeading: "Contact",
         contactBody: "Email us at",
+        contactCopy: "If the link does not open your mail app, copy the address:",
         includeHeading: "What to include",
         includeItems: [
             "The email address of your Genos account.",
@@ -126,6 +103,8 @@ const COPY: Record<
         lead: "Genos が思うように動かないときや、アカウントについてのご質問は、メールでご連絡ください。",
         contactHeading: "お問い合わせ",
         contactBody: "メールアドレス：",
+        contactCopy:
+            "リンクからメールアプリが開かない場合は、こちらのアドレスをコピーしてください：",
         includeHeading: "お知らせいただきたい内容",
         includeItems: [
             "Genos アカウントのメールアドレス。",
@@ -217,6 +196,10 @@ export default function SupportPage() {
                             <a className={linkClass} href={`mailto:${SUPPORT_EMAIL}`}>
                                 {SUPPORT_EMAIL}
                             </a>
+                        </p>
+                        <p className="mt-1 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                            {c.contactCopy}{" "}
+                            <span data-testid="support-email-text">{SUPPORT_EMAIL}</span>
                         </p>
                     </section>
 
