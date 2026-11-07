@@ -108,6 +108,8 @@ export type ModalFrameProps = {
     role?: "dialog" | "alertdialog";
     /** Show the X in the header. */
     closable?: boolean;
+    /** Accessible name of the X, when a more specific one than "Close" exists. */
+    closeLabel?: string;
     /** False while work is under way: Esc, the backdrop and the X do nothing. */
     dismissible?: boolean;
     /** Free-form marker for tests and styling hooks (e.g. "danger"). */
@@ -132,6 +134,7 @@ export const ModalFrame = ({
     hostZIndex,
     role = "dialog",
     closable = true,
+    closeLabel,
     dismissible = true,
     tone,
 }: ModalFrameProps) => {
@@ -270,7 +273,7 @@ export const ModalFrame = ({
                     )}
                     {closable && (
                         <IconButton
-                            aria-label={t.common.actions.close}
+                            aria-label={closeLabel ?? t.common.actions.close}
                             color="neutral"
                             disabled={!dismissible}
                             size="sm"

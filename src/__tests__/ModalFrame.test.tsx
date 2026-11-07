@@ -246,6 +246,14 @@ describe("ModalFrame", () => {
             expect(after(chip, close)).toBe(true);
         });
 
+        it("closeLabel names the X; the default is Close", () => {
+            const view = mount();
+            expect(screen.getByRole("button", { name: "Close" })).toBeTruthy();
+            view.unmount();
+            mount({ closeLabel: "Close history" });
+            expect(screen.getByRole("button", { name: "Close history" })).toBeTruthy();
+        });
+
         it("renders no accessory slot for a false or null accessory", () => {
             mount({ headerAccessory: false });
             expect(
