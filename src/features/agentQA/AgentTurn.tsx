@@ -66,8 +66,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { BubbleMeta } from "../../components/ui/bubble";
 import { fmt } from "../../i18n";
 import type { PendingApprovalPayload } from "../../services/agentApi";
+import { g, type } from "../../theme/tokens";
 import { entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdown";
@@ -82,12 +84,7 @@ import {
     rewriteCitations,
 } from "./citationUtils";
 import { FeedbackThumbs } from "./FeedbackThumbs";
-import {
-    DARK_TEXT_MEDIUM,
-    DARK_TEXT_SOFT,
-    DARK_TEXT_STRONG,
-    markdownAnswerSx,
-} from "./markdownAnswerSx";
+import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
 import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 import type { ToolEvent } from "./types";
@@ -359,9 +356,8 @@ const AgentTurnInner = ({
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.5,
-                opacity: isCurrent ? 1 : isDark ? 1 : 0.92,
                 // Reveal action buttons on hover; always visible on touch devices.
-                "& .turn-actions": { opacity: 0, transition: "opacity 0.15s" },
+                "& .turn-actions": { opacity: 0, transition: `opacity ${g.motion.fast}` },
                 "&:hover .turn-actions": { opacity: 1 },
                 "&:focus-within .turn-actions": { opacity: 1 },
                 "@media (hover: none)": { "& .turn-actions": { opacity: 1 } },
@@ -373,17 +369,15 @@ const AgentTurnInner = ({
                         display: "flex",
                         alignItems: "flex-start",
                         gap: 0.75,
-                        opacity: isDark ? 1 : 0.88,
                     }}
                 >
                     <Typography
                         level="body-sm"
                         sx={{
-                            fontWeight: 700,
+                            ...type("title-sm"),
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            opacity: isDark ? 1 : 0.7,
-                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            color: g.text.tertiary,
                             minWidth: 18,
                             mt: "2px",
                         }}
@@ -395,7 +389,7 @@ const AgentTurnInner = ({
                         sx={{
                             fontWeight: 500,
                             whiteSpace: "pre-wrap",
-                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                            color: g.text.primary,
                         }}
                     >
                         {askedQuery}
@@ -407,13 +401,12 @@ const AgentTurnInner = ({
                 <Typography
                     level="body-sm"
                     sx={{
-                        fontWeight: 700,
+                        ...type("title-sm"),
                         textTransform: "uppercase",
                         letterSpacing: "0.04em",
-                        opacity: isDark ? 1 : 0.75,
                         minWidth: 18,
                         mt: "2px",
-                        color: "primary.500",
+                        color: g.accent.text,
                     }}
                 >
                     {labels.turnLabelA}
@@ -425,13 +418,7 @@ const AgentTurnInner = ({
                                 size="sm"
                                 sx={{ "--CircularProgress-size": "12px" }}
                             />
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    opacity: isDark ? 1 : 0.75,
-                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                                }}
-                            >
+                            <Typography level="body-sm" sx={{ color: g.text.secondary }}>
                                 {labels.states.streaming}
                             </Typography>
                         </Box>
@@ -440,8 +427,7 @@ const AgentTurnInner = ({
                         <Typography
                             level="body-sm"
                             sx={{
-                                opacity: 0.85,
-                                color: "warning.500",
+                                color: g.warning.text,
                                 fontWeight: 600,
                                 mb: 0.5,
                             }}
@@ -484,7 +470,7 @@ const AgentTurnInner = ({
                     )}
 
                     {askError && (
-                        <Typography level="body-md" sx={{ color: "danger.500", mb: 0.5 }}>
+                        <Typography level="body-md" sx={{ color: g.danger.text, mb: 0.5 }}>
                             {askError}
                         </Typography>
                     )}
@@ -492,7 +478,7 @@ const AgentTurnInner = ({
                     {answer && (
                         <Box
                             sx={{
-                                ...markdownAnswerSx(isDark),
+                                ...markdownAnswerSx(),
                                 mb: chipSources.length > 0 ? 0.75 : 0,
                             }}
                         >
@@ -506,13 +492,7 @@ const AgentTurnInner = ({
                     )}
 
                     {(showThinking || showNoAnswer) && (
-                        <Typography
-                            level="body-md"
-                            sx={{
-                                opacity: isDark ? 1 : 0.75,
-                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                            }}
-                        >
+                        <Typography level="body-md" sx={{ color: g.text.secondary }}>
                             {showThinking ? labels.states.thinking : labels.states.noAnswer}
                         </Typography>
                     )}
@@ -532,19 +512,13 @@ const AgentTurnInner = ({
                         while streaming the spinner is the signal, and an
                         errored turn's timing is noise. */}
                     {typeof elapsedMs === "number" && !isStreaming && !askError && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                mt: 0.5,
-                                fontVariantNumeric: "tabular-nums",
-                                color: isDark ? DARK_TEXT_SOFT : undefined,
-                                opacity: isDark ? 0.9 : 0.6,
-                            }}
+                        <BubbleMeta
+                            sx={{ display: "block", fontVariantNumeric: "tabular-nums", mt: 0.5 }}
                         >
                             {fmt(labels.states.answeredIn, {
                                 duration: formatDurationMs(elapsedMs),
                             })}
-                        </Typography>
+                        </BubbleMeta>
                     )}
                 </Box>
             </Box>

@@ -348,7 +348,7 @@ export const ThreadAskModal = ({
                 {state.summary ? (
                     <Box
                         sx={{
-                            ...markdownAnswerSx(isDark),
+                            ...markdownAnswerSx(),
                             px: 1.25,
                             py: 1,
                             borderRadius: "md",

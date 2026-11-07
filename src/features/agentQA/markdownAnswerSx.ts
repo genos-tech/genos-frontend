@@ -6,6 +6,8 @@
 // The consuming `<Box sx={...}>` still owns layout-only props (`mb`,
 // `bgcolor` for the summary card, etc.) and merges this style in.
 
+import { g } from "../../theme/tokens";
+
 // Dark-mode body-text colour. Re-exported so consumers that share the
 // same look (badges, secondary labels) can keep importing from one
 // module — no risk of the two drifting apart.
@@ -16,11 +18,14 @@ export const DARK_TEXT_STRONG = "#f1e8ff";
 export const DARK_TEXT_MEDIUM = "#cebfeb";
 export const DARK_TEXT_SOFT = "#a89bbf";
 
-export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {
+// Roles, not values (MIP-1130): the answer reads the same tokens as every
+// message and comment, so it follows the theme and mode in CSS and takes no
+// `isDark`.
+export function markdownAnswerSx(): Record<string, unknown> {
     return {
         lineHeight: 1.65,
         fontSize: "1rem",
-        color: isDark ? DARK_TEXT_STRONG : undefined,
+        color: g.text.primary,
         // paragraphs — reset default browser margins
         "& p": { m: 0, mb: 0.75 },
         "& p:last-child": { mb: 0 },
@@ -32,17 +37,17 @@ export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {
         "& ol": { listStyleType: "decimal" },
         "& li": { mb: 0.5, display: "list-item" },
         "& li:last-child": { mb: 0 },
-        "& li::marker": { color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)" },
+        "& li::marker": { color: g.accent.text },
         // nested lists — tighter than top-level
         "& li > ul, & li > ol": { my: 0.25, pl: 2 },
         // code blocks
         "& pre": {
             overflowX: "auto",
-            borderRadius: "6px",
+            borderRadius: g.radius.sm,
             p: 1,
             my: 0.75,
             fontSize: "0.875rem",
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+            background: g.hover,
         },
         // inline code
         "& code": {
@@ -50,27 +55,27 @@ export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {
             fontSize: "0.85em",
             px: "0.3em",
             py: "0.1em",
-            borderRadius: "3px",
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+            borderRadius: g.radius.xs,
+            background: g.hover,
         },
         // reset code-inside-pre so the pre bg shows
         "& pre code": { background: "none", px: 0, py: 0 },
         // headings
-        "& h1, & h2, & h3": { mt: 1, mb: 0.5, fontWeight: 700 },
+        "& h1, & h2, & h3": { mt: 1, mb: 0.5, fontWeight: 600 },
         "& h1": { fontSize: "1.1em" },
         "& h2": { fontSize: "1.0em" },
         "& h3": { fontSize: "0.95em" },
         // bold / italic
-        "& strong": { fontWeight: 700 },
+        "& strong": { fontWeight: 600 },
         // links
         "& a": {
-            color: "primary.500",
+            color: g.accent.text,
             textDecoration: "underline",
             textUnderlineOffset: "2px",
         },
         // blockquotes
         "& blockquote": {
-            borderLeft: `3px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)"}`,
+            borderLeft: `3px solid ${g.border.strong}`,
             pl: 1.5,
             my: 0.5,
             opacity: 0.85,
@@ -83,19 +88,19 @@ export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {
             my: 0.75,
         },
         "& th, & td": {
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+            border: `1px solid ${g.border.default}`,
             px: 1,
             py: 0.5,
             textAlign: "left",
         },
         "& th": {
-            fontWeight: 700,
-            background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+            fontWeight: 600,
+            background: g.hover,
         },
         // horizontal rule
         "& hr": {
             border: "none",
-            borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+            borderTop: `1px solid ${g.border.subtle}`,
             my: 1,
         },
     };

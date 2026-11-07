@@ -2191,7 +2191,7 @@ const HistoryArchiveTurn = ({
                             {turn.error}
                         </Typography>
                     ) : (
-                        <Box sx={markdownAnswerSx(isDark)}>
+                        <Box sx={markdownAnswerSx()}>
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
