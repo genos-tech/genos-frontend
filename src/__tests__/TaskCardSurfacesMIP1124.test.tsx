@@ -169,8 +169,13 @@ describe("one status icon and color per status on the part-2 surfaces", () => {
         expect(mark(container)).toEqual([]);
         const icon = screen.getByText("High").closest("span[style]") as HTMLElement;
         expect(icon.style.color).toBe(toneCss(priorityTone("High")).text);
-        // Effort is plain words in the neutral color.
-        expect(cssOf(screen.getByText("Large"))).toContain("var(--g-text-secondary)");
+        // Effort is the shared EffortLabel (the table's), not a chip of the plan's own.
+        expect(
+            screen
+                .getByText("Large")
+                .closest("[data-effort-level]")
+                ?.getAttribute("data-effort-level")
+        ).toBe("Large");
     });
 });
 
