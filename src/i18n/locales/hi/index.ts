@@ -714,6 +714,11 @@ export const hi: DeepPartial<Messages> = {
             themeSystem: "सिस्टम",
             colorThemeLabel: "रंग थीम",
             colorThemeHelper: "पूरे ऐप में उच्चारण का रंग बदल देता है।",
+            densityLabel: "पंक्ति घनत्व",
+            densityHelper: "सूचियों और तालिकाओं में पंक्ति की ऊँचाई। तुरंत लागू होता है।",
+            densityCompact: "सघन",
+            densityDefault: "डिफ़ॉल्ट",
+            densityComfortable: "आरामदायक",
             colorThemes: {
                 purple: "बैंगनी",
                 blue: "नीला",

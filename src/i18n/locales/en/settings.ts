@@ -440,6 +440,11 @@ export const settings = {
         themeSystem: "System",
         colorThemeLabel: "Color theme",
         colorThemeHelper: "Changes the accent color across the whole app.",
+        densityLabel: "Density",
+        densityHelper: "Row height in lists and tables. Applies immediately.",
+        densityCompact: "Compact",
+        densityDefault: "Default",
+        densityComfortable: "Comfortable",
         colorThemes: {
             purple: "Purple",
             blue: "Blue",

@@ -67,6 +67,7 @@ export const AUTH_LOCAL_STORAGE_KEYS = [
 // signs in on the same device.
 export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
     "genos-theme-preference",
+    "genos-density-preference",
     // v2 only. This is a PRESERVE list, so the retired
     // `genos-bubble-style-preference` (v1) is deliberately absent —
     // leaving it here would carry the dead key across every user switch

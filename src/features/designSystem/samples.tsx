@@ -318,8 +318,10 @@ export type SampleTask = {
     priority?: "Minimal" | "Low" | "Normal" | "High" | "Critical";
 };
 
-/** A task-table row at 36px (53px today). IDs are tertiary text, not
- *  orange; priority shows only when it is set, not a flag on every row. */
+/** A task-table row (53px today). Its height is `g.row.current`: 36px by
+ *  default, 32 or 44 when the user picks another density (MIP-1119). IDs
+ *  are tertiary text, not orange; priority shows only when it is set, not
+ *  a flag on every row. */
 export const TaskRow = ({
     task,
     hovered = false,
@@ -330,11 +332,12 @@ export const TaskRow = ({
     compactColumns?: boolean;
 }) => (
     <Box
+        data-sample="task-row"
         sx={{
             display: "flex",
             alignItems: "center",
             gap: 1.5,
-            height: g.row.default,
+            height: g.row.current,
             px: 1.5,
             borderBottom: `1px solid ${g.border.subtle}`,
             background: hovered ? g.hover : "transparent",

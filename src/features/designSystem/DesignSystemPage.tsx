@@ -27,11 +27,12 @@ import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useColorTheme } from "../../theme/ColorThemeProvider";
+import { DENSITIES } from "../../theme/density";
 import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
 import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
 import { composite, contrast } from "../../theme/tokens/color";
 import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
-import { MOTION, RADIUS } from "../../theme/tokens/scales";
+import { MOTION, RADIUS, ROW } from "../../theme/tokens/scales";
 import { PRIORITY_NAMES, STATUS_NAMES } from "../tasks/meta/taskTone";
 import {
     Button,
@@ -809,10 +810,35 @@ const Labelled = ({
     </Panel>
 );
 
+/** The three row heights side by side. `data-g-density` re-points `--g-row`
+ *  inside each wrapper, so this shows all of them whatever the user chose. */
+const DensityStrip = () => (
+    <Box
+        sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+            gap: 1.5,
+        }}
+    >
+        {DENSITIES.map((d) => (
+            <Box key={d} data-g-density={d} data-testid={`density-${d}`}>
+                <Text level="body-xs" sx={{ mb: 0.5 }} tone="secondary">
+                    {d} · {ROW[d]}px
+                </Text>
+                <Panel>
+                    {TASKS.slice(0, 3).map((t, i) => (
+                        <TaskRow key={t.id} hovered={i === 1} task={t} compactColumns />
+                    ))}
+                </Panel>
+            </Box>
+        ))}
+    </Box>
+);
+
 const Components = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Labelled
-            note="36px rows instead of 53. Status color lives in the icon, IDs are quiet, priority shows only when set."
+            note="36px rows by default (53 today), 32 or 44 by the Density setting. Status color lives in the icon, IDs are quiet, priority shows only when set."
             title="Task table"
         >
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }}>
@@ -830,6 +856,13 @@ const Components = () => (
                     <TaskRow key={t.id} hovered={i === 2} task={t} />
                 ))}
             </Panel>
+        </Labelled>
+
+        <Labelled
+            note="Compact, Default and Comfortable. The table above follows the user's choice."
+            title="Row density"
+        >
+            <DensityStrip />
         </Labelled>
 
         <Box

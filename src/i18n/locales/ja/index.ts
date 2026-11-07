@@ -3368,6 +3368,11 @@ export const ja: DeepPartial<Messages> = {
             themeSystem: "システム",
             colorThemeLabel: "カラーテーマ",
             colorThemeHelper: "アプリ全体のアクセントカラーを変更します。",
+            densityLabel: "行の密度",
+            densityHelper: "リストや表の行の高さ。すぐに反映されます。",
+            densityCompact: "コンパクト",
+            densityDefault: "標準",
+            densityComfortable: "ゆったり",
             colorThemes: {
                 purple: "パープル",
                 blue: "ブルー",

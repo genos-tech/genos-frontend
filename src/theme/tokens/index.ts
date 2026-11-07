@@ -62,6 +62,9 @@ export const g = {
         compact: v("row-compact"),
         default: v("row-default"),
         comfortable: v("row-comfortable"),
+        /** The user's chosen row height (Settings -> Appearance -> Density).
+         *  A row that should follow the setting uses this, not a fixed step. */
+        current: v("row"),
     },
     motion: { fast: v("motion-fast"), base: v("motion-base"), slow: v("motion-slow") },
     ease: v("ease"),

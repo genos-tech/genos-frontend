@@ -101,6 +101,7 @@ import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { AccountSettingsSection } from "./AccountSettingsSection";
 import { ConnectedAppsSection } from "./ConnectedAppsSection";
+import { DensitySetting } from "./DensitySetting";
 import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { CreditUsageSection } from "./settings/CreditBalance";
@@ -347,6 +348,8 @@ const AppearanceSection = () => {
                 </Box>
                 <ColorThemeRow />
             </Stack>
+
+            <DensitySetting />
         </Sheet>
     );
 };

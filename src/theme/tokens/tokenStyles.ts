@@ -18,6 +18,7 @@
  * `themeStyles.ts`).
  */
 
+import { DENSITIES, installActiveDensity } from "../density";
 import { DEFAULT_THEME_ID, THEME_IDS, ThemeId } from "../themePalettes";
 import { alphaCss, buildRoles, Mode, RoleColors, SemanticRoles } from "./roles";
 import { CONTROL, FONT_STACKS, MOTION, RADIUS, ROW, SPACE, TYPE_SCALE } from "./scales";
@@ -82,6 +83,9 @@ export const scaleVars = (): [string, string][] => [
     ...Object.entries(SPACE).map(([k, v]): [string, string] => [`space-${spaceKey(k)}`, `${v}px`]),
     ...Object.entries(CONTROL).map(([k, v]): [string, string] => [`control-${k}`, `${v}px`]),
     ...Object.entries(ROW).map(([k, v]): [string, string] => [`row-${k}`, `${v}px`]),
+    // The row height the user chose (Settings -> Appearance -> Density). The
+    // bare `:root` value is the default density; `densityBlocks()` re-points it.
+    ["row", "var(--g-row-default)"],
     ["motion-fast", MOTION.fast],
     ["motion-base", MOTION.base],
     ["motion-slow", MOTION.slow],
@@ -123,9 +127,27 @@ const firstPaintDark = (): string =>
             .join("\n");
     }).join("\n\n")}\n}`;
 
+/**
+ * `--g-row` follows `data-density` on `<html>`. The `[data-g-density]` form
+ * lets the style-guide page show all three heights side by side inside a
+ * wrapper, the way `[data-g-theme]` does for themes. Declared after the
+ * `:root` block with higher specificity, so an unset or unknown attribute
+ * still resolves to the default row. "default" gets a block too: a
+ * `[data-g-density="default"]` wrapper inside a compact page must reset
+ * `--g-row` rather than inherit the page's value.
+ */
+const densityBlocks = (): string[] =>
+    DENSITIES.map((d) =>
+        block(
+            [`:root[data-density="${d}"]`, `[data-g-density="${d}"]`],
+            [["row", `var(--g-row-${d})`]]
+        )
+    );
+
 export const buildTokenStylesheet = (): string =>
     [
         block([":root"], scaleVars()),
+        ...densityBlocks(),
         ...THEME_IDS.flatMap((id) =>
             MODES.map((mode) => block(selectorsFor(id, mode), roleVars(buildRoles(id, mode))))
         ),
@@ -136,6 +158,9 @@ export const buildTokenStylesheet = (): string =>
  *  page calls it; P2 moves the call to boot, next to `installActiveTheme`. */
 export const installDesignTokens = (): void => {
     if (typeof document === "undefined") return;
+    // The density attribute is what `--g-row` keys on, so it is set here, in
+    // the same boot step as the stylesheet it selects into.
+    installActiveDensity();
     if (document.getElementById(STYLE_ELEMENT_ID)) return;
     const style = document.createElement("style");
     style.id = STYLE_ELEMENT_ID;

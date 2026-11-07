@@ -2949,6 +2949,11 @@ export const zh: DeepPartial<Messages> = {
             themeSystem: "跟随系统",
             colorThemeLabel: "色彩主题",
             colorThemeHelper: "更改整个应用的强调色。",
+            densityLabel: "行密度",
+            densityHelper: "列表和表格的行高。立即生效。",
+            densityCompact: "紧凑",
+            densityDefault: "默认",
+            densityComfortable: "宽松",
             colorThemes: {
                 purple: "紫色的",
                 blue: "蓝色的",
