@@ -15,6 +15,7 @@ import {
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { SPRINT_TONE, STATUS_NAMES, STATUS_TONE, toneJoyColor } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { Milestone, Sprint } from "../types";
 import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
@@ -69,26 +70,16 @@ const makeNoMilestone = (label: string): MilestoneOption => ({
     milestone: null,
 });
 
-const SPRINT_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
-    upcoming: "neutral",
-    active: "primary",
-    completed: "success",
-    archived: "neutral",
-};
+// Joy colors come from the one tone source (MIP-1122): Open is `primary` (Joy
+// has no info), Blocked is danger, and so on, exactly as they were.
+const SPRINT_STATUS_COLOR = Object.fromEntries(
+    Object.entries(SPRINT_TONE).map(([k, tone]) => [k, toneJoyColor(tone)])
+) as Record<string, "primary" | "warning" | "success" | "neutral">;
 
 const MILESTONE_STATUS_COLOR: Record<
     string,
     "primary" | "warning" | "danger" | "success" | "neutral"
-> = {
-    Open: "primary",
-    WIP: "warning",
-    // The API Blocks a milestone by itself when a dependency blocks it
-    // (MIP-1015); without this it fell back to the neutral "unknown" tone.
-    Blocked: "danger",
-    Pending: "neutral",
-    Closed: "success",
-    Deleted: "neutral",
-};
+> = Object.fromEntries(STATUS_NAMES.map((s) => [s, toneJoyColor(STATUS_TONE[s])]));
 
 // Shared listbox slot styling for both autocompletes. Joy's default
 // listbox lays options flush against each other with no breathing room

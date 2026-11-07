@@ -6,17 +6,24 @@ import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUnch
 import { Chip } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
+import { STATUS_TONE, toneBase, toneSoftBg } from "../meta/taskTone";
 import { taskMetaLabel } from "../utils/taskMeta";
 
-// Soft status swatch shared by every dashboard status chip. Moved here from
-// TaskHomeContent so the dashboard rows and the Assigned Milestones card
-// render the exact same chip.
+// Soft status swatch for the dashboard (stat tiles read `.bg`, and rewrite its
+// alpha by string, so it keeps the `rgba(r, g, b, 0.12)` shape). Derived from
+// the one tone source (MIP-1122): Pending used to be orange here and purple in
+// the table.
+const softSwatch = (status: "Open" | "WIP" | "Blocked" | "Pending" | "Closed") => {
+    const tone = STATUS_TONE[status];
+    return { bg: toneSoftBg(tone, 0.12), text: toneBase(tone) };
+};
+
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-    Open: { bg: "rgba(59,130,246,0.12)", text: "#3b82f6" },
-    WIP: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
-    Blocked: { bg: "rgba(244,63,94,0.12)", text: "#f43f5e" },
-    Pending: { bg: "rgba(251,146,60,0.12)", text: "#fb923c" },
-    Closed: { bg: "rgba(34,197,94,0.12)", text: "#22c55e" },
+    Open: softSwatch("Open"),
+    WIP: softSwatch("WIP"),
+    Blocked: softSwatch("Blocked"),
+    Pending: softSwatch("Pending"),
+    Closed: softSwatch("Closed"),
 };
 
 export const getStatusIcon = (status: string, size = 14) => {

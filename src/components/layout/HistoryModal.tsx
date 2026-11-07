@@ -31,6 +31,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { STATUS_FILL } from "../../features/tasks/meta/taskTone";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
     ChatHistoryEntry,
@@ -445,18 +446,6 @@ const CHIP_COLORS = {
     milestone: { light: "var(--gp-brand-700)", dark: "var(--gp-brandalt-400)" },
 } as const;
 
-// Canonical task-status palette used everywhere else in the app
-// (TaskPreview, SprintMilestonesSection, SprintManagerDialog). Keep
-// these in sync — the user reads the same color in the row as on the
-// task page itself.
-const STATUS_COLOR: Record<string, string> = {
-    Open: "#0044c2",
-    WIP: "#ff8c00",
-    Pending: "#b900ff",
-    Closed: "#1dc200",
-    Deleted: "#94a3b8",
-};
-
 // Matches the chip styling in TaskTitleBlock.tsx: solid-feel saturated
 // soft background (alpha 0.65 light / 0.25 dark), white text, soft 8px
 // radius border that picks up the same status color. Sized to match
@@ -465,7 +454,7 @@ const STATUS_COLOR: Record<string, string> = {
 // only the saturated bg / white text distinguishes the status chip
 // as the row's primary signal.
 const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean }) => {
-    const color = STATUS_COLOR[status.trim()] ?? "#94a3b8";
+    const color = STATUS_FILL[status.trim()] ?? "#94a3b8";
     return (
         <Chip
             size="sm"

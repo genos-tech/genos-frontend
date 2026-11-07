@@ -32,6 +32,7 @@ import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import type { TaskGraphScope } from "../../diagram/types";
+import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTaskTouched } from "../../services/taskEvents";
 import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
@@ -280,49 +281,43 @@ export const statusOptions = [
         label: "Open",
         labelKey: "open" as const,
         value: "Open",
-        color: "#0044c2",
-        textColor: "white",
-        icon: <CheckCircleOutlineIcon style={{ color: "white" }} />,
+        ...statusSolid("Open"),
+        icon: <CheckCircleOutlineIcon style={{ color: statusSolid("Open").textColor }} />,
     },
     {
         label: "WIP",
         labelKey: "wip" as const,
         value: "WIP",
-        color: "#ff8c00",
-        textColor: "white",
-        icon: <AutorenewIcon style={{ color: "white" }} />,
+        ...statusSolid("WIP"),
+        icon: <AutorenewIcon style={{ color: statusSolid("WIP").textColor }} />,
     },
     {
         label: "Blocked",
         labelKey: "blocked" as const,
         value: "Blocked",
-        color: "#e11d48",
-        textColor: "white",
-        icon: <BlockIcon style={{ color: "white" }} />,
+        ...statusSolid("Blocked"),
+        icon: <BlockIcon style={{ color: statusSolid("Blocked").textColor }} />,
     },
     {
         label: "Pending",
         labelKey: "pending" as const,
         value: "Pending",
-        color: "#b900ff",
-        textColor: "white",
-        icon: <PendingIcon style={{ color: "white" }} />,
+        ...statusSolid("Pending"),
+        icon: <PendingIcon style={{ color: statusSolid("Pending").textColor }} />,
     },
     {
         label: "Closed",
         labelKey: "closed" as const,
         value: "Closed",
-        color: "#1dc200",
-        textColor: "white",
-        icon: <CheckCircleOutlineIcon style={{ color: "white" }} />,
+        ...statusSolid("Closed"),
+        icon: <CheckCircleOutlineIcon style={{ color: statusSolid("Closed").textColor }} />,
     },
     {
         label: "Deleted",
         labelKey: "deleted" as const,
         value: "Deleted",
-        color: "#ff2323",
-        textColor: "white",
-        icon: <HighlightOffIcon style={{ color: "white" }} />,
+        ...statusSolid("Deleted"),
+        icon: <HighlightOffIcon style={{ color: statusSolid("Deleted").textColor }} />,
     },
 ];
 
