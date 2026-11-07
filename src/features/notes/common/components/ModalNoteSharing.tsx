@@ -149,6 +149,7 @@ export const ModalNoteSharing = ({
                 </Button>
             }
             clearBottomBar
+            ownsListboxPopups
             onClose={onClose}
         >
             {/* Current members */}

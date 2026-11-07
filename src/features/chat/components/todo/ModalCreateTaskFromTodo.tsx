@@ -274,9 +274,6 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
             icon={<TaskAltRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="md"
-            title={tc.heading}
-            // The page's own dialogs sit at Joy's modal layer; a host raises it.
-            zIndex={layer ?? theme.zIndex.modal}
             actions={
                 <>
                     <Button
@@ -296,7 +293,11 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                     </Button>
                 </>
             }
+            ownsListboxPopups
             onClose={onClose}
+            title={tc.heading}
+            // The page's own dialogs sit at Joy's modal layer; a host raises it.
+            zIndex={layer ?? theme.zIndex.modal}
         >
             {error && (
                 <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
@@ -337,13 +338,13 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                     <Autocomplete
                         disabled={isSubmitting || loadingProjects || noProjects}
                         getOptionLabel={(option) => option.projectName}
-                        isOptionEqualToValue={(option, value) =>
-                            option.projectId === value.projectId
-                        }
                         options={projects}
                         placeholder={loadingProjects ? tc.loadingProjects : tc.projectLabel}
                         size="sm"
                         value={projects.find((p) => p.projectId === projectId) ?? null}
+                        isOptionEqualToValue={(option, value) =>
+                            option.projectId === value.projectId
+                        }
                         renderOption={(optionProps, option) => (
                             // Joy's option component, same as
                             // `ACTeamProjects` — it carries the
@@ -385,11 +386,11 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                         showSprint={false}
                         sprintId={null}
                         useSM={useSM}
+                        onChangeSprint={() => undefined}
                         onChangeMilestone={(mid, taskId) => {
                             setMilestoneId(mid);
                             setMilestoneTaskId(taskId);
                         }}
-                        onChangeSprint={() => undefined}
                     />
                 </FormControl>
             </Stack>

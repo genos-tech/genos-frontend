@@ -68,17 +68,34 @@ const tokensOnly = (text: string) => {
     expect(text).not.toMatch(/ProfileModalStyles/);
 };
 
-describe("only one dialog claims every sibling listbox (ownsListboxPopups)", () => {
+describe("which dialogs claim sibling listboxes (ownsListboxPopups)", () => {
     // The rule is a global claim on every following sibling listbox in the page; two open
     // surfaces that both make it fight by stylesheet order (the invisible-dropdown bug,
-    // fe #122), so it is opt-in and only the Genos settings over Spotlight uses it.
-    it("is set by the Spotlight settings and by no migrated dialog", () => {
-        const read = (f: string) => readFileSync(join(src, f), "utf8");
-        expect(read("features/spotlight/SpotlightSettingsModal.tsx")).toMatch(
-            /\bownsListboxPopups\b/
-        );
+    // fe #122). The frame makes it opt-in, and only the dialogs that carried the same rule
+    // by hand before the migration opt in (parity, not a new claim): no other dialog does.
+    const OWNERS = [
+        "features/spotlight/SpotlightSettingsModal.tsx",
+        FRAMES.remindMe,
+        FRAMES.taskFromTodo,
+        FRAMES.scheduledTodos,
+        FRAMES.noteAsk,
+        FRAMES.noteHistory,
+        FRAMES.noteSharing,
+        FRAMES.moveToFolder,
+        FRAMES.teamFolderMembers,
+        FRAMES.teamFolderName,
+        FRAMES.teamFolderTags,
+        FRAMES.threadAsk,
+    ];
+    const read = (f: string) => readFileSync(join(src, f), "utf8");
+
+    it("the owners opt in", () => {
+        for (const file of OWNERS) expect(read(file), file).toMatch(/\bownsListboxPopups\b/);
+    });
+
+    it("no other migrated dialog does", () => {
         for (const file of Object.values(FRAMES)) {
-            if (file.endsWith("SpotlightSettingsModal.tsx")) continue;
+            if (OWNERS.includes(file)) continue;
             expect(read(file), file).not.toMatch(/ownsListboxPopups/);
         }
     });

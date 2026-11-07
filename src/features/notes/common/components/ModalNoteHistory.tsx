@@ -209,6 +209,7 @@ export const ModalNoteHistory = ({
             }
             flush
             headerDivider
+            ownsListboxPopups
             onClose={onClose}
         >
             {/* Body: split list / preview (stacked on a phone) */}

@@ -134,6 +134,7 @@ export const ModalRemindMe = ({
                       })
                     : (description ?? m.description)
             }
+            ownsListboxPopups
             onClose={onClose}
         >
             {error && (

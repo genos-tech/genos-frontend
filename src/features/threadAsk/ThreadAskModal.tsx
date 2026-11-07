@@ -286,6 +286,7 @@ export const ThreadAskModal = ({
                 </>
             }
             headerDivider
+            ownsListboxPopups
             onClose={state.close}
         >
             {/* Summary */}

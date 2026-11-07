@@ -111,9 +111,6 @@ export const ModalTeamFolderName = (props: Props) => {
             hostZIndex={hostZIndex}
             open={open}
             size="md"
-            title={title}
-            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
-            zIndex={theme.zIndex.modal}
             actions={
                 <>
                     <Button color="neutral" variant="plain" onClick={onClose}>
@@ -124,13 +121,17 @@ export const ModalTeamFolderName = (props: Props) => {
                     </Button>
                 </>
             }
+            ownsListboxPopups
             onClose={onClose}
+            title={title}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
         >
             <Stack spacing={2}>
                 <Input
-                    autoFocus
                     placeholder={t.notes.folders.folderNamePlaceholder}
                     value={name}
+                    autoFocus
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") submit();
@@ -203,10 +204,10 @@ export const ModalTeamFolderName = (props: Props) => {
                                                     return (
                                                         <Chip
                                                             key={connection.teamId}
+                                                            size="sm"
                                                             color={
                                                                 selected ? "primary" : "neutral"
                                                             }
-                                                            size="sm"
                                                             variant={
                                                                 selected ? "solid" : "outlined"
                                                             }

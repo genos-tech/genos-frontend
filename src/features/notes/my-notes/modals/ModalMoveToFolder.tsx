@@ -116,6 +116,7 @@ export const ModalMoveToFolder = (props: ModalMoveToFolderProps) => {
                     </Button>
                 </>
             }
+            ownsListboxPopups
             onClose={onClose}
         >
             {showDetachHint && (

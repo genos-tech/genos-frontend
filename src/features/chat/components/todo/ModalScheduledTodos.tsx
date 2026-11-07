@@ -217,6 +217,8 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
         <>
             <ModalFrame
                 description={ts.description}
+                open={open}
+                size="md"
                 icon={
                     editing ? (
                         <EditRoundedIcon sx={{ color: g.accent.text }} />
@@ -224,12 +226,11 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
                         <RepeatRoundedIcon sx={{ color: g.accent.text }} />
                     )
                 }
-                open={open}
-                size="md"
+                ownsListboxPopups
+                onClose={onClose}
                 title={editing ? ts.editHeading : ts.heading}
                 // The page's own dialogs sit at Joy's modal layer; a host raises it.
                 zIndex={layer ?? theme.zIndex.modal}
-                onClose={onClose}
             >
                 {error && (
                     <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
@@ -394,7 +395,6 @@ const ScheduleRow = ({
     return (
         <Box
             data-editing={editing ? "true" : undefined}
-            data-schedule-row
             sx={{
                 display: "flex",
                 alignItems: "center",
@@ -407,6 +407,7 @@ const ScheduleRow = ({
                 boxShadow: editing ? `0 0 0 1px ${g.accent.solid}` : undefined,
                 opacity: schedule.isActive ? 1 : 0.6,
             }}
+            data-schedule-row
         >
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 {/* The title as a to-do shows it: links clickable, # / @ as chips. */}

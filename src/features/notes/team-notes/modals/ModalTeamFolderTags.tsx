@@ -203,6 +203,7 @@ export const ModalTeamFolderTags = (props: Props) => {
                     </Button>
                 </>
             }
+            ownsListboxPopups
             onClose={onClose}
             description={t.notes.teamNotes.tagsHint}
             // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).

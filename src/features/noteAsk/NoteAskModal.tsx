@@ -130,6 +130,7 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
                 </Button>
             }
             headerDivider
+            ownsListboxPopups
             onClose={state.close}
         >
             {/* Summary */}
