@@ -55,7 +55,12 @@ import {
     type ProjectSavedFilter,
     type SavedFilterPayload,
 } from "../../services/projectSavedFilters";
-import { FilterChipButton, FilterDropdown, FilterMenu, FilterMenuItem } from "./filterBarParts";
+import {
+    FilterDropdown,
+    FilterIconMenuButton,
+    FilterMenu,
+    FilterMenuItem,
+} from "./filterBarParts";
 
 // Accent for this control — teal, deliberately outside the palette the
 // dimension filters use (status/tag colors, milestone orange, member
@@ -300,15 +305,13 @@ export const SavedFiltersMenu = ({
 
     return (
         <FilterDropdown open={menuOpen} onOpenChange={setMenuOpen}>
-            <AppTooltip title={ts.tooltip}>
-                <FilterChipButton
+            <AppTooltip title={appliedName ? `${ts.button}: ${appliedName}` : ts.tooltip}>
+                <FilterIconMenuButton
                     // AppTooltip writes its title onto the child as `aria-label`, so
                     // the accessible name is the tooltip sentence; the testid gives
                     // tests a stable handle without querying that sentence.
                     active={Boolean(appliedName)}
                     data-testid="saved-filters-button"
-                    field={ts.button}
-                    value={appliedName ?? ""}
                     onClick={() => {
                         // Refetch on open. These rows are shared, so a
                         // filter a teammate just created would otherwise
@@ -319,7 +322,9 @@ export const SavedFiltersMenu = ({
                         // rendered while it lands, so there's no flash.
                         if (!menuOpen) void refresh();
                     }}
-                />
+                >
+                    <BookmarksRoundedIcon />
+                </FilterIconMenuButton>
             </AppTooltip>
 
             <FilterMenu isDark={isDark} maxHeight="340px" minWidth="260px" styles={styles}>

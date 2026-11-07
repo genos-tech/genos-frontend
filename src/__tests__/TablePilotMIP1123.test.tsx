@@ -207,11 +207,12 @@ describe("FilterChipButton", () => {
     });
 });
 
-describe("the filter bar wraps instead of scrolling", () => {
-    it("no horizontal scroller and no 2-line clamp on the buttons", () => {
+describe("the filter bar scrolls sideways and never cuts a chip", () => {
+    it("one scrolling line, no wrap, no 2-line clamp on the buttons", () => {
         const bar = source("features/tasks/components/table/TaskFilterMenu.tsx");
-        expect(bar).toContain('flexWrap: "wrap"');
-        expect(bar).not.toContain('overflowX: "auto"');
+        expect(bar).toContain('flexWrap: "nowrap"');
+        expect(bar).toContain('overflowX: "auto"');
+        expect(bar).not.toContain('flexWrap: "wrap"');
         expect(bar).not.toContain("WebkitLineClamp");
         expect(bar).not.toContain("getFilterButtonStyle");
     });

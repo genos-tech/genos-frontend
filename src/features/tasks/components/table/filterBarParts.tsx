@@ -23,9 +23,11 @@ import {
     Chip,
     ChipDelete,
     Dropdown,
+    IconButton,
     Menu,
     MenuButton,
     MenuItem,
+    type IconButtonProps,
     type MenuButtonProps,
     type MenuItemProps,
 } from "@mui/joy";
@@ -134,7 +136,7 @@ export const BarChip = ({
 
 /**
  * A filter of the bar: the field and what is chosen, never cut to "Stat..." (the
- * bar wraps instead of clipping). Only a filter that is narrowing the list carries
+ * bar scrolls sideways instead of clipping). Only a filter that is narrowing the list carries
  * the accent (MIP-1123; the design page's `FilterChip` is the reference).
  *
  * The field name comes from the locale's "Status: {value}" template, so it stays
@@ -198,3 +200,57 @@ export const FilterChipButton = forwardRef<HTMLButtonElement, FilterChipButtonPr
         );
     }
 );
+
+// A compact icon-only control at the end of the bar (Saved Filters, Reset). The
+// name is the `AppTooltip` around it, which also writes it on as `aria-label`.
+const iconControlSx = (active: boolean) =>
+    ({
+        width: g.control.sm,
+        minWidth: g.control.sm,
+        height: g.control.sm,
+        minHeight: 0,
+        p: 0,
+        flexShrink: 0,
+        borderRadius: g.radius.sm,
+        border: `1px solid ${active ? g.accent.border : "transparent"}`,
+        background: active ? g.accent.subtle : "transparent",
+        color: active ? g.accent.text : g.text.secondary,
+        "--Icon-color": "currentColor",
+        "& svg": { fontSize: 18 },
+        "&:hover": {
+            background: active ? g.accent.subtle : g.hover,
+            color: active ? g.accent.text : g.text.primary,
+        },
+    }) as const;
+
+/** An icon button for a bar action (Reset). */
+export const FilterIconButton = forwardRef<
+    HTMLButtonElement,
+    Omit<IconButtonProps, "variant" | "color" | "sx" | "size">
+>(function FilterIconButton(props, ref) {
+    return (
+        <IconButton
+            {...props}
+            ref={ref}
+            color="neutral"
+            sx={iconControlSx(false)}
+            variant="plain"
+        />
+    );
+});
+
+/** The icon trigger of a bar dropdown (Saved Filters); `active` while a saved filter is applied. */
+export const FilterIconMenuButton = forwardRef<
+    HTMLButtonElement,
+    { active?: boolean } & Omit<MenuButtonProps, "variant" | "color" | "sx" | "size">
+>(function FilterIconMenuButton({ active = false, ...props }, ref) {
+    return (
+        <MenuButton
+            {...props}
+            ref={ref}
+            color="neutral"
+            sx={iconControlSx(active)}
+            variant="plain"
+        />
+    );
+});

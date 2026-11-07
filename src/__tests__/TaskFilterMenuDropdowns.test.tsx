@@ -13,7 +13,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskFilterMenu } from "../features/tasks/components/table/TaskFilterMenu";
 import {
-    predefinedEffortLevelFilters,
     predefinedPriorityFilters,
     predefinedStatusFilters,
 } from "../features/tasks/types/TaskTableTypes";
@@ -94,16 +93,16 @@ describe("the status dropdown", () => {
 });
 
 describe("the other dimensions", () => {
-    it.each([
-        ["Priority", predefinedPriorityFilters.find((p) => p.label === "High")!.label],
-        ["Effort", predefinedEffortLevelFilters.find((p) => p.label !== "All")!.label],
-    ])("%s opens its own menu and keeps it open while picking", async (prefix, pick) => {
-        mount();
-        fireEvent.click(trigger(new RegExp("^" + prefix)));
-        fireEvent.click(await screen.findByRole("menuitem", { name: new RegExp(pick) }));
-        expect(screen.getByRole("menu")).toBeTruthy();
-        expect(trigger(new RegExp("^" + prefix)).textContent).toContain(pick);
-    });
+    it.each([["Priority", predefinedPriorityFilters.find((p) => p.label === "High")!.label]])(
+        "%s opens its own menu and keeps it open while picking",
+        async (prefix, pick) => {
+            mount();
+            fireEvent.click(trigger(new RegExp("^" + prefix)));
+            fireEvent.click(await screen.findByRole("menuitem", { name: new RegExp(pick) }));
+            expect(screen.getByRole("menu")).toBeTruthy();
+            expect(trigger(new RegExp("^" + prefix)).textContent).toContain(pick);
+        }
+    );
 
     it("only one dropdown is open at a time", async () => {
         mount();
@@ -114,5 +113,23 @@ describe("the other dimensions", () => {
         expect(
             within(screen.getByRole("menu")).getByRole("menuitem", { name: /High/ })
         ).toBeTruthy();
+    });
+});
+
+describe("the bar (MIP-1123 review)", () => {
+    it("has no Effort filter for now, but still has the other six", () => {
+        mount();
+        const names = screen.getAllByRole("button").map((b) => b.textContent ?? "");
+        expect(names.some((n) => /^Effort/.test(n))).toBe(false);
+        for (const field of ["Status", "Priority"]) {
+            expect(names.some((n) => n.startsWith(field))).toBe(true);
+        }
+    });
+
+    it("Reset is an icon-only button named by its tooltip", () => {
+        mount();
+        const reset = screen.getByRole("button", { name: "Reset all filters to default" });
+        expect(reset.textContent?.trim()).toBe("");
+        expect(reset.querySelector("svg")).toBeTruthy();
     });
 });

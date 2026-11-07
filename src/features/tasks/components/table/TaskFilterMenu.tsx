@@ -11,7 +11,7 @@ import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRigh
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Avatar, Box, Button, IconButton, Stack, Typography } from "@mui/joy";
+import { Avatar, Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -69,6 +69,7 @@ import {
     BarChip,
     FilterChipButton,
     FilterDropdown,
+    FilterIconButton,
     FilterMenu,
     FilterMenuItem,
     splitFilterLabel,
@@ -133,6 +134,12 @@ const MEMBER_ACCENT_LIGHT = "#4f46e5";
  *
  *     applyFilters({ ...selection, status: newStatuses });
  */
+/** The Effort filter is switched off for now (Ken, MIP-1123 review): its chip is
+ *  not drawn and a stored or saved effort selection no longer narrows the list.
+ *  The state, the handler and the menu below stay, so flipping this back on is
+ *  the whole change. */
+const EFFORT_FILTER_ENABLED = false;
+
 type FilterSelection = {
     status: FilterProps[];
     tags: FilterProps[];
@@ -1166,11 +1173,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             status: statuses,
             tags,
             priorities: priority,
-            effortLevels: effortLevel,
+            effortLevels: storedEffortLevels,
             sprintKeys: sprintSel,
             milestoneKeys: milestoneSel,
             memberKeys: memberSel,
         } = sel;
+        const effortLevel = EFFORT_FILTER_ENABLED
+            ? storedEffortLevels
+            : [predefinedEffortLevelFilters[0]];
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
         const now = Date.now();
 
@@ -1689,8 +1699,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             <Stack
                 alignItems="center"
                 direction="row"
-                // Wraps instead of clipping to "Stat...": MIP-1123.
-                sx={{ flexWrap: "wrap", columnGap: 1, rowGap: 0.75 }}
+                // One line that scrolls sideways; every chip keeps its full
+                // text (`flexShrink: 0`), nothing wraps or is cut: MIP-1123.
+                sx={{
+                    flexWrap: "nowrap",
+                    columnGap: 1,
+                    overflowX: "auto",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: `${g.border.strong} transparent`,
+                }}
             >
                 {/* Filter Icon Label */}
                 <Stack alignItems="center" direction="row" gap={0.5} sx={{ flexShrink: 0 }}>
@@ -2612,105 +2629,113 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     </FilterMenu>
                 </FilterDropdown>
 
-                {/* Effort Level Filter */}
-                <FilterDropdown
-                    open={openEffortLevelFilter}
-                    onOpenChange={setOpenEffortLevelFilter}
-                >
-                    <AppTooltip
-                        title={selectedEffortLevels
-                            .map((effortLevel) => filterLabel(effortLevel))
-                            .join(", ")}
-                    >
-                        <FilterChipButton
-                            extra={selectedEffortLevels.length - 1}
-                            field={splitFilterLabel(t.tasks.filterButtons.effort, "").field}
-                            value={filterLabel(selectedEffortLevels[0])}
-                            active={
-                                !selectedEffortLevels.some(
-                                    (effortLevel) => effortLevel.label === "All"
-                                )
-                            }
-                        />
-                    </AppTooltip>
-                    <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
-                        {predefinedEffortLevelFilters.map((effortLevel) => {
-                            const isSelected = selectedEffortLevels.some(
-                                (items) => items.label === effortLevel.label
-                            );
-                            return (
-                                <FilterMenuItem
-                                    key={effortLevel.label}
-                                    sx={{
-                                        borderRadius: "8px",
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.buttonHoverBg,
-                                        },
-                                    }}
-                                    onClick={() => handleCloseEffortLevelFilter(effortLevel)}
-                                >
-                                    <Box
-                                        sx={{
-                                            width: "100%",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1,
-                                        }}
-                                    >
-                                        <Box
+                {EFFORT_FILTER_ENABLED && (
+                    <>
+                        {/* Effort Level Filter */}
+                        <FilterDropdown
+                            open={openEffortLevelFilter}
+                            onOpenChange={setOpenEffortLevelFilter}
+                        >
+                            <AppTooltip
+                                title={selectedEffortLevels
+                                    .map((effortLevel) => filterLabel(effortLevel))
+                                    .join(", ")}
+                            >
+                                <FilterChipButton
+                                    extra={selectedEffortLevels.length - 1}
+                                    value={filterLabel(selectedEffortLevels[0])}
+                                    active={
+                                        !selectedEffortLevels.some(
+                                            (effortLevel) => effortLevel.label === "All"
+                                        )
+                                    }
+                                    field={
+                                        splitFilterLabel(t.tasks.filterButtons.effort, "").field
+                                    }
+                                />
+                            </AppTooltip>
+                            <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
+                                {predefinedEffortLevelFilters.map((effortLevel) => {
+                                    const isSelected = selectedEffortLevels.some(
+                                        (items) => items.label === effortLevel.label
+                                    );
+                                    return (
+                                        <FilterMenuItem
+                                            key={effortLevel.label}
                                             sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: "50%",
-                                                background: isDark
-                                                    ? effortLevel.darkModeColor
-                                                    : effortLevel.lightModeColor,
-                                                boxShadow: `0 0 6px ${isDark ? effortLevel.darkModeColor : effortLevel.lightModeColor}`,
+                                                borderRadius: "8px",
+                                                mx: 0.5,
+                                                my: 0.25,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    background: styles.buttonHoverBg,
+                                                },
                                             }}
-                                        />
-                                        <Typography
-                                            sx={{
-                                                fontSize: "13px",
-                                                fontWeight: isSelected ? 700 : 500,
-                                                color: isSelected
-                                                    ? isDark
-                                                        ? effortLevel.darkModeColor
-                                                        : effortLevel.lightModeColor
-                                                    : styles.textColor,
-                                                flex: 1,
-                                            }}
+                                            onClick={() =>
+                                                handleCloseEffortLevelFilter(effortLevel)
+                                            }
                                         >
-                                            {filterLabel(effortLevel)}
-                                        </Typography>
-                                        {isSelected && (
                                             <Box
                                                 sx={{
-                                                    width: 16,
-                                                    height: 16,
-                                                    borderRadius: "4px",
-                                                    background: isDark
-                                                        ? effortLevel.darkModeColor
-                                                        : effortLevel.lightModeColor,
+                                                    width: "100%",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
-                                                    fontSize: "10px",
-                                                    color: "#fff",
-                                                    fontWeight: 700,
+                                                    gap: 1,
                                                 }}
                                             >
-                                                ✓
+                                                <Box
+                                                    sx={{
+                                                        width: 8,
+                                                        height: 8,
+                                                        borderRadius: "50%",
+                                                        background: isDark
+                                                            ? effortLevel.darkModeColor
+                                                            : effortLevel.lightModeColor,
+                                                        boxShadow: `0 0 6px ${isDark ? effortLevel.darkModeColor : effortLevel.lightModeColor}`,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? effortLevel.darkModeColor
+                                                                : effortLevel.lightModeColor
+                                                            : styles.textColor,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    {filterLabel(effortLevel)}
+                                                </Typography>
+                                                {isSelected && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 16,
+                                                            height: 16,
+                                                            borderRadius: "4px",
+                                                            background: isDark
+                                                                ? effortLevel.darkModeColor
+                                                                : effortLevel.lightModeColor,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "10px",
+                                                            color: "#fff",
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        ✓
+                                                    </Box>
+                                                )}
                                             </Box>
-                                        )}
-                                    </Box>
-                                </FilterMenuItem>
-                            );
-                        })}
-                    </FilterMenu>
-                </FilterDropdown>
+                                        </FilterMenuItem>
+                                    );
+                                })}
+                            </FilterMenu>
+                        </FilterDropdown>
+                    </>
+                )}
 
                 {/* Member Filter — multi-select over the team's members.
                     Filtering by a member surfaces every task/milestone
@@ -2929,27 +2954,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     onApply={applySavedFilter}
                 />
 
-                {/* Reset Filters Button */}
+                {/* Reset Filters: an icon button, the tooltip names it. */}
                 <AppTooltip title={t.tasks.tooltips.resetFilters}>
-                    <Button
-                        color="neutral"
-                        size="sm"
-                        startDecorator={<RestartAltIcon sx={{ fontSize: 16 }} />}
-                        variant="plain"
-                        sx={{
-                            height: g.control.sm,
-                            minHeight: 0,
-                            px: 1,
-                            flexShrink: 0,
-                            fontWeight: 400,
-                            color: g.text.secondary,
-                            "--Icon-color": "currentColor",
-                            "&:hover": { background: g.hover, color: g.danger.text },
-                        }}
-                        onClick={resetFilters}
-                    >
-                        Reset
-                    </Button>
+                    <FilterIconButton onClick={resetFilters}>
+                        <RestartAltIcon />
+                    </FilterIconButton>
                 </AppTooltip>
             </Stack>
         </Box>
