@@ -261,11 +261,11 @@ export const ModalTeamFolderMembers = (props: Props) => {
                     {t.notes.sharing.done}
                 </Button>
             }
-            ownsListboxPopups
-            onClose={onClose}
             title={fmt(t.notes.teamNotes.membersTitle, { name: folder?.name ?? "" })}
             // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
             zIndex={theme.zIndex.modal}
+            ownsListboxPopups
+            onClose={onClose}
         >
             {loading ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
