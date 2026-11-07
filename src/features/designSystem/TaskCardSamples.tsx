@@ -47,10 +47,13 @@ const SampleRoster = ({ children }: { children: ReactNode }) => (
     </AvatarContextProvider>
 );
 
+// A local calendar date: `toISOString()` is UTC, which is a day off for the
+// first hours of the day east of Greenwich.
 const day = (offset: number) => {
     const d = new Date();
     d.setDate(d.getDate() + offset);
-    return d.toISOString().slice(0, 10);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
 const TAGS = [

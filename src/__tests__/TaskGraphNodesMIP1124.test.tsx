@@ -868,7 +868,8 @@ describe("the task preview's other id chips are the family's quiet id", () => {
         expect(text).toContain("<TaskIdText");
         expect(text).not.toContain("CopyableTaskIdChip");
         // The parent row's id was a Joy action button (Tab, Enter): it stays one.
-        if (file.endsWith("TaskMainBlock.tsx")) expect(text).toContain("<TaskIdText focusable");
+        if (file.endsWith("TaskMainBlock.tsx"))
+            expect(text).toMatch(/<TaskIdText[^>]*\bfocusable\b/);
         // No Joy chip is left around an id (the sub-task tags and the branch
         // links are other chips, and stay).
         expect(text).not.toMatch(/<Chip[^>]*>\s*\{(ref_\.displayId|formatTaskDisplayId)/);
