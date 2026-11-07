@@ -621,7 +621,7 @@ export const settings = {
         // Back to the Genos settings from the sub-view.
         backToSettings: "Genos settings",
         title: "What Genos remembers",
-        intro: "Genos doesn't keep a separate store of “memories”. When it answers you, it draws on the three things below. You can see each one here and delete what you don't want kept.",
+        intro: "Genos doesn't keep a separate store of “memories”. Below is what it draws on when it answers you, plus one thing it notes about your connected AI apps. You can see each one here and delete what you don't want kept.",
         conversations: {
             heading: "Your Genos conversations",
             description:
@@ -677,6 +677,18 @@ export const settings = {
             stopFailed: "Couldn't stop sharing that answer. Please try again.",
             hasMore:
                 "Showing your latest {count} shared answers. There are more than this list shows.",
+        },
+        mcpUse: {
+            heading: "What your AI apps open",
+            switchLabel: "Notice what my AI apps open",
+            switchHelper:
+                "Genos notes which tasks, notes and projects your connected AI apps open or change (never their text), only you can see it, and it is kept 180 days. Turn it off and everything noted is deleted.",
+            toggleFailed: "Couldn't change this setting. Please try again.",
+            loadFailed: "Couldn't load this setting.",
+            offTitle: "Stop noticing and delete what was noted?",
+            offBody:
+                "Everything Genos has noted about which items your AI apps opened or changed is deleted now, and nothing new is noted. Your tasks, notes and messages are not affected. If you turn this on again, it starts fresh.",
+            offConfirm: "Turn off and delete",
         },
         settingsUsed: {
             heading: "Settings Genos uses",

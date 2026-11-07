@@ -3554,7 +3554,7 @@ export const ja: DeepPartial<Messages> = {
             entryOpen: "開く",
             backToSettings: "Genos設定",
             title: "Genosが記憶していること",
-            intro: "Genosは「記憶」を別に保存しているわけではありません。回答するときは、下の3つを参照します。ここで内容を確認し、残したくないものを削除できます。",
+            intro: "Genosは「記憶」を別に保存しているわけではありません。下に、回答するときに参照するものと、接続したAIアプリについて記録している1つのことを示します。ここで内容を確認し、残したくないものを削除できます。",
             conversations: {
                 heading: "Genosとの会話",
                 description:
@@ -3604,6 +3604,18 @@ export const ja: DeepPartial<Messages> = {
                 stopFailed: "この回答の共有を停止できませんでした。もう一度お試しください。",
                 hasMore:
                     "最新の{count}件の共有回答を表示しています。この一覧に表示されていない回答もあります。",
+            },
+            mcpUse: {
+                heading: "AIアプリが開いたもの",
+                switchLabel: "AIアプリが開いたものを記録する",
+                switchHelper:
+                    "接続したAIアプリが開いたり変更したりしたタスク、ノート、プロジェクトを、Genosが記録します(本文は記録しません)。見られるのはあなただけで、180日間保存されます。オフにすると、記録されたものはすべて削除されます。",
+                toggleFailed: "この設定を変更できませんでした。もう一度お試しください。",
+                loadFailed: "この設定を読み込めませんでした。",
+                offTitle: "記録をやめて、記録済みの内容を削除しますか?",
+                offBody:
+                    "AIアプリが開いたり変更したりした項目についてGenosが記録した内容は、今すぐすべて削除され、新たな記録もされません。タスク、ノート、メッセージには影響しません。再びオンにすると、記録は最初から始まります。",
+                offConfirm: "オフにして削除",
             },
             settingsUsed: {
                 heading: "Genosが使う設定",
