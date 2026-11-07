@@ -13,6 +13,9 @@ type Props = {
     setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
+    /** The layer of the modal this task is shown in (UrlLinkModal), so the
+     *  confirm opens above it instead of behind it. Page-hosted: omit. */
+    hostZIndex?: number;
 };
 
 export const ModalDeleteTask: React.FC<Props> = ({
@@ -22,6 +25,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
     setCurrentTaskContent,
     setTaskUpdated,
     setTaskStatusUpdated,
+    hostZIndex,
 }) => {
     const { t } = useTranslation();
 
@@ -56,6 +60,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
             confirmLabel={t.tasks.modals.deleteTask.confirmButton}
             description={t.tasks.modals.deleteTask.body}
             entityName={currentTaskContent.title}
+            hostZIndex={hostZIndex}
             icon={<DeleteOutlineIcon sx={{ color: g.danger.text }} />}
             open={openDeleteTask}
             title={t.tasks.modals.deleteTask.title}
