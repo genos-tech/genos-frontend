@@ -3,38 +3,18 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
-    AddCommentButton,
-    BasicTextStyleButton,
     BlockNoteViewEditor,
-    BlockTypeSelect,
-    BlockTypeSelectItem,
-    blockTypeSelectItems,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
     FormattingToolbarController,
-    getDefaultReactSlashMenuItems,
     SideMenu,
     SideMenuController,
-    SuggestionMenuController,
-    TableCellMergeButton,
-    TextAlignButton,
 } from "@blocknote/react";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, Chip, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
@@ -53,7 +33,6 @@ import { MyNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -62,14 +41,11 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { withGenosBlockSlashItems } from "./genosBlockSpecs";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosDocumentToolbar } from "./genos/GenosToolbars";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
@@ -206,15 +182,6 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
             }),
         [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
     );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGenosBlockSlashItems(
-            editor,
-            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
-        );
 
     // Counter wraps `uploadFile` so the editor surfaces a small
     // "Uploading n file(s)…" pill for the duration of any in-flight
@@ -575,126 +542,25 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 )}
                                 <FormattingToolbarController
                                     formattingToolbar={() => (
-                                        <FormattingToolbar>
-                                            {isEditable && (
-                                                <BlockTypeSelect
-                                                    key={"blockTypeSelect"}
-                                                    items={[
-                                                        ...getBlockTypeSelectItemsForDocuments(
-                                                            editor
-                                                        ),
-                                                        {
-                                                            name: t.common.editor.alertBlock,
-                                                            type: "alert",
-                                                            icon: RiAlertFill,
-                                                        } satisfies BlockTypeSelectItem,
-                                                    ]}
-                                                />
-                                            )}
-
-                                            {isEditable && (
-                                                <>
-                                                    <BasicTextStyleButton
-                                                        key={"boldStyleButton"}
-                                                        basicTextStyle={"bold"}
-                                                    />
-                                                    <BasicTextStyleButton
-                                                        key={"italicStyleButton"}
-                                                        basicTextStyle={"italic"}
-                                                    />
-                                                    <BasicTextStyleButton
-                                                        key={"underlineStyleButton"}
-                                                        basicTextStyle={"underline"}
-                                                    />
-                                                    <BasicTextStyleButton
-                                                        key={"strikeStyleButton"}
-                                                        basicTextStyle={"strike"}
-                                                    />
-                                                    <BasicTextStyleButton
-                                                        key={"codeStyleButton"}
-                                                        basicTextStyle={"code"}
-                                                    />
-                                                    <TextAlignButton
-                                                        key={"textAlignLeftButton"}
-                                                        textAlignment={"left"}
-                                                    />
-                                                    <TextAlignButton
-                                                        key={"textAlignCenterButton"}
-                                                        textAlignment={"center"}
-                                                    />
-                                                    <TextAlignButton
-                                                        key={"textAlignRightButton"}
-                                                        textAlignment={"right"}
-                                                    />
-                                                    <ColorStyleButton key={"colorStyleButton"} />
-                                                    <CreateLinkButton key={"createLinkButton"} />
-                                                    <GifToolbarButton
-                                                        key={"gifButton"}
-                                                        setShowGifPicker={setShowGifPicker}
-                                                    />
-                                                    <FileCaptionButton key={"fileCaptionButton"} />
-                                                    <FileReplaceButton key={"fileReplaceButton"} />
-                                                </>
-                                            )}
-                                            {threadStore && (
-                                                <AddCommentButton key={"addCommentButton"} />
-                                            )}
-                                            {isEditable && (
-                                                <>
-                                                    <FileDeleteButton key={"fileDeleteButton"} />
-                                                    <FileDownloadButton
-                                                        key={"fileDownloadButton"}
-                                                    />
-                                                    <FilePreviewButton key={"filePreviewButton"} />
-                                                    <FileRenameButton key={"fileRenameButton"} />
-                                                    <TableCellMergeButton
-                                                        key={"tableCellMergeButton"}
-                                                    />
-                                                </>
-                                            )}
-                                        </FormattingToolbar>
+                                        <GenosDocumentToolbar
+                                            editor={editor}
+                                            isEditable={isEditable}
+                                            hasComments={!!threadStore}
+                                            setShowGifPicker={setShowGifPicker}
+                                        />
                                     )}
                                 />
 
                                 {isEditable && (
-                                    <SuggestionMenuController
-                                        suggestionMenuComponent={MentionSuggestionMenu}
-                                        triggerCharacter={"@"}
-                                        getItems={async (query) =>
-                                            filterAndRankSuggestionItems(
-                                                MentionMenuItems(
-                                                    useTEM.teamMemberProfiles,
-                                                    editor,
-                                                    mentionableUsers,
-                                                    myself.userId,
-                                                    mentionGroups
-                                                ),
-                                                query
-                                            )
-                                        }
-                                    />
-                                )}
-                                {isEditable && <HashSuggestionMenuController editor={editor} />}
-                                {isEditable && (
-                                    <SuggestionMenuController
-                                        triggerCharacter={"/"}
-                                        getItems={async (query) =>
-                                            filterSuggestionItems(
-                                                getCustomSlashMenuItems(
-                                                    editor as unknown as typeof schema.BlockNoteEditor
-                                                ),
-                                                query
-                                            )
-                                        }
-                                    />
-                                )}
-                                {isEditable && (
-                                    <SuggestionMenuController
-                                        minQueryLength={2}
-                                        triggerCharacter={":"}
-                                        getItems={async (query) =>
-                                            getEmojiSuggestionItems(editor, query)
-                                        }
+                                    <GenosSuggestionMenus
+                                        editor={editor}
+                                        getMentionSources={() => ({
+                                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                                            teamMembers: mentionableUsers,
+                                            myselfUserId: myself.userId,
+                                            mentionGroups,
+                                        })}
+                                        slash={{ preset: "document", setShowGifPicker }}
                                     />
                                 )}
 
