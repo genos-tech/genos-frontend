@@ -45,7 +45,7 @@ import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
-import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
+import { ModalManageTagsHost } from "../tasks/components/modals/ModalManageTagsHost";
 import { MobileChatHome } from "./MobileChatHome";
 
 type ChatHomeProps = {
@@ -623,8 +623,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {/* Modal for creating a new project — global flag-gated */}
                     <ModalCreateProject myself={myself} useCM={useCM} usePM={usePM} />
 
-                    {/* Modal for creating a new tag — global flag-gated */}
-                    <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />
+                    {/* Modal for managing tags (create, edit, delete) — global flag-gated */}
+                    <ModalManageTagsHost myself={myself} usePM={usePM} useTM={useTM} />
                 </Sheet>
 
                 {/* Hover Animation with CSS */}

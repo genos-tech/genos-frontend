@@ -73,8 +73,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         usePM.setOpenCreateProject(true);
     };
 
-    const handleCreateTag = () => {
-        useTM.setOpenCreateTag(true);
+    const handleManageTags = () => {
+        useTM.setOpenManageTags(true);
     };
 
     const handleDeleteProject = () => {
@@ -137,7 +137,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         useUISM={useUISM}
                         onCloseTaskHome={handleCloseTaskHome}
                         onCreateProject={handleCreateProject}
-                        onCreateTag={handleCreateTag}
+                        onManageTags={handleManageTags}
                         onDeleteProject={handleDeleteProject}
                     />
                 )}

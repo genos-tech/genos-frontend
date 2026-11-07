@@ -6,9 +6,9 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ModalCreateProject } from "./ModalCreateProject";
-import { ModalCreateTag } from "./ModalCreateTag";
 import { ModalDeleteProject } from "./ModalDeleteProject";
 import { ModalJoinProject } from "./ModalJoinProject";
+import { ModalManageTagsHost } from "./ModalManageTagsHost";
 
 interface TaskHomeModalsProps {
     myself: UserProps;
@@ -72,7 +72,7 @@ export const TaskHomeModals = ({
                 setOpenDeleteProject={setOpenDeleteProject}
                 usePM={usePM}
             />
-            <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />
+            <ModalManageTagsHost myself={myself} usePM={usePM} useTM={useTM} />
         </>
     );
 };

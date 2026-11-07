@@ -258,8 +258,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             >
                                 {t.tasks.mobile.refreshTasks}
                             </MenuItem>
-                            <MenuItem onClick={() => useTM.setOpenCreateTag(true)}>
-                                {t.tasks.mobile.newTag}
+                            <MenuItem onClick={() => useTM.setOpenManageTags(true)}>
+                                {t.tasks.mobile.manageTags}
                             </MenuItem>
                             <MenuItem onClick={() => usePM.setOpenCreateProject(true)}>
                                 {t.tasks.mobile.newProject}
