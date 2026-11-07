@@ -1,8 +1,8 @@
 import React from "react";
-import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
@@ -58,8 +58,8 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     // is `undefined` and `.toUpperCase()` throws. Fall back to "?" so
     // the row renders while the partner / title resolves.
     if (chatType === 1 && chat.dmPartnerUser.userId === "") {
-        const initial = chat.chatName?.[0]?.toUpperCase() ?? "?";
-        return <Avatar size="sm">{initial}</Avatar>;
+        // The first LETTER ("(x) foo" is "x", not "("): BaseAvatar's rule, one for every avatar.
+        return <BaseAvatar name={chat.chatName ?? ""} size="md" />;
     }
 
     // GM Chat
