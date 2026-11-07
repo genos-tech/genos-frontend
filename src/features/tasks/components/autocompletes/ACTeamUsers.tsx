@@ -86,17 +86,18 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
     return (
         <Autocomplete
             key={taskContent.id}
+            getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={sortedMembers}
-            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
             sx={{ width: "100%" }}
             // Pass `null` through so an unassigned task renders an empty
             // picker (built-in placeholder), not a silent fallback to
             // `myself` that would mislead the user into thinking they
             // were the assignee.
+            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
             size="sm"
+            slotProps={{ input: { dir: "auto" } }}
             value={resolvedValue}
-            getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             renderOption={(props, option) => {
                 return (
                     <AutocompleteOption
