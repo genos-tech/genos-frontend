@@ -3177,6 +3177,16 @@ export const fr: DeepPartial<Messages> = {
             retry: "Réessayer",
             empty: "Vous n'avez pas encore de planification.",
             createFirst: "Créer votre première planification",
+            suggestedHeading: "Suggéré pour vous",
+            suggestedHint:
+                "Deux planifications ordinaires. Ajoutez-en une : vous pourrez la modifier, la mettre en pause ou la supprimer.",
+            suggestAdd: "Ajouter",
+            suggestAddFailed: "Impossible d'ajouter cette planification. Réessayez.",
+            suggestMorningName: "Plan du matin",
+            suggestMorningBlurb: "Ce qu'il y a à faire aujourd'hui",
+            suggestEveningName: "Bilan du soir",
+            suggestEveningBlurb: "Ce que vous avez fait aujourd'hui",
+            suggestDaily: "Tous les jours à {time}",
             newSchedule: "Nouvelle planification",
             limitReached:
                 "Vous avez atteint la limite de {limit} planifications. Supprimez-en une pour en ajouter une autre.",

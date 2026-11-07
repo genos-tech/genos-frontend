@@ -59,11 +59,22 @@ export interface Schedule {
     problem?: string;
 }
 
+/** An ordinary schedule Genos offers; accepting one is a normal create. */
+export interface ScheduleSuggestion {
+    key: string;
+    name: string;
+    job: string;
+    params: Record<string, ParamValue>;
+    frequency: ScheduleFrequency;
+    timeOfDay: string;
+}
+
 export interface ScheduleList {
     timeZone: string;
     limit: number;
     jobs: ScheduleJob[];
     schedules: Schedule[];
+    suggestions: ScheduleSuggestion[];
 }
 
 /** What the member can set. Fields a frequency does not use are not sent. */
@@ -125,6 +136,7 @@ export const listSchedules = async (
             limit: res.data.limit ?? 0,
             jobs: res.data.jobs ?? [],
             schedules: res.data.schedules ?? [],
+            suggestions: res.data.suggestions ?? [],
         };
     } catch {
         return null;
