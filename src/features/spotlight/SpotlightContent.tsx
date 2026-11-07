@@ -47,6 +47,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { SkeletonLines, SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation, type Messages } from "../../i18n";
 import type {
     AgentSessionDetail,
@@ -1875,20 +1876,7 @@ const HistoryListView = ({
 }: HistoryListViewProps) => {
     const { t } = useTranslation();
     if (isLoading && sessions.length === 0) {
-        return (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
-                <CircularProgress size="sm" />
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        opacity: isDark ? 1 : 0.75,
-                        color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                    }}
-                >
-                    {ts.history.loading}
-                </Typography>
-            </Box>
-        );
+        return <SkeletonRows count={4} label={ts.history.loading} />;
     }
 
     if (sessions.length === 0 && loadFailed) {
@@ -2031,20 +2019,7 @@ const HistorySessionDetailView = ({
 }: HistorySessionDetailViewProps) => {
     if (isLoading || detail === null) {
         if (isLoading) {
-            return (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
-                    <CircularProgress size="sm" />
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            opacity: isDark ? 1 : 0.75,
-                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                        }}
-                    >
-                        {ts.history.loading}
-                    </Typography>
-                </Box>
-            );
+            return <SkeletonLines label={ts.history.loading} lines={4} />;
         }
         // detail === null after a failed fetch.
         return (

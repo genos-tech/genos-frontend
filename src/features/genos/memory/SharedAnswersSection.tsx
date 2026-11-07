@@ -1,7 +1,8 @@
 import { useState } from "react";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import { Box, Button, CircularProgress, Sheet, Stack, Switch, Typography } from "@mui/joy";
+import { Box, Button, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useShareAnswersPreference } from "../../../hooks/common/useShareAnswersPreference";
 import { fmt, useTranslation } from "../../../i18n";
@@ -95,12 +96,7 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
 
     const renderList = () => {
         if (list.status === "loading") {
-            return (
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 1 }}>
-                    <CircularProgress size="sm" />
-                    <Typography level="body-sm">{m.loading}</Typography>
-                </Stack>
-            );
+            return <SkeletonRows count={3} label={m.loading} />;
         }
         if (list.status === "error") {
             return (

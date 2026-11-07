@@ -18,10 +18,11 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Box, Button, CircularProgress, IconButton, Input, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Input, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { NavItem } from "../../components/ui/nav/NavItem";
 import { NAV_KEEP_CLASS } from "../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../components/ui/nav/SectionHeader";
@@ -233,12 +234,7 @@ export const GenosSessionSidebar = ({
                 }}
             >
                 {isLoading && sessions.length === 0 && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
-                        <CircularProgress size="sm" />
-                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
-                            {t.genos.sidebar.loading}
-                        </Typography>
-                    </Box>
+                    <SkeletonRows count={4} label={t.genos.sidebar.loading} />
                 )}
 
                 {/* A failed load is neither of the messages below: "no

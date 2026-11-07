@@ -1,15 +1,10 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {
-    Autocomplete,
-    AutocompleteOption,
-    Chip,
-    CircularProgress,
-    ListItemContent,
-} from "@mui/joy";
+import { Autocomplete, AutocompleteOption, Chip, ListItemContent } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
@@ -128,18 +123,7 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
             options={options}
             placeholder={t.tasks.sidebar.searchPlaceholder}
             size="sm"
-            endDecorator={
-                loading ? (
-                    <CircularProgress
-                        size="sm"
-                        sx={{
-                            "--CircularProgress-size": "16px",
-                            "--CircularProgress-trackThickness": "2px",
-                            "--CircularProgress-progressThickness": "2px",
-                        }}
-                    />
-                ) : null
-            }
+            endDecorator={loading ? <Spinner /> : null}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>

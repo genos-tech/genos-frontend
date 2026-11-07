@@ -16,6 +16,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -230,18 +231,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 options={options}
                 placeholder={t.chat.sidebar.searchPlaceholder}
                 size="sm"
-                endDecorator={
-                    loading ? (
-                        <CircularProgress
-                            size="sm"
-                            sx={{
-                                "--CircularProgress-size": "16px",
-                                "--CircularProgress-trackThickness": "2px",
-                                "--CircularProgress-progressThickness": "2px",
-                            }}
-                        />
-                    ) : null
-                }
+                endDecorator={loading ? <Spinner /> : null}
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? personLabel(
