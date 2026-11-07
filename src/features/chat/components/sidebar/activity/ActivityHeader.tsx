@@ -131,7 +131,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                 <Typography
                     level="body-xs"
                     sx={{
-                        display: { xs: "none", md: "block" },
+                        // Shown on a phone too (MIP-1177).
                         fontSize: "0.7rem",
                         fontWeight: 500,
                         color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
