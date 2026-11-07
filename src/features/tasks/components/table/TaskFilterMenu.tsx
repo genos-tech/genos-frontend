@@ -11,10 +11,11 @@ import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRigh
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Avatar, Box, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -2892,12 +2893,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                     minWidth: 0,
                                                 }}
                                             >
-                                                <Avatar
+                                                <BaseAvatar
+                                                    name={m.userName}
+                                                    size={22}
                                                     src={buildAvatarSrc(m.avatarImgPath)}
-                                                    sx={{ width: 22, height: 22, fontSize: 11 }}
-                                                >
-                                                    {(m.userName?.[0] || "?").toUpperCase()}
-                                                </Avatar>
+                                                />
                                                 <Typography
                                                     sx={{
                                                         fontSize: "13px",

@@ -8,13 +8,14 @@ import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownR
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
-import { Avatar, Box, IconButton, Typography } from "@mui/joy";
+import { Box, IconButton, Typography } from "@mui/joy";
 import { alpha } from "@mui/system";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
@@ -516,17 +517,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {storedString !== "" ? (
                             <UserAvatar showPulseDot={false} size={24} userId={storedString} />
                         ) : (
-                            <Avatar
-                                size="sm"
-                                sx={{
-                                    "--Avatar-size": "24px",
-                                    bgcolor: g.bg.subtle,
-                                    color: g.text.tertiary,
-                                    fontSize: "var(--g-type-body-xs-size)",
-                                }}
-                            >
+                            <BaseAvatar size={24} sx={{ color: g.text.tertiary }}>
                                 ?
-                            </Avatar>
+                            </BaseAvatar>
                         )}
                     </Box>
                     <Box sx={{ overflow: "hidden" }}>
@@ -984,17 +977,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 // old fallback was a leftover from when
                                 // every task was forced to have an
                                 // assignee on create).
-                                <Avatar
-                                    size="sm"
-                                    sx={{
-                                        "--Avatar-size": "24px",
-                                        bgcolor: g.bg.subtle,
-                                        color: g.text.tertiary,
-                                        fontSize: "var(--g-type-body-xs-size)",
-                                    }}
-                                >
+                                <BaseAvatar size={24} sx={{ color: g.text.tertiary }}>
                                     ?
-                                </Avatar>
+                                </BaseAvatar>
                             )}
                         </Box>
                         <Box sx={{ overflow: "hidden" }}>

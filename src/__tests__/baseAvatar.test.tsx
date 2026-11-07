@@ -100,14 +100,10 @@ describe("UserAvatar initials", () => {
 });
 
 describe("no raw Joy Avatar outside components/ui/avatars", () => {
-    // Files whose raw Avatars are being converted in the table/board pilot and
-    // the chat-sidebar polish (MIP-1133 follow-up). This list may only SHRINK.
+    // Files whose raw Avatars are still to be converted (the milestone sidebar row: MIP-1163).
+    // This list may only SHRINK.
     const PENDING = new Set([
-        "features/tasks/components/table/DraggableTaskRow.tsx",
-        "features/tasks/components/table/TaskFilterMenu.tsx",
         "features/tasks/components/sidebar/projects_subs/MilestonesListItem.tsx",
-        "features/chat/components/sidebar/ChatListItemAvatar.tsx",
-        "features/chat/components/sidebar/chatListItemForFlagMessages.tsx",
     ]);
 
     it("imports Avatar from @mui/joy only in the pending files", () => {

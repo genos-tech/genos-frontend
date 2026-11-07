@@ -12,13 +12,14 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import { Avatar, Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
+import { Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
 import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
@@ -477,7 +478,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 />
             );
         }
-        return <Avatar size="sm">{(resolvedChatName || "?")[0].toUpperCase()}</Avatar>;
+        return <BaseAvatar name={resolvedChatName || ""} size="md" />;
     };
 
     const renderGMAvatar = () => {
@@ -502,9 +503,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             );
         }
         return (
-            <Avatar size="sm">
+            <BaseAvatar size="md">
                 <GroupsIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     };
 
@@ -523,9 +524,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             );
         }
         return (
-            <Avatar size="sm">
+            <BaseAvatar size="md">
                 <AssignmentIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     };
 
@@ -539,9 +540,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     // Fallback for any chat that has been removed entirely — we still need
     // *something* in the avatar slot so the row layout stays consistent.
     const renderRemovedAvatar = () => (
-        <Avatar size="sm" sx={{ opacity: 0.55, filter: "grayscale(0.6)" }}>
+        <BaseAvatar size="md" sx={{ opacity: 0.55, filter: "grayscale(0.6)" }}>
             <PeopleRoundedIcon />
-        </Avatar>
+        </BaseAvatar>
     );
 
     const renderAvatar = () => {
