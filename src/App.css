@@ -7,14 +7,6 @@
     --root-display: grid;
     --root-overflow: hidden;
 
-    /* Logo */
-    --logo-height: 6em;
-    --logo-padding: 1.5em;
-    --logo-transition: filter 300ms;
-
-    /* Cards */
-    --card-padding: 2em;
-
     /* Scrollbars */
     --scrollbar-width: 8px;
     --scrollbar-height: 8px;
@@ -92,40 +84,6 @@
 }
 
 /* ==========================================================================
-   Logo & Branding
-   ========================================================================== */
-
-.logo {
-    height: var(--logo-height);
-    padding: var(--logo-padding);
-    will-change: filter;
-    transition: var(--logo-transition);
-}
-
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-        animation: logo-spin infinite 20s linear;
-    }
-}
-
-/* ==========================================================================
    Form Elements
    ========================================================================== */
 
@@ -133,18 +91,6 @@ input[type="checkbox"] {
     transform: scale(1.4);
     transform-origin: center;
     cursor: pointer;
-}
-
-/* ==========================================================================
-   Layout Components
-   ========================================================================== */
-
-.card {
-    padding: var(--card-padding);
-}
-
-.read-the-docs {
-    color: #888;
 }
 
 /* ==========================================================================
@@ -324,8 +270,9 @@ input[type="checkbox"] {
    DataGrid Styles
    ========================================================================== */
 
-/* Toolbar pagination */
-.css-rxb3rp-MuiToolbar-root-MuiTablePagination-toolbar {
+/* Toolbar pagination. Stable MUI class names only: the `css-<hash>-…` form
+   never matched in a production build (Emotion drops the label there). */
+.MuiTablePagination-toolbar {
     min-height: 52px;
     padding-right: 2px;
     padding-bottom: 15px;
@@ -339,7 +286,7 @@ input[type="checkbox"] {
 /* Dark theme DataGrid */
 .task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall,
 .task-datagrid-dark .MuiDataGrid-menuIconButton,
-.task-datagrid-dark .css-4uxqju-MuiSvgIcon-root {
+.task-datagrid-dark .MuiSvgIcon-root {
     color: white !important;
 }
 
@@ -362,16 +309,16 @@ input[type="checkbox"] {
     opacity: 0.8;
 }
 
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .MuiInput-root {
     color: white;
 }
 
-.task-datagrid-dark .css-1f02in7-MuiInputBase-root-MuiInput-root {
+.task-datagrid-dark .MuiInput-root {
     background-color: var(--datagrid-dark-toolbar-bg) !important;
     border-radius: 1ch;
 }
 
-.task-datagrid-dark .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+.task-datagrid-dark .MuiButton-root {
     color: var(--datagrid-dark-button-color) !important;
 }
 
@@ -387,7 +334,7 @@ input[type="checkbox"] {
     overflow-y: hidden;
 }
 
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .MuiButton-root {
     color: var(--datagrid-dark-button-color) !important;
     font-weight: bold;
 }
@@ -412,64 +359,64 @@ input[type="checkbox"] {
     overflow-y: hidden;
 }
 
-.task-datagrid-light .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
+.task-datagrid-light .MuiDataGrid-toolbarContainer .MuiInput-root {
     color: black;
 }
 
-.task-datagrid-light .css-1f02in7-MuiInputBase-root-MuiInput-root {
+.task-datagrid-light .MuiInput-root {
     background-color: var(--datagrid-light-toolbar-bg) !important;
     border-radius: 1ch;
 }
 
-.task-datagrid-light .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+.task-datagrid-light .MuiButton-root {
     color: var(--datagrid-light-button-color) !important;
 }
 
-.task-datagrid-light .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
+.task-datagrid-light .MuiDataGrid-toolbarContainer .MuiButton-root {
     color: var(--datagrid-light-button-color) !important;
     font-weight: bold;
 }
 
 /* DataGrid editing styles */
-.css-nk6ga4-MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
+.MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
     background-color: transparent !important;
 }
 
 /* Dark theme editing */
-.task-datagrid-dark .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+.task-datagrid-dark .MuiDataGrid-editInputCell {
     background-color: var(--datagrid-dark-header-bg) !important;
     color: var(--datagrid-dark-header-color) !important;
     font-weight: bold;
 }
 
-.task-datagrid-dark .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+.task-datagrid-dark .MuiSelect-select {
     background-color: var(--datagrid-dark-header-bg) !important;
     color: var(--datagrid-dark-header-color) !important;
     font-weight: bold;
 }
 
-.task-datagrid-dark .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+.task-datagrid-dark .MuiSelect-icon {
     color: var(--datagrid-dark-button-color) !important;
 }
 
 /* Light theme editing */
-.task-datagrid-light .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+.task-datagrid-light .MuiDataGrid-editInputCell {
     background-color: transparent !important;
     color: var(--datagrid-light-header-color) !important;
     font-weight: bold;
 }
 
-.task-datagrid-light .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+.task-datagrid-light .MuiSelect-select {
     background-color: var(--datagrid-light-header-bg);
     color: rgb(255, 255, 255) !important;
     font-weight: bold;
 }
 
-.task-datagrid-light .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+.task-datagrid-light .MuiSelect-icon {
     color: var(--datagrid-light-header-color) !important;
 }
 
-.task-datagrid-light .css-157nff6-MuiButtonBase-root-MuiIconButton-root.Mui-disabled {
+.task-datagrid-light .MuiIconButton-root.Mui-disabled {
     color: var(--datagrid-light-header-color) !important;
 }
 
@@ -1301,36 +1248,11 @@ div[data-floating-ui-focusable] {
 }
 
 /* ==========================================================================
-   Utility Styles
-   ========================================================================== */
-
-/* NOT converted to a logical property, unlike the rest of this file: the
-   selector is a HASHED emotion class name, so it is already one Joy version
-   bump away from matching nothing. Rewriting the property inside it would
-   imply it is maintained. Same for the `.css-rxb3rp-MuiToolbar-…` rule
-   above. Both should be replaced by an `sx` on the component that owns
-   them; until then they stay physical and Arabic keeps a 10px gap on the
-   wrong side of a stack. */
-.css-ljwjwd-JoyStack-root > :not(style) ~ :not(style) {
-    margin-top: 5px !important;
-    margin-left: 10px !important;
-}
-
-/* ==========================================================================
    Responsive Design
    ========================================================================== */
 
 /* Mobile optimizations */
 @media (max-width: 480px) {
-    .card {
-        padding: 1em;
-    }
-
-    .logo {
-        height: 4em;
-        padding: 1em;
-    }
-
     .bn-chat-editor-box-light .bn-editor,
     .bn-chat-editor-box-dark .bn-editor {
         padding-top: 40px;

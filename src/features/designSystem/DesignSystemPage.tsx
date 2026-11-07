@@ -48,6 +48,7 @@ import {
     TaskRow,
     Text,
 } from "./samples";
+import { TailwindSample } from "./TailwindSample";
 
 /** The accent each theme renders with. It doesn't depend on mode, and the
  *  picker would otherwise rebuild every theme's roles on each click. */
@@ -956,6 +957,13 @@ const Components = () => (
                 </Panel>
             </Labelled>
         </Box>
+
+        <Labelled
+            note="Left cell: Tailwind classes only. Right cell: the same role through sx. They match in every theme and mode."
+            title="Tailwind"
+        >
+            <TailwindSample />
+        </Labelled>
     </Box>
 );
 

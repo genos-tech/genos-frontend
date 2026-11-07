@@ -4,6 +4,93 @@
    Used by `<div className={cn(dark && "dark")}>` wrappers (e.g. LandingPage). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* The design tokens (`--g-*`, src/theme/tokens) as Tailwind's theme, so a
+   Tailwind class and a Joy `sx` that name the same role paint the same pixels:
+
+       <div className="bg-surface text-secondary border border-default rounded-md shadow-md">
+
+   `inline` makes each utility use `var(--g-…)` directly instead of a copy
+   behind another variable, so it follows the active color theme AND mode
+   (both are resolved in CSS by `tokenStyles.ts`) with nothing to keep in sync.
+   Add a role in roles.ts, then one line here; a test checks every line below
+   points at a variable the token stylesheet really defines.
+
+   Names (Tailwind builds a utility from each `--color-*`):
+     bg-bg, bg-bg-subtle, bg-surface, bg-surface-raised, bg-hover, bg-active
+     text-primary / secondary / tertiary / disabled
+     border-subtle / default / strong
+     bg-accent, text-accent-text, bg-accent-subtle, border-accent-border,
+       text-accent-fg (on bg-accent); same shape for danger, success, warning, info
+   Radius xs..lg, shadow sm and md, and font-sans / font-mono are overridden
+   by the same names Tailwind already has (so existing `rounded-lg`,
+   `shadow-sm` and `font-mono` now follow the tokens).
+
+   `shadow-lg` is deliberately NOT mapped: Tailwind can only tint a shadow
+   (`shadow-lg shadow-violet-900/10`, 46 uses on the landing pages) when it
+   can read the colors inside the shadow value, and an opaque `var()` hides
+   them. Use `shadow-md` or a Joy surface for overlays. */
+@theme inline {
+    --color-bg: var(--g-bg);
+    --color-bg-subtle: var(--g-bg-subtle);
+    --color-surface: var(--g-surface);
+    --color-surface-raised: var(--g-surface-raised);
+    --color-hover: var(--g-hover);
+    --color-active: var(--g-active);
+    --color-scrim: var(--g-scrim);
+    --color-focus: var(--g-focus);
+
+    --color-primary: var(--g-text);
+    --color-secondary: var(--g-text-secondary);
+    --color-tertiary: var(--g-text-tertiary);
+    --color-disabled: var(--g-text-disabled);
+
+    --color-subtle: var(--g-border-subtle);
+    --color-default: var(--g-border);
+    --color-strong: var(--g-border-strong);
+
+    --color-accent: var(--g-accent);
+    --color-accent-hover: var(--g-accent-hover);
+    --color-accent-fg: var(--g-accent-fg);
+    --color-accent-text: var(--g-accent-text);
+    --color-accent-subtle: var(--g-accent-subtle);
+    --color-accent-border: var(--g-accent-border);
+
+    --color-danger: var(--g-danger-solid);
+    --color-danger-fg: var(--g-danger-solid-fg);
+    --color-danger-text: var(--g-danger-text);
+    --color-danger-subtle: var(--g-danger-subtle);
+    --color-danger-border: var(--g-danger-border);
+
+    --color-success: var(--g-success-solid);
+    --color-success-fg: var(--g-success-solid-fg);
+    --color-success-text: var(--g-success-text);
+    --color-success-subtle: var(--g-success-subtle);
+    --color-success-border: var(--g-success-border);
+
+    --color-warning: var(--g-warning-solid);
+    --color-warning-fg: var(--g-warning-solid-fg);
+    --color-warning-text: var(--g-warning-text);
+    --color-warning-subtle: var(--g-warning-subtle);
+    --color-warning-border: var(--g-warning-border);
+
+    --color-info: var(--g-info-solid);
+    --color-info-fg: var(--g-info-solid-fg);
+    --color-info-text: var(--g-info-text);
+    --color-info-subtle: var(--g-info-subtle);
+    --color-info-border: var(--g-info-border);
+
+    --radius-xs: var(--g-radius-xs);
+    --radius-sm: var(--g-radius-sm);
+    --radius-md: var(--g-radius-md);
+    --radius-lg: var(--g-radius-lg);
+
+    --shadow-sm: var(--g-shadow-sm);
+    --shadow-md: var(--g-shadow-md);
+
+    --font-sans: var(--g-font-body);
+    --font-mono: var(--g-font-mono);
+}
+
 /* Project-wide globals. Wrapped in `@layer base` so Tailwind utilities
    (which sit in the `utilities` layer) win over these element selectors. */
 @layer base {
