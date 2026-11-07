@@ -8,6 +8,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
 import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { QuickAddDraft } from "../../utils/quickAddDraft";
@@ -16,20 +17,17 @@ import {
     getQuickAddBlockingFields,
     TaskFieldRules,
 } from "../../utils/taskFieldRules";
-import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { effortLevels, priorities } from "../../utils/taskMeta";
 import {
     CellTextInput,
     ChipSelect,
+    effortSelectNode,
     MemberAutocomplete,
+    prioritySelectNode,
+    statusSelectNode,
     TagAutocomplete,
-    ValueChip,
 } from "./cellEditors";
-import {
-    DEPTH_BORDER_COLORS,
-    DEPTH_COLORS_DARK,
-    DEPTH_COLORS_LIGHT,
-    getTableCellStyles,
-} from "./DraggableTaskRow";
+import { depthRowLeftBorder, getTableCellStyles } from "./DraggableTaskRow";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 export type { QuickAddDraft };
@@ -240,12 +238,8 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         }
     };
 
-    const accent = mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
-    // rgba() rather than MUI's `alpha()`: the brand is a CSS variable and
-    // `alpha()` runs `decomposeColor`, which throws on a `var()`.
-    const accentRgb = mode === "dark" ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
-    const depthIdx = Math.min(depth, 3);
-    const dimText = mode === "dark" ? "#666" : "#aaa";
+    const accent = g.accent.text;
+    const dimText = g.text.tertiary;
     const emptyValueLabel = (
         <Typography level="body-sm" sx={{ color: dimText, fontStyle: "italic" }}>
             —
@@ -259,7 +253,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                     <SubdirectoryArrowRightRoundedIcon
                         sx={{
                             fontSize: 15,
-                            color: mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)",
+                            color: g.text.tertiary,
                         }}
                     />
                 );
@@ -276,15 +270,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={status}
                         options={statusOptions.map((opt) => ({
                             value: opt.value,
-                            node: (
-                                <ValueChip
-                                    color={opt.color}
-                                    icon={opt.icon}
-                                    label={taskMetaLabel(opt.value, t.tasks.filters)}
-                                    minWidth={70}
-                                    textColor={opt.textColor}
-                                />
-                            ),
+                            node: statusSelectNode(opt.value),
                         }))}
                         onChange={setStatus}
                     />
@@ -327,14 +313,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={priority ?? ""}
                         options={priorities.map((opt) => ({
                             value: opt.priority || "",
-                            node: (
-                                <ValueChip
-                                    color={opt.color || "#888"}
-                                    label={taskMetaLabel(opt.priority ?? "", t.tasks.filters)}
-                                    minWidth={60}
-                                    textColor={opt.textColor}
-                                />
-                            ),
+                            node: prioritySelectNode(opt.priority ?? ""),
                         }))}
                         onChange={(next) => setPriority(next === "" ? null : next)}
                     />
@@ -348,14 +327,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={effortLevel ?? ""}
                         options={effortLevels.map((opt) => ({
                             value: opt.level || "",
-                            node: (
-                                <ValueChip
-                                    color={opt.color || "#888"}
-                                    label={taskMetaLabel(opt.level ?? "", t.tasks.filters)}
-                                    minWidth={60}
-                                    textColor={opt.textColor}
-                                />
-                            ),
+                            node: effortSelectNode(opt.level ?? ""),
                         }))}
                         onChange={(next) => setEffortLevel(next === "" ? null : next)}
                     />
@@ -413,16 +385,12 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
             style={{
                 display: "flex",
                 alignItems: "center",
-                minHeight: 36,
-                borderBottom:
-                    mode === "dark"
-                        ? "1px solid rgba(255, 255, 255, 0.08)"
-                        : "1px solid rgba(0, 0, 0, 0.08)",
-                borderLeft: `3px solid ${DEPTH_BORDER_COLORS[depthIdx]}`,
-                backgroundColor:
-                    mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx],
-                // Subtle accent ring marks the row as an uncommitted draft.
-                boxShadow: `inset 0 0 0 1px rgba(${accentRgb}, 0.25)`,
+                minHeight: g.row.current,
+                borderBottom: `1px solid ${g.border.subtle}`,
+                borderLeft: depthRowLeftBorder(depth),
+                backgroundColor: g.bg.subtle,
+                // A ring in the accent marks the row as an uncommitted draft.
+                boxShadow: `inset 0 0 0 1px ${g.accent.border}`,
             }}
             onKeyDown={(e) => {
                 // Escape discards. When a Select/Autocomplete popup is
@@ -505,13 +473,9 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                 <div
                     key={column.field}
                     style={{
-                        ...getTableCellStyles(column.width, column.align, mode),
+                        ...getTableCellStyles(column.width, column.align),
                         borderRight:
-                            idx === columns.length - 1
-                                ? "none"
-                                : mode === "dark"
-                                  ? "1px solid rgba(255, 255, 255, 0.04)"
-                                  : "1px solid rgba(0, 0, 0, 0.04)",
+                            idx === columns.length - 1 ? "none" : `1px solid ${g.border.subtle}`,
                     }}
                 >
                     {renderCellContent(column)}

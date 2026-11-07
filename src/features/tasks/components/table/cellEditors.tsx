@@ -29,8 +29,12 @@ import type { SxProps } from "@mui/joy/styles/types";
 import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
+import { taskMetaLabel } from "../../utils/taskMeta";
+import { PriorityIcon } from "../meta/PriorityIcon";
+import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectTagChip } from "../ProjectTagChip";
 
 // ── shared surfaces ──────────────────────────────────────────────────────────
@@ -164,6 +168,82 @@ export const ValueChip = ({
         }}
     />
 );
+
+// ── The quiet cell values (MIP-1123) ─────────────────────────────────────────
+//
+// Status, priority and effort in the table are the SHARED components (color in the
+// icon, words neutral), not solid colored chips. `CellButton` is the click target
+// around one: a plain span (hundreds per table), a real button for the keyboard,
+// the row-hover tint on hover.
+
+export const CellButton = ({
+    onClick,
+    children,
+    label,
+}: {
+    onClick: () => void;
+    children: ReactNode;
+    /** Accessible name when the content is an icon alone. */
+    label?: string;
+}) => (
+    <Box
+        aria-label={label}
+        component="span"
+        role="button"
+        tabIndex={0}
+        sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            height: 24,
+            maxWidth: "100%",
+            px: "6px",
+            borderRadius: g.radius.sm,
+            cursor: "pointer",
+            minWidth: 0,
+            "&:hover": { background: g.hover },
+            "&:focus-visible": { outline: `2px solid ${g.focus}`, outlineOffset: "-1px" },
+        }}
+        onClick={(event: MouseEvent<HTMLElement>) => {
+            event.stopPropagation();
+            onClick();
+        }}
+        onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                onClick();
+            }
+        }}
+    >
+        {children}
+    </Box>
+);
+
+/** An effort level: plain words, no color (it is not a status). */
+export const EffortLabel = ({ level }: { level: string }) => {
+    const { t } = useTranslation();
+    return (
+        <Box
+            component="span"
+            sx={{
+                fontSize: "var(--g-type-body-sm-size)",
+                color: g.text.secondary,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+            }}
+        >
+            {taskMetaLabel(level, t.tasks.filters) || level}
+        </Box>
+    );
+};
+
+/** The three option lists of the cell selects, as the quiet components. */
+export const statusSelectNode = (status: string) => <StatusLabel status={status} />;
+export const prioritySelectNode = (priority: string) => (
+    <PriorityIcon priority={priority} showLabel />
+);
+export const effortSelectNode = (level: string) => <EffortLabel level={level} />;
 
 // ── ChipSelect: a Select whose value and options are chips ────────────────────
 
