@@ -1892,7 +1892,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     level="body-md"
                                     sx={{ fontWeight: 500, color: "inherit" }}
                                 >
-                                    Waiting to load tasks...
+                                    {t.tasks.table.loadingTasks}
                                 </Typography>
                             </Box>
                         ) : (
@@ -1911,13 +1911,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     level="body-lg"
                                     sx={{ fontWeight: 500, color: "inherit" }}
                                 >
-                                    No tasks to display
+                                    {t.tasks.table.emptyTitle}
                                 </Typography>
                                 <Typography
                                     level="body-sm"
                                     sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
                                 >
-                                    Try adjusting your filters
+                                    {t.tasks.table.emptyHint}
                                 </Typography>
                             </Box>
                         ))}

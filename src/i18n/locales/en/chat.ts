@@ -250,6 +250,7 @@ export const chat = {
         viewPastFlaggedMenu: "View completed flags",
         viewActiveFlaggedMenu: "View active flags",
         backToActiveFlaggedButton: "Back to active flags",
+        youSuffix: "(you)",
     },
     listItem: {
         backToChat: "Back to Chat",

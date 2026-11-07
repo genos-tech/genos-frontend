@@ -270,7 +270,7 @@ const MemberFieldEditor = ({
                             />
                             <Box sx={{ minWidth: 0 }}>
                                 <Typography level="body-sm" noWrap>
-                                    {option.userName}
+                                    <bdi className="g-bidi-island">{option.userName}</bdi>
                                 </Typography>
                                 <Typography
                                     level="body-xs"

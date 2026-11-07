@@ -619,7 +619,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }}
                         noWrap
                     >
-                        {isYou ? `${dmDisplayName} (you)` : dmDisplayName}
+                        {isYou ? `${dmDisplayName} ${t.chat.sidebar.youSuffix}` : dmDisplayName}
                     </Typography>
                 )}
 

@@ -179,7 +179,7 @@ export const TaskVelocitySection = ({
         <Stack alignItems="center" direction="row" spacing={1}>
             <UserAvatar clickable={false} showPulseDot={false} size={avatarSize} userId={m.id} />
             <Typography level="body-sm" sx={{ whiteSpace: "nowrap" }}>
-                {m.name}
+                <bdi className="g-bidi-island">{m.name}</bdi>
             </Typography>
         </Stack>
     );

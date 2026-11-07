@@ -960,6 +960,9 @@ export const tasks = {
             high: "High",
             critical: "Critical",
         },
+        loadingTasks: "Waiting to load tasks...",
+        emptyTitle: "No tasks to display",
+        emptyHint: "Try adjusting your filters",
     },
 
     // Due-date short labels (used by the dashboard's "Up Next" list).
@@ -989,6 +992,8 @@ export const tasks = {
                 title: "How your tasks are ordered",
                 body: "“By weight” shows the most pressing tasks first — Task Weight (1–25) = priority × time pressure to get started. The heavier a task's effort level, the earlier before its due date it starts climbing, so big jobs surface while there's still room to work on them. “By urgency” orders by overdue → priority → due date.",
             },
+            title: "Up Next",
+            allClosed: "All your assigned tasks are closed — nothing to do here.",
         },
         // My Tasks "Assigned Milestones" — the ongoing milestones the user is
         // an assignee of, in the current project. Cards open the task graph.
@@ -1119,7 +1124,25 @@ export const tasks = {
             coverage: "Tag coverage",
             mostUsed: "Most used",
             status: "Status",
+            colTag: "Tag",
+            colItems: "Items",
+            colProgress: "Progress",
         },
+        currentProject: "Current Project",
+        selectProjectForAnalytics: "Select a project from the sidebar to view sprint analytics",
+        tabOverall: "Overall Insights",
+        tabSprint: "Sprint Insights",
+        tabMyTasks: "My Tasks",
+        tabMemberTasks: "Member's Tasks",
+        newTask: "New Task",
+        sprintProgress: "Sprint Progress",
+        sprintClosedOfTotal: "{closed} / {total} closed",
+        chipMilestones: "{count} Milestones",
+        chipTasks: "{count} Tasks",
+        chipDone: "{count} Done",
+        chipRemaining: "{count} Remaining",
+        assigneeWorkload: "Assignee Workload",
+        tagInsights: "Tag Insights",
     },
 
     // Strings injected into BlockNote-format chat messages by
@@ -1277,5 +1300,11 @@ export const tasks = {
         hotPink: "Hot Pink",
         deepPink: "Deep Pink",
         chocolate: "Chocolate",
+    },
+    layout: {
+        noProjectTitle: "No project selected",
+        noProjectBody:
+            "Pick a project from the sidebar to see its tasks, or spin up a new one to get your team organized.",
+        createProject: "Create new project",
     },
 } as const;
