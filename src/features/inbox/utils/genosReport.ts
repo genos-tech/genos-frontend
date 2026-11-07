@@ -38,7 +38,10 @@ export const safeReportLink = (value: unknown): string | null => {
     if (/[\s\u0000-\u001f\u007f\\]/.test(value)) return null;
     if (value.startsWith(APP_PREFIX)) {
         const path = value.split(/[?#]/, 1)[0];
-        return path.split("/").includes("..") ? null : value;
+        // A dot-segment written plain or percent-encoded (`%2e%2e`), or an encoded
+        // separator that a router may decode into one.
+        if (path.split("/").includes("..") || /%(?:2e|2f|5c)/i.test(path)) return null;
+        return value;
     }
     try {
         const url = new URL(value);
