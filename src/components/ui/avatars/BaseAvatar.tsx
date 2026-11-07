@@ -10,7 +10,7 @@ import { initialOf } from "../../../utils/initials";
  * the app asks for this, or for `UserAvatar` / `GMAvatar` / `MDMAvatar` /
  * `ProjectAvatar`, which are built on it, so size, initials and tint can't
  * drift per call site again. `no-restricted-imports` style rule, enforced by
- * `src/__tests__/avatarBase.test.ts`: no file outside this folder imports
+ * `src/__tests__/baseAvatar.test.tsx` (a source scan): no file outside this folder imports
  * Avatar from `@mui/joy`.
  */
 
@@ -53,20 +53,10 @@ export const BaseAvatar = forwardRef<HTMLDivElement, BaseAvatarProps>(function B
     { size, name, children, tone = "neutral", shape = "circle", sx, ...rest },
     ref
 ) {
-    const tint =
-        tone === "neutral"
-            ? undefined
-            : tone === "accent"
-              ? {
-                    bgcolor: g.accent.subtle,
-                    color: g.accent.text,
-                    "--Icon-color": g.accent.text,
-                }
-              : {
-                    bgcolor: g[tone].subtle,
-                    color: g[tone].text,
-                    "--Icon-color": g[tone].text,
-                };
+    const hue = tone === "neutral" ? undefined : tone === "accent" ? g.accent : g[tone];
+    const tint = hue
+        ? { bgcolor: hue.subtle, color: hue.text, "--Icon-color": hue.text }
+        : undefined;
     return (
         <Avatar
             ref={ref}
