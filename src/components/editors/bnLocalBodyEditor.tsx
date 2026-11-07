@@ -2,16 +2,8 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    PartialBlock,
-} from "@blocknote/core";
+import { useEffect, useRef, useState } from "react";
+import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -53,29 +45,12 @@ import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-    genosTableOptions,
-    withGenosBlockSlashItems,
-} from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
+import { useGenosSchema } from "./genos/genosSchema";
+import { genosTableOptions, withGenosBlockSlashItems } from "./genosBlockSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
+import { HashSuggestionMenuController } from "./HashMention";
+import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
 import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { linkHostCaption } from "./sub/linkHostCaption";
@@ -119,36 +94,17 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
 
     // Same spec set as bnTaskPreview. Memoized [] — useCreateBlockNote
     // keeps its first schema for the editor's lifetime.
-    const schema = useMemo(() => {
-        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
-                mention: CreateMentionSpec(
-                    useTEM.teamMemberProfiles,
-                    socket,
-                    myself,
-                    setMyself,
-                    useUISM,
-                    useCM
-                ),
-                mentionGroup: CreateMentionGroupSpec(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: {
-                ...remainingBlockSpecs,
-                ...genosExtraBlockSpecs,
-                codeBlock: createCodeBlockSpec(codeBlockOptions),
-            },
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
+        "mount"
+    );
 
     const [showGifPicker, setShowGifPicker] = useState(false);
     const dictionary = useBlockNoteDictionary();
