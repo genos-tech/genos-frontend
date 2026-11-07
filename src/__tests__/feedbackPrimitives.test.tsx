@@ -337,6 +337,24 @@ describe("TabStrip", () => {
         expect(screen.getByRole("tab").textContent).toContain("99+");
     });
 
+    it("turns the mouse wheel into a sideways scroll while the strip overflows", () => {
+        mount();
+        const list = screen.getByRole("tablist");
+        // jsdom has no layout: fake an overflowing strip.
+        Object.defineProperty(list, "scrollWidth", { value: 900, configurable: true });
+        Object.defineProperty(list, "clientWidth", { value: 300, configurable: true });
+        list.scrollLeft = 0;
+        const event = new WheelEvent("wheel", { deltaY: 120, cancelable: true });
+        list.dispatchEvent(event);
+        expect(list.scrollLeft).toBe(120);
+        expect(event.defaultPrevented).toBe(true);
+        // Not overflowing: leave the page's own scrolling alone.
+        Object.defineProperty(list, "scrollWidth", { value: 300, configurable: true });
+        const calm = new WheelEvent("wheel", { deltaY: 120, cancelable: true });
+        list.dispatchEvent(calm);
+        expect(calm.defaultPrevented).toBe(false);
+    });
+
     it("closes a closable tab by button and by Delete, without selecting it", () => {
         const { onClose, onChange } = mount("a");
         fireEvent.click(screen.getByRole("button", { name: "Close tab" }));

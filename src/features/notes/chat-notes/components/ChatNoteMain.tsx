@@ -14,10 +14,10 @@ import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
+import { NoteTabStrip } from "../../common/components/NoteTabStrip";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 import { ChatNoteEditorPanel } from "./ChatNoteEditorPanel";
 import { ChatNoteHeader } from "./ChatNoteHeader";
-import { ChatNoteTabList } from "./ChatNoteTabList";
 
 /**
  * Props for the ChatNoteMain component
@@ -277,7 +277,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         isInChatPage={isInChatPage}
                         isInTaskPage={isInTaskPage}
                         myself={myself}
-                        onMobileBack={onMobileBack}
                         openDeleteNote={openDeleteNote}
                         openSearchBox={openSearchBox}
                         setMyself={setMyself}
@@ -292,6 +291,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         useUISM={useUISM}
                         onCreateChildNote={handleCreateChildNote}
                         onDeleteNote={handleDeleteNote}
+                        onMobileBack={onMobileBack}
                     />
                 </Stack>
 
@@ -318,17 +318,19 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                      * The strip is hidden when there are 0–1 tabs
                      * (no value to add). */}
                     {!isInChatPage && (
-                        <ChatNoteTabList
-                            selectedTabIndex={useNM.selectedTabIndex}
-                            tabItems={useNM.tabItems}
+                        <NoteTabStrip
+                            selectedIndex={useNM.selectedTabIndex}
+                            tabs={useNM.tabItems}
                             onCloseTab={handleCloseTab}
+                            onSelect={handleTabChange}
                         />
                     )}
                     {isInChatPage && useNM.chatPanelApi.tabs.length > 1 && (
-                        <ChatNoteTabList
-                            selectedTabIndex={Math.max(0, chatPanelActiveTabIndex)}
-                            tabItems={useNM.chatPanelApi.tabs}
+                        <NoteTabStrip
+                            selectedIndex={Math.max(0, chatPanelActiveTabIndex)}
+                            tabs={useNM.chatPanelApi.tabs}
                             onCloseTab={handleChatPanelCloseTab}
+                            onSelect={handleChatPanelTabChange}
                         />
                     )}
 

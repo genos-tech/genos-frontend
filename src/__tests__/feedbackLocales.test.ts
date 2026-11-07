@@ -28,6 +28,8 @@ const KEYS = [
     "common.feedback.toast.undo",
     "chat.threadTabs.ariaLabel",
     "inbox.tabs.ariaLabel",
+    "notes.tabs.ariaLabel",
+    "notes.tabs.closeTab",
 ] as const;
 
 const OTHERS = { ja, es, fr, zh, ar, hi } as const;

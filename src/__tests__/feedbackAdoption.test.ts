@@ -38,6 +38,23 @@ describe("feedback adoption", () => {
         expect(uses("features/inbox/components/InboxTabHeader.tsx")).toBe(true);
     });
 
+    it("the three note tab lists are one NoteTabStrip", () => {
+        for (const gone of [
+            "features/notes/common/components/NoteTabList.tsx",
+            "features/notes/chat-notes/components/ChatNoteTabList.tsx",
+            "features/notes/task-notes/components/TaskNoteTabs.tsx",
+        ]) {
+            expect(files.some(({ f }) => f === gone)).toBe(false);
+        }
+        for (const main of [
+            "features/notes/my-notes/components/MyNoteMain.tsx",
+            "features/notes/task-notes/components/TaskNoteMain.tsx",
+            "features/notes/chat-notes/components/ChatNoteMain.tsx",
+        ]) {
+            expect(files.find(({ f }) => f === main)?.text).toContain("NoteTabStrip");
+        }
+    });
+
     it("the four old EmptyStates are gone: each renders the shared one", () => {
         const shared = (path: string) =>
             files.find(({ f }) => f === path)?.text.includes("ui/feedback/EmptyState") ?? false;

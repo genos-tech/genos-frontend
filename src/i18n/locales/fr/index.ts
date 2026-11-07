@@ -2308,6 +2308,10 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "Notes ouvertes",
+            closeTab: "Fermer l'onglet",
+        },
         list: {
             empty: "Aucune note pour le moment",
             newNote: "Nouvelle note",

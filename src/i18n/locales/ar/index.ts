@@ -2653,6 +2653,10 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "الملاحظات المفتوحة",
+            closeTab: "إغلاق علامة التبويب",
+        },
         accessRequest: {
             privateBadge: "ملاحظة خاصة",
             heading: "ليس لديك صلاحية الوصول إلى هذه الملاحظة",

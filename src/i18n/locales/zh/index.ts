@@ -2210,6 +2210,10 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "已打开的笔记",
+            closeTab: "关闭标签页",
+        },
         list: {
             empty: "暂无笔记",
             newNote: "新建笔记",

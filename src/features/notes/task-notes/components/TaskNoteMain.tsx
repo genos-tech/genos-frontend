@@ -14,12 +14,12 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
+import { NoteTabStrip } from "../../common/components/NoteTabStrip";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteEditorPanel } from "./TaskNoteEditorPanel";
 import { TaskNoteHeader } from "./TaskNoteHeader";
-import { TaskNoteTabs } from "./TaskNoteTabs";
 
 type TaskNoteMainProps = {
     useTEM: TeamManagementState;
@@ -77,6 +77,14 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     // regardless of whether it's a task tab. Falls back to a noteId
     // search if the index drifted (e.g. another tab was closed in the
     // same render cycle).
+    const handleTabChange = useCallback(
+        (newValue: number) => {
+            const next = useNM.tabsApi.tabs[newValue];
+            if (next) useNM.tabsApi.switchTab(next.id);
+        },
+        [useNM.tabsApi]
+    );
+
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
             const all = useNM.tabsApi.tabs;
@@ -286,7 +294,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         editor body comes from the LRU pool in
                         NoteContentRenderer; in task-page mode we render
                         a single inline panel just below. */}
-                <TaskNoteTabs useNM={useNM} onCloseTab={handleCloseTab} />
+                <NoteTabStrip
+                    selectedIndex={useNM.selectedTabIndex}
+                    tabs={useNM.tabItems}
+                    onCloseTab={handleCloseTab}
+                    onSelect={handleTabChange}
+                />
 
                 {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always

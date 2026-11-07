@@ -2675,6 +2675,10 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "खुले हुए नोट",
+            closeTab: "टैब बंद करें",
+        },
         list: {
             empty: "अभी कोई नोट नहीं",
             newNote: "नया नोट",

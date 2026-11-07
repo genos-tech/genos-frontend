@@ -77,6 +77,23 @@ export const TabStrip = ({
         el?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
     }, [value, tabs.length]);
 
+    // A mouse wheel only moves vertically, which would leave a strip with
+    // many tabs (open notes) unreachable without a trackpad: turn it into a
+    // sideways scroll while the strip overflows. Non-passive so it can stop
+    // the page from scrolling too.
+    useEffect(() => {
+        const el = listRef.current;
+        if (!el) return;
+        const onWheel = (e: WheelEvent) => {
+            if (el.scrollWidth <= el.clientWidth) return;
+            if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+            e.preventDefault();
+            el.scrollLeft += e.deltaY;
+        };
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => el.removeEventListener("wheel", onWheel);
+    }, []);
+
     const enabled = tabs.filter((t) => !t.disabled);
 
     const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

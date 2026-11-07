@@ -2488,6 +2488,10 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "開いているノート",
+            closeTab: "タブを閉じる",
+        },
         list: {
             empty: "ノートはまだありません",
             newNote: "新規ノート",

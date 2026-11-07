@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import { IconButton, Stack, Tabs } from "@mui/joy";
+import { IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
@@ -16,7 +16,7 @@ import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
-import { NoteTabList } from "../../common/components/NoteTabList";
+import { NoteTabStrip } from "../../common/components/NoteTabStrip";
 import {
     noteTypeFromBucket,
     personalNoteScopes,
@@ -278,15 +278,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     )}
                 </Stack>
 
-                <Tabs
-                    sx={{ width: "100%" }}
-                    value={useNM.selectedTabIndex}
-                    onChange={(_, val) => {
-                        handleTabChange(Number(val));
-                    }}
-                >
-                    <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
-                </Tabs>
+                <NoteTabStrip
+                    selectedIndex={useNM.selectedTabIndex}
+                    tabs={useNM.tabItems}
+                    onCloseTab={handleCloseTab}
+                    onSelect={handleTabChange}
+                />
 
                 {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always

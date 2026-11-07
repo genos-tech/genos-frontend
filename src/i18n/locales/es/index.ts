@@ -2690,6 +2690,10 @@ export const es: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "Notas abiertas",
+            closeTab: "Cerrar pestaña",
+        },
         accessRequest: {
             privateBadge: "Nota privada",
             heading: "No tienes acceso a esta nota",
