@@ -4244,6 +4244,7 @@ export const fr: DeepPartial<Messages> = {
             none: "Aucun",
         },
         filterButtons: {
+            title: "Filtres",
             status: "Statut : {value}",
             tags: "Mots-clés : {value}",
             priority: "Priorité : {value}",

@@ -645,7 +645,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 mb: 0.5,
                                             }}
                                         >
-                                            Project name
+                                            {t.admin.projectProfile.projectName}
                                         </FormLabel>
                                         {nameEditMode ? (
                                             <Stack direction="row" spacing={1} alignItems="center">
@@ -1203,7 +1203,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                Code
+                                                {t.admin.projectProfile.code}
                                             </FormLabel>
                                             {codeEditMode ? (
                                                 <Stack
@@ -1248,7 +1248,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         loading={codeSaving}
                                                         onClick={handleCodeSave}
                                                     >
-                                                        Save
+                                                        {t.common.actions.save}
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -1259,7 +1259,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             setCodeError(null);
                                                         }}
                                                     >
-                                                        Cancel
+                                                        {t.common.actions.cancel}
                                                     </Button>
                                                 </Stack>
                                             ) : (

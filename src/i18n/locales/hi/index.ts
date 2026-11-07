@@ -2152,6 +2152,7 @@ export const hi: DeepPartial<Messages> = {
             none: "कोई नहीं",
         },
         filterButtons: {
+            title: "फ़िल्टर",
             status: "स्थिति: {value}",
             tags: "टैग: {value}",
             priority: "प्राथमिकता: {value}",

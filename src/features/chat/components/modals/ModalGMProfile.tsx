@@ -593,7 +593,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 mb: 0.5,
                                             }}
                                         >
-                                            Group name
+                                            {t.chat.modals.gmProfile.groupName}
                                         </FormLabel>
                                         {nameEditMode ? (
                                             <Stack alignItems="center" direction="row" spacing={1}>
