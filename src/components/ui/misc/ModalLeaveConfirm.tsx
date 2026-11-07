@@ -32,6 +32,7 @@ export const ModalLeaveConfirm = ({
 }: Props) => {
     const { t } = useTranslation();
 
+    // role stays a plain "dialog": callers and tests look for it.
     return (
         <ConfirmDialog
             cancelLabel={t.common.leaveConfirm.cancel}
@@ -39,8 +40,9 @@ export const ModalLeaveConfirm = ({
             description={description}
             entityName={entityName}
             icon={<LogoutRoundedIcon sx={{ color: g.danger.text }} />}
-            open={open}
+            role="dialog"
             title={title}
+            open={open}
             destructive
             onClose={onCancel}
             onConfirm={async () => {
