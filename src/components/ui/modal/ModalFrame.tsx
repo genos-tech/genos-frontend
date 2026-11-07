@@ -206,6 +206,7 @@ export const ModalFrame = ({
                                 mt: "-4px",
                                 color: g.text.secondary,
                                 "&:hover": { background: g.hover, color: g.text.primary },
+                                "&:focus:not(:focus-visible)": { outline: "none" },
                                 "&:focus-visible": focusRing,
                             }}
                             onClick={onClose}

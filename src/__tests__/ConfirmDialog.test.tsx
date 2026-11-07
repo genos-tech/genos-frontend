@@ -320,6 +320,31 @@ describe("ConfirmDialog", () => {
         });
     });
 
+    it("closed from outside: reopening starts clean (no old phrase, no old error)", async () => {
+        const phrase = "Q3 launch";
+        const { props, rerender } = mount({
+            confirmPhrase: phrase,
+            onConfirm: vi.fn(async () => {
+                throw new Error("The server said no.");
+            }),
+        });
+        fireEvent.change(screen.getByLabelText(phrase), { target: { value: phrase } });
+        await act(async () => {
+            fireEvent.click(confirmBtn());
+        });
+        expect(screen.getByRole("alert")).toBeTruthy();
+        const view = (open: boolean) => (
+            <CssVarsProvider>
+                <ConfirmDialog {...props} open={open} />
+            </CssVarsProvider>
+        );
+        rerender(view(false));
+        rerender(view(true));
+        expect(screen.queryByRole("alert")).toBeNull();
+        expect((screen.getByLabelText(phrase) as HTMLInputElement).value).toBe("");
+        expect(confirmBtn().disabled).toBe(true);
+    });
+
     describe("look", () => {
         it("the destructive button is flat danger.solid with its own foreground, no gradient", () => {
             mount();
@@ -366,11 +391,11 @@ describe("ConfirmDialog", () => {
             <CssVarsProvider>
                 <div onClick={onClick} onKeyDown={onKeyDown}>
                     <ConfirmDialog
-                        destructive
-                        open
                         cancelLabel="Cancel"
                         confirmLabel="Delete"
                         title="T"
+                        destructive
+                        open
                         onClose={() => {}}
                         onConfirm={() => {}}
                     />
@@ -394,13 +419,13 @@ describe("ConfirmDialog", () => {
                 <CssVarsProvider>
                     <I18nProvider>
                         <ConfirmDialog
-                            destructive
-                            open
                             cancelLabel="إلغاء"
                             confirmLabel="حذف"
                             description="لا يمكن التراجع."
                             entityName="مهمة"
                             title="حذف المهمة؟"
+                            destructive
+                            open
                             onClose={onClose}
                             onConfirm={() => {}}
                         />

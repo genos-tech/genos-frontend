@@ -1,4 +1,4 @@
-import { ReactNode, useId, useState } from "react";
+import { ReactNode, useEffect, useId, useState } from "react";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Input } from "@mui/joy";
 
@@ -29,6 +29,14 @@ import { ModalFrame, ModalFrameSize } from "./ModalFrame";
  * `onClose` once `onConfirm` settles; a `false` result or a throw keeps it
  * open, and a throw shows its message.
  */
+
+// index.css still has the Vite template's `button:focus { outline: 4px auto … }`,
+// which rings a button on a mouse click too. Show the ring for the keyboard
+// only (and for the programmatic initial focus when the dialog was opened by it).
+const buttonFocus = {
+    "&:focus:not(:focus-visible)": { outline: "none" },
+    "&:focus-visible": focusRing,
+} as const;
 
 type Props = {
     open: boolean;
@@ -98,6 +106,15 @@ export const ConfirmDialog = ({
     const [typed, setTyped] = useState("");
     const phraseId = useId();
 
+    // Closed from outside (the caller owns closing by default): the next
+    // opening starts clean, not with the last phrase or error.
+    useEffect(() => {
+        if (!open) {
+            setTyped("");
+            setThrown(null);
+        }
+    }, [open]);
+
     const busy = busyProp || running;
     const error = errorProp ?? thrown;
     const phraseOk = confirmPhrase == null || typed.trim() === confirmPhrase.trim();
@@ -151,7 +168,7 @@ export const ConfirmDialog = ({
                         variant="outlined"
                         sx={{
                             borderColor: g.border.default,
-                            "&:focus-visible": focusRing,
+                            ...buttonFocus,
                         }}
                         onClick={close}
                     >
@@ -166,7 +183,7 @@ export const ConfirmDialog = ({
                         variant="solid"
                         sx={{
                             fontWeight: 500,
-                            "&:focus-visible": focusRing,
+                            ...buttonFocus,
                             ...(destructive && {
                                 // Flat, real red. Never the brand gradient.
                                 background: g.danger.solid,
