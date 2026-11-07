@@ -8,9 +8,11 @@ import { useTranslation } from "../../../i18n";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
 
 /**
- * "What your AI apps open": the one switch for the markers Genos keeps of which
- * items the person's connected AI apps opened or changed over MCP (references
- * only, never text, only they can see them, 180 days).
+ * "What Genos notes about your work": the one switch for the markers Genos keeps of
+ * which items the person's connected AI apps opened or changed over MCP, and of the
+ * few changes of their own that nothing else saves (collaborators, dependencies,
+ * to-do edits, note shares: MIP-1085). References only, never text, only they can
+ * see them, 180 days.
  *
  * ON by default. Turning it OFF deletes what was noted, so it asks first, in
  * the page, and the switch does not move until the server has confirmed. Turning
