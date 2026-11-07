@@ -103,7 +103,6 @@ describe("no raw Joy Avatar outside components/ui/avatars", () => {
     // Files whose raw Avatars are being converted in the table/board pilot and
     // the chat-sidebar polish (MIP-1133 follow-up). This list may only SHRINK.
     const PENDING = new Set([
-        "features/tasks/components/board/SprintBoardCard.tsx",
         "features/tasks/components/table/DraggableTaskRow.tsx",
         "features/tasks/components/table/TaskFilterMenu.tsx",
         "features/tasks/components/sidebar/projects_subs/MilestonesListItem.tsx",
