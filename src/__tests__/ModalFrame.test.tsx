@@ -175,9 +175,9 @@ describe("ModalFrame", () => {
                 <CssVarsProvider>
                     <div onClick={onClick} onDoubleClick={onDoubleClick} onKeyDown={onKeyDown}>
                         <ModalFrame
-                            open
                             actions={<button type="button">Go</button>}
                             title="T"
+                            open
                             onClose={() => {}}
                         >
                             <input aria-label="field" />
@@ -221,10 +221,10 @@ describe("ModalFrame", () => {
                 <CssVarsProvider>
                     <I18nProvider>
                         <ModalFrame
-                            open
                             actions={<button type="button">حفظ</button>}
                             description="وصف"
                             title="عنوان"
+                            open
                             onClose={() => {}}
                         >
                             نص
