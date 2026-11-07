@@ -3,34 +3,16 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useEffect, useRef, useState } from "react";
-import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    BlockTypeSelectItem,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
     FormattingToolbarController,
-    getDefaultReactSlashMenuItems,
     SideMenu,
     SideMenuController,
-    SuggestionMenuController,
-    TableCellMergeButton,
-    TextAlignButton,
     useCreateBlockNote,
 } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
@@ -39,19 +21,15 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { genosTableOptions, withGenosBlockSlashItems } from "./genosBlockSpecs";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
-import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosDocumentToolbar } from "./genos/GenosToolbars";
+import { genosTableOptions } from "./genosBlockSpecs";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
@@ -86,7 +64,6 @@ const EMPTY_DOC: PartialBlock[] = [{ type: "paragraph", content: [] }];
 export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const { useTEM, myself, setMyself, socket, useUISM, useCM, initialBody, onChange } = props;
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -108,14 +85,6 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
 
     const [showGifPicker, setShowGifPicker] = useState(false);
     const dictionary = useBlockNoteDictionary();
-
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGenosBlockSlashItems(
-            editor,
-            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
-        );
 
     const editor = useCreateBlockNote({
         ...TAB_INDENT_OPTIONS,
@@ -181,98 +150,21 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                 />
                 <FormattingToolbarController
                     formattingToolbar={() => (
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={[
-                                    ...getBlockTypeSelectItemsForDocuments(editor),
-                                    {
-                                        name: t.common.editor.alertBlock,
-                                        type: "alert",
-                                        icon: RiAlertFill,
-                                    } satisfies BlockTypeSelectItem,
-                                ]}
-                            />
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
-                            <TextAlignButton
-                                key={"textAlignCenterButton"}
-                                textAlignment={"center"}
-                            />
-                            <TextAlignButton
-                                key={"textAlignRightButton"}
-                                textAlignment={"right"}
-                            />
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
-                            <GifToolbarButton
-                                key={"gifButton"}
-                                setShowGifPicker={setShowGifPicker}
-                            />
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"fileReplaceButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-                            <TableCellMergeButton key={"tableCellMergeButton"} />
-                        </FormattingToolbar>
+                        <GenosDocumentToolbar
+                            editor={editor}
+                            setShowGifPicker={setShowGifPicker}
+                        />
                     )}
                 />
-                {/* "#" mentions: tasks / notes / GM chats / projects */}
-                <HashSuggestionMenuController editor={editor} />
-                {/* "@" mentions */}
-                <SuggestionMenuController
-                    suggestionMenuComponent={MentionSuggestionMenu}
-                    triggerCharacter={"@"}
-                    getItems={async (query) =>
-                        filterAndRankSuggestionItems(
-                            MentionMenuItems(
-                                useTEM.teamMemberProfiles,
-                                editor,
-                                useTEM.teamMembers,
-                                myself.userId,
-                                mentionGroups
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    triggerCharacter={"/"}
-                    getItems={async (query) =>
-                        filterSuggestionItems(
-                            getCustomSlashMenuItems(
-                                editor as unknown as typeof schema.BlockNoteEditor
-                            ),
-                            query
-                        )
-                    }
-                />
-                {/* ":" custom + unicode emoji */}
-                <SuggestionMenuController
-                    getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                    minQueryLength={2}
-                    triggerCharacter={":"}
+                <GenosSuggestionMenus
+                    editor={editor}
+                    getMentionSources={() => ({
+                        teamMemberProfiles: useTEM.teamMemberProfiles,
+                        teamMembers: useTEM.teamMembers,
+                        myselfUserId: myself.userId,
+                        mentionGroups,
+                    })}
+                    slash={{ preset: "document", setShowGifPicker }}
                 />
             </BlockNoteView>
         </Box>
