@@ -4,6 +4,7 @@ import { Box } from "@mui/joy";
 import { AvatarContextProvider } from "../../components/ui/avatars/AvatarContext";
 import { g } from "../../theme/tokens";
 import type { UserProps } from "../../types/admin";
+import type { TaskTableProps } from "../../types/tasks";
 import {
     TaskCard,
     TaskCardFrame,
@@ -11,6 +12,9 @@ import {
     TaskListPanel,
     type TaskCardTask,
 } from "../tasks/components/card";
+import { MilestoneNodeView } from "../tasks/diagram/components/MilestoneNodeCard";
+import { TaskNodeView } from "../tasks/diagram/components/TaskNodeCard";
+import type { TaskNodeData } from "../tasks/diagram/types";
 
 /**
  * The task component family (MIP-1124) as the app uses it: the board, mobile and
@@ -112,9 +116,201 @@ const SAMPLES: TaskCardTask[] = [
     },
 ];
 
+// A graph node as the canvas builds it, from sample data. The views render
+// without React Flow (no handles), so the page shows the real card.
+const nodeData = (
+    over: Omit<Partial<TaskNodeData>, "task"> & { task: Partial<TaskTableProps> }
+): TaskNodeData => {
+    const { task, ...rest } = over;
+    return {
+        task: {
+            id: 1,
+            displayId: "GEN-1",
+            title: "A task in the graph",
+            status: "Open",
+            priority: "Normal",
+            assigneeId: "ds-1",
+            assigneeName: "Aiko Tanaka",
+            startDate: day(-2),
+            dueDate: day(9),
+            isMilestone: false,
+            ...task,
+        } as unknown as TaskTableProps,
+        isRoot: false,
+        isCurrentPreview: false,
+        isMilestone: false,
+        isExternal: false,
+        closedDescendantCount: 0,
+        totalDescendantCount: 0,
+        openBlockerCount: 0,
+        projectName: "genos-web",
+        onChange: NOOP,
+        onAddSubtask: NOOP,
+        onDelete: NOOP,
+        onOpenPreview: NOOP,
+        ...rest,
+    };
+};
+
+const NODE_STATES: Array<{ label: string; data: TaskNodeData }> = [
+    { label: "Plain", data: nodeData({ task: {} }) },
+    {
+        label: "Root of the graph",
+        data: nodeData({ isRoot: true, task: { title: "The task the graph opened from" } }),
+    },
+    {
+        label: "Current preview",
+        data: nodeData({ isCurrentPreview: true, task: { status: "WIP", title: "You are here" } }),
+    },
+    {
+        label: "Just created",
+        data: nodeData({
+            isNewlyCreated: true,
+            task: { title: "Added from the graph", startDate: null, dueDate: null },
+        }),
+    },
+    {
+        label: "Assigned to the viewer",
+        data: nodeData({ isAssignedToViewer: true, task: { title: "One of your tasks" } }),
+    },
+    {
+        label: "Dimmed (another member's)",
+        data: nodeData({
+            isDimmed: true,
+            task: { assigneeId: "ds-2", assigneeName: "Ben Ito", title: "Someone else's task" },
+        }),
+    },
+    {
+        label: "Ghost (outside the tree)",
+        data: nodeData({
+            isExternal: true,
+            task: { status: "Closed", title: "A blocker in another project", assigneeId: null },
+        }),
+    },
+    {
+        label: "Overdue (red edge)",
+        data: nodeData({
+            openBlockerCount: 2,
+            task: {
+                status: "Blocked",
+                priority: "Critical",
+                title: "Waiting on two blockers",
+                startDate: day(-12),
+                dueDate: day(-3),
+            },
+        }),
+    },
+    {
+        label: "Due soon (amber edge)",
+        data: nodeData({
+            task: { status: "WIP", priority: "High", title: "Due in two days", dueDate: day(2) },
+        }),
+    },
+    {
+        label: "Closed",
+        data: nodeData({
+            task: { status: "Closed", title: "Shipped", priority: "Low", dueDate: day(-1) },
+        }),
+    },
+];
+
+const NODE_STATUSES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"].map((status) => ({
+    label: status,
+    data: nodeData({
+        task: { status, title: `A ${status} task`, startDate: null, dueDate: null },
+    }),
+}));
+
+const MILESTONE_NODES: Array<{ label: string; data: TaskNodeData }> = [
+    {
+        label: "Milestone, behind",
+        data: nodeData({
+            isMilestone: true,
+            closedDescendantCount: 3,
+            totalDescendantCount: 15,
+            sprint: {
+                name: "Sprint 8",
+                startDate: day(-12),
+                endDate: day(2),
+            } as TaskNodeData["sprint"],
+            task: {
+                isMilestone: true,
+                status: "WIP",
+                title: "Design system rollout",
+                startDate: day(-12),
+                dueDate: day(2),
+                assigneeId: null,
+            },
+        }),
+    },
+    {
+        label: "Milestone, on track, current preview",
+        data: nodeData({
+            isMilestone: true,
+            isCurrentPreview: true,
+            closedDescendantCount: 9,
+            totalDescendantCount: 12,
+            sprint: {
+                name: "Sprint 8",
+                startDate: day(-12),
+                endDate: day(2),
+            } as TaskNodeData["sprint"],
+            task: {
+                isMilestone: true,
+                status: "Open",
+                title: "Mobile polish",
+                startDate: day(-12),
+                dueDate: day(2),
+                assigneeId: null,
+            },
+        }),
+    },
+    {
+        label: "Milestone, no dates, no tasks",
+        data: nodeData({
+            isMilestone: true,
+            task: {
+                isMilestone: true,
+                status: "Pending",
+                title: "Someday",
+                startDate: null,
+                dueDate: null,
+                assigneeId: null,
+            },
+        }),
+    },
+];
+
 const Caption = ({ children }: { children: ReactNode }) => (
     <Box component="span" sx={{ color: g.text.tertiary, fontSize: "var(--g-type-caption-size)" }}>
         {children}
+    </Box>
+);
+
+const NodeGrid = ({
+    items,
+    milestone = false,
+}: {
+    items: Array<{ label: string; data: TaskNodeData }>;
+    milestone?: boolean;
+}) => (
+    <Box
+        sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 260px))",
+        }}
+    >
+        {items.map((item) => (
+            <Box key={item.label} sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                <Caption>{item.label}</Caption>
+                {milestone ? (
+                    <MilestoneNodeView data={item.data} />
+                ) : (
+                    <TaskNodeView data={item.data} />
+                )}
+            </Box>
+        ))}
     </Box>
 );
 
@@ -162,6 +358,24 @@ export const TaskCardSamples = () => (
                 ))}
             </TaskListPanel>
             <Caption>Compact: short lists inside a card (Overdue, Due this week).</Caption>
+
+            <NodeGrid items={NODE_STATES} />
+            <Caption>
+                Task graph node: the same card surface with the graph's highlights as typed states
+                (the card the preview came from, a card just added, a card assigned to the viewer),
+                a dashed dimmed ghost, and a red or amber edge for urgency. A highlight is a border
+                and a halo in a role color, never a tint per status.
+            </Caption>
+            <NodeGrid items={NODE_STATUSES} />
+            <Caption>
+                Graph node, one per status: the icon and the word the table uses. No border tint,
+                no glow.
+            </Caption>
+            <NodeGrid items={MILESTONE_NODES} milestone />
+            <Caption>
+                Graph milestone node: the flag, a stronger border, the pace verdict beside the
+                status, a progress bar with the expected-by-now marker.
+            </Caption>
         </Box>
     </SampleRoster>
 );
