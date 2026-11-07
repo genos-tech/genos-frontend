@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 
 import { useTranslation } from "../../../../../i18n";
+import { g } from "../../../../../theme/tokens";
 import { MilestoneFolder } from "../../../sprint-milestone/types";
 
 // The "..." menus of the milestone sidebar (MIP-847). Both stop the click
@@ -22,7 +23,7 @@ import { MilestoneFolder } from "../../../sprint-milestone/types";
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
 // The amber the notes sidebar's favorite stars use.
-export const FAVORITE_COLOR = "#f59e0b";
+export const FAVORITE_COLOR = g.warning.solid;
 
 type MilestoneRowMenuProps = {
     milestoneTitle: string;

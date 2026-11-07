@@ -22,8 +22,12 @@ import { Box, Button, CircularProgress, IconButton, Input, Typography } from "@m
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { NavItem } from "../../components/ui/nav/NavItem";
+import { NAV_KEEP_CLASS } from "../../components/ui/nav/navStyles";
+import { SectionHeader } from "../../components/ui/nav/SectionHeader";
 import { fmt, useTranslation } from "../../i18n";
 import type { AgentSessionSummary } from "../../services/agentApi";
+import { g } from "../../theme/tokens";
 import { relativeTimeLabel } from "../spotlight/SpotlightContent";
 
 interface Props {
@@ -75,183 +79,86 @@ export const GenosSessionSidebar = ({
 
     const renderRow = (s: AgentSessionSummary) => {
         const isActive = s.session_id === activeSessionId;
+        const pinLabel = s.is_pinned ? t.genos.sidebar.unpin : t.genos.sidebar.pin;
         return (
-            <Box
+            <NavItem
                 key={s.session_id}
-                sx={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 0.25,
-                    flexShrink: 0,
-                    borderRadius: "10px",
-                    // The pin button is a sibling of the row button, not a
-                    // child: a button inside a button is invalid HTML and
-                    // browsers do not reliably deliver the inner click.
-                    // Hovering the pair reveals the pin.
-                    "&:hover .genos-session-pin": { opacity: 1 },
-                }}
-            >
-                <Box
-                    aria-current={isActive ? "true" : undefined}
-                    component="button"
-                    type="button"
-                    sx={{
-                        flex: 1,
-                        minWidth: 0,
-                        textAlign: "left",
-                        background: isActive
-                            ? isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.14)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                            : "transparent",
-                        border: "1px solid",
-                        borderColor: isActive
-                            ? isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.35)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.28)"
-                            : "transparent",
-                        borderRadius: "10px",
-                        px: 1.25,
-                        py: 0.875,
-                        cursor: "pointer",
-                        font: "inherit",
-                        color: "inherit",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.25,
-                        transition: "background 100ms ease, border-color 100ms ease",
-                        "&:hover": {
-                            background: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.10)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                        },
-                        "&:focus-visible": {
-                            outline: "2px solid",
-                            outlineColor: "primary.400",
-                            outlineOffset: "1px",
-                        },
-                    }}
-                    onClick={() => onSelectSession(s.session_id)}
-                >
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            fontWeight: 500,
-                            // Two-line clamp keeps rows compact when
-                            // the first query runs long (server
-                            // truncates at ~140 chars regardless).
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {s.first_query || t.spotlight.states.untitled}
-                    </Typography>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.75,
-                            fontSize: "0.75rem",
-                            opacity: 0.65,
-                        }}
-                    >
-                        <Box component="span">
-                            {relativeTimeLabel(s.last_active_at, t.spotlight)}
-                        </Box>
-                        <Box component="span" sx={{ opacity: 0.6 }}>
-                            ·
-                        </Box>
-                        <Box component="span">
-                            {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
-                        </Box>
-                    </Box>
-                    {pinError === s.session_id && (
-                        <Typography level="body-xs" sx={{ color: "danger.500" }}>
-                            {t.genos.sidebar.pinFailed}
-                        </Typography>
-                    )}
-                </Box>
-
-                <AppTooltip
-                    placement="top"
-                    title={s.is_pinned ? t.genos.sidebar.unpin : t.genos.sidebar.pin}
-                >
-                    <IconButton
-                        aria-label={s.is_pinned ? t.genos.sidebar.unpin : t.genos.sidebar.pin}
-                        aria-pressed={s.is_pinned}
-                        className="genos-session-pin"
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            flexShrink: 0,
-                            mt: 0.25,
-                            // No plate behind the pin in any state — the icon
-                            // carries this on its own. Fed to Joy's own
-                            // variables (which its variant styles read first)
-                            // rather than overridden per-selector, so there's
-                            // no specificity fight to lose.
-                            //
-                            // `plainActiveBg` matters beyond the press: Joy
-                            // applies its "active" variant to
-                            // `[aria-pressed="true"]` as well, which framed
-                            // every PINNED pin even at rest. The attribute
-                            // stays — it's how the toggle state reaches a
-                            // screen reader — but the frame goes, because the
-                            // filled icon already says the same thing.
-                            "--variant-plainHoverBg": "transparent",
-                            "--variant-plainActiveBg": "transparent",
-                            // Only shapes the focus ring now.
-                            borderRadius: "8px",
-                            // Pinned rows keep their pin visible — it's
-                            // state, not just an action. Unpinned ones
-                            // reveal it on hover so the list stays quiet,
-                            // but focus must reveal it too or the button
-                            // is unreachable by keyboard.
-                            opacity: s.is_pinned ? 1 : 0,
-                            // Opacity stays fast so the reveal keeps up with
-                            // a pointer travelling down the rows; the hover
-                            // feedback below is slower and eased, because
-                            // that one is meant to be watched.
-                            transition:
-                                "opacity 100ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), color 180ms ease",
-                            "& svg": {
-                                transition: "transform 180ms cubic-bezier(0.4, 0, 0.2, 1)",
-                            },
-                            "&:hover": {
-                                color: isDark ? "var(--gp-brandalt-300)" : "var(--gp-brand-700)",
-                                transform: "scale(1.12)",
-                                // Reads as pushing the pin in, or backwards,
-                                // pulling it out of a row already pinned.
-                                "& svg": { transform: "rotate(-15deg)" },
-                            },
-                            "&:focus-visible": { opacity: 1 },
-                            // After `&:hover` deliberately: same specificity,
-                            // so source order is what lets the press win
-                            // while the pointer is still over the button.
-                            "&:active": { transform: "scale(0.95)" },
-                        }}
-                        onClick={() => onTogglePin(s.session_id)}
-                    >
-                        {s.is_pinned ? (
-                            <PushPinRoundedIcon sx={{ fontSize: 15 }} />
-                        ) : (
-                            <PushPinOutlinedIcon sx={{ fontSize: 15 }} />
+                as="div"
+                // Title (two-line clamp) over time and turn count: a documented
+                // multiple of a density row.
+                lines={2}
+                selected={isActive}
+                sx={{ flexShrink: 0, height: "auto", py: 0.5 }}
+                label={s.first_query || t.spotlight.states.untitled}
+                // Two-line clamp keeps rows compact when the first query runs
+                // long (server truncates at ~140 chars regardless).
+                actions={
+                    <AppTooltip placement="top" title={pinLabel}>
+                        <IconButton
+                            aria-label={pinLabel}
+                            aria-pressed={s.is_pinned}
+                            className={`genos-session-pin${s.is_pinned ? ` ${NAV_KEEP_CLASS}` : ""}`}
+                            size="sm"
+                            variant="plain"
+                            sx={{
+                                flexShrink: 0,
+                                borderRadius: g.radius.sm,
+                                // No plate behind the pin in any state: the icon
+                                // carries this on its own. `plainActiveBg` matters
+                                // beyond the press: Joy applies its "active"
+                                // variant to `[aria-pressed="true"]` as well, which
+                                // framed every PINNED pin even at rest.
+                                "--variant-plainHoverBg": "transparent",
+                                "--variant-plainActiveBg": "transparent",
+                                "& svg": { transition: `transform ${g.motion.base} ${g.ease}` },
+                                "&:hover": {
+                                    color: g.accent.text,
+                                    // Reads as pushing the pin in, or backwards,
+                                    // pulling it out of a row already pinned.
+                                    "& svg": { transform: "rotate(-15deg)" },
+                                },
+                            }}
+                            onClick={() => onTogglePin(s.session_id)}
+                        >
+                            {s.is_pinned ? (
+                                <PushPinRoundedIcon sx={{ fontSize: 15 }} />
+                            ) : (
+                                <PushPinOutlinedIcon sx={{ fontSize: 15 }} />
+                            )}
+                        </IconButton>
+                    </AppTooltip>
+                }
+                secondary={
+                    <>
+                        {relativeTimeLabel(s.last_active_at, t.spotlight)}
+                        {" · "}
+                        {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
+                        {pinError === s.session_id && (
+                            <Box component="span" sx={{ display: "block", color: g.danger.text }}>
+                                {t.genos.sidebar.pinFailed}
+                            </Box>
                         )}
-                    </IconButton>
-                </AppTooltip>
-            </Box>
+                    </>
+                }
+                // The pin is a SIBLING of the row button, not a child: a button
+                // inside a button is invalid HTML and browsers do not reliably
+                // deliver the inner click. A pinned row keeps its pin showing
+                // (it is state, not just an action); the rest appear on hover
+                // and, because focus reveals them too, are reachable by keyboard.
+                labelSx={{
+                    whiteSpace: "normal",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    fontWeight: 500,
+                }}
+                onClick={() => onSelectSession(s.session_id)}
+            />
         );
     };
 
     const renderGroupLabel = (label: string) => (
-        <Typography
-            level="body-xs"
-            sx={{ fontWeight: 700, opacity: 0.55, px: 0.5, pt: 0.5, flexShrink: 0 }}
-        >
-            {label}
-        </Typography>
+        <SectionHeader as="div" label={label} sx={{ flexShrink: 0 }} />
     );
 
     return (
@@ -284,6 +191,7 @@ export const GenosSessionSidebar = ({
                 placeholder={t.genos.sidebar.searchPlaceholder}
                 size="sm"
                 startDecorator={<SearchRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />}
+                sx={{ borderRadius: "10px", flexShrink: 0 }}
                 value={search}
                 endDecorator={
                     isSearching ? (
@@ -297,28 +205,15 @@ export const GenosSessionSidebar = ({
                         </IconButton>
                     ) : null
                 }
-                sx={{ borderRadius: "10px", flexShrink: 0 }}
                 onChange={(e) => onSearchChange(e.target.value)}
             />
 
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.75,
-                    px: 0.5,
-                    pt: 0.5,
-                    flexShrink: 0,
-                }}
-            >
-                <HistoryRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />
-                <Typography
-                    level="body-xs"
-                    sx={{ fontWeight: 700, textTransform: "uppercase", opacity: 0.7 }}
-                >
-                    {t.genos.sidebar.header}
-                </Typography>
-            </Box>
+            <SectionHeader
+                as="div"
+                icon={<HistoryRoundedIcon />}
+                label={t.genos.sidebar.header}
+                sx={{ flexShrink: 0 }}
+            />
 
             {resumeError && (
                 <Typography level="body-xs" sx={{ color: "danger.500", px: 0.5 }}>

@@ -1,7 +1,6 @@
 import { memo, useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import WorkIcon from "@mui/icons-material/Work";
 import {
     Box,
@@ -10,17 +9,19 @@ import {
     List,
     ListDivider,
     ListItem,
-    ListItemContent,
     Menu,
     MenuButton,
     MenuItem,
     Typography,
 } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
+import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
@@ -105,203 +106,151 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
         );
 
     return (
-        <ListItem nested>
+        <ListItem sx={{ p: 0 }} nested>
             <Toggler
                 key={`toggler-TeamProjects`}
                 defaultExpanded={true}
                 storageKey="projects"
                 renderToggle={({ open, setOpen }) => (
                     // Header row = the section toggle + a SIBLING filter
-                    // dropdown. The filter lives outside the ListItemButton
-                    // (not nested) so opening it can never toggle the section
-                    // — no stopPropagation juggling.
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.25, mb: 0.5 }}>
-                        <ListItemButton
-                            sx={{
-                                flex: 1,
-                                minWidth: 0,
-                                borderRadius: "10px",
-                                py: 1,
-                                px: 1.5,
-                                gap: 1.5,
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.04)",
-                                },
-                            }}
-                            onClick={() => {
-                                setOpen(!open);
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.05)",
-                                    transition: "all 0.2s ease",
-                                }}
-                            >
-                                <WorkIcon
-                                    sx={{
-                                        fontSize: 16,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.75)"
-                                            : "rgba(0,0,0,0.65)",
-                                    }}
-                                />
-                            </Box>
-                            <ListItemContent>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(0,0,0,0.8)",
-                                    }}
-                                >
-                                    {t.tasks.sidebar.projects}
-                                </Typography>
-                            </ListItemContent>
-                            <KeyboardArrowDownIcon
-                                sx={{
-                                    fontSize: 18,
-                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
-                                    transition: "transform 0.2s ease",
-                                    transform: open ? "rotate(180deg)" : "none",
-                                }}
-                            />
-                        </ListItemButton>
-
-                        {/* Filter projects by label. A Joy Dropdown (NOT a
+                    // dropdown (the header's `actions` slot is beside the toggle,
+                    // not inside it). Opening the filter can never toggle the
+                    // section, with no stopPropagation juggling.
+                    <SectionHeader
+                        as="div"
+                        expanded={open}
+                        icon={<WorkIcon />}
+                        label={t.tasks.sidebar.projects}
+                        actions={
+                            <>
+                                {/* Filter projects by label. A Joy Dropdown (NOT a
                             Material Menu — that crashes under the Joy theme)
                             so clickaway + Escape close it for free; MenuItem
                             selection closes it too (per user: it should close
                             on select). Multi-label OR-filtering still works
                             cumulatively across reopens. */}
-                        <Dropdown>
-                            <AppTooltip title={t.tasks.sidebar.filterByLabel}>
-                                <MenuButton
-                                    slots={{ root: IconButton }}
-                                    slotProps={{
-                                        root: {
-                                            size: "sm",
-                                            variant: filterActive ? "soft" : "plain",
-                                            color: filterActive ? "primary" : "neutral",
-                                            sx: {
-                                                "--IconButton-size": "30px",
-                                                borderRadius: "6px",
-                                                px: filterActive ? 0.5 : 0,
-                                                flexShrink: 0,
-                                            },
-                                        },
-                                    }}
-                                >
-                                    <FilterListIcon sx={{ fontSize: 16 }} />
-                                    {filterActive && (
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ ml: 0.25, fontWeight: 700, color: "inherit" }}
-                                        >
-                                            {effectiveActiveIds.length}
-                                        </Typography>
-                                    )}
-                                </MenuButton>
-                            </AppTooltip>
-                            <Menu
-                                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                placement="bottom-end"
-                                size="sm"
-                                sx={{
-                                    maxHeight: 320,
-                                    minWidth: 147,
-                                    overflowY: "auto",
-                                    borderRadius: "10px",
-                                }}
-                            >
-                                {allLabels.length === 0 ? (
-                                    <MenuItem sx={{ fontSize: "0.8rem", opacity: 0.7 }} disabled>
-                                        {t.tasks.sidebar.noLabels}
-                                    </MenuItem>
-                                ) : (
-                                    allLabels.map((label) => {
-                                        const selected = effectiveActiveIds.includes(
-                                            label.labelId
-                                        );
-                                        return (
-                                            <MenuItem
-                                                key={label.labelId}
-                                                sx={{ gap: 1, fontSize: "0.8rem" }}
-                                                onClick={() => toggleLabel(label.labelId)}
-                                            >
-                                                <CheckRoundedIcon
-                                                    sx={{
-                                                        fontSize: 16,
+                                <Dropdown>
+                                    <AppTooltip title={t.tasks.sidebar.filterByLabel}>
+                                        <MenuButton
+                                            slots={{ root: IconButton }}
+                                            slotProps={{
+                                                root: {
+                                                    size: "sm",
+                                                    variant: filterActive ? "soft" : "plain",
+                                                    color: filterActive ? "primary" : "neutral",
+                                                    sx: {
+                                                        "--IconButton-size": "30px",
+                                                        borderRadius: "6px",
+                                                        px: filterActive ? 0.5 : 0,
                                                         flexShrink: 0,
-                                                        // Always visible; faint
-                                                        // when unselected so the
-                                                        // toggle affordance reads.
-                                                        opacity: selected ? 1 : 0.25,
-                                                        color: selected
-                                                            ? "var(--joy-palette-primary-500)"
-                                                            : "inherit",
-                                                    }}
-                                                />
-                                                <Box
+                                                    },
+                                                },
+                                            }}
+                                        >
+                                            <FilterListIcon sx={{ fontSize: 16 }} />
+                                            {filterActive && (
+                                                <Typography
+                                                    level="body-xs"
                                                     sx={{
-                                                        px: 0.75,
-                                                        py: 0.15,
-                                                        borderRadius: "5px",
-                                                        backgroundColor: label.color,
-                                                        color: label.textColor,
-                                                        fontWeight: 600,
-                                                        fontSize: "0.7rem",
-                                                        maxWidth: 110,
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
+                                                        ml: 0.25,
+                                                        fontWeight: 700,
+                                                        color: "inherit",
                                                     }}
                                                 >
-                                                    {label.name}
-                                                </Box>
-                                            </MenuItem>
-                                        );
-                                    })
-                                )}
-                                {filterActive && <ListDivider />}
-                                {filterActive && (
-                                    <MenuItem
-                                        sx={{ justifyContent: "center", fontSize: "0.8rem" }}
-                                        onClick={() => setActiveLabelIds([])}
+                                                    {effectiveActiveIds.length}
+                                                </Typography>
+                                            )}
+                                        </MenuButton>
+                                    </AppTooltip>
+                                    <Menu
+                                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                        placement="bottom-end"
+                                        size="sm"
+                                        sx={{
+                                            maxHeight: 320,
+                                            minWidth: 147,
+                                            overflowY: "auto",
+                                            borderRadius: "10px",
+                                        }}
                                     >
-                                        {t.tasks.sidebar.clearLabelFilter}
-                                    </MenuItem>
-                                )}
-                            </Menu>
-                        </Dropdown>
-                    </Box>
+                                        {allLabels.length === 0 ? (
+                                            <MenuItem
+                                                sx={{ fontSize: "0.8rem", opacity: 0.7 }}
+                                                disabled
+                                            >
+                                                {t.tasks.sidebar.noLabels}
+                                            </MenuItem>
+                                        ) : (
+                                            allLabels.map((label) => {
+                                                const selected = effectiveActiveIds.includes(
+                                                    label.labelId
+                                                );
+                                                return (
+                                                    <MenuItem
+                                                        key={label.labelId}
+                                                        sx={{ gap: 1, fontSize: "0.8rem" }}
+                                                        onClick={() => toggleLabel(label.labelId)}
+                                                    >
+                                                        <CheckRoundedIcon
+                                                            sx={{
+                                                                fontSize: 16,
+                                                                flexShrink: 0,
+                                                                // Always visible; faint
+                                                                // when unselected so the
+                                                                // toggle affordance reads.
+                                                                opacity: selected ? 1 : 0.25,
+                                                                color: selected
+                                                                    ? "var(--joy-palette-primary-500)"
+                                                                    : "inherit",
+                                                            }}
+                                                        />
+                                                        <Box
+                                                            sx={{
+                                                                px: 0.75,
+                                                                py: 0.15,
+                                                                borderRadius: "5px",
+                                                                backgroundColor: label.color,
+                                                                color: label.textColor,
+                                                                fontWeight: 600,
+                                                                fontSize: "0.7rem",
+                                                                maxWidth: 110,
+                                                                overflow: "hidden",
+                                                                textOverflow: "ellipsis",
+                                                                whiteSpace: "nowrap",
+                                                            }}
+                                                        >
+                                                            {label.name}
+                                                        </Box>
+                                                    </MenuItem>
+                                                );
+                                            })
+                                        )}
+                                        {filterActive && <ListDivider />}
+                                        {filterActive && (
+                                            <MenuItem
+                                                sx={{
+                                                    justifyContent: "center",
+                                                    fontSize: "0.8rem",
+                                                }}
+                                                onClick={() => setActiveLabelIds([])}
+                                            >
+                                                {t.tasks.sidebar.clearLabelFilter}
+                                            </MenuItem>
+                                        )}
+                                    </Menu>
+                                </Dropdown>
+                            </>
+                        }
+                        onToggleExpanded={() => setOpen(!open)}
+                    />
                 )}
             >
-                <List sx={{ gap: 0.25 }}>
+                <List sx={navNestedListSx}>
                     {filterActive && visibleProjects.length === 0 && (
-                        <ListItem sx={{ pl: 4.5, py: 0.5 }}>
+                        <ListItem sx={{ px: 1, py: 0.5 }}>
                             <Typography
                                 level="body-xs"
-                                sx={{
-                                    fontStyle: "italic",
-                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                                }}
+                                sx={{ fontStyle: "italic", color: g.text.tertiary }}
                             >
                                 {t.tasks.sidebar.noProjectsMatchFilter}
                             </Typography>
@@ -319,14 +268,6 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                             hostTeamName,
                         }) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
-                            // Selected-project emphasis. Lives here, not in
-                            // ProjectIdentityRow: only the sidebar has an
-                            // "active project" — a dropdown option has none.
-                            const accent = isSelected
-                                ? isDark
-                                    ? "#fb923c"
-                                    : "#ea580c"
-                                : undefined;
                             // Resolve this project's PM chat (chatType 3) so we
                             // can show its uploaded avatar image. Same canonical
                             // lookup TaskHeader / HistoryModal use. When the PM
@@ -344,32 +285,42 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                     defaultExpanded={false}
                                     storageKey={`project:${projectId}`}
                                     renderToggle={({ open, setOpen }) => (
-                                        <ListItemButton
+                                        <NavItem
+                                            expanded={open}
                                             selected={isSelected}
-                                            sx={{
-                                                overflow: "hidden",
-                                                borderRadius: "8px",
-                                                py: 0.75,
-                                                px: 1.25,
-                                                ml: 4.5,
-                                                gap: 1,
-                                                transition: "all 0.15s ease",
-                                                "&:hover": {
-                                                    backgroundColor: isDark
-                                                        ? "rgba(255,255,255,0.04)"
-                                                        : "rgba(0,0,0,0.03)",
-                                                },
-                                                "&.Mui-selected": {
-                                                    backgroundColor: isDark
-                                                        ? "rgba(251,146,60,0.15)"
-                                                        : "rgba(234,88,12,0.1)",
-                                                    "&:hover": {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(251,146,60,0.2)"
-                                                            : "rgba(234,88,12,0.15)",
-                                                    },
-                                                },
-                                            }}
+                                            // Avatar + labels + lock + name. Shared with
+                                            // the project pickers via `ProjectIdentityRow`
+                                            // so the dropdown and this row can't drift
+                                            // apart.
+                                            label={
+                                                // The identity row is a fragment laid out by its parent
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 1,
+                                                        minWidth: 0,
+                                                    }}
+                                                >
+                                                    <ProjectIdentityRow
+                                                        avatarSrc={avatarSrc}
+                                                        maxLabels={1}
+                                                        nameColor="inherit"
+                                                        nameWeight={isSelected ? 500 : 400}
+                                                        iconColor={
+                                                            isSelected ? g.accent.text : undefined
+                                                        }
+                                                        project={{
+                                                            projectId,
+                                                            projectName,
+                                                            projectLabels,
+                                                            isPrivate,
+                                                            isExternal,
+                                                            hostTeamName,
+                                                        }}
+                                                    />
+                                                </Box>
+                                            }
                                             onClick={() => {
                                                 setOpen(!open);
                                                 // Only if the clicked project id is not the same as the current one,
@@ -415,39 +366,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                                     });
                                                 }
                                             }}
-                                        >
-                                            {/* Avatar + labels + lock + name. Shared with
-                                                the project pickers via
-                                                `ProjectIdentityRow` so the dropdown and
-                                                this row can't drift apart; the selected
-                                                emphasis stays here because only the
-                                                sidebar has an "active project". */}
-                                            <ProjectIdentityRow
-                                                avatarSrc={avatarSrc}
-                                                iconColor={accent}
-                                                maxLabels={1}
-                                                nameColor={accent}
-                                                nameWeight={isSelected ? 600 : 500}
-                                                project={{
-                                                    projectId,
-                                                    projectName,
-                                                    projectLabels,
-                                                    isPrivate,
-                                                    isExternal,
-                                                    hostTeamName,
-                                                }}
-                                            />
-                                            <KeyboardArrowDownIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.4)"
-                                                        : "rgba(0,0,0,0.35)",
-                                                    transition: "transform 0.2s ease",
-                                                    transform: open ? "rotate(180deg)" : "none",
-                                                }}
-                                            />
-                                        </ListItemButton>
+                                        />
                                     )}
                                 >
                                     <MilestonesListItem

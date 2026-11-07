@@ -1,24 +1,18 @@
 import { memo, ReactNode, useEffect, useRef, useState } from "react";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import {
-    Box,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemContent,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, IconButton, List, ListItem } from "@mui/joy";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { NAV_KEEP_CLASS, navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
+import { NoteDot } from "./NoteDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     node: T;
@@ -49,8 +43,6 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     depth = 0,
     rowMenuItems,
 }: NoteTreeRendererProps<T>) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, node.noteId);
@@ -88,7 +80,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     // The scroll is deferred past the folder rows' expand transition
     // (0.2s of `grid-template-rows`) — measured mid-animation the row is
     // still collapsed to zero height and lands in the wrong place.
-    const rowRef = useRef<HTMLLIElement | null>(null);
+    const rowRef = useRef<HTMLElement | null>(null);
     const wasSelected = useRef(false);
     useEffect(() => {
         const justSelected = isSelected && !wasSelected.current;
@@ -113,7 +105,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         // `useNoteManagement`, so the row itself stays visible).
     };
 
-    const handleChevronClick = (e: React.MouseEvent) => {
+    const handleChevronClick = (e: React.SyntheticEvent) => {
         e.stopPropagation();
         useNM.toggleNodeExpanded(noteType, node.noteId);
     };
@@ -140,216 +132,76 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                 position: "relative",
             }}
         >
-            <ListItem
-                ref={rowRef}
-                sx={{
-                    position: "relative",
-                }}
-                nested
-            >
-                {/* Tree line connector */}
-                {depth > 0 && (
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            left: -10,
-                            top: 0,
-                            bottom: 0,
-                            width: 1,
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.08)"
-                                : "rgba(0,0,0,0.06)",
-                        }}
-                    />
-                )}
-
-                <ListItemButton
+            <ListItem sx={{ p: 0, m: 0 }} nested>
+                {/* The row is the shared NavItem. It does NOT expand on click:
+                    opening a note should reveal the note, not unfold its child
+                    notes (the chevron, or the arrow keys, are the control for
+                    that; the ancestor chain still auto-expands in
+                    `useNoteManagement`, so the row itself stays visible). */}
+                <NavItem
+                    ref={rowRef}
+                    actionsVisible={rowMenuOpen}
+                    as="div"
+                    expanded={hasChildren ? open : undefined}
+                    icon={<NoteDot unread={hasUnread} />}
                     selected={isSelected}
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.125,
-                        gap: 0.75,
-                        minHeight: 30,
-                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                        // Hover-only on real pointers — sticky :hover on
-                        // touch eats the first tap (note won't open until
-                        // tap #2) because hover reveals the star / ⋯.
-                        "@media (hover: hover) and (pointer: fine)": {
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.05)"
-                                    : "rgba(0,0,0,0.03)",
-                                "& .favorite-btn": {
-                                    opacity: 1,
-                                },
-                                "& .row-menu-btn": {
-                                    opacity: 1,
-                                },
-                            },
-                        },
-                        "&.Mui-selected": {
-                            backgroundColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.12)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                            "@media (hover: hover) and (pointer: fine)": {
-                                "&:hover": {
-                                    backgroundColor: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                                },
-                            },
-                        },
-                    }}
-                    onClick={() => {
-                        handleClick();
-                    }}
-                >
-                    {/* Chevron / Expand button */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 16,
-                            height: 16,
-                            borderRadius: "4px",
-                            flexShrink: 0,
-                            opacity: hasChildren ? 1 : 0,
-                            transition: "all 0.15s ease",
-                            cursor: hasChildren ? "pointer" : "default",
-                            "&:hover": hasChildren
-                                ? {
-                                      backgroundColor: isDark
-                                          ? "rgba(255,255,255,0.1)"
-                                          : "rgba(0,0,0,0.06)",
-                                  }
-                                : {},
-                        }}
-                        onClick={hasChildren ? handleChevronClick : undefined}
-                    >
-                        <ChevronRightRoundedIcon
-                            sx={{
-                                fontSize: 13,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                                transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                transform: open ? "rotate(90deg)" : "rotate(0deg)",
-                            }}
-                        />
-                    </Box>
-
-                    {/* Note indicator dot — turns red when there's an unread
-                        @mention (cleared on open). */}
-                    <Box
-                        sx={{
-                            width: hasUnread ? 8 : 6,
-                            height: hasUnread ? 8 : 6,
-                            borderRadius: "50%",
-                            flexShrink: 0,
-                            backgroundColor: hasUnread
-                                ? isDark
-                                    ? "var(--gp-brandalt-400)"
-                                    : "var(--gp-brand-700)"
-                                : isSelected
-                                  ? isDark
-                                      ? "var(--gp-brandalt-400)"
-                                      : "var(--gp-brand-800)"
-                                  : isDark
-                                    ? "rgba(255,255,255,0.2)"
-                                    : "rgba(0,0,0,0.15)",
-                            transition: "all 0.2s ease",
-                        }}
-                    />
-
-                    <ListItemContent sx={{ minWidth: 0 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: hasUnread ? 700 : isSelected ? 500 : 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
-                                fontSize: "0.775rem",
-                                letterSpacing: "-0.01em",
-                            }}
-                        >
-                            {node.title || t.notes.defaults.untitled}
-                        </Typography>
-                    </ListItemContent>
-
-                    {/* Favorite toggle button — hover-revealed on desktop,
-                        always visible on touch (no hover to reveal). */}
-                    <IconButton
-                        className="favorite-btn"
-                        color="warning"
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            opacity: isFavorited ? 1 : 0,
-                            minWidth: 20,
-                            minHeight: 20,
-                            borderRadius: "4px",
-                            transition: "opacity 0.15s ease, background-color 0.15s ease",
-                            "@media (hover: none)": { opacity: 1 },
-                            "@media (hover: hover) and (pointer: fine)": {
-                                "&:hover": {
-                                    backgroundColor: isDark
-                                        ? "rgba(245,158,11,0.15)"
-                                        : "rgba(245,158,11,0.1)",
-                                },
-                            },
-                        }}
-                        onClick={handleFavoriteClick}
-                    >
-                        {isFavorited ? (
-                            <StarRoundedIcon sx={{ fontSize: 14, color: "#f59e0b" }} />
-                        ) : (
-                            <StarOutlineRoundedIcon
+                    unread={hasUnread}
+                    label={node.title || t.notes.defaults.untitled}
+                    // Keep the "..." trigger visible while its portal menu is
+                    // open: otherwise the hover-reveal hides it the moment the
+                    // pointer moves onto the menu itself.
+                    actions={
+                        <>
+                            {/* Favorite toggle: a lit star stays visible, an
+                                unlit one appears with the other actions. */}
+                            <IconButton
+                                className={`favorite-btn${isFavorited ? ` ${NAV_KEEP_CLASS}` : ""}`}
+                                size="sm"
+                                variant="plain"
                                 sx={{
-                                    fontSize: 14,
-                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)",
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                    borderRadius: g.radius.xs,
+                                    "--IconButton-size": "20px",
                                 }}
-                            />
-                        )}
-                    </IconButton>
+                                onClick={handleFavoriteClick}
+                            >
+                                {isFavorited ? (
+                                    <StarRoundedIcon
+                                        sx={{ fontSize: 14, color: g.warning.solid }}
+                                    />
+                                ) : (
+                                    <StarOutlineRoundedIcon
+                                        sx={{ fontSize: 14, color: g.text.tertiary }}
+                                    />
+                                )}
+                            </IconButton>
 
-                    {/* Optional per-row "⋯" menu (hover-revealed like the
-                        star; stays visible while its menu is open; always
-                        visible on touch). */}
-                    {menuItems && menuItems.length > 0 && (
-                        <Box
-                            className="row-menu-btn"
-                            sx={{
-                                opacity: rowMenuOpen ? 1 : 0,
-                                transition: "opacity 0.15s ease",
-                                "@media (hover: none)": { opacity: 1 },
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <MoreMenu
-                                iconFontSize={14}
-                                items={menuItems}
-                                placement="bottom-end"
-                                triggerSize={20}
-                                onOpenChange={setRowMenuOpen}
-                            />
-                        </Box>
-                    )}
-                </ListItemButton>
+                            {/* Optional per-row "..." menu. */}
+                            {menuItems && menuItems.length > 0 && (
+                                <Box className="row-menu-btn" onClick={(e) => e.stopPropagation()}>
+                                    <MoreMenu
+                                        iconFontSize={14}
+                                        items={menuItems}
+                                        placement="bottom-end"
+                                        triggerSize={20}
+                                        onOpenChange={setRowMenuOpen}
+                                    />
+                                </Box>
+                            )}
+                        </>
+                    }
+                    reserveChevron
+                    onClick={handleClick}
+                    onToggleExpanded={handleChevronClick}
+                />
 
                 {/* Children: rendered only when expanded so collapsed
                     subtrees pay zero render cost. Trade-off vs. the previous
                     CSS-grid trick: loses the slide animation but unmounts
                     deep subtrees entirely, which dominates at heavy scale. */}
                 {open && hasChildren && (
-                    <List
-                        sx={{
-                            pl: 2,
-                            "--List-nestedInsetStart": "16px",
-                        }}
-                    >
+                    <List sx={navNestedListSx}>
                         {node.children.map((child) => (
                             <NoteTreeRenderer
                                 key={child.noteId}

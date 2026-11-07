@@ -1,5 +1,4 @@
 import { memo, ReactNode, useState } from "react";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
@@ -13,13 +12,15 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
-import { Box, Chip, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Chip, List, ListItem, Typography } from "@mui/joy";
 
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
 import {
     FolderFavoriteStar,
@@ -70,8 +71,6 @@ type TeamNoteFolderTreeProps = {
 // "Move to folder" dialog where the destination is a deliberate choice.
 function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     const { folder, useNM, actions, renderNote, visibleFolderIds = null, depth = 0 } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     const isExpanded = useNM.isFolderExpanded(folder.folderId);
@@ -188,178 +187,118 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem nested>
-                <ListItemButton
+            <ListItem sx={{ p: 0 }} nested>
+                {/* Passive markers, in the row's end: whose folder, its tags,
+                   and its visibility.
+                   Keep the "..." trigger visible while its portal menu is open. */}
+                <NavItem
+                    actionsVisible={menuOpen}
+                    as="div"
                     data-note-folder-id={folder.folderId}
-                    sx={{
-                        borderRadius: "8px",
-                        py: 0.5,
-                        px: 1,
-                        my: 0.25,
-                        gap: 0.75,
-                        minHeight: 32,
-                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                        backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-                        ...(useNM.highlightedFolderId === folder.folderId
-                            ? highlightedFolderSx(isDark)
-                            : {}),
-                        // Hover-only on real pointers — sticky :hover on
-                        // touch eats the first tap (folder won't expand
-                        // until tap #2).
-                        "@media (hover: hover) and (pointer: fine)": {
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.06)"
-                                    : "rgba(0,0,0,0.04)",
-                                "& .folder-menu-btn": { opacity: 1 },
-                            },
-                        },
-                    }}
+                    expanded={isExpanded}
+                    icon={<FolderIcon />}
+                    label={folder.name}
+                    actions={
+                        <>
+                            <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
+                            <Box onClick={(e) => e.stopPropagation()}>
+                                <MoreMenu
+                                    iconFontSize={14}
+                                    items={menuItems}
+                                    placement="bottom-end"
+                                    triggerSize={20}
+                                    onOpenChange={setMenuOpen}
+                                />
+                            </Box>
+                        </>
+                    }
+                    sx={
+                        useNM.highlightedFolderId === folder.folderId
+                            ? highlightedFolderSx
+                            : undefined
+                    }
+                    trailing={
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {/* Whose folder this is. Only on the share's own root:
+                                the label answers "why is another team's folder in
+                                my list", and repeating it down every level of the
+                                subtree would crowd out the names. */}
+                            {isExternal && folder.parentFolderId === null && (
+                                <ExternalChip
+                                    label={folder.hostTeamName || t.notes.teamNotes.sharedBadge}
+                                    maxWidth={110}
+                                    hint={
+                                        folder.hostTeamName
+                                            ? fmt(t.notes.teamNotes.sharedByTeamHint, {
+                                                  team: folder.hostTeamName,
+                                              })
+                                            : t.notes.teamNotes.sharedByAnotherTeamHint
+                                    }
+                                />
+                            )}
+
+                            {/* Tags, capped at two on the row. The sidebar is
+                                narrow and the folder NAME has to stay readable;
+                                the rest are reachable from the tag filter and the
+                                tag dialog. */}
+                            {folder.tags.slice(0, 2).map((tag) => (
+                                <Chip
+                                    key={tag.tagId}
+                                    size="sm"
+                                    sx={folderTagChipSx(tag)}
+                                    variant="solid"
+                                >
+                                    {tag.name}
+                                </Chip>
+                            ))}
+                            {folder.tags.length > 2 && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: g.text.tertiary, flexShrink: 0, fontSize: 10 }}
+                                >
+                                    +{folder.tags.length - 2}
+                                </Typography>
+                            )}
+
+                            {/* Visibility at a glance. Muted when inherited, so
+                                "private because its parent is" reads differently
+                                from "private in its own right". */}
+                            {shownVisibility === "private" ? (
+                                <LockRoundedIcon
+                                    sx={{
+                                        fontSize: 12,
+                                        flexShrink: 0,
+                                        opacity: inherits ? 0.4 : 0.75,
+                                        color: g.text.secondary,
+                                    }}
+                                    titleAccess={
+                                        inherits
+                                            ? t.notes.teamNotes.privateInherited
+                                            : t.notes.teamNotes.private
+                                    }
+                                />
+                            ) : shownVisibility === "public" ? (
+                                <PublicRoundedIcon
+                                    sx={{
+                                        fontSize: 12,
+                                        flexShrink: 0,
+                                        opacity: inherits ? 0.4 : 0.75,
+                                        color: g.text.secondary,
+                                    }}
+                                    titleAccess={
+                                        inherits
+                                            ? t.notes.teamNotes.publicInherited
+                                            : t.notes.teamNotes.public
+                                    }
+                                />
+                            ) : null}
+                        </Box>
+                    }
                     onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
-                >
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 16,
-                            height: 16,
-                            borderRadius: "4px",
-                            flexShrink: 0,
-                        }}
-                    >
-                        <ChevronRightRoundedIcon
-                            sx={{
-                                fontSize: 13,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                                transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                            }}
-                        />
-                    </Box>
-
-                    <FolderIcon
-                        sx={{
-                            fontSize: 14,
-                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                            flexShrink: 0,
-                        }}
-                    />
-
-                    <ListItemContent sx={{ minWidth: 0 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                                fontSize: "0.75rem",
-                                letterSpacing: "-0.01em",
-                            }}
-                        >
-                            {folder.name}
-                        </Typography>
-                    </ListItemContent>
-
-                    {/* Whose folder this is. Only on the share's own root:
-                        the label answers "why is another team's folder in
-                        my list", and repeating it down every level of the
-                        subtree would crowd out the names. */}
-                    {isExternal && folder.parentFolderId === null && (
-                        <ExternalChip
-                            hint={
-                                folder.hostTeamName
-                                    ? fmt(t.notes.teamNotes.sharedByTeamHint, {
-                                          team: folder.hostTeamName,
-                                      })
-                                    : t.notes.teamNotes.sharedByAnotherTeamHint
-                            }
-                            label={folder.hostTeamName || t.notes.teamNotes.sharedBadge}
-                            maxWidth={110}
-                        />
-                    )}
-
-                    {/* Tags, capped at two on the row. The sidebar is
-                        narrow and the folder NAME has to stay readable;
-                        the rest are reachable from the tag filter and the
-                        tag dialog. */}
-                    {folder.tags.slice(0, 2).map((tag) => (
-                        <Chip key={tag.tagId} size="sm" sx={folderTagChipSx(tag)} variant="solid">
-                            {tag.name}
-                        </Chip>
-                    ))}
-                    {folder.tags.length > 2 && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                                flexShrink: 0,
-                                fontSize: 10,
-                            }}
-                        >
-                            +{folder.tags.length - 2}
-                        </Typography>
-                    )}
-
-                    {/* Visibility at a glance. Muted when inherited, so
-                        "private because its parent is" reads differently
-                        from "private in its own right". */}
-                    {shownVisibility === "private" ? (
-                        <LockRoundedIcon
-                            sx={{
-                                fontSize: 12,
-                                flexShrink: 0,
-                                opacity: inherits ? 0.4 : 0.75,
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
-                            }}
-                            titleAccess={
-                                inherits
-                                    ? t.notes.teamNotes.privateInherited
-                                    : t.notes.teamNotes.private
-                            }
-                        />
-                    ) : shownVisibility === "public" ? (
-                        <PublicRoundedIcon
-                            sx={{
-                                fontSize: 12,
-                                flexShrink: 0,
-                                opacity: inherits ? 0.4 : 0.75,
-                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
-                            }}
-                            titleAccess={
-                                inherits
-                                    ? t.notes.teamNotes.publicInherited
-                                    : t.notes.teamNotes.public
-                            }
-                        />
-                    ) : null}
-
-                    <FolderFavoriteStar folderId={folder.folderId} isDark={isDark} useNM={useNM} />
-
-                    <Box
-                        className="folder-menu-btn"
-                        sx={{
-                            opacity: menuOpen ? 1 : 0,
-                            transition: "opacity 0.15s ease",
-                            // Always show on touch — no hover to reveal.
-                            "@media (hover: none)": { opacity: 1 },
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <MoreMenu
-                            iconFontSize={14}
-                            items={menuItems}
-                            placement="bottom-end"
-                            triggerSize={20}
-                            onOpenChange={setMenuOpen}
-                        />
-                    </Box>
-                </ListItemButton>
+                />
 
                 {isExpanded && (
-                    <List sx={{ pl: 1.5, "--List-nestedInsetStart": "16px" }}>
+                    <List sx={navNestedListSx}>
                         {folder.childFolders
                             .filter((c) => !visibleFolderIds || visibleFolderIds.has(c.folderId))
                             .map((child) => (
@@ -381,7 +320,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                                     px: 1.5,
                                     py: 0.5,
                                     fontStyle: "italic",
-                                    color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                                    color: g.text.tertiary,
                                 }}
                             >
                                 {t.notes.folders.emptyFolder}

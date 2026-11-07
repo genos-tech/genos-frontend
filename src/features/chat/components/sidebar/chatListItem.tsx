@@ -6,17 +6,15 @@
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
 import { memo, useEffect, useRef, useState } from "react";
-import { Box, ListItem, Stack } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
-import { useColorScheme } from "@mui/joy/styles";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../context/AuthContext";
 import { prefetchChannel } from "../../../../services/channel/channelPrefetch";
 import { useChatListItem } from "../../hooks/useChatListItem";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { ModalAssignGMTags } from "../modals/ModalAssignGMTags";
 import { ChatListItemProps } from "./ChatListItem.types";
-import { ChatListItemActions } from "./ChatListItemActions";
+import { ChatListItemActions, ChatListItemMeta } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { chatListItemPropsAreEqual } from "./chatListItemEquality";
 import { ChatListItemMessage } from "./ChatListItemMessage";
@@ -46,9 +44,6 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     } = props;
 
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-    const [isHovered, setIsHovered] = useState(false);
     const [openAddMembers, setOpenAddMembers] = useState(false);
     const [openAssignTags, setOpenAssignTags] = useState(false);
 
@@ -106,70 +101,69 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         chat.latestMessage && Number(chat.lastReadMessageId || "0") < chat.latestMessage.messageId;
 
     return (
-        <ListItem
-            sx={{
-                width: "100%",
-                p: 0.5,
-                px: 1,
-            }}
-        >
-            <ListItemButton
-                onMouseEnter={() => {
-                    setIsHovered(true);
-                    // Warm this channel's messages while the pointer is
-                    // still travelling to the click. A cold channel
-                    // otherwise blanks the pane for the whole sync
-                    // round-trip (see `channelPrefetch`). Delayed so
-                    // sweeping the cursor down the list doesn't fire a
-                    // sync per row it crosses.
-                    prefetchTimerRef.current = window.setTimeout(() => {
-                        prefetchChannel(chat.chatId);
-                    }, HOVER_PREFETCH_DELAY_MS);
-                }}
-                onMouseLeave={() => {
-                    setIsHovered(false);
-                    if (prefetchTimerRef.current !== undefined) {
-                        clearTimeout(prefetchTimerRef.current);
-                        prefetchTimerRef.current = undefined;
-                    }
-                }}
-                color="neutral"
+        <>
+            <NavItem
+                as="div"
+                // Two lines (title + latest message): the documented multiple of
+                // a density row. It still grows for a custom status or GM tags.
+                lines={2}
                 selected={selected}
-                sx={{
-                    borderRadius: "12px",
-                    p: 1.25,
-                    gap: 1,
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    background: selected
-                        ? isDark
-                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)"
-                        : isHovered
-                          ? isDark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.03)"
-                          : "transparent",
-                    border: "1px solid",
-                    borderColor: selected
-                        ? isDark
-                            ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.12)"
-                        : "transparent",
-                    position: "relative",
-                    overflow: "hidden",
-                    "&:hover": {
-                        background: selected
-                            ? isDark
-                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
-                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
-                            : isDark
-                              ? "rgba(255,255,255,0.05)"
-                              : "rgba(0,0,0,0.04)",
+                unread={Boolean(hasUnread)}
+                sx={{ mx: 1 }}
+                icon={
+                    <ChatListItemAvatar
+                        chat={chat}
+                        chatType={chat.chatType}
+                        useCM={useCM}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                }
+                label={
+                    <ChatListItemTitle chat={chat} isYou={isYou} myself={myself} useTEM={useTEM} />
+                }
+                secondary={<ChatListItemMessage chat={chat} />}
+                trailing={<ChatListItemMeta chat={chat} />}
+                actions={
+                    <ChatListItemActions
+                        chat={chat}
+                        incompleteTodoCount={incompleteTodoCount}
+                        isPinned={isPinned || false}
+                        myself={myself}
+                        onPinClick={handlePinClick}
+                        onSplitClick={handleSplitClick}
+                        onAddMembersClick={handleAddMembersClick}
+                        onManageTagsClick={handleManageTagsClick}
+                        setIsToDoVisible={setIsToDoVisible}
+                        isToDoVisible={isToDoVisible}
+                    />
+                }
+                // On the row, not the row button: the actions beside it are part of
+                // the row, so moving onto them must not cancel the prefetch.
+                rootProps={{
+                    onMouseEnter: () => {
+                        // Warm this channel's messages while the pointer is
+                        // still travelling to the click. A cold channel
+                        // otherwise blanks the pane for the whole sync
+                        // round-trip (see `channelPrefetch`). Delayed so
+                        // sweeping the cursor down the list doesn't fire a
+                        // sync per row it crosses.
+                        if (prefetchTimerRef.current !== undefined) {
+                            clearTimeout(prefetchTimerRef.current);
+                        }
+                        prefetchTimerRef.current = window.setTimeout(() => {
+                            prefetchChannel(chat.chatId);
+                        }, HOVER_PREFETCH_DELAY_MS);
                     },
-                    "&.Mui-selected": {
-                        background: isDark
-                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
+                    onMouseLeave: () => {
+                        if (prefetchTimerRef.current !== undefined) {
+                            clearTimeout(prefetchTimerRef.current);
+                            prefetchTimerRef.current = undefined;
+                        }
                     },
                 }}
                 onClick={() => {
@@ -177,90 +171,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     // possibly-stale captured prop.
                     onClickHandler(liveRef.current);
                 }}
-            >
-                {/* Unread indicator line */}
-                {hasUnread && (
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            left: 0,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: 3,
-                            height: "60%",
-                            borderRadius: "0 4px 4px 0",
-                            background: isDark
-                                ? "linear-gradient(180deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
-                                : "linear-gradient(180deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                        }}
-                    />
-                )}
-
-                <Stack direction="column" spacing={0.75} sx={{ width: "100%" }}>
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        justifyContent="space-between"
-                        spacing={1}
-                    >
-                        <Stack
-                            direction="row"
-                            spacing={1.25}
-                            alignItems="center"
-                            sx={{ flex: 1, minWidth: 0 }}
-                        >
-                            <Box sx={{ flexShrink: 0 }}>
-                                <ChatListItemAvatar
-                                    chat={chat}
-                                    chatType={chat.chatType}
-                                    useCM={useCM}
-                                    isYou={isYou}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                />
-                            </Box>
-
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <ChatListItemTitle
-                                    chat={chat}
-                                    isYou={isYou}
-                                    myself={myself}
-                                    useTEM={useTEM}
-                                />
-                            </Box>
-                        </Stack>
-
-                        <Box
-                            sx={{
-                                opacity: isHovered || selected ? 1 : 0.5,
-                                transition: "opacity 0.15s ease",
-                                flexShrink: 0,
-                            }}
-                        >
-                            <ChatListItemActions
-                                chat={chat}
-                                incompleteTodoCount={incompleteTodoCount}
-                                isPinned={isPinned || false}
-                                myself={myself}
-                                onPinClick={handlePinClick}
-                                onSplitClick={handleSplitClick}
-                                onAddMembersClick={handleAddMembersClick}
-                                onManageTagsClick={handleManageTagsClick}
-                                setIsToDoVisible={setIsToDoVisible}
-                                isToDoVisible={isToDoVisible}
-                            />
-                        </Box>
-                    </Stack>
-
-                    {/* GM personal tag chips render inside
-                        ChatListItemTitle as the sub-name line (the DM
-                        custom-status slot), not as an extra row here. */}
-                    <ChatListItemMessage chat={chat} />
-                </Stack>
-            </ListItemButton>
+            />
 
             {/* Personal tag assignment for GM chats */}
             {chat.chatType === 2 && (
@@ -281,6 +192,6 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     setMyself={setMyself}
                 />
             )}
-        </ListItem>
+        </>
     );
 }, chatListItemPropsAreEqual);

@@ -21,7 +21,9 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { navFocusSx, navRowSx } from "../../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../../i18n";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { Milestone, MilestoneFolder } from "../../../sprint-milestone/types";
 import { groupMilestonesByFolder } from "../../../sprint-milestone/utils/groupMilestonesByFolder";
@@ -294,10 +296,10 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             folders={folders}
                             isFavorited={favorited}
                             milestoneTitle={m.title}
+                            onToggleFavorite={toggleFavorite}
                             onMoveToFolder={(folderId) =>
                                 void useSM.moveMilestoneToFolder(m.milestoneId, folderId)
                             }
-                            onToggleFavorite={toggleFavorite}
                         />
                     </Stack>
                 }
@@ -312,7 +314,10 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                     // hover); a touch device, where it is always visible, keeps
                     // 32px (see `rowMenuSx`).
                     sx={{
-                        borderRadius: 8,
+                        // The shared row look (selected tint, hover, radius, focus
+                        // ring): see `navStyles`. Structure stays this file's own.
+                        ...navRowSx({ lines: 2 }),
+                        ...navFocusSx,
                         ...indentSx(depth),
                         py: 0.5,
                         pl: BTN_PL,
@@ -323,7 +328,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                     }}
                     onClick={() => handleOpen(m.milestoneId)}
                 >
-                    <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", mr: 0.75 }} />
+                    <FlagRoundedIcon sx={{ fontSize: 14, color: g.warning.solid, mr: 0.75 }} />
                     <ListItemContent
                         sx={{
                             containerType: "inline-size",
@@ -514,11 +519,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
             {folderGroups.map(({ folder, milestones: inFolder }) => (
                 <MilestoneTreeFolder
                     key={`folder-${folder.folderId}`}
-                    storageKey={`project:${currentProjectId}:folder:${folder.folderId}`}
                     count={inFolder.length}
                     depth={0}
                     isDark={isDark}
                     label={folder.name}
+                    storageKey={`project:${currentProjectId}:folder:${folder.folderId}`}
                     actions={
                         <FolderMenu
                             folderName={folder.name}
@@ -570,11 +575,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
             {unfiled.map((m) => renderMilestoneRow(m))}
             {pastMilestones.length > 0 && (
                 <MilestoneTreeFolder
-                    storageKey={`project:${currentProjectId}:past`}
                     count={pastMilestones.length}
                     depth={0}
                     isDark={isDark}
                     label={t.tasks.sidebar.pastMilestones}
+                    storageKey={`project:${currentProjectId}:past`}
                     icon={
                         <HistoryRoundedIcon
                             sx={{
@@ -593,11 +598,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         return (
                             <MilestoneTreeFolder
                                 key={yearGroup.year}
-                                storageKey={`project:${currentProjectId}:past:${yearGroup.year}`}
                                 count={yearCount}
                                 depth={1}
                                 isDark={isDark}
                                 label={yearGroup.year}
+                                storageKey={`project:${currentProjectId}:past:${yearGroup.year}`}
                                 icon={
                                     <CalendarMonthRoundedIcon
                                         sx={{
@@ -613,11 +618,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                 {yearGroup.sprints.map((sprintGroup) => (
                                     <MilestoneTreeFolder
                                         key={sprintGroup.sprintId ?? "none"}
-                                        storageKey={`project:${currentProjectId}:past:${yearGroup.year}:${sprintGroup.sprintId ?? "none"}`}
                                         count={sprintGroup.milestones.length}
                                         depth={2}
                                         isDark={isDark}
                                         label={pastSprintLabel(sprintGroup)}
+                                        storageKey={`project:${currentProjectId}:past:${yearGroup.year}:${sprintGroup.sprintId ?? "none"}`}
                                         icon={
                                             <DirectionsRunRoundedIcon
                                                 sx={{
@@ -697,7 +702,8 @@ const MilestoneTreeFolder = ({
                     // Same as the milestone row: no room kept for the "..." menu
                     // except on touch.
                     sx={{
-                        borderRadius: 8,
+                        ...navRowSx(),
+                        ...navFocusSx,
                         ...indentSx(depth),
                         py: 0.5,
                         pl: BTN_PL,
@@ -749,7 +755,14 @@ const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boo
     return (
         <ListItem sx={{ pl: 0, pr: LI_PR }}>
             <ListItemButton
-                sx={{ borderRadius: 8, ...indentSx(0), py: 0.5, pl: BTN_PL, gap: BTN_GAP }}
+                sx={{
+                    ...navRowSx(),
+                    ...navFocusSx,
+                    ...indentSx(0),
+                    py: 0.5,
+                    pl: BTN_PL,
+                    gap: BTN_GAP,
+                }}
                 onClick={onClick}
             >
                 <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
@@ -771,7 +784,14 @@ const AddFolderRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolea
     return (
         <ListItem sx={{ pl: 0, pr: LI_PR }}>
             <ListItemButton
-                sx={{ borderRadius: 8, ...indentSx(0), py: 0.5, pl: BTN_PL, gap: BTN_GAP }}
+                sx={{
+                    ...navRowSx(),
+                    ...navFocusSx,
+                    ...indentSx(0),
+                    py: 0.5,
+                    pl: BTN_PL,
+                    gap: BTN_GAP,
+                }}
                 onClick={onClick}
             >
                 <FolderRoundedIcon

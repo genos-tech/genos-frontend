@@ -1,17 +1,16 @@
 import { memo, useEffect, useMemo } from "react";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { Box, Chip, IconButton, List, ListItem, ListItemContent, Typography } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, IconButton, List, ListItem } from "@mui/joy";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
+import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useTranslation } from "../../../../i18n";
-import { getMilestoneStatusChipColor } from "../../sprint-milestone/utils/sortMilestones";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { g } from "../../../../theme/tokens";
+import { StatusLabel } from "../meta/StatusLabel";
 import { Toggler } from "./common";
 import { openMilestoneFromSidebar } from "./openMilestone";
-import { FAVORITE_COLOR } from "./projects_subs/MilestoneFolderMenus";
 import type { SidebarTreePM, SidebarTreeSM, SidebarTreeTM } from "./useSidebarSlices";
 
 // The managers arrive as slices (MIP-971), like every other part of the sidebar.
@@ -37,8 +36,6 @@ export const FavoritesListItem = memo(function FavoritesListItem({
     useTM,
     useSM,
 }: FavoritesListItemProps) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     const { teamProjects } = usePM;
@@ -76,77 +73,32 @@ export const FavoritesListItem = memo(function FavoritesListItem({
     if (rows.length === 0) return null;
 
     return (
-        <ListItem data-testid="sidebar-favorites" nested>
+        <ListItem data-testid="sidebar-favorites" sx={{ p: 0 }} nested>
             <Toggler
                 storageKey="favorites"
                 renderToggle={({ open, setOpen }) => (
-                    <ListItemButton
-                        sx={{
-                            borderRadius: "10px",
-                            py: 1,
-                            px: 1.5,
-                            gap: 1.5,
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                                backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.06)"
-                                    : "rgba(0,0,0,0.04)",
-                            },
-                        }}
-                        onClick={() => setOpen(!open)}
-                    >
-                        <Box
-                            sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.05)",
-                            }}
-                        >
-                            <StarRoundedIcon sx={{ fontSize: 16, color: FAVORITE_COLOR }} />
-                        </Box>
-                        <ListItemContent>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 500,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
-                                }}
-                            >
-                                {t.tasks.sidebar.favorites}
-                            </Typography>
-                        </ListItemContent>
-                        <KeyboardArrowDownIcon
-                            sx={{
-                                fontSize: 18,
-                                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
-                                transition: "transform 0.2s ease",
-                                transform: open ? "rotate(180deg)" : "none",
-                            }}
-                        />
-                    </ListItemButton>
+                    <SectionHeader
+                        as="div"
+                        expanded={open}
+                        icon={<StarRoundedIcon sx={{ color: g.warning.solid }} />}
+                        label={t.tasks.sidebar.favorites}
+                        onToggleExpanded={() => setOpen(!open)}
+                    />
                 )}
                 defaultExpanded
             >
-                <List sx={{ gap: 0.5, pl: 1 }}>
+                <List sx={{ ...navNestedListSx, "--List-gap": "0px" }}>
                     {rows.map((row) => {
-                        const tone = getMilestoneStatusChipColor(row.status);
                         const selected =
                             currentPreviewKind === "milestone" &&
                             currentPreviewMilestoneId === row.milestoneId;
                         return (
-                            <ListItem
+                            <NavItem
                                 key={row.milestoneId}
-                                data-testid={`favorite-milestone-${row.milestoneId}`}
-                                endAction={
+                                icon={<FlagRoundedIcon sx={{ color: g.warning.solid }} />}
+                                label={row.title}
+                                lines={2}
+                                actions={
                                     <IconButton
                                         aria-label={`${t.tasks.sidebar.removeFromFavorites}: ${row.title}`}
                                         color="neutral"
@@ -163,94 +115,42 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                         }
                                     >
                                         <StarRoundedIcon
-                                            sx={{ fontSize: 16, color: FAVORITE_COLOR }}
+                                            sx={{ fontSize: 16, color: g.warning.solid }}
                                         />
                                     </IconButton>
                                 }
-                                sx={{
-                                    pl: 0,
-                                    // The remove star shows with the row's other actions:
-                                    // hover, keyboard focus, always on touch.
-                                    "& > .MuiListItem-endAction": { pointerEvents: "none" },
-                                    "& > .MuiListItem-endAction button": {
-                                        opacity: 0,
-                                        pointerEvents: "none",
-                                        transition: "opacity 0.12s",
-                                    },
-                                    "&:hover > .MuiListItem-endAction button, & > .Mui-focusVisible ~ .MuiListItem-endAction button, & > .MuiListItem-endAction button:focus-visible":
-                                        { opacity: 1, pointerEvents: "auto" },
-                                    "@media (hover: none)": {
-                                        "& > .MuiListItem-endAction button": {
-                                            opacity: 1,
-                                            pointerEvents: "auto",
-                                        },
-                                    },
+                                rootProps={{
+                                    "data-testid": `favorite-milestone-${row.milestoneId}`,
                                 }}
-                            >
-                                <ListItemButton
-                                    selected={selected}
-                                    sx={{ borderRadius: 8, py: 0.5, gap: 0.75 }}
-                                    onClick={() =>
-                                        openMilestoneFromSidebar(
-                                            { usePM, useTM },
-                                            row.milestoneId,
-                                            row.projectId
-                                        )
-                                    }
-                                >
-                                    <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316" }} />
-                                    <ListItemContent sx={{ minWidth: 0 }}>
-                                        <Typography
-                                            level="body-sm"
+                                selected={selected}
+                                // The remove star shows with the row's other actions:
+                                // hover, keyboard focus, always on touch.
+                                secondary={
+                                    <Box
+                                        component="span"
+                                        sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
+                                    >
+                                        <StatusLabel status={row.status} />
+                                        <Box
+                                            component="span"
                                             sx={{
+                                                minWidth: 0,
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                color: isDark
-                                                    ? "rgba(255,255,255,0.85)"
-                                                    : "rgba(0,0,0,0.8)",
                                             }}
                                         >
-                                            {row.title}
-                                        </Typography>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 0.5,
-                                                minWidth: 0,
-                                                mt: 0.25,
-                                            }}
-                                        >
-                                            <Chip
-                                                size="sm"
-                                                variant="solid"
-                                                sx={{
-                                                    backgroundColor: tone.color,
-                                                    color: tone.textColor,
-                                                    fontWeight: 600,
-                                                    flexShrink: 0,
-                                                }}
-                                            >
-                                                {taskMetaLabel(row.status, t.tasks.filters)}
-                                            </Chip>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.5)"
-                                                        : "rgba(0,0,0,0.5)",
-                                                }}
-                                            >
-                                                {row.projectName}
-                                            </Typography>
+                                            {row.projectName}
                                         </Box>
-                                    </ListItemContent>
-                                </ListItemButton>
-                            </ListItem>
+                                    </Box>
+                                }
+                                onClick={() =>
+                                    openMilestoneFromSidebar(
+                                        { usePM, useTM },
+                                        row.milestoneId,
+                                        row.projectId
+                                    )
+                                }
+                            />
                         );
                     })}
                 </List>

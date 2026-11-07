@@ -5,6 +5,7 @@ import { Avatar, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { ProjectProps } from "../../../types/tasks";
 import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectLabelChips";
 
@@ -34,14 +35,12 @@ type ProjectIdentity = Pick<
 // `gap: 1` flex parent, which is what both callers lay out with.
 
 const ProjectAvatar = ({ avatarSrc, iconColor }: { avatarSrc?: string; iconColor?: string }) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     return (
         <Avatar size="sm" src={avatarSrc} sx={{ width: 20, height: 20, flexShrink: 0 }}>
             <AssignmentIcon
                 sx={{
                     fontSize: 14,
-                    color: iconColor ?? (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"),
+                    color: iconColor ?? g.text.tertiary,
                 }}
             />
         </Avatar>
@@ -49,15 +48,13 @@ const ProjectAvatar = ({ avatarSrc, iconColor }: { avatarSrc?: string; iconColor
 };
 
 const PrivateMark = () => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     return (
         <LockOutlineIcon
             sx={{
                 fontSize: 14,
                 mx: -0.5,
                 flexShrink: 0,
-                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                color: g.text.tertiary,
             }}
         />
     );
@@ -111,9 +108,6 @@ type ProjectIdentityRowProps = {
 
 export const ProjectIdentityRow = (props: ProjectIdentityRowProps) => {
     const { project, avatarSrc, maxLabels = 1, nameColor, nameWeight = 500, iconColor } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-
     return (
         <>
             <ProjectAvatar avatarSrc={avatarSrc} iconColor={iconColor} />
@@ -137,7 +131,7 @@ export const ProjectIdentityRow = (props: ProjectIdentityRowProps) => {
                     flex: 1,
                     minWidth: 0,
                     fontWeight: nameWeight,
-                    color: nameColor ?? (isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)"),
+                    color: nameColor ?? "inherit",
                 }}
                 noWrap
             >

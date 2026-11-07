@@ -89,9 +89,9 @@ describe("GenosSessionSidebar", () => {
 
     it("marks the live session's row via aria-current", () => {
         renderSidebar({ activeSessionId: "sess-1" });
-        const active = screen.getByText("what shipped last week?").closest("button");
+        const active = screen.getByText("what shipped last week?").closest('[role="button"]');
         expect(active?.getAttribute("aria-current")).toBe("true");
-        const inactive = screen.getByText("summarize the auth thread").closest("button");
+        const inactive = screen.getByText("summarize the auth thread").closest('[role="button"]');
         expect(inactive?.getAttribute("aria-current")).toBeNull();
     });
 

@@ -1,11 +1,12 @@
 import { memo, ReactNode, useEffect, useState } from "react";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, List, ListItem } from "@mui/joy";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
+import { g } from "../../../../theme/tokens";
 import { DroppableHeader, SidebarDndKind } from "../dnd/sidebarNoteDnd";
 
 interface GroupedNoteSectionProps {
@@ -43,8 +44,6 @@ function GroupedNoteSectionComponent({
     leadingIcon,
     menuItems,
 }: GroupedNoteSectionProps) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
     // Keeps the "⋯" trigger visible while its portal menu is open, or the
     // hover-reveal hides it as the pointer moves onto the menu.
@@ -69,138 +68,55 @@ function GroupedNoteSectionComponent({
     // Match MyNoteFolderTree: open-folder icon when expanded, closed when not.
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 
+    // Keep the "..." trigger visible while its portal menu is open, or
+    // the hover-reveal hides it as the pointer moves onto the menu.
+    // A `leadingIcon` (milestone flag) overrides the folder glyph, which
+    // swaps open/closed like the my-note folder tree.
+    // Dragging a note over the folder: the accent tint and a dashed ring.
     const headerButton = (isDraggingOver: boolean) => (
-        <ListItemButton
-            sx={{
-                borderRadius: "8px",
-                py: 0.5,
-                px: 1,
-                my: 0.25,
-                gap: 0.75,
-                minHeight: 32,
-                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                backgroundColor: isDraggingOver
-                    ? isDark
-                        ? "rgba(var(--gp-brand-700-rgb), 0.18)"
-                        : "rgba(var(--gp-brand-700-rgb), 0.1)"
-                    : isDark
-                      ? "rgba(255,255,255,0.02)"
-                      : "rgba(0,0,0,0.01)",
-                outline: isDraggingOver ? "1px dashed" : "none",
-                outlineColor: isDark
-                    ? "rgba(var(--gp-brandalt-400-rgb), 0.7)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                // Hover-only on real pointers — sticky :hover on touch
-                // eats the first tap (folder won't expand until tap #2).
-                "@media (hover: hover) and (pointer: fine)": {
-                    "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                        "& .group-menu-btn": {
-                            opacity: 1,
-                        },
-                    },
-                },
-            }}
-            onClick={() => setIsExpanded(!isExpanded)}
-        >
-            {/* Chevron */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 16,
-                    height: 16,
-                    borderRadius: "4px",
-                    flexShrink: 0,
-                    transition: "all 0.15s ease",
-                }}
-            >
-                <ChevronRightRoundedIcon
-                    sx={{
-                        fontSize: 13,
-                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)",
-                        transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                    }}
-                />
-            </Box>
-
-            {/* Folder Icon — purple, and swaps open/closed on expand, to
-                match the my-note folder tree (MyNoteFolderTree) so task-note
-                and chat-note groups read as the same kind of folder. A
-                `leadingIcon` (milestone flag) overrides it when supplied. */}
-            {leadingIcon ?? (
-                <FolderIcon
-                    sx={{
-                        fontSize: 14,
-                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        flexShrink: 0,
-                    }}
-                />
-            )}
-
-            <ListItemContent sx={{ minWidth: 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            fontWeight: 600,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                            fontSize: "0.75rem",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        {groupLabel}
-                    </Typography>
+        <NavItem
+            actionsVisible={menuOpen}
+            as="div"
+            expanded={isExpanded}
+            icon={leadingIcon ?? <FolderIcon />}
+            actions={
+                menuItems && menuItems.length > 0 ? (
+                    <Box onClick={(e) => e.stopPropagation()}>
+                        <MoreMenu
+                            iconFontSize={14}
+                            items={menuItems}
+                            placement="bottom-end"
+                            triggerSize={20}
+                            onOpenChange={setMenuOpen}
+                        />
+                    </Box>
+                ) : undefined
+            }
+            label={
+                <>
+                    {groupLabel}
                     {subLabel && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                color: isDark
-                                    ? "rgba(255, 255, 255, 0.71)"
-                                    : "rgba(0, 0, 0, 0.57)",
-                                fontSize: "0.7rem",
-                            }}
-                        >
+                        <Box component="span" sx={{ ml: 0.75, color: "text.tertiary" }}>
                             {subLabel}
-                        </Typography>
+                        </Box>
                     )}
-                </Box>
-            </ListItemContent>
-
-            {menuItems && menuItems.length > 0 && (
-                <Box
-                    className="group-menu-btn"
-                    sx={{
-                        opacity: menuOpen ? 1 : 0,
-                        transition: "opacity 0.15s ease",
-                        "@media (hover: none)": { opacity: 1 },
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <MoreMenu
-                        iconFontSize={14}
-                        items={menuItems}
-                        placement="bottom-end"
-                        triggerSize={20}
-                        onOpenChange={setMenuOpen}
-                    />
-                </Box>
-            )}
-        </ListItemButton>
+                </>
+            }
+            sx={
+                isDraggingOver
+                    ? {
+                          background: g.accent.subtle,
+                          outline: `1px dashed ${g.accent.border}`,
+                      }
+                    : undefined
+            }
+            onClick={() => setIsExpanded(!isExpanded)}
+        />
     );
 
     return (
         <Box key={groupKey}>
-            <ListItem nested>
+            <ListItem sx={{ p: 0 }} nested>
                 {droppableId && droppableKind ? (
                     <DroppableHeader containerId={droppableId} kind={droppableKind}>
                         {(isDraggingOver) => headerButton(isDraggingOver)}
@@ -220,14 +136,7 @@ function GroupedNoteSectionComponent({
                         },
                     }}
                 >
-                    <List
-                        sx={{
-                            pl: 1.5,
-                            "--List-nestedInsetStart": "16px",
-                        }}
-                    >
-                        {children}
-                    </List>
+                    <List sx={navNestedListSx}>{children}</List>
                 </Box>
             </ListItem>
         </Box>

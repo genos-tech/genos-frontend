@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { SettingsModal } from "../components/layout/SettingsModal";
 
 let isMobileViewport = false;
@@ -110,5 +112,18 @@ describe("SettingsModal tab rail", () => {
         // Nothing may be dropped on the way to a narrow layout — the
         // strip scrolls instead.
         expect(screen.getAllByRole("tab").length).toBeGreaterThanOrEqual(9);
+    });
+
+    it("wears the shared sidebar-row look: density height, accent tint, token focus ring (MIP-1127)", () => {
+        renderModal();
+        const tab = screen.getAllByRole("tab")[0];
+        const css = cssOf(tab);
+        expect(css).toContain("height: var(--g-row)");
+        expect(css).toContain("border-radius: var(--g-radius-sm)");
+        expect(css).toContain("var(--g-accent-subtle)");
+        expect(css).toContain("outline: 2px solid var(--g-focus)");
+        expect(css).not.toMatch(/gradient|rgba?\(\s*\d/);
+        // The selected tab is the first one (General) on open.
+        expect(tab).toHaveAttribute("aria-selected", "true");
     });
 });

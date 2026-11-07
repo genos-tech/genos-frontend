@@ -23,9 +23,12 @@ import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
 import EditNoteRounded from "@mui/icons-material/EditNoteRounded";
 import FilterListRounded from "@mui/icons-material/FilterListRounded";
 import InboxRounded from "@mui/icons-material/InboxRounded";
+import MoreHorizRounded from "@mui/icons-material/MoreHorizRounded";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { NavItem } from "../../components/ui/nav/NavItem";
+import { SectionHeader } from "../../components/ui/nav/SectionHeader";
 import { useColorTheme } from "../../theme/ColorThemeProvider";
 import { DENSITIES } from "../../theme/density";
 import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
@@ -39,7 +42,6 @@ import {
     EmptyState,
     FilterChip,
     Input,
-    NavItem,
     Panel,
     PriorityIcon,
     SampleTask,
@@ -280,9 +282,9 @@ const MiniSlice = ({ id, mode }: { id: ThemeId; mode: Mode }) => (
             >
                 <Text level="title-sm">{themeName(id)}</Text>
             </Box>
-            <NavItem icon={<AssignmentRounded />} label="Tasks" selected />
-            <NavItem count={3} icon={<ChatRounded />} label="Chats" />
-            <NavItem icon={<EditNoteRounded />} label="Notes" />
+            <NavItem as="div" icon={<AssignmentRounded />} label="Tasks" selected />
+            <NavItem as="div" count={3} icon={<ChatRounded />} label="Chats" />
+            <NavItem as="div" icon={<EditNoteRounded />} label="Notes" />
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
             <Box
@@ -927,7 +929,7 @@ const Components = () => (
             </Labelled>
 
             <Labelled
-                note="Selected is the accent's quiet tint, not a filled pill."
+                note="One row, one height (the density setting), one selected style: the accent's quiet tint, not a filled pill. A two-line row is the only taller one."
                 title="Navigation"
             >
                 <Box
@@ -938,11 +940,24 @@ const Components = () => (
                         border: `1px solid ${g.border.subtle}`,
                     }}
                 >
-                    <NavItem icon={<AutoAwesomeRounded />} label="Genos" />
-                    <NavItem count={5} icon={<InboxRounded />} label="Inbox" />
-                    <NavItem count={2} icon={<ChatRounded />} label="Chats" />
-                    <NavItem icon={<AssignmentRounded />} label="Tasks" selected />
-                    <NavItem icon={<EditNoteRounded />} label="Notes" />
+                    <NavItem as="div" icon={<AutoAwesomeRounded />} label="Genos" />
+                    <NavItem as="div" count={5} icon={<InboxRounded />} label="Inbox" />
+                    <NavItem as="div" count={2} icon={<ChatRounded />} label="Chats" />
+                    <NavItem as="div" icon={<AssignmentRounded />} label="Tasks" selected />
+                    <NavItem as="div" icon={<EditNoteRounded />} label="Notes" />
+                    <SectionHeader as="div" label="Projects" expanded />
+                    <NavItem as="div" label="Genos web" expanded />
+                    <NavItem as="div" indent={1} label="Sprint 42" selected />
+                    <NavItem as="div" indent={1} label="Backlog" unread />
+                    <NavItem
+                        actions={<MoreHorizRounded sx={{ fontSize: 16 }} />}
+                        as="div"
+                        icon={<EditNoteRounded />}
+                        label="Release notes"
+                        lines={2}
+                        secondary="Edited 2h ago"
+                        actionsVisible
+                    />
                 </Box>
             </Labelled>
 

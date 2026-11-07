@@ -1,6 +1,7 @@
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import { ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { FavoriteFolderMeta } from "../../favorite-notes/services";
 import { FolderFavoriteStar } from "./FolderFavoriteStar";
@@ -12,64 +13,26 @@ export const FavoriteFolderItem = ({
     folder,
     spaceLabel,
     useNM,
-    isDark,
 }: {
     folder: FavoriteFolderMeta;
     spaceLabel: string;
     useNM: NoteManagementState;
-    isDark: boolean;
 }) => (
-    <ListItem>
-        <ListItemButton
-            data-testid={`favorite-folder-${folder.folderId}`}
-            sx={{
-                borderRadius: "8px",
-                py: 0.5,
-                px: 1,
-                gap: 0.75,
-                minHeight: 32,
-                "@media (hover: hover) and (pointer: fine)": {
-                    "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                        "& .folder-menu-btn": { opacity: 1 },
-                    },
-                },
-            }}
-            onClick={() =>
-                useNM.revealFolder(folder.folderId, folder.scope === "team" ? "team" : "my")
-            }
-        >
-            <FolderRoundedIcon
-                sx={{
-                    fontSize: 14,
-                    color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                    flexShrink: 0,
-                }}
-            />
-            <ListItemContent sx={{ minWidth: 0 }}>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        fontWeight: 600,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.65)",
-                    }}
-                >
-                    {folder.name}
-                </Typography>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        fontSize: "0.65rem",
-                        color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                    }}
-                >
-                    {spaceLabel}
-                </Typography>
-            </ListItemContent>
-            <FolderFavoriteStar folderId={folder.folderId} isDark={isDark} useNM={useNM} />
-        </ListItemButton>
-    </ListItem>
+    <NavItem
+        as="div"
+        data-testid={`favorite-folder-${folder.folderId}`}
+        icon={<FolderRoundedIcon />}
+        label={folder.name}
+        lines={2}
+        secondary={spaceLabel}
+        // The star is the row's whole point here: it is always shown.
+        actions={
+            <span className={NAV_KEEP_CLASS}>
+                <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
+            </span>
+        }
+        onClick={() =>
+            useNM.revealFolder(folder.folderId, folder.scope === "team" ? "team" : "my")
+        }
+    />
 );

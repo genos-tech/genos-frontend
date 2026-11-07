@@ -22,13 +22,11 @@ import {
     Divider,
     List,
     ListItem,
-    ListItemContent,
     Modal,
     ModalDialog,
     Sheet,
     Typography,
 } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -37,12 +35,14 @@ import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import {
@@ -817,91 +817,54 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // "Invalid prop supplied to React.Fragment" warning. The grouped
     // task/chat/shared sections are Box-rooted for the same reason.
     const renderMyNotesSection = () => {
-        // Shared dashed-button style for the "New folder" / "New note" pair.
-        // `isDraggingOver` is threaded from the DroppableHeader so both
-        // buttons highlight together while the row acts as the root drop target.
-        const dashedActionSx = (isDraggingOver: boolean) => ({
-            // Size to content and never grow/compress: the pair sits on one
-            // row and uses the free space to its right rather than splitting
-            // the width 50/50 (which squeezed "New folder" onto two lines).
-            // Explicit `0 0 auto` overrides Joy ListItemButton's default grow.
-            flex: "0 0 auto",
-            whiteSpace: "nowrap",
-            // Joy's ListItem sets `--ListItemButton-marginInline` to NEGATIVE
-            // padding (calc(-1 * paddingLeft) calc(-1 * paddingRight)) so a
-            // single button bleeds to the row's edges. With two buttons side
-            // by side those negative margins pull the pair into each other,
-            // overrunning the flex `gap` — that's the overlap. Reset to 0 so
-            // the gap is honoured. (This, not the flex tweak in #450, is the
-            // real fix — the negative margin was fighting the gap all along.)
-            mx: 0,
-            borderRadius: "8px",
-            py: 0.5,
-            px: 1,
-            my: 0.25,
-            gap: 0.75,
-            minHeight: 30,
-            border: "1px dashed",
-            borderColor: isDraggingOver
-                ? isDark
-                    ? "rgba(var(--gp-brandalt-400-rgb), 0.8)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.7)"
-                : isDark
-                  ? "rgba(255,255,255,0.15)"
-                  : "rgba(0,0,0,0.12)",
-            backgroundColor: isDraggingOver
-                ? isDark
-                    ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                : "transparent",
-            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-            "&:hover": {
-                borderColor: isDark
-                    ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-            },
-        });
-
         return (
             <Box>
                 {/* "New folder" / "New note" affordances — the row also doubles
                     as the always-visible "move to root" drop target (folders
                     below may be the only other rows when every note is filed).
                     "New note" creates a plain root note (no parent, no folder). */}
-                <ListItem>
+                <ListItem sx={{ p: 0 }}>
                     <DroppableHeader containerId={myRootContainerId()} kind={1}>
                         {(isDraggingOver) => (
+                            // The pair sits on one row and takes its content width
+                            // (not 50/50, which squeezed "New folder" onto two
+                            // lines). While a note is dragged over, both light up
+                            // together: the row is the root drop target.
                             <Box sx={{ display: "flex", gap: 0.5, width: "100%" }}>
-                                <ListItemButton
-                                    sx={dashedActionSx(isDraggingOver)}
-                                    onClick={() =>
-                                        setFolderNameModal({
-                                            mode: "create",
-                                            parentFolderId: null,
-                                        })
-                                    }
-                                >
-                                    <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{ fontWeight: 500, color: "inherit" }}
-                                    >
-                                        {t.notes.folders.newFolder}
-                                    </Typography>
-                                </ListItemButton>
-                                <ListItemButton
-                                    sx={dashedActionSx(isDraggingOver)}
-                                    onClick={() => void useNM.handleCreateNewMyNote(null)}
-                                >
-                                    <NoteAddRoundedIcon sx={{ fontSize: 15 }} />
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{ fontWeight: 500, color: "inherit" }}
-                                    >
-                                        {t.notes.list.newNote}
-                                    </Typography>
-                                </ListItemButton>
+                                {[
+                                    {
+                                        key: "folder",
+                                        icon: <CreateNewFolderRoundedIcon />,
+                                        label: t.notes.folders.newFolder,
+                                        onClick: () =>
+                                            setFolderNameModal({
+                                                mode: "create",
+                                                parentFolderId: null,
+                                            }),
+                                    },
+                                    {
+                                        key: "note",
+                                        icon: <NoteAddRoundedIcon />,
+                                        label: t.notes.list.newNote,
+                                        onClick: () => void useNM.handleCreateNewMyNote(null),
+                                    },
+                                ].map((action) => (
+                                    <NavItem
+                                        key={action.key}
+                                        as="div"
+                                        icon={action.icon}
+                                        label={action.label}
+                                        variant="dashed"
+                                        sx={{
+                                            flex: "0 0 auto",
+                                            ...(isDraggingOver && {
+                                                background: g.accent.subtle,
+                                                borderColor: g.accent.border,
+                                            }),
+                                        }}
+                                        onClick={action.onClick}
+                                    />
+                                ))}
                             </Box>
                         )}
                     </DroppableHeader>
@@ -1000,6 +963,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={teamNoteState.tmpCurrentChain}
             node={node}
             noteType={8}
+            timestamp={teamNoteState.timestamp}
+            useNM={useNM}
+            createChildNoteList={(node) => (
+                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
+            )}
             rowMenuItems={(node: MyNoteMetaTreeNode) =>
                 canEditTeamNote(node)
                     ? [
@@ -1020,11 +988,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                       ]
                     : [buildExportMenuItem(8, node)]
             }
-            timestamp={teamNoteState.timestamp}
-            useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
-            )}
         />
     );
 
@@ -1149,32 +1112,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 A guest sees this section for the one folder shared with their
                 team, so the affordance would only ever fail for them. */}
             {!useTEM.currentTeam.isGuest && (
-                <ListItem>
-                    <ListItemButton
-                        sx={{
-                            borderRadius: "8px",
-                            py: 0.5,
-                            px: 1,
-                            my: 0.25,
-                            gap: 0.75,
-                            minHeight: 30,
-                            border: "1px dashed",
-                            borderColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
-                            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-                            "&:hover": {
-                                borderColor: isDark
-                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.5)",
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                            },
-                        }}
+                <ListItem sx={{ p: 0 }}>
+                    <NavItem
+                        as="div"
+                        icon={<CreateNewFolderRoundedIcon />}
+                        label={t.notes.teamNotes.newFolder}
+                        variant="dashed"
                         onClick={() => setTeamFolderModal({ mode: "create-root" })}
-                    >
-                        <CreateNewFolderRoundedIcon sx={{ fontSize: 15 }} />
-                        <Typography level="body-xs" sx={{ fontWeight: 500, color: "inherit" }}>
-                            {t.notes.teamNotes.newFolder}
-                        </Typography>
-                    </ListItemButton>
+                    />
                 </ListItem>
             )}
             {teamFolderTags.length > 0 && (
@@ -1508,6 +1453,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 // task), so it can hold notes — but only
                                 // once a child note has revealed which task
                                 // that is.
+                                defaultExpanded={milestoneGroupContainsNote(
+                                    milestoneGroup,
+                                    activeNoteId
+                                )}
+                                leadingIcon={
+                                    <FlagRoundedIcon
+                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
+                                    />
+                                }
                                 menuItems={
                                     milestoneGroup.backingTaskId != null
                                         ? buildTaskFolderMenuItems(
@@ -1516,15 +1470,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                           )
                                         : undefined
                                 }
-                                leadingIcon={
-                                    <FlagRoundedIcon
-                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
-                                    />
-                                }
-                                defaultExpanded={milestoneGroupContainsNote(
-                                    milestoneGroup,
-                                    activeNoteId
-                                )}
                             >
                                 {/* Direct milestone notes all anchor to the
                                     milestone's backing task, so that task is
@@ -1722,13 +1667,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             <FavoriteFolderItem
                                 key={`fav-folder-${folder.folderId}`}
                                 folder={folder}
-                                isDark={isDark}
+                                useNM={useNM}
                                 spaceLabel={
                                     folder.scope === "team"
                                         ? t.notes.sidebar.teamNotes
                                         : t.notes.sidebar.myNotes
                                 }
-                                useNM={useNM}
                             />
                         ))}
                     </FavoriteNoteSection>
@@ -2162,17 +2106,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 initialName={teamFolderModal?.mode === "rename" ? teamFolderModal.folder.name : ""}
                 mode={teamFolderModal?.mode ?? "create-root"}
                 open={teamFolderModal !== null}
-                parentName={
-                    teamFolderModal?.mode === "create-child"
-                        ? teamFolderModal.parent.name
-                        : undefined
-                }
+                teamId={myself.teamId}
                 initialVisibility={
                     teamFolderModal?.mode === "rename"
                         ? teamFolderModal.folder.visibility
                         : undefined
                 }
-                teamId={myself.teamId}
+                parentName={
+                    teamFolderModal?.mode === "create-child"
+                        ? teamFolderModal.parent.name
+                        : undefined
+                }
                 onClose={() => setTeamFolderModal(null)}
                 onSubmit={(name, visibility, guestTeamIds) => {
                     if (!teamFolderModal) return;
@@ -2225,8 +2169,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 folder={teamTagsModal}
                 myself={myself}
                 open={teamTagsModal !== null}
-                onClose={() => setTeamTagsModal(null)}
                 onChanged={() => void useNM.getTeamNoteFolders()}
+                onClose={() => setTeamTagsModal(null)}
             />
             {/* Move a NOTE into another team folder. Scoped to the team
                 folder list so a team note can't be filed into someone's

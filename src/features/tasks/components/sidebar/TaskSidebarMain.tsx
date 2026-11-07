@@ -1,9 +1,10 @@
 import { memo, useEffect, useState } from "react";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
+import { Box, Divider, List, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -237,12 +238,12 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
             {/* Search Box */}
             <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
                 <TaskSidebarSearchBox
+                    accessToken={accessToken}
                     loading={loading}
+                    myself={myself}
                     openSearch={openSearch}
                     setOpenSearch={setOpenSearch}
                     setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                    accessToken={accessToken}
-                    myself={myself}
                     teamTaskSearchOptions={teamTaskSearchOptions}
                     useTM={slices.search.tm}
                 />
@@ -264,81 +265,21 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                 <List
                     size="sm"
                     sx={{
-                        gap: 0.5,
-                        "--List-nestedInsetStart": "24px",
-                        "--ListItem-radius": "8px",
+                        gap: 0,
+                        "--List-nestedInsetStart": "0px",
                     }}
                 >
                     {/* Home Item */}
-                    <ListItem>
-                        <ListItemButton
-                            selected={useTM.isTaskDashboardVisible}
-                            sx={{
-                                borderRadius: "10px",
-                                py: 1,
-                                px: 1.5,
-                                gap: 1.5,
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    backgroundColor: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.06)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.04)",
-                                },
-                                "&.Mui-selected": {
-                                    backgroundColor: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                    "&:hover": {
-                                        backgroundColor: isDark
-                                            ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                                    },
-                                },
-                            }}
-                            onClick={() => {
-                                useTM.setIsTaskDashboardVisible(true);
-                                useTM.setIsTaskTableVisible(false);
-                                useTM.setIsSprintBoardVisible(false);
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: isDark
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                    transition: "all 0.2s ease",
-                                }}
-                            >
-                                <HomeRoundedIcon
-                                    sx={{
-                                        fontSize: 16,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.75)"
-                                            : "rgba(0,0,0,0.65)",
-                                    }}
-                                />
-                            </Box>
-                            <ListItemContent>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(0,0,0,0.8)",
-                                    }}
-                                >
-                                    {t.tasks.sidebar.home}
-                                </Typography>
-                            </ListItemContent>
-                        </ListItemButton>
-                    </ListItem>
+                    <NavItem
+                        icon={<HomeRoundedIcon />}
+                        label={t.tasks.sidebar.home}
+                        selected={useTM.isTaskDashboardVisible}
+                        onClick={() => {
+                            useTM.setIsTaskDashboardVisible(true);
+                            useTM.setIsTaskTableVisible(false);
+                            useTM.setIsSprintBoardVisible(false);
+                        }}
+                    />
 
                     {/* Section Header - Views — Table and Sprint Board
                         aren't reachable on mobile (MobileTaskHome only
@@ -349,42 +290,18 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                         resizes back to ≥md. */}
                     {!isMobile && (
                         <>
-                            <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        fontWeight: 600,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.08em",
-                                        fontSize: 10,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.4)"
-                                            : "rgba(0,0,0,0.4)",
-                                    }}
-                                >
-                                    {t.tasks.sidebar.viewsHeader}
-                                </Typography>
-                            </Box>
+                            <SectionHeader
+                                as="div"
+                                label={t.tasks.sidebar.viewsHeader}
+                                sx={{ mt: 1.5 }}
+                            />
                             <TaskTableListItem useTM={slices.tableView.tm} />
                             <SprintBoardListItem useTM={slices.boardView.tm} />
                         </>
                     )}
 
                     {/* Section Header - Tasks */}
-                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                fontSize: 10,
-                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            {t.tasks.sidebar.tasksHeader}
-                        </Typography>
-                    </Box>
+                    <SectionHeader as="div" label={t.tasks.sidebar.tasksHeader} sx={{ mt: 1.5 }} />
 
                     <FavoritesListItem
                         usePM={slices.tree.pm}
@@ -399,20 +316,11 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                     />
 
                     {/* Section Header - Projects */}
-                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                fontSize: 10,
-                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            {t.tasks.sidebar.projectsHeader}
-                        </Typography>
-                    </Box>
+                    <SectionHeader
+                        as="div"
+                        label={t.tasks.sidebar.projectsHeader}
+                        sx={{ mt: 1.5 }}
+                    />
 
                     <ProjectsListItem
                         myself={myself}
