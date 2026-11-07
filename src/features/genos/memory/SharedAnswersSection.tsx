@@ -2,11 +2,12 @@ import { useState } from "react";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { Box, Button, CircularProgress, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useShareAnswersPreference } from "../../../hooks/common/useShareAnswersPreference";
 import { fmt, useTranslation } from "../../../i18n";
 import type { SharedAnswer } from "../../../services/agentApi";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
 import { useSharedAnswers } from "./useSharedAnswers";
 
 interface Props {
@@ -228,29 +229,33 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
             {renderList()}
 
             <ConfirmDialog
-                body={m.offBody}
                 busy={busy}
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={m.offConfirm}
+                description={m.offBody}
                 error={error}
                 open={offOpen}
                 title={m.offTitle}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                destructive
                 onConfirm={confirmOff}
-                onCancel={() => {
+                onClose={() => {
                     if (!busy) setOffOpen(false);
                 }}
             />
 
             <ConfirmDialog
-                body={m.stopBody}
                 busy={busy}
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={m.stopConfirm}
+                description={m.stopBody}
                 error={error}
                 open={stopTarget !== null}
                 title={m.stopTitle}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                destructive
                 onConfirm={confirmStop}
-                onCancel={() => {
+                onClose={() => {
                     if (!busy) setStopTarget(null);
                 }}
             >

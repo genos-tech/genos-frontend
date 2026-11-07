@@ -8,22 +8,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import {
-    Badge,
-    Box,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    GlobalStyles,
-    List,
-    ListItem,
-    Modal,
-    ModalDialog,
-    Sheet,
-    Typography,
-} from "@mui/joy";
+import { Badge, Box, Divider, GlobalStyles, List, ListItem, Sheet, Typography } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +31,7 @@ import { UserProps } from "../../types/admin";
 import { isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
+import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
 
@@ -859,54 +845,28 @@ export const Sidebar = (props: SidebarProps) => {
                 onClose={() => setOpenSettings(false)}
             />
 
-            <Modal
+            <ConfirmDialog
+                busy={signOutBusy}
+                cancelLabel={t.sidebar.signOutConfirm.cancel}
+                confirmLabel={t.sidebar.signOutConfirm.confirm}
+                description={t.sidebar.signOutConfirm.body}
                 open={openSignOutConfirm}
-                onClose={() => !signOutBusy && setOpenSignOutConfirm(false)}
-            >
-                <ModalDialog
-                    sx={{
-                        width: { xs: "calc(100vw - 24px)", md: "auto" },
-                        minWidth: { xs: 0, md: 380 },
-                        maxWidth: { xs: "100vw", md: 480 },
-                    }}
-                >
-                    <DialogTitle>{t.sidebar.signOutConfirm.title}</DialogTitle>
-                    <Divider />
-                    <DialogContent>
-                        <Typography level="body-sm" sx={{ pt: 1 }}>
-                            {t.sidebar.signOutConfirm.body}
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            color="neutral"
-                            disabled={signOutBusy}
-                            variant="plain"
-                            onClick={() => setOpenSignOutConfirm(false)}
-                        >
-                            {t.sidebar.signOutConfirm.cancel}
-                        </Button>
-                        <Button
-                            color="danger"
-                            loading={signOutBusy}
-                            onClick={async () => {
-                                setSignOutBusy(true);
-                                try {
-                                    await handleLogout();
-                                } finally {
-                                    // Sign-out navigates away on success;
-                                    // resetting state defends against the
-                                    // failure path (button stays clickable).
-                                    setSignOutBusy(false);
-                                    setOpenSignOutConfirm(false);
-                                }
-                            }}
-                        >
-                            {t.sidebar.signOutConfirm.confirm}
-                        </Button>
-                    </DialogActions>
-                </ModalDialog>
-            </Modal>
+                title={t.sidebar.signOutConfirm.title}
+                destructive
+                onClose={() => setOpenSignOutConfirm(false)}
+                onConfirm={async () => {
+                    setSignOutBusy(true);
+                    try {
+                        await handleLogout();
+                    } finally {
+                        // Sign-out navigates away on success;
+                        // resetting state defends against the
+                        // failure path (button stays clickable).
+                        setSignOutBusy(false);
+                        setOpenSignOutConfirm(false);
+                    }
+                }}
+            />
         </Sheet>
     );
 };

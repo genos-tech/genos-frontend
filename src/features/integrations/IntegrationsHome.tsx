@@ -49,6 +49,7 @@ import { GithubPullSummary, listMyPulls } from "./services/github";
 import { redirectToOAuthConnect } from "./services/oauth";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../context/AuthContext";
 import { fmt, useTranslation } from "../../i18n";
 import { fetchAgentFeatures } from "../../services/agentApi";
@@ -196,15 +197,11 @@ const CalendarTab = ({
         setModalOpen(true);
     };
 
-    const handleDelete = async (event: CalendarEvent) => {
-        if (
-            !confirm(
-                fmt(t.integrations.calendar.deleteConfirm, {
-                    title: event.summary || event.id,
-                })
-            )
-        )
-            return;
+    // The trash button only ASKS (`deleting`); the confirm dialog runs `runDelete`.
+    const [deleting, setDeleting] = useState<CalendarEvent | null>(null);
+    const handleDelete = (event: CalendarEvent) => setDeleting(event);
+
+    const runDelete = async (event: CalendarEvent) => {
         const ok = await deleteEvent(
             accessToken,
             event.id,
@@ -354,6 +351,25 @@ const CalendarTab = ({
                     ))}
                 </Stack>
             )}
+
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={t.common.actions.delete}
+                open={deleting != null}
+                title={
+                    deleting
+                        ? fmt(t.integrations.calendar.deleteConfirm, {
+                              title: deleting.summary || deleting.id,
+                          })
+                        : ""
+                }
+                closeOnConfirm
+                destructive
+                onClose={() => setDeleting(null)}
+                onConfirm={async () => {
+                    if (deleting) await runDelete(deleting);
+                }}
+            />
 
             <CalendarEventModal
                 accessToken={accessToken}

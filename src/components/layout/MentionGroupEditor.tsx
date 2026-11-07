@@ -27,6 +27,7 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
+import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 
 type Props = {
     groupId: number;
@@ -67,6 +68,7 @@ export const MentionGroupEditor = ({
     const [editingName, setEditingName] = useState<string | null>(null);
     const [editingDescription, setEditingDescription] = useState<string | null>(null);
     const [memberPickerQuery, setMemberPickerQuery] = useState("");
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     const group: MentionGroup | undefined = useMemo(
         () => mentionGroups.find((g) => g.groupId === groupId),
@@ -133,17 +135,24 @@ export const MentionGroupEditor = ({
         setEditingDescription(null);
     };
 
+    // The trash button only ASKS; the confirm dialog (below) deletes.
     const handleDelete = async () => {
-        const ok = window.confirm(
-            fmt(t.settings.mentionGroups.deleteConfirm, { name: group.groupName })
-        );
-        if (!ok) return;
         await deleteGroup(group.groupId);
         onDeleted?.();
     };
 
     return (
         <Stack spacing={1.5}>
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={t.common.actions.delete}
+                open={confirmingDelete}
+                title={fmt(t.settings.mentionGroups.deleteConfirm, { name: group.groupName })}
+                closeOnConfirm
+                destructive
+                onClose={() => setConfirmingDelete(false)}
+                onConfirm={handleDelete}
+            />
             {/* Name + delete */}
             <Stack alignItems="center" direction="row" spacing={1}>
                 {editingName != null ? (
@@ -173,7 +182,7 @@ export const MentionGroupEditor = ({
                         color="danger"
                         size="sm"
                         variant="plain"
-                        onClick={() => void handleDelete()}
+                        onClick={() => setConfirmingDelete(true)}
                     >
                         <DeleteOutlineRoundedIcon />
                     </IconButton>

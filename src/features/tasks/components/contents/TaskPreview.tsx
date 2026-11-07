@@ -27,6 +27,7 @@ import { useInitialTabIndex } from "./utils/useInitialTabIndex";
 import { usePreviewEditMirror } from "./utils/usePreviewEditMirror";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -1278,6 +1279,7 @@ const MilestonePreviewInner = ({
     const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });
     // ...which asks first, in the app's own dialog.
     const [openConvertToTask, setOpenConvertToTask] = useState(false);
+    const [openDeleteMilestone, setOpenDeleteMilestone] = useState(false);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
@@ -2526,27 +2528,7 @@ const MilestonePreviewInner = ({
                                     label: t.tasks.preview.menu.deleteMilestone,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                     danger: true,
-                                    onClick: async () => {
-                                        if (!confirm(t.tasks.preview.confirmDeleteMilestone))
-                                            return;
-                                        await useSM.removeMilestone(
-                                            milestone.milestoneId,
-                                            milestone.projectId
-                                        );
-                                        useTM.setCurrentPreviewKind("task");
-                                        useTM.setCurrentPreviewMilestoneId(-1);
-                                        useTM.setIsTaskPreviewVisible(false);
-                                        // Same dual-gate trap as the milestone Close
-                                        // button: when the preview was opened from a
-                                        // task note, the surrounding `TaskPreviewPanel`
-                                        // is mounted by `useNM.isTaskVisibleInNote`
-                                        // rather than `useTM`, so flipping `useTM`
-                                        // alone leaves the panel showing a now-deleted
-                                        // milestone. Clear the NM flag too.
-                                        if (useNM.setIsTaskVisibleInNote) {
-                                            useNM.setIsTaskVisibleInNote(false);
-                                        }
-                                    },
+                                    onClick: () => setOpenDeleteMilestone(true),
                                 },
                             ];
                             return (
@@ -2887,6 +2869,34 @@ const MilestonePreviewInner = ({
     return (
         <>
             {previewLayout}
+            {/* Delete milestone. Above a modal-hosted preview (UrlLinkModal), else the default. */}
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={t.common.actions.delete}
+                entityName={milestone.title}
+                open={openDeleteMilestone}
+                title={t.tasks.preview.confirmDeleteMilestone}
+                zIndex={hostZIndex != null ? hostZIndex + 10 : undefined}
+                closeOnConfirm
+                destructive
+                onClose={() => setOpenDeleteMilestone(false)}
+                onConfirm={async () => {
+                    await useSM.removeMilestone(milestone.milestoneId, milestone.projectId);
+                    useTM.setCurrentPreviewKind("task");
+                    useTM.setCurrentPreviewMilestoneId(-1);
+                    useTM.setIsTaskPreviewVisible(false);
+                    // Same dual-gate trap as the milestone Close
+                    // button: when the preview was opened from a
+                    // task note, the surrounding `TaskPreviewPanel`
+                    // is mounted by `useNM.isTaskVisibleInNote`
+                    // rather than `useTM`, so flipping `useTM`
+                    // alone leaves the panel showing a now-deleted
+                    // milestone. Clear the NM flag too.
+                    if (useNM.setIsTaskVisibleInNote) {
+                        useNM.setIsTaskVisibleInNote(false);
+                    }
+                }}
+            />
             <ModalConvertTaskMilestone
                 direction="toTask"
                 name={milestone.title}

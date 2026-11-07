@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -11,14 +10,9 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {
     Box,
     Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
     Divider,
     IconButton,
     ListDivider,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Sheet,
@@ -29,6 +23,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
 import { consumeYjsPersistenceFailure } from "../../../../db/utils/yjsPersistenceRegistry";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -1720,42 +1715,19 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                     {/* Milestone-path discard confirmation. TaskCreateFooter
                         renders its own equivalent for the task path. */}
-                    <Modal
+                    <ConfirmDialog
+                        cancelLabel="Keep editing"
+                        confirmLabel="Discard draft"
+                        description="Your title, description, and any other changes will be lost. This can't be undone."
                         open={showMilestoneDiscardConfirm}
+                        title="Discard this milestone draft?"
+                        destructive
                         onClose={() => setShowMilestoneDiscardConfirm(false)}
-                    >
-                        <ModalDialog role="alertdialog" variant="outlined">
-                            <DialogTitle>
-                                <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
-                                Discard this milestone draft?
-                            </DialogTitle>
-                            <Divider />
-                            <DialogContent>
-                                Your title, description, and any other changes will be lost. This
-                                can&apos;t be undone.
-                            </DialogContent>
-                            <DialogActions>
-                                <Button
-                                    color="danger"
-                                    startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                                    variant="solid"
-                                    onClick={() => {
-                                        setShowMilestoneDiscardConfirm(false);
-                                        performMilestoneCancel();
-                                    }}
-                                >
-                                    Discard draft
-                                </Button>
-                                <Button
-                                    color="neutral"
-                                    variant="plain"
-                                    onClick={() => setShowMilestoneDiscardConfirm(false)}
-                                >
-                                    Keep editing
-                                </Button>
-                            </DialogActions>
-                        </ModalDialog>
-                    </Modal>
+                        onConfirm={() => {
+                            setShowMilestoneDiscardConfirm(false);
+                            performMilestoneCancel();
+                        }}
+                    />
                 </Sheet>
             ) : bootstrapError ? (
                 <TaskPaneError

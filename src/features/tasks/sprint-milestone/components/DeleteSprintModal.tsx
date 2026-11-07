@@ -1,18 +1,7 @@
-import { useState } from "react";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import {
-    Alert,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert } from "@mui/joy";
 
+import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { fmt, useTranslation } from "../../../../i18n";
 
 type Props = {
@@ -30,57 +19,30 @@ export const DeleteSprintModal = ({
     onConfirm,
     onClose,
 }: Props) => {
-    const [busy, setBusy] = useState(false);
     const { t } = useTranslation();
 
     return (
-        <Modal open={open} onClose={() => !busy && onClose()}>
-            <ModalDialog
-                sx={{
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: 420 },
-                    maxWidth: { xs: "100vw", md: 600 },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
-                    overflow: "auto",
-                }}
-            >
-                <DialogTitle>{t.tasks.deleteSprint.title}</DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Stack spacing={1.5} sx={{ pt: 1 }}>
-                        <Typography level="body-sm">
-                            <b>{sprintName}</b>
-                            {t.tasks.deleteSprint.bodyPrefix}
-                        </Typography>
-                        {milestoneCount > 0 && (
-                            <Alert color="warning" startDecorator={<WarningAmberIcon />}>
-                                {fmt(t.tasks.deleteSprint.milestoneMove, {
-                                    count: milestoneCount,
-                                })}
-                            </Alert>
-                        )}
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="neutral" disabled={busy} variant="plain" onClick={onClose}>
-                        {t.tasks.deleteSprint.cancelButton}
-                    </Button>
-                    <Button
-                        color="danger"
-                        loading={busy}
-                        onClick={async () => {
-                            setBusy(true);
-                            try {
-                                await onConfirm();
-                            } finally {
-                                setBusy(false);
-                            }
-                        }}
-                    >
-                        {t.tasks.deleteSprint.deleteButton}
-                    </Button>
-                </DialogActions>
-            </ModalDialog>
-        </Modal>
+        <ConfirmDialog
+            cancelLabel={t.tasks.deleteSprint.cancelButton}
+            confirmLabel={t.tasks.deleteSprint.deleteButton}
+            open={open}
+            size="md"
+            title={t.tasks.deleteSprint.title}
+            description={
+                <>
+                    <b>{sprintName}</b>
+                    {t.tasks.deleteSprint.bodyPrefix}
+                </>
+            }
+            destructive
+            onClose={onClose}
+            onConfirm={onConfirm}
+        >
+            {milestoneCount > 0 && (
+                <Alert color="warning" size="sm" startDecorator={<WarningAmberIcon />}>
+                    {fmt(t.tasks.deleteSprint.milestoneMove, { count: milestoneCount })}
+                </Alert>
+            )}
+        </ConfirmDialog>
     );
 };
