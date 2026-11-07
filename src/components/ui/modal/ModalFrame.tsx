@@ -56,7 +56,9 @@ const FENCE = {
 /**
  * `sm` / `md` / `lg` are fixed widths for dialogs. `xl` is the wide tabbed
  * panel (Settings): 550 / 700 / 920 as the screen grows. `profile` is the
- * 1000px profile card (project, group, team); see `fullScreenOnMobile`.
+ * 1000px profile card (project, group, team); it is built to be used with
+ * `fullScreenOnMobile` (below `md` the card is the screen, with the close X as
+ * the only way out), so pass both.
  */
 export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "profile";
 
@@ -98,7 +100,8 @@ export type ModalFrameProps = {
     flush?: boolean;
     /** On a phone the frame fills the screen with square corners, not an inset card. */
     fullScreenOnMobile?: boolean;
-    /** Keep the frame clear of the mobile bottom tab bar (a dialog that paints over it). */
+    /** Keep the frame clear of the mobile bottom tab bar (a dialog that paints over it).
+     *  Not combinable with `fullScreenOnMobile`, which is the whole screen. */
     clearBottomBar?: boolean;
     /** Exact layer. Wins over the default, loses to nothing but `hostZIndex`. */
     zIndex?: number;
