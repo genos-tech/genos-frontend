@@ -84,7 +84,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         variant="outlined"
                         sx={{
                             borderRadius: "sm",
-                            fontWeight: "bold",
+                            fontWeight: 600,
                         }}
                         onClick={() => {
                             setOpenRoleEditor(false);
@@ -109,7 +109,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         }
                     }}
                 >
-                    <Typography fontWeight="bold">{roleValue}</Typography>
+                    <Typography fontWeight={600}>{roleValue}</Typography>
                 </Button>
             )}
         </>

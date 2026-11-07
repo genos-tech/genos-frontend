@@ -3,23 +3,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Chip, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -89,6 +78,7 @@ export const ModalTeamFolderTags = (props: Props) => {
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const hostZIndex = useNoteModalHostZIndex();
+    const theme = useTheme();
     // The palette is a portaled Joy Menu; it must clear THIS dialog, and
     // the dialog itself may already be stacked above a UrlLinkModal.
     // `useNoteModalHostZIndex` is undefined on page surfaces, where the
@@ -198,47 +188,59 @@ export const ModalTeamFolderTags = (props: Props) => {
     };
 
     return (
-        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
-            <ModalDialog sx={{ maxWidth: 560, minWidth: 460 }}>
-                <Typography level="title-md">
-                    {fmt(t.notes.teamNotes.tagsTitle, { name: folder?.name ?? "" })}
-                </Typography>
-                <Typography level="body-xs" sx={{ mt: 0.25, opacity: 0.7 }}>
-                    {t.notes.teamNotes.tagsHint}
-                </Typography>
-
-                <Stack spacing={0.5} sx={{ maxHeight: 300, mt: 1.5, overflowY: "auto" }}>
-                    {allTags.length === 0 && (
-                        <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
-                            {t.notes.teamNotes.noTags}
-                        </Typography>
-                    )}
-                    {allTags.map((tag) => {
-                        const isOn = selected.has(tag.tagId);
-                        const isEditing = editingTagId === tag.tagId;
-                        return (
-                            <Stack
-                                key={tag.tagId}
-                                alignItems="center"
-                                direction="row"
-                                spacing={1}
-                                sx={{ px: 0.5, py: 0.5 }}
-                            >
-                                {isEditing ? (
-                                    <Input
-                                        autoFocus
-                                        size="sm"
-                                        sx={{ flex: 1 }}
-                                        value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") void commitRename(tag.tagId);
-                                            if (e.key === "Escape") setEditingTagId(null);
-                                        }}
-                                    />
-                                ) : (
-                                    <>
-                                        {/* Clicking assigns/unassigns on THIS
+        <ModalFrame
+            hostZIndex={hostZIndex}
+            open={open}
+            size="md"
+            title={fmt(t.notes.teamNotes.tagsTitle, { name: folder?.name ?? "" })}
+            actions={
+                <>
+                    <Button color="neutral" variant="plain" onClick={onClose}>
+                        {t.notes.folders.cancel}
+                    </Button>
+                    <Button disabled={saving} loading={saving} onClick={() => void submit()}>
+                        {t.notes.folders.save}
+                    </Button>
+                </>
+            }
+            ownsListboxPopups
+            onClose={onClose}
+            description={t.notes.teamNotes.tagsHint}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
+        >
+            <Stack spacing={0.5} sx={{ maxHeight: 300, overflowY: "auto" }}>
+                {allTags.length === 0 && (
+                    <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
+                        {t.notes.teamNotes.noTags}
+                    </Typography>
+                )}
+                {allTags.map((tag) => {
+                    const isOn = selected.has(tag.tagId);
+                    const isEditing = editingTagId === tag.tagId;
+                    return (
+                        <Stack
+                            key={tag.tagId}
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
+                            sx={{ px: 0.5, py: 0.5 }}
+                        >
+                            {isEditing ? (
+                                <Input
+                                    size="sm"
+                                    sx={{ flex: 1 }}
+                                    value={editName}
+                                    autoFocus
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") void commitRename(tag.tagId);
+                                        if (e.key === "Escape") setEditingTagId(null);
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    {/* Clicking assigns/unassigns on THIS
                                             folder. The handler sits on a
                                             wrapper, NOT on the Chip: a Joy
                                             Chip with `onClick` renders a
@@ -249,129 +251,119 @@ export const ModalTeamFolderTags = (props: Props) => {
                                             here render grey. Keeping the
                                             Chip presentational is also what
                                             ProjectLabelChips does. */}
-                                        <Box
-                                            role="button"
-                                            sx={{ cursor: "pointer", display: "flex" }}
-                                            tabIndex={0}
-                                            onClick={() => toggle(tag.tagId)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" || e.key === " ") {
-                                                    e.preventDefault();
-                                                    toggle(tag.tagId);
-                                                }
-                                            }}
-                                        >
-                                            <Chip
-                                                size="sm"
-                                                variant="solid"
-                                                startDecorator={
-                                                    isOn ? (
-                                                        <CheckRoundedIcon sx={{ fontSize: 12 }} />
-                                                    ) : undefined
-                                                }
-                                                sx={{
-                                                    ...folderTagChipSx(tag, "md"),
-                                                    opacity: isOn ? 1 : 0.45,
-                                                }}
-                                            >
-                                                {tag.name}
-                                            </Chip>
-                                        </Box>
-                                        <Typography level="body-xs" sx={{ flex: 1, opacity: 0.6 }}>
-                                            {fmt(t.notes.teamNotes.tagUsage, {
-                                                count: tag.folderCount,
-                                            })}
-                                        </Typography>
-                                    </>
-                                )}
-
-                                <ColorPickerMenu
-                                    zIndex={paletteZIndex}
-                                    onSelectColor={(c: TagColorOption) =>
-                                        void patchTag(tag.tagId, {
-                                            color: c.value,
-                                            textColor: c.textColor,
-                                        })
-                                    }
-                                />
-                                <AppTooltip size="sm" title={t.notes.folders.rename}>
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={() => {
-                                            if (isEditing) void commitRename(tag.tagId);
-                                            else {
-                                                setEditName(tag.name);
-                                                setEditingTagId(tag.tagId);
+                                    <Box
+                                        role="button"
+                                        sx={{ cursor: "pointer", display: "flex" }}
+                                        tabIndex={0}
+                                        onClick={() => toggle(tag.tagId)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                toggle(tag.tagId);
                                             }
                                         }}
                                     >
-                                        <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                                <AppTooltip size="sm" title={t.notes.folders.delete}>
-                                    <IconButton
-                                        color="danger"
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={() => void removeTag(tag)}
-                                    >
-                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            </Stack>
-                        );
-                    })}
-                </Stack>
+                                        <Chip
+                                            size="sm"
+                                            variant="solid"
+                                            startDecorator={
+                                                isOn ? (
+                                                    <CheckRoundedIcon sx={{ fontSize: 12 }} />
+                                                ) : undefined
+                                            }
+                                            sx={{
+                                                ...folderTagChipSx(tag, "md"),
+                                                opacity: isOn ? 1 : 0.45,
+                                            }}
+                                        >
+                                            {tag.name}
+                                        </Chip>
+                                    </Box>
+                                    <Typography level="body-xs" sx={{ flex: 1, opacity: 0.6 }}>
+                                        {fmt(t.notes.teamNotes.tagUsage, {
+                                            count: tag.folderCount,
+                                        })}
+                                    </Typography>
+                                </>
+                            )}
 
-                {error && (
-                    <Typography color="danger" level="body-xs" sx={{ mt: 1 }}>
-                        {error}
-                    </Typography>
-                )}
+                            <ColorPickerMenu
+                                zIndex={paletteZIndex}
+                                onSelectColor={(c: TagColorOption) =>
+                                    void patchTag(tag.tagId, {
+                                        color: c.value,
+                                        textColor: c.textColor,
+                                    })
+                                }
+                            />
+                            <AppTooltip size="sm" title={t.notes.folders.rename}>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => {
+                                        if (isEditing) void commitRename(tag.tagId);
+                                        else {
+                                            setEditName(tag.name);
+                                            setEditingTagId(tag.tagId);
+                                        }
+                                    }}
+                                >
+                                    <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </AppTooltip>
+                            <AppTooltip size="sm" title={t.notes.folders.delete}>
+                                <IconButton
+                                    color="danger"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => void removeTag(tag)}
+                                >
+                                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        </Stack>
+                    );
+                })}
+            </Stack>
 
-                {/* Create row — swatch first so the colour is chosen
+            {error && (
+                <Typography color="danger" level="body-xs" sx={{ mt: 1 }}>
+                    {error}
+                </Typography>
+            )}
+
+            {/* Create row — swatch first so the colour is chosen
                     before the name, matching the label manager. */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 2 }}>
-                    <Chip size="sm" sx={folderTagChipSx(newColor, "md")} variant="solid">
-                        {trimmed || t.notes.teamNotes.newTagPreview}
-                    </Chip>
-                    <ColorPickerMenu
-                        zIndex={paletteZIndex}
-                        onSelectColor={(c: TagColorOption) =>
-                            setNewColor({ color: c.value, textColor: c.textColor })
-                        }
-                    />
-                    <Input
-                        placeholder={t.notes.teamNotes.newTagPlaceholder}
-                        size="sm"
-                        sx={{ flexGrow: 1 }}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") void addNew();
-                        }}
-                    />
-                    <Button
-                        disabled={!canCreate}
-                        size="sm"
-                        startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="soft"
-                        onClick={() => void addNew()}
-                    >
-                        {t.notes.folders.create}
-                    </Button>
-                </Stack>
-
-                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 2 }}>
-                    <Button color="neutral" variant="plain" onClick={onClose}>
-                        {t.notes.folders.cancel}
-                    </Button>
-                    <Button disabled={saving} loading={saving} onClick={() => void submit()}>
-                        {t.notes.folders.save}
-                    </Button>
-                </Box>
-            </ModalDialog>
-        </Modal>
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 2 }}>
+                <Chip size="sm" sx={folderTagChipSx(newColor, "md")} variant="solid">
+                    {trimmed || t.notes.teamNotes.newTagPreview}
+                </Chip>
+                <ColorPickerMenu
+                    zIndex={paletteZIndex}
+                    onSelectColor={(c: TagColorOption) =>
+                        setNewColor({ color: c.value, textColor: c.textColor })
+                    }
+                />
+                <Input
+                    placeholder={t.notes.teamNotes.newTagPlaceholder}
+                    size="sm"
+                    sx={{ flexGrow: 1 }}
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") void addNew();
+                    }}
+                />
+                <Button
+                    disabled={!canCreate}
+                    size="sm"
+                    startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="soft"
+                    onClick={() => void addNew()}
+                >
+                    {t.notes.folders.create}
+                </Button>
+            </Stack>
+        </ModalFrame>
     );
 };
