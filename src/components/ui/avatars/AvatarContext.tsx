@@ -142,6 +142,11 @@ export const useResolvedUserName = (
  * parents (e.g. `DraggableTaskRow`) don't re-render on every
  * `teamMemberProfiles` change — only this node does, mirroring how
  * `<UserAvatar>` already scopes its own subscription.
+ *
+ * The name sits in a `<bdi>`: a name is its own bidi island. Without it an
+ * "(DY) Ken Kamiya" inside an RTL row (Arabic) reorders to "Ken Kamiya (DY)",
+ * and a truncated cell clips the FIRST letters ("…n Kamiya (DY)"). `.g-person-name`
+ * (App.css) makes the island truncate itself, at its own end, in RTL only.
  */
 export const ResolvedUserName = ({
     userId,
@@ -149,4 +154,4 @@ export const ResolvedUserName = ({
 }: {
     userId: string | number | null | undefined;
     fallbackName: string;
-}) => <>{useResolvedUserName(userId, fallbackName)}</>;
+}) => <bdi className="g-person-name">{useResolvedUserName(userId, fallbackName)}</bdi>;

@@ -81,6 +81,22 @@ input[type="checkbox"] {
 }
 
 /* ==========================================================================
+   Names in RTL
+   ========================================================================== */
+
+/* A person's name is its own bidi island (`<bdi>`, see ResolvedUserName). In an RTL
+   row a truncating parent clips the START of an LTR name ("…Y) Ken Kamiya"), because
+   the line ends on the left. Letting the island truncate itself does it at its own
+   end ("(DY) Ken Ka…"). RTL only: in LTR the bdi stays plain inline text. */
+[dir="rtl"] .g-person-name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+}
+
+/* ==========================================================================
    Scrollbar Styles
    ========================================================================== */
 
