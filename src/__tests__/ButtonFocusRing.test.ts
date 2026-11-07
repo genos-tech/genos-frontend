@@ -16,7 +16,7 @@ const css = readFileSync(join(here, "../index.css"), "utf8").replace(/\/\*[\s\S]
 
 const rule = (selector: string) => {
     const m = css.match(
-        new RegExp(`(^|\\s)${selector.replace(/[()]/g, "\\$&")}\\s*\\{([^}]*)\\}`)
+        new RegExp(`(^|\\s)${selector.replace(/[\\()]/g, "\\$&")}\\s*\\{([^}]*)\\}`)
     );
     return m ? m[2] : null;
 };
