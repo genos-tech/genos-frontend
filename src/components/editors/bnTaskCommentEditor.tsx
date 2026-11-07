@@ -3,25 +3,8 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    getDefaultReactSlashMenuItems,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -44,27 +27,21 @@ import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
-import { AttachFileToolbarButton } from "./AttachFileToolbarButton";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
-import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosChatToolbar } from "./genos/GenosToolbars";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
-import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 type BnTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -144,12 +121,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         },
         "mount"
     );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     const dictionary = useBlockNoteDictionary();
 
@@ -580,129 +551,27 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             p: { xs: 0.25, md: 0.7 },
                         }}
                     >
-                        <FormattingToolbar>
-                            {/* The block-type picker ("Paragraph" + a
-                                dropdown of headings / lists) is the widest
-                                item in the bar by far, and heading-styled
-                                chat messages aren't a thing people reach for
-                                on a phone. Dropping it on mobile is what
-                                buys room for Emoji and GIF below; the "/"
-                                menu still offers every block type. */}
-                            {!isMobile && (
-                                <BlockTypeSelect
-                                    key={"blockTypeSelect"}
-                                    items={getBlockTypeSelectItemsWithCodeBlock(editor)}
-                                />
-                            )}
-
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            {/* Extra button to toggle code styles */}
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            {/* Link + Emoji buttons hidden on mobile —
-                                the toolbar is absolutely-positioned and
-                                clips the tail off-screen on narrow
-                                viewports. The "/" slash menu still
-                                exposes both. */}
-                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
-
-                            {/* Emoji + GIF now render at EVERY width. They
-                                were mobile-hidden because the bar clipped
-                                off-screen — that was the block-type picker's
-                                width; with it gone these two fit, and they're
-                                the two people actually want on a comment. */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
-                            <GifToolbarButton
-                                key={"gifButton"}
-                                setShowGifPicker={setShowGifPicker}
-                            />
-                            {/* Mobile-only "attach image/file" button.
-                                On desktop, drag-drop and the side-menu
-                                already cover inserts; a phone has neither,
-                                so this native picker is the only way to
-                                send an attachment there. Needs an upload
-                                channel (same gate as inline uploads). */}
-                            {isMobile && uploadChannelId && (
-                                <AttachFileToolbarButton
-                                    key={"attachFileButton"}
-                                    onClick={() => attachInputRef.current?.click()}
-                                />
-                            )}
-                            {/* Session-only wrap toggles — hidden on
-                                mobile because the toolbar already
-                                clips off-screen on narrow viewports. */}
-                            {!isMobile && (
-                                <WrapToggleToolbarButtons
-                                    key={"wrapToggleButtons"}
-                                    setUnwrapAll={setUnwrapAll}
-                                    setUnwrapCode={setUnwrapCode}
-                                    unwrapAll={unwrapAll}
-                                    unwrapCode={unwrapCode}
-                                />
-                            )}
-                        </FormattingToolbar>
+                        <GenosChatToolbar
+                            editor={editor}
+                            isMobile={isMobile}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setShowGifPicker={setShowGifPicker}
+                            onAttach={
+                                uploadChannelId ? () => attachInputRef.current?.click() : undefined
+                            }
+                            wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
+                        />
                     </Box>
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
-                                    editor,
-                                    useTEM.teamMembers,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        // Replaces the default Slash Menu items with our custom ones.
-                        getItems={async (query) =>
-                            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                            teamMembers: useTEM.teamMembers,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>
