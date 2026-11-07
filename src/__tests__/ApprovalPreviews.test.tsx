@@ -1564,10 +1564,16 @@ describe("RestoreNoteVersionPreview (restore_note_version approval)", () => {
 });
 
 describe("Project tag and label previews (add_project_tag / manage_project_labels approvals)", () => {
-    // The tag chip draws its color as `alpha(color, 0.8)` on the border in
-    // light mode; the rgb part is what says which color it got.
+    // The tag chip is neutral and carries the tag's color as a small DOT beside
+    // the label (MIP-1122); the dot's background says which color it got.
     const GREY_RGB = "128, 128, 128";
     const BLUE_RGB = "59, 130, 246";
+    const dotOf = (label: string) =>
+        (
+            screen
+                .getByText(label)
+                .parentElement!.querySelector('span[aria-hidden="true"]') as HTMLElement
+        ).style.background;
     const REFUSED = (color: string) =>
         `“${color}” is not a hex color like #3b82f6, so it will be refused.`;
     const chipRoot = (label: string) => screen.getByText(label).closest(".MuiChip-root");
@@ -1579,8 +1585,7 @@ describe("Project tag and label previews (add_project_tag / manage_project_label
             color: "#3b82f6",
         });
         expect(screen.getByText("Add tag")).toBeTruthy();
-        const chip = screen.getByText("urgent") as HTMLElement;
-        expect(chip.style.borderColor).toContain(BLUE_RGB);
+        expect(dotOf("urgent")).toContain(BLUE_RGB);
         expect(screen.getByText("on Website Redesign")).toBeTruthy();
         // Structured: the raw key:value fallback must NOT render.
         expect(screen.queryByText("tag_name:")).toBeNull();
@@ -1590,7 +1595,7 @@ describe("Project tag and label previews (add_project_tag / manage_project_label
 
     it("draws a tag with no color in the tool's default grey", () => {
         renderCard("add_project_tag", { project_id: "Website Redesign", tag_name: "later" });
-        expect((screen.getByText("later") as HTMLElement).style.borderColor).toContain(GREY_RGB);
+        expect(dotOf("later")).toContain(GREY_RGB);
         expect(screen.queryByText(/is not a hex color/)).toBeNull();
     });
 
@@ -1600,7 +1605,7 @@ describe("Project tag and label previews (add_project_tag / manage_project_label
             tag_name: "urgent",
             color: "#3B82F6",
         });
-        expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(BLUE_RGB);
+        expect(dotOf("urgent")).toContain(BLUE_RGB);
         expect(screen.queryByText(/is not a hex color/)).toBeNull();
     });
 
@@ -1612,9 +1617,7 @@ describe("Project tag and label previews (add_project_tag / manage_project_label
                 tag_name: "urgent",
                 color,
             });
-            expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(
-                GREY_RGB
-            );
+            expect(dotOf("urgent")).toContain(GREY_RGB);
             expect(screen.getByText(REFUSED(color))).toBeTruthy();
         }
     );
@@ -1625,7 +1628,7 @@ describe("Project tag and label previews (add_project_tag / manage_project_label
             tag_name: "urgent",
             color: 255,
         });
-        expect((screen.getByText("urgent") as HTMLElement).style.borderColor).toContain(GREY_RGB);
+        expect(dotOf("urgent")).toContain(GREY_RGB);
         expect(screen.getByText(REFUSED("255"))).toBeTruthy();
     });
 
