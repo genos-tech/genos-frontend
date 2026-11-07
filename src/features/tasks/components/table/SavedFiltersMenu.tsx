@@ -17,14 +17,11 @@
 // its CRUD, its menu and its dialogs, and talks to the bar through two
 // callbacks (read the current selection, apply a saved one).
 //
-// LOAD-BEARING: the dropdown is a MUI **Material** `Menu` with
-// `slots={{ transition: Fade }}`, matching all six sibling filter menus
-// in `TaskFilterMenu`. The Fade slot is not decoration — a Material Menu
-// without it crashes in this Joy-themed app (`Fade` → `Backdrop` →
-// `Modal` reads `theme.transitions.duration`, undefined under the Joy
-// theme) and the Tasks error boundary swallows the whole feature. The
-// dialogs below are Joy `Modal`/`ModalDialog` for the same reason — a
-// Material `Dialog` has the same backdrop path.
+// The dropdown is a Joy `Menu` (via `FilterDropdown` / `FilterMenu`, shared with
+// the six filter menus in `TaskFilterMenu`). It used to be a Material `Menu`
+// that had to be given `slots={{ transition: Fade }}`, because a Material Menu
+// without it crashed under the Joy theme alone (`Fade` -> `Backdrop` -> `Modal`
+// read `theme.transitions.duration`); nothing here needs a Material theme now.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import BookmarkAddedRoundedIcon from "@mui/icons-material/BookmarkAddedRounded";
@@ -35,21 +32,18 @@ import SaveAsRoundedIcon from "@mui/icons-material/SaveAsRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
     Alert,
+    Box,
+    Button,
+    CircularProgress,
+    IconButton,
     Input,
-    Box as JoyBox,
-    Button as JoyButton,
-    Stack as JoyStack,
-    Typography as JoyTypography,
+    MenuButton,
     Modal,
     ModalDialog,
+    Stack,
+    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { Box, CircularProgress, Stack, Typography } from "@mui/material";
-import Button from "@mui/material/Button";
-import Fade from "@mui/material/Fade";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -64,6 +58,7 @@ import {
     type ProjectSavedFilter,
     type SavedFilterPayload,
 } from "../../services/projectSavedFilters";
+import { FilterDropdown, FilterMenu, FilterMenuItem } from "./filterBarParts";
 
 // Accent for this control — teal, deliberately outside the palette the
 // dimension filters use (status/tag colors, milestone orange, member
@@ -71,6 +66,9 @@ import {
 // dimension to narrow by".
 const SAVED_ACCENT = "#0d9488";
 const SAVED_ACCENT_DARK = "#2dd4bf";
+
+// Joy's IconButton has a 2rem minimum; these are small inline row actions.
+const ICON_BUTTON_SX = { minWidth: 0, minHeight: 0, p: 0.25 } as const;
 
 const NAME_MAX_LENGTH = 60; // matches ProjectSavedTaskFilter.filter_name
 
@@ -122,7 +120,7 @@ export const SavedFiltersMenu = ({
     const ts = t.tasks.savedFilters;
     const accent = isDark ? SAVED_ACCENT_DARK : SAVED_ACCENT;
 
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [saved, setSaved] = useState<ProjectSavedFilter[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [dialog, setDialog] = useState<DialogState>({ kind: "closed" });
@@ -168,7 +166,7 @@ export const SavedFiltersMenu = ({
         void refresh();
     }, [refresh]);
 
-    const closeMenu = () => setAnchorEl(null);
+    const closeMenu = () => setMenuOpen(false);
     const closeDialog = () => {
         setDialog({ kind: "closed" });
         setNameDraft("");
@@ -304,9 +302,9 @@ export const SavedFiltersMenu = ({
         saved.some((f) => f.filterName.toLowerCase() === trimmedDraft.toLowerCase());
 
     return (
-        <>
+        <FilterDropdown open={menuOpen} onOpenChange={setMenuOpen}>
             <AppTooltip title={ts.tooltip}>
-                <Button
+                <MenuButton
                     // AppTooltip writes its title onto the child as
                     // `aria-label`, so this button's accessible name is the
                     // tooltip sentence rather than its visible text — true
@@ -315,12 +313,12 @@ export const SavedFiltersMenu = ({
                     // that sentence.
                     data-testid="saved-filters-button"
                     variant="outlined"
-                    endIcon={
+                    endDecorator={
                         appliedName ? undefined : (
                             <BookmarksRoundedIcon sx={{ fontSize: "14px" }} />
                         )
                     }
-                    startIcon={
+                    startDecorator={
                         appliedName ? (
                             <BookmarkAddedRoundedIcon sx={{ fontSize: "16px" }} />
                         ) : undefined
@@ -348,7 +346,8 @@ export const SavedFiltersMenu = ({
                         textOverflow: "ellipsis",
                         px: 1.5,
                         my: 0.5,
-                        textTransform: "none",
+                        // Joy's Button has a 36px minimum; the bar's buttons are 32.
+                        minHeight: 0,
                         flexShrink: 0,
                         transition: "all 0.2s ease",
                         "&:hover": {
@@ -362,8 +361,7 @@ export const SavedFiltersMenu = ({
                             transform: "translateY(-1px)",
                         },
                     }}
-                    onClick={(event) => {
-                        setAnchorEl(event.currentTarget);
+                    onClick={() => {
                         // Refetch on open. These rows are shared, so a
                         // filter a teammate just created would otherwise
                         // stay invisible until this component remounted —
@@ -371,38 +369,23 @@ export const SavedFiltersMenu = ({
                         // server-side. Opening the dropdown is the natural
                         // moment to be current; the previous list stays
                         // rendered while it lands, so there's no flash.
-                        void refresh();
+                        if (!menuOpen) void refresh();
                     }}
                 >
                     {appliedName ?? ts.button}
-                </Button>
+                </MenuButton>
             </AppTooltip>
 
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                slots={{ transition: Fade }}
-                slotProps={{
-                    paper: {
-                        className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
-                        sx: {
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "12px",
-                            boxShadow: isDark
-                                ? "0 8px 32px rgba(0,0,0,0.5)"
-                                : "0 8px 32px rgba(0,0,0,0.15)",
-                            mt: 1,
-                            minWidth: "260px",
-                            maxHeight: "340px",
-                        },
-                    },
-                }}
-                onClose={closeMenu}
-            >
+            <FilterMenu isDark={isDark} maxHeight="340px" minWidth="260px" styles={styles}>
                 {isLoading && saved.length === 0 && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1.5 }}>
-                        <CircularProgress size={14} sx={{ color: accent }} />
+                        <CircularProgress
+                            size="sm"
+                            sx={{
+                                "--CircularProgress-size": "14px",
+                                "--CircularProgress-progressColor": accent,
+                            }}
+                        />
                         <Typography sx={{ fontSize: "12px", color: styles.mutedText }}>
                             {ts.loading}
                         </Typography>
@@ -423,7 +406,7 @@ export const SavedFiltersMenu = ({
                     // derived match actually resolved to.
                     const isApplied = appliedRow?.id === row.id;
                     return (
-                        <MenuItem
+                        <FilterMenuItem
                             key={row.id}
                             // The applied row is emphasised with weight and
                             // color; `aria-current` carries the same fact to
@@ -500,8 +483,9 @@ export const SavedFiltersMenu = ({
                                 >
                                     <AppTooltip title={ts.overwriteTooltip}>
                                         <IconButton
-                                            size="small"
-                                            sx={{ color: styles.mutedText, p: 0.25 }}
+                                            size="sm"
+                                            sx={{ ...ICON_BUTTON_SX, color: styles.mutedText }}
+                                            variant="plain"
                                             onClick={(e) => {
                                                 // Every action here must stop
                                                 // propagation: the row itself
@@ -521,8 +505,9 @@ export const SavedFiltersMenu = ({
                                     </AppTooltip>
                                     <AppTooltip title={ts.renameTooltip}>
                                         <IconButton
-                                            size="small"
-                                            sx={{ color: styles.mutedText, p: 0.25 }}
+                                            size="sm"
+                                            sx={{ ...ICON_BUTTON_SX, color: styles.mutedText }}
+                                            variant="plain"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 openRenameDialog(row);
@@ -535,10 +520,11 @@ export const SavedFiltersMenu = ({
                                     </AppTooltip>
                                     <AppTooltip title={ts.deleteTooltip}>
                                         <IconButton
-                                            size="small"
+                                            size="sm"
+                                            variant="plain"
                                             sx={{
+                                                ...ICON_BUTTON_SX,
                                                 color: isDark ? "#f87171" : "#dc2626",
-                                                p: 0.25,
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -550,7 +536,7 @@ export const SavedFiltersMenu = ({
                                     </AppTooltip>
                                 </Stack>
                             </Box>
-                        </MenuItem>
+                        </FilterMenuItem>
                     );
                 })}
 
@@ -561,7 +547,7 @@ export const SavedFiltersMenu = ({
                         pt: 0.5,
                     }}
                 >
-                    <MenuItem
+                    <FilterMenuItem
                         sx={{
                             borderRadius: "8px",
                             mx: 0.5,
@@ -575,14 +561,11 @@ export const SavedFiltersMenu = ({
                         <Typography sx={{ fontSize: "13px", fontWeight: 600, color: accent }}>
                             {ts.saveCurrent}
                         </Typography>
-                    </MenuItem>
+                    </FilterMenuItem>
                 </Box>
-            </Menu>
+            </FilterMenu>
 
-            {/* Joy Modal, not a Material Dialog — see the file header note
-                on the Joy theme and the Material backdrop.
-
-                One Modal for all three dialogs: they're mutually exclusive by
+            {/* One Modal for all three dialogs: they're mutually exclusive by
                 construction (`dialog.kind`), and sharing it keeps one backdrop,
                 one close path and one `isSubmitting`. Delete gets its own body
                 rather than a fourth variant of the name form — it has no input,
@@ -590,7 +573,7 @@ export const SavedFiltersMenu = ({
             <Modal open={dialog.kind !== "closed"} onClose={closeDialog}>
                 {dialog.kind === "delete" ? (
                     <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
-                        <JoyTypography
+                        <Typography
                             level="title-md"
                             startDecorator={
                                 <WarningAmberRoundedIcon
@@ -599,17 +582,17 @@ export const SavedFiltersMenu = ({
                             }
                         >
                             {ts.deleteTitle}
-                        </JoyTypography>
-                        <JoyStack spacing={1.5}>
-                            <JoyTypography level="body-sm">
+                        </Typography>
+                        <Stack spacing={1.5}>
+                            <Typography level="body-sm">
                                 {fmt(ts.deleteHelper, { name: dialog.name })}
-                            </JoyTypography>
+                            </Typography>
                             {dialogError && (
                                 <Alert color="danger" size="sm" variant="soft">
                                     {dialogError}
                                 </Alert>
                             )}
-                            <JoyBox
+                            <Box
                                 sx={{
                                     display: "flex",
                                     justifyContent: "flex-end",
@@ -617,7 +600,7 @@ export const SavedFiltersMenu = ({
                                     mt: 0.5,
                                 }}
                             >
-                                <JoyButton
+                                <Button
                                     color="neutral"
                                     disabled={isSubmitting}
                                     size="sm"
@@ -625,8 +608,8 @@ export const SavedFiltersMenu = ({
                                     onClick={closeDialog}
                                 >
                                     {ts.cancel}
-                                </JoyButton>
-                                <JoyButton
+                                </Button>
+                                <Button
                                     color="danger"
                                     // The row's Delete icon carries the same
                                     // word as its accessible name, so tests get
@@ -638,19 +621,19 @@ export const SavedFiltersMenu = ({
                                     onClick={() => void handleSubmitDelete()}
                                 >
                                     {ts.deleteConfirm}
-                                </JoyButton>
-                            </JoyBox>
-                        </JoyStack>
+                                </Button>
+                            </Box>
+                        </Stack>
                     </ModalDialog>
                 ) : (
                     <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
-                        <JoyTypography level="title-md">
+                        <Typography level="title-md">
                             {dialog.kind === "rename" ? ts.renameTitle : ts.saveTitle}
-                        </JoyTypography>
-                        <JoyTypography level="body-xs" sx={{ mb: 0.5 }}>
+                        </Typography>
+                        <Typography level="body-xs" sx={{ mb: 0.5 }}>
                             {dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
-                        </JoyTypography>
-                        <JoyStack spacing={1.5}>
+                        </Typography>
+                        <Stack spacing={1.5}>
                             <Input
                                 placeholder={ts.namePlaceholder}
                                 size="sm"
@@ -682,7 +665,7 @@ export const SavedFiltersMenu = ({
                                     {dialogError}
                                 </Alert>
                             )}
-                            <JoyBox
+                            <Box
                                 sx={{
                                     display: "flex",
                                     justifyContent: "flex-end",
@@ -690,15 +673,15 @@ export const SavedFiltersMenu = ({
                                     mt: 0.5,
                                 }}
                             >
-                                <JoyButton
+                                <Button
                                     color="neutral"
                                     size="sm"
                                     variant="plain"
                                     onClick={closeDialog}
                                 >
                                     {ts.cancel}
-                                </JoyButton>
-                                <JoyButton
+                                </Button>
+                                <Button
                                     disabled={isSubmitting || trimmedDraft.length === 0}
                                     size="sm"
                                     variant="solid"
@@ -713,12 +696,12 @@ export const SavedFiltersMenu = ({
                                         : willOverwrite
                                           ? ts.overwriteConfirm
                                           : ts.saveConfirm}
-                                </JoyButton>
-                            </JoyBox>
-                        </JoyStack>
+                                </Button>
+                            </Box>
+                        </Stack>
                     </ModalDialog>
                 )}
             </Modal>
-        </>
+        </FilterDropdown>
     );
 };

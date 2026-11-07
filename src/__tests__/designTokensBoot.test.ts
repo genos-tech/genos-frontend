@@ -1,9 +1,11 @@
 /**
  * MIP-1118: the design tokens are live in the app, and Geist is the one
  * typeface. Several independent things each have to say "Geist": the CSS
- * that runs before any script, Joy, BlockNote's own stylesheet, and the two
- * Material providers in the task table and board. Each is easy to miss, and
- * a miss shows up as a second typeface on one screen, so each is pinned.
+ * that runs before any script, Joy, and BlockNote's own stylesheet. Each is
+ * easy to miss, and a miss shows up as a second typeface on one screen, so
+ * each is pinned. (The task table and board used to carry a Material provider
+ * of their own, a third place to say "Geist"; MIP-1121 removed it, and the
+ * last test below keeps it from coming back.)
  */
 
 import { readFileSync } from "node:fs";
@@ -45,8 +47,9 @@ describe("Geist is the app typeface", () => {
     it.each([
         "features/tasks/components/table/DraggableTaskTable.tsx",
         "features/tasks/components/board/SprintBoard.tsx",
-    ])("the Material provider in %s uses Geist, not Roboto", (file) => {
-        expect(source(file)).toContain("typography: { fontFamily: FONT_STACKS.geist }");
+    ])("%s has no Material provider (it would bring Roboto back)", (file) => {
+        expect(source(file)).not.toContain("@mui/material");
+        expect(source(file)).not.toContain("createTheme");
     });
 });
 

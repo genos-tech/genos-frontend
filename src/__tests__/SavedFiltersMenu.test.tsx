@@ -17,7 +17,6 @@
 
 import { useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -63,14 +62,9 @@ const row = (over: Partial<ProjectSavedFilter> = {}): ProjectSavedFilter => ({
     ...over,
 });
 
-// Both real hosts (`DraggableTaskTable`, `SprintBoard`) wrap their content
-// in a Material `ThemeProvider` alongside Joy's, and this component's
-// Material Button / Menu NEED it: under the Joy theme alone,
-// `@mui/material/Button` throws reading `theme.palette.grey[300]`. Mirror
-// the real mount rather than papering over it — the same coupling is why
-// the dropdown must pass `slots={{ transition: Fade }}` and why the
-// dialogs are Joy.
-const materialTheme = createTheme({ cssVariables: true });
+// Mounted under Joy's provider ALONE. Until MIP-1121 the hosts wrapped this in a
+// Material `ThemeProvider` too, because its Material Button / Menu threw without
+// one; leaving the Material theme out here is what pins that it is gone.
 
 const same = (a: SavedFilterPayload, b: SavedFilterPayload) =>
     JSON.stringify(a) === JSON.stringify(b);
@@ -125,11 +119,9 @@ const renderMenu = (props: Partial<React.ComponentProps<typeof SavedFiltersMenu>
     const onApply = vi.fn();
     const getCurrentFilters = vi.fn();
     const result = render(
-        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-            <CssVarsProvider>
-                <Host getCurrentSpy={getCurrentFilters} onApplySpy={onApply} {...props} />
-            </CssVarsProvider>
-        </ThemeProvider>
+        <CssVarsProvider>
+            <Host getCurrentSpy={getCurrentFilters} onApplySpy={onApply} {...props} />
+        </CssVarsProvider>
     );
     return { ...result, onApply, getCurrentFilters };
 };
@@ -161,18 +153,16 @@ describe("SavedFiltersMenu", () => {
 
     it("renders nothing until a project and team are resolved", () => {
         const bare = (over: Partial<React.ComponentProps<typeof SavedFiltersMenu>>) => (
-            <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                <CssVarsProvider>
-                    <SavedFiltersMenu
-                        getCurrentFilters={() => CURRENT}
-                        isCurrentSelection={() => false}
-                        projectId={7}
-                        teamId="t1"
-                        onApply={vi.fn()}
-                        {...over}
-                    />
-                </CssVarsProvider>
-            </ThemeProvider>
+            <CssVarsProvider>
+                <SavedFiltersMenu
+                    getCurrentFilters={() => CURRENT}
+                    isCurrentSelection={() => false}
+                    projectId={7}
+                    teamId="t1"
+                    onApply={vi.fn()}
+                    {...over}
+                />
+            </CssVarsProvider>
         );
         expect(render(bare({ projectId: null })).container).toBeEmptyDOMElement();
         expect(loadProjectSavedFilters).not.toHaveBeenCalled();

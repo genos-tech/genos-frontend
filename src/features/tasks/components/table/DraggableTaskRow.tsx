@@ -8,17 +8,7 @@ import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownR
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
-import { Avatar, Box, Typography } from "@mui/joy";
-import {
-    Autocomplete,
-    Chip,
-    IconButton,
-    MenuItem,
-    Paper,
-    Select,
-    SelectChangeEvent,
-    TextField,
-} from "@mui/material";
+import { Avatar, Box, IconButton, Typography } from "@mui/joy";
 import { alpha } from "@mui/system";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
@@ -40,7 +30,6 @@ import {
     TagListProps,
     TaskTableProps,
 } from "../../../../types/tasks";
-import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import type { TaskGraphScope } from "../../diagram/types";
 import { toneSolid } from "../../meta/taskTone";
@@ -55,6 +44,14 @@ import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { ProjectTagChip } from "../ProjectTagChip";
+import {
+    CellTextInput,
+    ChipSelect,
+    MemberAutocomplete,
+    PillChip,
+    TagAutocomplete,
+    ValueChip,
+} from "./cellEditors";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 // Depth-based background colors for nested task rows. Exported (along
@@ -452,30 +449,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         </Typography>
     );
 
-    // Dropdown option row for tag-type fields (built-in Tags + custom
-    // tag). Renders the option as its colored ProjectTagChip so options
-    // read the same as the selected chips; `aria-selected` (set by MUI on
-    // already-picked options in the multi-select) gets the accent bg.
-    const tagOptionRowSx = {
-        py: 0.5,
-        px: 1,
-        mx: 0.5,
-        my: 0.25,
-        borderRadius: "6px",
-        display: "flex",
-        alignItems: "center",
-        cursor: "pointer",
-        "&:hover": {
-            backgroundColor: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-        },
-        '&[aria-selected="true"]': {
-            backgroundColor:
-                mode === "dark"
-                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.08)",
-        },
-    } as const;
-
     // One cell of a `cf_<id>` column. Editing mirrors the built-in
     // cells per type: text ≈ title (buffered, commit on blur/Enter),
     // date ≈ dueDate (commit on change), tag ≈ tags (multi buffer,
@@ -496,18 +469,17 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <Autocomplete
-                            autoHighlight
-                            disableCloseOnSelect
-                            multiple
-                            openOnFocus
-                            getOptionLabel={(option: CustomFieldOption) => option.label}
-                            isOptionEqualToValue={(option, val) => option.id === val?.id}
+                        <TagAutocomplete<CustomFieldOption>
+                            getColor={(option) => option.color}
+                            getLabel={(option) => option.label}
+                            isEqual={(a, b) => a.id === b.id}
+                            minWidth={160}
                             options={def.options}
-                            size="small"
-                            sx={{ width: "100%", minWidth: 160 }}
+                            placeholder={selected.length === 0 ? "Select…" : ""}
                             value={editCustomOptions}
-                            onChange={(_, newValue) => setEditCustomOptions(newValue)}
+                            autoFocus
+                            persistent
+                            onChange={setEditCustomOptions}
                             onBlur={() => {
                                 if (revertTagsRef.current) {
                                     revertTagsRef.current = false;
@@ -525,83 +497,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     handleCancelEdit();
                                 }
                             }}
-                            renderTags={(tagValue, getTagProps) =>
-                                tagValue.map((option, idx) => {
-                                    const { key, ...chipProps } = getTagProps({ index: idx });
-                                    return (
-                                        <Chip
-                                            key={key}
-                                            {...chipProps}
-                                            label={option.label}
-                                            size="small"
-                                            sx={{
-                                                height: 20,
-                                                fontSize: "0.7rem",
-                                                fontWeight: 600,
-                                                color: mode === "dark" ? "white" : "black",
-                                                borderColor: alpha(option.color, 0.6),
-                                                backgroundColor: alpha(option.color, 0.12),
-                                            }}
-                                        />
-                                    );
-                                })
-                            }
-                            PaperComponent={({ children, ...paperProps }) => (
-                                <Paper
-                                    {...paperProps}
-                                    sx={{
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        borderRadius: "10px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 32px rgba(0, 0, 0, 0.5)"
-                                                : "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                        mt: 0.5,
-                                    }}
-                                >
-                                    {children}
-                                </Paper>
-                            )}
-                            renderOption={(optionProps, option) => {
-                                const { key, ...restProps } = stripOwnerState(optionProps);
-                                return (
-                                    <Box
-                                        key={key}
-                                        component="li"
-                                        {...restProps}
-                                        sx={tagOptionRowSx}
-                                    >
-                                        <ProjectTagChip
-                                            isDark={mode === "dark"}
-                                            label={option.label}
-                                            tagColor={option.color}
-                                        />
-                                    </Box>
-                                );
-                            }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    autoFocus
-                                    placeholder={selected.length === 0 ? "Select…" : ""}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "6px",
-                                            fontSize: "0.8rem",
-                                            padding: "2px 6px",
-                                            "&:hover fieldset": { borderColor: accent },
-                                            "&.Mui-focused fieldset": {
-                                                borderColor: accent,
-                                                borderWidth: "1.5px",
-                                            },
-                                        },
-                                    }}
-                                />
-                            )}
                         />
                     </Box>
                 );
@@ -636,202 +531,23 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             if (editingField === editKey) {
                 const current = teamMembers.find((m) => String(m.userId) === storedString);
                 return (
-                    <Autocomplete
-                        blurOnSelect={true}
+                    <MemberAutocomplete
                         clearOnBlur={false}
-                        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
-                        open={true}
-                        options={teamMembers}
-                        size="small"
+                        members={teamMembers}
+                        minWidth={180}
+                        placeholder={t.tasks.table.searchMembersPlaceholder}
                         value={current || null}
-                        filterOptions={(options, { inputValue }) => {
-                            const searchTerm = inputValue.toLowerCase();
-                            return options.filter(
-                                (option) =>
-                                    option.userName.toLowerCase().includes(searchTerm) ||
-                                    option.userEmail.toLowerCase().includes(searchTerm)
-                            );
-                        }}
-                        isOptionEqualToValue={(option, val) => option.userId === val?.userId}
-                        ListboxProps={{
-                            sx: {
-                                maxHeight: 280,
-                                overflow: "auto",
-                                padding: "4px 0",
-                                "&::-webkit-scrollbar": {
-                                    width: "6px",
-                                },
-                                "&::-webkit-scrollbar-track": {
-                                    background: "transparent",
-                                },
-                                "&::-webkit-scrollbar-thumb": {
-                                    background:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.15)"
-                                            : "rgba(0, 0, 0, 0.15)",
-                                    borderRadius: "3px",
-                                },
-                            },
-                        }}
-                        PaperComponent={({ children, ...props }) => (
-                            <Paper
-                                {...props}
-                                sx={{
-                                    backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                    backgroundImage:
-                                        mode === "dark"
-                                            ? "linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))"
-                                            : "none",
-                                    borderRadius: "10px",
-                                    border:
-                                        mode === "dark"
-                                            ? "1px solid rgba(255, 255, 255, 0.1)"
-                                            : "1px solid rgba(0, 0, 0, 0.08)",
-                                    boxShadow:
-                                        mode === "dark"
-                                            ? "0 8px 32px rgba(0, 0, 0, 0.5)"
-                                            : "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                    mt: 0.5,
-                                    overflow: "hidden",
-                                }}
-                            >
-                                {children}
-                            </Paper>
-                        )}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                placeholder={t.tasks.table.searchMembersPlaceholder}
-                                sx={{
-                                    minWidth: 180,
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: "8px",
-                                        backgroundColor:
-                                            mode === "dark"
-                                                ? "rgba(255, 255, 255, 0.03)"
-                                                : "rgba(0, 0, 0, 0.01)",
-                                        "& fieldset": {
-                                            borderColor:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.15)"
-                                                    : "rgba(0, 0, 0, 0.12)",
-                                        },
-                                        "&:hover fieldset": {
-                                            borderColor: accent,
-                                        },
-                                        "&.Mui-focused fieldset": {
-                                            borderColor: accent,
-                                            borderWidth: "1.5px",
-                                        },
-                                    },
-                                    "& .MuiInputBase-input": {
-                                        color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                                        fontSize: "0.875rem",
-                                        padding: "6px 12px",
-                                        "&::placeholder": {
-                                            color:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.4)"
-                                                    : "rgba(0, 0, 0, 0.4)",
-                                            opacity: 1,
-                                        },
-                                    },
-                                }}
-                                autoFocus
-                            />
-                        )}
-                        renderOption={(props, option) => {
-                            const isSelected = String(option.userId) === storedString;
-                            const { key, ...restProps } = stripOwnerState(props);
-                            return (
-                                <Box
-                                    key={key}
-                                    component="li"
-                                    {...restProps}
-                                    sx={{
-                                        py: 1,
-                                        px: 1.5,
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        borderRadius: "8px",
-                                        transition: "all 0.15s ease",
-                                        backgroundColor: isSelected
-                                            ? mode === "dark"
-                                                ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                            : "transparent",
-                                        "&:hover": {
-                                            backgroundColor:
-                                                mode === "dark"
-                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.2)"
-                                                    : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                                        },
-                                        display: "flex",
-                                        gap: 1.5,
-                                        alignItems: "center",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <UserAvatar
-                                        clickable={false}
-                                        showPulseDot={false}
-                                        userId={option.userId}
-                                    />
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: isSelected ? 600 : 500,
-                                                color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                                                lineHeight: 1.3,
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {option.userName}
-                                        </Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{
-                                                color:
-                                                    mode === "dark"
-                                                        ? "rgba(255, 255, 255, 0.5)"
-                                                        : "rgba(0, 0, 0, 0.5)",
-                                                fontSize: "0.7rem",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {option.userEmail}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            );
-                        }}
-                        sx={{
-                            "& .MuiAutocomplete-popupIndicator": {
-                                color:
-                                    mode === "dark"
-                                        ? "rgba(255, 255, 255, 0.5)"
-                                        : "rgba(0, 0, 0, 0.5)",
-                            },
-                            "& .MuiAutocomplete-clearIndicator": {
-                                color:
-                                    mode === "dark"
-                                        ? "rgba(255, 255, 255, 0.5)"
-                                        : "rgba(0, 0, 0, 0.5)",
-                            },
-                        }}
-                        fullWidth
-                        onChange={(_, newValue) => {
-                            if (newValue) {
-                                void commitCustomField(def.fieldId, String(newValue.userId));
+                        autoFocus
+                        blurOnSelect
+                        open
+                        showEmail
+                        onChange={(member) => {
+                            if (member) {
+                                void commitCustomField(def.fieldId, String(member.userId));
                                 handleCancelEdit();
                             }
                         }}
-                        onClose={(_, reason) => {
+                        onClose={(reason) => {
                             if (reason === "blur" || reason === "escape") {
                                 handleCancelEdit();
                             }
@@ -971,25 +687,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         // text — mirrors the built-in Title cell's input styling.
         if (editingField === editKey) {
             return (
-                <TextField
-                    autoFocus
-                    fullWidth
-                    size="small"
+                <CellTextInput
                     value={editValue}
-                    sx={{
-                        "& .MuiInputBase-input": {
-                            color: mode === "dark" ? "white" : "black",
-                            fontSize: "0.875rem",
-                            padding: "6px 10px",
-                        },
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: "6px",
-                        },
-                    }}
+                    autoFocus
+                    onChange={setEditValue}
                     onBlur={() => {
                         void commitCustomField(def.fieldId, editValue.trim() || null);
                     }}
-                    onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             void commitCustomField(def.fieldId, editValue.trim() || null);
@@ -1048,7 +752,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 if (!hasChildren) return null;
                 return (
                     <IconButton
-                        size="small"
+                        size="sm"
+                        variant="plain"
                         sx={{
                             color: mode === "dark" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)",
                             p: 0,
@@ -1075,8 +780,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             case "id":
                 return (
                     <IconButton
-                        size="small"
+                        size="sm"
+                        variant="plain"
                         sx={{
+                            minWidth: 0,
+                            minHeight: 0,
                             color: isMilestoneRow
                                 ? "#f97316"
                                 : mode === "dark"
@@ -1117,112 +825,35 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const statusOption = statusOptions.find((opt) => opt.value === value);
                 if (editingField === "status") {
                     return (
-                        <Select
-                            open={true}
-                            size="small"
+                        <ChipSelect
+                            fullWidth={false}
+                            minWidth={110}
                             value={(value as string) || ""}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        borderRadius: "8px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
-                                        mt: 0.5,
-                                    },
-                                },
-                            }}
-                            renderValue={(selected) => {
-                                const opt = statusOptions.find((o) => o.value === selected);
-                                return opt ? (
-                                    <Chip
+                            options={statusOptions.map((opt) => ({
+                                value: opt.value || "",
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
                                         icon={opt.icon}
-                                        label={taskMetaLabel(opt.value, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color, 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 70,
-                                        }}
+                                        label={taskMetaLabel(opt.value ?? "", t.tasks.filters)}
+                                        minWidth={70}
+                                        textColor={opt.textColor}
                                     />
-                                ) : null;
-                            }}
-                            sx={{
-                                minWidth: 110,
-                                "& .MuiSelect-select": {
-                                    display: "flex",
-                                    alignItems: "center",
-                                    padding: "4px 8px",
-                                    minHeight: "unset",
-                                },
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.15)"
-                                            : "rgba(0, 0, 0, 0.12)",
-                                    borderRadius: "6px",
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                },
-                            }}
+                                ),
+                            }))}
+                            open
                             onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("status", e.target.value);
+                            onChange={(next) => {
+                                handleSelectChange("status", next);
                                 handleCancelEdit();
                             }}
-                        >
-                            {statusOptions.map((opt) => (
-                                <MenuItem
-                                    key={opt.value}
-                                    value={opt.value}
-                                    sx={{
-                                        py: 0.75,
-                                        px: 1,
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        borderRadius: "6px",
-                                        "&:hover": {
-                                            backgroundColor:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.08)"
-                                                    : "rgba(0, 0, 0, 0.04)",
-                                        },
-                                    }}
-                                >
-                                    <Chip
-                                        icon={opt.icon}
-                                        label={taskMetaLabel(opt.value, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color, 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 70,
-                                        }}
-                                    />
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        />
                     );
                 }
                 return statusOption ? (
-                    <Chip
+                    <PillChip
                         icon={statusOption.icon}
                         label={taskMetaLabel(statusOption.value, t.tasks.filters)}
-                        size="small"
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -1257,8 +888,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 
             case "tags": {
                 const tags = task.tags || [];
-                const tagAccent =
-                    mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
                 if (editingField === "tags") {
                     return (
                         // Stop mouse events reaching the row (drag / preview).
@@ -1267,20 +896,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
                         >
-                            <Autocomplete
-                                autoHighlight
-                                disableCloseOnSelect
-                                multiple
-                                openOnFocus
-                                getOptionLabel={(option: TagListProps) => option.tagName}
-                                isOptionEqualToValue={(option, value) =>
-                                    option.tagName === value?.tagName
-                                }
+                            <TagAutocomplete<TagListProps>
+                                getColor={(tag) => tag.tagColor}
+                                getLabel={(tag) => tag.tagName}
+                                isEqual={(a, b) => a.tagName === b.tagName}
+                                minWidth={160}
                                 options={projectTags}
-                                size="small"
-                                sx={{ width: "100%", minWidth: 160 }}
                                 value={editTags}
-                                onChange={(_, newValue) => setEditTags(newValue)}
+                                placeholder={
+                                    tags.length === 0 ? t.tasks.table.addTagsPlaceholder : ""
+                                }
+                                autoFocus
+                                persistent
+                                onChange={setEditTags}
                                 onBlur={() => {
                                     if (revertTagsRef.current) {
                                         revertTagsRef.current = false;
@@ -1295,88 +923,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         handleCancelEdit();
                                     }
                                 }}
-                                renderTags={(value, getTagProps) =>
-                                    value.map((tag, idx) => {
-                                        const { key, ...chipProps } = getTagProps({ index: idx });
-                                        return (
-                                            <Chip
-                                                key={key}
-                                                {...chipProps}
-                                                label={tag.tagName}
-                                                size="small"
-                                                sx={{
-                                                    height: 20,
-                                                    fontSize: "0.7rem",
-                                                    fontWeight: 600,
-                                                    color: mode === "dark" ? "white" : "black",
-                                                    borderColor: alpha(tag.tagColor, 0.6),
-                                                    backgroundColor: alpha(tag.tagColor, 0.12),
-                                                }}
-                                            />
-                                        );
-                                    })
-                                }
-                                PaperComponent={({ children, ...paperProps }) => (
-                                    <Paper
-                                        {...paperProps}
-                                        sx={{
-                                            backgroundColor:
-                                                mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                            borderRadius: "10px",
-                                            border:
-                                                mode === "dark"
-                                                    ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                    : "1px solid rgba(0, 0, 0, 0.08)",
-                                            boxShadow:
-                                                mode === "dark"
-                                                    ? "0 8px 32px rgba(0, 0, 0, 0.5)"
-                                                    : "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                            mt: 0.5,
-                                        }}
-                                    >
-                                        {children}
-                                    </Paper>
-                                )}
-                                renderOption={(optionProps, option) => {
-                                    const { key, ...restProps } = stripOwnerState(optionProps);
-                                    return (
-                                        <Box
-                                            key={key}
-                                            component="li"
-                                            {...restProps}
-                                            sx={tagOptionRowSx}
-                                        >
-                                            <ProjectTagChip
-                                                isDark={mode === "dark"}
-                                                label={option.tagName}
-                                                tagColor={option.tagColor}
-                                            />
-                                        </Box>
-                                    );
-                                }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        autoFocus
-                                        placeholder={
-                                            tags.length === 0
-                                                ? t.tasks.table.addTagsPlaceholder
-                                                : ""
-                                        }
-                                        sx={{
-                                            "& .MuiOutlinedInput-root": {
-                                                borderRadius: "6px",
-                                                fontSize: "0.8rem",
-                                                padding: "2px 6px",
-                                                "&:hover fieldset": { borderColor: tagAccent },
-                                                "&.Mui-focused fieldset": {
-                                                    borderColor: tagAccent,
-                                                    borderWidth: "1.5px",
-                                                },
-                                            },
-                                        }}
-                                    />
-                                )}
                             />
                         </Box>
                     );
@@ -1435,29 +981,18 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             case "title":
                 if (editingField === "title") {
                     return (
-                        <TextField
-                            size="small"
-                            value={editValue}
-                            sx={{
-                                "& .MuiInputBase-input": {
-                                    color: mode === "dark" ? "white" : "black",
-                                    fontSize: "0.875rem",
-                                    padding: "6px 10px",
-                                },
-                                "& .MuiOutlinedInput-root": {
-                                    borderRadius: "6px",
-                                },
-                                ml: depth > 0 ? depth * 1.5 : 0,
-                            }}
-                            autoFocus
-                            fullWidth
-                            onBlur={() => handleSaveEdit("title")}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit("title");
-                                if (e.key === "Escape") handleCancelEdit();
-                            }}
-                        />
+                        <Box sx={{ pl: depth > 0 ? depth * 1.5 : 0, width: "100%" }}>
+                            <CellTextInput
+                                value={editValue}
+                                autoFocus
+                                onBlur={() => handleSaveEdit("title")}
+                                onChange={setEditValue}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleSaveEdit("title");
+                                    if (e.key === "Escape") handleCancelEdit();
+                                }}
+                            />
+                        </Box>
                     );
                 }
                 return (
@@ -1508,214 +1043,24 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         (member) => member.userId === task.assigneeId
                     );
                     return (
-                        <Autocomplete
-                            blurOnSelect={true}
+                        <MemberAutocomplete
                             clearOnBlur={false}
-                            getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
-                            open={true}
-                            options={teamMembers}
-                            size="small"
+                            members={teamMembers}
+                            minWidth={180}
+                            placeholder={t.tasks.table.searchMembersPlaceholder}
                             value={currentAssignee || null}
-                            filterOptions={(options, { inputValue }) => {
-                                const searchTerm = inputValue.toLowerCase();
-                                return options.filter(
-                                    (option) =>
-                                        option.userName.toLowerCase().includes(searchTerm) ||
-                                        option.userEmail.toLowerCase().includes(searchTerm)
-                                );
-                            }}
-                            isOptionEqualToValue={(option, value) =>
-                                option.userId === value?.userId
-                            }
-                            ListboxProps={{
-                                sx: {
-                                    maxHeight: 280,
-                                    overflow: "auto",
-                                    padding: "4px 0",
-                                    "&::-webkit-scrollbar": {
-                                        width: "6px",
-                                    },
-                                    "&::-webkit-scrollbar-track": {
-                                        background: "transparent",
-                                    },
-                                    "&::-webkit-scrollbar-thumb": {
-                                        background:
-                                            mode === "dark"
-                                                ? "rgba(255, 255, 255, 0.15)"
-                                                : "rgba(0, 0, 0, 0.15)",
-                                        borderRadius: "3px",
-                                    },
-                                },
-                            }}
-                            PaperComponent={({ children, ...props }) => (
-                                <Paper
-                                    {...props}
-                                    sx={{
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        backgroundImage:
-                                            mode === "dark"
-                                                ? "linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))"
-                                                : "none",
-                                        borderRadius: "10px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 32px rgba(0, 0, 0, 0.5)"
-                                                : "0 8px 32px rgba(0, 0, 0, 0.12)",
-                                        mt: 0.5,
-                                        overflow: "hidden",
-                                    }}
-                                >
-                                    {children}
-                                </Paper>
-                            )}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    placeholder={t.tasks.table.searchMembersPlaceholder}
-                                    sx={{
-                                        minWidth: 180,
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "8px",
-                                            backgroundColor:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.03)"
-                                                    : "rgba(0, 0, 0, 0.01)",
-                                            "& fieldset": {
-                                                borderColor:
-                                                    mode === "dark"
-                                                        ? "rgba(255, 255, 255, 0.15)"
-                                                        : "rgba(0, 0, 0, 0.12)",
-                                            },
-                                            "&:hover fieldset": {
-                                                borderColor:
-                                                    mode === "dark"
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                            },
-                                            "&.Mui-focused fieldset": {
-                                                borderColor:
-                                                    mode === "dark"
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                                borderWidth: "1.5px",
-                                            },
-                                        },
-                                        "& .MuiInputBase-input": {
-                                            color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                                            fontSize: "0.875rem",
-                                            padding: "6px 12px",
-                                            "&::placeholder": {
-                                                color:
-                                                    mode === "dark"
-                                                        ? "rgba(255, 255, 255, 0.4)"
-                                                        : "rgba(0, 0, 0, 0.4)",
-                                                opacity: 1,
-                                            },
-                                        },
-                                    }}
-                                    autoFocus
-                                />
-                            )}
-                            renderOption={(props, option) => {
-                                const isSelected = option.userId === task.assigneeId;
-                                // stripOwnerState: bespoke <li> rows must not
-                                // forward Joy's internal ownerState to the DOM
-                                // (React warns on every rendered option).
-                                const { key, ...restProps } = stripOwnerState(props);
-                                return (
-                                    <Box
-                                        key={key}
-                                        component="li"
-                                        {...restProps}
-                                        sx={{
-                                            py: 1,
-                                            px: 1.5,
-                                            mx: 0.5,
-                                            my: 0.25,
-                                            borderRadius: "8px",
-                                            transition: "all 0.15s ease",
-                                            backgroundColor: isSelected
-                                                ? mode === "dark"
-                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                                : "transparent",
-                                            "&:hover": {
-                                                backgroundColor:
-                                                    mode === "dark"
-                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.2)"
-                                                        : "rgba(var(--gp-brand-700-rgb), 0.12)",
-                                            },
-                                            display: "flex",
-                                            gap: 1.5,
-                                            alignItems: "center",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <UserAvatar
-                                            clickable={false}
-                                            showPulseDot={false}
-                                            userId={option.userId}
-                                        />
-                                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{
-                                                    fontWeight: isSelected ? 600 : 500,
-                                                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                                                    lineHeight: 1.3,
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {option.userName}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color:
-                                                        mode === "dark"
-                                                            ? "rgba(255, 255, 255, 0.5)"
-                                                            : "rgba(0, 0, 0, 0.5)",
-                                                    fontSize: "0.7rem",
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {option.userEmail}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                );
-                            }}
-                            sx={{
-                                "& .MuiAutocomplete-popupIndicator": {
-                                    color:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.5)"
-                                            : "rgba(0, 0, 0, 0.5)",
-                                },
-                                "& .MuiAutocomplete-clearIndicator": {
-                                    color:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.5)"
-                                            : "rgba(0, 0, 0, 0.5)",
-                                },
-                            }}
-                            fullWidth
-                            onChange={(_, newValue) => {
-                                if (newValue) {
-                                    handleSelectChange("assigneeId", newValue.userId);
+                            autoFocus
+                            blurOnSelect
+                            open
+                            showEmail
+                            onChange={(member) => {
+                                if (member) {
+                                    handleSelectChange("assigneeId", member.userId);
                                     handleCancelEdit();
                                 }
                                 // Don't close when clearing - let user continue typing
                             }}
-                            onClose={(_, reason) => {
+                            onClose={(reason) => {
                                 // Only close when clicking outside or pressing escape
                                 // Don't close when clearing the input
                                 if (reason === "blur" || reason === "escape") {
@@ -1810,109 +1155,33 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const priorityOption = priorities.find((p) => p.priority === value);
                 if (editingField === "priority") {
                     return (
-                        <Select
-                            open={true}
-                            size="small"
+                        <ChipSelect
+                            fullWidth={false}
+                            minWidth={100}
                             value={(value as string) || ""}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        borderRadius: "8px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
-                                        mt: 0.5,
-                                    },
-                                },
-                            }}
-                            renderValue={(selected) => {
-                                const opt = priorities.find((p) => p.priority === selected);
-                                return opt ? (
-                                    <Chip
-                                        label={taskMetaLabel(opt.priority, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 60,
-                                        }}
+                            options={priorities.map((opt) => ({
+                                value: opt.priority || "",
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
+                                        label={taskMetaLabel(opt.priority ?? "", t.tasks.filters)}
+                                        minWidth={60}
+                                        textColor={opt.textColor}
                                     />
-                                ) : null;
-                            }}
-                            sx={{
-                                minWidth: 100,
-                                "& .MuiSelect-select": {
-                                    display: "flex",
-                                    alignItems: "center",
-                                    padding: "4px 8px",
-                                    minHeight: "unset",
-                                },
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.15)"
-                                            : "rgba(0, 0, 0, 0.12)",
-                                    borderRadius: "6px",
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                },
-                            }}
+                                ),
+                            }))}
+                            open
                             onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("priority", e.target.value);
+                            onChange={(next) => {
+                                handleSelectChange("priority", next);
                                 handleCancelEdit();
                             }}
-                        >
-                            {priorities.map((opt) => (
-                                <MenuItem
-                                    key={opt.priority || ""}
-                                    value={opt.priority || ""}
-                                    sx={{
-                                        py: 0.75,
-                                        px: 1,
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        borderRadius: "6px",
-                                        "&:hover": {
-                                            backgroundColor:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.08)"
-                                                    : "rgba(0, 0, 0, 0.04)",
-                                        },
-                                    }}
-                                >
-                                    <Chip
-                                        label={taskMetaLabel(opt.priority, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 60,
-                                        }}
-                                    />
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        />
                     );
                 }
                 return priorityOption ? (
-                    <Chip
+                    <PillChip
                         label={taskMetaLabel(priorityOption.priority, t.tasks.filters)}
-                        size="small"
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -1939,109 +1208,33 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const effortOption = effortLevels.find((e) => e.level === value);
                 if (editingField === "effortLevel") {
                     return (
-                        <Select
-                            open={true}
-                            size="small"
+                        <ChipSelect
+                            fullWidth={false}
+                            minWidth={90}
                             value={(value as string) || ""}
-                            MenuProps={{
-                                PaperProps: {
-                                    sx: {
-                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
-                                        borderRadius: "8px",
-                                        border:
-                                            mode === "dark"
-                                                ? "1px solid rgba(255, 255, 255, 0.1)"
-                                                : "1px solid rgba(0, 0, 0, 0.08)",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
-                                        mt: 0.5,
-                                    },
-                                },
-                            }}
-                            renderValue={(selected) => {
-                                const opt = effortLevels.find((e) => e.level === selected);
-                                return opt ? (
-                                    <Chip
-                                        label={taskMetaLabel(opt.level, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 50,
-                                        }}
+                            options={effortLevels.map((opt) => ({
+                                value: opt.level || "",
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
+                                        label={taskMetaLabel(opt.level ?? "", t.tasks.filters)}
+                                        minWidth={50}
+                                        textColor={opt.textColor}
                                     />
-                                ) : null;
-                            }}
-                            sx={{
-                                minWidth: 90,
-                                "& .MuiSelect-select": {
-                                    display: "flex",
-                                    alignItems: "center",
-                                    padding: "4px 8px",
-                                    minHeight: "unset",
-                                },
-                                "& .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.15)"
-                                            : "rgba(0, 0, 0, 0.12)",
-                                    borderRadius: "6px",
-                                },
-                                "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor:
-                                        mode === "dark"
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                },
-                            }}
+                                ),
+                            }))}
+                            open
                             onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("effortLevel", e.target.value);
+                            onChange={(next) => {
+                                handleSelectChange("effortLevel", next);
                                 handleCancelEdit();
                             }}
-                        >
-                            {effortLevels.map((opt) => (
-                                <MenuItem
-                                    key={opt.level || ""}
-                                    value={opt.level || ""}
-                                    sx={{
-                                        py: 0.75,
-                                        px: 1,
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        borderRadius: "6px",
-                                        "&:hover": {
-                                            backgroundColor:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.08)"
-                                                    : "rgba(0, 0, 0, 0.04)",
-                                        },
-                                    }}
-                                >
-                                    <Chip
-                                        label={taskMetaLabel(opt.level, t.tasks.filters)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: alpha(opt.color || "#888", 0.75),
-                                            color: opt.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            minWidth: 50,
-                                        }}
-                                    />
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        />
                     );
                 }
                 return effortOption ? (
-                    <Chip
+                    <PillChip
                         label={taskMetaLabel(effortOption.level, t.tasks.filters)}
-                        size="small"
                         sx={{
                             cursor: "pointer",
                             backgroundColor: alpha(
@@ -2092,9 +1285,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             max: MAX_TASK_WEIGHT,
                         })} · ${t.tasks.table.weightBands[band]}`}
                     >
-                        <Chip
+                        <PillChip
                             label={weight}
-                            size="small"
                             sx={{
                                 backgroundColor: alpha(color, mode === "dark" ? 0.5 : 0.75),
                                 color: "white",
@@ -2128,9 +1320,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return dl === -1 ? (
-                    <Chip
+                    <PillChip
                         label={t.tasks.filters.expired}
-                        size="small"
                         sx={{
                             // Past due is the danger tone (it was "#ff2323"), not Deleted's gray.
                             backgroundColor: alpha(
@@ -2230,9 +1421,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const resolved = sprintNamesById?.has(task.sprintId) ?? false;
                 return (
                     <AppTooltip title={name}>
-                        <Chip
+                        <PillChip
                             label={name}
-                            size="small"
                             sx={{
                                 maxWidth: "100%",
                                 // Composed with rgba() rather than MUI's `alpha()`:
@@ -2546,8 +1736,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
                                     <IconButton
                                         className="task-row-open-diagram"
-                                        size="small"
+                                        size="sm"
+                                        variant="plain"
                                         sx={{
+                                            minWidth: 0,
+                                            minHeight: 0,
                                             width: 20,
                                             height: 20,
                                             p: 0,
@@ -2571,8 +1764,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             <AppTooltip title={t.tasks.table.quickAddTooltip}>
                                 <IconButton
                                     className="task-row-quick-add"
-                                    size="small"
+                                    size="sm"
+                                    variant="plain"
                                     sx={{
+                                        minWidth: 0,
+                                        minHeight: 0,
                                         width: 20,
                                         height: 20,
                                         p: 0,

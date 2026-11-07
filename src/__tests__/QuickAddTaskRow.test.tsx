@@ -1,6 +1,5 @@
 import { CssVarsProvider } from "@mui/joy/styles";
-import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { defaultColumns } from "../features/tasks/components/table/DraggableTaskTable";
@@ -8,6 +7,9 @@ import { QuickAddTaskRow } from "../features/tasks/components/table/QuickAddTask
 import { QuickAddRequiredFieldsPreferenceProvider } from "../hooks/common/useQuickAddRequiredFieldsPreference";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
+
+// The avatar needs the app's AvatarContextProvider; the row under test only lists names.
+vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => null }));
 
 const myself: UserProps = {
     teamId: "team1",
@@ -32,10 +34,8 @@ const parentTask = {
 
 const TITLE_PLACEHOLDER = "Type a title, Enter to create…";
 
-// The row mixes Joy and Material components; Material ones need the
-// scoped Material theme under THEME_ID (same setup DraggableTaskTable
-// provides in the app) or they crash reading Joy's theme shape.
-const materialTheme = createTheme({ cssVariables: true });
+// Mounted under Joy's provider ALONE (MIP-1121 removed the Material editors and the
+// Material ThemeProvider the table wrapped them in).
 
 // The required-field gate is a user preference read from localStorage by
 // `QuickAddRequiredFieldsPreferenceProvider` at mount. Seed the store
@@ -52,24 +52,22 @@ const renderRow = (
     const onDirtyChange = vi.fn();
     const utils = render(
         <CssVarsProvider>
-            <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                <QuickAddRequiredFieldsPreferenceProvider>
-                    <QuickAddTaskRow
-                        columns={defaultColumns}
-                        creatorUserId={myself.userId}
-                        depth={1}
-                        fieldRules={null}
-                        mode="light"
-                        parentTask={parentTask}
-                        projectTags={[]}
-                        teamMembers={[myself]}
-                        onClose={onClose}
-                        onDirtyChange={onDirtyChange}
-                        onSubmit={onSubmit}
-                        {...overrides}
-                    />
-                </QuickAddRequiredFieldsPreferenceProvider>
-            </ThemeProvider>
+            <QuickAddRequiredFieldsPreferenceProvider>
+                <QuickAddTaskRow
+                    columns={defaultColumns}
+                    creatorUserId={myself.userId}
+                    depth={1}
+                    fieldRules={null}
+                    mode="light"
+                    parentTask={parentTask}
+                    projectTags={[]}
+                    teamMembers={[myself]}
+                    onClose={onClose}
+                    onDirtyChange={onDirtyChange}
+                    onSubmit={onSubmit}
+                    {...overrides}
+                />
+            </QuickAddRequiredFieldsPreferenceProvider>
         </CssVarsProvider>
     );
     const titleInput = utils.getByPlaceholderText(TITLE_PLACEHOLDER) as HTMLInputElement;
@@ -179,6 +177,67 @@ describe("QuickAddTaskRow", () => {
         }
 
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("picks a status from the real popup, and Escape/Enter inside it do not discard or submit the row", async () => {
+        // The popup is a portal, and React portals bubble through the React tree: a
+        // keydown inside the open list reaches the row's own Enter/Escape handlers.
+        const { onClose, onSubmit, titleInput } = renderRow();
+        fireEvent.change(titleInput, { target: { value: "Draft" } });
+
+        const statusSelect = screen.getAllByRole("combobox")[0];
+        fireEvent.click(statusSelect);
+        const listbox = await screen.findByRole("listbox");
+
+        fireEvent.keyDown(listbox, { key: "Escape" });
+        expect(onClose).not.toHaveBeenCalled();
+
+        // reopen (Escape closed it) and pick WIP by click
+        if (!screen.queryByRole("listbox")) fireEvent.click(statusSelect);
+        const wip = await screen.findByRole("option", { name: /WIP/ });
+        fireEvent.keyDown(wip, { key: "Enter" });
+        expect(onSubmit).not.toHaveBeenCalled();
+        fireEvent.click(wip);
+        await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit.mock.calls[0][0]).toMatchObject({ title: "Draft", status: "WIP" });
+    });
+
+    it("picks a priority and can go back to none", async () => {
+        const { onSubmit, titleInput } = renderRow();
+        fireEvent.change(titleInput, { target: { value: "Draft" } });
+        const priority = screen.getAllByRole("combobox").find((c) => c.textContent === "—")!;
+
+        fireEvent.click(priority);
+        fireEvent.click(await screen.findByRole("option", { name: /High/ }));
+        await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+
+        fireEvent.click(priority);
+        // the first option is the "no value" dash
+        fireEvent.click(within(await screen.findByRole("listbox")).getAllByRole("option")[0]);
+        await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit.mock.calls[0][0].priority).toBeNull();
+    });
+
+    it("picks an assignee by typing and choosing, without submitting the row", async () => {
+        const { onSubmit, titleInput } = renderRow();
+        fireEvent.change(titleInput, { target: { value: "Draft" } });
+        const member = screen.getByPlaceholderText(/member/i);
+
+        fireEvent.focus(member);
+        fireEvent.change(member, { target: { value: "test@" } });
+        const option = await screen.findByRole("option", { name: /Test User/ });
+        fireEvent.click(option);
+        expect(onSubmit).not.toHaveBeenCalled();
+
+        fireEvent.keyDown(titleInput, { key: "Enter" });
+        await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+        expect(onSubmit.mock.calls[0][0].assigneeId).toBe("user1");
     });
 
     it("shows the inline error and preserves the draft when the submit rejects", async () => {

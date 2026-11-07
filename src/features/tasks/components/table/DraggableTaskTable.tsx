@@ -7,7 +7,6 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
 import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
@@ -26,7 +25,6 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
-import { FONT_STACKS } from "../../../../theme/tokens/scales";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
@@ -62,13 +60,6 @@ import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 import { TaskTableRows } from "./TaskTableRows";
-
-// Material's default is a Roboto stack that is never loaded; this surface
-// would otherwise be a third typeface next to Joy's Geist.
-const materialTheme = createTheme({
-    cssVariables: true,
-    typography: { fontFamily: FONT_STACKS.geist },
-});
 
 // Shared empty fallback so a project without tags doesn't mint a new array
 // identity on every render (see `quickAddProjectTags`).
@@ -1604,7 +1595,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
     return (
-        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
+        <>
             <div
                 style={{
                     height: "100%",
@@ -1939,6 +1930,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         onClose={() => setDiagramTarget(null)}
                     />
                 )}
-        </ThemeProvider>
+        </>
     );
 };

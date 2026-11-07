@@ -5,7 +5,6 @@ import Stack from "@mui/joy/Stack";
 import { useColorScheme } from "@mui/joy/styles";
 import Switch from "@mui/joy/Switch";
 import Typography from "@mui/joy/Typography";
-import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -16,7 +15,6 @@ import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPref
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { FONT_STACKS } from "../../../../theme/tokens/scales";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
@@ -39,13 +37,6 @@ import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
-
-// Material's default is a Roboto stack that is never loaded; this surface
-// would otherwise be a third typeface next to Joy's Geist.
-const materialTheme = createTheme({
-    cssVariables: true,
-    typography: { fontFamily: FONT_STACKS.geist },
-});
 
 const NO_TAGS: TagListProps[] = [];
 // After a quick-add create, how long the filter pipeline gets to put the new
@@ -667,7 +658,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
     };
 
     return (
-        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
+        <>
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                 <TaskFilterMenu
                     predefinedTagsFilters={predefinedTagsFilters}
@@ -866,6 +857,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         onClose={() => setDiagramTask(null)}
                     />
                 )}
-        </ThemeProvider>
+        </>
     );
 };
