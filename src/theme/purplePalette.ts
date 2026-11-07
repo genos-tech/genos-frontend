@@ -1,6 +1,7 @@
 import { extendTheme } from "@mui/joy/styles";
 
 import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId } from "./themePalettes";
+import { joyFontWeight, joyRadius, joyShadow, joyTypography } from "./tokens/joyScales";
 import { FONT_STACKS } from "./tokens/scales";
 
 // Brand-surface palette. The single source of truth for brand-surface colors
@@ -269,6 +270,12 @@ export const buildJoyTheme = (
             display: FONT_STACKS.geist,
             code: FONT_STACKS.mono,
         },
+        // Type levels, weights, radius and shadows come from the design
+        // tokens (see `tokens/joyScales.ts`).
+        typography: joyTypography,
+        fontWeight: joyFontWeight,
+        radius: joyRadius,
+        shadow: joyShadow,
         colorSchemes: {
             dark: {
                 palette: {
