@@ -112,7 +112,7 @@ describe("text and code in the dark bubbles", () => {
                 // The code chip is a translucent fill over the bubble: reading the rule
                 // gives its color; its own background is white or black at an alpha.
                 const rule = css.match(
-                    new RegExp(`(?:^|\\n)${root.replace(/\./g, "\\.")} code\\s*\\{([^}]*)\\}`)
+                    new RegExp(`(?:^|\\n)${root.replace(/[\\.]/g, "\\$&")} code\\s*\\{([^}]*)\\}`)
                 );
                 const fg = rule?.[1].match(/(?:^|[;\s])color:\s*(#[0-9a-fA-F]{6})\b/)?.[1];
                 const bgm = rule?.[1].match(
