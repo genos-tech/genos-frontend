@@ -1322,6 +1322,7 @@ export const es: DeepPartial<Messages> = {
             viewPastFlaggedMenu: "Ver banderas completadas",
             viewActiveFlaggedMenu: "Ver banderas activas",
             backToActiveFlaggedButton: "Volver a banderas activas",
+            youSuffix: "(tú)",
         },
         listItem: {
             backToChat: "Volver al chat",

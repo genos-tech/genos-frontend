@@ -933,6 +933,7 @@ export const fr: DeepPartial<Messages> = {
             viewPastFlaggedMenu: "Afficher les indicateurs terminés",
             viewActiveFlaggedMenu: "Afficher les indicateurs actifs",
             backToActiveFlaggedButton: "Retour aux drapeaux actifs",
+            youSuffix: "(vous)",
         },
         listItem: {
             backToChat: "Retour à la conversation",

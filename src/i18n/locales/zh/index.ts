@@ -884,6 +884,7 @@ export const zh: DeepPartial<Messages> = {
             viewPastFlaggedMenu: "查看已完成的标志",
             viewActiveFlaggedMenu: "查看活动标志",
             backToActiveFlaggedButton: "返回活动标志",
+            youSuffix: "（你）",
         },
         listItem: {
             backToChat: "返回聊天",

@@ -1301,6 +1301,7 @@ export const ar: DeepPartial<Messages> = {
             viewPastFlaggedMenu: "عرض الأعلام المكتملة",
             viewActiveFlaggedMenu: "عرض الأعلام النشطة",
             backToActiveFlaggedButton: "العودة إلى الأعلام النشطة",
+            youSuffix: "(أنت)",
         },
         listItem: {
             backToChat: "العودة إلى المحادثة",

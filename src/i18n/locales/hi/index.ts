@@ -1315,6 +1315,7 @@ export const hi: DeepPartial<Messages> = {
             viewPastFlaggedMenu: "पूर्ण झंडे देखें",
             viewActiveFlaggedMenu: "सक्रिय झंडे देखें",
             backToActiveFlaggedButton: "सक्रिय झंडों पर वापस जाएँ",
+            youSuffix: "(आप)",
         },
         listItem: {
             backToChat: "चैट पर वापस",
