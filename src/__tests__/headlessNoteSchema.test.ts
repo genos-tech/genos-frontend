@@ -6,57 +6,28 @@
 // (`schemaSpecConfigs.ts`); this test pins the rest: that the headless
 // assembly registers the same set, with the same options, as the editors'.
 
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteEditor,
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-} from "@blocknote/core";
+import { BlockNoteEditor } from "@blocknote/core";
 import { describe, expect, it } from "vitest";
 
-import { CreateCustomEmojiSpec } from "../components/editors/CustomEmoji";
 import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-} from "../components/editors/genosBlockSpecs";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-} from "../components/editors/HashMention";
+    createGenosSchema,
+    createLegacyMentionSpecs,
+} from "../components/editors/genos/genosSchema";
 import { createHeadlessNoteSchema } from "../components/editors/headlessNoteSchema";
-import { CreateMentionGroupSpec, CreateMentionSpec } from "../components/editors/Mention";
-import { Alert } from "../components/editors/sub/Alert";
 
-// Assembled exactly as `bnMyNoteEditor` / `bnTaskNoteEditor` /
-// `bnChatNoteEditor` do (the three are identical). The mention spec closes
-// over runtime state that only its `render` reads, so stubs do here.
-const buildEditorsSchema = () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-    return BlockNoteSchema.create({
-        inlineContentSpecs: {
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
-            mention: CreateMentionSpec({}, null, {} as never, () => {}, {} as never, {} as never),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
-        },
-        blockSpecs: {
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-            alert: Alert(),
-        },
-    });
-};
+// The editors' schema, from the factory every editor uses. The mention spec closes over
+// runtime state that only its `render` reads, so stubs do here.
+const buildEditorsSchema = () =>
+    createGenosSchema(
+        createLegacyMentionSpecs({
+            teamMemberProfiles: {},
+            socket: null,
+            myself: {} as never,
+            setMyself: () => {},
+            useUISM: {} as never,
+            useCM: {} as never,
+        })
+    );
 
 // What a body conversion depends on: which node and mark types exist and
 // which attributes (with which defaults) each carries. A missing node type
