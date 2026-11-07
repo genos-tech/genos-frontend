@@ -1,6 +1,8 @@
 import { extendTheme } from "@mui/joy/styles";
 
-import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId } from "./themePalettes";
+import { DEFAULT_THEME_ID, ThemeId } from "./themePalettes";
+import { joyComponents } from "./tokens/joyComponents";
+import { joyPalette } from "./tokens/joyPalette";
 import { joyFontWeight, joyRadius, joyShadow, joyTypography } from "./tokens/joyScales";
 import { FONT_STACKS } from "./tokens/scales";
 
@@ -259,8 +261,6 @@ export const buildJoyTheme = (
     // because it isn't expressed as CSS.
     direction: "ltr" | "rtl" = "ltr"
 ) => {
-    const { ramp, brandRgb } = THEME_PRIMITIVES[themeId];
-    const soft = (alpha: number) => `rgba(${brandRgb}, ${alpha})`;
     return extendTheme({
         direction,
         // Joy's default is Inter with an unloaded system fallback. Geist
@@ -276,50 +276,14 @@ export const buildJoyTheme = (
         fontWeight: joyFontWeight,
         radius: joyRadius,
         shadow: joyShadow,
+        // Palettes come from the design roles, per theme and mode, so Joy
+        // components and the `--g-*` tokens can never disagree (see
+        // `tokens/joyPalette.ts` for the decisions behind each mapping).
         colorSchemes: {
-            dark: {
-                palette: {
-                    primary: {
-                        ...ramp,
-                        solidBg: "var(--joy-palette-primary-600)",
-                        solidHoverBg: "var(--joy-palette-primary-500)",
-                        solidActiveBg: "var(--joy-palette-primary-700)",
-                        outlinedBorder: "var(--joy-palette-primary-700)",
-                        outlinedColor: "var(--joy-palette-primary-300)",
-                        outlinedHoverBg: "var(--joy-palette-primary-800)",
-                        outlinedActiveBg: "var(--joy-palette-primary-900)",
-                        softColor: "var(--joy-palette-primary-200)",
-                        softBg: soft(0.18),
-                        softHoverBg: soft(0.28),
-                        softActiveBg: soft(0.35),
-                        plainColor: "var(--joy-palette-primary-300)",
-                        plainHoverBg: soft(0.12),
-                        plainActiveBg: soft(0.2),
-                    },
-                },
-            },
-            light: {
-                palette: {
-                    primary: {
-                        ...ramp,
-                        solidBg: "var(--joy-palette-primary-700)",
-                        solidHoverBg: "var(--joy-palette-primary-600)",
-                        solidActiveBg: "var(--joy-palette-primary-800)",
-                        outlinedBorder: "var(--joy-palette-primary-500)",
-                        outlinedColor: "var(--joy-palette-primary-700)",
-                        outlinedHoverBg: "var(--joy-palette-primary-100)",
-                        outlinedActiveBg: "var(--joy-palette-primary-200)",
-                        softColor: "var(--joy-palette-primary-800)",
-                        softBg: "var(--joy-palette-primary-100)",
-                        softHoverBg: "var(--joy-palette-primary-200)",
-                        softActiveBg: soft(0.25),
-                        plainColor: "var(--joy-palette-primary-700)",
-                        plainHoverBg: "var(--joy-palette-primary-100)",
-                        plainActiveBg: "var(--joy-palette-primary-200)",
-                    },
-                },
-            },
+            dark: { palette: joyPalette(themeId, "dark") },
+            light: { palette: joyPalette(themeId, "light") },
         },
+        components: joyComponents,
         // Tooltips portal to <body> at the Joy `tooltip` z-index token (default
         // 1550). Several app surfaces use much higher hardcoded z-indexes —
         // ServiceSwitcherOverlay (13000), the Spotlight overlay (13100) and the
