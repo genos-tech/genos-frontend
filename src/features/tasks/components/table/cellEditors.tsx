@@ -26,6 +26,7 @@ import {
     Typography,
 } from "@mui/joy";
 import type { SxProps } from "@mui/joy/styles/types";
+import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { g } from "../../../../theme/tokens";
@@ -135,6 +136,33 @@ export const PillChip = ({
         {icon ? <span className="pill-icon">{icon}</span> : null}
         <span className="pill-label">{label}</span>
     </Box>
+);
+
+/** A status / priority / effort chip as the table colors it (the color at 75%, its own label color). */
+export const ValueChip = ({
+    label,
+    color,
+    textColor,
+    minWidth,
+    icon,
+}: {
+    label: string;
+    color: string;
+    textColor: string | null | undefined;
+    minWidth: number;
+    icon?: ReactNode;
+}) => (
+    <PillChip
+        icon={icon}
+        label={label}
+        sx={{
+            backgroundColor: alpha(color || "#888", 0.75),
+            color: textColor ?? undefined,
+            fontWeight: "bold",
+            borderRadius: "5px",
+            minWidth,
+        }}
+    />
 );
 
 // ── ChipSelect: a Select whose value and options are chips ────────────────────

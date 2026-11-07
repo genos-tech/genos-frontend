@@ -3,7 +3,6 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
-import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
@@ -22,8 +21,8 @@ import {
     CellTextInput,
     ChipSelect,
     MemberAutocomplete,
-    PillChip,
     TagAutocomplete,
+    ValueChip,
 } from "./cellEditors";
 import {
     DEPTH_BORDER_COLORS,
@@ -247,26 +246,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
     const accentRgb = mode === "dark" ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
     const depthIdx = Math.min(depth, 3);
     const dimText = mode === "dark" ? "#666" : "#aaa";
-    // A value chip (status / priority / effort) with the colors the table gives it.
-    const valueChip = (
-        label: string,
-        color: string,
-        textColor: string | null | undefined,
-        minWidth: number,
-        icon?: React.ReactNode
-    ) => (
-        <PillChip
-            icon={icon}
-            label={label}
-            sx={{
-                backgroundColor: alpha(color || "#888", 0.75),
-                color: textColor ?? undefined,
-                fontWeight: "bold",
-                borderRadius: "5px",
-                minWidth,
-            }}
-        />
-    );
     const emptyValueLabel = (
         <Typography level="body-sm" sx={{ color: dimText, fontStyle: "italic" }}>
             —
@@ -297,12 +276,14 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={status}
                         options={statusOptions.map((opt) => ({
                             value: opt.value,
-                            node: valueChip(
-                                taskMetaLabel(opt.value, t.tasks.filters),
-                                opt.color,
-                                opt.textColor,
-                                70,
-                                opt.icon
+                            node: (
+                                <ValueChip
+                                    color={opt.color}
+                                    icon={opt.icon}
+                                    label={taskMetaLabel(opt.value, t.tasks.filters)}
+                                    minWidth={70}
+                                    textColor={opt.textColor}
+                                />
                             ),
                         }))}
                         onChange={setStatus}
@@ -346,11 +327,13 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={priority ?? ""}
                         options={priorities.map((opt) => ({
                             value: opt.priority || "",
-                            node: valueChip(
-                                taskMetaLabel(opt.priority ?? "", t.tasks.filters),
-                                opt.color || "#888",
-                                opt.textColor,
-                                60
+                            node: (
+                                <ValueChip
+                                    color={opt.color || "#888"}
+                                    label={taskMetaLabel(opt.priority ?? "", t.tasks.filters)}
+                                    minWidth={60}
+                                    textColor={opt.textColor}
+                                />
                             ),
                         }))}
                         onChange={(next) => setPriority(next === "" ? null : next)}
@@ -365,11 +348,13 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
                         value={effortLevel ?? ""}
                         options={effortLevels.map((opt) => ({
                             value: opt.level || "",
-                            node: valueChip(
-                                taskMetaLabel(opt.level ?? "", t.tasks.filters),
-                                opt.color || "#888",
-                                opt.textColor,
-                                60
+                            node: (
+                                <ValueChip
+                                    color={opt.color || "#888"}
+                                    label={taskMetaLabel(opt.level ?? "", t.tasks.filters)}
+                                    minWidth={60}
+                                    textColor={opt.textColor}
+                                />
                             ),
                         }))}
                         onChange={(next) => setEffortLevel(next === "" ? null : next)}

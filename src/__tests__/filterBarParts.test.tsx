@@ -78,6 +78,22 @@ describe("FilterDropdown / FilterMenu / FilterMenuItem", () => {
         expect(trigger().getAttribute("aria-expanded")).toBe("true");
     });
 
+    it("a KEYBOARD pick (Enter / Space on the highlighted item) keeps the menu open too", async () => {
+        const onPick = vi.fn();
+        render(<Harness onPick={onPick} />);
+        fireEvent.click(trigger());
+        const first = await screen.findByRole("menuitem", { name: "Open" });
+        first.focus();
+        fireEvent.keyDown(first, { key: "Enter" });
+        fireEvent.keyUp(first, { key: "Enter" });
+        expect(onPick).toHaveBeenCalledTimes(1);
+        expect(screen.getAllByRole("menuitem")).toHaveLength(2);
+        fireEvent.keyDown(first, { key: " " });
+        fireEvent.keyUp(first, { key: " " });
+        expect(onPick).toHaveBeenCalledTimes(2);
+        expect(trigger().getAttribute("aria-expanded")).toBe("true");
+    });
+
     it("a handler that closes the menu still can, by setting its own state", async () => {
         render(<Harness closeOnPick onPick={vi.fn()} />);
         fireEvent.click(trigger());

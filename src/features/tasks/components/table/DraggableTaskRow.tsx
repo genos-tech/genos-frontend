@@ -50,6 +50,7 @@ import {
     MemberAutocomplete,
     PillChip,
     TagAutocomplete,
+    ValueChip,
 } from "./cellEditors";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
@@ -442,27 +443,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         },
     };
 
-    // A value chip (status / priority / effort) as the table colors it.
-    const valueChip = (
-        label: string,
-        color: string,
-        textColor: string | null | undefined,
-        minWidth: number,
-        icon?: React.ReactNode
-    ) => (
-        <PillChip
-            icon={icon}
-            label={label}
-            sx={{
-                backgroundColor: alpha(color || "#888", 0.75),
-                color: textColor ?? undefined,
-                fontWeight: "bold",
-                borderRadius: "5px",
-                minWidth,
-            }}
-        />
-    );
-
     const emptyCellPlaceholder = (
         <Typography sx={{ fontSize: "0.72rem", color: mode === "dark" ? "#6b7280" : "#9ca3af" }}>
             -
@@ -851,12 +831,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             value={(value as string) || ""}
                             options={statusOptions.map((opt) => ({
                                 value: opt.value || "",
-                                node: valueChip(
-                                    taskMetaLabel(opt.value ?? "", t.tasks.filters),
-                                    opt.color || "#888",
-                                    opt.textColor,
-                                    70,
-                                    opt.icon
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
+                                        icon={opt.icon}
+                                        label={taskMetaLabel(opt.value ?? "", t.tasks.filters)}
+                                        minWidth={70}
+                                        textColor={opt.textColor}
+                                    />
                                 ),
                             }))}
                             open
@@ -1179,11 +1161,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             value={(value as string) || ""}
                             options={priorities.map((opt) => ({
                                 value: opt.priority || "",
-                                node: valueChip(
-                                    taskMetaLabel(opt.priority ?? "", t.tasks.filters),
-                                    opt.color || "#888",
-                                    opt.textColor,
-                                    60
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
+                                        label={taskMetaLabel(opt.priority ?? "", t.tasks.filters)}
+                                        minWidth={60}
+                                        textColor={opt.textColor}
+                                    />
                                 ),
                             }))}
                             open
@@ -1230,11 +1214,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             value={(value as string) || ""}
                             options={effortLevels.map((opt) => ({
                                 value: opt.level || "",
-                                node: valueChip(
-                                    taskMetaLabel(opt.level ?? "", t.tasks.filters),
-                                    opt.color || "#888",
-                                    opt.textColor,
-                                    50
+                                node: (
+                                    <ValueChip
+                                        color={opt.color || "#888"}
+                                        label={taskMetaLabel(opt.level ?? "", t.tasks.filters)}
+                                        minWidth={50}
+                                        textColor={opt.textColor}
+                                    />
                                 ),
                             }))}
                             open
