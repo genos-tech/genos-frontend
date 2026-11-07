@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -119,8 +119,12 @@ export const ModalCreateGM: React.FC<Props> = ({
         );
     };
 
+    // The ref blocks a second Enter / click in the same tick, before `isLoading` re-renders
+    // (MIP-1184: the group was created twice).
+    const creatingRef = useRef(false);
     const handleCreateGroup = async () => {
-        if (!chatName.trim() || isLoading) return;
+        if (!chatName.trim() || isLoading || creatingRef.current) return;
+        creatingRef.current = true;
         setIsLoading(true);
         setCreateCGErrorMessage(null);
         try {
@@ -149,12 +153,14 @@ export const ModalCreateGM: React.FC<Props> = ({
                 });
             }
         } finally {
+            creatingRef.current = false;
             setIsLoading(false);
         }
     };
 
     return (
         <ModalFrame
+            dismissible={!isLoading}
             icon={<GroupAddIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="md"
