@@ -19,20 +19,6 @@
     --scrollbar-thumb-bg-hover-dark: #bfbfbf;
     --scrollbar-border-radius: 10px;
 
-    /* DataGrid Colors */
-    --datagrid-light-header-bg: #d9d9d9;
-    --datagrid-light-header-color: rgb(55, 55, 55);
-    --datagrid-light-filler-bg: #d9d9d9;
-    --datagrid-light-toolbar-bg: #c5c5c571;
-    --datagrid-light-button-color: rgb(55, 55, 55);
-
-    --datagrid-dark-header-bg: #161616;
-    --datagrid-dark-header-color: rgb(255, 255, 255);
-    --datagrid-dark-filler-bg: #161616;
-    --datagrid-dark-toolbar-bg: #d4d4d44e;
-    --datagrid-dark-button-color: white;
-    --datagrid-dark-main-bg: #000000;
-
     /* Editor chrome (MIP-1131): roles from the design tokens. They switch with the
        mode, so each is ONE value where there used to be a light and a dark one. */
     --editor-bg: var(--g-bg-subtle);
@@ -115,8 +101,8 @@ input[type="checkbox"] {
 
 /* Global default: every scrollable element gets the custom scrollbar.
    The universal selector has ZERO specificity, so any element that styles
-   its own scrollbar — the `.custom-scrollbar-*` classes below, the
-   DataGrid overrides, or sx-level `&::-webkit-scrollbar` rules (including
+   its own scrollbar — the `.custom-scrollbar-*` classes below, or
+   sx-level `&::-webkit-scrollbar` rules (including
    the hidden tab-strip scrollbars) — still wins without changes. */
 *::-webkit-scrollbar {
     width: var(--scrollbar-width);
@@ -152,28 +138,24 @@ input[type="checkbox"] {
 
 /* Base scrollbar styles */
 .custom-scrollbar-light::-webkit-scrollbar,
-.MuiAutocomplete-listbox::-webkit-scrollbar,
-.MuiDataGrid-scrollbar::-webkit-scrollbar {
+.MuiAutocomplete-listbox::-webkit-scrollbar {
     width: var(--scrollbar-width);
     height: var(--scrollbar-height);
 }
 
 .custom-scrollbar-dark::-webkit-scrollbar,
-.MuiAutocomplete-listbox::-webkit-scrollbar,
-.MuiDataGrid-scrollbar::-webkit-scrollbar {
+.MuiAutocomplete-listbox::-webkit-scrollbar {
     width: var(--scrollbar-width);
     height: var(--scrollbar-height);
 }
 
 .custom-scrollbar-light::-webkit-scrollbar-track,
-.MuiAutocomplete-listbox::-webkit-scrollbar-track,
-.MuiDataGrid-scrollbar::-webkit-scrollbar-track {
+.MuiAutocomplete-listbox::-webkit-scrollbar-track {
     background: var(--scrollbar-track-bg-light);
 }
 
 .custom-scrollbar-dark::-webkit-scrollbar-track,
-.MuiAutocomplete-listbox::-webkit-scrollbar-track,
-.MuiDataGrid-scrollbar::-webkit-scrollbar-track {
+.MuiAutocomplete-listbox::-webkit-scrollbar-track {
     background: var(--scrollbar-track-bg-dark);
 }
 
@@ -203,36 +185,13 @@ input[type="checkbox"] {
 
 /* Scrollbar corner (where horizontal and vertical scrollbars meet) */
 .custom-scrollbar-light::-webkit-scrollbar-corner,
-.MuiAutocomplete-listbox::-webkit-scrollbar-corner,
-.MuiDataGrid-scrollbar::-webkit-scrollbar-corner {
+.MuiAutocomplete-listbox::-webkit-scrollbar-corner {
     background: var(--scrollbar-track-bg-light);
 }
 
 .custom-scrollbar-dark::-webkit-scrollbar-corner,
-.MuiAutocomplete-listbox::-webkit-scrollbar-corner,
-.MuiDataGrid-scrollbar::-webkit-scrollbar-corner {
+.MuiAutocomplete-listbox::-webkit-scrollbar-corner {
     background: var(--scrollbar-track-bg-dark);
-}
-
-/* DataGrid specific scrollbar overrides */
-.task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-bg-light);
-    border-radius: var(--scrollbar-border-radius);
-}
-
-.task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-bg-hover-light);
-    border-radius: var(--scrollbar-border-radius);
-}
-
-.task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
-    background: #404040;
-    border-radius: var(--scrollbar-border-radius);
-}
-
-.task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #777777;
-    border-radius: var(--scrollbar-border-radius);
 }
 
 /* Custom chat scroll-position indicator (see `useScrollIndicator`). iOS hides
@@ -265,160 +224,6 @@ input[type="checkbox"] {
    the wrapper having a currently-scrolling scroller within it. */
 .chat-msg-scrolling ~ .chat-scroll-indicator {
     background: var(--scrollbar-thumb-bg-hover);
-}
-
-/* ==========================================================================
-   DataGrid Styles
-   ========================================================================== */
-
-/* Toolbar pagination. Stable MUI class names only: the `css-<hash>-…` form
-   never matched in a production build (Emotion drops the label there). */
-.MuiTablePagination-toolbar {
-    min-height: 52px;
-    padding-right: 2px;
-    padding-bottom: 15px;
-}
-
-/* Hide selected row count */
-.MuiDataGrid-selectedRowCount {
-    display: none !important;
-}
-
-/* Dark theme DataGrid */
-.task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall,
-.task-datagrid-dark .MuiDataGrid-menuIconButton,
-.task-datagrid-dark .MuiSvgIcon-root {
-    color: white !important;
-}
-
-.task-datagrid-dark .MuiDataGrid-columnHeader {
-    background-color: var(--datagrid-dark-header-bg);
-    color: var(--datagrid-dark-header-color);
-}
-
-.task-datagrid-dark .MuiDataGrid-filler,
-.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
-    background-color: var(--datagrid-dark-filler-bg);
-}
-
-.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
-    opacity: 0.8;
-}
-
-.task-datagrid-dark .MuiDataGrid-toolbarContainer {
-    background-color: var(--datagrid-dark-header-bg);
-    opacity: 0.8;
-}
-
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .MuiInput-root {
-    color: white;
-}
-
-.task-datagrid-dark .MuiInput-root {
-    background-color: var(--datagrid-dark-toolbar-bg) !important;
-    border-radius: 1ch;
-}
-
-.task-datagrid-dark .MuiButton-root {
-    color: var(--datagrid-dark-button-color) !important;
-}
-
-.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
-    background-color: var(--datagrid-dark-main-bg);
-    opacity: 0.9;
-}
-
-.task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
-    background-color: var(--datagrid-dark-header-bg);
-    color: var(--datagrid-dark-header-color);
-    font-weight: bold;
-    overflow-y: hidden;
-}
-
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .MuiButton-root {
-    color: var(--datagrid-dark-button-color) !important;
-    font-weight: bold;
-}
-
-/* Light theme DataGrid */
-.task-datagrid-light .MuiDataGrid-columnHeader {
-    background-color: var(--datagrid-light-header-bg);
-    color: var(--datagrid-light-header-color);
-    opacity: 0.8;
-}
-
-.task-datagrid-light .MuiDataGrid-filler,
-.task-datagrid-light .MuiDataGrid-scrollbarFiller {
-    background-color: var(--datagrid-light-filler-bg);
-}
-
-.task-datagrid-light .MuiDataGrid-scrollbarFiller {
-    opacity: 0.8;
-}
-
-.task-datagrid-light .MuiDataGrid-footerContainer .MuiTablePagination-root {
-    overflow-y: hidden;
-}
-
-.task-datagrid-light .MuiDataGrid-toolbarContainer .MuiInput-root {
-    color: black;
-}
-
-.task-datagrid-light .MuiInput-root {
-    background-color: var(--datagrid-light-toolbar-bg) !important;
-    border-radius: 1ch;
-}
-
-.task-datagrid-light .MuiButton-root {
-    color: var(--datagrid-light-button-color) !important;
-}
-
-.task-datagrid-light .MuiDataGrid-toolbarContainer .MuiButton-root {
-    color: var(--datagrid-light-button-color) !important;
-    font-weight: bold;
-}
-
-/* DataGrid editing styles */
-.MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
-    background-color: transparent !important;
-}
-
-/* Dark theme editing */
-.task-datagrid-dark .MuiDataGrid-editInputCell {
-    background-color: var(--datagrid-dark-header-bg) !important;
-    color: var(--datagrid-dark-header-color) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-dark .MuiSelect-select {
-    background-color: var(--datagrid-dark-header-bg) !important;
-    color: var(--datagrid-dark-header-color) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-dark .MuiSelect-icon {
-    color: var(--datagrid-dark-button-color) !important;
-}
-
-/* Light theme editing */
-.task-datagrid-light .MuiDataGrid-editInputCell {
-    background-color: transparent !important;
-    color: var(--datagrid-light-header-color) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-light .MuiSelect-select {
-    background-color: var(--datagrid-light-header-bg);
-    color: rgb(255, 255, 255) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-light .MuiSelect-icon {
-    color: var(--datagrid-light-header-color) !important;
-}
-
-.task-datagrid-light .MuiIconButton-root.Mui-disabled {
-    color: var(--datagrid-light-header-color) !important;
 }
 
 /* ==========================================================================
