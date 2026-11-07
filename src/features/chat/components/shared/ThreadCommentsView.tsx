@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -9,6 +8,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
@@ -58,8 +58,6 @@ export const ThreadCommentsView = ({
     setTodoFromMessageBubble,
 }: ThreadCommentsViewProps) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
 
     const [isInEdit, setIsInEdit] = useState(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
@@ -186,7 +184,7 @@ export const ThreadCommentsView = ({
                     px: 2,
                     py: 1,
                     borderTop: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    borderColor: g.border.subtle,
                 }}
             >
                 <TaskCommentEditorBlock
