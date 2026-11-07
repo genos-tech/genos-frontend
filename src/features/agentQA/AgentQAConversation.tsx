@@ -17,6 +17,7 @@ import { useCallback, useMemo, useRef } from "react";
 import { Stack, Typography } from "@mui/joy";
 
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { SpotlightResult } from "../spotlight/types";
 import { AgentTurn } from "./AgentTurn";
 import type { AgentTurnLabels } from "./agentTurnLabels";
@@ -115,6 +116,8 @@ export const AgentQAConversation = ({
         return buildSourcesById(acc);
     }, [state.turns, state.ask.answerSources]);
 
+    // The same look as every message and comment (changes only with the setting).
+    const { style: layout } = useBubbleStylePreference();
     const { ask } = state;
     const hasInFlightAnswer =
         ask.isStreaming ||
@@ -153,13 +156,14 @@ export const AgentQAConversation = ({
                     isCurrent={false}
                     isDark={isDark}
                     labels={turnLabels}
+                    layout={layout}
                     mentions={turn.mentions}
                     noteScopes={noteScopes}
+                    renderAnswerStatus={renderSaveAnswerStatus}
+                    renderExtraActions={renderSaveAnswerActions}
                     runId={turn.runId}
                     sourcesById={sourcesById}
                     toolEvents={turn.toolEvents}
-                    renderAnswerStatus={renderSaveAnswerStatus}
-                    renderExtraActions={renderSaveAnswerActions}
                     undoSteps={turn.undo}
                     onFeedback={onFeedback}
                     onPreview={onPreview}
@@ -179,9 +183,12 @@ export const AgentQAConversation = ({
                     isDark={isDark}
                     isStreaming={ask.isStreaming}
                     labels={turnLabels}
+                    layout={layout}
                     mentions={ask.askedMentions}
                     noteScopes={noteScopes}
                     pendingApproval={ask.pendingApproval}
+                    renderAnswerStatus={renderSaveAnswerStatus}
+                    renderExtraActions={renderSaveAnswerActions}
                     runId={ask.runId}
                     sourcesById={sourcesById}
                     toolEvents={ask.toolEvents}
@@ -191,8 +198,6 @@ export const AgentQAConversation = ({
                     onPreview={onPreview}
                     onReject={state.onReject}
                     onRetry={onRetry}
-                    renderAnswerStatus={renderSaveAnswerStatus}
-                    renderExtraActions={renderSaveAnswerActions}
                     onUndo={onUndo}
                 />
             ) : null}

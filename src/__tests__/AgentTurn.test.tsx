@@ -716,6 +716,53 @@ describe("the action bar", () => {
     });
 });
 
+describe("the Bubble frame (MIP-1165)", () => {
+    it.each(["compact", "bubble"] as const)(
+        "%s: the turn is a Bubble, its actions are a row UNDER the answer, not the floating toolbar",
+        (layout) => {
+            const { container } = renderTurn({
+                answer: "Shipped.",
+                runId: "run-1",
+                onFeedback: vi.fn(),
+                onRetry: vi.fn(),
+                layout,
+            });
+            const frame = container.querySelector("[data-bubble-layout]") as HTMLElement;
+            expect(frame.getAttribute("data-bubble-layout")).toBe(layout);
+            expect(container.querySelector(".bubble-toolbar")).toBeNull();
+            const row = container.querySelector(".bubble-actions-bottom") as HTMLElement;
+            expect(row.querySelector(".turn-actions")).toBeTruthy();
+            const answer = screen.getByText("Shipped.");
+            expect(
+                answer.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING
+            ).toBeTruthy();
+            // The answer's own text is inside the frame too.
+            expect(frame.contains(answer)).toBe(true);
+        }
+    );
+
+    it("defaults to the compact look and reads no preference itself", () => {
+        const { container } = renderTurn();
+        expect(
+            (container.querySelector("[data-bubble-layout]") as HTMLElement).getAttribute(
+                "data-bubble-layout"
+            )
+        ).toBe("compact");
+    });
+
+    it("the Undo slot and the answer status stay OUTSIDE the revealed row", () => {
+        const { container } = renderTurn({
+            answer: "Done.",
+            renderExtraActions: () => <button type="button">Save as note</button>,
+            renderAnswerStatus: () => <p>Saved to My Notes</p>,
+        });
+        const row = container.querySelector(".bubble-actions-bottom") as HTMLElement;
+        expect(within(row).getByText("Save as note")).toBeTruthy();
+        expect(within(row).queryByText("Saved to My Notes")).toBeNull();
+        expect(screen.getByText("Saved to My Notes")).toBeTruthy();
+    });
+});
+
 describe("one turn, with or without the providers", () => {
     it("renders the same DOM bare as inside the thread modal's providers", async () => {
         const { UrlLinkModalProvider } = await import("../hooks/common/UrlLinkModalContext");
