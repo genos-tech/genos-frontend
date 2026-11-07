@@ -1,16 +1,12 @@
-import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteEditor,
     BlockNoteSchema,
     createBlockSpec,
-    createCodeBlockSpec,
     createInlineContentSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
 } from "@blocknote/core";
 
 import { getMessages } from "../../i18n";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
+import { genosBaseBlockSpecs, genosBaseInlineContentSpecs } from "./genos/genosSchemaParts";
 import { genosStyleSpecs } from "./genosStyleSpecs";
 import {
     ALERT_SPEC_CONFIG,
@@ -48,14 +44,10 @@ const blockStub = () => ({
 });
 
 export const createHeadlessNoteSchema = () => {
-    // Same removal the editors make: the note editors don't offer these.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
     return BlockNoteSchema.create({
         styleSpecs: genosStyleSpecs,
         inlineContentSpecs: {
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
+            ...genosBaseInlineContentSpecs(),
             mention: createInlineContentSpec(MENTION_SPEC_CONFIG, { render: inlineStub }),
             mentionGroup: createInlineContentSpec(
                 mentionGroupSpecConfig(getMessages().common.editor.mentionGroupFallback),
@@ -72,9 +64,7 @@ export const createHeadlessNoteSchema = () => {
             }),
         },
         blockSpecs: {
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
+            ...genosBaseBlockSpecs(),
             alert: createBlockSpec(ALERT_SPEC_CONFIG, { render: blockStub })(),
         },
     });
