@@ -1,0 +1,1086 @@
+/**
+ * Design system review page (MIP-1106, P1): /workspace/design
+ *
+ * Renders the proposed tokens and components so the direction can be
+ * judged BEFORE anything in the app changes. Nothing else uses `--g-*`
+ * yet. Reachable by URL only (no nav entry), lazy-loaded, behind the
+ * workspace auth guard. English only: an internal review surface, not a
+ * user-facing screen, so its copy is not in the 7 locales.
+ *
+ * Preview controls set `data-g-theme` / `data-g-mode` on this page's
+ * wrapper, which the token stylesheet matches, so any theme can be viewed
+ * without touching the user's saved theme. Inside the wrapper the Joy
+ * palette variables are re-pointed at the tokens (`joyBridge`), which is
+ * also how P2 will wire Joy to them.
+ */
+
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/geist/index.css";
+
+import { ReactNode, useMemo, useState } from "react";
+import AddRounded from "@mui/icons-material/AddRounded";
+import AssignmentRounded from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
+import ChatRounded from "@mui/icons-material/ChatRounded";
+import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
+import EditNoteRounded from "@mui/icons-material/EditNoteRounded";
+import FilterListRounded from "@mui/icons-material/FilterListRounded";
+import InboxRounded from "@mui/icons-material/InboxRounded";
+import Box from "@mui/joy/Box";
+import { useColorScheme } from "@mui/joy/styles";
+
+import { useColorTheme } from "../../theme/ColorThemeProvider";
+import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
+import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
+import { composite, contrast } from "../../theme/tokens/color";
+import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
+import { MOTION, RADIUS } from "../../theme/tokens/scales";
+import { installDesignTokens } from "../../theme/tokens/tokenStyles";
+import {
+    Button,
+    EmptyState,
+    FilterChip,
+    Input,
+    NavItem,
+    Panel,
+    SampleTask,
+    Status,
+    STATUSES,
+    StatusLabel,
+    Tag,
+    TaskRow,
+    Text,
+} from "./samples";
+
+installDesignTokens();
+
+type FontId = "inter" | "geist";
+const FONTS: Record<FontId, string> = {
+    inter: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", sans-serif',
+    geist: '"Geist Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", sans-serif',
+};
+
+const themeName = (id: ThemeId) => id.charAt(0).toUpperCase() + id.slice(1);
+
+/** Joy's palette variables, re-pointed at the tokens for everything inside
+ *  the preview. Stops the global theme leaking into a previewed one. */
+const joyBridge = (font: string) => ({
+    "--joy-palette-text-primary": g.text.primary,
+    "--joy-palette-text-secondary": g.text.secondary,
+    "--joy-palette-text-tertiary": g.text.tertiary,
+    "--joy-palette-background-body": g.bg.default,
+    "--joy-palette-background-surface": g.surface.default,
+    "--joy-palette-background-popup": g.surface.raised,
+    "--joy-palette-divider": g.border.subtle,
+    "--joy-palette-focusVisible": g.focus,
+    "--joy-palette-neutral-outlinedBorder": g.border.default,
+    "--joy-fontFamily-body": font,
+    "--joy-fontFamily-display": font,
+    fontFamily: font,
+    color: g.text.primary,
+    background: g.bg.default,
+});
+
+const TASKS: SampleTask[] = [
+    {
+        id: "GEN-201",
+        title: "UI & UX full improvement",
+        status: "WIP",
+        assignee: "Ken Kamiya",
+        priority: "Critical",
+        tags: [{ label: "UI&UX", color: "#8b5cf6" }],
+    },
+    {
+        id: "GEN-202",
+        title: "Wire Joy theme to the design tokens",
+        status: "Open",
+        assignee: "Ken Kamiya",
+        tags: [{ label: "frontend", color: "#3b82f6" }],
+    },
+    {
+        id: "GEN-203",
+        title: "OAuth consent screen copy",
+        status: "Blocked",
+        assignee: "(DY) Ken Kamiya",
+        priority: "High",
+    },
+    {
+        id: "GEN-204",
+        title: "Weekly digest: one prompt per run",
+        status: "Pending",
+        assignee: "Genos",
+    },
+    {
+        id: "GEN-205",
+        title: "Note comments over MCP",
+        status: "Closed",
+        assignee: "Ken Kamiya",
+        tags: [{ label: "mcp", color: "#10b981" }],
+    },
+];
+
+// ---------------------------------------------------------------------------
+// Layout pieces
+// ---------------------------------------------------------------------------
+
+const Section = ({
+    title,
+    intro,
+    children,
+}: {
+    title: string;
+    intro?: string;
+    children: ReactNode;
+}) => (
+    <Box
+        component="section"
+        sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            py: 4,
+            borderTop: `1px solid ${g.border.subtle}`,
+        }}
+    >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 640 }}>
+            <Text component="h2" level="h3" sx={{ textWrap: "balance" }}>
+                {title}
+            </Text>
+            {intro && (
+                <Text component="p" level="body-md" tone="secondary">
+                    {intro}
+                </Text>
+            )}
+        </Box>
+        {children}
+    </Box>
+);
+
+const Segmented = <T extends string>({
+    label,
+    value,
+    options,
+    onChange,
+}: {
+    label: string;
+    value: T;
+    options: { id: T; label: string }[];
+    onChange: (v: T) => void;
+}) => (
+    <Box
+        aria-label={label}
+        role="group"
+        sx={{
+            display: "inline-flex",
+            p: 0.25,
+            gap: 0.25,
+            borderRadius: g.radius.sm,
+            background: g.bg.subtle,
+            border: `1px solid ${g.border.subtle}`,
+        }}
+    >
+        {options.map((o) => (
+            <Box
+                key={o.id}
+                aria-pressed={value === o.id}
+                component="button"
+                type="button"
+                sx={{
+                    ...type("body-sm"),
+                    fontFamily: "inherit",
+                    fontWeight: 500,
+                    height: 24,
+                    px: 1,
+                    border: 0,
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    color: value === o.id ? g.text.primary : g.text.secondary,
+                    background: value === o.id ? g.surface.default : "transparent",
+                    boxShadow: value === o.id ? g.shadow.sm : "none",
+                    "&:focus-visible": focusRing,
+                }}
+                onClick={() => onChange(o.id)}
+            >
+                {o.label}
+            </Box>
+        ))}
+    </Box>
+);
+
+const ThemePicker = ({
+    value,
+    mode,
+    onChange,
+}: {
+    value: ThemeId;
+    mode: Mode;
+    onChange: (id: ThemeId) => void;
+}) => (
+    <Box
+        aria-label="Color theme"
+        role="group"
+        sx={{ display: "inline-flex", gap: 0.75, alignItems: "center" }}
+    >
+        {THEME_IDS.map((id) => (
+            <Box
+                key={id}
+                aria-label={themeName(id)}
+                aria-pressed={value === id}
+                component="button"
+                title={themeName(id)}
+                type="button"
+                sx={{
+                    width: 22,
+                    height: 22,
+                    p: 0,
+                    borderRadius: g.radius.full,
+                    cursor: "pointer",
+                    border: 0,
+                    background: buildRoles(id, mode).accent,
+                    boxShadow:
+                        value === id
+                            ? `0 0 0 2px ${g.bg.default}, 0 0 0 4px ${g.text.primary}`
+                            : `inset 0 0 0 1px rgba(0,0,0,0.12)`,
+                    "&:focus-visible": focusRing,
+                }}
+                onClick={() => onChange(id)}
+            />
+        ))}
+    </Box>
+);
+
+// ---------------------------------------------------------------------------
+// The theme matrix: the same slice of Genos in every theme and mode
+// ---------------------------------------------------------------------------
+
+const MiniSlice = ({ id, mode }: { id: ThemeId; mode: Mode }) => (
+    <Box
+        data-g-mode={mode}
+        data-g-theme={id}
+        sx={{
+            color: g.text.primary,
+            background: g.bg.default,
+            border: `1px solid ${g.border.default}`,
+            borderRadius: g.radius.md,
+            overflow: "hidden",
+            display: "grid",
+            gridTemplateColumns: "124px minmax(0, 1fr)",
+            minWidth: 0,
+        }}
+    >
+        <Box
+            sx={{
+                background: g.bg.subtle,
+                borderInlineEnd: `1px solid ${g.border.subtle}`,
+                p: 0.75,
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.25,
+            }}
+        >
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    px: 0.5,
+                    pb: 0.75,
+                }}
+            >
+                <Text level="title-sm">{themeName(id)}</Text>
+            </Box>
+            <NavItem icon={<AssignmentRounded />} label="Tasks" selected />
+            <NavItem count={3} icon={<ChatRounded />} label="Chats" />
+            <NavItem icon={<EditNoteRounded />} label="Notes" />
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    px: 1.5,
+                    height: 40,
+                    borderBottom: `1px solid ${g.border.subtle}`,
+                }}
+            >
+                <Text level="body-xs" tone="tertiary">
+                    {mode === "light" ? "Light" : "Dark"}
+                </Text>
+                <Button icon={<AddRounded />} size="sm" variant="primary">
+                    Task
+                </Button>
+            </Box>
+            <Box sx={{ background: g.surface.default, flex: 1 }}>
+                {TASKS.slice(0, 3).map((t, i) => (
+                    <TaskRow key={t.id} hovered={i === 1} task={t} compactColumns />
+                ))}
+            </Box>
+        </Box>
+    </Box>
+);
+
+const ThemeMatrix = () => (
+    <Box
+        sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+            gap: 1.5,
+        }}
+    >
+        {THEME_IDS.flatMap((id) =>
+            (["light", "dark"] as Mode[]).map((mode) => (
+                <MiniSlice key={`${id}-${mode}`} id={id} mode={mode} />
+            ))
+        )}
+    </Box>
+);
+
+// ---------------------------------------------------------------------------
+// Color roles
+// ---------------------------------------------------------------------------
+
+type RoleRow = {
+    name: string;
+    value: string;
+    paint: string;
+    use: string;
+    ratio?: number;
+    min?: number;
+};
+
+const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
+    const onSurface = (c: string) =>
+        Math.min(contrast(c, r.surface), contrast(c, r.bg), contrast(c, r.bgSubtle));
+    const a = (x: { hex: string; a: number }) => alphaCss(x);
+    return [
+        {
+            group: "Surfaces",
+            rows: [
+                { name: "bg", value: r.bg, paint: r.bg, use: "Page canvas" },
+                {
+                    name: "bg-subtle",
+                    value: r.bgSubtle,
+                    paint: r.bgSubtle,
+                    use: "Sidebars, rails, insets",
+                },
+                {
+                    name: "surface",
+                    value: r.surface,
+                    paint: r.surface,
+                    use: "Tables, cards, inputs",
+                },
+                {
+                    name: "surface-raised",
+                    value: r.surfaceRaised,
+                    paint: r.surfaceRaised,
+                    use: "Menus, popovers, modals",
+                },
+            ],
+        },
+        {
+            group: "Text",
+            rows: [
+                {
+                    name: "text",
+                    value: r.text,
+                    paint: r.text,
+                    use: "Titles, body",
+                    ratio: onSurface(r.text),
+                    min: 4.5,
+                },
+                {
+                    name: "text-secondary",
+                    value: r.textSecondary,
+                    paint: r.textSecondary,
+                    use: "Labels, descriptions",
+                    ratio: onSurface(r.textSecondary),
+                    min: 4.5,
+                },
+                {
+                    name: "text-tertiary",
+                    value: r.textTertiary,
+                    paint: r.textTertiary,
+                    use: "IDs, timestamps, placeholders",
+                    ratio: onSurface(r.textTertiary),
+                    min: 3,
+                },
+                {
+                    name: "text-disabled",
+                    value: r.textDisabled,
+                    paint: r.textDisabled,
+                    use: "Disabled controls only",
+                },
+            ],
+        },
+        {
+            group: "Lines and fills",
+            rows: [
+                {
+                    name: "border-subtle",
+                    value: a(r.borderSubtle),
+                    paint: a(r.borderSubtle),
+                    use: "Row dividers",
+                },
+                {
+                    name: "border",
+                    value: a(r.border),
+                    paint: a(r.border),
+                    use: "Inputs, cards, chips",
+                },
+                {
+                    name: "border-strong",
+                    value: a(r.borderStrong),
+                    paint: a(r.borderStrong),
+                    use: "Hovered inputs, separators that must show",
+                },
+                {
+                    name: "hover",
+                    value: a(r.hover),
+                    paint: a(r.hover),
+                    use: "Hovered rows and items",
+                },
+                { name: "active", value: a(r.active), paint: a(r.active), use: "Pressed items" },
+            ],
+        },
+        {
+            group: "Accent",
+            rows: [
+                {
+                    name: "accent",
+                    value: r.accent,
+                    paint: r.accent,
+                    use: "Solid fills (white text passes AA)",
+                    ratio: contrast(r.accentFg, r.accent),
+                    min: 4.5,
+                },
+                {
+                    name: "accent-text",
+                    value: r.accentText,
+                    paint: r.accentText,
+                    use: "Links, selected labels, icons",
+                    ratio: Math.min(
+                        onSurface(r.accentText),
+                        contrast(
+                            r.accentText,
+                            composite(r.accentSubtle.hex, r.accentSubtle.a, r.surface)
+                        )
+                    ),
+                    min: 4.5,
+                },
+                {
+                    name: "accent-subtle",
+                    value: a(r.accentSubtle),
+                    paint: a(r.accentSubtle),
+                    use: "Selected row, selected nav",
+                },
+                {
+                    name: "brand-gradient",
+                    value: "primary button, Genos",
+                    paint: r.brandGradient,
+                    use: "The only gradient left",
+                },
+            ],
+        },
+        {
+            group: "Status (the same on every theme)",
+            rows: (["danger", "success", "warning", "info"] as const).map((k) => ({
+                name: k,
+                value: r[k].text,
+                paint: r[k].solid,
+                use: {
+                    danger: "Errors, destructive actions, overdue",
+                    success: "Done, saved, connected",
+                    warning: "At risk, in progress",
+                    info: "Neutral notices, open",
+                }[k],
+                ratio: onSurface(r[k].text),
+                min: 4.5,
+            })),
+        },
+    ];
+};
+
+const ColorRoles = ({ roles }: { roles: RoleColors }) => (
+    <Box
+        sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))",
+            gap: 1.5,
+        }}
+    >
+        {roleRows(roles).map(({ group, rows }) => (
+            <Panel key={group}>
+                <Box
+                    sx={{
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: `1px solid ${g.border.subtle}`,
+                        background: g.bg.subtle,
+                    }}
+                >
+                    <Text component="h3" level="title-sm">
+                        {group}
+                    </Text>
+                </Box>
+                {rows.map((row) => (
+                    <Box
+                        key={row.name}
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: "28px minmax(0, 1fr) auto",
+                            alignItems: "center",
+                            gap: 1.25,
+                            px: 1.5,
+                            py: 0.875,
+                            borderBottom: `1px solid ${g.border.subtle}`,
+                            "&:last-of-type": { borderBottom: 0 },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: g.radius.sm,
+                                background: row.paint,
+                                boxShadow: `inset 0 0 0 1px ${g.border.default}`,
+                            }}
+                        />
+                        <Box sx={{ minWidth: 0 }}>
+                            <Text
+                                level="body-sm"
+                                sx={{ fontWeight: 500, fontFamily: g.font.mono, fontSize: 12 }}
+                                translate="no"
+                            >
+                                --g-{row.name}
+                            </Text>
+                            <Text level="body-xs" tone="secondary">
+                                {row.use}
+                            </Text>
+                        </Box>
+                        <Box sx={{ textAlign: "end" }}>
+                            <Text
+                                level="body-xs"
+                                sx={{ fontFamily: g.font.mono, fontSize: 11 }}
+                                tone="tertiary"
+                            >
+                                {row.value}
+                            </Text>
+                            {row.ratio !== undefined && (
+                                <Text
+                                    level="caption"
+                                    sx={{
+                                        color:
+                                            row.ratio >= (row.min ?? 4.5)
+                                                ? g.success.text
+                                                : g.danger.text,
+                                        fontVariantNumeric: "tabular-nums",
+                                    }}
+                                >
+                                    {row.ratio.toFixed(1)}:1
+                                </Text>
+                            )}
+                        </Box>
+                    </Box>
+                ))}
+            </Panel>
+        ))}
+    </Box>
+);
+
+// ---------------------------------------------------------------------------
+// Type
+// ---------------------------------------------------------------------------
+
+const TYPE_SAMPLES: Partial<Record<TypeLevel, [string, string]>> = {
+    h1: ["Plan the week", "今週の計画"],
+    h2: ["Design system", "デザインシステム"],
+    h3: ["Sprint 42", "スプリント 42"],
+    h4: ["Project settings", "プロジェクト設定"],
+    "title-lg": ["Wire Joy to the tokens", "Joy をトークンに接続"],
+    "title-md": ["Ken Kamiya", "神谷 健太郎"],
+    "title-sm": ["Assignee", "担当者"],
+    "body-lg": ["Long-form reading, like a note.", "ノートのような長文。"],
+    "body-md": [
+        "Messages and task descriptions read at this size.",
+        "メッセージとタスクの説明はこのサイズ。",
+    ],
+    "body-sm": [
+        "The default for lists, tables and sidebars.",
+        "リスト、テーブル、サイドバーの既定。",
+    ],
+    "body-xs": ["Secondary details and table meta.", "補足とテーブルのメタ情報。"],
+    caption: ["Counts and timestamps", "件数と時刻"],
+};
+
+const TypeScale = ({ font }: { font: FontId }) => (
+    <Panel>
+        {(Object.keys(TYPE_SCALE) as TypeLevel[]).map((level) => {
+            const s = TYPE_SCALE[level];
+            const [en, ja] = TYPE_SAMPLES[level] ?? ["", ""];
+            return (
+                <Box
+                    key={level}
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", sm: "120px minmax(0, 1fr)" },
+                        gap: { xs: 0.5, sm: 2 },
+                        alignItems: "baseline",
+                        px: 2,
+                        py: 1.25,
+                        borderBottom: `1px solid ${g.border.subtle}`,
+                        "&:last-of-type": { borderBottom: 0 },
+                    }}
+                >
+                    <Box>
+                        <Text level="body-sm" sx={{ fontWeight: 500 }}>
+                            {level}
+                        </Text>
+                        <Text
+                            level="body-xs"
+                            sx={{ fontVariantNumeric: "tabular-nums" }}
+                            tone="tertiary"
+                        >
+                            {s.size}/{s.line}, {s.weight}
+                        </Text>
+                    </Box>
+                    <Box
+                        sx={{
+                            minWidth: 0,
+                            display: "flex",
+                            flexWrap: "wrap",
+                            columnGap: 2.5,
+                            rowGap: 0.25,
+                            fontFamily: FONTS[font],
+                        }}
+                    >
+                        <Text level={level}>{en}</Text>
+                        <Text level={level} tone="secondary">
+                            {ja}
+                        </Text>
+                    </Box>
+                </Box>
+            );
+        })}
+    </Panel>
+);
+
+// ---------------------------------------------------------------------------
+// Shape, depth, motion
+// ---------------------------------------------------------------------------
+
+const ShapeAndDepth = () => (
+    <Box
+        sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))",
+            gap: 1.5,
+        }}
+    >
+        <Panel sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Text level="title-sm">Radius by size</Text>
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "flex-end" }}>
+                {(Object.entries(RADIUS) as [keyof typeof RADIUS, number][]).map(([k, v]) => (
+                    <Box
+                        key={k}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 0.5,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: `${Math.min(v, 22)}px`,
+                                background: g.bg.subtle,
+                                border: `1px solid ${g.border.strong}`,
+                            }}
+                        />
+                        <Text level="caption" tone="secondary">
+                            {k} {v === 9999 ? "" : `${v}`}
+                        </Text>
+                    </Box>
+                ))}
+            </Box>
+            <Text level="body-xs" tone="secondary">
+                Tags 4, buttons and inputs 6, cards and menus 8, modals 12. Small things get small
+                corners.
+            </Text>
+        </Panel>
+        <Panel
+            sx={{
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                background: g.bg.subtle,
+            }}
+        >
+            <Text level="title-sm">Depth</Text>
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+                {(["sm", "md", "lg"] as const).map((k) => (
+                    <Box
+                        key={k}
+                        sx={{
+                            width: 72,
+                            height: 56,
+                            borderRadius: g.radius.md,
+                            background: g.surface.raised,
+                            border: `1px solid ${g.border.subtle}`,
+                            boxShadow: g.shadow[k],
+                            display: "flex",
+                            alignItems: "flex-end",
+                            p: 0.75,
+                        }}
+                    >
+                        <Text level="caption" tone="secondary">
+                            {k}
+                        </Text>
+                    </Box>
+                ))}
+            </Box>
+            <Text level="body-xs" tone="secondary">
+                Surfaces are flat. sm under buttons and inputs, md under menus, lg under modals. No
+                glow.
+            </Text>
+        </Panel>
+        <Panel sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+            <Text level="title-sm">Motion</Text>
+            {(
+                [
+                    ["fast", MOTION.fast, "Hover, press, toggles"],
+                    ["base", MOTION.base, "Menus, popovers, tabs"],
+                    ["slow", MOTION.slow, "Modals, drawers"],
+                ] as const
+            ).map(([k, v, use]) => (
+                <Box key={k} sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                    <Text level="body-sm">
+                        {k}{" "}
+                        <Box component="span" sx={{ color: g.text.tertiary }}>
+                            {v}
+                        </Box>
+                    </Text>
+                    <Text level="body-xs" tone="secondary">
+                        {use}
+                    </Text>
+                </Box>
+            ))}
+            <Text level="body-xs" tone="secondary">
+                One easing curve. Motion only answers an action, and is off under reduced motion.
+            </Text>
+        </Panel>
+    </Box>
+);
+
+// ---------------------------------------------------------------------------
+// Components
+// ---------------------------------------------------------------------------
+
+const Labelled = ({
+    title,
+    note,
+    children,
+}: {
+    title: string;
+    note?: string;
+    children: ReactNode;
+}) => (
+    <Panel sx={{ display: "flex", flexDirection: "column" }}>
+        <Box sx={{ px: 2, pt: 1.5, pb: note ? 0.5 : 1.5 }}>
+            <Text component="h3" level="title-sm">
+                {title}
+            </Text>
+            {note && (
+                <Text level="body-xs" sx={{ mt: 0.25 }} tone="secondary">
+                    {note}
+                </Text>
+            )}
+        </Box>
+        <Box
+            sx={{
+                px: 2,
+                pb: 2,
+                pt: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
+                flex: 1,
+            }}
+        >
+            {children}
+        </Box>
+    </Panel>
+);
+
+const Components = () => (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Labelled
+            note="36px rows instead of 53. Status color lives in the icon, IDs are quiet, priority shows only when set."
+            title="Task table"
+        >
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }}>
+                <FilterChip field="Status" value="Open, WIP" active />
+                <FilterChip field="Sprint" value="All" />
+                <FilterChip field="Milestone" value="All" />
+                <FilterChip field="Priority" value="Any" />
+                <FilterChip field="Member" value="Anyone" />
+                <Button icon={<FilterListRounded />} size="sm" variant="ghost">
+                    Filter
+                </Button>
+            </Box>
+            <Panel sx={{ mx: -0.25 }}>
+                {TASKS.map((t, i) => (
+                    <TaskRow key={t.id} hovered={i === 2} task={t} />
+                ))}
+            </Panel>
+        </Labelled>
+
+        <Box
+            sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+                gap: 1.5,
+            }}
+        >
+            <Labelled note="The gradient survives only on the primary action." title="Buttons">
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Button icon={<AddRounded />} variant="primary">
+                        New task
+                    </Button>
+                    <Button variant="secondary">Cancel</Button>
+                    <Button variant="ghost">Skip</Button>
+                    <Button variant="danger">Delete</Button>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+                    <Button size="sm">Small 28</Button>
+                    <Button size="md">Default 32</Button>
+                    <Button size="lg">Large 36</Button>
+                </Box>
+            </Labelled>
+
+            <Labelled note="White field, one border, the accent only on focus." title="Input">
+                <Input name="ds-search" placeholder="Search tasks…" />
+                <Input defaultValue="Wire Joy to the tokens" name="ds-title" placeholder="Title" />
+            </Labelled>
+
+            <Labelled note="Same five hues on every theme." title="Status">
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    {(Object.keys(STATUSES) as Status[]).map((s) => (
+                        <StatusLabel key={s} status={s} />
+                    ))}
+                </Box>
+                <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                    <Tag color="#8b5cf6" label="UI&UX" />
+                    <Tag color="#3b82f6" label="frontend" />
+                    <Tag color="#10b981" label="mcp" />
+                    <Tag color="#ef4444" label="bug" />
+                </Box>
+                <Box
+                    sx={{
+                        ...type("body-sm"),
+                        color: g.danger.text,
+                        background: g.danger.subtle,
+                        border: `1px solid ${g.danger.border}`,
+                        borderRadius: g.radius.sm,
+                        px: 1.25,
+                        py: 1,
+                    }}
+                >
+                    Couldn't save the task. Check your connection and try again.
+                </Box>
+            </Labelled>
+
+            <Labelled
+                note="Selected is the accent's quiet tint, not a filled pill."
+                title="Navigation"
+            >
+                <Box
+                    sx={{
+                        background: g.bg.subtle,
+                        borderRadius: g.radius.md,
+                        p: 0.75,
+                        border: `1px solid ${g.border.subtle}`,
+                    }}
+                >
+                    <NavItem icon={<AutoAwesomeRounded />} label="Genos" />
+                    <NavItem count={5} icon={<InboxRounded />} label="Inbox" />
+                    <NavItem count={2} icon={<ChatRounded />} label="Chats" />
+                    <NavItem icon={<AssignmentRounded />} label="Tasks" selected />
+                    <NavItem icon={<EditNoteRounded />} label="Notes" />
+                </Box>
+            </Labelled>
+
+            <Labelled note="One design for chat, notes, inbox and every list." title="Empty state">
+                <Panel sx={{ background: g.bg.default }}>
+                    <EmptyState
+                        action="New note"
+                        body="Pick a note from the sidebar, or start a new one."
+                        icon={<DescriptionOutlined />}
+                        title="No note selected"
+                    />
+                </Panel>
+            </Labelled>
+        </Box>
+    </Box>
+);
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+const DesignSystemPage = () => {
+    const { themeId } = useColorTheme();
+    const { mode: joyMode, systemMode } = useColorScheme();
+    const initialMode: Mode =
+        (joyMode === "system" ? systemMode : joyMode) === "dark" ? "dark" : "light";
+
+    const [theme, setTheme] = useState<ThemeId>(themeId);
+    const [mode, setMode] = useState<Mode>(initialMode);
+    const [font, setFont] = useState<FontId>("inter");
+    const roles = useMemo(() => buildRoles(theme, mode), [theme, mode]);
+
+    return (
+        <Box
+            data-g-mode={mode}
+            data-g-theme={theme}
+            sx={{
+                ...joyBridge(FONTS[font]),
+                // The page owns its scroll, like PlansHome: the shell is
+                // `overflow: hidden`, so a taller page would scroll the
+                // document and carry the sidebar away with it.
+                height: "100dvh",
+                // The workspace content slot is a flex row; without these
+                // the page shrinks to its content's width.
+                flex: 1,
+                width: "100%",
+                minWidth: 0,
+                overflowY: "auto",
+                WebkitFontSmoothing: "antialiased",
+                // Native scrollbars and form controls follow the PREVIEWED
+                // mode, not the app's.
+                colorScheme: mode,
+                // Keep a focused element clear of the sticky header.
+                scrollPaddingTop: "72px",
+            }}
+        >
+            <Box
+                component="header"
+                sx={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 1,
+                    background: g.bg.default,
+                    borderBottom: `1px solid ${g.border.subtle}`,
+                }}
+            >
+                <Box
+                    sx={{
+                        maxWidth: 1120,
+                        mx: "auto",
+                        px: { xs: 2, md: 4 },
+                        py: 1.5,
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 1.5,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <Text component="span" level="title-md">
+                        Preview
+                    </Text>
+                    <Box
+                        sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}
+                    >
+                        <ThemePicker mode={mode} value={theme} onChange={setTheme} />
+                        <Segmented
+                            label="Mode"
+                            value={mode}
+                            options={[
+                                { id: "light", label: "Light" },
+                                { id: "dark", label: "Dark" },
+                            ]}
+                            onChange={setMode}
+                        />
+                        <Segmented
+                            label="Typeface"
+                            value={font}
+                            options={[
+                                { id: "inter", label: "Inter" },
+                                { id: "geist", label: "Geist" },
+                            ]}
+                            onChange={setFont}
+                        />
+                    </Box>
+                </Box>
+            </Box>
+
+            <Box
+                component="main"
+                sx={{
+                    maxWidth: 1120,
+                    mx: "auto",
+                    px: { xs: 2, md: 4 },
+                    pb: { xs: "calc(48px + var(--mobile-bottom-inset, 0px))", md: 8 },
+                }}
+            >
+                <Box
+                    sx={{
+                        py: { xs: 4, md: 6 },
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                        maxWidth: 640,
+                    }}
+                >
+                    <Text component="h1" level="h1" sx={{ textWrap: "balance" }}>
+                        Design system
+                    </Text>
+                    <Text component="p" level="body-lg" tone="secondary">
+                        The proposed look for Genos (MIP-1106): quiet surfaces, one accent used
+                        sparingly, real status colors, and one scale for type, corners and depth.
+                        Nothing in the app uses it yet. Pick a theme and mode above to preview it.
+                    </Text>
+                </Box>
+
+                <Section
+                    intro="The same slice of Genos in all seven color themes, light and dark. Every color on this page is checked for contrast by a test."
+                    title="Every theme"
+                >
+                    <ThemeMatrix />
+                </Section>
+
+                <Section
+                    intro={`Components ask for a role, never a hex value or an isDark branch. Values below are ${themeName(theme)}, ${mode}. Ratios are the worst case across the page, sidebar and card surfaces.`}
+                    title="Color roles"
+                >
+                    <ColorRoles roles={roles} />
+                </Section>
+
+                <Section
+                    intro="Twelve steps replace about 65 sizes in use today. Body text in lists and tables is 13px; reading text is 14px. Weights are 400, 500 and 600 only. Switch the typeface above to compare."
+                    title="Type"
+                >
+                    <TypeScale font={font} />
+                </Section>
+
+                <Section title="Shape, depth and motion">
+                    <ShapeAndDepth />
+                </Section>
+
+                <Section
+                    intro="The first shared pieces. Each replaces several hand-styled versions in the app today."
+                    title="Components"
+                >
+                    <Components />
+                </Section>
+            </Box>
+        </Box>
+    );
+};
+
+export default DesignSystemPage;
