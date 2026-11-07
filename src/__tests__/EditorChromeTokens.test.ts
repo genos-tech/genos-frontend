@@ -99,9 +99,7 @@ describe("editor boxes", () => {
             ["--editor-code-bg", "var(--g-active)"],
             ["--editor-code-color", "var(--g-text)"],
         ]) {
-            expect(new RegExp(`${name}:\\s*${role.replace(/[()]/g, "\\$&")};`).test(css)).toBe(
-                true
-            );
+            expect(css, `${name} is ${role}`).toContain(`${name}: ${role};`);
         }
     });
 
