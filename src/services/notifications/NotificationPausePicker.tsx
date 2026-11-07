@@ -215,19 +215,19 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 <Box sx={{ flex: 1 }} />
                 <Dropdown>
                     <MenuButton
-                        color={isPausedNow ? "warning" : "neutral"}
                         size="sm"
-                        startDecorator={<NotificationsPausedRoundedIcon />}
                         variant={isPausedNow ? "soft" : "outlined"}
+                        color={isPausedNow ? "warning" : "neutral"}
+                        startDecorator={<NotificationsPausedRoundedIcon />}
                     >
                         {p.durationMenuLabel}
                     </MenuButton>
-                    <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
+                    <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
                         <NotificationPausePresetItems
                             isPausedNow={isPausedNow}
                             pauseFor={pauseFor}
-                            pauseUntilNextWeek={pauseUntilNextWeek}
                             pauseUntilTomorrow={pauseUntilTomorrow}
+                            pauseUntilNextWeek={pauseUntilNextWeek}
                             resume={resume}
                             onCustom={openCustom}
                         />
@@ -235,10 +235,10 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Dropdown>
                 {untilActive && (
                     <Button
-                        color="danger"
                         size="sm"
-                        startDecorator={<PlayArrowRoundedIcon />}
+                        color="danger"
                         variant="plain"
+                        startDecorator={<PlayArrowRoundedIcon />}
                         onClick={resume}
                     >
                         {p.resumeShort}
@@ -273,13 +273,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 spacing={1.5}
                 sx={{ opacity: schedEnabled ? 1 : 0.5 }}
             >
-                <Stack alignItems="center" direction="row" spacing={0.75}>
+                <Stack direction="row" alignItems="center" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleStart}</Typography>
                     <Input
-                        disabled={!schedEnabled}
-                        size="sm"
                         type="time"
+                        size="sm"
                         value={schedStart}
+                        disabled={!schedEnabled}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -289,13 +289,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         }
                     />
                 </Stack>
-                <Stack alignItems="center" direction="row" spacing={0.75}>
+                <Stack direction="row" alignItems="center" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleEnd}</Typography>
                     <Input
-                        disabled={!schedEnabled}
-                        size="sm"
                         type="time"
+                        size="sm"
                         value={schedEnd}
+                        disabled={!schedEnabled}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -329,9 +329,9 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 onClose={() => setCustomOpen(false)}
             >
                 <Input
-                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                     type="datetime-local"
                     value={customValue}
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                     onChange={(e) => setCustomValue(e.target.value)}
                 />
             </ModalFrame>

@@ -143,17 +143,8 @@ export const ModalTaskDiagram = ({
     // a page, host + DIAGRAM_LIFT inside a modal-hosted preview. The task-preview
     // BlockNote floating UI is pinned at 1400, so the dialog has to clear that; it
     // owns no listbox (the node popups pin themselves from the same context).
-    const headerAccessory = (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                flexWrap: "wrap",
-                justifyContent: "flex-end",
-                gap: 1.25,
-                maxWidth: "min(760px, 62vw)",
-            }}
-        >
+    const accessoryItems = (
+        <>
             {/* Schedule-health chip — the headline verdict for
                         the whole tree. Tooltip explains the maths so a
                         "Behind" verdict isn't mysterious. Hidden when
@@ -415,19 +406,37 @@ export const ModalTaskDiagram = ({
                     </IconButton>
                 </AppTooltip>
             )}
-        </Box>
+        </>
     );
+    // The row of schedule facts sits in the header from `sm` up. On a phone it would squeeze
+    // the title to nothing, so it is a row of its own under the header there.
+    const accessorySx = {
+        alignItems: "center",
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+        gap: 1.25,
+    } as const;
 
     return (
         <ModalFrame
             closeLabel={t.tasks.diagram.tooltips.close}
             description={rootLabel}
-            headerAccessory={headerAccessory}
             icon={<AccountTreeRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="canvas"
             title={t.tasks.diagram.title}
             zIndex={effectiveZIndex}
+            headerAccessory={
+                <Box
+                    sx={{
+                        ...accessorySx,
+                        display: { xs: "none", sm: "flex" },
+                        maxWidth: "min(760px, 62vw)",
+                    }}
+                >
+                    {accessoryItems}
+                </Box>
+            }
             fillBody
             flush
             headerDivider
@@ -437,6 +446,19 @@ export const ModalTaskDiagram = ({
                 (node-card popups, canvas-node preview opens) from
                 the dialog's effective z, see diagramZIndex.ts. */}
             <DiagramZIndexProvider value={effectiveZIndex}>
+                <Box
+                    sx={{
+                        ...accessorySx,
+                        display: { xs: "flex", sm: "none" },
+                        justifyContent: "flex-start",
+                        flexShrink: 0,
+                        px: 2.5,
+                        py: 1,
+                        borderBottom: `1px solid ${g.border.subtle}`,
+                    }}
+                >
+                    {accessoryItems}
+                </Box>
                 {/* Canvas fills the rest of the dialog */}
                 <Box sx={{ flex: 1, display: "flex", minHeight: 0 }}>
                     {open && (

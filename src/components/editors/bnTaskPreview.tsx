@@ -324,7 +324,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    sideMenu={false}
+                    slashMenu={false}
                     formattingToolbar={false}
                     // `false` so the custom `<SideMenuController>` below
                     // is the only side-menu controller attached. When
@@ -334,7 +334,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     // hovering a line shows nothing. Mirrors the
                     // bnMyNoteEditor / bnTaskNoteEditor / bnChatNoteEditor
                     // setup.
-                    slashMenu={false}
+                    sideMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onBlur={() => syncBodyToParent.flush()}
@@ -419,13 +419,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
                     <GenosSuggestionMenus
                         editor={editor}
-                        slash={{ preset: "document", setShowGifPicker }}
                         getMentionSources={() => ({
                             teamMemberProfiles: useTEM.teamMemberProfiles,
                             teamMembers: useTEM.teamMembers,
                             myselfUserId: myself.userId,
                             mentionGroups,
                         })}
+                        slash={{ preset: "document", setShowGifPicker }}
                     />
 
                     {threadStore && (

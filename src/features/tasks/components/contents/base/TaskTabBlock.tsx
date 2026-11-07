@@ -398,11 +398,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                               }
                             : null
                     }
-                    onTaskNoteCreated={handleImportedNote}
                     onClose={() => {
                         setImportNoteOpen(false);
                         setImportAttachment(null);
                     }}
+                    onTaskNoteCreated={handleImportedNote}
                 />
             )}
             <Tabs
@@ -736,9 +736,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     >
                                         <AddRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
                                         <Typography
+                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
-                                            noWrap
                                         >
                                             New Note
                                         </Typography>
@@ -756,9 +756,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             sx={{ fontSize: 18, flexShrink: 0 }}
                                         />
                                         <Typography
+                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
-                                            noWrap
                                         >
                                             {t.notes.importMd.importNote}
                                         </Typography>
