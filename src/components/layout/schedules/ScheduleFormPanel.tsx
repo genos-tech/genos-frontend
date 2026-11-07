@@ -1,0 +1,441 @@
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Alert,
+    Box,
+    Button,
+    FormControl,
+    FormHelperText,
+    FormLabel,
+    Input,
+    Option,
+    Select,
+    Sheet,
+    Stack,
+    Switch,
+    Typography,
+} from "@mui/joy";
+
+import {
+    buildCreate,
+    buildPatch,
+    emptyForm,
+    formFromSchedule,
+    FormProblems,
+    FREQUENCIES,
+    hasProblems,
+    NAME_MAX,
+    paramKind,
+    ScheduleForm,
+    validateForm,
+    WEEKDAY_NUMBERS,
+} from "../../../features/schedules/scheduleForm";
+import { humanizeKey, weekdayName } from "../../../features/schedules/scheduleFormat";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
+import { fmt, useTranslation } from "../../../i18n";
+import type {
+    Schedule,
+    ScheduleChange,
+    ScheduleFields,
+    ScheduleJob,
+    ScheduleResult,
+} from "../../../services/schedules";
+import { g } from "../../../theme/tokens";
+
+type Props = {
+    /** The schedule being edited; null to create one. */
+    schedule: Schedule | null;
+    jobs: ScheduleJob[];
+    timeZone: string;
+    /** Resolves with the server's verdict; the panel shows its sentence. */
+    onSubmit: (body: ScheduleFields | ScheduleChange) => Promise<ScheduleResult<object>>;
+    onCancel: () => void;
+};
+
+const FREQUENCY_KEYS = {
+    daily: "frequencyDaily",
+    weekdays: "frequencyWeekdays",
+    weekly: "frequencyWeekly",
+    monthly: "frequencyMonthly",
+    once: "frequencyOnce",
+} as const;
+
+/**
+ * The create / edit form for one schedule (MIP-1150). It is built from the
+ * catalog the API sends: the job list, and for the chosen job only the
+ * parameters that job declares (an integer with a range is a number input, an
+ * enum is a select, anything else is text). It names no job itself, so a job
+ * added on the server shows up here with no change to this file.
+ *
+ * Time is typed as 24-hour `HH:MM` text rather than `<input type="time">`,
+ * which shows 12-hour in some browser locales and the zone beside it must be
+ * unambiguous.
+ */
+export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel }: Props) => {
+    const { t, locale } = useTranslation();
+    const s = t.settings.schedules;
+
+    const [form, setForm] = useState<ScheduleForm>(() => {
+        if (schedule) return formFromSchedule(schedule, jobs);
+        const blank = emptyForm(jobs);
+        return { ...blank, name: jobs[0]?.title ?? "" };
+    });
+    const isMobile = useIsMobile();
+    const formRef = useRef<HTMLFormElement>(null);
+    const [touched, setTouched] = useState(false);
+    // Bumped on every refused submit, so focus goes to the first wrong field.
+    const [refused, setRefused] = useState(0);
+    const [busy, setBusy] = useState(false);
+    const [failure, setFailure] = useState<string | null>(null);
+
+    const job = jobs.find((j) => j.job === form.job);
+    // Editing a schedule whose job was removed: renaming or re-timing it is
+    // still fine as long as the job field is left alone.
+    const keepsUnknownJob = !!schedule && !job && form.job === schedule.job;
+    const problems: FormProblems = useMemo(
+        () => validateForm(form, job, keepsUnknownJob),
+        [form, job, keepsUnknownJob]
+    );
+    const show = touched && hasProblems(problems);
+
+    const set = <K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) =>
+        setForm((cur) => ({ ...cur, [key]: value }));
+
+    const pickJob = (next: string) =>
+        setForm((cur) => {
+            const prev = jobs.find((j) => j.job === cur.job);
+            const nextJob = jobs.find((j) => j.job === next);
+            // A name still showing the previous report's title follows the pick.
+            const follows = cur.name.trim() === "" || cur.name === prev?.title;
+            return {
+                ...cur,
+                job: next,
+                params: {},
+                name: follows ? (nextJob?.title ?? cur.name) : cur.name,
+            };
+        });
+
+    const toggleDay = (day: number) =>
+        set(
+            "weekdays",
+            form.weekdays.includes(day)
+                ? form.weekdays.filter((d) => d !== day)
+                : [...form.weekdays, day].sort((a, b) => a - b)
+        );
+
+    useEffect(() => {
+        if (refused === 0) return;
+        const first = formRef.current?.querySelector<HTMLElement>(
+            ".Mui-error input, .Mui-error [role='combobox'], [data-invalid-group]"
+        );
+        first?.focus();
+    }, [refused]);
+
+    const submit = async (e: FormEvent) => {
+        e.preventDefault();
+        setTouched(true);
+        if (hasProblems(problems)) {
+            setRefused((n) => n + 1);
+            return;
+        }
+        if (busy) return;
+        setBusy(true);
+        setFailure(null);
+        const res = await onSubmit(
+            schedule ? buildPatch(schedule, form, job) : buildCreate(form, job)
+        );
+        setBusy(false);
+        if (!res.ok) setFailure(res.error ?? (res.gone ? s.gone : s.saveFailed));
+    };
+
+    return (
+        <Sheet
+            ref={formRef}
+            component="form"
+            data-testid="schedule-form"
+            sx={{ borderRadius: 8, p: 1.5, minWidth: 0, borderColor: g.border.default }}
+            variant="outlined"
+            noValidate
+            onSubmit={(e: FormEvent) => void submit(e)}
+        >
+            <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+                <Typography level="title-sm">{schedule ? s.formEdit : s.formNew}</Typography>
+
+                <FormControl error={show && !!problems.name} sx={{ minWidth: 0 }}>
+                    <FormLabel>{s.name}</FormLabel>
+                    <Input
+                        placeholder={s.namePlaceholder}
+                        value={form.name}
+                        slotProps={{
+                            input: { autoComplete: "off", maxLength: NAME_MAX + 20, name: "name" },
+                        }}
+                        // Opened by the member's own click; on a phone the keyboard would
+                        // cover the form, so only a fine pointer gets the focus.
+                        autoFocus={!isMobile}
+                        onChange={(e) => set("name", e.target.value)}
+                    />
+                    {show && problems.name && (
+                        <FormHelperText>
+                            {problems.name === "required"
+                                ? s.errorNameRequired
+                                : fmt(s.errorNameTooLong, { max: NAME_MAX })}
+                        </FormHelperText>
+                    )}
+                </FormControl>
+
+                <FormControl error={show && !!problems.job} sx={{ minWidth: 0 }}>
+                    <FormLabel>{s.job}</FormLabel>
+                    <Select
+                        placeholder={s.jobPlaceholder}
+                        sx={{ minWidth: 0 }}
+                        value={job ? form.job : null}
+                        onChange={(_, v) => v && pickJob(v)}
+                    >
+                        {jobs.map((j) => (
+                            <Option key={j.job} value={j.job}>
+                                {j.title}
+                            </Option>
+                        ))}
+                    </Select>
+                    {job?.description && (
+                        <FormHelperText sx={{ color: g.text.secondary }}>
+                            {job.description}
+                        </FormHelperText>
+                    )}
+                    {show && problems.job && <FormHelperText>{s.errorJob}</FormHelperText>}
+                </FormControl>
+
+                {job && Object.keys(job.params).length > 0 && (
+                    <Stack data-testid="schedule-params" spacing={1.25} sx={{ minWidth: 0 }}>
+                        <Typography level="title-sm">{s.options}</Typography>
+                        {Object.entries(job.params).map(([key, spec]) => {
+                            const kind = paramKind(spec);
+                            const problem = show ? problems.params[key] : undefined;
+                            const range =
+                                spec.minimum !== undefined && spec.maximum !== undefined
+                                    ? fmt(s.paramRange, { min: spec.minimum, max: spec.maximum })
+                                    : null;
+                            return (
+                                <FormControl key={key} error={!!problem} sx={{ minWidth: 0 }}>
+                                    <FormLabel>{spec.title || humanizeKey(key)}</FormLabel>
+                                    {kind === "enum" ? (
+                                        <Select
+                                            placeholder={s.paramDefault}
+                                            sx={{ minWidth: 0 }}
+                                            value={form.params[key] || null}
+                                            onChange={(_, v) =>
+                                                set("params", {
+                                                    ...form.params,
+                                                    [key]: v ?? "",
+                                                })
+                                            }
+                                        >
+                                            {(spec.enum ?? []).map((v) => (
+                                                <Option key={String(v)} value={String(v)}>
+                                                    {humanizeKey(String(v))}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    ) : (
+                                        <Input
+                                            placeholder={s.paramDefault}
+                                            value={form.params[key] ?? ""}
+                                            slotProps={{
+                                                input:
+                                                    kind === "integer"
+                                                        ? {
+                                                              type: "number",
+                                                              inputMode: "numeric",
+                                                              min: spec.minimum,
+                                                              max: spec.maximum,
+                                                              step: 1,
+                                                          }
+                                                        : {
+                                                              autoComplete: "off",
+                                                              spellCheck: false,
+                                                          },
+                                            }}
+                                            onChange={(e) =>
+                                                set("params", {
+                                                    ...form.params,
+                                                    [key]: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    )}
+                                    {(spec.description || (kind === "integer" && range)) && (
+                                        <FormHelperText sx={{ color: g.text.secondary }}>
+                                            {spec.description || range}
+                                        </FormHelperText>
+                                    )}
+                                    {problem && (
+                                        <FormHelperText>
+                                            {problem === "range" &&
+                                            spec.minimum !== undefined &&
+                                            spec.maximum !== undefined
+                                                ? fmt(s.errorParamRange, {
+                                                      min: spec.minimum,
+                                                      max: spec.maximum,
+                                                  })
+                                                : s.errorParam}
+                                        </FormHelperText>
+                                    )}
+                                </FormControl>
+                            );
+                        })}
+                    </Stack>
+                )}
+
+                <Typography level="title-sm">{s.when}</Typography>
+
+                <FormControl sx={{ minWidth: 0 }}>
+                    <FormLabel>{s.frequency}</FormLabel>
+                    <Select
+                        sx={{ minWidth: 0 }}
+                        value={form.frequency}
+                        onChange={(_, v) => v && set("frequency", v)}
+                    >
+                        {FREQUENCIES.map((f) => (
+                            <Option key={f} value={f}>
+                                {s[FREQUENCY_KEYS[f]]}
+                            </Option>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                {form.frequency === "weekly" && (
+                    <FormControl error={show && !!problems.weekdays} sx={{ minWidth: 0 }}>
+                        <FormLabel id="schedule-weekdays-label">{s.weekdays}</FormLabel>
+                        <Box
+                            aria-labelledby="schedule-weekdays-label"
+                            role="group"
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, minWidth: 0 }}
+                        >
+                            {WEEKDAY_NUMBERS.map((d) => {
+                                const on = form.weekdays.includes(d);
+                                return (
+                                    <Button
+                                        key={d}
+                                        aria-label={weekdayName(d, locale, "long")}
+                                        aria-pressed={on}
+                                        color={on ? "primary" : "neutral"}
+                                        size="sm"
+                                        variant={on ? "solid" : "outlined"}
+                                        data-invalid-group={
+                                            d === WEEKDAY_NUMBERS[0] && show && problems.weekdays
+                                                ? ""
+                                                : undefined
+                                        }
+                                        // Seven chips wrap (the row is flexWrap), they never push the dialog wider.
+                                        sx={{ minWidth: 44, px: 1 }}
+                                        onClick={() => toggleDay(d)}
+                                    >
+                                        {weekdayName(d, locale, "short")}
+                                    </Button>
+                                );
+                            })}
+                        </Box>
+                        {show && problems.weekdays && (
+                            <FormHelperText>{s.errorWeekdays}</FormHelperText>
+                        )}
+                    </FormControl>
+                )}
+
+                {form.frequency === "monthly" && (
+                    <FormControl error={show && !!problems.monthDay} sx={{ minWidth: 0 }}>
+                        <FormLabel>{s.monthDay}</FormLabel>
+                        <Input
+                            sx={{ maxWidth: 140 }}
+                            value={form.monthDay}
+                            slotProps={{
+                                input: { type: "number", inputMode: "numeric", min: 1, max: 31 },
+                            }}
+                            onChange={(e) => set("monthDay", e.target.value)}
+                        />
+                        <FormHelperText sx={{ color: g.text.secondary }}>
+                            {s.monthDayHint}
+                        </FormHelperText>
+                        {show && problems.monthDay && (
+                            <FormHelperText>{s.errorMonthDay}</FormHelperText>
+                        )}
+                    </FormControl>
+                )}
+
+                {form.frequency === "once" && (
+                    <FormControl error={show && !!problems.runDate} sx={{ minWidth: 0 }}>
+                        <FormLabel>{s.runDate}</FormLabel>
+                        <Input
+                            slotProps={{ input: { type: "date" } }}
+                            sx={{ maxWidth: 200 }}
+                            value={form.runDate}
+                            onChange={(e) => set("runDate", e.target.value)}
+                        />
+                        {show && problems.runDate && (
+                            <FormHelperText>{s.errorRunDate}</FormHelperText>
+                        )}
+                    </FormControl>
+                )}
+
+                <FormControl error={show && !!problems.timeOfDay} sx={{ minWidth: 0 }}>
+                    <FormLabel>{s.timeOfDay}</FormLabel>
+                    <Input
+                        placeholder="09:00"
+                        sx={{ maxWidth: 140 }}
+                        value={form.timeOfDay}
+                        slotProps={{
+                            input: {
+                                inputMode: "numeric",
+                                maxLength: 5,
+                                autoComplete: "off",
+                                name: "timeOfDay",
+                                spellCheck: false,
+                                // Times are digits and a colon in every language.
+                                dir: "ltr",
+                            },
+                        }}
+                        onChange={(e) => set("timeOfDay", e.target.value)}
+                    />
+                    {timeZone && (
+                        <FormHelperText sx={{ color: g.text.secondary }}>
+                            {fmt(s.timeZone, { zone: timeZone })}
+                        </FormHelperText>
+                    )}
+                    {show && problems.timeOfDay && (
+                        <FormHelperText>
+                            {problems.timeOfDay === "required" ? s.errorRequired : s.errorTime}
+                        </FormHelperText>
+                    )}
+                </FormControl>
+
+                <FormControl orientation="horizontal" sx={{ gap: 1, alignItems: "center" }}>
+                    <Switch
+                        checked={form.deliverPush}
+                        size="sm"
+                        onChange={(e) => set("deliverPush", e.target.checked)}
+                    />
+                    <FormLabel sx={{ m: 0 }}>{s.push}</FormLabel>
+                </FormControl>
+
+                {failure && (
+                    <Alert color="danger" role="alert" size="sm">
+                        {failure}
+                    </Alert>
+                )}
+
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
+                    <Button loading={busy} size="sm" type="submit">
+                        {schedule ? s.save : s.create}
+                    </Button>
+                    <Button
+                        color="neutral"
+                        disabled={busy}
+                        size="sm"
+                        variant="outlined"
+                        onClick={onCancel}
+                    >
+                        {s.cancel}
+                    </Button>
+                </Stack>
+            </Stack>
+        </Sheet>
+    );
+};

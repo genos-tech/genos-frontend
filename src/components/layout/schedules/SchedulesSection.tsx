@@ -1,0 +1,487 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
+
+import { useAuth } from "../../../context/AuthContext";
+import {
+    formatMoment,
+    STATUS_KEYS,
+    statusColor,
+} from "../../../features/schedules/scheduleFormat";
+import { fmt, useTranslation } from "../../../i18n";
+import {
+    createSchedule,
+    deleteSchedule,
+    listSchedules,
+    runScheduleNow,
+    Schedule,
+    ScheduleChange,
+    ScheduleFields,
+    ScheduleList,
+    ScheduleResult,
+    updateSchedule,
+} from "../../../services/schedules";
+import { g } from "../../../theme/tokens";
+import { ScheduleFormPanel } from "./ScheduleFormPanel";
+
+type Props = {
+    /** The team on screen. Every call carries it. */
+    teamId: string;
+};
+
+type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
+
+/** What "Run now" said, kept per schedule so the refetch after it keeps it. */
+type RunNotice =
+    | { kind: "ok"; title: string; items: number }
+    | { kind: "failed"; error: string }
+    | { kind: "refused"; error: string };
+
+/**
+ * Settings → Schedules (MIP-1150): the member's own "at this local time, on
+ * these days, run this report" rules. The report lands in the Inbox; this page
+ * only creates, edits, pauses, runs and deletes the rules.
+ *
+ * Nothing here knows a job by name: the list of reports, and each one's
+ * parameters, come from the API's catalog. Every sentence that explains a
+ * refusal is written by the API for the member and is shown as it arrived.
+ * Deleting asks first, in the page, because a browser confirm dialog is not
+ * available inside every host this runs in.
+ */
+export const SchedulesSection = ({ teamId }: Props) => {
+    const { t, locale } = useTranslation();
+    const { accessToken } = useAuth();
+    const s = t.settings.schedules;
+
+    const [data, setData] = useState<ScheduleList | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [mode, setMode] = useState<Mode>(null);
+    const [busy, setBusy] = useState<string | null>(null);
+    const [running, setRunning] = useState<string | null>(null);
+    const [confirming, setConfirming] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [notices, setNotices] = useState<Record<string, RunNotice>>({});
+
+    // Only the newest request may write: a slow answer for the team the member
+    // just left must not paint over the team they are in now.
+    const latest = useRef(0);
+
+    const refresh = useCallback(async () => {
+        const mine = ++latest.current;
+        const list = await listSchedules(accessToken, teamId);
+        if (mine !== latest.current) return;
+        setLoading(false);
+        if (list === null) {
+            setLoadFailed(true);
+            return;
+        }
+        setLoadFailed(false);
+        setData(list);
+    }, [accessToken, teamId]);
+
+    useEffect(() => {
+        setData(null);
+        setMode(null);
+        setConfirming(null);
+        setNotices({});
+        setError(null);
+        setLoading(true);
+        void refresh();
+        const requests = latest;
+        return () => {
+            // Invalidate whatever is still in flight for this team.
+            requests.current++;
+        };
+    }, [refresh]);
+
+    /** A 404 means the list on screen is stale: say so and show the real one. */
+    const failed = async (res: { gone: boolean; error: string | null }, fallback: string) => {
+        setError(res.error ?? (res.gone ? s.gone : fallback));
+        if (res.gone) await refresh();
+    };
+
+    const submitForm = async (
+        body: ScheduleFields | ScheduleChange
+    ): Promise<ScheduleResult<object>> => {
+        const editing = mode?.kind === "edit" ? mode.id : null;
+        if (editing && Object.keys(body).length === 0) {
+            setMode(null);
+            return { ok: true };
+        }
+        const res = editing
+            ? await updateSchedule(accessToken, teamId, editing, body)
+            : await createSchedule(accessToken, teamId, body as ScheduleFields);
+        if (res.ok) {
+            setError(null);
+            setMode(null);
+            await refresh();
+        } else if (res.gone) {
+            setMode(null);
+            await failed(res, s.saveFailed);
+        }
+        return res;
+    };
+
+    const toggle = async (sch: Schedule) => {
+        setBusy(sch.id);
+        setError(null);
+        const res = await updateSchedule(accessToken, teamId, sch.id, { enabled: !sch.enabled });
+        if (res.ok) await refresh();
+        else await failed(res, s.saveFailed);
+        setBusy(null);
+    };
+
+    const runNow = async (sch: Schedule) => {
+        setBusy(sch.id);
+        setRunning(sch.id);
+        setError(null);
+        setNotices((cur) =>
+            Object.fromEntries(Object.entries(cur).filter(([id]) => id !== sch.id))
+        );
+        const res = await runScheduleNow(accessToken, teamId, sch.id);
+        let notice: RunNotice;
+        if (!res.ok) {
+            notice = { kind: "refused", error: res.error ?? s.runFailed };
+            if (res.gone) await refresh();
+        } else if (res.outcome.status === "failed") {
+            notice = { kind: "failed", error: res.outcome.error || s.runFailed };
+        } else {
+            notice = { kind: "ok", title: res.outcome.title, items: res.outcome.items };
+        }
+        setNotices((cur) => ({ ...cur, [sch.id]: notice }));
+        if (res.ok) await refresh();
+        setBusy(null);
+        setRunning(null);
+    };
+
+    const remove = async (id: string) => {
+        setBusy(id);
+        setError(null);
+        const res = await deleteSchedule(accessToken, teamId, id);
+        setBusy(null);
+        if (!res.ok && !res.gone) {
+            setError(res.error ?? s.deleteFailed);
+            return;
+        }
+        setConfirming(null);
+        if (!res.ok) setError(res.error ?? s.gone);
+        await refresh();
+    };
+
+    const schedules = data?.schedules ?? [];
+    const atLimit = !!data && data.limit > 0 && schedules.length >= data.limit;
+    const zone = data?.timeZone ?? "";
+    const when = (iso: string) => formatMoment(iso, zone, locale);
+
+    const form = (existing: Schedule | null) => (
+        <ScheduleFormPanel
+            jobs={data?.jobs ?? []}
+            schedule={existing}
+            timeZone={zone}
+            onCancel={() => setMode(null)}
+            onSubmit={submitForm}
+        />
+    );
+
+    return (
+        <Stack data-testid="schedules-section" spacing={1.5} sx={{ minWidth: 0 }}>
+            <Stack alignItems="center" direction="row" spacing={1}>
+                <EventRepeatRoundedIcon sx={{ fontSize: 18 }} />
+                <Typography level="title-md">{s.title}</Typography>
+            </Stack>
+            <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                {s.blurb}
+            </Typography>
+
+            {loading && (
+                <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
+                    {s.loading}
+                </Typography>
+            )}
+            {loadFailed && (
+                <Alert
+                    color="danger"
+                    size="sm"
+                    sx={{ flexWrap: "wrap" }}
+                    endDecorator={
+                        <Button
+                            color="danger"
+                            size="sm"
+                            variant="outlined"
+                            onClick={() => void refresh()}
+                        >
+                            {s.retry}
+                        </Button>
+                    }
+                >
+                    {s.loadFailed}
+                </Alert>
+            )}
+            {error && (
+                <Alert color="danger" role="alert" size="sm">
+                    {error}
+                </Alert>
+            )}
+
+            {data && schedules.length === 0 && mode === null && (
+                <Stack alignItems="flex-start" spacing={1}>
+                    <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                        {s.empty}
+                    </Typography>
+                    <Button
+                        size="sm"
+                        startDecorator={<AddRoundedIcon />}
+                        onClick={() => setMode({ kind: "new" })}
+                    >
+                        {s.createFirst}
+                    </Button>
+                </Stack>
+            )}
+
+            {data && schedules.length > 0 && mode?.kind !== "new" && (
+                <Stack alignItems="flex-start" spacing={0.75}>
+                    <Button
+                        color="neutral"
+                        disabled={atLimit}
+                        size="sm"
+                        startDecorator={<AddRoundedIcon />}
+                        variant="outlined"
+                        onClick={() => setMode({ kind: "new" })}
+                    >
+                        {s.newSchedule}
+                    </Button>
+                    {atLimit && (
+                        <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                            {fmt(s.limitReached, { limit: data.limit })}
+                        </Typography>
+                    )}
+                </Stack>
+            )}
+
+            {data && mode?.kind === "new" && form(null)}
+
+            {schedules.map((sch) => {
+                if (mode?.kind === "edit" && mode.id === sch.id) {
+                    return <Box key={sch.id}>{form(sch)}</Box>;
+                }
+                const notice = notices[sch.id];
+                const rowBusy = busy === sch.id;
+                return (
+                    <Sheet
+                        key={sch.id}
+                        data-testid="schedule-row"
+                        sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                        variant="soft"
+                    >
+                        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1}
+                                sx={{ minWidth: 0, flexWrap: "wrap" }}
+                                useFlexGap
+                            >
+                                <Typography
+                                    level="title-sm"
+                                    sx={{ minWidth: 0, flex: 1, overflowWrap: "anywhere" }}
+                                >
+                                    {sch.name}
+                                </Typography>
+                                <Chip size="sm" variant="soft">
+                                    {sch.jobTitle ?? s.jobRemoved}
+                                </Chip>
+                                {!sch.enabled && (
+                                    <Chip color="warning" size="sm" variant="soft">
+                                        {s.paused}
+                                    </Chip>
+                                )}
+                            </Stack>
+
+                            <Typography level="body-sm" sx={{ overflowWrap: "anywhere" }}>
+                                {sch.when}
+                            </Typography>
+                            {!sch.enabled && sch.pausedReason && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
+                                >
+                                    {sch.pausedReason}
+                                </Typography>
+                            )}
+                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                {sch.nextRun
+                                    ? fmt(s.nextRun, { when: when(sch.nextRun) })
+                                    : s.noNextRun}
+                            </Typography>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={0.75}
+                                sx={{ flexWrap: "wrap", minWidth: 0 }}
+                                useFlexGap
+                            >
+                                {sch.lastRun ? (
+                                    <>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.text.secondary }}
+                                        >
+                                            {fmt(s.lastRun, { when: when(sch.lastRun) })}
+                                        </Typography>
+                                        {sch.lastStatus && (
+                                            <Chip
+                                                color={statusColor(sch.lastStatus)}
+                                                size="sm"
+                                                variant="soft"
+                                            >
+                                                {s[STATUS_KEYS[sch.lastStatus]]}
+                                            </Chip>
+                                        )}
+                                    </>
+                                ) : (
+                                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                        {s.neverRun}
+                                    </Typography>
+                                )}
+                            </Stack>
+                            {sch.lastResult && sch.lastStatus === "ok" && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
+                                >
+                                    {fmt(s.lastResult, {
+                                        title: sch.lastResult.title,
+                                        count: sch.lastResult.items,
+                                    })}
+                                </Typography>
+                            )}
+                            {sch.lastError && sch.lastStatus !== "ok" && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: g.danger.text, overflowWrap: "anywhere" }}
+                                >
+                                    {sch.lastError}
+                                </Typography>
+                            )}
+                            {sch.problem && (
+                                <Alert color="warning" size="sm" variant="soft">
+                                    {sch.problem}
+                                </Alert>
+                            )}
+                            {notice && (
+                                <Alert
+                                    color={notice.kind === "ok" ? "success" : "danger"}
+                                    data-testid="run-notice"
+                                    role="status"
+                                    size="sm"
+                                    variant="soft"
+                                >
+                                    {notice.kind === "ok"
+                                        ? fmt(s.ranOk, {
+                                              title: notice.title,
+                                              count: notice.items,
+                                          })
+                                        : notice.kind === "failed"
+                                          ? fmt(s.ranFailed, { error: notice.error })
+                                          : notice.error}
+                                </Alert>
+                            )}
+
+                            {confirming === sch.id ? (
+                                <Alert
+                                    color="danger"
+                                    role="alertdialog"
+                                    variant="soft"
+                                    sx={{
+                                        alignItems: "flex-start",
+                                        flexDirection: "column",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Typography level="body-sm" sx={{ overflowWrap: "anywhere" }}>
+                                        {fmt(s.deleteConfirm, { name: sch.name })}
+                                    </Typography>
+                                    <Stack direction="row" spacing={1}>
+                                        <Button
+                                            color="danger"
+                                            loading={rowBusy}
+                                            size="sm"
+                                            onClick={() => void remove(sch.id)}
+                                        >
+                                            {s.deleteYes}
+                                        </Button>
+                                        <Button
+                                            color="neutral"
+                                            disabled={rowBusy}
+                                            size="sm"
+                                            variant="outlined"
+                                            onClick={() => setConfirming(null)}
+                                        >
+                                            {s.cancel}
+                                        </Button>
+                                    </Stack>
+                                </Alert>
+                            ) : (
+                                <Stack
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={1}
+                                    sx={{ flexWrap: "wrap" }}
+                                    useFlexGap
+                                >
+                                    <Switch
+                                        checked={sch.enabled}
+                                        disabled={rowBusy}
+                                        endDecorator={sch.enabled ? s.active : s.paused}
+                                        size="sm"
+                                        slotProps={{
+                                            input: {
+                                                "aria-label": fmt(
+                                                    sch.enabled ? s.pauseNamed : s.resumeNamed,
+                                                    { name: sch.name }
+                                                ),
+                                            },
+                                        }}
+                                        onChange={() => void toggle(sch)}
+                                    />
+                                    <Button
+                                        color="neutral"
+                                        disabled={rowBusy}
+                                        loading={running === sch.id}
+                                        size="sm"
+                                        startDecorator={<PlayArrowRoundedIcon />}
+                                        variant="outlined"
+                                        onClick={() => void runNow(sch)}
+                                    >
+                                        {s.runNow}
+                                    </Button>
+                                    <Button
+                                        color="neutral"
+                                        disabled={rowBusy}
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={() => setMode({ kind: "edit", id: sch.id })}
+                                    >
+                                        {s.edit}
+                                    </Button>
+                                    <Button
+                                        color="danger"
+                                        disabled={rowBusy}
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={() => setConfirming(sch.id)}
+                                    >
+                                        {s.delete}
+                                    </Button>
+                                </Stack>
+                            )}
+                        </Stack>
+                    </Sheet>
+                );
+            })}
+        </Stack>
+    );
+};

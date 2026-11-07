@@ -1,0 +1,152 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+    createSchedule,
+    deleteSchedule,
+    listSchedules,
+    runScheduleNow,
+    updateSchedule,
+} from "../services/schedules";
+
+const api = {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+};
+vi.mock("../services/api", () => ({
+    authApi: (token: string | null) => (token ? api : null),
+}));
+
+const TEAM = "team-1";
+const FIELDS = {
+    name: "Plan",
+    job: "what_you_did",
+    params: { day: "today" },
+    frequency: "daily" as const,
+    timeOfDay: "09:00",
+    deliverPush: false,
+};
+
+beforeEach(() => {
+    for (const fn of Object.values(api)) fn.mockReset();
+});
+
+const refusal = (status: number, error?: string) => ({
+    response: { status, data: error === undefined ? {} : { error } },
+});
+
+describe("every call names the member's team", () => {
+    it("GET sends team_id in the query, on a path relative to the /api/v2 base", async () => {
+        api.get.mockResolvedValue({
+            data: { timeZone: "Asia/Tokyo", limit: 20, jobs: [], schedules: [] },
+        });
+        const list = await listSchedules("tok", TEAM);
+        expect(api.get).toHaveBeenCalledWith(
+            "/schedules/",
+            expect.objectContaining({ params: { team_id: TEAM } })
+        );
+        expect(list).toEqual({ timeZone: "Asia/Tokyo", limit: 20, jobs: [], schedules: [] });
+    });
+
+    it("POST sends team_id in the JSON body, not the query", async () => {
+        api.post.mockResolvedValue({ data: { schedule: { id: "s1" } } });
+        const res = await createSchedule("tok", TEAM, FIELDS);
+        const [url, body, config] = api.post.mock.calls[0];
+        expect(url).toBe("/schedules/");
+        expect(body).toEqual({ ...FIELDS, team_id: TEAM });
+        expect(config.params).toBeUndefined();
+        expect(res).toEqual({ ok: true, schedule: { id: "s1" } });
+    });
+
+    it("PATCH sends team_id in the query and only the change in the body", async () => {
+        api.patch.mockResolvedValue({ data: { schedule: { id: "s1" } } });
+        await updateSchedule("tok", TEAM, "s1", { enabled: false });
+        const [url, body, config] = api.patch.mock.calls[0];
+        expect(url).toBe("/schedules/s1/");
+        expect(body).toEqual({ enabled: false });
+        expect(config.params).toEqual({ team_id: TEAM });
+    });
+
+    it("DELETE sends team_id in the query", async () => {
+        api.delete.mockResolvedValue({ status: 204 });
+        expect(await deleteSchedule("tok", TEAM, "s1")).toEqual({ ok: true });
+        expect(api.delete).toHaveBeenCalledWith(
+            "/schedules/s1/",
+            expect.objectContaining({ params: { team_id: TEAM } })
+        );
+    });
+
+    it("run sends team_id in the query", async () => {
+        api.post.mockResolvedValue({ data: { status: "ok", error: "", title: "T", items: 3 } });
+        const res = await runScheduleNow("tok", TEAM, "s1");
+        const [url, , config] = api.post.mock.calls[0];
+        expect(url).toBe("/schedules/s1/run/");
+        expect(config.params).toEqual({ team_id: TEAM });
+        expect(res).toEqual({
+            ok: true,
+            outcome: { status: "ok", error: "", title: "T", items: 3 },
+        });
+    });
+
+    it("never calls the API without a team or a session", async () => {
+        expect(await listSchedules("tok", "")).toBeNull();
+        expect(await createSchedule("tok", "", FIELDS)).toMatchObject({ ok: false });
+        expect(await updateSchedule("tok", "", "s1", {})).toMatchObject({ ok: false });
+        expect(await deleteSchedule("tok", "", "s1")).toMatchObject({ ok: false });
+        expect(await runScheduleNow("tok", "", "s1")).toMatchObject({ ok: false });
+        expect(await listSchedules(null, TEAM)).toBeNull();
+        for (const fn of Object.values(api)) expect(fn).not.toHaveBeenCalled();
+    });
+
+    it("keeps the global error toast off: the page shows the sentence inline", async () => {
+        api.get.mockResolvedValue({ data: {} });
+        api.post.mockResolvedValue({ data: {} });
+        api.patch.mockResolvedValue({ data: {} });
+        api.delete.mockResolvedValue({});
+        await listSchedules("tok", TEAM);
+        await createSchedule("tok", TEAM, FIELDS);
+        await updateSchedule("tok", TEAM, "s1", {});
+        await deleteSchedule("tok", TEAM, "s1");
+        await runScheduleNow("tok", TEAM, "s1");
+        const configs = [
+            api.get.mock.calls[0][1],
+            api.post.mock.calls[0][2],
+            api.patch.mock.calls[0][2],
+            api.delete.mock.calls[0][1],
+            api.post.mock.calls[1][2],
+        ];
+        for (const c of configs) expect(c.suppressErrorToast).toBe(true);
+    });
+});
+
+describe("failures", () => {
+    it("carries the sentence the API wrote for the member, as is", async () => {
+        api.post.mockRejectedValue(refusal(400, "Ran a moment ago, try again in 42 seconds."));
+        expect(await runScheduleNow("tok", TEAM, "s1")).toEqual({
+            ok: false,
+            gone: false,
+            error: "Ran a moment ago, try again in 42 seconds.",
+        });
+    });
+
+    it("a 404 means the list is stale", async () => {
+        api.patch.mockRejectedValue(refusal(404, "Schedule not found"));
+        expect(await updateSchedule("tok", TEAM, "s1", { name: "x" })).toEqual({
+            ok: false,
+            gone: true,
+            error: "Schedule not found",
+        });
+    });
+
+    it("has no sentence for a network or server failure", async () => {
+        api.delete.mockRejectedValue(refusal(500));
+        expect(await deleteSchedule("tok", TEAM, "s1")).toEqual({
+            ok: false,
+            gone: false,
+            error: null,
+        });
+        api.get.mockRejectedValue(new Error("network"));
+        expect(await listSchedules("tok", TEAM)).toBeNull();
+    });
+});
