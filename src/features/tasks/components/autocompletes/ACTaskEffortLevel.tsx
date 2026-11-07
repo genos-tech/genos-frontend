@@ -1,12 +1,11 @@
-import { Chip, ListItemContent } from "@mui/joy";
+import { ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
 import { effortLevels, taskMetaLabel } from "../../utils/taskMeta";
+import { EffortLabel } from "../table/cellEditors";
 
 type ACTaskEffortLevelProps = {
     taskContent: TaskProps;
@@ -16,7 +15,6 @@ type ACTaskEffortLevelProps = {
 export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
 
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
 
     return (
@@ -32,44 +30,14 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.level}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
-                        <Chip
-                            key={option.level} // pass the key directly
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                backgroundColor: option.color
-                                    ? alpha(option.color, mode === "dark" ? 0.5 : 1)
-                                    : "transparent",
-                                color: option.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {taskMetaLabel(option.level, t.tasks.filters)}
-                        </Chip>
+                        <EffortLabel level={option.level ?? ""} />
                     </ListItemContent>
                 </AutocompleteOption>
             )}
             renderTags={(tags, getTagProps) =>
                 tags.slice(-1).map((item, index) => {
                     const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={`ac-project-effort-level-${key}`}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 1)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {taskMetaLabel(item.level, t.tasks.filters)}
-                        </Chip>
-                    );
+                    return <EffortLabel key={key} level={item.level ?? ""} />;
                 })
             }
             value={

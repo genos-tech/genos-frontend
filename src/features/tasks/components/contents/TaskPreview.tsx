@@ -17,9 +17,8 @@ import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, Chip, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Box, Button, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { useAdoptableTitleDraft } from "./utils/useAdoptableTitleDraft";
@@ -44,6 +43,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -63,7 +63,7 @@ import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
-import { STATUS_FILL, statusTone, toneSolid } from "../../meta/taskTone";
+import { STATUS_FILL } from "../../meta/taskTone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -77,16 +77,13 @@ import {
 import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
-import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
-import {
-    countMilestoneTaskStatuses,
-    type MilestoneProgressKey,
-} from "../../utils/milestoneTaskProgress";
+import { countMilestoneTaskStatuses } from "../../utils/milestoneTaskProgress";
 import { getTaskKind } from "../../utils/taskKind";
-import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { effortLevels, priorities } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
+import { StatusLabel } from "../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../modals/ModalConvertTaskMilestone";
 import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
@@ -1069,13 +1066,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         </TaskOpenLandingContext.Provider>
     );
 };
-
-// Chip colours of the "Task progress" row: the shared milestone status palette,
-// plus a neutral grey for "Other".
-const MILESTONE_PROGRESS_CHIP_COLORS: Record<MilestoneProgressKey, { color: string }> = {
-    ...MILESTONE_STATUS_CHIP_COLORS,
-    Other: { color: "#94a3b8" },
-} as Record<MilestoneProgressKey, { color: string }>;
 
 type MilestonePreviewInnerProps = {
     milestoneId: number;
@@ -2248,34 +2238,11 @@ const MilestonePreviewInner = ({
                             isDark={isDark}
                             task={{ displayId: milestone.displayId, id: milestone.taskId }}
                         />
-                        <Chip
+                        {/* The same icon + word as the task table (MIP-1157). */}
+                        <StatusLabel
                             key={`milestone-status-${milestone.status}`}
-                            size="md"
-                            variant="soft"
-                            sx={{
-                                borderRadius: "8px",
-                                fontWeight: 600,
-                                fontSize: "0.75rem",
-                                px: 1.5,
-                                backgroundColor: alpha(
-                                    STATUS_FILL[milestone.status as string] ?? "#666",
-                                    isDark ? 0.25 : 0.65
-                                ),
-                                // White on the dark-mode tint; on the light-mode tint the
-                                // tone's own label color (near-black on amber, where white
-                                // fails AA). Was white in both.
-                                color: isDark
-                                    ? "#ffffff"
-                                    : toneSolid(statusTone(milestone.status as string)).fg,
-                                border: "1px solid",
-                                borderColor: alpha(
-                                    STATUS_FILL[milestone.status as string] ?? "#666",
-                                    isDark ? 0.3 : 0.25
-                                ),
-                            }}
-                        >
-                            {taskMetaLabel(milestone.status, t.tasks.filters)}
-                        </Chip>
+                            status={milestone.status as string}
+                        />
                         <Box sx={{ flex: 1 }} />
                         {/* Check thread — only for milestones created from
                             a chat thread (linkage lives on the backing
@@ -2640,31 +2607,37 @@ const MilestonePreviewInner = ({
                                 {t.tasks.preview.taskProgress}
                             </Typography>
                             {milestoneTaskCounts.entries.map(({ status: s, count }) => {
-                                const tone = MILESTONE_PROGRESS_CHIP_COLORS[s];
                                 return (
-                                    <Chip
+                                    <Box
                                         key={s}
-                                        size="sm"
-                                        variant="soft"
                                         sx={{
-                                            backgroundColor: alpha(
-                                                tone.color,
-                                                isDark ? 0.28 : 0.14
-                                            ),
-                                            color: isDark ? "rgba(255,255,255,0.92)" : tone.color,
-                                            border: "1px solid",
-                                            borderColor: alpha(tone.color, isDark ? 0.4 : 0.3),
-                                            fontWeight: 600,
-                                            fontSize: "0.72rem",
-                                            borderRadius: "6px",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 0.75,
+                                            height: 24,
                                             px: 1,
+                                            borderRadius: g.radius.sm,
+                                            border: `1px solid ${g.border.default}`,
+                                            fontSize: "var(--g-type-body-xs-size)",
+                                            color: g.text.secondary,
                                         }}
                                     >
-                                        {s === "Other"
-                                            ? t.tasks.preview.taskProgressOther
-                                            : taskMetaLabel(s, t.tasks.filters)}
-                                        : {count}
-                                    </Chip>
+                                        {s === "Other" ? (
+                                            t.tasks.preview.taskProgressOther
+                                        ) : (
+                                            <StatusLabel status={s} />
+                                        )}
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: g.text.primary,
+                                                fontVariantNumeric: "tabular-nums",
+                                            }}
+                                        >
+                                            {count}
+                                        </Box>
+                                    </Box>
                                 );
                             })}
                             <Typography

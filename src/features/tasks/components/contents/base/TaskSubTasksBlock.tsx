@@ -32,7 +32,7 @@ import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
-import { taskMetaLabel } from "../../../utils/taskMeta";
+import { StatusLabel } from "../../meta/StatusLabel";
 
 type TaskSubTasksBlockProps = {
     SectionHeader: React.ComponentType<{ children: React.ReactNode; isDark: boolean }>;
@@ -407,25 +407,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 >
                                                     {formatTaskDisplayId({ id, displayId })}
                                                 </Chip>
-                                                <Chip
-                                                    key={`status-chip-${id}-${index}`} // pass the key directly
-                                                    size="md"
-                                                    variant="soft"
-                                                    sx={{
-                                                        marginX: "5px",
-                                                        backgroundColor: status.color
-                                                            ? alpha(
-                                                                  status.color,
-                                                                  mode === "dark" ? 0.5 : 0.75
-                                                              )
-                                                            : "transparent",
-                                                        color: status.textColor,
-                                                        fontWeight: "bold",
-                                                        borderRadius: "5px",
-                                                    }}
+                                                <Box
+                                                    key={`status-chip-${id}-${index}`}
+                                                    sx={{ mx: "5px" }}
                                                 >
-                                                    {taskMetaLabel(status.status, t.tasks.filters)}
-                                                </Chip>
+                                                    <StatusLabel status={status.status} />
+                                                </Box>
                                                 <Typography
                                                     sx={{
                                                         overflow: "hidden",

@@ -38,6 +38,7 @@ import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
 import { StatusLabel } from "../../../meta/StatusLabel";
+import { EffortLabel } from "../../../table/cellEditors";
 import { RestoreBodyControl } from "./RestoreBodyControl";
 
 type ActivityMessages = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
@@ -851,6 +852,8 @@ const ValueChip = ({
     if (fieldName === "priority" && isPriorityName(label)) {
         return <PriorityIcon priority={label} showLabel />;
     }
+    // ...and so is an effort level (the table's chip; MIP-1157).
+    if (fieldName === "effort_level" && label) return <EffortLabel level={label} />;
     const palette = paletteFor(fieldName, label);
     const displayLabel =
         fieldName === "status" || fieldName === "priority" || fieldName === "effort_level"
@@ -1070,15 +1073,15 @@ export const TaskActivityFeed = ({
                             <AvatarWithStatus
                                 avatarSize={30}
                                 avatarUser={avatarUser}
-                                isYou={
-                                    actorId != null && String(myself.userId) === String(actorId)
-                                }
                                 myself={myself}
                                 setMyself={setMyself}
                                 showPulseDot={false}
                                 socket={socket}
                                 useCM={useCM}
                                 useUISM={useUISM}
+                                isYou={
+                                    actorId != null && String(myself.userId) === String(actorId)
+                                }
                             />
                             <Box
                                 sx={{
