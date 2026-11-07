@@ -16,13 +16,11 @@ import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { useDebouncedCallback } from "../../hooks/common/useDebouncedCallback";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -36,11 +34,10 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./genos/GenosToolbars";
+import { useGenosCollabEditor } from "./genos/useGenosEditor";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
-import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
+import { CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -122,41 +119,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Memoized: `BlockNoteSchema.create` + the six spec factories are
-    // non-trivial and the live editor only reads the schema when it is
-    // (re)built — rebuilding the object on every render was pure waste,
-    // and this component re-renders on every parent update. The deps are
-    // exactly the values `CreateMentionSpec` closes over, so a rebuilt
-    // schema is available whenever the editor is next recreated.
-    const schema = useGenosSchema(
-        {
-            teamMemberProfiles: useTEM.teamMemberProfiles,
-            socket,
-            myself,
-            setMyself,
-            useUISM,
-            useCM,
-        },
-        "live"
-    );
-
-    // Mention-capable schema for the inline body-COMMENT editors (composer,
-    // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
-    // comments. Same deps as the main `schema` — `CreateMentionSpec` closes
-    // over these values.
-    const commentSchema = useMemo(
-        () =>
-            buildCommentSchema({
-                teamMemberProfiles: useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM,
-            }),
-        [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
-    );
-
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
@@ -194,29 +156,22 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const dictionary = useBlockNoteDictionary();
 
-    const collabUser = useMemo(
-        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
-        [myself.userName, myself.userId]
-    );
-
     const documentName = `task-body:${taskId}`;
 
-    const { editor, threadStore } = useCollaborativeBlockNote({
+    const { editor, threadStore } = useGenosCollabEditor({
         documentName,
-        user: collabUser,
-        userId: myself.userId,
-        myself,
+        ctx: {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
         accessToken,
-        schema,
-        commentSchema,
         dictionary,
         uploadFile,
-        initialBody: body,
-        enableComments: true,
-        teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
+        body,
     });
 
     // Fan @-mentions left in inline comments out to the activity system,
