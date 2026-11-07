@@ -52,7 +52,14 @@ describe("the AI-app activity switch", () => {
         expect(screen.getByText(m.heading)).toBeTruthy();
         expect(screen.getByText(m.switchHelper)).toBeTruthy();
         expect(m.switchHelper).toMatch(/never their text/);
-        expect(m.switchHelper).toMatch(/only you can see it/);
+        expect(m.switchHelper).toMatch(/only you can see it/i);
+        // The switch also covers the person's own changes that nothing else saves (MIP-1085):
+        // the sentence must say so, and so must the confirmation that deletes them.
+        expect(m.switchHelper).toMatch(/collaborator/);
+        expect(m.switchHelper).toMatch(/dependency/);
+        expect(m.switchHelper).toMatch(/to-do/);
+        expect(m.switchHelper).toMatch(/share a note/);
+        expect(m.offBody).toMatch(/collaborators, dependencies, to-dos and note shares/);
         expect(m.switchHelper).toMatch(/180 days/);
         expect(m.switchHelper).toMatch(/everything noted is deleted/);
         expect(api.get).toHaveBeenCalledWith(URL, expect.anything());
