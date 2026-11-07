@@ -34,7 +34,7 @@ import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
 import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
 import { composite, contrast } from "../../theme/tokens/color";
 import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
-import { MOTION, RADIUS } from "../../theme/tokens/scales";
+import { FONT_STACKS, MOTION, RADIUS } from "../../theme/tokens/scales";
 import { installDesignTokens } from "../../theme/tokens/tokenStyles";
 import {
     Button,
@@ -55,16 +55,20 @@ import {
 installDesignTokens();
 
 type FontId = "inter" | "geist";
-const FONTS: Record<FontId, string> = {
-    inter: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", sans-serif',
-    geist: '"Geist Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", sans-serif',
-};
+
+/** The accent each theme renders with. It doesn't depend on mode, and the
+ *  picker would otherwise rebuild every theme's roles on each click. */
+const SWATCH: Record<ThemeId, string> = Object.fromEntries(
+    THEME_IDS.map((id) => [id, buildRoles(id, "light").accent])
+) as Record<ThemeId, string>;
 
 const themeName = (id: ThemeId) => id.charAt(0).toUpperCase() + id.slice(1);
 
-/** Joy's palette variables, re-pointed at the tokens for everything inside
- *  the preview. Stops the global theme leaking into a previewed one. */
-const joyBridge = (font: string) => ({
+/** Joy's palette variables, re-pointed at the tokens. A custom property is
+ *  resolved where it is DECLARED, so every element that sets its own
+ *  `data-g-theme` (the page and each matrix cell) must declare these again;
+ *  inheriting them would hand a teal cell the page's purple. */
+const joyBridge = (mode: Mode) => ({
     "--joy-palette-text-primary": g.text.primary,
     "--joy-palette-text-secondary": g.text.secondary,
     "--joy-palette-text-tertiary": g.text.tertiary,
@@ -74,9 +78,11 @@ const joyBridge = (font: string) => ({
     "--joy-palette-divider": g.border.subtle,
     "--joy-palette-focusVisible": g.focus,
     "--joy-palette-neutral-outlinedBorder": g.border.default,
-    "--joy-fontFamily-body": font,
-    "--joy-fontFamily-display": font,
-    fontFamily: font,
+    "--joy-fontFamily-body": g.font.body,
+    "--joy-fontFamily-display": g.font.body,
+    fontFamily: g.font.body,
+    // Native scrollbars and form controls follow the previewed mode.
+    colorScheme: mode,
     color: g.text.primary,
     background: g.bg.default,
 });
@@ -207,15 +213,7 @@ const Segmented = <T extends string>({
     </Box>
 );
 
-const ThemePicker = ({
-    value,
-    mode,
-    onChange,
-}: {
-    value: ThemeId;
-    mode: Mode;
-    onChange: (id: ThemeId) => void;
-}) => (
+const ThemePicker = ({ value, onChange }: { value: ThemeId; onChange: (id: ThemeId) => void }) => (
     <Box
         aria-label="Color theme"
         role="group"
@@ -236,7 +234,7 @@ const ThemePicker = ({
                     borderRadius: g.radius.full,
                     cursor: "pointer",
                     border: 0,
-                    background: buildRoles(id, mode).accent,
+                    background: SWATCH[id],
                     boxShadow:
                         value === id
                             ? `0 0 0 2px ${g.bg.default}, 0 0 0 4px ${g.text.primary}`
@@ -258,8 +256,7 @@ const MiniSlice = ({ id, mode }: { id: ThemeId; mode: Mode }) => (
         data-g-mode={mode}
         data-g-theme={id}
         sx={{
-            color: g.text.primary,
-            background: g.bg.default,
+            ...joyBridge(mode),
             border: `1px solid ${g.border.default}`,
             borderRadius: g.radius.md,
             overflow: "hidden",
@@ -351,8 +348,14 @@ type RoleRow = {
 };
 
 const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
-    const onSurface = (c: string) =>
-        Math.min(contrast(c, r.surface), contrast(c, r.bg), contrast(c, r.bgSubtle));
+    const surfaces = [r.bg, r.bgSubtle, r.surface, r.surfaceRaised];
+    // The same backdrops designTokens.test checks, so the page can't show a
+    // better figure than the test enforces.
+    const onSurface = (c: string) => Math.min(...surfaces.map((s) => contrast(c, s)));
+    const onSelected = (c: string) =>
+        Math.min(
+            ...surfaces.map((s) => contrast(c, composite(r.accentSubtle.hex, r.accentSubtle.a, s)))
+        );
     const a = (x: { hex: string; a: number }) => alphaCss(x);
     return [
         {
@@ -460,13 +463,7 @@ const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
                     value: r.accentText,
                     paint: r.accentText,
                     use: "Links, selected labels, icons",
-                    ratio: Math.min(
-                        onSurface(r.accentText),
-                        contrast(
-                            r.accentText,
-                            composite(r.accentSubtle.hex, r.accentSubtle.a, r.surface)
-                        )
-                    ),
+                    ratio: Math.min(onSurface(r.accentText), onSelected(r.accentText)),
                     min: 4.5,
                 },
                 {
@@ -488,7 +485,9 @@ const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
             rows: (["danger", "success", "warning", "info"] as const).map((k) => ({
                 name: k,
                 value: r[k].text,
-                paint: r[k].solid,
+                // The swatch is the color the value and ratio describe: the
+                // hue as text. The solid fill is shown in the Buttons sample.
+                paint: r[k].text,
                 use: {
                     danger: "Errors, destructive actions, overdue",
                     success: "Done, saved, connected",
@@ -502,92 +501,95 @@ const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
     ];
 };
 
-const ColorRoles = ({ roles }: { roles: RoleColors }) => (
-    <Box
-        sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))",
-            gap: 1.5,
-        }}
-    >
-        {roleRows(roles).map(({ group, rows }) => (
-            <Panel key={group}>
-                <Box
-                    sx={{
-                        px: 1.5,
-                        py: 1,
-                        borderBottom: `1px solid ${g.border.subtle}`,
-                        background: g.bg.subtle,
-                    }}
-                >
-                    <Text component="h3" level="title-sm">
-                        {group}
-                    </Text>
-                </Box>
-                {rows.map((row) => (
+const ColorRoles = ({ roles }: { roles: RoleColors }) => {
+    const rows = useMemo(() => roleRows(roles), [roles]);
+    return (
+        <Box
+            sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))",
+                gap: 1.5,
+            }}
+        >
+            {rows.map(({ group, rows: groupRows }) => (
+                <Panel key={group}>
                     <Box
-                        key={row.name}
                         sx={{
-                            display: "grid",
-                            gridTemplateColumns: "28px minmax(0, 1fr) auto",
-                            alignItems: "center",
-                            gap: 1.25,
                             px: 1.5,
-                            py: 0.875,
+                            py: 1,
                             borderBottom: `1px solid ${g.border.subtle}`,
-                            "&:last-of-type": { borderBottom: 0 },
+                            background: g.bg.subtle,
                         }}
                     >
-                        <Box
-                            sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: g.radius.sm,
-                                background: row.paint,
-                                boxShadow: `inset 0 0 0 1px ${g.border.default}`,
-                            }}
-                        />
-                        <Box sx={{ minWidth: 0 }}>
-                            <Text
-                                level="body-sm"
-                                sx={{ fontWeight: 500, fontFamily: g.font.mono, fontSize: 12 }}
-                                translate="no"
-                            >
-                                --g-{row.name}
-                            </Text>
-                            <Text level="body-xs" tone="secondary">
-                                {row.use}
-                            </Text>
-                        </Box>
-                        <Box sx={{ textAlign: "end" }}>
-                            <Text
-                                level="body-xs"
-                                sx={{ fontFamily: g.font.mono, fontSize: 11 }}
-                                tone="tertiary"
-                            >
-                                {row.value}
-                            </Text>
-                            {row.ratio !== undefined && (
-                                <Text
-                                    level="caption"
-                                    sx={{
-                                        color:
-                                            row.ratio >= (row.min ?? 4.5)
-                                                ? g.success.text
-                                                : g.danger.text,
-                                        fontVariantNumeric: "tabular-nums",
-                                    }}
-                                >
-                                    {row.ratio.toFixed(1)}:1
-                                </Text>
-                            )}
-                        </Box>
+                        <Text component="h3" level="title-sm">
+                            {group}
+                        </Text>
                     </Box>
-                ))}
-            </Panel>
-        ))}
-    </Box>
-);
+                    {groupRows.map((row) => (
+                        <Box
+                            key={row.name}
+                            sx={{
+                                display: "grid",
+                                gridTemplateColumns: "28px minmax(0, 1fr) auto",
+                                alignItems: "center",
+                                gap: 1.25,
+                                px: 1.5,
+                                py: 0.875,
+                                borderBottom: `1px solid ${g.border.subtle}`,
+                                "&:last-of-type": { borderBottom: 0 },
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: g.radius.sm,
+                                    background: row.paint,
+                                    boxShadow: `inset 0 0 0 1px ${g.border.default}`,
+                                }}
+                            />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Text
+                                    level="body-sm"
+                                    sx={{ fontWeight: 500, fontFamily: g.font.mono, fontSize: 12 }}
+                                    translate="no"
+                                >
+                                    --g-{row.name}
+                                </Text>
+                                <Text level="body-xs" tone="secondary">
+                                    {row.use}
+                                </Text>
+                            </Box>
+                            <Box sx={{ textAlign: "end" }}>
+                                <Text
+                                    level="body-xs"
+                                    sx={{ fontFamily: g.font.mono, fontSize: 11 }}
+                                    tone="tertiary"
+                                >
+                                    {row.value}
+                                </Text>
+                                {row.ratio !== undefined && (
+                                    <Text
+                                        level="caption"
+                                        sx={{
+                                            color:
+                                                row.ratio >= (row.min ?? 4.5)
+                                                    ? g.success.text
+                                                    : g.danger.text,
+                                            fontVariantNumeric: "tabular-nums",
+                                        }}
+                                    >
+                                        {row.ratio.toFixed(1)}:1
+                                    </Text>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
+                </Panel>
+            ))}
+        </Box>
+    );
+};
 
 // ---------------------------------------------------------------------------
 // Type
@@ -652,7 +654,7 @@ const TypeScale = ({ font }: { font: FontId }) => (
                             flexWrap: "wrap",
                             columnGap: 2.5,
                             rowGap: 0.25,
-                            fontFamily: FONTS[font],
+                            fontFamily: FONT_STACKS[font],
                         }}
                     >
                         <Text level={level}>{en}</Text>
@@ -948,7 +950,10 @@ const DesignSystemPage = () => {
             data-g-mode={mode}
             data-g-theme={theme}
             sx={{
-                ...joyBridge(FONTS[font]),
+                // The typeface toggle drives the token, so anything using
+                // `g.font.body` follows it, not just this page.
+                "--g-font-body": FONT_STACKS[font],
+                ...joyBridge(mode),
                 // The page owns its scroll, like PlansHome: the shell is
                 // `overflow: hidden`, so a taller page would scroll the
                 // document and carry the sidebar away with it.
@@ -960,9 +965,6 @@ const DesignSystemPage = () => {
                 minWidth: 0,
                 overflowY: "auto",
                 WebkitFontSmoothing: "antialiased",
-                // Native scrollbars and form controls follow the PREVIEWED
-                // mode, not the app's.
-                colorScheme: mode,
                 // Keep a focused element clear of the sticky header.
                 scrollPaddingTop: "72px",
             }}
@@ -998,7 +1000,7 @@ const DesignSystemPage = () => {
                     <Box
                         sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}
                     >
-                        <ThemePicker mode={mode} value={theme} onChange={setTheme} />
+                        <ThemePicker value={theme} onChange={setTheme} />
                         <Segmented
                             label="Mode"
                             value={mode}

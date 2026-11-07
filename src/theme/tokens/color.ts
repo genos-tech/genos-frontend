@@ -26,8 +26,9 @@ export const hexToRgb = (hex: string): Rgb => {
 export const rgbToHex = ([r, g, b]: Rgb): string =>
     "#" + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
 
-/** "r, g, b" — the shape `rgba(var(--x-rgb), α)` needs. */
-export const rgbString = (hex: string): string => hexToRgb(hex).join(", ");
+/** "r, g, b", the shape `rgba(var(--x-rgb), α)` needs. Same helper the
+ *  `--gp-*` palette uses, so the two systems can't format it differently. */
+export { rgbTriplet as rgbString } from "../themePalettes";
 
 const toLinear = (c: number) => {
     const v = c / 255;

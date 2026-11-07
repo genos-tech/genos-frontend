@@ -24,7 +24,7 @@
  * surfaces they are used on before measuring.
  */
 
-import { RampStop, THEME_PRIMITIVES, ThemeId } from "../themePalettes";
+import { RAMP_STOPS, RampStop, THEME_PRIMITIVES, ThemeId } from "../themePalettes";
 import { composite, contrast, hexToOklch, oklchToHex, rgbString } from "./color";
 
 export type Mode = "light" | "dark";
@@ -151,9 +151,8 @@ const BRAND_STOP: Record<ThemeId, RampStop> = {
     slate: 600,
 };
 
-const STOPS: RampStop[] = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
 const stepFrom = (stop: RampStop, by: number): RampStop =>
-    STOPS[Math.min(STOPS.length - 1, Math.max(0, STOPS.indexOf(stop) + by))];
+    RAMP_STOPS[Math.min(RAMP_STOPS.length - 1, Math.max(0, RAMP_STOPS.indexOf(stop) + by))];
 
 /** Readable text for a solid: white when it passes AA, else near-black. */
 const fgFor = (solid: string): string => (contrast(WHITE, solid) >= AA ? WHITE : ON_LIGHT);
@@ -289,8 +288,12 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         textTertiary: g("textTertiary"),
         textDisabled: g("textDisabled"),
         accent,
-        accentHover: t.ramp[stepFrom(solidStop, 1)],
-        accentFg: WHITE,
+        // One step darker; at the end of the ramp, one step lighter, so a
+        // hover is always visible.
+        accentHover: t.ramp[stepFrom(solidStop, solidStop === 900 ? -1 : 1)],
+        // White whenever it passes, which the loop above makes the normal
+        // case; near-black only if a ramp never gets dark enough.
+        accentFg: fgFor(accent),
         accentText,
         accentSubtle,
         accentBorder: { hex: accent, a: 0.35 },
