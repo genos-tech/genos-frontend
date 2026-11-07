@@ -14,6 +14,7 @@
         "lint:check": "eslint . --max-warnings 0",
         "format": "prettier --write .",
         "blocknote-compat": "node scripts/blocknote-compat.mjs",
+        "ratchet:update": "node scripts/design-ratchet.mjs",
         "format:check": "prettier --check .",
         "format:fix": "prettier --write . && eslint . --fix",
         "sort": "eslint . --fix",
