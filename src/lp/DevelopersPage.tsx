@@ -367,12 +367,6 @@ const MCP_TOOLS: McpTool[] = [
         ),
     },
     {
-        name: "list_my_worklog",
-        type: "read",
-        meaning:
-            "Your own worklog for today, yesterday, the last week or a range of dates, with each entry's items. It is private to you: nobody else's worklog can be read.",
-    },
-    {
         name: "update_task",
         type: "write",
         taskRef: true,
@@ -576,24 +570,6 @@ const MCP_TOOLS: McpTool[] = [
         meaning:
             "Put an earlier version of a note back, title and body. What the note says now is kept as a version first, so a restore can itself be undone. If the live editor could not be updated, the result says so. A note is named by its url, or by its id with its note_type.",
     },
-    {
-        name: "capture_worklog",
-        type: "write",
-        meaning:
-            "Save what you say you did, will do, wait on or decided, in your private worklog. The note is kept exactly as written; its items (done, next, waiting, decision) link to the tasks and notes you can open. Only you can read it.",
-    },
-    {
-        name: "update_worklog_item",
-        type: "write",
-        meaning:
-            "Reword one worklog item or change its kind, confirm or reject it, or mark it resolved.",
-    },
-    {
-        name: "delete_worklog_entry",
-        type: "write",
-        meaning:
-            "Delete one worklog entry and all its items for good. Needs a key that also has the destructive opt-in.",
-    },
 ];
 
 // The two MCP prompts (genos-api `origin/views/public/mcp/prompts.py`), in its order.
@@ -788,8 +764,8 @@ export default function DevelopersPage() {
                         There is no model on this side of the connection. The endpoint is a
                         JSON-RPC dispatcher over Genos&apos;s workspace tools — most of them the
                         ones the in-app agent uses, plus a few made for outside clients, like the
-                        worklog and the briefing below. Your client does the reasoning; Genos
-                        answers questions about the workspace and writes what it is told to.
+                        briefing below. Your client does the reasoning; Genos answers questions
+                        about the workspace and writes what it is told to.
                     </p>
 
                     <Pre label="the whole setup">{`claude mcp add --transport http genos \\
@@ -874,21 +850,13 @@ export default function DevelopersPage() {
                     </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
-                        Your worklog is private
+                        The briefing is yours alone
                     </h3>
                     <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        The worklog is yours alone. Only the person it belongs to can read, change
-                        or delete an entry: not a teammate, not an admin, not the owner of the
-                        team, and asking for someone else&apos;s entry gets the same answer as
-                        asking for one that does not exist. A note links only to tasks and notes
-                        you can open. It goes when you delete your account, and it is in your data
-                        export.
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        The briefing is the same: it is built from what you can open and from other
-                        people&apos;s activity on those things only. Today&apos;s calendar is read
-                        from Google when you ask and goes straight into the answer. Genos does not
-                        keep your calendar events.
+                        The briefing is built from what you can open and from other people&apos;s
+                        activity on those things only. Today&apos;s calendar is read from Google
+                        when you ask and goes straight into the answer. Genos does not keep your
+                        calendar events.
                     </p>
 
                     <h3 className="mt-8 text-base font-bold text-slate-800 dark:text-slate-100">
