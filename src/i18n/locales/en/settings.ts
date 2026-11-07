@@ -125,7 +125,7 @@ export const settings = {
         // webhooks and alerts. A person's own sign-ins are not here.
         securityLog: {
             title: "Security log",
-            blurb: "Sensitive changes to this team, newest first: members joining and leaving, role and ownership changes, invites, API keys, webhooks and alerts. Kept for a year.",
+            blurb: "Sensitive changes to this team, newest first: members joining and leaving, role and ownership changes, invites, API keys, webhooks and alerts. Kept for 365 days.",
             empty: "Nothing recorded yet.",
             loadMore: "Show older",
             loadFailed: "Couldn't load the security log.",
