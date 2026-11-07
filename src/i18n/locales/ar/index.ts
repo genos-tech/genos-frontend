@@ -630,6 +630,11 @@ export const ar: DeepPartial<Messages> = {
             themeSystem: "النظام",
             colorThemeLabel: "سمة اللون",
             colorThemeHelper: "يغير لون التمييز عبر التطبيق بأكمله.",
+            densityLabel: "كثافة الصفوف",
+            densityHelper: "ارتفاع الصفوف في القوائم والجداول. يُطبَّق فورًا.",
+            densityCompact: "مضغوط",
+            densityDefault: "افتراضي",
+            densityComfortable: "مريح",
             colorThemes: {
                 purple: "أرجواني",
                 blue: "أزرق",

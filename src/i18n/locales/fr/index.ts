@@ -3093,6 +3093,12 @@ export const fr: DeepPartial<Messages> = {
             themeSystem: "Système",
             colorThemeLabel: "Thème de couleur",
             colorThemeHelper: "Modifie la couleur d'accent dans toute l'application.",
+            densityLabel: "Densité des lignes",
+            densityHelper:
+                "Hauteur des lignes dans les listes et les tableaux. S'applique immédiatement.",
+            densityCompact: "Compacte",
+            densityDefault: "Par défaut",
+            densityComfortable: "Confortable",
             colorThemes: {
                 purple: "Violet",
                 blue: "Bleu",

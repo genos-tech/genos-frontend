@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { DensityPreferenceProvider } from "./useDensityPreference";
 import { useUiSettings } from "./useUiSettings";
 
 /**
@@ -117,7 +118,8 @@ export const ThemePreferenceProvider = ({ children }: { children: ReactNode }) =
 
     return (
         <ThemePreferenceContext.Provider value={{ preference, setPreference }}>
-            {children}
+            {/* Row density rides on the same app-root slot (no App.tsx re-indent). */}
+            <DensityPreferenceProvider>{children}</DensityPreferenceProvider>
         </ThemePreferenceContext.Provider>
     );
 };

@@ -643,6 +643,11 @@ export const es: DeepPartial<Messages> = {
             themeSystem: "Sistema",
             colorThemeLabel: "Tema de color",
             colorThemeHelper: "Cambia el color de acento en toda la aplicación.",
+            densityLabel: "Densidad de filas",
+            densityHelper: "Altura de las filas en listas y tablas. Se aplica al instante.",
+            densityCompact: "Compacta",
+            densityDefault: "Predeterminada",
+            densityComfortable: "Cómoda",
             colorThemes: {
                 purple: "Púrpura",
                 blue: "Azul",
