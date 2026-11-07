@@ -199,6 +199,8 @@ describe("FilterChipButton", () => {
     it("shows how many more are chosen as +N, and nothing for one", () => {
         mount({ extra: 3 });
         expect(button().textContent).toContain("+3");
+        // Read left to right even in an RTL bar ("+3", not "3+").
+        expect(button().querySelector('span[dir="ltr"]')?.textContent).toBe("+3");
         document.body.innerHTML = "";
         mount({ extra: 0 });
         expect(button().textContent).not.toContain("+");

@@ -188,7 +188,9 @@ export const FilterChipButton = forwardRef<HTMLButtonElement, FilterChipButtonPr
                     {value}
                 </span>
                 {extra > 0 && (
-                    <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.8 }}>
+                    // `dir="ltr"`: in a right-to-left bar the "+" is a neutral character
+                    // and the count read "3+".
+                    <span dir="ltr" style={{ fontVariantNumeric: "tabular-nums", opacity: 0.8 }}>
                         +{extra}
                     </span>
                 )}
