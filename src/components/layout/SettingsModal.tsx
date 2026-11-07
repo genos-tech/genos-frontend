@@ -95,10 +95,18 @@ import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { useColorTheme } from "../../theme/ColorThemeProvider";
 import { THEME_IDS, themeSwatch } from "../../theme/themePalettes";
+import { g } from "../../theme/tokens";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import {
+    NAV_HOVER_MEDIA,
+    NAV_ICON_SIZE,
+    NAV_PAD_X,
+    navFocusSx,
+    navRowSx,
+} from "../ui/nav/navStyles";
 import { AccountSettingsSection } from "./AccountSettingsSection";
 import { ConnectedAppsSection } from "./ConnectedAppsSection";
 import { DensitySetting } from "./DensitySetting";
@@ -154,9 +162,15 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
     </Box>
 );
 
-// Pill-style active state replacing Joy's default left-bar indicator
-// on the modal's vertical sidebar. Reused on every Tab in the rail.
+// The vertical rail's tab (a Joy `Tab`, so arrow keys, roles and the
+// horizontal mobile strip keep working) wearing the shared sidebar-row look
+// (MIP-1127): density height, radius sm, the accent tint when selected, the
+// token focus ring. It cannot be a `NavItem` (that is a list row), so it takes
+// the same style from `navRowSx`; nothing here restates a colour or a size.
+const NAV_ROW = navRowSx();
 const SIDEBAR_TAB_SX = {
+    ...NAV_ROW,
+    ...navFocusSx,
     // MUST stay here, on the Tab's own `sx`, and MUST stay unconditional.
     //
     // Joy's Tab root sets `flex: 'initial'` (Tab.js), which is shorthand
@@ -172,28 +186,21 @@ const SIDEBAR_TAB_SX = {
     flex: "0 0 auto",
     whiteSpace: "nowrap",
     justifyContent: "flex-start",
-    gap: 1.25,
-    borderRadius: "md",
-    px: 1.5,
-    py: 0.85,
-    minHeight: 36,
-    fontSize: "0.875rem",
-    fontWeight: 500,
-    color: "text.secondary",
-    transition: "background-color 0.12s ease, color 0.12s ease",
+    gap: 1,
+    px: `${NAV_PAD_X}px`,
     "&::after": { display: "none" },
-    "&:hover:not([aria-selected='true'])": {
-        bgcolor: "background.level1",
-        color: "text.primary",
-    },
-    "&[aria-selected='true']": {
-        bgcolor: "primary.softBg",
-        color: "primary.softColor",
-        fontWeight: 600,
+    // Joy's own hover plate on a Tab out-ranks the shared one (`:not(...)`), so
+    // the unselected hover is restated at the same strength.
+    [NAV_HOVER_MEDIA]: {
+        ...NAV_ROW[NAV_HOVER_MEDIA],
+        "&:hover:not([aria-selected='true'])": {
+            background: g.hover,
+            color: g.text.primary,
+        },
     },
 } as const;
 
-const SIDEBAR_TAB_ICON_SX = { fontSize: 18, flexShrink: 0 } as const;
+const SIDEBAR_TAB_ICON_SX = { fontSize: NAV_ICON_SIZE, flexShrink: 0 } as const;
 
 /**
  * Color-theme swatches. Each dot is painted with the accent that theme
