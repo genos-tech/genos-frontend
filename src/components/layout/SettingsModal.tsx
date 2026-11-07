@@ -112,6 +112,7 @@ import { ConnectedAppsSection } from "./ConnectedAppsSection";
 import { DensitySetting } from "./DensitySetting";
 import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
+import { SchedulesSection } from "./schedules/SchedulesSection";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
 import { TeamEmojiPanel } from "./TeamEmojiPanel";
@@ -2080,6 +2081,14 @@ export const SettingsModal = ({
                     >
                         <Stack spacing={2}>
                             <ConnectedAppsSection />
+                            <SchedulesSection
+                                teamId={
+                                    useTEM?.currentTeamId ||
+                                    myself?.teamId ||
+                                    localStorage.getItem("teamId") ||
+                                    ""
+                                }
+                            />
                             <DeveloperSettingsSection teamId={localStorage.getItem("teamId")} />
                         </Stack>
                     </TabPanel>
