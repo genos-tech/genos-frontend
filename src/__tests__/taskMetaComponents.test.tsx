@@ -43,6 +43,15 @@ describe("StatusLabel", () => {
         expect(label.parentElement!.style.color).toBe("var(--g-text-secondary)");
     });
 
+    it("the icon takes the status color through --Icon-color (Joy's SvgIcon ignores inherited color)", () => {
+        // Found in a real browser: the wrapper was colored but every icon computed to
+        // the gray `text-icon` role, because Joy's SvgIcon sets `color` itself.
+        const { container } = render(<StatusLabel status="Blocked" />);
+        expect(iconWrapper(container).style.getPropertyValue("--Icon-color")).toBe(
+            "var(--g-danger-text)"
+        );
+    });
+
     it("every status has its own icon shape, so it is not told apart by color alone", () => {
         const shapes = STATUS_NAMES.map((s) => {
             const { container, unmount } = render(<StatusLabel status={s} />);
@@ -134,6 +143,13 @@ describe("PriorityIcon", () => {
         const el = getByRole("img");
         expect(el.getAttribute("aria-label")).toBe(priority);
         expect(el.style.color).toBe(color);
+    });
+
+    it("Critical's icon takes the color through --Icon-color too", () => {
+        const { getByRole } = render(<PriorityIcon priority="Critical" />);
+        expect(getByRole("img").style.getPropertyValue("--Icon-color")).toBe(
+            "var(--g-danger-text)"
+        );
     });
 
     it("level is in the SHAPE too: five distinct glyphs, so it is never color alone", () => {

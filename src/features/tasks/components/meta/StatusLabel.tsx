@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { useTranslation } from "../../../../i18n";
 import { statusTone, toneCss } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
@@ -43,11 +45,16 @@ export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusL
         >
             <span
                 aria-hidden="true"
-                style={{
-                    display: "inline-flex",
-                    flexShrink: 0,
-                    color: toneCss(tone).text,
-                }}
+                style={
+                    {
+                        display: "inline-flex",
+                        flexShrink: 0,
+                        color: toneCss(tone).text,
+                        // Joy's SvgIcon colors itself from --Icon-color (falling back to a gray
+                        // palette role), so `color` on the wrapper alone leaves the icon gray.
+                        "--Icon-color": toneCss(tone).text,
+                    } as CSSProperties
+                }
             >
                 {getStatusIcon(name, iconSize)}
             </span>

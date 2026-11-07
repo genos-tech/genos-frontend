@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import PriorityHighRoundedIcon from "@mui/icons-material/PriorityHighRounded";
 
 import { useTranslation } from "../../../../i18n";
@@ -57,15 +58,19 @@ export const PriorityIcon = ({ priority, showLabel = false, size = 16 }: Priorit
     const label = taskMetaLabel(name, t.tasks.filters) || name;
     return (
         <span
-            style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                color: toneCss(priorityTone(name)).text,
-                fontSize: "var(--g-type-body-sm-size, 0.8125rem)",
-                lineHeight: 1.2,
-                whiteSpace: "nowrap",
-            }}
+            style={
+                {
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    color: toneCss(priorityTone(name)).text,
+                    // The "!" is a Joy SvgIcon: it takes --Icon-color, not the inherited color.
+                    "--Icon-color": toneCss(priorityTone(name)).text,
+                    fontSize: "var(--g-type-body-sm-size, 0.8125rem)",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                } as CSSProperties
+            }
             {...(showLabel ? {} : { role: "img", "aria-label": label })}
         >
             {name === "Critical" ? (
