@@ -131,8 +131,9 @@ const RailButton = ({
                 width: "100%",
                 boxSizing: "border-box",
                 borderRadius: g.radius.sm,
-                // The tile's own text is the label's: medium, as `navToneSx` keeps it when selected.
-                fontWeight: 500,
+                // Regular at rest, medium when selected (`navToneSx`): the weight is
+                // the non-colour cue, as in the sidebars. The label inherits it.
+                fontWeight: 400,
             },
             tone === "danger" && {
                 [NAV_HOVER_MEDIA]: {
@@ -147,7 +148,7 @@ const RailButton = ({
     >
         <AppTooltip placement="right" size="sm" title={tooltip}>
             <ListItemButton
-                aria-current={selected ? "true" : undefined}
+                aria-current={selected ? "page" : undefined}
                 color="neutral"
                 selected={selected}
                 variant="plain"
@@ -206,7 +207,7 @@ const RailButton = ({
                     sx={{
                         fontSize: RAIL_LABEL_SIZE,
                         lineHeight: 1.3,
-                        fontWeight: 500,
+                        fontWeight: "inherit",
                         letterSpacing: 0,
                         textAlign: "center",
                         whiteSpace: "nowrap",

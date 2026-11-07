@@ -73,9 +73,9 @@ const button = (label: string) =>
 const tile = (label: string) => button(label).closest("li") as HTMLElement;
 
 describe("rail buttons", () => {
-    it("the selected service is the accent's quiet tint and aria-current; the others are neither", () => {
+    it("the selected service is the accent's quiet tint and aria-current=page; the others are neither", () => {
         mountRail("/workspace/tasks");
-        expect(button("Tasks")).toHaveAttribute("aria-current", "true");
+        expect(button("Tasks")).toHaveAttribute("aria-current", "page");
         expect(tile("Tasks")).toHaveAttribute("data-selected", "true");
         // The shared style, from the tokens: the same rule every NavItem row carries.
         const css = cssOf(tile("Tasks"));
@@ -99,11 +99,12 @@ describe("rail buttons", () => {
             join(dirname(fileURLToPath(import.meta.url)), "../components/layout/sidebar.tsx"),
             "utf8"
         );
-        expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
-        expect(source).not.toMatch(/rgba?\(\s*\d/);
-        expect(source).not.toMatch(/gradient/i);
-        expect(source).not.toContain("isDark");
-        expect(source).not.toContain("useColorScheme");
+        const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+        expect(code).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+        expect(code).not.toMatch(/rgba?\(\s*\d/);
+        expect(code).not.toMatch(/gradient/i);
+        expect(code).not.toContain("isDark");
+        expect(code).not.toContain("useColorScheme");
     });
 
     it("the icon follows the tile's state (Joy's neutral button would pin it to its own grey)", () => {
@@ -121,6 +122,13 @@ describe("rail buttons", () => {
         }
         // RAIL_BUTTON_PX = 0.5 (4px): Geist's "Sign out" no longer fit at 10px (MIP-1118).
         expect(cssOf(button("Sign out"))).toMatch(/padding:\s*\d+px 4px/);
+    });
+
+    it("selected is medium over a regular rest weight: the cue that is not a colour", () => {
+        mountRail("/workspace/tasks");
+        expect(cssOf(tile("Chats"))).toMatch(/font-weight:\s*400/);
+        expect(cssOf(tile("Tasks"))).toMatch(/data-selected="true"[^{]*\{[^}]*font-weight:\s*500/);
+        expect(cssOf(screen.getByText("Tasks"))).toMatch(/font-weight:\s*inherit/);
     });
 
     it("Sign out turns danger on hover, from the danger tokens", () => {
