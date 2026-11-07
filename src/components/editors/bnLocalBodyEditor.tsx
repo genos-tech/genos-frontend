@@ -5,12 +5,7 @@ import "../../App.css";
 import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    FormattingToolbarController,
-    SideMenu,
-    SideMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -22,17 +17,13 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./genos/GenosToolbars";
-import { genosTableOptions } from "./genosBlockSpecs";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
+import { useGenosEditor } from "./genos/useGenosEditor";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
 
 type BnLocalBodyEditorProps = {
     useTEM: TeamManagementState;
@@ -86,14 +77,11 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
     const [showGifPicker, setShowGifPicker] = useState(false);
     const dictionary = useBlockNoteDictionary();
 
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        tables: genosTableOptions,
+    const editor = useGenosEditor({
+        surface: "template",
         schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
-        extensions: [codeFenceInputRule, linkHostCaption, tabStaysInEditor],
         dictionary,
+        initialContent: initialBody.length > 0 ? initialBody : EMPTY_DOC,
     });
 
     const insertGif = (gif: { url: string; title: string }) => {
