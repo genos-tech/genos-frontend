@@ -7,7 +7,7 @@
 // on react-vs-@mui ordering.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import { Box, ListDivider, Modal, ModalClose, ModalDialog, Stack, Typography } from "@mui/joy";
+import { ListDivider, Modal, ModalClose, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";

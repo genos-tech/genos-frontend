@@ -73,7 +73,7 @@ export const FavoritesListItem = memo(function FavoritesListItem({
     if (rows.length === 0) return null;
 
     return (
-        <ListItem data-testid="sidebar-favorites" nested sx={{ p: 0 }}>
+        <ListItem data-testid="sidebar-favorites" sx={{ p: 0 }} nested>
             <Toggler
                 storageKey="favorites"
                 renderToggle={({ open, setOpen }) => (
@@ -98,30 +98,6 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                 icon={<FlagRoundedIcon sx={{ color: g.warning.solid }} />}
                                 label={row.title}
                                 lines={2}
-                                rootProps={{
-                                    "data-testid": `favorite-milestone-${row.milestoneId}`,
-                                }}
-                                secondary={
-                                    <Box
-                                        component="span"
-                                        sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-                                    >
-                                        <StatusLabel status={row.status} />
-                                        <Box
-                                            component="span"
-                                            sx={{
-                                                minWidth: 0,
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {row.projectName}
-                                        </Box>
-                                    </Box>
-                                }
-                                selected={selected}
-                                // The remove star shows with the row's other actions:
-                                // hover, keyboard focus, always on touch.
                                 actions={
                                     <IconButton
                                         aria-label={`${t.tasks.sidebar.removeFromFavorites}: ${row.title}`}
@@ -142,6 +118,30 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                             sx={{ fontSize: 16, color: g.warning.solid }}
                                         />
                                     </IconButton>
+                                }
+                                rootProps={{
+                                    "data-testid": `favorite-milestone-${row.milestoneId}`,
+                                }}
+                                selected={selected}
+                                // The remove star shows with the row's other actions:
+                                // hover, keyboard focus, always on touch.
+                                secondary={
+                                    <Box
+                                        component="span"
+                                        sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
+                                    >
+                                        <StatusLabel status={row.status} />
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                minWidth: 0,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}
+                                        >
+                                            {row.projectName}
+                                        </Box>
+                                    </Box>
                                 }
                                 onClick={() =>
                                     openMilestoneFromSidebar(

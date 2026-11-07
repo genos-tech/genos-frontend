@@ -945,18 +945,18 @@ const Components = () => (
                     <NavItem as="div" count={2} icon={<ChatRounded />} label="Chats" />
                     <NavItem as="div" icon={<AssignmentRounded />} label="Tasks" selected />
                     <NavItem as="div" icon={<EditNoteRounded />} label="Notes" />
-                    <SectionHeader as="div" expanded label="Projects" />
-                    <NavItem as="div" expanded label="Genos web" />
+                    <SectionHeader as="div" label="Projects" expanded />
+                    <NavItem as="div" label="Genos web" expanded />
                     <NavItem as="div" indent={1} label="Sprint 42" selected />
                     <NavItem as="div" indent={1} label="Backlog" unread />
                     <NavItem
-                        as="div"
                         actions={<MoreHorizRounded sx={{ fontSize: 16 }} />}
-                        actionsVisible
+                        as="div"
                         icon={<EditNoteRounded />}
                         label="Release notes"
                         lines={2}
                         secondary="Edited 2h ago"
+                        actionsVisible
                     />
                 </Box>
             </Labelled>

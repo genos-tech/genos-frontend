@@ -42,7 +42,7 @@ export const RecentsListItem = memo(function RecentsListItem(props: RecentsListI
     };
 
     return (
-        <ListItem nested sx={{ p: 0 }}>
+        <ListItem sx={{ p: 0 }} nested>
             <Toggler
                 defaultExpanded={false}
                 storageKey="recents"

@@ -64,12 +64,6 @@ const CHAT_TYPES = {
     PM: 3,
 } as const;
 
-// Flagged message color scheme for visual distinction
-const FLAGGED_COLOR_SCHEME = {
-    dark: "#f87171",
-    light: "#ef4444",
-} as const;
-
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     flaggedMessage: FlaggedMessageProps;
     useCM: ChatManagementState;
@@ -186,7 +180,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     // snapshot still has its content, so we keep rendering the row but mark
     // it visually and refuse to navigate.
     const [sourceDeleted, setSourceDeleted] = useState(false);
-    const flagColor = FLAGGED_COLOR_SCHEME;
 
     // The flag entry can outlive the underlying chat (delete a GM, leave an
     // MDM, drop a project, etc.). When that happens the chat is gone from

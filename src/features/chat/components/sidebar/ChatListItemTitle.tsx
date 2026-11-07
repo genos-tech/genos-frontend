@@ -103,6 +103,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         can close it, and its rules are theirs. */}
                     {chat.isExternal && (
                         <ExternalChip
+                            label={chat.hostTeamName || t.chat.sidebar.externalBadge}
                             hint={
                                 chat.hostTeamName
                                     ? fmt(t.chat.sidebar.sharedByTeamHint, {
@@ -110,7 +111,6 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                                       })
                                     : t.chat.sidebar.externalBadgeHint
                             }
-                            label={chat.hostTeamName || t.chat.sidebar.externalBadge}
                         />
                     )}
                 </Stack>

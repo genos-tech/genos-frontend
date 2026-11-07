@@ -193,9 +193,20 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                     data-note-folder-id={folder.folderId}
                     expanded={isExpanded}
                     icon={<FolderIcon />}
-                    label={folder.name}
-                    // Keep the "..." trigger visible while its portal menu is open.
-                    actionsVisible={menuOpen}
+                    actions={
+                        <>
+                            <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
+                            <Box onClick={(e) => e.stopPropagation()}>
+                                <MoreMenu
+                                    iconFontSize={14}
+                                    items={menuItems}
+                                    placement="bottom-end"
+                                    triggerSize={20}
+                                    onOpenChange={setMenuOpen}
+                                />
+                            </Box>
+                        </>
+                    }
                     sx={
                         useNM.highlightedFolderId === folder.folderId
                             ? highlightedFolderSx
@@ -280,21 +291,10 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                             ) : null}
                         </Box>
                     }
-                    actions={
-                        <>
-                            <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
-                            <Box onClick={(e) => e.stopPropagation()}>
-                                <MoreMenu
-                                    iconFontSize={14}
-                                    items={menuItems}
-                                    placement="bottom-end"
-                                    triggerSize={20}
-                                    onOpenChange={setMenuOpen}
-                                />
-                            </Box>
-                        </>
-                    }
                     onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
+                    label={folder.name}
+                    // Keep the "..." trigger visible while its portal menu is open.
+                    actionsVisible={menuOpen}
                 />
 
                 {isExpanded && (

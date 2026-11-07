@@ -132,7 +132,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                 position: "relative",
             }}
         >
-            <ListItem nested sx={{ p: 0, m: 0 }}>
+            <ListItem sx={{ p: 0, m: 0 }} nested>
                 {/* The row is the shared NavItem. It does NOT expand on click:
                     opening a note should reveal the note, not unfold its child
                     notes (the chevron, or the arrow keys, are the control for
@@ -140,17 +140,16 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     `useNoteManagement`, so the row itself stays visible). */}
                 <NavItem
                     ref={rowRef}
+                    actionsVisible={rowMenuOpen}
                     as="div"
                     expanded={hasChildren ? open : undefined}
-                    reserveChevron
+                    icon={<NoteDot unread={hasUnread} />}
                     selected={isSelected}
                     unread={hasUnread}
-                    icon={<NoteDot unread={hasUnread} />}
                     label={node.title || t.notes.defaults.untitled}
                     // Keep the "..." trigger visible while its portal menu is
                     // open: otherwise the hover-reveal hides it the moment the
                     // pointer moves onto the menu itself.
-                    actionsVisible={rowMenuOpen}
                     actions={
                         <>
                             {/* Favorite toggle: a lit star stays visible, an
@@ -192,6 +191,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             )}
                         </>
                     }
+                    reserveChevron
                     onClick={handleClick}
                     onToggleExpanded={handleChevronClick}
                 />

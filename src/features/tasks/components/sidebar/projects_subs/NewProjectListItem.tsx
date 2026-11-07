@@ -15,8 +15,8 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
     return (
         <NavItem
             icon={<AddIcon />}
-            label={t.tasks.sidebar.newProject}
             indent={1}
+            label={t.tasks.sidebar.newProject}
             onClick={() => {
                 usePM.setOpenCreateProject(true);
             }}

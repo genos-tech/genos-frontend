@@ -238,12 +238,12 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
             {/* Search Box */}
             <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
                 <TaskSidebarSearchBox
+                    accessToken={accessToken}
                     loading={loading}
+                    myself={myself}
                     openSearch={openSearch}
                     setOpenSearch={setOpenSearch}
                     setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                    accessToken={accessToken}
-                    myself={myself}
                     teamTaskSearchOptions={teamTaskSearchOptions}
                     useTM={slices.search.tm}
                 />

@@ -121,7 +121,6 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                         expanded={open}
                         icon={<WorkIcon />}
                         label={t.tasks.sidebar.projects}
-                        onToggleExpanded={() => setOpen(!open)}
                         actions={
                             <>
                                 {/* Filter projects by label. A Joy Dropdown (NOT a
@@ -242,6 +241,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                 </Dropdown>
                             </>
                         }
+                        onToggleExpanded={() => setOpen(!open)}
                     />
                 )}
             >
@@ -295,12 +295,12 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                             label={
                                                 <ProjectIdentityRow
                                                     avatarSrc={avatarSrc}
-                                                    iconColor={
-                                                        isSelected ? g.accent.text : undefined
-                                                    }
                                                     maxLabels={1}
                                                     nameColor="inherit"
                                                     nameWeight={isSelected ? 500 : 400}
+                                                    iconColor={
+                                                        isSelected ? g.accent.text : undefined
+                                                    }
                                                     project={{
                                                         projectId,
                                                         projectName,

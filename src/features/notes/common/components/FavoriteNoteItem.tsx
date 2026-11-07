@@ -87,11 +87,11 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
     return (
         <NavItem
             as="div"
-            selected={isSelected}
-            unread={hasUnread}
             icon={<NoteDot unread={hasUnread} />}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}
+            selected={isSelected}
+            unread={hasUnread}
             secondary={subLabel}
             // Remove-from-favorites: hover-revealed on desktop, always visible
             // on touch.

@@ -166,7 +166,6 @@ export const NavItem = ({
         >
             {unread && (
                 <Box
-                    aria-hidden
                     className="NavItem-unread"
                     sx={{
                         position: "absolute",
@@ -180,15 +179,16 @@ export const NavItem = ({
                         background: g.accent.solid,
                         pointerEvents: "none",
                     }}
+                    aria-hidden
                 />
             )}
             <ListItemButton
                 // `selected` also puts Joy's Mui-selected class on the button: tests and
                 // a few selectors outside the row key on it. Its plate is off (below).
-                selected={selected}
                 aria-current={selected ? current : undefined}
                 aria-expanded={expandable ? expanded : undefined}
                 color="neutral"
+                selected={selected}
                 variant="plain"
                 {...buttonProps}
                 sx={{
@@ -222,7 +222,6 @@ export const NavItem = ({
             >
                 {showChevronColumn && (
                     <Box
-                        aria-hidden
                         className="NavItem-chevron"
                         sx={{
                             display: "inline-flex",
@@ -248,6 +247,7 @@ export const NavItem = ({
                                 transform: expanded ? "rotate(90deg)" : "scaleX(-1)",
                             },
                         }}
+                        aria-hidden
                         onClick={
                             onToggleExpanded
                                 ? (event: MouseEvent) => {

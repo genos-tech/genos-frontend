@@ -22,13 +22,11 @@ import {
     Divider,
     List,
     ListItem,
-    ListItemContent,
     Modal,
     ModalDialog,
     Sheet,
     Typography,
 } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -965,6 +963,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             currentChain={teamNoteState.tmpCurrentChain}
             node={node}
             noteType={8}
+            timestamp={teamNoteState.timestamp}
+            useNM={useNM}
+            createChildNoteList={(node) => (
+                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
+            )}
             rowMenuItems={(node: MyNoteMetaTreeNode) =>
                 canEditTeamNote(node)
                     ? [
@@ -985,11 +988,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                       ]
                     : [buildExportMenuItem(8, node)]
             }
-            timestamp={teamNoteState.timestamp}
-            useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
-            )}
         />
     );
 
@@ -1455,6 +1453,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 // task), so it can hold notes — but only
                                 // once a child note has revealed which task
                                 // that is.
+                                defaultExpanded={milestoneGroupContainsNote(
+                                    milestoneGroup,
+                                    activeNoteId
+                                )}
+                                leadingIcon={
+                                    <FlagRoundedIcon
+                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
+                                    />
+                                }
                                 menuItems={
                                     milestoneGroup.backingTaskId != null
                                         ? buildTaskFolderMenuItems(
@@ -1463,15 +1470,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                           )
                                         : undefined
                                 }
-                                leadingIcon={
-                                    <FlagRoundedIcon
-                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
-                                    />
-                                }
-                                defaultExpanded={milestoneGroupContainsNote(
-                                    milestoneGroup,
-                                    activeNoteId
-                                )}
                             >
                                 {/* Direct milestone notes all anchor to the
                                     milestone's backing task, so that task is
@@ -1669,12 +1667,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             <FavoriteFolderItem
                                 key={`fav-folder-${folder.folderId}`}
                                 folder={folder}
+                                useNM={useNM}
                                 spaceLabel={
                                     folder.scope === "team"
                                         ? t.notes.sidebar.teamNotes
                                         : t.notes.sidebar.myNotes
                                 }
-                                useNM={useNM}
                             />
                         ))}
                     </FavoriteNoteSection>
@@ -2108,17 +2106,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 initialName={teamFolderModal?.mode === "rename" ? teamFolderModal.folder.name : ""}
                 mode={teamFolderModal?.mode ?? "create-root"}
                 open={teamFolderModal !== null}
-                parentName={
-                    teamFolderModal?.mode === "create-child"
-                        ? teamFolderModal.parent.name
-                        : undefined
-                }
+                teamId={myself.teamId}
                 initialVisibility={
                     teamFolderModal?.mode === "rename"
                         ? teamFolderModal.folder.visibility
                         : undefined
                 }
-                teamId={myself.teamId}
+                parentName={
+                    teamFolderModal?.mode === "create-child"
+                        ? teamFolderModal.parent.name
+                        : undefined
+                }
                 onClose={() => setTeamFolderModal(null)}
                 onSubmit={(name, visibility, guestTeamIds) => {
                     if (!teamFolderModal) return;
@@ -2171,8 +2169,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 folder={teamTagsModal}
                 myself={myself}
                 open={teamTagsModal !== null}
-                onClose={() => setTeamTagsModal(null)}
                 onChanged={() => void useNM.getTeamNoteFolders()}
+                onClose={() => setTeamTagsModal(null)}
             />
             {/* Move a NOTE into another team folder. Scoped to the team
                 folder list so a team note can't be filed into someone's

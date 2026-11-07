@@ -74,18 +74,6 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
             data-note-folder-id={folder.folderId}
             expanded={isExpanded}
             icon={<FolderIcon />}
-            label={folder.name}
-            // Keep the "..." trigger visible while its portal menu is open.
-            actionsVisible={menuOpen}
-            // A folder you drag a note over takes the accent tint and a dashed
-            // ring; the folder a "jump to folder" landed on flashes the tint.
-            sx={
-                isDraggingOver
-                    ? { background: g.accent.subtle, outline: `1px dashed ${g.accent.border}` }
-                    : isHighlighted
-                      ? highlightedFolderSx
-                      : undefined
-            }
             actions={
                 <>
                     <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
@@ -153,7 +141,19 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                     </Box>
                 </>
             }
+            // A folder you drag a note over takes the accent tint and a dashed
+            // ring; the folder a "jump to folder" landed on flashes the tint.
+            sx={
+                isDraggingOver
+                    ? { background: g.accent.subtle, outline: `1px dashed ${g.accent.border}` }
+                    : isHighlighted
+                      ? highlightedFolderSx
+                      : undefined
+            }
             onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
+            label={folder.name}
+            // Keep the "..." trigger visible while its portal menu is open.
+            actionsVisible={menuOpen}
         />
     );
 

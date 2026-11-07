@@ -47,6 +47,8 @@ describe("favorite folder row", () => {
         const useNM = nm([3]);
         render(
             <FavoriteFolderItem
+                spaceLabel="Team Notes"
+                useNM={useNM}
                 folder={{
                     folderId: 3,
                     name: "Specs",
@@ -54,8 +56,6 @@ describe("favorite folder row", () => {
                     parentFolderId: 1,
                     isExternal: false,
                 }}
-                spaceLabel="Team Notes"
-                useNM={useNM}
             />
         );
         fireEvent.click(screen.getByTestId("favorite-folder-3"));

@@ -92,30 +92,6 @@ export const GenosSessionSidebar = ({
                 label={s.first_query || t.spotlight.states.untitled}
                 // Two-line clamp keeps rows compact when the first query runs
                 // long (server truncates at ~140 chars regardless).
-                labelSx={{
-                    whiteSpace: "normal",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    fontWeight: 500,
-                }}
-                secondary={
-                    <>
-                        {relativeTimeLabel(s.last_active_at, t.spotlight)}
-                        {" · "}
-                        {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
-                        {pinError === s.session_id && (
-                            <Box component="span" sx={{ display: "block", color: g.danger.text }}>
-                                {t.genos.sidebar.pinFailed}
-                            </Box>
-                        )}
-                    </>
-                }
-                // The pin is a SIBLING of the row button, not a child: a button
-                // inside a button is invalid HTML and browsers do not reliably
-                // deliver the inner click. A pinned row keeps its pin showing
-                // (it is state, not just an action); the rest appear on hover
-                // and, because focus reveals them too, are reachable by keyboard.
                 actions={
                     <AppTooltip placement="top" title={pinLabel}>
                         <IconButton
@@ -152,6 +128,30 @@ export const GenosSessionSidebar = ({
                         </IconButton>
                     </AppTooltip>
                 }
+                secondary={
+                    <>
+                        {relativeTimeLabel(s.last_active_at, t.spotlight)}
+                        {" · "}
+                        {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
+                        {pinError === s.session_id && (
+                            <Box component="span" sx={{ display: "block", color: g.danger.text }}>
+                                {t.genos.sidebar.pinFailed}
+                            </Box>
+                        )}
+                    </>
+                }
+                // The pin is a SIBLING of the row button, not a child: a button
+                // inside a button is invalid HTML and browsers do not reliably
+                // deliver the inner click. A pinned row keeps its pin showing
+                // (it is state, not just an action); the rest appear on hover
+                // and, because focus reveals them too, are reachable by keyboard.
+                labelSx={{
+                    whiteSpace: "normal",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    fontWeight: 500,
+                }}
                 onClick={() => onSelectSession(s.session_id)}
             />
         );
@@ -191,6 +191,7 @@ export const GenosSessionSidebar = ({
                 placeholder={t.genos.sidebar.searchPlaceholder}
                 size="sm"
                 startDecorator={<SearchRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />}
+                sx={{ borderRadius: "10px", flexShrink: 0 }}
                 value={search}
                 endDecorator={
                     isSearching ? (
@@ -204,7 +205,6 @@ export const GenosSessionSidebar = ({
                         </IconButton>
                     ) : null
                 }
-                sx={{ borderRadius: "10px", flexShrink: 0 }}
                 onChange={(e) => onSearchChange(e.target.value)}
             />
 

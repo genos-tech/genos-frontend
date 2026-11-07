@@ -289,7 +289,7 @@ describe("SectionHeader", () => {
         const onToggleExpanded = vi.fn();
         render(
             <CssVarsProvider>
-                <SectionHeader expanded label="Projects" onToggleExpanded={onToggleExpanded} />
+                <SectionHeader label="Projects" expanded onToggleExpanded={onToggleExpanded} />
             </CssVarsProvider>
         );
         const toggle = screen.getByRole("button", { name: "Projects" });

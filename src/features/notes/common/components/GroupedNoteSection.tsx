@@ -73,7 +73,11 @@ function GroupedNoteSectionComponent({
             as="div"
             // A `leadingIcon` (milestone flag) overrides the folder glyph, which
             // swaps open/closed like the my-note folder tree.
+            actionsVisible={menuOpen}
             icon={leadingIcon ?? <FolderIcon />}
+            expanded={isExpanded}
+            // Keep the "..." trigger visible while its portal menu is open, or
+            // the hover-reveal hides it as the pointer moves onto the menu.
             label={
                 <>
                     {groupLabel}
@@ -84,10 +88,6 @@ function GroupedNoteSectionComponent({
                     )}
                 </>
             }
-            expanded={isExpanded}
-            // Keep the "..." trigger visible while its portal menu is open, or
-            // the hover-reveal hides it as the pointer moves onto the menu.
-            actionsVisible={menuOpen}
             actions={
                 menuItems && menuItems.length > 0 ? (
                     <Box onClick={(e) => e.stopPropagation()}>

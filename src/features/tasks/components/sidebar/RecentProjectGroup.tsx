@@ -112,13 +112,7 @@ export const RecentProjectGroup = ({
                             const isSelected = task.taskId === selectedTaskId;
                             return (
                                 <NavItem
-                                    key={`recent-task-${task.taskId}`}
-                                    // Milestone rows get the flag glyph on the far left.
-                                    icon={
-                                        task.isMilestone === true ? (
-                                            <FlagRoundedIcon sx={{ color: g.warning.solid }} />
-                                        ) : undefined
-                                    }
+                                    selected={isSelected}
                                     label={
                                         <Box
                                             sx={{
@@ -155,8 +149,14 @@ export const RecentProjectGroup = ({
                                             </Box>
                                         </Box>
                                     }
-                                    selected={isSelected}
                                     onClick={() => onOpenTask(group, task)}
+                                    key={`recent-task-${task.taskId}`}
+                                    // Milestone rows get the flag glyph on the far left.
+                                    icon={
+                                        task.isMilestone === true ? (
+                                            <FlagRoundedIcon sx={{ color: g.warning.solid }} />
+                                        ) : undefined
+                                    }
                                 />
                             );
                         })}

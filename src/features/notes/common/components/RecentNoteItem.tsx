@@ -99,12 +99,12 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
     return (
         <NavItem
             as="div"
-            selected={isSelected}
-            unread={hasUnread}
             icon={getTypeIcon(noteType)}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}
             secondary={subLabel}
+            selected={isSelected}
+            unread={hasUnread}
             onClick={handleClick}
         />
     );

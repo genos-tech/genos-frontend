@@ -647,13 +647,13 @@ const MessageActionsSection = () => {
                             key={id}
                             checked={checked}
                             disabled={!checked && atLimit}
+                            size="sm"
                             label={
                                 <Stack alignItems="center" direction="row" spacing={1}>
                                     {labels[id].icon}
                                     <span>{labels[id].label}</span>
                                 </Stack>
                             }
-                            size="sm"
                             onChange={(e) => setPinned(id, e.target.checked)}
                         />
                     );

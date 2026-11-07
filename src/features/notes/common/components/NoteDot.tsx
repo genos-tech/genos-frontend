@@ -9,7 +9,6 @@ import { g } from "../../../../theme/tokens";
  */
 export const NoteDot = ({ unread = false }: { unread?: boolean }) => (
     <Box
-        aria-hidden
         sx={{
             width: unread ? 8 : 6,
             height: unread ? 8 : 6,
@@ -18,5 +17,6 @@ export const NoteDot = ({ unread = false }: { unread?: boolean }) => (
             background: unread ? g.accent.solid : g.border.strong,
             transition: `all ${g.motion.base} ${g.ease}`,
         }}
+        aria-hidden
     />
 );

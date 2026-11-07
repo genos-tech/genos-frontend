@@ -1,4 +1,4 @@
-import { KeyboardEvent, MouseEvent, ReactNode, Ref, SyntheticEvent } from "react";
+import { ReactNode, Ref, SyntheticEvent } from "react";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import { Box, ListItem, ListItemButton } from "@mui/joy";
 import type { ListItemButtonProps } from "@mui/joy/ListItemButton";
@@ -61,7 +61,6 @@ export const SectionHeader = ({
         <>
             {collapsible && (
                 <Box
-                    aria-hidden
                     className="SectionHeader-chevron"
                     sx={{
                         display: "inline-flex",
@@ -77,6 +76,7 @@ export const SectionHeader = ({
                             transform: expanded ? "rotate(90deg)" : "scaleX(-1)",
                         },
                     }}
+                    aria-hidden
                 >
                     <ChevronRightRounded />
                 </Box>
