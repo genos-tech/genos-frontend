@@ -1970,6 +1970,7 @@ export const fr: DeepPartial<Messages> = {
             externalShare: "Partagé avec votre équipe",
             messageReminder: "Rappel",
             todoReminder: "Rappel de tâche",
+            genosReport: "Rapport Genos",
         },
         messageReminder: {
             headline: "Vous avez demandé un rappel à propos de ce message.",

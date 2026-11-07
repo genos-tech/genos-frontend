@@ -11,7 +11,7 @@
  * Server-side vocabulary: `origin/models/common/inbox_models.py`.
  */
 
-/** activity notice (0), Genos digest (6), message reminder (9). */
-export const ACTIVITY_ITEM_TYPES: ReadonlySet<number> = new Set([0, 6, 9]);
+/** activity notice (0), Genos digest (6), message reminder (9), Genos report (10). */
+export const ACTIVITY_ITEM_TYPES: ReadonlySet<number> = new Set([0, 6, 9, 10]);
 
 export const isActivityItemType = (itemType: number): boolean => ACTIVITY_ITEM_TYPES.has(itemType);

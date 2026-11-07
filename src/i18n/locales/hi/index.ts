@@ -2940,6 +2940,7 @@ export const hi: DeepPartial<Messages> = {
             externalShare: "आपकी टीम के साथ साझा किया गया",
             messageReminder: "रिमाइंडर",
             todoReminder: "टू-डू रिमाइंडर",
+            genosReport: "Genos रिपोर्ट",
         },
         messageReminder: {
             headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",

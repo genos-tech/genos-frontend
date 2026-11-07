@@ -30,6 +30,7 @@ export const inbox = {
         externalShare: "Shared With Your Team",
         messageReminder: "Reminder",
         todoReminder: "To-do reminder",
+        genosReport: "Genos report",
     },
     // A reminder that has come due (item_type 9). The card is written from
     // the reader's side — they asked for this, so it says so.
