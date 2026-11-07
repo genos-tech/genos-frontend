@@ -116,7 +116,7 @@ function GroupedNoteSectionComponent({
 
     return (
         <Box key={groupKey}>
-            <ListItem nested>
+            <ListItem nested sx={{ p: 0 }}>
                 {droppableId && droppableKind ? (
                     <DroppableHeader containerId={droppableId} kind={droppableKind}>
                         {(isDraggingOver) => headerButton(isDraggingOver)}

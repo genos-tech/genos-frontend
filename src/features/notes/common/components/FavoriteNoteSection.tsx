@@ -23,7 +23,7 @@ function FavoriteNoteSectionComponent({
 
     return (
         <Box key={groupKey}>
-            <ListItem nested>
+            <ListItem nested sx={{ p: 0 }}>
                 <NavItem
                     as="div"
                     expanded={isExpanded}

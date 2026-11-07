@@ -187,7 +187,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem nested>
+            <ListItem nested sx={{ p: 0 }}>
                 <NavItem
                     as="div"
                     data-note-folder-id={folder.folderId}

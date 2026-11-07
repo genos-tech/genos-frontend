@@ -159,7 +159,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem nested>
+            <ListItem nested sx={{ p: 0 }}>
                 {/* Folder header — always a drop target so notes can be
                     filed into a COLLAPSED folder too. */}
                 <DroppableHeader containerId={myFolderContainerId(folder.folderId)} kind={1}>

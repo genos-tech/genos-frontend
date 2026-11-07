@@ -106,7 +106,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
         );
 
     return (
-        <ListItem nested>
+        <ListItem nested sx={{ p: 0 }}>
             <Toggler
                 key={`toggler-TeamProjects`}
                 defaultExpanded={true}
@@ -293,23 +293,33 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                             // so the dropdown and this row can't drift
                                             // apart.
                                             label={
-                                                <ProjectIdentityRow
-                                                    avatarSrc={avatarSrc}
-                                                    maxLabels={1}
-                                                    nameColor="inherit"
-                                                    nameWeight={isSelected ? 500 : 400}
-                                                    iconColor={
-                                                        isSelected ? g.accent.text : undefined
-                                                    }
-                                                    project={{
-                                                        projectId,
-                                                        projectName,
-                                                        projectLabels,
-                                                        isPrivate,
-                                                        isExternal,
-                                                        hostTeamName,
+                                                // The identity row is a fragment laid out by its parent
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 1,
+                                                        minWidth: 0,
                                                     }}
-                                                />
+                                                >
+                                                    <ProjectIdentityRow
+                                                        avatarSrc={avatarSrc}
+                                                        maxLabels={1}
+                                                        nameColor="inherit"
+                                                        nameWeight={isSelected ? 500 : 400}
+                                                        iconColor={
+                                                            isSelected ? g.accent.text : undefined
+                                                        }
+                                                        project={{
+                                                            projectId,
+                                                            projectName,
+                                                            projectLabels,
+                                                            isPrivate,
+                                                            isExternal,
+                                                            hostTeamName,
+                                                        }}
+                                                    />
+                                                </Box>
                                             }
                                             onClick={() => {
                                                 setOpen(!open);
