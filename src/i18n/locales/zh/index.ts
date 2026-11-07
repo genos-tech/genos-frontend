@@ -3121,7 +3121,7 @@ export const zh: DeepPartial<Messages> = {
             entryOpen: "打开",
             backToSettings: "Genos 设置",
             title: "Genos 记住了什么",
-            intro: "Genos 并没有单独保存一份“记忆”。它回答你时会参考下面三类内容。你可以在这里查看每一类，并删除不想保留的内容。",
+            intro: "Genos 并没有单独保存一份“记忆”。下面列出它回答你时会参考的内容，以及它记录的、关于你已连接的AI应用的一项内容。你可以在这里查看每一类，并删除不想保留的内容。",
             conversations: {
                 heading: "你与 Genos 的对话",
                 description:
@@ -3168,6 +3168,18 @@ export const zh: DeepPartial<Messages> = {
                 stopConfirm: "停止共享",
                 stopFailed: "无法停止共享这条答案，请重试。",
                 hasMore: "正在显示你最近 {count} 条共享的答案，实际还有更多。",
+            },
+            mcpUse: {
+                heading: "你的AI应用打开了什么",
+                switchLabel: "记录我的AI应用打开的内容",
+                switchHelper:
+                    "Genos会记录你已连接的AI应用打开或修改了哪些任务、笔记和项目(绝不记录其文字内容),只有你能看到,并保留180天。关闭后,已记录的内容会全部删除。",
+                toggleFailed: "无法更改此设置,请重试。",
+                loadFailed: "无法加载此设置。",
+                offTitle: "停止记录并删除已记录的内容?",
+                offBody:
+                    "Genos已记录的、关于你的AI应用打开或修改了哪些项目的内容,现在会全部删除,也不会再记录新的内容。你的任务、笔记和消息不受影响。再次开启后,将从头开始记录。",
+                offConfirm: "关闭并删除",
             },
             settingsUsed: {
                 heading: "Genos 使用的设置",

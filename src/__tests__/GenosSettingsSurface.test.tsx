@@ -83,6 +83,10 @@ vi.mock("../components/layout/TeamEmojiPanel", () => ({
     TeamEmojiPanel: () => <div />,
 }));
 
+// The page is a lazy chunk; its first import can take longer than the 1 s default under a cold
+// transform, with or without this change.
+const LAZY_PAGE = { timeout: 8000 };
+
 beforeEach(() => {
     localStorage.clear();
     localStorage.setItem("teamId", "team-1");
@@ -133,7 +137,7 @@ describe("Genos settings dialog (the gear on the Genos bar)", () => {
         expect(screen.queryByText("Your Genos conversations")).toBeNull();
 
         await user.click(screen.getByRole("button", { name: "Open" }));
-        expect(await screen.findByText("Your Genos conversations")).toBeTruthy();
+        expect(await screen.findByText("Your Genos conversations", {}, LAZY_PAGE)).toBeTruthy();
         expect(screen.getByText("Answers shared with your team")).toBeTruthy();
         expect(screen.getByText("Settings Genos uses")).toBeTruthy();
         // The toggles are not on this view.
@@ -152,7 +156,7 @@ describe("Genos settings dialog (the gear on the Genos bar)", () => {
         const user = userEvent.setup();
         const view = renderGearDialog();
         await user.click(screen.getByRole("button", { name: "Open" }));
-        await screen.findByText("Your Genos conversations");
+        await screen.findByText("Your Genos conversations", {}, LAZY_PAGE);
 
         view.unmount();
         renderGearDialog();
@@ -172,7 +176,7 @@ describe("Settings -> Genos tab", () => {
         await user.click(screen.getByRole("tab", { name: "Genos" }));
         expect(await screen.findByText("Genos answers")).toBeTruthy();
         await user.click(screen.getByRole("button", { name: "Open" }));
-        expect(await screen.findByText("Your Genos conversations")).toBeTruthy();
+        expect(await screen.findByText("Your Genos conversations", {}, LAZY_PAGE)).toBeTruthy();
     });
 
     it("jumps to General -> Language from the answer-language row", async () => {

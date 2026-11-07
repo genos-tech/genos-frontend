@@ -3275,7 +3275,7 @@ export const fr: DeepPartial<Messages> = {
             entryOpen: "Ouvrir",
             backToSettings: "Paramètres de Genos",
             title: "Ce dont Genos se souvient",
-            intro: "Genos ne conserve pas de réserve distincte de « souvenirs ». Pour vous répondre, il s'appuie sur les trois éléments ci-dessous. Vous pouvez tous les consulter ici et supprimer ce que vous ne voulez pas garder.",
+            intro: "Genos ne conserve pas de réserve distincte de « souvenirs ». Ci-dessous, ce sur quoi il s'appuie pour vous répondre, plus une chose qu'il note sur vos apps d'IA connectées. Vous pouvez tous les consulter ici et supprimer ce que vous ne voulez pas garder.",
             conversations: {
                 heading: "Vos conversations avec Genos",
                 description:
@@ -3327,6 +3327,18 @@ export const fr: DeepPartial<Messages> = {
                     "Impossible d'arrêter le partage de cette réponse. Veuillez réessayer.",
                 hasMore:
                     "Affichage de vos {count} dernières réponses partagées. Il y en a plus que cette liste n'en montre.",
+            },
+            mcpUse: {
+                heading: "Ce que vos apps d'IA ouvrent",
+                switchLabel: "Noter ce que mes apps d'IA ouvrent",
+                switchHelper:
+                    "Genos note quelles tâches, notes et quels projets vos apps d'IA connectées ouvrent ou modifient (jamais leur texte), vous seul pouvez le voir et c'est conservé 180 jours. Si vous le désactivez, tout ce qui a été noté est supprimé.",
+                toggleFailed: "Impossible de modifier ce réglage. Veuillez réessayer.",
+                loadFailed: "Impossible de charger ce réglage.",
+                offTitle: "Arrêter de noter et supprimer ce qui a été noté ?",
+                offBody:
+                    "Tout ce que Genos a noté sur les éléments ouverts ou modifiés par vos apps d'IA est supprimé maintenant, et plus rien de nouveau n'est noté. Vos tâches, notes et messages ne sont pas touchés. Si vous le réactivez, cela repart de zéro.",
+                offConfirm: "Désactiver et supprimer",
             },
             settingsUsed: {
                 heading: "Réglages utilisés par Genos",

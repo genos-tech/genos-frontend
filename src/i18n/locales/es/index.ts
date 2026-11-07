@@ -784,7 +784,7 @@ export const es: DeepPartial<Messages> = {
             entryOpen: "Abrir",
             backToSettings: "Ajustes de Genos",
             title: "Lo que Genos recuerda",
-            intro: "Genos no guarda un almacén aparte de «recuerdos». Cuando te responde, se basa en las tres cosas de abajo. Aquí puedes ver cada una y eliminar lo que no quieras que se conserve.",
+            intro: "Genos no guarda un almacén aparte de «recuerdos». Abajo está lo que usa cuando te responde, más una cosa que anota sobre tus apps de IA conectadas. Aquí puedes ver cada una y eliminar lo que no quieras que se conserve.",
             conversations: {
                 heading: "Tus conversaciones con Genos",
                 description:
@@ -835,6 +835,18 @@ export const es: DeepPartial<Messages> = {
                 stopFailed: "No se pudo dejar de compartir esa respuesta. Inténtalo de nuevo.",
                 hasMore:
                     "Se muestran tus últimas {count} respuestas compartidas. Hay más de las que muestra esta lista.",
+            },
+            mcpUse: {
+                heading: "Lo que abren tus apps de IA",
+                switchLabel: "Registrar lo que abren mis apps de IA",
+                switchHelper:
+                    "Genos anota qué tareas, notas y proyectos abren o cambian tus apps de IA conectadas (nunca su texto), solo tú puedes verlo y se conserva 180 días. Si lo desactivas, se borra todo lo anotado.",
+                toggleFailed: "No se pudo cambiar este ajuste. Inténtalo de nuevo.",
+                loadFailed: "No se pudo cargar este ajuste.",
+                offTitle: "¿Dejar de registrar y borrar lo anotado?",
+                offBody:
+                    "Todo lo que Genos ha anotado sobre qué elementos abrieron o cambiaron tus apps de IA se borra ahora y no se anota nada nuevo. Tus tareas, notas y mensajes no se ven afectados. Si lo vuelves a activar, empieza de cero.",
+                offConfirm: "Desactivar y borrar",
             },
             settingsUsed: {
                 heading: "Ajustes que usa Genos",

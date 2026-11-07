@@ -4,6 +4,7 @@ import { Box, Stack, Typography } from "@mui/joy";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "../../../i18n";
 import { ConversationsSection } from "./ConversationsSection";
+import { McpUseSection } from "./McpUseSection";
 import { SettingsGenosUsesSection } from "./SettingsGenosUsesSection";
 import { SharedAnswersSection } from "./SharedAnswersSection";
 
@@ -25,7 +26,9 @@ interface Props {
  *
  *   1. their Genos conversations,
  *   2. the answers of theirs that teammates may see,
- *   3. the settings Genos reads.
+ *   3. a note of which items their connected AI apps opened (one switch; references only,
+ *      and NOT something Genos's own answers use),
+ *   4. the settings Genos reads.
  *
  * Sections are independent siblings that share only `teamId` and the token.
  * That is the seam a further section (a profile Genos is allowed to use)
@@ -59,6 +62,7 @@ export const GenosMemoryPage = ({ teamId, onOpenLanguageSettings }: Props) => {
                 refreshKey={sharedRefreshKey}
                 teamId={teamId}
             />
+            <McpUseSection />
             <SettingsGenosUsesSection
                 accessToken={accessToken}
                 onOpenLanguageSettings={onOpenLanguageSettings}
