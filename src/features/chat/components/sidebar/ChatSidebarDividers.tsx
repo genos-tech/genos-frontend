@@ -29,10 +29,12 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 import {
     CHATTYPE_HEADER_CHIP,
@@ -44,44 +46,11 @@ import {
     makeInstanceKey,
 } from "../../utils/activityChipFilters";
 
-// Shared divider base component
-const DividerBase = ({
-    children,
-    icon,
-}: {
-    children: React.ReactNode;
-    icon?: React.ReactNode;
-}) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-
-    return (
-        <Box
-            sx={{
-                px: 2,
-                py: 1,
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-            }}
-        >
-            <Stack alignItems="center" direction="row" justifyContent="center" spacing={1}>
-                {icon}
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        fontWeight: 600,
-                        fontSize: 11,
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
-                        letterSpacing: "0.02em",
-                    }}
-                >
-                    {children}
-                </Typography>
-            </Stack>
-        </Box>
-    );
-};
+// Section headings of the chat list (MIP-1127): the shared SectionHeader, plain
+// (these do not collapse). `px: 1` lines them up with the rows beneath.
+const DividerBase = ({ children }: { children: React.ReactNode }) => (
+    <SectionHeader as="div" label={children} sx={{ mx: 1, mt: 0.5 }} />
+);
 
 export const PinnedDivider = () => {
     const { t } = useTranslation();
@@ -94,33 +63,16 @@ type GMDividerProps = {
 
 export const GMDivider = (props: GMDividerProps) => {
     const { setOpenCreateGM } = props;
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     return (
-        <Box
-            sx={{
-                px: 2,
-                py: 0.75,
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-            }}
-        >
-            <Stack alignItems="center" direction="row" justifyContent="center" spacing={1}>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        fontWeight: 600,
-                        fontSize: 11,
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
-                        letterSpacing: "0.02em",
-                    }}
-                >
-                    {t.chat.sidebar.dividerGroupMessages}
-                </Typography>
+        <SectionHeader
+            as="div"
+            label={t.chat.sidebar.dividerGroupMessages}
+            sx={{ mx: 1, mt: 0.5 }}
+            actions={
                 <IconButton
+                    aria-label={t.chat.sidebar.newGroupMessageMenu}
                     size="sm"
                     variant="plain"
                     sx={{
@@ -128,19 +80,16 @@ export const GMDivider = (props: GMDividerProps) => {
                         height: 22,
                         minWidth: 22,
                         minHeight: 22,
-                        borderRadius: "6px",
-                        color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-                        "&:hover": {
-                            background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                            color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        },
+                        borderRadius: g.radius.sm,
+                        color: g.text.tertiary,
+                        "&:hover": { background: g.hover, color: g.accent.text },
                     }}
                     onClick={() => setOpenCreateGM(true)}
                 >
                     <AddRoundedIcon sx={{ fontSize: 14 }} />
                 </IconButton>
-            </Stack>
-        </Box>
+            }
+        />
     );
 };
 

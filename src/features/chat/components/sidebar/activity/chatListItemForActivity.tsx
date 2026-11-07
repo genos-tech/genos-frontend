@@ -7,21 +7,12 @@
 // on react-vs-@mui ordering.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import {
-    Box,
-    ListDivider,
-    ListItem,
-    Modal,
-    ModalClose,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
+import { Box, ListDivider, Modal, ModalClose, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
@@ -732,166 +723,65 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     return (
         <React.Fragment>
-            <ListItem
-                sx={{
-                    width: "100%",
-                    p: 0.5,
-                    overflowX: "hidden",
-                }}
+            {/* The row shell (selection, unread bar, focus, hover) is the shared
+                NavItem; the card content below is the feed's own. */}
+            <NavItem
+                as="div"
+                data-chat-list-key={`activity-${activity.activityId}`}
+                lines={2}
+                selected={isSelected}
+                sx={{ mx: 1, my: 0.25, height: "auto", py: 0.75 }}
+                unread={activity.isRead === false}
+                onClick={onClickHandler}
             >
-                <ListItemButton
-                    data-chat-list-key={`activity-${activity.activityId}`}
-                    onClick={onClickHandler}
-                    sx={{
-                        flexDirection: "column",
-                        alignItems: "initial",
-                        gap: 0.75,
-                        py: 1.25,
-                        px: 1.5,
-                        borderRadius: "12px",
-                        position: "relative",
-                        overflow: "hidden",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        background: isSelected
-                            ? isDark
-                                ? `linear-gradient(135deg, rgba(${activityColor.darkRgb}, 0.08) 0%, rgba(${activityColor.darkRgb}, 0.03) 100%)`
-                                : `linear-gradient(135deg, rgba(${activityColor.lightRgb}, 0.07) 0%, rgba(${activityColor.lightRgb}, 0.02) 100%)`
-                            : isDark
-                              ? "rgba(255,255,255,0.02)"
-                              : "rgba(0,0,0,0.01)",
-                        border: "1px solid",
-                        borderColor: isSelected
-                            ? isDark
-                                ? `rgba(${activityColor.darkRgb}, 0.19)`
-                                : `rgba(${activityColor.lightRgb}, 0.15)`
-                            : isDark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.04)",
-                        boxShadow: isSelected
-                            ? isDark
-                                ? `0 4px 16px rgba(${activityColor.darkRgb}, 0.08), inset 0 1px 0 rgba(${activityColor.darkRgb}, 0.06)`
-                                : `0 4px 16px rgba(${activityColor.lightRgb}, 0.07), inset 0 1px 0 rgba(${activityColor.lightRgb}, 0.03)`
-                            : "none",
-                        "&:hover": {
-                            background: isSelected
-                                ? isDark
-                                    ? `linear-gradient(135deg, rgba(${activityColor.darkRgb}, 0.13) 0%, rgba(${activityColor.darkRgb}, 0.07) 100%)`
-                                    : `linear-gradient(135deg, rgba(${activityColor.lightRgb}, 0.08) 0%, rgba(${activityColor.lightRgb}, 0.03) 100%)`
-                                : isDark
-                                  ? "rgba(255,255,255,0.05)"
-                                  : "rgba(0,0,0,0.03)",
-                            borderColor: isSelected
-                                ? isDark
-                                    ? `rgba(${activityColor.darkRgb}, 0.25)`
-                                    : `rgba(${activityColor.lightRgb}, 0.21)`
-                                : isDark
-                                  ? "rgba(255,255,255,0.08)"
-                                  : "rgba(0,0,0,0.08)",
-                            transform: "translateY(-1px)",
-                            boxShadow: isSelected
-                                ? isDark
-                                    ? `0 6px 20px rgba(${activityColor.darkRgb}, 0.13)`
-                                    : `0 6px 20px rgba(${activityColor.lightRgb}, 0.08)`
-                                : isDark
-                                  ? "0 4px 12px rgba(0,0,0,0.3)"
-                                  : "0 4px 12px rgba(0,0,0,0.08)",
-                        },
-                        "&:active": {
-                            transform: "translateY(0)",
-                        },
-                    }}
-                >
-                    {/* Unread indicator line */}
-                    {activity.isRead === false && (
-                        <Box
+                <Stack direction="column" spacing={0.5} sx={{ position: "relative", zIndex: 1 }}>
+                    <ActivityHeader
+                        activity={activity}
+                        chatTypeLookup={chatTypeLookup}
+                        useCM={useCM}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+
+                    <ActivityContent
+                        activity={activity}
+                        groupedReactions={groupedReactions}
+                        myself={myself}
+                    />
+
+                    {aggregatedCount > 1 && (
+                        <Typography
+                            level="body-xs"
                             sx={{
-                                position: "absolute",
-                                left: 0,
-                                top: "50%",
-                                transform: "translateY(-50%)",
-                                width: 3,
-                                height: "60%",
-                                borderRadius: "0 4px 4px 0",
-                                background: isDark
-                                    ? `linear-gradient(180deg, ${activityColor.dark} 0%, rgba(${activityColor.darkRgb}, 0.5) 100%)`
-                                    : `linear-gradient(180deg, ${activityColor.light} 0%, rgba(${activityColor.lightRgb}, 0.5) 100%)`,
-                                boxShadow: isDark
-                                    ? `0 0 8px rgba(${activityColor.darkRgb}, 0.38)`
-                                    : `0 0 8px rgba(${activityColor.lightRgb}, 0.31)`,
+                                ml: "44px",
+                                mt: 0.25,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                                color: isDark
+                                    ? `rgba(${activityColor.darkRgb}, 0.8)`
+                                    : `rgba(${activityColor.lightRgb}, 0.8)`,
                             }}
-                        />
-                    )}
-
-                    {/* Subtle gradient overlay for selected state */}
-                    {isSelected && (
-                        <Box
-                            sx={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                width: "50%",
-                                height: "100%",
-                                background: isDark
-                                    ? `radial-gradient(ellipse at top right, rgba(${activityColor.darkRgb}, 0.03) 0%, transparent 70%)`
-                                    : `radial-gradient(ellipse at top right, rgba(${activityColor.lightRgb}, 0.02) 0%, transparent 70%)`,
-                                pointerEvents: "none",
-                            }}
-                        />
-                    )}
-
-                    <Stack
-                        direction="column"
-                        spacing={0.5}
-                        sx={{ position: "relative", zIndex: 1 }}
-                    >
-                        <ActivityHeader
-                            activity={activity}
-                            chatTypeLookup={chatTypeLookup}
-                            useCM={useCM}
-                            isYou={isYou}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-
-                        <ActivityContent
-                            activity={activity}
-                            groupedReactions={groupedReactions}
-                            myself={myself}
-                        />
-
-                        {aggregatedCount > 1 && (
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    ml: "44px",
-                                    mt: 0.25,
-                                    fontSize: "0.7rem",
-                                    fontWeight: 600,
-                                    color: isDark
-                                        ? `rgba(${activityColor.darkRgb}, 0.8)`
-                                        : `rgba(${activityColor.lightRgb}, 0.8)`,
-                                }}
-                            >
-                                {/* Aggregation partitions each topic by read-state
+                        >
+                            {/* Aggregation partitions each topic by read-state
                                     (see `aggregateActivityMessages`), so a row is
                                     either the unread "while you were away" bucket
                                     or read history. `isRead === false` on the
                                     aggregated row means the former — label the
                                     hidden members as NEW rather than "earlier". */}
-                                {fmt(
-                                    activity.isRead === false
-                                        ? t.chat.activity.aggregatedNew
-                                        : t.chat.activity.aggregatedEarlier,
-                                    { count: aggregatedCount - 1 }
-                                )}
-                            </Typography>
-                        )}
-                    </Stack>
-                </ListItemButton>
-            </ListItem>
+                            {fmt(
+                                activity.isRead === false
+                                    ? t.chat.activity.aggregatedNew
+                                    : t.chat.activity.aggregatedEarlier,
+                                { count: aggregatedCount - 1 }
+                            )}
+                        </Typography>
+                    )}
+                </Stack>
+            </NavItem>
             <ListDivider
                 sx={{
                     margin: 0,

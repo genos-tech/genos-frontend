@@ -30,7 +30,11 @@ import {
  */
 export type NavItemProps = {
     /** The row's text, or a node for a composite title (lock icon, chip...). */
-    label: ReactNode;
+    label?: ReactNode;
+    /** A card-shaped row (activity feed, flagged messages): replaces the
+     *  icon / label / secondary layout with the caller's own content, and
+     *  keeps everything else: selection, unread, focus, hover, height floor. */
+    children?: ReactNode;
     /** Leading icon or avatar. Plain SVG icons are sized to `NAV_ICON_SIZE`. */
     icon?: ReactNode;
     /** Second line under the label (needs `lines={2}`). */
@@ -77,6 +81,7 @@ const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
 export const NavItem = ({
     label,
+    children,
     icon,
     secondary,
     count,
@@ -250,88 +255,107 @@ export const NavItem = ({
                     </Box>
                 )}
 
-                {icon !== undefined && icon !== null && (
+                {children !== undefined ? (
                     <Box
-                        className="NavItem-icon"
-                        sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            "& > svg": { fontSize: NAV_ICON_SIZE },
-                        }}
+                        className="NavItem-content"
+                        sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}
                     >
-                        {icon}
+                        {children}
                     </Box>
-                )}
+                ) : (
+                    <>
+                        {icon !== undefined && icon !== null && (
+                            <Box
+                                className="NavItem-icon"
+                                sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                    "& > svg": { fontSize: NAV_ICON_SIZE },
+                                }}
+                            >
+                                {icon}
+                            </Box>
+                        )}
 
-                <Box
-                    className="NavItem-content"
-                    sx={{
-                        flex: 1,
-                        minWidth: 0,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Box
-                        className="NavItem-label"
-                        sx={[
-                            {
-                                minWidth: 0,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                fontWeight: unread ? 600 : "inherit",
-                                color: unread && !selected ? g.text.primary : "inherit",
-                            },
-                            ...(Array.isArray(labelSx) ? labelSx : labelSx ? [labelSx] : []),
-                        ]}
-                    >
-                        {label}
-                    </Box>
-                    {secondary !== undefined && secondary !== null && (
                         <Box
-                            className="NavItem-secondary"
+                            className="NavItem-content"
                             sx={{
-                                ...type("body-xs"),
+                                flex: 1,
                                 minWidth: 0,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                fontWeight: 400,
-                                color: g.text.tertiary,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
                             }}
                         >
-                            {secondary}
+                            <Box
+                                className="NavItem-label"
+                                sx={[
+                                    {
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        fontWeight: unread ? 600 : "inherit",
+                                        color: unread && !selected ? g.text.primary : "inherit",
+                                    },
+                                    ...(Array.isArray(labelSx)
+                                        ? labelSx
+                                        : labelSx
+                                          ? [labelSx]
+                                          : []),
+                                ]}
+                            >
+                                {label}
+                            </Box>
+                            {secondary !== undefined && secondary !== null && (
+                                <Box
+                                    className="NavItem-secondary"
+                                    sx={{
+                                        ...type("body-xs"),
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        fontWeight: 400,
+                                        color: g.text.tertiary,
+                                    }}
+                                >
+                                    {secondary}
+                                </Box>
+                            )}
                         </Box>
-                    )}
-                </Box>
 
-                {count !== undefined && count !== null && (
-                    <Box
-                        className="NavItem-count"
-                        component="span"
-                        sx={{
-                            ...type("caption"),
-                            flexShrink: 0,
-                            color: "inherit",
-                            opacity: 0.8,
-                            fontVariantNumeric: "tabular-nums",
-                        }}
-                    >
-                        {count}
-                    </Box>
-                )}
+                        {count !== undefined && count !== null && (
+                            <Box
+                                className="NavItem-count"
+                                component="span"
+                                sx={{
+                                    ...type("caption"),
+                                    flexShrink: 0,
+                                    color: "inherit",
+                                    opacity: 0.8,
+                                    fontVariantNumeric: "tabular-nums",
+                                }}
+                            >
+                                {count}
+                            </Box>
+                        )}
 
-                {trailing !== undefined && trailing !== null && (
-                    <Box
-                        className="NavItem-trailing"
-                        sx={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}
-                    >
-                        {trailing}
-                    </Box>
+                        {trailing !== undefined && trailing !== null && (
+                            <Box
+                                className="NavItem-trailing"
+                                sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {trailing}
+                            </Box>
+                        )}
+                    </>
                 )}
             </ListItemButton>
 

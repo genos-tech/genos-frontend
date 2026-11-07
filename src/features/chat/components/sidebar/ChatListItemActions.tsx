@@ -17,10 +17,10 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
@@ -50,9 +50,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     setIsToDoVisible,
     isToDoVisible,
 }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     // Show add members option for DM and MDM chats (chatType 1 and 4)
     const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
@@ -60,15 +58,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     const showManageTags = chat.chatType === 2 && onManageTagsClick;
 
     return (
-        <Stack alignItems="center" direction="row">
-            <Typography
-                level="body-xs"
-                sx={{ display: { xs: "none", md: "block" }, mt: 0.6, mr: 1 }}
-                noWrap
-            >
-                {chat.latestMessage ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent) : ""}
-            </Typography>
-
+        <Stack alignItems="center" direction="row" spacing={0.25}>
             {/* To-Do Button */}
             {chat.dmPartnerUser.userId === myself.userId &&
                 (isToDoVisible ? (
@@ -77,7 +67,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             color="neutral"
                             component="a"
                             size="sm"
-                            sx={{ mr: -1, mt: 0.6 }}
                             variant="plain"
                             onClick={() => setIsToDoVisible(false)}
                         >
@@ -91,13 +80,12 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             badgeContent={incompleteTodoCount}
                             color="primary"
                             size="sm"
-                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
+                            sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
                         >
                             <IconButton
                                 color="neutral"
                                 component="a"
                                 size="sm"
-                                sx={{ mr: -1 }}
                                 variant="plain"
                                 onClick={() => setIsToDoVisible(true)}
                             >
@@ -115,22 +103,13 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 <IconButton
                     color={chat.isPinned ? "danger" : "neutral"}
                     component="a"
-                    sx={{ mr: -1, mt: 0.6 }}
+                    size="sm"
+                    variant="plain"
                     onClick={onPinClick}
                 >
                     <PushPinIcon sx={{ fontSize: isPinned ? 18 : 16 }} />
                 </IconButton>
             </AppTooltip>
-
-            {/* Unread Indicator */}
-            {/* PUNCH LIST (v3 chatId migration): `lastReadMessageId` is */}
-            {/* `string` post-flip; `messageId` is still `number`. */}
-            {/* Round-trip via `Number(... || "0")` — UUID-shaped cursors */}
-            {/* NaN-compare to false (no false-positive unread dot). */}
-            {chat.latestMessage &&
-                Number(chat.lastReadMessageId || "0") < chat.latestMessage?.messageId && (
-                    <CircleIcon color="primary" sx={{ mr: 0.5, fontSize: 12, mt: 0.5 }} />
-                )}
 
             {/* More Options Menu */}
             <Dropdown>
@@ -142,13 +121,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             variant: "plain",
                             color: "neutral",
                             sx: {
-                                mt: 0.6,
-                                borderRadius: "8px",
-                                "&:hover": {
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.06)",
-                                },
+                                borderRadius: g.radius.sm,
                             },
                         },
                     }}
@@ -161,16 +134,11 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     size="sm"
                     sx={{
                         zIndex: 10010,
-                        borderRadius: "10px",
+                        borderRadius: g.radius.md,
                         minWidth: 160,
-                        boxShadow: isDark
-                            ? "0 8px 24px rgba(0,0,0,0.5)"
-                            : "0 8px 24px rgba(0,0,0,0.12)",
-                        background: isDark
-                            ? "rgba(30, 30, 40, 0.98)"
-                            : "rgba(255, 255, 255, 0.98)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                        boxShadow: g.shadow.md,
+                        background: g.surface.raised,
+                        border: `1px solid ${g.border.subtle}`,
                     }}
                 >
                     {/* Split View Option — opening leads (moreMenuOrder.ts). Members and
@@ -191,7 +159,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         <SplitscreenIcon
                             sx={{
                                 fontSize: 18,
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
+                                color: g.accent.text,
                             }}
                         />
                         {t.chat.listItem.openInSplitView}
@@ -215,9 +183,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             <PersonAddRoundedIcon
                                 sx={{
                                     fontSize: 18,
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
+                                    color: g.accent.text,
                                 }}
                             />
                             {t.chat.listItem.addMembersMenu}
@@ -242,9 +208,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             <SellOutlinedIcon
                                 sx={{
                                     fontSize: 18,
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
+                                    color: g.accent.text,
                                 }}
                             />
                             {t.chat.listItem.manageTagsMenu}
@@ -252,6 +216,35 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     )}
                 </Menu>
             </Dropdown>
+        </Stack>
+    );
+};
+
+/**
+ * What a chat row always shows at its end, whatever the pointer does: the time
+ * of the latest message (wide screens) and the unread dot. Not an action, so it
+ * lives in the row's `trailing` slot and is never hidden.
+ */
+export const ChatListItemMeta: React.FC<{ chat: AllChatProps }> = ({ chat }) => {
+    // PUNCH LIST (v3 chatId migration): `lastReadMessageId` is `string`
+    // post-flip; `messageId` is still `number`. Round-trip via
+    // `Number(... || "0")` — UUID-shaped cursors NaN-compare to false
+    // (no false-positive unread dot).
+    const hasUnread =
+        chat.latestMessage && Number(chat.lastReadMessageId || "0") < chat.latestMessage.messageId;
+    const time = chat.latestMessage ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent) : "";
+    return (
+        <Stack alignItems="center" direction="row" spacing={0.75}>
+            {time && (
+                <Typography
+                    level="body-xs"
+                    sx={{ display: { xs: "none", md: "block" }, color: g.text.tertiary }}
+                    noWrap
+                >
+                    {time}
+                </Typography>
+            )}
+            {hasUnread && <CircleIcon color="primary" sx={{ fontSize: 10 }} />}
         </Stack>
     );
 };

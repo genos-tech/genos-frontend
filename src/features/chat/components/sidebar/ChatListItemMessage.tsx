@@ -1,9 +1,9 @@
 import React from "react";
-import { Box, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
 
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../utils/common";
 
@@ -12,9 +12,7 @@ interface ChatListItemMessageProps {
 }
 
 export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     // PUNCH LIST (v3 chatId migration): `lastReadMessageId` is `string`
     // post-flip; `messageId` is still `number`. Round-trip via
@@ -34,36 +32,22 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
         return null;
     }
 
+    // The row's second line (NavItem `secondary`): one line, ellipsized by the
+    // row. Unread previews read as text, the rest stay quiet.
     return (
-        <Box sx={{ pl: 4.5 }}>
-            <Typography
-                level="body-xs"
-                sx={{
-                    fontWeight: hasUnread ? 600 : 400,
-                    fontSize: "1rem",
-                    fontStyle: mediaKind ? "italic" : "normal",
-                    opacity: mediaKind ? 0.75 : 1,
-                    color: hasUnread
-                        ? isDark
-                            ? "rgba(255,255,255,0.95)"
-                            : "rgba(0,0,0,0.9)"
-                        : isDark
-                          ? "rgba(255,255,255,0.7)"
-                          : "rgba(0,0,0,0.65)",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    lineHeight: 1.4,
-                }}
-            >
-                {mediaKind ? (
-                    t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
-                ) : (
-                    <EmojiText text={chat.latestMessageText} />
-                )}
-            </Typography>
+        <Box
+            component="span"
+            sx={{
+                fontStyle: mediaKind ? "italic" : "normal",
+                fontWeight: hasUnread ? 500 : 400,
+                color: hasUnread ? g.text.primary : "inherit",
+            }}
+        >
+            {mediaKind ? (
+                t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
+            ) : (
+                <EmojiText text={chat.latestMessageText} />
+            )}
         </Box>
     );
 };

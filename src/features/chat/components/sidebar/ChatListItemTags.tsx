@@ -2,6 +2,7 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 
 /**
@@ -82,9 +83,9 @@ export const ChatListItemTags = ({ chat }: { chat: AllChatProps }) => {
                     sx={{
                         alignItems: "center",
                         border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-                        borderRadius: "4px",
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                        borderColor: g.border.default,
+                        borderRadius: g.radius.xs,
+                        color: g.text.tertiary,
                         display: "inline-flex",
                         flexShrink: 0,
                         fontSize: "0.6rem",

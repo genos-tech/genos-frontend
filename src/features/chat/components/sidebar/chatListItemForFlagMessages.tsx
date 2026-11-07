@@ -12,8 +12,8 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
-import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import { Avatar, Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
+import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -23,6 +23,7 @@ import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -738,257 +739,163 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
     return (
         <React.Fragment>
-            <ListItem
+            {/* The row shell (selection, active-flag bar, focus, hover) is the
+                shared NavItem; the card content below is the feed's own. */}
+            <NavItem
+                as="div"
+                data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
+                lines={2}
+                selected={isSelected}
                 sx={{
-                    overflowX: "hidden",
-                    p: 0.5,
-                    width: "100%",
+                    mx: 1,
+                    my: 0.25,
+                    height: "auto",
+                    py: 0.75,
+                    opacity: navigationDisabled ? 0.65 : 1,
+                    ...(navigationDisabled && {
+                        "& .MuiListItemButton-root": { cursor: "default" },
+                    }),
                 }}
+                // Active-flag indicator bar: not shown in the past view (those
+                // flags are completed, not outstanding).
+                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
+                onClick={onClickHandler}
             >
-                <ListItemButton
-                    data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
-                    sx={{
-                        "&:active": {
-                            transform: "translateY(0)",
-                        },
-                        "&:hover": {
-                            background: isSelected
-                                ? isDark
-                                    ? `linear-gradient(135deg, ${flagColor.dark}20 0%, ${flagColor.dark}12 100%)`
-                                    : `linear-gradient(135deg, ${flagColor.light}15 0%, ${flagColor.light}08 100%)`
-                                : isDark
-                                  ? "rgba(255,255,255,0.05)"
-                                  : "rgba(0,0,0,0.03)",
-                            borderColor: isSelected
-                                ? isDark
-                                    ? `${flagColor.dark}40`
-                                    : `${flagColor.light}35`
-                                : isDark
-                                  ? "rgba(255,255,255,0.08)"
-                                  : "rgba(0,0,0,0.08)",
-                            boxShadow: isSelected
-                                ? isDark
-                                    ? `0 6px 20px ${flagColor.dark}20`
-                                    : `0 6px 20px ${flagColor.light}15`
-                                : isDark
-                                  ? "0 4px 12px rgba(0,0,0,0.3)"
-                                  : "0 4px 12px rgba(0,0,0,0.08)",
-                            transform: "translateY(-1px)",
-                        },
-                        alignItems: "initial",
-                        background: isSelected
-                            ? isDark
-                                ? `linear-gradient(135deg, ${flagColor.dark}15 0%, ${flagColor.dark}08 100%)`
-                                : `linear-gradient(135deg, ${flagColor.light}12 0%, ${flagColor.light}05 100%)`
-                            : isDark
-                              ? "rgba(255,255,255,0.02)"
-                              : "rgba(0,0,0,0.01)",
-                        border: "1px solid",
-                        borderColor: isSelected
-                            ? isDark
-                                ? `${flagColor.dark}30`
-                                : `${flagColor.light}25`
-                            : isDark
-                              ? "rgba(255,255,255,0.04)"
-                              : "rgba(0,0,0,0.04)",
-                        borderRadius: "12px",
-                        boxShadow: isSelected
-                            ? isDark
-                                ? `0 4px 16px ${flagColor.dark}15, inset 0 1px 0 ${flagColor.dark}10`
-                                : `0 4px 16px ${flagColor.light}12, inset 0 1px 0 ${flagColor.light}08`
-                            : "none",
-                        cursor: navigationDisabled ? "default" : undefined,
-                        flexDirection: "column",
-                        gap: 0.75,
-                        opacity: navigationDisabled ? 0.65 : 1,
-                        overflow: "hidden",
-                        position: "relative",
-                        px: 1.5,
-                        py: 1.25,
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    }}
-                    onClick={onClickHandler}
-                >
-                    {/* Active-flag indicator line — not shown in the past
-                        view (those flags are completed, not outstanding). */}
-                    {tmpIsFlagged && viewMode === "active" && (
-                        <Box
-                            sx={{
-                                background: isDark
-                                    ? `linear-gradient(180deg, ${flagColor.dark} 0%, ${flagColor.dark}80 100%)`
-                                    : `linear-gradient(180deg, ${flagColor.light} 0%, ${flagColor.light}80 100%)`,
-                                borderRadius: "0 4px 4px 0",
-                                boxShadow: isDark
-                                    ? `0 0 8px ${flagColor.dark}60`
-                                    : `0 0 8px ${flagColor.light}50`,
-                                height: "60%",
-                                left: 0,
-                                position: "absolute",
-                                top: "50%",
-                                transform: "translateY(-50%)",
-                                width: 3,
-                            }}
-                        />
-                    )}
-
-                    {/* Subtle gradient overlay for selected state */}
-                    {isSelected && (
-                        <Box
-                            sx={{
-                                background: isDark
-                                    ? `radial-gradient(ellipse at top right, ${flagColor.dark}08 0%, transparent 70%)`
-                                    : `radial-gradient(ellipse at top right, ${flagColor.light}06 0%, transparent 70%)`,
-                                height: "100%",
-                                pointerEvents: "none",
-                                position: "absolute",
-                                right: 0,
-                                top: 0,
-                                width: "50%",
-                            }}
-                        />
-                    )}
-
+                <Stack direction="column" spacing={0.5} sx={{ position: "relative", zIndex: 1 }}>
+                    {/* Header with avatar, name, and actions */}
                     <Stack
-                        direction="column"
-                        spacing={0.5}
-                        sx={{ position: "relative", zIndex: 1 }}
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={1.5}
                     >
-                        {/* Header with avatar, name, and actions */}
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="space-between"
-                            spacing={1.5}
-                        >
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <div>{renderAvatar()}</div>
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <div>{renderAvatar()}</div>
 
-                                <Stack
-                                    alignItems="center"
-                                    direction="row"
-                                    flexWrap="wrap"
-                                    spacing={0.5}
-                                >
-                                    {renderChatNameChip()}
-                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                                        {renderProjectChips()}
-                                        {renderChatTypeChip()}
-                                        {renderThreadChip()}
-                                        {renderReminderChip()}
-                                        {chatRemoved &&
-                                            renderRemovedChip(t.chat.listItem.chatRemoved)}
-                                        {!chatRemoved &&
-                                            sourceDeleted &&
-                                            renderRemovedChip(t.chat.listItem.messageDeleted)}
-                                    </Box>
-                                </Stack>
-                            </Stack>
-
-                            {/* Right-aligned content */}
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        display: { xs: "none", md: "block" },
-                                        opacity: 0.7,
-                                    }}
-                                    noWrap
-                                >
-                                    {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
-                                </Typography>
-                                {viewMode === "active" ? (
-                                    <AppTooltip size="sm" title={t.chat.listItem.completeFlag}>
-                                        <IconButton
-                                            color="success"
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                transition: "all 0.2s ease",
-                                                "&:hover": { transform: "scale(1.1)" },
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                completeFlagStatus();
-                                            }}
-                                        >
-                                            <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
-                                    </AppTooltip>
-                                ) : (
-                                    <AppTooltip size="sm" title={t.chat.listItem.reopenFlag}>
-                                        <IconButton
-                                            color="primary"
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                transition: "all 0.2s ease",
-                                                "&:hover": { transform: "scale(1.1)" },
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                reopenFlagStatus();
-                                            }}
-                                        >
-                                            <ReplayRoundedIcon sx={{ fontSize: 18 }} />
-                                        </IconButton>
-                                    </AppTooltip>
-                                )}
-                                {/* Hard remove — deletes the flag entirely
-                                    (for an accidental flag). Available in both
-                                    the active and past views. */}
-                                <AppTooltip size="sm" title={t.chat.listItem.unflag}>
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        color={
-                                            viewMode === "active" && tmpIsFlagged
-                                                ? "danger"
-                                                : "neutral"
-                                        }
-                                        sx={{
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                transform: "scale(1.1)",
-                                            },
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            updateFlagStatus();
-                                        }}
-                                    >
-                                        {viewMode === "active" ? (
-                                            <FlagIcon sx={{ fontSize: 16 }} />
-                                        ) : (
-                                            <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                        )}
-                                    </IconButton>
-                                </AppTooltip>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                flexWrap="wrap"
+                                spacing={0.5}
+                            >
+                                {renderChatNameChip()}
+                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                    {renderProjectChips()}
+                                    {renderChatTypeChip()}
+                                    {renderThreadChip()}
+                                    {renderReminderChip()}
+                                    {chatRemoved && renderRemovedChip(t.chat.listItem.chatRemoved)}
+                                    {!chatRemoved &&
+                                        sourceDeleted &&
+                                        renderRemovedChip(t.chat.listItem.messageDeleted)}
+                                </Box>
                             </Stack>
                         </Stack>
 
-                        {/* Message content */}
-                        <Box sx={{ pl: "44px" }}>
+                        {/* Right-aligned content */}
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <Typography
-                                level="body-sm"
+                                level="body-xs"
                                 sx={{
-                                    display: "-webkit-box",
-                                    fontStyle: navigationDisabled ? "italic" : "normal",
-                                    fontWeight: 500,
-                                    lineHeight: 1.5,
-                                    opacity: navigationDisabled ? 0.55 : 0.85,
-                                    overflow: "hidden",
-                                    textDecoration: navigationDisabled ? "line-through" : "none",
-                                    textOverflow: "ellipsis",
-                                    WebkitBoxOrient: "vertical",
-                                    WebkitLineClamp: 2,
+                                    display: { xs: "none", md: "block" },
+                                    opacity: 0.7,
                                 }}
+                                noWrap
                             >
-                                <EmojiText text={flaggedMessage.contentText} />
+                                {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                             </Typography>
-                        </Box>
+                            {viewMode === "active" ? (
+                                <AppTooltip size="sm" title={t.chat.listItem.completeFlag}>
+                                    <IconButton
+                                        color="success"
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            transition: "all 0.2s ease",
+                                            "&:hover": { transform: "scale(1.1)" },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            completeFlagStatus();
+                                        }}
+                                    >
+                                        <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            ) : (
+                                <AppTooltip size="sm" title={t.chat.listItem.reopenFlag}>
+                                    <IconButton
+                                        color="primary"
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            transition: "all 0.2s ease",
+                                            "&:hover": { transform: "scale(1.1)" },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            reopenFlagStatus();
+                                        }}
+                                    >
+                                        <ReplayRoundedIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </AppTooltip>
+                            )}
+                            {/* Hard remove — deletes the flag entirely
+                                    (for an accidental flag). Available in both
+                                    the active and past views. */}
+                            <AppTooltip size="sm" title={t.chat.listItem.unflag}>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    color={
+                                        viewMode === "active" && tmpIsFlagged
+                                            ? "danger"
+                                            : "neutral"
+                                    }
+                                    sx={{
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            transform: "scale(1.1)",
+                                        },
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        updateFlagStatus();
+                                    }}
+                                >
+                                    {viewMode === "active" ? (
+                                        <FlagIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                    )}
+                                </IconButton>
+                            </AppTooltip>
+                        </Stack>
                     </Stack>
-                </ListItemButton>
-            </ListItem>
+
+                    {/* Message content */}
+                    <Box sx={{ pl: "44px" }}>
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                display: "-webkit-box",
+                                fontStyle: navigationDisabled ? "italic" : "normal",
+                                fontWeight: 500,
+                                lineHeight: 1.5,
+                                opacity: navigationDisabled ? 0.55 : 0.85,
+                                overflow: "hidden",
+                                textDecoration: navigationDisabled ? "line-through" : "none",
+                                textOverflow: "ellipsis",
+                                WebkitBoxOrient: "vertical",
+                                WebkitLineClamp: 2,
+                            }}
+                        >
+                            <EmojiText text={flaggedMessage.contentText} />
+                        </Typography>
+                    </Box>
+                </Stack>
+            </NavItem>
             <ListDivider
                 sx={{
                     margin: 0,

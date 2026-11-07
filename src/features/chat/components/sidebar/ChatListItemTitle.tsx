@@ -1,12 +1,12 @@
 import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import { Box, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Stack } from "@mui/joy";
 
 import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { ChatListItemTags } from "./ChatListItemTags";
@@ -24,9 +24,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     isYou,
     myself,
 }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     const showMyCustomStatus =
         chat.dmPartnerUser.userId !== "" &&
@@ -70,30 +68,30 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     return (
         <Box sx={{ minWidth: 0 }}>
             <Stack direction="column" spacing={0.25} sx={{ minWidth: 0 }}>
-                {/* Name row with lock icon and group indicator */}
+                {/* Name row with lock icon and group indicator. The name takes
+                    the row's own type and weight (NavItem), so it follows the
+                    density row and the unread emphasis without restating them. */}
                 <Stack alignItems="center" direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
                     {chat.isPrivate && (
                         <LockOutlineRoundedIcon
                             sx={{
                                 fontSize: 13,
-                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                                color: g.text.tertiary,
                                 flexShrink: 0,
                             }}
                         />
                     )}
-                    <Typography
-                        level="title-sm"
+                    <Box
+                        component="span"
                         sx={{
-                            fontWeight: 600,
-                            fontSize: "1rem",
-                            color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
                             minWidth: 0,
-                            lineHeight: 1.3,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                         }}
-                        noWrap
                     >
                         {isYou ? `${displayName} (you)` : displayName}
-                    </Typography>
+                    </Box>
                     {/* Never a hover-only affordance: people outside the
                         company are in this room, and that has to be
                         visible at a glance before anything is typed.
@@ -119,21 +117,19 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
 
                 {/* Custom status row - only shown when status exists */}
                 {customStatus && (
-                    <Typography
-                        level="body-xs"
+                    <Box
                         sx={{
-                            fontSize: "0.7rem",
-                            fontWeight: 500,
-                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                            lineHeight: 1.2,
-                            pl: chat.isPrivate ? 2.25 : 0, // Align with name when lock icon present
+                            ...type("body-xs"),
+                            color: g.text.tertiary,
                             fontStyle: "italic",
-                            letterSpacing: "0.01em",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            pl: chat.isPrivate ? 2.25 : 0, // Align with name when lock icon present
                         }}
-                        noWrap
                     >
                         {customStatus}
-                    </Typography>
+                    </Box>
                 )}
 
                 {/* GM rows: the user's personal tags act as the chat's
