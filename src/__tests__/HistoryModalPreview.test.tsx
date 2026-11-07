@@ -11,6 +11,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { HistoryModal } from "../components/layout/HistoryModal";
 import { TeamEmoji } from "../services/teamEmojiApi";
 import { setTeamEmojiList } from "../services/teamEmojiStore";
@@ -138,5 +140,28 @@ describe("HistoryModal chat-row subtitle", () => {
 
         renderModal([]);
         expect(screen.getByText("just text")).toBeInTheDocument();
+    });
+});
+
+describe("HistoryModal frame (MIP-1126 batch 1)", () => {
+    it("is a ModalFrame dialog titled History with the specific close name", () => {
+        renderModal([]);
+        const dialog = screen.getByRole("dialog");
+        const title = document.getElementById(dialog.getAttribute("aria-labelledby")!)!;
+        expect(title.textContent).toBe("History");
+        expect(screen.getByRole("button", { name: "Close history" })).toBeTruthy();
+    });
+
+    it("keeps Joy's default modal layer and brings no gradient or glow", () => {
+        renderModal([]);
+        expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe("1300");
+        const css = cssOf(screen.getByRole("dialog"));
+        expect(css).not.toMatch(/gradient/i);
+        expect(css.match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+    });
+
+    it("keeps Clear history as the footer action", () => {
+        renderModal([]);
+        expect(screen.getByRole("button", { name: "Clear history" })).toBeTruthy();
     });
 });

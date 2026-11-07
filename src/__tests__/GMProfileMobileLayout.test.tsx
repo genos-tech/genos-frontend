@@ -19,9 +19,12 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
+import { PROFILE_MODAL_Z_INDEX } from "../components/ui/styles/commonStyle";
 import { ModalGMProfile } from "../features/chat/components/modals/ModalGMProfile";
 import type { UserProps } from "../types/admin";
 import type { AllChatProps } from "../types/chat";
@@ -172,5 +175,63 @@ describe("the group profile modal body", () => {
         // The title was the one thing that DID render on a phone, so it is
         // the control: the fix must not have moved it.
         expect(screen.getByRole("heading", { name: /Launch crew/ })).toBeInTheDocument();
+    });
+});
+
+describe("the group profile modal frame (MIP-1126 batch 1)", () => {
+    it("is a ModalFrame dialog named by its title, at the profile layer", () => {
+        renderModal();
+        const dialog = screen.getByRole("dialog");
+        const title = document.getElementById(dialog.getAttribute("aria-labelledby")!)!;
+        expect(title.tagName).toBe("H2");
+        expect(title.textContent).toBe("Group Message Profile - Launch crew");
+        // Children raised from it (add members, user profile) derive from this.
+        expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe(
+            String(PROFILE_MODAL_Z_INDEX)
+        );
+    });
+
+    it("has a close button (it is full-screen on a phone)", () => {
+        renderModal();
+        expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
+
+    it("keeps its own gradient, glow and radius off the dialog", () => {
+        renderModal();
+        const css = cssOf(screen.getByRole("dialog"));
+        expect(css).not.toMatch(/gradient/i);
+        expect(css.match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+        expect(css).not.toContain("20px");
+    });
+
+    it("does not leak a click inside to the component that opened it", () => {
+        const onClick = vi.fn();
+        render(
+            <CssVarsProvider>
+                <div onClick={onClick}>
+                    <ModalGMProfile
+                        gmChat={gmChat}
+                        myself={myself}
+                        openModalGMProfile={true}
+                        setAvatarUserId={vi.fn()}
+                        setMyself={vi.fn()}
+                        setOpenModalGMProfile={vi.fn()}
+                        setOpenUserProfile={vi.fn()}
+                        socket={null}
+                        useCM={
+                            {
+                                allChats: [],
+                                funcSetAllChats: vi.fn(),
+                                setAllChats: vi.fn(),
+                            } as never
+                        }
+                        useTEM={{ teamMemberProfiles: {} } as never}
+                        useUISM={{} as never}
+                    />
+                </div>
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getByText("Group name"));
+        expect(onClick).not.toHaveBeenCalled();
     });
 });
