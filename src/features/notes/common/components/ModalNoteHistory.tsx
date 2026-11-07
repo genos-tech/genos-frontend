@@ -163,11 +163,19 @@ export const ModalNoteHistory = ({
         }
     };
 
+    const description = canRestore
+        ? t.notes.history.ownerDescription
+        : t.notes.history.viewerDescription;
+
+    // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
     return (
         <ModalFrame
+            description={description}
             hostZIndex={hostZIndex}
             open={open}
             size="xl"
+            title={t.notes.history.title}
+            zIndex={theme.zIndex.modal}
             actions={
                 <>
                     <Typography
@@ -199,15 +207,9 @@ export const ModalNoteHistory = ({
                     </Button>
                 </>
             }
-            description={
-                canRestore ? t.notes.history.ownerDescription : t.notes.history.viewerDescription
-            }
             flush
             headerDivider
             onClose={onClose}
-            title={t.notes.history.title}
-            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
-            zIndex={theme.zIndex.modal}
         >
             {/* Body: split list / preview (stacked on a phone) */}
             <Stack

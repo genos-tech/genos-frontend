@@ -244,7 +244,6 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
     return (
         <ModalFrame
             description={t.tasks.sprint.configIntro}
-            headerDivider
             open={open}
             size="lg"
             title={t.tasks.sprint.configDialogTitle}
@@ -270,6 +269,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                     </Button>
                 </>
             }
+            headerDivider
             onClose={onClose}
         >
             <Stack spacing={2.5} sx={{ pt: 1 }}>

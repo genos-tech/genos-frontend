@@ -237,7 +237,6 @@ export const ThreadAskModal = ({
 
     return (
         <ModalFrame
-            headerDivider
             closeLabel={t.threadAsk.modal.close}
             description={chatName ? chatName : undefined}
             icon={<AutoAwesomeRoundedIcon sx={{ color: g.accent.text }} />}
@@ -286,6 +285,7 @@ export const ThreadAskModal = ({
                     ) : null}
                 </>
             }
+            headerDivider
             onClose={state.close}
         >
             {/* Summary */}

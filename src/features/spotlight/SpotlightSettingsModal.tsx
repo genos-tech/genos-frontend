@@ -39,11 +39,11 @@ export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
             icon={<SettingsRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="md"
-            headerDivider
-            onClose={onClose}
             title={t.spotlight.settings.title}
             // Above the Spotlight overlay (13100), which remains open behind us.
             zIndex={SPOTLIGHT_SETTINGS_Z_INDEX}
+            headerDivider
+            onClose={onClose}
         >
             <GenosSettingsPanel teamId={teamId}>
                 <LlmModelSection />

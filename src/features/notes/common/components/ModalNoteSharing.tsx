@@ -129,26 +129,27 @@ export const ModalNoteSharing = ({
         await handleGrant(member.userId, newRoleId);
     };
 
+    const description = isOwner
+        ? t.notes.sharing.ownerDescription
+        : t.notes.sharing.viewerDescription;
+    const title = fmt(t.notes.sharing.title, { title: noteTitle || t.notes.defaults.untitled });
+
+    // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
     return (
         <ModalFrame
+            description={description}
             hostZIndex={hostZIndex}
             open={open}
+            size="md"
+            title={title}
+            zIndex={theme.zIndex.modal}
             actions={
                 <Button color="neutral" variant="plain" onClick={onClose}>
                     {t.notes.sharing.done}
                 </Button>
             }
-            description={
-                isOwner ? t.notes.sharing.ownerDescription : t.notes.sharing.viewerDescription
-            }
-            title={fmt(t.notes.sharing.title, {
-                title: noteTitle || t.notes.defaults.untitled,
-            })}
             clearBottomBar
             onClose={onClose}
-            size="md"
-            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
-            zIndex={theme.zIndex.modal}
         >
             {/* Current members */}
             <Box sx={{ mb: 1 }}>
