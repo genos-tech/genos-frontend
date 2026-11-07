@@ -4,7 +4,6 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -37,8 +36,6 @@ import {
     Checkbox,
     Divider,
     IconButton,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Sheet,
@@ -50,7 +47,7 @@ import {
     Tabs,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
 import { GenosSettingsPanel } from "../../features/genos/memory/GenosSettingsPanel";
@@ -100,6 +97,7 @@ import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { ModalFrame } from "../ui/modal/ModalFrame";
 import {
     NAV_HOVER_MEDIA,
     NAV_ICON_SIZE,
@@ -1775,9 +1773,8 @@ export const SettingsModal = ({
     useCM,
     useUISM,
 }: Props) => {
-    const { mode } = useColorScheme();
+    const theme = useTheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     // The tab rail is a LEFT SIDEBAR on desktop and a scrollable TOP
     // STRIP on mobile. Not a styling preference: `orientation` is what
     // makes Joy's `Tabs` a row vs a column, and the vertical rail's
@@ -1792,48 +1789,22 @@ export const SettingsModal = ({
     // app-wide preferences (appearance, language, privacy).
     const [tab, setTab] = useState<SettingsTabKey>("general");
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
-                sx={{
-                    // Widened at `lg` so the two-pane Mention groups
-                    // panel (group list + member editor) fits without
-                    // truncation. The other tabs still look fine in
-                    // the extra space — they're single-column sheets.
-                    width: { xs: "94vw", sm: 550, md: 700, lg: 920 },
-                    // `dvh`, not `vh`: `vh` is the viewport with the
-                    // browser chrome HIDDEN, so on iOS an 85vh dialog is
-                    // taller than what you can actually see. Mobile also
-                    // subtracts the bottom bar / keyboard strip, because
-                    // the Modal (z-1300) paints OVER the BottomTabBar
-                    // (z-1200) and would otherwise put its lowest rows
-                    // behind it.
-                    maxHeight: {
-                        xs: "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
-                        sm: "85dvh",
-                    },
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    borderRadius: "xl",
-                    // Every 8px of padding is 16px off the panel width,
-                    // which is the scarce axis on a phone.
-                    p: { xs: 1.5, sm: 2.5 },
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <SettingsRoundedIcon />
-                    <Typography level="title-lg">{t.settings.title}</Typography>
-                    <Box sx={{ flex: 1 }} />
-                    <IconButton
-                        aria-label={t.common.actions.close}
-                        variant="plain"
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
+        <ModalFrame
+            icon={<SettingsRoundedIcon />}
+            open={open}
+            size="xl"
+            title={t.settings.title}
+            // Where Joy's own modals sit (this dialog never set a layer): above
+            // the mobile bottom bar, below every dialog a panel raises.
+            zIndex={theme.zIndex.modal}
+            clearBottomBar
+            flush
+            headerDivider
+            onClose={onClose}
+        >
+            {/* The header is the frame's; only this body scrolls. The padding is the
+                old dialog's: every 8px is 16px off the panel width on a phone. */}
+            <Box sx={{ px: { xs: 1.5, sm: 2.5 }, pt: 1.5, pb: { xs: 1.5, sm: 2.5 } }}>
                 <Tabs
                     orientation={isMobile ? "horizontal" : "vertical"}
                     value={tab}
@@ -2093,7 +2064,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                 </Tabs>
-            </ModalDialog>
-        </Modal>
+            </Box>
+        </ModalFrame>
     );
 };
