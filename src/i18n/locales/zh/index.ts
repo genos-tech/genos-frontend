@@ -1428,6 +1428,7 @@ export const zh: DeepPartial<Messages> = {
             colors: "颜色",
             download: "下载",
             imagePreviewAlt: "预览",
+            imagePreviewTitle: "图片预览",
         },
         featureError: {
             title: "{feature} 出了点问题。",

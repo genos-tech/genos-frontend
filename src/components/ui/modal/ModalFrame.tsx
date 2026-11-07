@@ -60,9 +60,21 @@ const FENCE = {
  * (dependencies). `profile` is the
  * 1000px profile card (project, group, team); it is built to be used with
  * `fullScreenOnMobile` (below `md` the card is the screen, with the close X as
- * the only way out), so pass both.
+ * the only way out), so pass both. `app` is the 1340px page-sized tool (the calendar),
+ * also meant for `fullScreenOnMobile`. `canvas` is 94vw x 90vh, a fixed-height dialog for a
+ * canvas that needs the room (the task graph). `fit` is as wide as its content (an image
+ * lightbox), up to the screen.
  */
-export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "wide" | "profile";
+export type ModalFrameSize =
+    | "sm"
+    | "md"
+    | "lg"
+    | "xl"
+    | "wide"
+    | "profile"
+    | "app"
+    | "canvas"
+    | "fit";
 
 const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = {
     sm: 400,
@@ -71,10 +83,15 @@ const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = 
     xl: { sm: 550, md: 700, lg: 920 },
     wide: { sm: 550, md: 806 },
     profile: { md: 1000 },
+    app: { md: 1340 },
+    canvas: { xs: "94vw" },
+    fit: { xs: "fit-content" },
 };
 
 /** Where page-level dialogs have always sat. */
 export const MODAL_FRAME_DEFAULT_Z_INDEX = 10010;
+/** Joy's own modal layer, below which its default popup rule is already right. */
+const JOY_MODAL_LAYER = 1300;
 /** Lift over a host's layer: clears the host dialog and its dropdown (host + 1). */
 export const MODAL_FRAME_HOST_OFFSET = 2;
 
@@ -101,6 +118,12 @@ export type ModalFrameProps = {
     headerAccessory?: ReactNode;
     /** The body brings its own padding (tabs, a scrolling card). Default: 20px. */
     flush?: boolean;
+    /**
+     * The body does not scroll: it is a flex column that hands its children the room, so a
+     * canvas or a grid with its own scroller can `flex: 1; minHeight: 0` (the task graph, the
+     * calendar). Default: the body scrolls.
+     */
+    fillBody?: boolean;
     /** On a phone the frame fills the screen with square corners, not an inset card. */
     fullScreenOnMobile?: boolean;
     /** Keep the frame clear of the mobile bottom tab bar (a dialog that paints over it).
@@ -114,6 +137,17 @@ export type ModalFrameProps = {
     role?: "dialog" | "alertdialog";
     /** Show the X in the header. */
     closable?: boolean;
+    /**
+     * This dialog owns Select / Autocomplete popups that portal to `<body>` as siblings of
+     * its root, and it is raised above Joy's modal layer: write the picker layer for them
+     * (Joy's own sibling rule would leave them at 1301, behind the dialog). Off by default
+     * and meant for ONE surface at a time: the rule is a claim on every following sibling
+     * listbox in the page, so two open surfaces that both make it fight by stylesheet
+     * order (the cascade race behind the invisible-dropdown bug, fe #122). Prefer
+     * `slotProps.listbox.sx.zIndex` on the component; use this only when the dialog is the
+     * sole owner of the listboxes that open over it (the Genos settings over Spotlight).
+     */
+    ownsListboxPopups?: boolean;
     /** Accessible name of the X, when a more specific one than "Close" exists. */
     closeLabel?: string;
     /** False while work is under way: Esc, the backdrop and the X do nothing. */
@@ -134,12 +168,14 @@ export const ModalFrame = ({
     headerDivider = false,
     headerAccessory,
     flush = false,
+    fillBody = false,
     fullScreenOnMobile = false,
     clearBottomBar = false,
     zIndex,
     hostZIndex,
     role = "dialog",
     closable = true,
+    ownsListboxPopups = false,
     closeLabel,
     dismissible = true,
     tone,
@@ -184,8 +220,17 @@ export const ModalFrame = ({
             sx={{
                 zIndex: layer,
                 // Joy pins the pickers a dialog opens to calc(modal + 1);
-                // keep them above this layer too.
+                // keep them above this layer too. Select and Autocomplete
+                // listboxes portal to <body> as SIBLINGS of this root, so the
+                // variable also has to be written for them (Joy's own rule
+                // does exactly that, with the default layer); the inline popups
+                // inherit it from the root. The sibling rule is opt-in
+                // (`ownsListboxPopups`): it is a global claim on every listbox.
                 "--unstable_popup-zIndex": layer + 10,
+                ...(ownsListboxPopups &&
+                    layer > JOY_MODAL_LAYER && {
+                        '& ~ [role="listbox"]': { "--unstable_popup-zIndex": layer + 10 },
+                    }),
                 // The blur lives on the root; Joy's Backdrop slot paints the dim.
                 backdropFilter: "blur(4px)",
                 backgroundColor: "transparent",
@@ -204,6 +249,7 @@ export const ModalFrame = ({
                     p: 0,
                     gap: 0,
                     ...sizing,
+                    ...(size === "canvas" && { height: "90vh" }),
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -306,8 +352,9 @@ export const ModalFrame = ({
                             py: flush ? 0 : 1,
                             flex: "1 1 auto",
                             minHeight: 0,
-                            overflowY: "auto",
-                            overscrollBehavior: "contain",
+                            ...(fillBody
+                                ? { display: "flex", flexDirection: "column", overflow: "hidden" }
+                                : { overflowY: "auto", overscrollBehavior: "contain" }),
                         }}
                     >
                         {children}

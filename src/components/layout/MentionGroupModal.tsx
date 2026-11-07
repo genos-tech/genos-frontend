@@ -1,7 +1,5 @@
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { IconButton, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
@@ -9,7 +7,9 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
+import { ModalFrame } from "../ui/modal/ModalFrame";
 import { MentionGroupEditor } from "./MentionGroupEditor";
 
 type Props = {
@@ -35,52 +35,32 @@ export const MentionGroupModal = ({
     useCM,
     useUISM,
 }: Props) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const { openGroupId, closeGroupModal } = useMentionGroupModal();
     const open = openGroupId != null;
+    const theme = useTheme();
     return (
-        <Modal open={open} onClose={closeGroupModal}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="md"
-                sx={{
-                    width: { xs: "92vw", sm: 520 },
-                    maxHeight: "85vh",
-                    overflowY: "auto",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <GroupRoundedIcon sx={{ color: "#16a34a" }} />
-                    <Typography level="title-md">
-                        {t.settings.mentionGroups.modalHeading}
-                    </Typography>
-                    <Stack sx={{ flex: 1 }} />
-                    <IconButton
-                        aria-label={t.common.actions.close}
-                        size="sm"
-                        variant="plain"
-                        onClick={closeGroupModal}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                {open && (
-                    <MentionGroupEditor
-                        groupId={openGroupId!}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                        onDeleted={closeGroupModal}
-                    />
-                )}
-            </ModalDialog>
-        </Modal>
+        <ModalFrame
+            icon={<GroupRoundedIcon sx={{ color: g.success.text }} />}
+            open={open}
+            size="md"
+            title={t.settings.mentionGroups.modalHeading}
+            // Joy's modal layer, where this dialog has always opened.
+            zIndex={theme.zIndex.modal}
+            onClose={closeGroupModal}
+        >
+            {open && (
+                <MentionGroupEditor
+                    groupId={openGroupId!}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                    onDeleted={closeGroupModal}
+                />
+            )}
+        </ModalFrame>
     );
 };

@@ -9,12 +9,11 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import {
     listZoneOptions,
@@ -52,10 +51,7 @@ type Props = {
  */
 export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const isSelfView = myself.userId === user?.userId;
     const source = isSelfView ? myself : user;
@@ -152,7 +148,7 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                 <Chip
                     color="danger"
                     size="sm"
-                    sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                    sx={{ borderRadius: "sm", fontWeight: 600 }}
                     variant="outlined"
                     onClick={() => setEditing(false)}
                 >
@@ -178,17 +174,13 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                 px: 1.5,
                 py: 0.5,
                 borderRadius: "6px",
-                background: isDark
-                    ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                border: `1px solid ${styles.border}`,
+                background: g.accent.subtle,
+                border: `1px solid ${g.border.default}`,
                 width: "fit-content",
                 cursor: isSelfView ? "pointer" : "default",
                 "&:hover": isSelfView
                     ? {
-                          background: isDark
-                              ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                              : "rgba(var(--gp-brand-700-rgb), 0.1)",
+                          background: g.accent.border,
                       }
                     : undefined,
             }}
@@ -199,12 +191,12 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
             }
             onClick={isSelfView ? () => setEditing(true) : undefined}
         >
-            <PlaceRoundedIcon sx={{ fontSize: 16, color: styles.accentColor }} />
+            <PlaceRoundedIcon sx={{ fontSize: 16, color: g.accent.text }} />
             <Typography
                 fontWeight={600}
                 sx={{
                     userSelect: "text",
-                    color: zoneId ? styles.valueColor : styles.labelColor,
+                    color: zoneId ? g.text.primary : g.text.secondary,
                     fontSize: "13px",
                 }}
             >
@@ -215,7 +207,7 @@ export const UserProfileLocation = ({ myself, setMyself, user }: Props) => {
                 you do, because it's the difference between a value that
                 follows you when you travel and one that doesn't. */}
             {isSelfView && isDetected && zoneId && (
-                <Typography sx={{ color: styles.labelColor, fontSize: "11px" }}>
+                <Typography sx={{ color: g.text.secondary, fontSize: "11px" }}>
                     {t.admin.userProfile.locationAuto}
                 </Typography>
             )}

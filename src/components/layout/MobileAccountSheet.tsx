@@ -21,7 +21,7 @@ import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
-import { purplePalette } from "../../theme/purplePalette";
+import { g } from "../../theme/tokens";
 import { Team, TeamProfileProps, UserProps } from "../../types/admin";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
@@ -61,7 +61,7 @@ const RowButton = ({
         variant="plain"
         endDecorator={
             detail ? (
-                <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
                     {detail}
                 </Typography>
             ) : undefined
@@ -120,7 +120,6 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
     const [signOutBusy, setSignOutBusy] = useState(false);
 
     const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     // Load the team list lazily — only once the sheet is actually opened,
     // so the tab bar's presence doesn't cost a request on every session.
@@ -172,8 +171,8 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                 slotProps={{
                     content: {
                         sx: {
-                            borderTopLeftRadius: 16,
-                            borderTopRightRadius: 16,
+                            borderTopLeftRadius: g.radius.lg,
+                            borderTopRightRadius: g.radius.lg,
                             height: "auto",
                             // Clear the home-indicator strip on iPhones.
                             pb: "env(safe-area-inset-bottom, 0px)",
@@ -253,8 +252,8 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                 slotProps={{
                     content: {
                         sx: {
-                            borderTopLeftRadius: 16,
-                            borderTopRightRadius: 16,
+                            borderTopLeftRadius: g.radius.lg,
+                            borderTopRightRadius: g.radius.lg,
                             height: "auto",
                             maxHeight: "70dvh",
                             pb: "env(safe-area-inset-bottom, 0px)",
@@ -295,7 +294,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                                     </Typography>
                                     {isCurrent && (
                                         <CheckCircleRoundedIcon
-                                            sx={{ fontSize: 18, color: palette.accent }}
+                                            sx={{ fontSize: 18, color: g.accent.text }}
                                         />
                                     )}
                                 </Sheet>

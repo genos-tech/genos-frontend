@@ -1,7 +1,7 @@
 /**
  * UrlLinkModal on a phone: a task / milestone preview takes the whole screen.
  *
- * As a centred card (88vh x 92vw, 20px corners) it left a strip of backdrop
+ * As a centred card (88vh x 92vw, rounded corners) it left a strip of backdrop
  * above and below and 20px at each side. On a phone the preview now uses Joy's
  * `fullscreen` layout (pinned to every edge of the modal root); every other
  * view, and every desktop preview, keeps the card.
@@ -99,7 +99,7 @@ describe("UrlLinkModal on mobile", () => {
         const css = declaredCss(dialog);
         expect(css).not.toContain("min(900px, 88vh)");
         expect(css).not.toContain("min(1200px, 92vw)");
-        expect(css).not.toContain("border-radius:20px");
+        expect(css).not.toContain("border-radius:var(--g-radius-lg)");
         // Joy modals paint over the tab bar and the keyboard, so the content
         // stays off the home indicator, and off the keyboard when it is up.
         expect(css).toContain(
@@ -118,7 +118,7 @@ describe("UrlLinkModal on mobile", () => {
         const css = declaredCss(dialog);
         expect(css).toContain("height:min(900px, 88vh)");
         expect(css).toContain("width:min(1200px, 92vw)");
-        expect(css).toContain("border-radius:20px");
+        expect(css).toContain("border-radius:var(--g-radius-lg)");
         expect(css).not.toContain("padding-bottom:max(");
     });
 
@@ -133,6 +133,6 @@ describe("UrlLinkModal on mobile", () => {
         expect(dialog.classList.contains("MuiModalDialog-layoutCenter")).toBe(true);
         const css = declaredCss(dialog);
         expect(css).toContain("height:min(900px, 88vh)");
-        expect(css).toContain("border-radius:20px");
+        expect(css).toContain("border-radius:var(--g-radius-lg)");
     });
 });

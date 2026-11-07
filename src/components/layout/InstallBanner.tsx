@@ -3,18 +3,8 @@ import AddBoxOutlined from "@mui/icons-material/AddBoxOutlined";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import InstallMobileRounded from "@mui/icons-material/InstallMobileRounded";
 import IosShareRounded from "@mui/icons-material/IosShareRounded";
-import {
-    Box,
-    Button,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Sheet,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, IconButton, Sheet, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 
 import {
     isIOSDevice,
@@ -23,6 +13,8 @@ import {
 } from "../../hooks/common/useInstallPrompt";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
+import { ModalFrame } from "../ui/modal/ModalFrame";
 
 // localStorage, not sessionStorage (contrast PermissionBanner): "no" to
 // installing should stick across visits — re-asking every session is how
@@ -49,8 +41,8 @@ const HowToStep = ({ step, icon, text }: { step: number; icon: ReactNode; text: 
                 borderRadius: "12px",
                 display: "grid",
                 placeItems: "center",
-                bgcolor: "primary.softBg",
-                color: "primary.solidBg",
+                bgcolor: g.accent.subtle,
+                color: g.accent.text,
                 flexShrink: 0,
             }}
         >
@@ -83,6 +75,7 @@ export const InstallBanner = () => {
     const [installing, setInstalling] = useState(false);
     const [howOpen, setHowOpen] = useState(false);
     const { t } = useTranslation();
+    const theme = useTheme();
 
     const onIOS = isIOSDevice();
 
@@ -112,8 +105,7 @@ export const InstallBanner = () => {
     return (
         <>
             <Sheet
-                color="primary"
-                variant="soft"
+                variant="outlined"
                 sx={{
                     position: "fixed",
                     left: 8,
@@ -127,17 +119,13 @@ export const InstallBanner = () => {
                     zIndex: 1199,
                     px: 2,
                     py: 1,
-                    borderRadius: "lg",
-                    boxShadow: "md",
-                    // The banner floats over page content, so it must be
-                    // opaque. The `soft` primary `softBg` is a translucent rgba
-                    // (0.18 alpha in dark mode), which lets content behind show
-                    // through. Layer that tint over an opaque surface so the
-                    // banner stays fully opaque in both light and dark themes
-                    // while keeping its look.
-                    backgroundColor: "background.surface",
-                    backgroundImage:
-                        "linear-gradient(var(--joy-palette-primary-softBg), var(--joy-palette-primary-softBg))",
+                    // The banner floats over page content, so it is an opaque
+                    // raised surface (a translucent tint would let the page
+                    // show through).
+                    background: g.surface.raised,
+                    border: `1px solid ${g.border.default}`,
+                    borderRadius: g.radius.lg,
+                    boxShadow: g.shadow.md,
                 }}
             >
                 <Stack alignItems="center" direction="row" spacing={1.5}>
@@ -148,8 +136,8 @@ export const InstallBanner = () => {
                             borderRadius: "50%",
                             display: "grid",
                             placeItems: "center",
-                            bgcolor: "primary.softHoverBg",
-                            color: "primary.solidColor",
+                            bgcolor: g.accent.subtle,
+                            color: g.accent.text,
                             flexShrink: 0,
                         }}
                     >
@@ -182,36 +170,32 @@ export const InstallBanner = () => {
                 </Stack>
             </Sheet>
 
-            <Modal open={howOpen} onClose={() => setHowOpen(false)}>
-                <ModalDialog
-                    sx={{
-                        width: "calc(100vw - 32px)",
-                        maxWidth: 420,
-                    }}
-                >
-                    <DialogTitle>{t.services.pwaInstall.howTitle}</DialogTitle>
-                    <DialogContent>
-                        <Stack spacing={2} sx={{ pt: 1 }}>
-                            <HowToStep
-                                icon={<IosShareRounded />}
-                                step={1}
-                                text={t.services.pwaInstall.howStep1}
-                            />
-                            <HowToStep
-                                icon={<AddBoxOutlined />}
-                                step={2}
-                                text={t.services.pwaInstall.howStep2}
-                            />
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {t.services.pwaInstall.howNote}
-                            </Typography>
-                            <Button fullWidth onClick={() => setHowOpen(false)}>
-                                {t.common.actions.done}
-                            </Button>
-                        </Stack>
-                    </DialogContent>
-                </ModalDialog>
-            </Modal>
+            <ModalFrame
+                open={howOpen}
+                size="md"
+                title={t.services.pwaInstall.howTitle}
+                zIndex={theme.zIndex.modal}
+                actions={
+                    <Button onClick={() => setHowOpen(false)}>{t.common.actions.done}</Button>
+                }
+                onClose={() => setHowOpen(false)}
+            >
+                <Stack spacing={2}>
+                    <HowToStep
+                        icon={<IosShareRounded />}
+                        step={1}
+                        text={t.services.pwaInstall.howStep1}
+                    />
+                    <HowToStep
+                        icon={<AddBoxOutlined />}
+                        step={2}
+                        text={t.services.pwaInstall.howStep2}
+                    />
+                    <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                        {t.services.pwaInstall.howNote}
+                    </Typography>
+                </Stack>
+            </ModalFrame>
         </>
     );
 };

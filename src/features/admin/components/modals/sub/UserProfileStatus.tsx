@@ -15,18 +15,14 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../../components/ui/avatars/AvatarContext";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
+import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
@@ -48,6 +44,7 @@ import {
     statusExpiryIn,
     toLocalInputValue,
 } from "../../../../../services/notifications/statusExpiry";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { resolveDisplayZone } from "../../../../../utils/userTimezone";
 import { updateUserProfile } from "../../../services/updateUserProfile";
@@ -90,9 +87,7 @@ export const UserProfileStatus = ({
     setSelectedEmoji,
 }: Props) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
     // The status-expiry ("clear after…") i18n subtree, aliased for the editor
     // dropdown and the custom-datetime modal below.
     const seT = t.services.notifications.statusExpiry;
@@ -499,7 +494,7 @@ export const UserProfileStatus = ({
                                         cursor: isSelfView ? "pointer" : "default",
                                         transition: "background-color 0.15s ease",
                                         "&:hover": isSelfView
-                                            ? { backgroundColor: styles.hoverBg }
+                                            ? { backgroundColor: g.hover }
                                             : undefined,
                                     }}
                                     onClick={isSelfView ? handleOpenEditor : undefined}
@@ -746,10 +741,7 @@ export const UserProfileStatus = ({
                 )}
             </Typography>
             {isSelfView && nameError && (
-                <Typography
-                    level="body-xs"
-                    sx={{ color: "rgba(var(--gp-tint-danger-rgb), 0.9)", mt: 0.5 }}
-                >
+                <Typography level="body-xs" sx={{ color: g.danger.text, mt: 0.5 }}>
                     {nameError}
                 </Typography>
             )}
@@ -780,7 +772,7 @@ export const UserProfileStatus = ({
                     <Button
                         color="danger"
                         size="md"
-                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        sx={{ borderRadius: "sm", fontWeight: 600 }}
                         variant="outlined"
                         onClick={handleReset}
                     >
@@ -789,7 +781,7 @@ export const UserProfileStatus = ({
                     <Button
                         color="neutral"
                         size="md"
-                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        sx={{ borderRadius: "sm", fontWeight: 600 }}
                         variant="outlined"
                         onClick={handleCloseEditor}
                     >
@@ -798,7 +790,7 @@ export const UserProfileStatus = ({
                     <Button
                         color="primary"
                         size="md"
-                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        sx={{ borderRadius: "sm", fontWeight: 600 }}
                         variant="soft"
                         onClick={handleSet}
                     >
@@ -811,21 +803,13 @@ export const UserProfileStatus = ({
                 date & time…"). Owned at this level so it survives the editor's
                 "Clear after…" menu closing on click. Sets the draft `newExpiry`
                 only — the actual PUT happens when the user hits Set. */}
-            <Modal
+            <ModalFrame
                 open={expiryCustomOpen}
-                sx={{ zIndex: 10020 }}
-                onClose={() => setExpiryCustomOpen(false)}
-            >
-                <ModalDialog>
-                    <ModalClose />
-                    <Typography level="title-md">{seT.customTitle}</Typography>
-                    <Input
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
-                        type="datetime-local"
-                        value={expiryCustomValue}
-                        onChange={(e) => setExpiryCustomValue(e.target.value)}
-                    />
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                size="sm"
+                title={seT.customTitle}
+                zIndex={10020}
+                actions={
+                    <>
                         <Button
                             color="neutral"
                             variant="plain"
@@ -836,30 +820,28 @@ export const UserProfileStatus = ({
                         <Button disabled={!expiryCustomValue} onClick={commitExpiryCustom}>
                             {seT.customSet}
                         </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+                    </>
+                }
+                onClose={() => setExpiryCustomOpen(false)}
+            >
+                <Input
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                    type="datetime-local"
+                    value={expiryCustomValue}
+                    onChange={(e) => setExpiryCustomValue(e.target.value)}
+                />
+            </ModalFrame>
 
             {/* Custom date/time for the notification PAUSE ("pause until Aug 11,
                 9 AM"). Commits straight through the pause hook — unlike the
                 status expiry, there is no separate Set step for a pause. */}
-            <Modal
+            <ModalFrame
                 open={pauseCustomOpen}
-                sx={{ zIndex: 10020 }}
-                onClose={() => setPauseCustomOpen(false)}
-            >
-                <ModalDialog>
-                    <ModalClose />
-                    <Typography level="title-md">
-                        {t.services.notifications.pause.customTitle}
-                    </Typography>
-                    <Input
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
-                        type="datetime-local"
-                        value={pauseCustomValue}
-                        onChange={(e) => setPauseCustomValue(e.target.value)}
-                    />
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                size="sm"
+                title={t.services.notifications.pause.customTitle}
+                zIndex={10020}
+                actions={
+                    <>
                         <Button
                             color="neutral"
                             variant="plain"
@@ -870,9 +852,17 @@ export const UserProfileStatus = ({
                         <Button disabled={!pauseCustomValue} onClick={commitPauseCustom}>
                             {t.services.notifications.pause.customSet}
                         </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+                    </>
+                }
+                onClose={() => setPauseCustomOpen(false)}
+            >
+                <Input
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                    type="datetime-local"
+                    value={pauseCustomValue}
+                    onChange={(e) => setPauseCustomValue(e.target.value)}
+                />
+            </ModalFrame>
         </Stack>
     );
 };

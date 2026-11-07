@@ -9,13 +9,9 @@ import {
     FormControl,
     FormLabel,
     IconButton,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -26,13 +22,15 @@ import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
-import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind, type Channel } from "../../../../types/channel";
 import type { ChatProps } from "../../../../types/chat";
@@ -49,6 +47,15 @@ import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
+const labelSx = {
+    color: g.text.secondary,
+    fontSize: "0.7rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    mb: 0.5,
+} as const;
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -76,10 +83,7 @@ export const UserProfile = (props: UserProfileProps) => {
 
     const { accessToken } = useAuth();
     const navigate = useNavigate();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Optional: this modal is also rendered from a few callsites that
     // pre-date the AvatarContextProvider (older sidebar paths, mention
@@ -240,297 +244,278 @@ export const UserProfile = (props: UserProfileProps) => {
         }
     };
 
+    const profileTitle =
+        isYou === true
+            ? t.admin.userProfile.myProfile
+            : myself.userId !== profileUser?.userId
+              ? profileUser?.userName
+                  ? fmt(t.admin.userProfile.othersProfile, {
+                        userName: profileUser.userName,
+                    })
+                  : t.admin.userProfile.profileFallback
+              : t.admin.userProfile.myProfile;
+
+    const openDm = () => {
+        (async () => {
+            if (!profileUser) return;
+            // v3 DM open. Scan v3 snapshot for an
+            // existing DM with this partner; if
+            // none, ask the backend to create one
+            // (`channelService.createChannel`'s
+            // idempotency via `ChannelDirectPair`
+            // returns the existing channel if it
+            // already exists server-side but the
+            // FE snapshot hasn't caught up yet).
+            const snapshot = channelService.getSnapshot();
+            let channel: Channel | undefined;
+            for (const c of snapshot.channels.values()) {
+                if (c.kind !== ChannelKind.DM) continue;
+                const roster = snapshot.membersByChannel.get(c.id) ?? [];
+                const ids = new Set(roster.map((m) => m.userId));
+                if (ids.size === 2 && ids.has(myself.userId) && ids.has(profileUser.userId)) {
+                    channel = c;
+                    break;
+                }
+            }
+            if (!channel) {
+                try {
+                    channel = await channelService.createChannel({
+                        kind: ChannelKind.DM,
+                        otherUserId: profileUser.userId,
+                        teamId: myself.teamId,
+                    });
+                } catch (e) {
+                    console.error("[ModalUserProfile] DM create failed:", e);
+                    return;
+                }
+            }
+            if (!channel) return;
+            const initialChat: ChatProps = {
+                chatId: channel.id,
+                chatName: profileUser.userName,
+                chatType: 1,
+                dmPartnerUser: profileUser,
+                isPrivate: channel.isPrivate,
+                lastReadMessageId: "",
+                latestMessage: undefined as unknown as ChatProps["latestMessage"],
+                latestMessageText: "",
+                messages: [],
+                profileImagePath: channel.profileImageUrl || undefined,
+                TSLastMessage: channel.tsUpdated ?? channel.tsCreated ?? "",
+            };
+            useCM.setCurrentMainChat(initialChat);
+            useCM.setIsMainChatVisible(true);
+            setOpenUserProfile(false);
+            navigate("/workspace/chat");
+        })();
+    };
+
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Modal
+            <ModalFrame
                 open={openUserProfile}
-                sx={{
-                    zIndex: 10001,
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "transparent",
-                }}
+                size="profile"
+                title={profileTitle}
+                zIndex={PROFILE_MODAL_Z_INDEX}
+                actions={
+                    <AppTooltip
+                        title={
+                            isYou === true
+                                ? t.admin.userProfile.dmToMyself
+                                : profileUser?.userName
+                                  ? fmt(t.admin.userProfile.dmToUser, {
+                                        userName: profileUser.userName,
+                                    })
+                                  : t.admin.userProfile.dmToUserFallback
+                        }
+                    >
+                        <Button
+                            color="neutral"
+                            size="sm"
+                            variant="outlined"
+                            startDecorator={
+                                <QuestionAnswerRoundedIcon
+                                    sx={{ color: g.accent.text, fontSize: "18px" }}
+                                />
+                            }
+                            onClick={openDm}
+                        >
+                            {t.admin.userProfile.sendDm}
+                        </Button>
+                    </AppTooltip>
+                }
+                flush
+                fullScreenOnMobile
                 onClose={() => setOpenUserProfile(false)}
             >
-                <ModalDialog
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{
-                        background: styles.bg,
-                        border: `1px solid ${styles.border}`,
-                        boxShadow: styles.shadow,
-                        borderRadius: { xs: "0", md: "20px" },
-                        // Clip horizontal overflow on mobile so over-wide
-                        // children (UUID monospace strings, long status
-                        // chips) can't make the dialog scroll sideways.
-                        // Vertical scroll is delegated to the inner Box.
-                        overflowX: "hidden",
-                        overflowY: { xs: "hidden", md: "auto" },
-                        transition: "all 0.3s ease",
-                        width: { xs: "100vw", md: "min(900px, 90vw)" },
-                        height: { xs: "100dvh", md: "auto" },
-                        maxWidth: { xs: "100vw", md: "900px" },
-                        maxHeight: { xs: "100dvh", md: "90vh" },
-                        m: { xs: 0, md: "auto" },
-                        p: 0,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            flex: 1,
-                            width: "100%",
-                            maxWidth: "100%",
-                            minWidth: 0,
-                            // Vertical scroll lives here so the dialog's
-                            // outer overflow can stay clipped.
-                            overflowY: { xs: "auto", md: "visible" },
-                            overflowX: "hidden",
-                            height: { xs: "100%", md: "auto" },
-                            p: { xs: 1.5, md: 2 },
-                        }}
-                    >
-                        {/* `useFixedPosition` portals the picker to document.body
+                {/* `useFixedPosition` portals the picker to document.body
                         with position:fixed + z-index 99999, side-stepping both
                         the modal's `overflow: hidden` clipping and the zero-
                         height `<div className="relative">` anchor inside the
                         picker. `calc(50vw - 175px)` horizontally centers a
                         ~350px-wide emoji-mart picker on any viewport. */}
-                        <EmojiPicker
-                            // customStatus is a plain string rendered in
-                            // shortcode-blind surfaces — no team emoji here.
-                            includeCustom={false}
-                            pickerBottomPosition="20vh"
-                            pickerLeftPosition="calc(50vw - 175px)"
-                            setSelectedEmoji={setSelectedEmoji}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            showEmojiPicker={showEmojiPicker}
-                            useFixedPosition
-                        />
-                        <Box
-                            sx={{
-                                position: "sticky",
-                                top: { sm: -100, md: -110 },
-                                zIndex: 9995,
-                            }}
+                <EmojiPicker
+                    // customStatus is a plain string rendered in
+                    // shortcode-blind surfaces — no team emoji here.
+                    includeCustom={false}
+                    pickerBottomPosition="20vh"
+                    pickerLeftPosition="calc(50vw - 175px)"
+                    setSelectedEmoji={setSelectedEmoji}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    showEmojiPicker={showEmojiPicker}
+                    useFixedPosition
+                />
+                <Stack
+                    spacing={3}
+                    sx={{
+                        display: "flex",
+                        mx: "auto",
+                        px: { xs: 2, md: 3 },
+                        py: { xs: 1, md: 2 },
+                        width: "100%",
+                    }}
+                >
+                    <Card
+                        sx={{
+                            background: g.surface.default,
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            boxShadow: "none",
+                            p: { xs: 2, md: 3 },
+                        }}
+                    >
+                        <Stack
+                            alignItems={{ xs: "stretch", md: "flex-start" }}
+                            direction={{ xs: "column", md: "row" }}
+                            spacing={{ xs: 2, md: 6 }}
+                            sx={{ width: "100%", minWidth: 0 }}
                         >
                             <Box
                                 sx={{
+                                    position: "relative",
                                     display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 1,
-                                    px: { xs: 2, md: 3 },
+                                    flexShrink: 0,
+                                    alignSelf: { xs: "center", md: "auto" },
                                 }}
                             >
-                                <Typography
-                                    component="h1"
-                                    level="h2"
+                                <BaseAvatar
+                                    size={{ xs: "xxl", md: "hero" }}
+                                    src={buildAvatarSrc(profileUser?.avatarImgPath)}
                                     sx={{
-                                        mt: 1,
-                                        mb: 1,
-                                        flex: 1,
-                                        minWidth: 0,
-                                        background: styles.headerGradient,
-                                        backgroundClip: "text",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.02em",
-                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
+                                        fontSize: { xs: "36px", md: "48px" },
+                                        border: `3px solid ${g.border.default}`,
+                                        cursor: "pointer",
+                                        transition: "all 0.3s ease",
+                                        "&:hover": { transform: "scale(1.02)" },
                                     }}
-                                    noWrap
+                                    onClick={() => setOpenUserProfile(true)}
                                 >
-                                    {isYou === true
-                                        ? t.admin.userProfile.myProfile
-                                        : myself.userId !== profileUser?.userId
-                                          ? profileUser?.userName
-                                              ? fmt(t.admin.userProfile.othersProfile, {
-                                                    userName: profileUser.userName,
-                                                })
-                                              : t.admin.userProfile.profileFallback
-                                          : t.admin.userProfile.myProfile}
-                                </Typography>
-                                {/* Close button — without it mobile users
-                                    have no way to dismiss the modal,
-                                    since it's full-screen on xs and
-                                    there's no backdrop to click. */}
-                                <ModalClose
-                                    variant="plain"
-                                    sx={{
-                                        position: "static",
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            </Box>
-                        </Box>
+                                    {initialOf(profileUser?.userName)}
+                                </BaseAvatar>
 
-                        <Stack
-                            spacing={3}
-                            sx={{
-                                display: "flex",
-                                mx: "auto",
-                                px: { xs: 1, md: 3 },
-                                py: { xs: 1, md: 2 },
-                                width: "100%",
-                            }}
-                        >
-                            <Card
-                                sx={{
-                                    background: styles.cardBg,
-                                    border: `1px solid ${styles.border}`,
-                                    borderRadius: "16px",
-                                    boxShadow: isDark
-                                        ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
-                                    transition: "all 0.3s ease",
-                                    p: { xs: 2, md: 3 },
-                                    "&:hover": {
-                                        boxShadow: isDark
-                                            ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
-                                    },
-                                }}
-                            >
-                                <Stack
-                                    alignItems={{ xs: "stretch", md: "flex-start" }}
-                                    direction={{ xs: "column", md: "row" }}
-                                    spacing={{ xs: 2, md: 6 }}
-                                    sx={{ width: "100%", minWidth: 0 }}
-                                >
+                                {myself.userId === profileUser?.userId && (
                                     <Box
                                         sx={{
-                                            position: "relative",
-                                            display: "flex",
-                                            flexShrink: 0,
-                                            alignSelf: { xs: "center", md: "auto" },
+                                            position: "absolute",
+                                            bottom: 0,
+                                            right: 0,
                                         }}
                                     >
-                                        <BaseAvatar
-                                            size={{ xs: "xxl", md: "hero" }}
-                                            src={buildAvatarSrc(profileUser?.avatarImgPath)}
-                                            sx={{
-                                                fontSize: { xs: "36px", md: "48px" },
-                                                boxShadow: styles.avatarGlow,
-                                                border: `3px solid ${styles.border}`,
-                                                cursor: "pointer",
-                                                transition: "all 0.3s ease",
-                                                "&:hover": {
-                                                    transform: "scale(1.02)",
-                                                    boxShadow: isDark
-                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.15)",
-                                                },
-                                            }}
-                                            onClick={() => setOpenUserProfile(true)}
-                                        >
-                                            {initialOf(profileUser?.userName)}
-                                        </BaseAvatar>
-
-                                        {myself.userId === profileUser?.userId && (
-                                            <Box
-                                                sx={{
-                                                    position: "absolute",
-                                                    bottom: 0,
-                                                    right: 0,
-                                                }}
-                                            >
-                                                <input
-                                                    ref={inputRef}
-                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                    multiple={false}
-                                                    style={{ display: "none" }}
-                                                    type="file"
-                                                    onChange={handleSelectedFiles}
-                                                />
-                                                <AppTooltip
-                                                    size="sm"
-                                                    title={t.admin.userProfile.editProfileImage}
-                                                >
-                                                    <IconButton
-                                                        size="sm"
-                                                        variant="soft"
-                                                        sx={{
-                                                            background: isDark
-                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.3) 0%, rgba(var(--gp-brandalt-500-rgb), 0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
-                                                            border: `1px solid ${styles.border}`,
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.5) 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brandalt-500-rgb), 0.25) 100%)",
-                                                                transform: "scale(1.1)",
-                                                            },
-                                                        }}
-                                                        onClick={handleButtonClick}
-                                                    >
-                                                        <EditIcon
-                                                            sx={{
-                                                                fontSize: "20px",
-                                                                color: styles.accentColor,
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    <Stack
-                                        spacing={2}
-                                        sx={{
-                                            flexGrow: 1,
-                                            minWidth: 0,
-                                            width: "100%",
-                                            maxWidth: "100%",
-                                        }}
-                                    >
-                                        <UserProfileStatus
-                                            isYou={isYou}
-                                            myself={myself}
-                                            selectedEmoji={selectedEmoji}
-                                            setMyself={setMyself}
-                                            setSelectedEmoji={setSelectedEmoji}
-                                            setShowEmojiPicker={setShowEmojiPicker}
-                                            user={user}
+                                        <input
+                                            ref={inputRef}
+                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                            multiple={false}
+                                            style={{ display: "none" }}
+                                            type="file"
+                                            onChange={handleSelectedFiles}
                                         />
-
-                                        <Stack
-                                            direction={{ xs: "column", sm: "row" }}
-                                            flexWrap="wrap"
-                                            spacing={2}
+                                        <AppTooltip
+                                            size="sm"
+                                            title={t.admin.userProfile.editProfileImage}
                                         >
-                                            <Typography
-                                                component="a"
-                                                href={`mailto:${profileUser?.userEmail}`}
-                                                startDecorator={
-                                                    <EmailRoundedIcon
-                                                        fontSize="small"
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                        }}
-                                                    />
-                                                }
+                                            <IconButton
+                                                size="sm"
+                                                variant="soft"
                                                 sx={{
-                                                    textDecoration: "none",
-                                                    color: styles.valueColor,
-                                                    cursor: "pointer",
+                                                    background: g.accent.subtle,
+                                                    border: `1px solid ${g.border.default}`,
                                                     transition: "all 0.2s ease",
-                                                    fontSize: "14px",
                                                     "&:hover": {
-                                                        color: styles.accentColor,
+                                                        background: g.accent.border,
+                                                        transform: "scale(1.1)",
                                                     },
                                                 }}
+                                                onClick={handleButtonClick}
                                             >
-                                                {profileUser?.userEmail}
-                                            </Typography>
-                                            <UserProfilePhone
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                user={profileUser}
-                                            />
-                                        </Stack>
+                                                <EditIcon
+                                                    sx={{
+                                                        fontSize: "20px",
+                                                        color: g.accent.text,
+                                                    }}
+                                                />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </Box>
+                                )}
+                            </Box>
 
-                                        {/* Where they are, what time it is
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    flexGrow: 1,
+                                    minWidth: 0,
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                }}
+                            >
+                                <UserProfileStatus
+                                    isYou={isYou}
+                                    myself={myself}
+                                    selectedEmoji={selectedEmoji}
+                                    setMyself={setMyself}
+                                    setSelectedEmoji={setSelectedEmoji}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                    user={user}
+                                />
+
+                                <Stack
+                                    direction={{ xs: "column", sm: "row" }}
+                                    flexWrap="wrap"
+                                    spacing={2}
+                                >
+                                    <Typography
+                                        component="a"
+                                        href={`mailto:${profileUser?.userEmail}`}
+                                        startDecorator={
+                                            <EmailRoundedIcon
+                                                fontSize="small"
+                                                sx={{
+                                                    color: g.accent.text,
+                                                }}
+                                            />
+                                        }
+                                        sx={{
+                                            textDecoration: "none",
+                                            color: g.text.primary,
+                                            cursor: "pointer",
+                                            transition: "all 0.2s ease",
+                                            fontSize: "14px",
+                                            "&:hover": {
+                                                color: g.accent.text,
+                                            },
+                                        }}
+                                    >
+                                        {profileUser?.userEmail}
+                                    </Typography>
+                                    <UserProfilePhone
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        user={profileUser}
+                                    />
+                                </Stack>
+
+                                {/* Where they are, what time it is
                                             there, and — on your own card — the
                                             share toggle: one question, so one
                                             row ("<Location> <Time> <Toggle>").
@@ -539,412 +524,227 @@ export const UserProfile = (props: UserProfileProps) => {
                                             neither is configured by hand in the
                                             normal case, because the browser
                                             reports the zone on every boot. */}
-                                        <Stack
-                                            direction={{ xs: "column", sm: "row" }}
-                                            spacing={{ xs: 1, sm: 2 }}
-                                            sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
-                                        >
-                                            <UserProfileLocation
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                user={profileUser}
-                                            />
-                                            <UserProfileLocalTime
-                                                isSelf={myself.userId === profileUser?.userId}
-                                                user={profileUser}
-                                            />
-                                            <UserProfileLocationShare
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                user={profileUser}
-                                            />
-                                        </Stack>
+                                <Stack
+                                    direction={{ xs: "column", sm: "row" }}
+                                    spacing={{ xs: 1, sm: 2 }}
+                                    sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
+                                >
+                                    <UserProfileLocation
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        user={profileUser}
+                                    />
+                                    <UserProfileLocalTime
+                                        isSelf={myself.userId === profileUser?.userId}
+                                        user={profileUser}
+                                    />
+                                    <UserProfileLocationShare
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        user={profileUser}
+                                    />
+                                </Stack>
 
-                                        {/* Rendered by the child only when
+                                {/* Rendered by the child only when
                                             there's something to show, so the
                                             label has to be gated the same way
                                             or an empty "ABOUT" heading floats
                                             above nothing on other people's
                                             profiles. */}
-                                        {(profileUser?.aboutMe ||
-                                            myself.userId === profileUser?.userId) && (
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.about}
-                                                </FormLabel>
-                                                <UserProfileAbout
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    user={profileUser}
-                                                />
-                                            </FormControl>
-                                        )}
+                                {(profileUser?.aboutMe ||
+                                    myself.userId === profileUser?.userId) && (
+                                    <FormControl>
+                                        <FormLabel sx={labelSx}>
+                                            {t.admin.userProfile.about}
+                                        </FormLabel>
+                                        <UserProfileAbout
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            user={profileUser}
+                                        />
+                                    </FormControl>
+                                )}
 
-                                        {/* Team Name */}
-                                        <FormControl>
-                                            <FormLabel
-                                                sx={{
-                                                    color: styles.labelColor,
-                                                    fontSize: "0.7rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.5,
-                                                }}
-                                            >
-                                                {t.admin.userProfile.teamName}
-                                            </FormLabel>
-                                            <Stack
-                                                direction="row"
-                                                spacing={1}
-                                                sx={{ alignItems: "center" }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 0.75,
-                                                        borderRadius: "8px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        display: "inline-flex",
-                                                        width: "fit-content",
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight="bold"
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.valueColor,
-                                                            fontSize: "14px",
-                                                        }}
-                                                    >
-                                                        {shownTeamName}
-                                                    </Typography>
-                                                </Box>
-                                                {isExternal && (
-                                                    <ExternalChip
-                                                        hint={t.admin.userProfile.externalHint}
-                                                        label={t.admin.userProfile.externalBadge}
-                                                    />
-                                                )}
-                                            </Stack>
-                                        </FormControl>
-
-                                        {/* IDs Row */}
-                                        <Stack
-                                            direction={{ xs: "column", sm: "row" }}
-                                            spacing={2}
-                                            sx={{ width: "100%", minWidth: 0 }}
+                                {/* Team Name */}
+                                <FormControl>
+                                    <FormLabel sx={labelSx}>
+                                        {t.admin.userProfile.teamName}
+                                    </FormLabel>
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        sx={{ alignItems: "center" }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                px: 1.5,
+                                                py: 0.75,
+                                                borderRadius: g.radius.md,
+                                                background: g.accent.subtle,
+                                                border: `1px solid ${g.border.default}`,
+                                                display: "inline-flex",
+                                                width: "fit-content",
+                                            }}
                                         >
-                                            <FormControl
+                                            <Typography
+                                                fontWeight={600}
                                                 sx={{
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    width: "100%",
+                                                    userSelect: "text",
+                                                    color: g.text.primary,
+                                                    fontSize: "14px",
                                                 }}
                                             >
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.teamId}
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 0.5,
-                                                        borderRadius: "6px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.3)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        overflow: "hidden",
-                                                        width: "100%",
-                                                        maxWidth: "100%",
-                                                        minWidth: 0,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.labelColor,
-                                                            fontSize: "11px",
-                                                            fontFamily: "monospace",
-                                                            whiteSpace: "nowrap",
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                        }}
-                                                    >
-                                                        {shownTeamId}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
-                                            <FormControl
-                                                sx={{
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    width: "100%",
-                                                }}
-                                            >
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.userId}
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 0.5,
-                                                        borderRadius: "6px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.3)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        overflow: "hidden",
-                                                        width: "100%",
-                                                        maxWidth: "100%",
-                                                        minWidth: 0,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.labelColor,
-                                                            fontSize: "11px",
-                                                            fontFamily: "monospace",
-                                                            whiteSpace: "nowrap",
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                        }}
-                                                    >
-                                                        {profileUser?.userId}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
-                                        </Stack>
+                                                {shownTeamName}
+                                            </Typography>
+                                        </Box>
+                                        {isExternal && (
+                                            <ExternalChip
+                                                hint={t.admin.userProfile.externalHint}
+                                                label={t.admin.userProfile.externalBadge}
+                                            />
+                                        )}
+                                    </Stack>
+                                </FormControl>
 
-                                        {/* Role & Joined Row. Country used to
+                                {/* IDs Row */}
+                                <Stack
+                                    direction={{ xs: "column", sm: "row" }}
+                                    spacing={2}
+                                    sx={{ width: "100%", minWidth: 0 }}
+                                >
+                                    <FormControl
+                                        sx={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            width: "100%",
+                                        }}
+                                    >
+                                        <FormLabel sx={labelSx}>
+                                            {t.admin.userProfile.teamId}
+                                        </FormLabel>
+                                        <Box
+                                            sx={{
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: g.radius.sm,
+                                                background: g.hover,
+                                                border: `1px solid ${g.border.default}`,
+                                                overflow: "hidden",
+                                                width: "100%",
+                                                maxWidth: "100%",
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontWeight={600}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: g.text.secondary,
+                                                    fontSize: "11px",
+                                                    fontFamily: g.font.mono,
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                }}
+                                            >
+                                                {shownTeamId}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
+                                    <FormControl
+                                        sx={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            width: "100%",
+                                        }}
+                                    >
+                                        <FormLabel sx={labelSx}>
+                                            {t.admin.userProfile.userId}
+                                        </FormLabel>
+                                        <Box
+                                            sx={{
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: g.radius.sm,
+                                                background: g.hover,
+                                                border: `1px solid ${g.border.default}`,
+                                                overflow: "hidden",
+                                                width: "100%",
+                                                maxWidth: "100%",
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <Typography
+                                                fontWeight={600}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: g.text.secondary,
+                                                    fontSize: "11px",
+                                                    fontFamily: g.font.mono,
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                }}
+                                            >
+                                                {profileUser?.userId}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
+                                </Stack>
+
+                                {/* Role & Joined Row. Country used to
                                             sit between them; it is now the
                                             Location row above, which answers
                                             the same question more precisely
                                             and carries the timezone with it. */}
-                                        <Stack direction="column" spacing={2}>
-                                            <FormControl sx={{ flex: 1 }}>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.role}
-                                                </FormLabel>
-                                                <UserProfileRole
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    user={profileUser}
-                                                />
-                                            </FormControl>
-                                            <FormControl sx={{ flex: 1 }}>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    {t.admin.userProfile.joinedDate}
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        display: "inline-flex",
-                                                        px: 1.5,
-                                                        py: 0.5,
-                                                        borderRadius: "6px",
-                                                        background: isDark
-                                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                        width: "fit-content",
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
-                                                        sx={{
-                                                            userSelect: "text",
-                                                            color: styles.valueColor,
-                                                            fontSize: "13px",
-                                                        }}
-                                                    >
-                                                        {profileUser &&
-                                                        profileUser?.tsJoined !== "" &&
-                                                        profileUser?.tsJoined !== "N/A"
-                                                            ? extractYYYYMMDD(profileUser.tsJoined)
-                                                            : t.admin.userProfile.notAvailable}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
-                                        </Stack>
-                                    </Stack>
-                                </Stack>
-                            </Card>
-                        </Stack>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                px: { xs: 1, md: 3 },
-                                pb: 1,
-                            }}
-                        >
-                            <AppTooltip
-                                title={
-                                    isYou === true
-                                        ? t.admin.userProfile.dmToMyself
-                                        : profileUser?.userName
-                                          ? fmt(t.admin.userProfile.dmToUser, {
-                                                userName: profileUser.userName,
-                                            })
-                                          : t.admin.userProfile.dmToUserFallback
-                                }
-                            >
-                                <Button
-                                    size="sm"
-                                    variant="outlined"
-                                    startDecorator={
-                                        <QuestionAnswerRoundedIcon
-                                            sx={{
-                                                color: styles.accentColor,
-                                                fontSize: "18px",
-                                            }}
+                                <Stack direction="column" spacing={2}>
+                                    <FormControl sx={{ flex: 1 }}>
+                                        <FormLabel sx={labelSx}>
+                                            {t.admin.userProfile.role}
+                                        </FormLabel>
+                                        <UserProfileRole
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            user={profileUser}
                                         />
-                                    }
-                                    sx={{
-                                        fontSize: "14px",
-                                        px: 2,
-                                        py: 0.75,
-                                        borderRadius: "10px",
-                                        background: isDark
-                                            ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)"
-                                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brandalt-500-rgb), 0.1) 100%)",
-                                        border: `1px solid ${styles.border}`,
-                                        color: styles.valueColor,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.4) 0%, rgba(var(--gp-brandalt-500-rgb), 0.4) 100%)"
-                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
-                                            transform: "translateY(-2px)",
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.3)"
-                                                : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.2)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        (async () => {
-                                            if (!profileUser) return;
-                                            // v3 DM open. Scan v3 snapshot for an
-                                            // existing DM with this partner; if
-                                            // none, ask the backend to create one
-                                            // (`channelService.createChannel`'s
-                                            // idempotency via `ChannelDirectPair`
-                                            // returns the existing channel if it
-                                            // already exists server-side but the
-                                            // FE snapshot hasn't caught up yet).
-                                            const snapshot = channelService.getSnapshot();
-                                            let channel: Channel | undefined;
-                                            for (const c of snapshot.channels.values()) {
-                                                if (c.kind !== ChannelKind.DM) continue;
-                                                const roster =
-                                                    snapshot.membersByChannel.get(c.id) ?? [];
-                                                const ids = new Set(roster.map((m) => m.userId));
-                                                if (
-                                                    ids.size === 2 &&
-                                                    ids.has(myself.userId) &&
-                                                    ids.has(profileUser.userId)
-                                                ) {
-                                                    channel = c;
-                                                    break;
-                                                }
-                                            }
-                                            if (!channel) {
-                                                try {
-                                                    channel = await channelService.createChannel({
-                                                        kind: ChannelKind.DM,
-                                                        otherUserId: profileUser.userId,
-                                                        teamId: myself.teamId,
-                                                    });
-                                                } catch (e) {
-                                                    console.error(
-                                                        "[ModalUserProfile] DM create failed:",
-                                                        e
-                                                    );
-                                                    return;
-                                                }
-                                            }
-                                            if (!channel) return;
-                                            const initialChat: ChatProps = {
-                                                chatId: channel.id,
-                                                chatName: profileUser.userName,
-                                                chatType: 1,
-                                                dmPartnerUser: profileUser,
-                                                isPrivate: channel.isPrivate,
-                                                lastReadMessageId: "",
-                                                latestMessage:
-                                                    undefined as unknown as ChatProps["latestMessage"],
-                                                latestMessageText: "",
-                                                messages: [],
-                                                profileImagePath:
-                                                    channel.profileImageUrl || undefined,
-                                                TSLastMessage:
-                                                    channel.tsUpdated ?? channel.tsCreated ?? "",
-                                            };
-                                            useCM.setCurrentMainChat(initialChat);
-                                            useCM.setIsMainChatVisible(true);
-                                            setOpenUserProfile(false);
-                                            navigate("/workspace/chat");
-                                        })();
-                                    }}
-                                >
-                                    {t.admin.userProfile.sendDm}
-                                </Button>
-                            </AppTooltip>
-                        </Box>
-                    </Box>
-                </ModalDialog>
-            </Modal>
+                                    </FormControl>
+                                    <FormControl sx={{ flex: 1 }}>
+                                        <FormLabel sx={labelSx}>
+                                            {t.admin.userProfile.joinedDate}
+                                        </FormLabel>
+                                        <Box
+                                            sx={{
+                                                display: "inline-flex",
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: g.radius.sm,
+                                                background: g.accent.subtle,
+                                                border: `1px solid ${g.border.default}`,
+                                                width: "fit-content",
+                                            }}
+                                        >
+                                            <Typography
+                                                fontWeight={600}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: g.text.primary,
+                                                    fontSize: "13px",
+                                                }}
+                                            >
+                                                {profileUser &&
+                                                profileUser?.tsJoined !== "" &&
+                                                profileUser?.tsJoined !== "N/A"
+                                                    ? extractYYYYMMDD(profileUser.tsJoined)
+                                                    : t.admin.userProfile.notAvailable}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
+                                </Stack>
+                            </Stack>
+                        </Stack>
+                    </Card>
+                </Stack>
+            </ModalFrame>
         </>
     );
 };

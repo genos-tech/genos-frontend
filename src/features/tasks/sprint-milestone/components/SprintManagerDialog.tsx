@@ -2,25 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
-import {
-    Box,
-    Button,
-    Chip,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Option,
-    Select,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Button, Chip, IconButton, Input, Option, Select, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { STATUS_FILL } from "../../meta/taskTone";
@@ -264,8 +250,7 @@ const SprintRow = ({
 
 export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
+    const theme = useTheme();
     const [showAdd, setShowAdd] = useState(false);
     const [adhocName, setAdhocName] = useState("");
     const [adhocStart, setAdhocStart] = useState(todayIso());
@@ -355,84 +340,76 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
     );
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: 640 },
-                    maxWidth: { xs: "100vw", md: 800 },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
-                    overflow: "auto",
-                }}
-            >
-                <DialogTitle>{t.tasks.sprint.managerDialogTitle}</DialogTitle>
-                <Divider />
-                <DialogContent sx={{ overflowY: "auto" }}>
-                    <Stack spacing={2.5} sx={{ pt: 1, pb: 1 }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-sm" sx={{ flex: 1 }}>
-                                {t.tasks.sprintManager.planIntro}
-                            </Typography>
-                            <Button
+        <ModalFrame
+            open={open}
+            size="wide"
+            title={t.tasks.sprint.managerDialogTitle}
+            zIndex={theme.zIndex.modal}
+            headerDivider
+            onClose={onClose}
+        >
+            <Stack spacing={2.5} sx={{ pt: 1, pb: 1 }}>
+                <Stack alignItems="center" direction="row" spacing={1}>
+                    <Typography level="body-sm" sx={{ flex: 1 }}>
+                        {t.tasks.sprintManager.planIntro}
+                    </Typography>
+                    <Button
+                        size="sm"
+                        startDecorator={<AddIcon />}
+                        onClick={() => setShowAdd((v) => !v)}
+                    >
+                        {t.tasks.sprintManager.addCustomSprint}
+                    </Button>
+                </Stack>
+
+                {showAdd && (
+                    <Box
+                        sx={{
+                            p: 1.5,
+                            borderRadius: 8,
+                            border: "1px solid",
+                            borderColor: "neutral.outlinedBorder",
+                            bgcolor: "background.level1",
+                        }}
+                    >
+                        <Stack spacing={1}>
+                            <Input
+                                placeholder={t.tasks.sprintManager.sprintNamePlaceholder}
                                 size="sm"
-                                startDecorator={<AddIcon />}
-                                onClick={() => setShowAdd((v) => !v)}
-                            >
-                                {t.tasks.sprintManager.addCustomSprint}
-                            </Button>
+                                value={adhocName}
+                                onChange={(e) => setAdhocName(e.target.value)}
+                            />
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                                <Input
+                                    size="sm"
+                                    type="date"
+                                    value={adhocStart}
+                                    onChange={(e) => setAdhocStart(e.target.value)}
+                                />
+                                <Typography level="body-xs">→</Typography>
+                                <Input
+                                    size="sm"
+                                    type="date"
+                                    value={adhocEnd}
+                                    onChange={(e) => setAdhocEnd(e.target.value)}
+                                />
+                                <Button loading={creating} size="sm" onClick={submitAdhoc}>
+                                    {t.tasks.sprintManager.createButton}
+                                </Button>
+                            </Stack>
+                            {adhocError && (
+                                <Typography color="danger" level="body-xs">
+                                    {adhocError}
+                                </Typography>
+                            )}
                         </Stack>
+                    </Box>
+                )}
 
-                        {showAdd && (
-                            <Box
-                                sx={{
-                                    p: 1.5,
-                                    borderRadius: 8,
-                                    border: "1px solid",
-                                    borderColor: "neutral.outlinedBorder",
-                                    bgcolor: "background.level1",
-                                }}
-                            >
-                                <Stack spacing={1}>
-                                    <Input
-                                        placeholder={t.tasks.sprintManager.sprintNamePlaceholder}
-                                        size="sm"
-                                        value={adhocName}
-                                        onChange={(e) => setAdhocName(e.target.value)}
-                                    />
-                                    <Stack alignItems="center" direction="row" spacing={1}>
-                                        <Input
-                                            size="sm"
-                                            type="date"
-                                            value={adhocStart}
-                                            onChange={(e) => setAdhocStart(e.target.value)}
-                                        />
-                                        <Typography level="body-xs">→</Typography>
-                                        <Input
-                                            size="sm"
-                                            type="date"
-                                            value={adhocEnd}
-                                            onChange={(e) => setAdhocEnd(e.target.value)}
-                                        />
-                                        <Button loading={creating} size="sm" onClick={submitAdhoc}>
-                                            {t.tasks.sprintManager.createButton}
-                                        </Button>
-                                    </Stack>
-                                    {adhocError && (
-                                        <Typography color="danger" level="body-xs">
-                                            {adhocError}
-                                        </Typography>
-                                    )}
-                                </Stack>
-                            </Box>
-                        )}
-
-                        {renderSection(t.tasks.sprintManager.sectionCurrent, grouped.current)}
-                        {renderSection(t.tasks.sprintManager.sectionUpcoming, grouped.upcoming)}
-                        {renderSection(t.tasks.sprintManager.sectionPast, grouped.past)}
-                    </Stack>
-                </DialogContent>
-            </ModalDialog>
-        </Modal>
+                {renderSection(t.tasks.sprintManager.sectionCurrent, grouped.current)}
+                {renderSection(t.tasks.sprintManager.sectionUpcoming, grouped.upcoming)}
+                {renderSection(t.tasks.sprintManager.sectionPast, grouped.past)}
+            </Stack>
+        </ModalFrame>
     );
 };

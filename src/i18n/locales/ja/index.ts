@@ -1644,6 +1644,7 @@ export const ja: DeepPartial<Messages> = {
             colors: "カラー",
             download: "ダウンロード",
             imagePreviewAlt: "プレビュー",
+            imagePreviewTitle: "画像のプレビュー",
         },
         featureError: {
             title: "{feature} で問題が発生しました。",

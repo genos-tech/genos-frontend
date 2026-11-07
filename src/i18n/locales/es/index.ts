@@ -155,6 +155,7 @@ export const es: DeepPartial<Messages> = {
             colors: "Colores",
             download: "Descargar",
             imagePreviewAlt: "vista previa",
+            imagePreviewTitle: "Vista previa de la imagen",
             placeholderEmpty: "Empieza a escribir...",
             placeholderDefault: "Escribe algo...",
             placeholderHeading: "Marcador de posición de encabezado personalizado",
