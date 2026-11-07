@@ -3,33 +3,12 @@ import { Box, Stack } from "@mui/joy";
 import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { BubbleAuthor, BubbleMeta } from "../../../../components/ui/bubble";
 import { useTranslation } from "../../../../i18n";
-import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
+import { TaskIdText } from "../../../tasks/components/card/parts";
 import { StatusLabel } from "../../../tasks/components/meta/StatusLabel";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { statuses } from "../../../tasks/utils/taskMeta";
-
-// The task's display id: a quiet accent chip. (The status is the shared
-// StatusLabel: its color is in the icon.)
-const IdChip = ({ children }: { children: React.ReactNode }) => (
-    <Box
-        sx={{
-            ...type("title-sm"),
-            display: "inline-flex",
-            alignItems: "center",
-            height: 24,
-            px: 1,
-            borderRadius: g.radius.sm,
-            border: "1px solid",
-            borderColor: g.accent.border,
-            bgcolor: g.accent.subtle,
-            color: g.accent.text,
-        }}
-    >
-        {children}
-    </Box>
-);
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
@@ -98,10 +77,15 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             still render in the card layout but skip the
                             chips so the header stays just the date. */}
                         {isThread === false && taskId !== null && (
-                            <IdChip>
-                                {formatTaskDisplayId({ taskId, displayId }) ||
-                                    t.chat.modals.gmProfile.na}
-                            </IdChip>
+                            // Not copyable: a chat can hold hundreds of these, and a
+                            // tooltip and copy state per bubble is not worth it here.
+                            <TaskIdText
+                                copyable={false}
+                                text={
+                                    formatTaskDisplayId({ taskId, displayId }) ||
+                                    t.chat.modals.gmProfile.na
+                                }
+                            />
                         )}
 
                         {taskId !== null && taskStatusDetails && (
