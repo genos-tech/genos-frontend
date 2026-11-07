@@ -96,7 +96,7 @@ export const useGenosCollabEditor = ({
     accessToken: string | null;
     dictionary: GenosDictionary;
     uploadFile?: (file: File) => Promise<string>;
-    body?: PartialBlock[] | any[];
+    body?: PartialBlock[];
 }) => {
     const { myself } = ctx;
     const schema = useGenosSchema(ctx, "live");
