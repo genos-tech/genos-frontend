@@ -319,7 +319,7 @@ describe("TaskCard keeps what the old cards did", () => {
             "utf8"
         );
         expect(source).toMatch(
-            /copyable \?[\s\S]{0,40}<CopyableId[\s\S]{0,80}<Box component="span"/
+            /copyable && real \?[\s\S]{0,40}<CopyableId[\s\S]{0,80}<Box component="span"/
         );
     });
 

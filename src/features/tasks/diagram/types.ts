@@ -175,6 +175,12 @@ export const HANDLE = {
     dependencyRight: "d-right",
 } as const;
 
+/** The orange of a dependency: the edge's stroke and the dependency handles on
+ *  the cards, one value so the two cannot drift apart. */
+export const DEPENDENCY_COLOR = "#f97316";
+/** The same edge while it is hovered or selected. */
+export const DEPENDENCY_COLOR_ACTIVE = "#fbbf24";
+
 export const isStructureHandle = (id: string | null | undefined) =>
     id === HANDLE.structureTop || id === HANDLE.structureBottom;
 

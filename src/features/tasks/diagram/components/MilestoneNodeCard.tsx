@@ -2,28 +2,32 @@ import { memo } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
-import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
-import { Box, Chip, IconButton, LinearProgress, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
-import { Handle, NodeProps, Position } from "@xyflow/react";
+import { Box, LinearProgress } from "@mui/joy";
+import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
-import { purplePalette } from "../../../../theme/purplePalette";
-import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
-import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
-import { statuses } from "../../utils/taskMeta";
-import { HANDLE, TaskNodeData } from "../types";
+import { g, type } from "../../../../theme/tokens";
 import {
-    computeHealth,
-    getMilestoneWindow,
-    getScheduleStatus,
-    HEALTH_JOY_COLOR,
-    TONE_COLOR,
-} from "../utils/scheduleStatus";
+    DueText,
+    MilestoneFlag,
+    TaskCardFrame,
+    TaskIdText,
+    TaskTitle,
+} from "../../components/card";
+import { StatusLabel } from "../../components/meta/StatusLabel";
+import { TaskNodeData } from "../types";
+import { NODE_WIDTH } from "../utils/layoutDiagram";
+import { computeHealth, getMilestoneWindow, getScheduleStatus } from "../utils/scheduleStatus";
+import { DurationText, HealthLabel, NodeBadge, NodeHandles, NodeIconButton } from "./nodeParts";
+import {
+    dueToneOf,
+    HEALTH_COLOR,
+    NODE_TITLE_MIN_HEIGHT,
+    scheduleDateText,
+    useScheduleLabel,
+} from "./nodeTone";
 
 const fmtDate = (iso: string | null | undefined): string => {
     if (!iso) return "";
@@ -32,35 +36,25 @@ const fmtDate = (iso: string | null | undefined): string => {
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 
-const statusMeta = (label: string | null | undefined) => {
-    const found = statuses.find((s) => s.status === label);
-    return (
-        found ?? {
-            code: 0,
-            status: label ?? "—",
-            color: null as string | null,
-            textColor: null as string | null,
-        }
-    );
-};
-
-const HANDLE_BASE = {
-    width: 10,
-    height: 10,
-    border: "2px solid",
-    borderRadius: "50%",
-} as const;
-
-// Milestone variant of TaskNodeCard. Read-only structure-side; the
-// dependency handles stay live so a milestone can still be a
-// blocker / blocked target. Adds a progress bar + the same rich
-// schedule chips as TaskNodeCard so the milestone reads as the
-// "header" of its tree.
-export const MilestoneNodeCard = memo((props: NodeProps) => {
-    const { mode } = useColorScheme();
+/**
+ * A milestone as a node of the graph (MIP-1124 3/3): the family's card surface
+ * with the milestone flag, the same schedule rows as `TaskNodeCard`, and a
+ * progress bar. Read-only on the structure side; the dependency handles stay
+ * live so a milestone can still be a blocker / blocked target. Like the task
+ * node it renders from the node's `data` alone; `withHandles` is the canvas's.
+ *
+ * A milestone's identity is the flag (as on the board and in the table) and a
+ * stronger border, not an orange frame; the "current preview" highlight is the
+ * same accent as on a task node.
+ */
+export const MilestoneNodeView = ({
+    data,
+    withHandles = false,
+}: {
+    data: TaskNodeData;
+    withHandles?: boolean;
+}) => {
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const P = isDark ? purplePalette.dark : purplePalette.light;
 
     const {
         task,
@@ -70,58 +64,19 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
         sprint,
         onAddSubtask,
         onOpenPreview,
-    } = props.data as unknown as TaskNodeData;
+    } = data;
 
-    // "Current preview" treatment — kept in sync with TaskNodeCard so
-    // both kinds of cards highlight the same way when they happen to
-    // be the focal one (e.g. previewing a milestone-backing task
-    // anchors the diagram on the milestone, which renders via this
-    // component). Border stays orange (milestone identity); the
-    // accent purple appears as an OUTER ring on top of the existing
-    // milestone shadow, and the surface gets the same lightness wash
-    // (brighter in dark mode, darker in light) so it pops by
-    // *brightness* against the surrounding purple cards.
-    const cardBackground = isCurrentPreview
-        ? isDark
-            ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
-            : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
-        : P.surfaceElevated;
-    // Pre-composed ring tokens rather than `alpha(P.accent, …)`: the palette
-    // is CSS variables now and MUI's `alpha()` runs `decomposeColor`, which
-    // throws on a `var()`. The per-mode alphas live in the token.
-    const currentRing = isCurrentPreview
-        ? `0 0 0 2px ${P.accentRingStrong}, 0 0 22px ${P.accentRingSoft}`
-        : null;
-
-    const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
-    const toneColor = TONE_COLOR[schedule.tone];
-    const scheduleLabel =
-        schedule.daysUntilDue == null
-            ? null
-            : task.status?.toLowerCase() === "closed"
-              ? t.tasks.diagram.schedule.closed
-              : schedule.daysUntilDue < 0
-                ? fmt(t.tasks.diagram.schedule.overdueDays, {
-                      count: -schedule.daysUntilDue,
-                  })
-                : schedule.daysUntilDue === 0
-                  ? t.tasks.diagram.schedule.dueToday
-                  : schedule.daysUntilDue === 1
-                    ? t.tasks.diagram.schedule.dueTomorrow
-                    : fmt(t.tasks.diagram.schedule.dueInDays, {
-                          count: schedule.daysUntilDue,
-                      });
+    const scheduleLabel = useScheduleLabel(schedule, task.status);
 
     const total = totalDescendantCount ?? 0;
     const closed = closedDescendantCount ?? 0;
     const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
-    const progressColor = pct === 100 ? "success" : "primary";
 
-    // Per-milestone health verdict — same maths as the modal header
-    // but scoped to *this* milestone's own descendants and window.
-    // When a tree contains multiple milestones the user sees a
-    // verdict per milestone without opening each.
+    // Per-milestone health verdict — same maths as the modal header but scoped
+    // to *this* milestone's own descendants and window. When a tree contains
+    // multiple milestones the user sees a verdict per milestone without opening
+    // each.
     const health = computeHealth(
         getMilestoneWindow({
             sprint: sprint ? { startDate: sprint.startDate, endDate: sprint.endDate } : null,
@@ -139,252 +94,140 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
               : t.tasks.diagram.schedule.behind
         : null;
 
-    const flagColor = "#f97316";
+    const dateText = scheduleDateText(schedule);
 
     return (
-        <Box
-            sx={{
-                width: 260,
-                p: 1.25,
-                pt: 1.5,
-                borderRadius: "12px",
-                background: cardBackground,
-                border: "1.5px solid",
-                borderColor: isDark ? "rgba(249,115,22,0.45)" : "rgba(234,88,12,0.45)",
-                // Stack the current-preview ring outside the milestone's
-                // orange glow when applicable; otherwise the orange glow
-                // alone — same compose pattern as TaskNodeCard.
-                boxShadow: [
-                    currentRing,
-                    isDark
-                        ? "0 6px 22px rgba(249,115,22,0.18)"
-                        : "0 6px 22px rgba(234,88,12,0.14)",
-                ]
-                    .filter(Boolean)
-                    .join(", "),
-                position: "relative",
-                transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-                "&:hover": {
-                    borderColor: isDark ? "rgba(249,115,22,0.7)" : "rgba(234,88,12,0.7)",
-                },
-                "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    top: 0,
-                    left: 8,
-                    right: 8,
-                    height: "2px",
-                    borderRadius: "0 0 2px 2px",
-                    background: "linear-gradient(90deg, #fbbf24 0%, #f97316 50%, #ef4444 100%)",
-                    opacity: 0.9,
-                },
-            }}
+        <TaskCardFrame
+            clickable={false}
+            emphasis={isCurrentPreview ? "current" : undefined}
+            width={NODE_WIDTH}
+            prominent
         >
-            <Handle
-                id={HANDLE.structureTop}
-                isConnectable={false}
-                position={Position.Top}
-                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
-                type="target"
-            />
-            <Handle
-                id={HANDLE.structureBottom}
-                isConnectable={false}
-                position={Position.Bottom}
-                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
-                type="source"
-            />
-            <Handle
-                id={HANDLE.dependencyLeft}
-                position={Position.Left}
-                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
-                type="target"
-            />
-            <Handle
-                id={HANDLE.dependencyRight}
-                position={Position.Right}
-                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
-                type="source"
-            />
+            {withHandles && <NodeHandles structureConnectable={false} dependencyConnectable />}
 
-            <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mb: 0.75 }}>
-                <Box
-                    sx={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: "6px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: isDark ? "rgba(249,115,22,0.18)" : "rgba(234,88,12,0.12)",
-                        color: flagColor,
-                    }}
-                >
-                    <FlagRoundedIcon sx={{ fontSize: 14 }} />
-                </Box>
-                <CopyableTaskIdChip
-                    size="sm"
-                    sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
-                    task={task}
-                    variant="outlined"
-                />
-                <StatusChip isDark={isDark} meta={meta} />
-                {/* Schedule-health chip — visible per-milestone so the
-                    user spots a slipping milestone inside a multi-
-                    milestone tree without opening each card. Skipped
-                    when there's no window or no descendants. */}
-                {health && total > 0 && (
-                    <AppTooltip
-                        title={fmt(t.tasks.diagram.tooltips.healthSummary, {
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    minHeight: 22,
+                    minWidth: 0,
+                }}
+            >
+                <MilestoneFlag size={16} />
+                <TaskIdText task={task} />
+                <StatusLabel status={task.status} />
+                {/* Schedule health — visible per milestone so the user spots a
+                    slipping milestone inside a multi-milestone tree without
+                    opening each card. Skipped when there's no window or no
+                    descendants. */}
+                {health && total > 0 && healthLabel && (
+                    <HealthLabel
+                        label={healthLabel}
+                        tone={health.tone}
+                        tooltip={fmt(t.tasks.diagram.tooltips.healthSummary, {
                             actualPct: Math.round(health.actualPct),
                             expectedPct: Math.round(health.expectedPct),
                         })}
-                    >
-                        <Chip
-                            color={HEALTH_JOY_COLOR[health.tone]}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                fontSize: "0.6rem",
-                                fontWeight: 700,
-                                borderRadius: "5px",
-                                "--Chip-paddingInline": "6px",
-                            }}
-                        >
-                            {healthLabel}
-                        </Chip>
-                    </AppTooltip>
+                    />
                 )}
                 <Box sx={{ flex: 1 }} />
                 <AppTooltip title={t.tasks.diagram.tooltips.openMilestone}>
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            "--IconButton-size": "22px",
-                            color: P.textMuted,
-                            opacity: 0.7,
-                            "&:hover": { opacity: 1, color: P.text },
-                        }}
-                        onClick={onOpenPreview}
-                    >
-                        <LaunchRoundedIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
+                    <Box component="span" sx={{ display: "inline-flex" }}>
+                        <NodeIconButton onClick={onOpenPreview}>
+                            <LaunchRoundedIcon sx={{ fontSize: 14 }} />
+                        </NodeIconButton>
+                    </Box>
                 </AppTooltip>
-            </Stack>
+            </Box>
 
-            <Typography
-                level="body-sm"
-                sx={{
-                    fontWeight: 700,
-                    mb: 0.75,
-                    color: P.text,
-                    overflow: "hidden",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    wordBreak: "break-word",
-                    lineHeight: 1.3,
-                    minHeight: "2.6em",
-                }}
-            >
-                {task.title || t.tasks.milestones.untitled}
-            </Typography>
+            <Box sx={{ display: "flex", minHeight: NODE_TITLE_MIN_HEIGHT }}>
+                <TaskTitle lines={2}>{task.title || t.tasks.milestones.untitled}</TaskTitle>
+            </Box>
 
             {/* Schedule row */}
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={0.5}
-                sx={{ mb: 0.5, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 0.75,
+                    rowGap: 0.5,
+                    minHeight: 22,
+                }}
             >
                 <CalendarMonthRoundedIcon
-                    sx={{ fontSize: 14, color: P.textMuted, opacity: 0.7 }}
+                    aria-hidden="true"
+                    sx={{ fontSize: 14, color: g.text.tertiary, "--Icon-color": g.text.tertiary }}
                 />
-                {schedule.startLabel && schedule.dueLabel ? (
-                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 500 }}>
-                        {schedule.startLabel} – {schedule.dueLabel}
-                    </Typography>
-                ) : schedule.startLabel || schedule.dueLabel ? (
-                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 500 }}>
-                        {schedule.startLabel ?? schedule.dueLabel}
-                    </Typography>
-                ) : (
-                    <Typography level="body-xs" sx={{ color: P.textMuted, opacity: 0.6 }}>
-                        {t.tasks.diagram.noDates}
-                    </Typography>
-                )}
+                <Box
+                    component="span"
+                    data-testid="node-dates"
+                    sx={{
+                        ...type("body-xs"),
+                        fontWeight: 500,
+                        color: dateText ? g.text.primary : g.text.tertiary,
+                    }}
+                >
+                    {dateText ?? t.tasks.diagram.noDates}
+                </Box>
                 {schedule.durationDays != null && (
-                    <Chip
-                        size="sm"
-                        variant="outlined"
-                        sx={{
-                            fontSize: "0.6rem",
-                            fontWeight: 600,
-                            borderRadius: "4px",
-                            "--Chip-paddingInline": "5px",
-                            color: P.textMuted,
-                        }}
-                    >
-                        {fmt(t.tasks.diagram.durationDays, {
-                            count: schedule.durationDays,
-                        })}
-                    </Chip>
+                    <DurationText>
+                        {fmt(t.tasks.diagram.durationDays, { count: schedule.durationDays })}
+                    </DurationText>
                 )}
                 {scheduleLabel && (
-                    <Chip
-                        size="sm"
-                        startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
-                        variant="soft"
+                    <DueText text={scheduleLabel} tone={dueToneOf(schedule.tone)} icon />
+                )}
+            </Box>
+
+            {/* Sprint linkage — when the milestone is attached to a sprint we
+                surface its name + date range so the milestone reads as
+                scheduled within a concrete cycle. */}
+            {sprint && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 0.75,
+                        rowGap: 0.5,
+                        minHeight: 22,
+                    }}
+                >
+                    <BoltRoundedIcon
+                        aria-hidden="true"
+                        sx={{ fontSize: 14, color: g.accent.text, "--Icon-color": g.accent.text }}
+                    />
+                    <Box
+                        component="span"
                         sx={{
-                            fontSize: "0.6rem",
-                            fontWeight: 700,
-                            borderRadius: "4px",
-                            "--Chip-paddingInline": "5px",
-                            background: alpha(toneColor, isDark ? 0.22 : 0.16),
-                            color: toneColor,
+                            ...type("body-xs"),
+                            fontWeight: 500,
+                            color: g.text.primary,
+                            whiteSpace: "nowrap",
                         }}
                     >
-                        {scheduleLabel}
-                    </Chip>
-                )}
-            </Stack>
-
-            {/* Sprint linkage — when the milestone is attached to a
-                sprint we surface its name + date range so the milestone
-                reads as scheduled within a concrete cycle. Sits between
-                the schedule row and the progress bar so milestone
-                window and sprint cadence read side by side. */}
-            {sprint && (
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ mb: 0.75, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
-                >
-                    <BoltRoundedIcon sx={{ fontSize: 14, color: P.accentSoft, opacity: 0.9 }} />
-                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 600 }} noWrap>
                         {sprint.name}
-                    </Typography>
-                    <Typography
-                        level="body-xs"
-                        sx={{ color: P.textMuted, fontWeight: 500 }}
-                        noWrap
+                    </Box>
+                    <Box
+                        component="span"
+                        sx={{ ...type("body-xs"), color: g.text.tertiary, whiteSpace: "nowrap" }}
                     >
                         {fmtDate(sprint.startDate)} – {fmtDate(sprint.endDate)}
-                    </Typography>
-                </Stack>
+                    </Box>
+                </Box>
             )}
 
-            {/* Progress bar — only when the milestone has descendants.
-                A vertical "expected by now" marker overlays the bar at
-                health.expectedPct so the gap between actual progress
-                and expected progress is visible right on the card. */}
+            {/* Progress bar — only when the milestone has descendants. A vertical
+                "expected by now" marker overlays the bar at health.expectedPct
+                so the gap between actual and expected progress is visible right
+                on the card. */}
             {total > 0 && (
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Box sx={{ flex: 1, position: "relative" }}>
                         <LinearProgress
-                            color={progressColor}
+                            color={pct === 100 ? "success" : "primary"}
                             size="sm"
                             sx={{ "--LinearProgress-thickness": "5px" }}
                             value={pct}
@@ -392,87 +235,54 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                         />
                         {health && (
                             <Box
+                                data-health={health.tone}
+                                data-testid="node-expected-marker"
                                 sx={{
                                     position: "absolute",
                                     top: -2,
                                     bottom: -2,
                                     left: `${health.expectedPct}%`,
                                     width: "2px",
-                                    background:
-                                        health.tone === "on-track"
-                                            ? "#16a34a"
-                                            : health.tone === "at-risk"
-                                              ? "#f59e0b"
-                                              : "#dc2626",
+                                    background: HEALTH_COLOR[health.tone],
                                     borderRadius: "1px",
-                                    boxShadow: isDark
-                                        ? "0 0 0 1px rgba(11,10,22,0.7)"
-                                        : "0 0 0 1px rgba(255,255,255,0.85)",
+                                    boxShadow: `0 0 0 1px ${g.surface.default}`,
                                 }}
                             />
                         )}
                     </Box>
-                    <Typography
-                        level="body-xs"
+                    <Box
+                        component="span"
                         sx={{
-                            color: P.textMuted,
-                            fontWeight: 600,
+                            ...type("body-xs"),
+                            fontWeight: 500,
+                            color: g.text.tertiary,
                             minWidth: 42,
-                            textAlign: "right",
+                            textAlign: "end",
+                            fontVariantNumeric: "tabular-nums",
                         }}
                     >
                         {closed}/{total}
-                    </Typography>
-                </Stack>
+                    </Box>
+                </Box>
             )}
 
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={0.75}
-                sx={{ mt: total > 0 ? 0.5 : 0 }}
-            >
-                <Chip
-                    size="sm"
-                    variant="soft"
-                    sx={{
-                        fontSize: "0.6rem",
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                        borderRadius: "4px",
-                        "--Chip-paddingInline": "5px",
-                        background: isDark ? "rgba(249,115,22,0.15)" : "rgba(234,88,12,0.1)",
-                        color: flagColor,
-                    }}
-                >
-                    Milestone
-                </Chip>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                <NodeBadge>{t.tasks.titleBlock.milestoneBadge}</NodeBadge>
                 <Box sx={{ flex: 1 }} />
                 <AppTooltip title={t.tasks.diagram.tooltips.addTaskToMilestone}>
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            "--IconButton-size": "24px",
-                            color: flagColor,
-                            opacity: 0.8,
-                            borderRadius: "6px",
-                            "&:hover": {
-                                opacity: 1,
-                                background: isDark
-                                    ? "rgba(249,115,22,0.15)"
-                                    : "rgba(234,88,12,0.1)",
-                            },
-                        }}
-                        onClick={() => void onAddSubtask()}
-                    >
-                        <AddRoundedIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
+                    <Box component="span" sx={{ display: "inline-flex" }}>
+                        <NodeIconButton size={24} onClick={() => void onAddSubtask()}>
+                            <AddRoundedIcon sx={{ fontSize: 16 }} />
+                        </NodeIconButton>
+                    </Box>
                 </AppTooltip>
-            </Stack>
-        </Box>
+            </Box>
+        </TaskCardFrame>
     );
-});
+};
+
+export const MilestoneNodeCard = memo((props: NodeProps) => (
+    <MilestoneNodeView data={props.data as unknown as TaskNodeData} withHandles />
+));
 
 MilestoneNodeCard.displayName = "MilestoneNodeCard";

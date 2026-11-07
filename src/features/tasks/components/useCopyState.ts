@@ -5,7 +5,7 @@ const COPIED_FEEDBACK_MS = 1200;
 /** Click-to-copy state shared by the task id controls. */
 export const useCopyState = () => {
     const [copied, setCopied] = useState(false);
-    const onClick = (text: string) => (event: React.MouseEvent) => {
+    const onClick = (text: string) => (event: React.SyntheticEvent) => {
         // Task ID chips are routinely nested inside row click handlers
         // (open task, navigate to thread, etc.). Without stopPropagation
         // a click would both copy AND navigate, which is surprising.

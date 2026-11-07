@@ -8,7 +8,7 @@
  * `isDark`, and a theme or mode change needs no re-render.
  */
 
-import { ReactNode } from "react";
+import { KeyboardEvent, ReactNode } from "react";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { Box } from "@mui/joy";
@@ -17,7 +17,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useTranslation } from "../../../../i18n";
-import { g, type } from "../../../../theme/tokens";
+import { focusRing, g, type } from "../../../../theme/tokens";
 import { TagListProps } from "../../../../types/tasks";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { Tag } from "../meta/Tag";
@@ -38,9 +38,10 @@ const idSx = {
     flexShrink: 0,
 } as const;
 
-const CopyableId = ({ text }: { text: string }) => {
+const CopyableId = ({ text, focusable }: { text: string; focusable: boolean }) => {
     const { copied, onClick } = useCopyState();
     const { t } = useTranslation();
+    const copy = onClick(text);
     return (
         <AppTooltip title={copied ? t.common.ui.copy.copied : t.common.ui.copy.clickToCopy}>
             <Box
@@ -50,8 +51,23 @@ const CopyableId = ({ text }: { text: string }) => {
                     cursor: "pointer",
                     transition: `color ${g.motion.fast}`,
                     "&:hover": { color: g.accent.text },
+                    "&:focus-visible": { ...focusRing, borderRadius: g.radius.xs },
                 }}
-                onClick={onClick(text)}
+                onClick={copy}
+                {...(focusable
+                    ? {
+                          role: "button",
+                          tabIndex: 0,
+                          // The tooltip would otherwise name it "Click to copy".
+                          "aria-label": `${text}, ${t.common.ui.copy.clickToCopy}`,
+                          onKeyDown: (e: KeyboardEvent<HTMLSpanElement>) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  copy(e);
+                              }
+                          },
+                      }
+                    : {})}
             >
                 {text}
             </Box>
@@ -69,16 +85,25 @@ export const TaskIdText = ({
     task,
     text,
     copyable = true,
+    focusable = false,
+    fallback,
 }: {
     task?: TaskIdSource | null;
     /** An already-formatted id (milestones format their own). Wins over `task`. */
     text?: string;
     copyable?: boolean;
+    /** Make the copy a keyboard control (a button: Tab, then Enter or Space).
+     *  Off for ids inside a row or card that is itself the control. */
+    focusable?: boolean;
+    /** Shown when the task has no resolvable id ("N/A"); otherwise nothing is drawn. */
+    fallback?: string;
 }) => {
-    const label = text ?? formatTaskDisplayId(task);
+    const real = text ?? formatTaskDisplayId(task);
+    const label = real || fallback;
     if (!label) return null;
-    return copyable ? (
-        <CopyableId text={label} />
+    // The fallback is a placeholder, not an id: nothing to copy.
+    return copyable && real ? (
+        <CopyableId focusable={focusable} text={label} />
     ) : (
         <Box component="span" sx={idSx}>
             {label}
@@ -131,6 +156,9 @@ export const DueText = ({
             gap: 0.5,
             minWidth: 0,
             color: DUE_COLOR[tone],
+            // Joy's SvgIcon takes its color from --Icon-color, not from `color`:
+            // without this the clock stays gray beside a red date.
+            "--Icon-color": DUE_COLOR[tone],
             fontWeight: tone === "overdue" ? 500 : 400,
             whiteSpace: "nowrap",
         }}

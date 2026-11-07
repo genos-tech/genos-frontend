@@ -2,7 +2,7 @@ import { useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
-import { Box, Chip, IconButton, ListItem, Typography } from "@mui/joy";
+import { Box, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
@@ -14,6 +14,7 @@ import { fmt, useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskDependencyRef, TaskProps } from "../../../../../types/tasks";
 import { StatusChip } from "../../autocompletes/ACTaskSelector";
+import { TaskIdText } from "../../card";
 import { ModalManageDependencies } from "../../modals/ModalManageDependencies";
 
 const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
@@ -349,18 +350,7 @@ const DependencyChip = ({
                 }}
                 onClick={onClick}
             >
-                <Chip
-                    size="sm"
-                    variant="outlined"
-                    sx={{
-                        fontWeight: 600,
-                        fontFamily: "monospace",
-                        borderRadius: "5px",
-                        justifyContent: "center",
-                    }}
-                >
-                    {ref_.displayId ?? `#${ref_.otherTaskId}`}
-                </Chip>
+                <TaskIdText copyable={false} text={ref_.displayId ?? `#${ref_.otherTaskId}`} />
                 <StatusChip isDark={isDark} meta={ref_.status} />
                 <Typography
                     level="body-sm"

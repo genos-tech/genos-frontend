@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Box, Card, Chip, LinearProgress, Stack, Typography } from "@mui/joy";
+import { Box, LinearProgress, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -11,9 +10,10 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-import { STATUS_FILL } from "../../meta/taskTone";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { MilestoneFlag, TaskCardFrame, TaskIdText, TaskTitle } from "../../components/card";
+import { StatusLabel } from "../../components/meta/StatusLabel";
 import { Milestone, Sprint } from "../types";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -29,10 +29,6 @@ type Props = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     socket: Socket | null;
-    isDark: boolean;
-    textPrimary: string;
-    textSecondary: string;
-    textMuted: string;
 };
 
 export const SprintMilestonesSection = ({
@@ -46,10 +42,6 @@ export const SprintMilestonesSection = ({
     myself,
     setMyself,
     socket,
-    isDark,
-    textPrimary,
-    textSecondary,
-    textMuted,
 }: Props) => {
     const { t } = useTranslation();
     const milestones: Milestone[] = useMemo(() => {
@@ -69,17 +61,12 @@ export const SprintMilestonesSection = ({
     return (
         <Box>
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 2 }}>
-                <FlagRoundedIcon
-                    sx={{
-                        fontSize: 18,
-                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                    }}
-                />
+                <MilestoneFlag size={18} />
                 <Typography
                     level="title-sm"
                     sx={{
                         fontWeight: 600,
-                        color: textPrimary,
+                        color: g.text.primary,
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                     }}
@@ -88,12 +75,16 @@ export const SprintMilestonesSection = ({
                         ? fmt(t.tasks.milestones.sectionInSprint, { name: selectedSprint.name })
                         : t.tasks.milestones.sectionNoSprint}
                 </Typography>
-                <Chip size="sm" variant="soft">
+                <Box
+                    component="span"
+                    data-testid="sprint-milestones-count"
+                    sx={{ ...type("body-sm"), color: g.text.tertiary }}
+                >
                     {milestones.length}
-                </Chip>
+                </Box>
             </Stack>
             {milestones.length === 0 ? (
-                <Typography level="body-sm" sx={{ color: textMuted }}>
+                <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
                     {t.tasks.milestones.noMilestones}
                 </Typography>
             ) : (
@@ -102,21 +93,11 @@ export const SprintMilestonesSection = ({
                         const total = m.tasksTotal ?? 0;
                         const closed = m.tasksClosed ?? 0;
                         const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
-                        const statusColor = STATUS_FILL[m.status as string] ?? "#94a3b8";
                         return (
-                            <Card
+                            <TaskCardFrame
                                 key={m.milestoneId}
-                                variant="outlined"
-                                sx={{
-                                    p: 1.5,
-                                    cursor: "pointer",
-                                    "&:hover": {
-                                        backgroundColor: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                    },
-                                }}
-                                onClick={() => handleOpenMilestone(m.milestoneId)}
+                                label={m.title || t.tasks.milestones.untitled}
+                                onOpen={() => handleOpenMilestone(m.milestoneId)}
                             >
                                 <Stack
                                     alignItems="center"
@@ -127,45 +108,32 @@ export const SprintMilestonesSection = ({
                                     <Stack
                                         alignItems="center"
                                         direction="row"
-                                        spacing={1}
+                                        spacing={0.75}
                                         sx={{ flex: 1, minWidth: 0 }}
                                     >
-                                        <Box
-                                            sx={{
-                                                width: 6,
-                                                height: 6,
-                                                borderRadius: "50%",
-                                                backgroundColor: statusColor,
-                                                flexShrink: 0,
-                                            }}
+                                        <MilestoneFlag size={14} />
+                                        <TaskIdText
+                                            copyable={false}
+                                            text={m.displayId ?? `#${m.milestoneId}`}
                                         />
-                                        <Typography
-                                            level="title-sm"
-                                            sx={{
-                                                fontWeight: 600,
-                                                color: textPrimary,
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {m.title || t.tasks.milestones.untitled}
-                                        </Typography>
-                                        <Chip
-                                            size="sm"
-                                            variant="soft"
-                                            sx={{
-                                                color: statusColor,
-                                                backgroundColor: `${statusColor}1A`,
-                                            }}
-                                        >
-                                            {taskMetaLabel(m.status, t.tasks.filters)}
-                                        </Chip>
+                                        <Box sx={{ display: "flex", minWidth: 0 }}>
+                                            <TaskTitle>
+                                                {m.title || t.tasks.milestones.untitled}
+                                            </TaskTitle>
+                                        </Box>
+                                        <StatusLabel status={m.status} />
                                     </Stack>
                                     <Stack alignItems="center" direction="row" spacing={1.5}>
-                                        <Typography level="body-xs" sx={{ color: textSecondary }}>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                ...type("body-xs"),
+                                                color: g.text.tertiary,
+                                                fontVariantNumeric: "tabular-nums",
+                                            }}
+                                        >
                                             {closed}/{total}
-                                        </Typography>
+                                        </Box>
                                         <AvatarGroup size="sm">
                                             {m.assignees.slice(0, 4).map((a, idx) => {
                                                 const userIdKey =
@@ -224,7 +192,7 @@ export const SprintMilestonesSection = ({
                                         determinate
                                     />
                                 </Box>
-                            </Card>
+                            </TaskCardFrame>
                         );
                     })}
                 </Stack>
