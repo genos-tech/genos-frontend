@@ -3,7 +3,6 @@ import "@blocknote/mantine/style.css";
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -24,7 +23,6 @@ import { useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -36,10 +34,8 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
+import { useGenosEditor } from "./genos/useGenosEditor";
 import { EditorSendButton } from "./sub/EditorSendButton";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -149,16 +145,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     );
 
     const dictionary = useBlockNoteDictionary();
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        uploadFile,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
-        dictionary,
-    });
+    const editor = useGenosEditor({ surface: "composer", schema, dictionary, uploadFile });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
