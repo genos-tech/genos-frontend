@@ -163,20 +163,18 @@ const toolbarPlace = {
 } as const;
 
 /** Always mounted, shown by CSS (`:hover`, `:focus-within`, and always on touch):
- *  for a host that must not hold hover state, such as a streamed, memoised turn. */
-const cssRevealed = {
-    "& > .bubble-toolbar": { opacity: 0, transition: `opacity ${g.motion.fast} ${g.ease}` },
-    "&:hover > .bubble-toolbar, &:focus-within > .bubble-toolbar": { opacity: 1 },
-    "@media (hover: none)": { "& > .bubble-toolbar": { opacity: 1 } },
-} as const;
-
-/** The `"bottom"` actions row, revealed the same way. A descendant selector, not
- *  `>`: in the balloon layout the row is inside the surface, not beside it. */
-const cssRevealedBottom = {
-    "& .bubble-actions-bottom": { opacity: 0, transition: `opacity ${g.motion.fast} ${g.ease}` },
-    "&:hover .bubble-actions-bottom, &:focus-within .bubble-actions-bottom": { opacity: 1 },
-    "@media (hover: none)": { "& .bubble-actions-bottom": { opacity: 1 } },
-} as const;
+ *  for a host that must not hold hover state, such as a streamed, memoised turn.
+ *  `child` is the revealed element's selector. The toolbar sits beside the
+ *  surface, so it is a direct child (`> .bubble-toolbar`); the `"bottom"` row may
+ *  be inside the balloon's surface, so it is a descendant. */
+const revealRules = (child: string) =>
+    ({
+        [`& ${child}`]: { opacity: 0, transition: `opacity ${g.motion.fast} ${g.ease}` },
+        [`&:hover ${child}, &:focus-within ${child}`]: { opacity: 1 },
+        "@media (hover: none)": { [`& ${child}`]: { opacity: 1 } },
+    }) as const;
+const cssRevealed = revealRules("> .bubble-toolbar");
+const cssRevealedBottom = revealRules(".bubble-actions-bottom");
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 

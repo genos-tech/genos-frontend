@@ -1,4 +1,12 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import {
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
 import { useUiSettings } from "./useUiSettings";
 
@@ -109,8 +117,13 @@ export const BubbleStylePreferenceProvider = ({ children }: { children: ReactNod
         [set]
     );
 
+    // Memoised: the provider re-renders with every App-root write (its `children`
+    // is a new element each time), and a fresh value object would re-render every
+    // consumer, including the Spotlight conversation, on each keystroke (MIP-904).
+    const value = useMemo(() => ({ style, setStyle }), [style, setStyle]);
+
     return (
-        <BubbleStylePreferenceContext.Provider value={{ style, setStyle }}>
+        <BubbleStylePreferenceContext.Provider value={value}>
             {children}
         </BubbleStylePreferenceContext.Provider>
     );

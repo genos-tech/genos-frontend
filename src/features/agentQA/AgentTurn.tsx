@@ -368,8 +368,10 @@ const AgentTurnInner = ({
     // top edge would be scrolled away by then. The reveal (hover / focus / touch)
     // is Bubble's, in CSS, so the turn still holds no hover state (MIP-904).
     // The hosts already pad their column; on a phone the compact row's own 16px
-    // each side would take a fifth of the reading width.
-    const frameSx = layout === "compact" ? { px: { xs: 1, md: 2 } } : undefined;
+    // each side would take a fifth of the reading width. The balloon clips its
+    // content by default (for the pointed corner); a turn holds an approval card
+    // and wide previews that must not be cut, and its corner is not pointed.
+    const frameSx = layout === "compact" ? { px: { xs: 1, md: 2 } } : { overflow: "visible" };
 
     return (
         <Bubble

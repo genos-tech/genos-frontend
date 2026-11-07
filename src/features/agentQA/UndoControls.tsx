@@ -1,8 +1,9 @@
 // Undo of an approved write, on the turn that made it.
 //
-// WHY NOT THE ACTION BAR. The per-turn action bar (`.turn-actions`) is revealed on
-// hover. Undo is time-sensitive and the person's main way back from something they
-// just approved, so it must be on screen without a hover, on desktop and on touch:
+// WHY NOT THE ACTION BAR. The per-turn action bar (`.turn-actions`, inside the
+// Bubble's bottom row) is revealed on hover. Undo is time-sensitive and the
+// person's main way back from something they just approved, so it must be on
+// screen without a hover, on desktop and on touch:
 // `AgentTurn` gives it a slot of its own, under the steps, and keeps
 // `renderExtraActions` free for others.
 //
