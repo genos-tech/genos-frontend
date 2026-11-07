@@ -1,8 +1,9 @@
-import { Box, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { BubbleMeta } from "../../../../components/ui/bubble";
 import { ShowEmojiReaction } from "../../../../components/ui/emoji/ShowEmojiReaction";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
@@ -47,9 +48,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         replayHandler,
         isThread,
     } = props;
-
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
 
     // Pick the right counter for this bubble:
     //   - PM (chatType === 3): the task's LIVE comment count
@@ -114,45 +112,19 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             px: 1,
                             py: 0.5,
                             flexShrink: 0,
-                            borderRadius: "8px",
+                            borderRadius: g.radius.md,
                             border: "1px solid",
-                            borderColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.3)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.25)",
-                            background: isDark
-                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
-                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.05) 100%)",
+                            borderColor: g.accent.border,
+                            bgcolor: g.accent.subtle,
                             cursor: "pointer",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                                background: isDark
-                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
-                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
-                                borderColor: isDark
-                                    ? "rgba(var(--gp-brand-700-rgb), 0.5)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.4)",
-                                transform: "translateY(-1px)",
-                                boxShadow: isDark
-                                    ? "0 3px 10px rgba(var(--gp-brand-700-rgb), 0.2)"
-                                    : "0 3px 10px rgba(var(--gp-brand-700-rgb), 0.15)",
-                            },
-                            "&:active": {
-                                transform: "translateY(0)",
-                            },
+                            transition: `border-color ${g.motion.fast} ${g.ease}`,
+                            "&:hover": { borderColor: g.accent.solid },
                         }}
                         onClick={replayHandler}
                     >
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                fontSize: "0.7rem",
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-800)",
-                                letterSpacing: "0.01em",
-                            }}
-                        >
+                        <BubbleMeta sx={{ color: g.accent.text, fontWeight: 600 }}>
                             {chipCount === 1 ? `1 ${chipNoun}` : `${chipCount} ${chipNounPlural}`}
-                        </Typography>
+                        </BubbleMeta>
                     </Box>
                 )}
             </Stack>
