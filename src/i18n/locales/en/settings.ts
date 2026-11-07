@@ -93,6 +93,16 @@ export const settings = {
         retry: "Try again",
         empty: "You have no schedules yet.",
         createFirst: "Create your first schedule",
+        suggestedHeading: "Suggested for you",
+        suggestedHint:
+            "Two ordinary schedules. Add one and it is yours to change, pause or delete.",
+        suggestAdd: "Add",
+        suggestAddFailed: "Couldn't add that schedule. Try again.",
+        suggestMorningName: "Morning plan",
+        suggestMorningBlurb: "What to do today",
+        suggestEveningName: "Evening recap",
+        suggestEveningBlurb: "What you did today",
+        suggestDaily: "Every day at {time}",
         newSchedule: "New schedule",
         limitReached:
             "You have reached the limit of {limit} schedules. Delete one to add another.",

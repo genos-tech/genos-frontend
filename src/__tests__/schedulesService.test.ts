@@ -46,7 +46,28 @@ describe("every call names the member's team", () => {
             "/schedules/",
             expect.objectContaining({ params: { team_id: TEAM } })
         );
-        expect(list).toEqual({ timeZone: "Asia/Tokyo", limit: 20, jobs: [], schedules: [] });
+        expect(list).toEqual({
+            timeZone: "Asia/Tokyo",
+            limit: 20,
+            jobs: [],
+            schedules: [],
+            suggestions: [],
+        });
+    });
+
+    it("GET passes the suggestions on, and an older API without them gives none", async () => {
+        const suggestion = {
+            key: "morning_plan",
+            name: "Morning plan",
+            job: "what_to_do_today",
+            params: {},
+            frequency: "daily",
+            timeOfDay: "09:00",
+        };
+        api.get.mockResolvedValue({ data: { suggestions: [suggestion] } });
+        expect((await listSchedules("tok", TEAM))?.suggestions).toEqual([suggestion]);
+        api.get.mockResolvedValue({ data: {} });
+        expect((await listSchedules("tok", TEAM))?.suggestions).toEqual([]);
     });
 
     it("POST sends team_id in the JSON body, not the query", async () => {

@@ -21,6 +21,7 @@ import {
     ScheduleFields,
     ScheduleList,
     ScheduleResult,
+    ScheduleSuggestion,
     updateSchedule,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
@@ -32,6 +33,13 @@ type Props = {
 };
 
 type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
+
+/** The words for a suggestion Genos makes, by its key. A key this page does not know falls
+ *  back to the name the server sent, so a new suggestion still shows. */
+const SUGGESTION_TEXT = {
+    morning_plan: { name: "suggestMorningName", blurb: "suggestMorningBlurb" },
+    evening_recap: { name: "suggestEveningName", blurb: "suggestEveningBlurb" },
+} as const;
 
 /** What "Run now" said, kept per schedule so the refetch after it keeps it. */
 type RunNotice =
@@ -64,6 +72,7 @@ export const SchedulesSection = ({ teamId }: Props) => {
     const [confirming, setConfirming] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [notices, setNotices] = useState<Record<string, RunNotice>>({});
+    const [adding, setAdding] = useState<string | null>(null);
 
     // Only the newest request may write: a slow answer for the team the member
     // just left must not paint over the team they are in now.
@@ -157,6 +166,24 @@ export const SchedulesSection = ({ teamId }: Props) => {
         setRunning(null);
     };
 
+    /** Accepting a suggestion is an ordinary create: the schedule is the member's from then on. */
+    const accept = async (sug: ScheduleSuggestion) => {
+        const known = SUGGESTION_TEXT[sug.key as keyof typeof SUGGESTION_TEXT];
+        setAdding(sug.key);
+        setError(null);
+        const res = await createSchedule(accessToken, teamId, {
+            name: known ? s[known.name] : sug.name,
+            job: sug.job,
+            params: sug.params,
+            frequency: sug.frequency,
+            timeOfDay: sug.timeOfDay,
+            deliverPush: false,
+        });
+        setAdding(null);
+        if (res.ok) await refresh();
+        else await failed(res, s.suggestAddFailed);
+    };
+
     const remove = async (id: string) => {
         setBusy(id);
         setError(null);
@@ -172,6 +199,7 @@ export const SchedulesSection = ({ teamId }: Props) => {
     };
 
     const schedules = data?.schedules ?? [];
+    const suggestions = data?.suggestions ?? [];
     const atLimit = !!data && data.limit > 0 && schedules.length >= data.limit;
     const zone = data?.timeZone ?? "";
     const when = (iso: string) => formatMoment(iso, zone, locale);
@@ -238,6 +266,57 @@ export const SchedulesSection = ({ teamId }: Props) => {
                     >
                         {s.createFirst}
                     </Button>
+                </Stack>
+            )}
+
+            {data && suggestions.length > 0 && mode === null && (
+                <Stack data-testid="schedule-suggestions" spacing={0.75}>
+                    <Typography level="title-sm">{s.suggestedHeading}</Typography>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                        {s.suggestedHint}
+                    </Typography>
+                    {suggestions.map((sug) => {
+                        const known = SUGGESTION_TEXT[sug.key as keyof typeof SUGGESTION_TEXT];
+                        return (
+                            <Sheet
+                                key={sug.key}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    flexWrap: "wrap",
+                                    gap: 1,
+                                    p: 1,
+                                    borderRadius: "md",
+                                    minWidth: 0,
+                                }}
+                                variant="outlined"
+                            >
+                                <Stack spacing={0.25} sx={{ flex: "1 1 12rem", minWidth: 0 }}>
+                                    <Typography level="title-sm" sx={{ overflowWrap: "anywhere" }}>
+                                        {known ? s[known.name] : sug.name}
+                                    </Typography>
+                                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                        {known ? s[known.blurb] : ""}
+                                        {known ? " · " : ""}
+                                        {sug.frequency === "daily"
+                                            ? fmt(s.suggestDaily, { time: sug.timeOfDay })
+                                            : sug.timeOfDay}
+                                    </Typography>
+                                </Stack>
+                                <Button
+                                    color="neutral"
+                                    disabled={atLimit || adding !== null}
+                                    loading={adding === sug.key}
+                                    size="sm"
+                                    startDecorator={<AddRoundedIcon />}
+                                    variant="outlined"
+                                    onClick={() => void accept(sug)}
+                                >
+                                    {s.suggestAdd}
+                                </Button>
+                            </Sheet>
+                        );
+                    })}
                 </Stack>
             )}
 

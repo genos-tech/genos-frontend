@@ -3469,6 +3469,16 @@ export const ja: DeepPartial<Messages> = {
             retry: "もう一度試す",
             empty: "スケジュールはまだありません。",
             createFirst: "最初のスケジュールを作成",
+            suggestedHeading: "あなたへのおすすめ",
+            suggestedHint:
+                "通常のスケジュールを2つご提案します。追加すると、変更・一時停止・削除はご自身でできます。",
+            suggestAdd: "追加",
+            suggestAddFailed: "スケジュールを追加できませんでした。もう一度お試しください。",
+            suggestMorningName: "朝のプラン",
+            suggestMorningBlurb: "今日やること",
+            suggestEveningName: "夕方の振り返り",
+            suggestEveningBlurb: "今日やったこと",
+            suggestDaily: "毎日 {time}",
             newSchedule: "新しいスケジュール",
             limitReached:
                 "スケジュールの上限 {limit} 件に達しました。追加するには、どれかを削除してください。",

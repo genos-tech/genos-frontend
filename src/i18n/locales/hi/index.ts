@@ -800,6 +800,16 @@ export const hi: DeepPartial<Messages> = {
             retry: "फिर कोशिश करें",
             empty: "अभी आपका कोई शेड्यूल नहीं है।",
             createFirst: "अपना पहला शेड्यूल बनाएँ",
+            suggestedHeading: "आपके लिए सुझाव",
+            suggestedHint:
+                "दो सामान्य शेड्यूल। एक जोड़ें और उसे बदलना, रोकना या हटाना आपके हाथ में है।",
+            suggestAdd: "जोड़ें",
+            suggestAddFailed: "वह शेड्यूल जोड़ा नहीं जा सका। फिर कोशिश करें।",
+            suggestMorningName: "सुबह की योजना",
+            suggestMorningBlurb: "आज क्या करना है",
+            suggestEveningName: "शाम का सार",
+            suggestEveningBlurb: "आज आपने क्या किया",
+            suggestDaily: "हर दिन {time} बजे",
             newSchedule: "नया शेड्यूल",
             limitReached:
                 "आप {limit} शेड्यूल की सीमा तक पहुँच चुके हैं। नया जोड़ने के लिए एक हटाएँ।",

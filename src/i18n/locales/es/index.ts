@@ -700,6 +700,16 @@ export const es: DeepPartial<Messages> = {
             retry: "Reintentar",
             empty: "Aún no tienes programaciones.",
             createFirst: "Crea tu primera programación",
+            suggestedHeading: "Sugerido para ti",
+            suggestedHint:
+                "Dos programaciones normales. Añade una y será tuya para cambiarla, pausarla o eliminarla.",
+            suggestAdd: "Añadir",
+            suggestAddFailed: "No se pudo añadir esa programación. Inténtalo de nuevo.",
+            suggestMorningName: "Plan de la mañana",
+            suggestMorningBlurb: "Qué hacer hoy",
+            suggestEveningName: "Resumen de la tarde",
+            suggestEveningBlurb: "Lo que hiciste hoy",
+            suggestDaily: "Todos los días a las {time}",
             newSchedule: "Nueva programación",
             limitReached:
                 "Has alcanzado el límite de {limit} programaciones. Elimina una para añadir otra.",
