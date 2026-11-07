@@ -124,6 +124,16 @@ describe.each(cases)("Joy palette: %s / %s", (id, mode) => {
         expect(readable(v.plainColor, [body, surface])).toEqual([]);
     });
 
+    it("soft fills are opaque, so a Joy avatar, chip or checkbox stays visible on any surface", () => {
+        // Joy's soft variants are opaque. Translucent ones vanished on the
+        // hard-coded dark Create Project modal inside a light page.
+        for (const k of ["primary", "neutral", "danger", "success", "warning"]) {
+            for (const state of ["softBg", "softHoverBg", "softActiveBg"]) {
+                expect(p[k][state], `${k}.${state}`).toMatch(/^#[0-9a-f]{6}$/i);
+            }
+        }
+    });
+
     it("the primary palette is flat: the gradient is not in it", () => {
         for (const value of Object.values(p.primary)) {
             expect(String(value)).not.toContain("gradient");

@@ -65,15 +65,25 @@ const stepped = (tint: Alpha, by: number, fg: string, backdrops: string[]): Alph
 
 const darkened = (solid: string, by: number) => composite("#000000", by, solid);
 
+/**
+ * A tint painted onto `over`, as one opaque color. Joy's `soft` variants
+ * (Avatar, Chip, Checkbox, Badge...) are OPAQUE fills, and a translucent one
+ * disappears on any surface that is not the page's own: the Create Project
+ * modal is hard-coded dark inside a light page, and its avatars and
+ * checkboxes vanished. Hover and pressed states of plain and outlined
+ * variants stay translucent; only the soft family is flattened.
+ */
+const opaque = (tint: Alpha, over: string) => composite(tint.hex, tint.a, over);
+
 const status = (s: SemanticRoles, backdrops: string[]) => ({
     solidBg: s.solid,
     solidHoverBg: darkened(s.solid, 0.1),
     solidActiveBg: darkened(s.solid, 0.18),
     solidColor: s.solidFg,
     softColor: s.text,
-    softBg: alphaCss(s.subtle),
-    softHoverBg: alphaCss(stepped(s.subtle, 0.06, s.text, backdrops)),
-    softActiveBg: alphaCss(stepped(s.subtle, 0.12, s.text, backdrops)),
+    softBg: opaque(s.subtle, backdrops[1]),
+    softHoverBg: opaque(stepped(s.subtle, 0.06, s.text, backdrops), backdrops[1]),
+    softActiveBg: opaque(stepped(s.subtle, 0.12, s.text, backdrops), backdrops[1]),
     plainColor: s.text,
     plainHoverBg: alphaCss(s.subtle),
     plainActiveBg: alphaCss(stepped(s.subtle, 0.08, s.text, backdrops)),
@@ -99,9 +109,12 @@ export const joyPalette = (themeId: ThemeId, mode: Mode) => {
             solidActiveBg: r.accentHover,
             solidColor: r.accentFg,
             softColor: r.accentText,
-            softBg: alphaCss(r.accentSubtle),
-            softHoverBg: alphaCss(stepped(r.accentSubtle, 0.06, r.accentText, backdrops)),
-            softActiveBg: alphaCss(stepped(r.accentSubtle, 0.12, r.accentText, backdrops)),
+            softBg: opaque(r.accentSubtle, r.surface),
+            softHoverBg: opaque(stepped(r.accentSubtle, 0.06, r.accentText, backdrops), r.surface),
+            softActiveBg: opaque(
+                stepped(r.accentSubtle, 0.12, r.accentText, backdrops),
+                r.surface
+            ),
             plainColor: r.accentText,
             plainHoverBg: alphaCss(r.accentSubtle),
             plainActiveBg: alphaCss(stepped(r.accentSubtle, 0.08, r.accentText, backdrops)),
@@ -121,9 +134,9 @@ export const joyPalette = (themeId: ThemeId, mode: Mode) => {
             outlinedHoverBg: alphaCss(r.hover),
             outlinedActiveBg: alphaCss(r.active),
             softColor: r.text,
-            softBg: alphaCss(r.hover),
-            softHoverBg: alphaCss(r.active),
-            softActiveBg: alphaCss(r.border),
+            softBg: opaque(r.hover, r.surface),
+            softHoverBg: opaque(r.active, r.surface),
+            softActiveBg: opaque(r.border, r.surface),
             // A neutral solid is the inverse chip: tooltips use it.
             solidBg: r.textSecondary,
             solidHoverBg: r.text,
