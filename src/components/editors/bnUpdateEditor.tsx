@@ -2,14 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useEffect, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-} from "@blocknote/core";
+import { defaultBlockSpecs, filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -61,25 +54,13 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
+import { insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
+import { useGenosSchema } from "./genos/genosSchema";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
+import { HashSuggestionMenuController } from "./HashMention";
+import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
 import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
@@ -126,47 +107,21 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         useCM.isSubChatVisible ? " with-subchat" : ""
     }`;
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Our schema with inline content specs, which contain the configs and
-    // implementations for inline content  that we want our editor to use.
-    const schema = BlockNoteSchema.create({
-        styleSpecs: genosStyleSpecs,
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
+    // The shared Genos schema (`genos/genosSchema.ts`), built once per mount:
+    // `useCreateBlockNote` keeps the first schema it is given.
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
         },
-        blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-        },
-    });
+        "mount"
+    );
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
