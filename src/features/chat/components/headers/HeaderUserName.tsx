@@ -213,9 +213,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             }}
                             noWrap
                         >
-                            {isYou
-                                ? `${dmDisplayName} ${t.chat.sidebar.youSuffix}`
-                                : dmDisplayName}
+                            {/* The name is its own bidi island; the "(you)" stays outside it (MIP-1180). */}
+                            <bdi className="g-bidi-island">{dmDisplayName}</bdi>
+                            {isYou ? ` ${t.chat.sidebar.youSuffix}` : ""}
                         </Typography>
                     )}
 
