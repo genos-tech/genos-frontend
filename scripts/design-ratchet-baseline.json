@@ -4,7 +4,7 @@
     "components/editors:brandVars": 10,
     "components/editors:gradients": 3,
     "components/editors:heavyFontWeights": 5,
-    "components/editors:isDarkTernaries": 21,
+    "components/editors:isDarkTernaries": 19,
     "components/editors:literalColors": 64,
     "components/layout:backdropFilter": 2,
     "components/layout:brandVars": 20,
@@ -77,9 +77,9 @@
     "features/tasks:backdropFilter": 14,
     "features/tasks:brandVars": 415,
     "features/tasks:gradients": 127,
-    "features/tasks:heavyFontWeights": 112,
+    "features/tasks:heavyFontWeights": 111,
     "features/tasks:isDarkTernaries": 831,
-    "features/tasks:literalColors": 1573,
+    "features/tasks:literalColors": 1572,
     "features/threadAsk:isDarkTernaries": 2,
     "features/threadAsk:literalColors": 2,
     "other:backdropFilter": 1,
@@ -87,6 +87,6 @@
     "other:gradients": 1,
     "other:heavyFontWeights": 7,
     "other:isDarkTernaries": 2,
-    "other:literalColors": 114,
+    "other:literalColors": 103,
     "other:muiMaterial": 1
 }

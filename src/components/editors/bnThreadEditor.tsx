@@ -2,32 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-} from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    getDefaultReactSlashMenuItems,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -49,40 +24,19 @@ import { channelService } from "../../services/channel/channelService";
 import { emitRequestError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
-import { AttachFileToolbarButton } from "./AttachFileToolbarButton";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
-import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { insertEmojiValue } from "./CustomEmoji";
+import { useGenosSchema } from "./genos/genosSchema";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosChatToolbar } from "./genos/GenosToolbars";
+import { useGenosEditor } from "./genos/useGenosEditor";
 import { EditorSendButton } from "./sub/EditorSendButton";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
-import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -143,53 +97,21 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         teamMemberProfilesRef.current = useTEM.teamMemberProfiles;
     }, [useTEM.teamMembers, useTEM.teamMemberProfiles]);
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Our schema with inline content specs, which contain the configs and
-    // implementations for inline content  that we want our editor to use.
-    const schema = BlockNoteSchema.create({
-        styleSpecs: genosStyleSpecs,
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
+    // The shared Genos schema (`genos/genosSchema.ts`), built once per mount:
+    // `useCreateBlockNote` keeps the first schema it is given.
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
         },
-        blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-        },
-    });
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
+        "mount"
+    );
 
     // See `bnChatEditor` for the rationale on `useUploadCounter`. Same
     // pattern: every uploadFile call ticks the counter so the in-editor
@@ -211,16 +133,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     );
 
     const dictionary = useBlockNoteDictionary();
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        uploadFile,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
-        dictionary,
-    });
+    const editor = useGenosEditor({ surface: "composer", schema, dictionary, uploadFile });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -497,117 +410,25 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             p: 0.7,
                         }}
                     >
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
-                            />
-
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            {/* Extra button to toggle code styles */}
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            {/* Link + Emoji buttons hidden on mobile —
-                                the toolbar is absolutely-positioned and
-                                clips the tail off-screen on narrow
-                                viewports. The "/" slash menu still
-                                exposes both. */}
-                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-
-                            {/* Extra button to toggle blue text & background */}
-                            {!isMobile && (
-                                <CustomEmojiToolbar
-                                    key={"customButton"}
-                                    setShowEmojiPicker={setShowEmojiPicker}
-                                />
-                            )}
-                            {!isMobile && (
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                            )}
-                            {/* Mobile-only "attach image/file" button.
-                                On desktop, drag-drop and the side-menu
-                                already cover inserts; a phone has neither,
-                                so this native picker is the only way to
-                                send an attachment there. */}
-                            {isMobile && (
-                                <AttachFileToolbarButton
-                                    key={"attachFileButton"}
-                                    onClick={() => attachInputRef.current?.click()}
-                                />
-                            )}
-                            {/* Session-only wrap toggles — hidden on
-                                mobile because the toolbar already
-                                clips off-screen on narrow viewports. */}
-                            {!isMobile && (
-                                <WrapToggleToolbarButtons
-                                    key={"wrapToggleButtons"}
-                                    setUnwrapAll={setUnwrapAll}
-                                    setUnwrapCode={setUnwrapCode}
-                                    unwrapAll={unwrapAll}
-                                    unwrapCode={unwrapCode}
-                                />
-                            )}
-                        </FormattingToolbar>
+                        <GenosChatToolbar
+                            editor={editor}
+                            isMobile={isMobile}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setShowGifPicker={setShowGifPicker}
+                            onAttach={() => attachInputRef.current?.click()}
+                            wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
+                        />
                     </Box>
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    teamMemberProfilesRef.current,
-                                    editor,
-                                    teamMembersRef.current,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        // Replaces the default Slash Menu items with our custom ones.
-                        getItems={async (query) =>
-                            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: teamMemberProfilesRef.current,
+                            teamMembers: teamMembersRef.current,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>

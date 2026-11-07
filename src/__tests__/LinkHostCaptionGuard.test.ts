@@ -27,10 +27,14 @@ const sources = (dir: string): string[] =>
         return /\.(ts|tsx)$/.test(name) && !/\.test\./.test(name) ? [path] : [];
     });
 
-// Where an editor is created. The collaborative hook is not one: it receives
-// its extensions from the four editors that call it.
-const CREATES_AN_EDITOR = /\buseCreateBlockNote\(|\buseCollaborativeBlockNote\(\{/;
+// Where an editor is created. Since MIP-1131 that is three places: the two Genos hooks (the
+// local one takes a `surface`, the collaborative one is for the documents), the v3 composer's
+// own `useCreateBlockNote` call, and the collaborative hook, which receives its extensions from
+// `useGenosCollabEditor`. Every wrapper goes through one of the Genos hooks.
+const CREATES_AN_EDITOR =
+    /\buseCreateBlockNote\(|\buseCollaborativeBlockNote\(\{|\buseGenosEditor\(\{/;
 const HOOK_ITSELF = "hooks/common/useCollaborativeBlockNote.ts";
+const GENOS_HOOKS = "components/editors/genos/useGenosEditor.ts";
 
 // Comment lines are not code: a comment that names `useCreateBlockNote(` is not an editor.
 const withoutComments = (text: string) =>
@@ -46,29 +50,63 @@ const editorFiles = sources(SRC)
     }))
     .filter(({ file, text }) => file !== HOOK_ITSELF && CREATES_AN_EDITOR.test(text));
 
+/** The surfaces that skip the editing rules (and so the link caption): read-only ones. */
+const surfacesWithoutEditingRules = (hooks: string): string[] => {
+    const table = hooks.slice(hooks.indexOf("GENOS_SURFACES = {"), hooks.indexOf("} as const;"));
+    return [...table.matchAll(/^\s+(\w+):\s*\{\s*editingRules:\s*false/gm)].map((m) => m[1]);
+};
+
 describe("link host caption in every editable editor", () => {
     it("finds the editors (so the scan can't pass by finding none)", () => {
-        // 12 editors with an extensions list, the v3 composer, and the read-only chat preview.
-        expect(editorFiles.length).toBeGreaterThanOrEqual(14);
+        // 6 composers, the template and todo bodies and the read-only chat preview (all through
+        // useGenosEditor), the v3 composer, and the Genos hooks file. The 4 collab wrappers go
+        // through useGenosCollabEditor.
+        expect(editorFiles.length).toBeGreaterThanOrEqual(11);
     });
 
-    it.each(editorFiles.map(({ file, text }) => [file, text] as const))(
-        "%s registers it unless it is read-only",
-        (file, text) => {
-            const readOnly = /editable=\{false\}/.test(text);
-            if (readOnly) return;
+    it.each(
+        editorFiles
+            .filter(({ file }) => file !== GENOS_HOOKS)
+            .map(({ file, text }) => [file, text] as const)
+    )("%s registers it unless it is read-only", (file, text) => {
+        const readOnly = /editable=\{false\}/.test(text);
+        if (readOnly) return;
 
-            expect(text, `${file} creates an editable editor`).toMatch(
-                /extensions:\s*\[[^\]]*\blinkHostCaption\b[^\]]*\]/
+        // A wrapper on `useGenosEditor` gets it from the surface (checked below); the v3
+        // composer lists its own extensions.
+        if (/\buseGenosEditor\(/.test(text)) {
+            expect(text, `${file} names a surface`).toMatch(
+                /surface:\s*"(composer|todo|template)"/
             );
+            return;
         }
-    );
+        expect(text, `${file} creates an editable editor`).toMatch(
+            /extensions:\s*\[[^\]]*\blinkHostCaption\b[^\]]*\]/
+        );
+    });
+
+    it("the Genos hooks register it for every editing surface and for the collab editors", () => {
+        const hooks = readFileSync(join(SRC, GENOS_HOOKS), "utf8");
+        // local editors: inside the `editingRules` branch
+        expect(hooks).toMatch(
+            /cfg\.editingRules[\s\S]*extensions:\s*\[[\s\S]*\blinkHostCaption\b/
+        );
+        // collaborative editors
+        expect(hooks).toMatch(/extensions:\s*\[codeFenceInputRule,\s*linkHostCaption\]/);
+    });
 
     it("leaves exactly the read-only previews out", () => {
         const readOnly = editorFiles
             .filter(({ text }) => /editable=\{false\}/.test(text))
             .map(({ file }) => file);
-
         expect(readOnly).toEqual(["components/editors/bnChatPreview.tsx"]);
+
+        // ...and the only surface without editing rules is the one that preview uses.
+        const hooks = readFileSync(join(SRC, GENOS_HOOKS), "utf8");
+        expect(surfacesWithoutEditingRules(hooks)).toEqual(["preview"]);
+        const users = editorFiles
+            .filter(({ text }) => /surface:\s*"preview"/.test(text))
+            .map(({ file }) => file);
+        expect(users).toEqual(["components/editors/bnChatPreview.tsx"]);
     });
 });

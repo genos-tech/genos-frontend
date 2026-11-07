@@ -3,44 +3,12 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    PartialBlock,
-} from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    AddCommentButton,
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    BlockTypeSelectItem,
-    blockTypeSelectItems,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileDeleteButton,
-    FileDownloadButton,
-    FilePreviewButton,
-    FileRenameButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    FormattingToolbarController,
-    getDefaultReactSlashMenuItems,
-    SideMenu,
-    SideMenuController,
-    SuggestionMenuController,
-    TableCellMergeButton,
-    TextAlignButton,
-} from "@blocknote/react";
+import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
@@ -48,16 +16,13 @@ import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { useDebouncedCallback } from "../../hooks/common/useDebouncedCallback";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -65,34 +30,14 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-    withGenosBlockSlashItems,
-} from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
-import { Alert } from "./sub/Alert";
+import { insertEmojiValue } from "./CustomEmoji";
+import { useGenosSchema } from "./genos/genosSchema";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosDocumentToolbar } from "./genos/GenosToolbars";
+import { useGenosCollabEditor } from "./genos/useGenosEditor";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
-import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
+import { CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -174,77 +119,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Memoized: `BlockNoteSchema.create` + the six spec factories are
-    // non-trivial and the live editor only reads the schema when it is
-    // (re)built — rebuilding the object on every render was pure waste,
-    // and this component re-renders on every parent update. The deps are
-    // exactly the values `CreateMentionSpec` closes over, so a rebuilt
-    // schema is available whenever the editor is next recreated.
-    const schema = useMemo(() => {
-        // Disable the Audio and Video blocks from the built-in schema
-        // This is done by picking out the blocks you want to disable
-        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                // Adds all default inline content.
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
-                // Adds the mention tag.
-                mention: CreateMentionSpec(
-                    useTEM.teamMemberProfiles,
-                    socket,
-                    myself,
-                    setMyself,
-                    useUISM,
-                    useCM
-                ),
-                mentionGroup: CreateMentionGroupSpec(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: {
-                ...remainingBlockSpecs,
-                ...genosExtraBlockSpecs,
-                // BlockNote 0.49 moved the code-block options out of
-                // `useCreateBlockNote` and into the schema. We override
-                // the default plain-text codeBlock with the syntax-
-                // highlighted one shipped by `@blocknote/code-block`.
-                codeBlock: createCodeBlockSpec(codeBlockOptions),
-                alert: Alert(),
-            },
-        });
-    }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
-
-    // Mention-capable schema for the inline body-COMMENT editors (composer,
-    // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
-    // comments. Same deps as the main `schema` — `CreateMentionSpec` closes
-    // over these values.
-    const commentSchema = useMemo(
-        () =>
-            buildCommentSchema({
-                teamMemberProfiles: useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM,
-            }),
-        [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
-    );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGenosBlockSlashItems(
-            editor,
-            withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker)
-        );
-
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
@@ -282,29 +156,22 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const dictionary = useBlockNoteDictionary();
 
-    const collabUser = useMemo(
-        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
-        [myself.userName, myself.userId]
-    );
-
     const documentName = `task-body:${taskId}`;
 
-    const { editor, threadStore } = useCollaborativeBlockNote({
+    const { editor, threadStore } = useGenosCollabEditor({
         documentName,
-        user: collabUser,
-        userId: myself.userId,
-        myself,
+        ctx: {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
         accessToken,
-        schema,
-        commentSchema,
         dictionary,
         uploadFile,
-        initialBody: body,
-        enableComments: true,
-        teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
+        body,
     });
 
     // Fan @-mentions left in inline comments out to the activity system,
@@ -552,106 +419,23 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     />
                     <FormattingToolbarController
                         formattingToolbar={() => (
-                            <FormattingToolbar>
-                                <BlockTypeSelect
-                                    key={"blockTypeSelect"}
-                                    items={[
-                                        // Gets the default Block Type Select items.
-                                        ...getBlockTypeSelectItemsForDocuments(editor),
-                                        // Adds an item for the Alert block.
-                                        {
-                                            name: t.common.editor.alertBlock,
-                                            type: "alert",
-                                            icon: RiAlertFill,
-                                        } satisfies BlockTypeSelectItem,
-                                    ]}
-                                />
-
-                                <BasicTextStyleButton
-                                    key={"boldStyleButton"}
-                                    basicTextStyle={"bold"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"italicStyleButton"}
-                                    basicTextStyle={"italic"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"underlineStyleButton"}
-                                    basicTextStyle={"underline"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"strikeStyleButton"}
-                                    basicTextStyle={"strike"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"codeStyleButton"}
-                                    basicTextStyle={"code"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignLeftButton"}
-                                    textAlignment={"left"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignCenterButton"}
-                                    textAlignment={"center"}
-                                />
-                                <TextAlignButton
-                                    key={"textAlignRightButton"}
-                                    textAlignment={"right"}
-                                />
-                                <ColorStyleButton key={"colorStyleButton"} />
-                                <CreateLinkButton key={"createLinkButton"} />
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                                <FileCaptionButton key={"fileCaptionButton"} />
-                                <FileReplaceButton key={"fileReplaceButton"} />
-                                {threadStore && <AddCommentButton key={"addCommentButton"} />}
-                                <FileDeleteButton key={"fileDeleteButton"} />
-                                <FileDownloadButton key={"fileDownloadButton"} />
-                                <FilePreviewButton key={"filePreviewButton"} />
-                                <FileRenameButton key={"fileRenameButton"} />
-                                <TableCellMergeButton key={"tableCellMergeButton"} />
-                            </FormattingToolbar>
+                            <GenosDocumentToolbar
+                                editor={editor}
+                                hasComments={!!threadStore}
+                                setShowGifPicker={setShowGifPicker}
+                            />
                         )}
                     />
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
-                                    editor,
-                                    useTEM.teamMembers,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        getItems={async (query) =>
-                            filterSuggestionItems(
-                                getCustomSlashMenuItems(
-                                    editor as unknown as typeof schema.BlockNoteEditor
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                            teamMembers: useTEM.teamMembers,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "document", setShowGifPicker }}
                     />
 
                     {threadStore && (

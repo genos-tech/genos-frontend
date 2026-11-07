@@ -2,16 +2,8 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useMemo, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    PartialBlock,
-} from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -30,19 +22,11 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { downloadFile } from "../../utils/downloadUtils";
 import { AppTooltip } from "../ui/AppTooltip";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec } from "./CustomEmoji";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-} from "./HashMention";
-import { CreateMentionGroupSpec, CreateMentionSpec } from "./Mention";
+import { useGenosSchema } from "./genos/genosSchema";
+import { useGenosEditor } from "./genos/useGenosEditor";
 
 // Cap the number of inline PR previews per message body. Anyone pasting
 // more than this is abusing the channel; the rest are silently dropped.
@@ -70,69 +54,30 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         : `bn-message-bubble-box-${mode}`;
     const bnBoxClassName = customClassName ? `${customClassName}-${mode}` : _bnBoxClassName;
 
-    // Our schema with inline content specs, which contain the configs and
-    // implementations for inline content  that we want our editor to use.
-    // `mentionGroup` is registered here for read-only rendering of saved
-    // messages — no menu wiring needed since the preview can't be typed
-    // into. Without this, BlockNote rejects any historical message that
-    // contains a `mentionGroup` token with "node type not found in schema".
-    //
-    // Memoized with empty deps on purpose: `useCreateBlockNote` below
-    // builds the editor once per mount and keeps its first schema
-    // forever, so re-creating the schema on later renders was pure
-    // waste — one full spec build per visible bubble per re-render,
-    // with the result thrown away. The mount-time closures (team
-    // profiles etc.) are exactly what the editor captured before.
-    const schema = useMemo(() => {
-        // Disable the Audio and Image blocks from the built-in schema
-        // This is done by picking out the blocks you want to disable
-        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                // Adds all default inline content.
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
-                // Adds the mention tag.
-                mention: CreateMentionSpec(
-                    useTEM.teamMemberProfiles,
-                    socket,
-                    myself,
-                    setMyself,
-                    useUISM,
-                    useCM
-                ),
-                mentionGroup: CreateMentionGroupSpec(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: {
-                // remainingBlockSpecs contains all the other blocks
-                ...remainingBlockSpecs,
-                ...genosExtraBlockSpecs,
-                // BlockNote 0.49 moved the code-block options out of
-                // `useCreateBlockNote` and into the schema. We override
-                // the default plain-text codeBlock with the syntax-
-                // highlighted one shipped by `@blocknote/code-block`.
-                codeBlock: createCodeBlockSpec(codeBlockOptions),
-            },
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // The shared Genos schema (`genos/genosSchema.ts`). Built once per mount on purpose:
+    // `useCreateBlockNote` below builds the editor once and keeps its first schema, so
+    // rebuilding on later renders was one full spec build per visible bubble per re-render,
+    // thrown away. `mentionGroup` and the other chips are in it so a historical message
+    // that carries one is not rejected with "node type not found in schema".
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
+        "mount"
+    );
 
-    const editor = useCreateBlockNote({
+    // `initialContent` drops the stored trailing blank line, and only that: a message typed
+    // since BlockNote 0.57 may not end with one, and a blind `slice(0, -1)` hid its last real
+    // line (MIP-1039). `resolveFileUrl` (upgrading http media) comes with the surface.
+    const editor = useGenosEditor({
+        surface: "preview",
         schema,
         dictionary,
-        // Upgrade http:// media URLs baked into saved image/file blocks to
-        // https:// so the HTTPS SPA renders them without a Mixed-Content
-        // warning (older bodies carry an http scheme; see the helper).
-        resolveFileUrl: resolveInsecureFileUrl,
-        // Drops the stored trailing blank line, and only that: a message typed
-        // since BlockNote 0.57 may not end with one, and a blind `slice(0, -1)`
-        // hid its last real line (MIP-1039).
         initialContent: withoutTrailingBlank(content),
     });
 

@@ -41,34 +41,16 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { DefaultReactSuggestionItem, SuggestionMenuController } from "@blocknote/react";
 
-import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
-import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-} from "../../../components/editors/genosBlockSpecs";
-import { genosStyleSpecs } from "../../../components/editors/genosStyleSpecs";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "../../../components/editors/HashMention";
-import { linkHostCaption } from "../../../components/editors/sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
+import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
+import { useGenosEditor } from "../../../components/editors/genos/useGenosEditor";
+import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
-import { resolveInsecureFileUrl } from "../../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { createMentionGroupSpecV3, createMentionSpecV3 } from "./MentionV3";
@@ -175,32 +157,21 @@ export function MessageComposerV3({
     // Build the schema once per (currentUserId, placeholder). The
     // mention spec captures currentUserId at creation time for the
     // self-highlight render branch.
-    const schema = useMemo(() => {
-        const { audio, video, ...remaining } = defaultBlockSpecs;
-        void audio;
-        void video;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
+    const schema = useMemo(
+        () =>
+            createGenosSchema({
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: { ...remaining, ...genosExtraBlockSpecs },
-        });
-    }, [currentUserId]);
+            }),
+        [currentUserId]
+    );
 
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        extensions: [linkHostCaption],
+    // The same editing rules as every composer (Tab indents, the ``` fence rule that keeps an
+    // unknown typed language from wedging the highlighted code block, the link-host caption):
+    // they come with the `composer` surface instead of a copy of the list here.
+    const editor = useGenosEditor({
+        surface: "composer",
         schema,
-        resolveFileUrl: resolveInsecureFileUrl,
         dictionary: {
             placeholders: {
                 emptyDocument: placeholder,
