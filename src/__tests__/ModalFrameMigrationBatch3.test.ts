@@ -68,6 +68,22 @@ const tokensOnly = (text: string) => {
     expect(text).not.toMatch(/ProfileModalStyles/);
 };
 
+describe("only one dialog claims every sibling listbox (ownsListboxPopups)", () => {
+    // The rule is a global claim on every following sibling listbox in the page; two open
+    // surfaces that both make it fight by stylesheet order (the invisible-dropdown bug,
+    // fe #122), so it is opt-in and only the Genos settings over Spotlight uses it.
+    it("is set by the Spotlight settings and by no migrated dialog", () => {
+        const read = (f: string) => readFileSync(join(src, f), "utf8");
+        expect(read("features/spotlight/SpotlightSettingsModal.tsx")).toMatch(
+            /\bownsListboxPopups\b/
+        );
+        for (const file of Object.values(FRAMES)) {
+            if (file.endsWith("SpotlightSettingsModal.tsx")) continue;
+            expect(read(file), file).not.toMatch(/ownsListboxPopups/);
+        }
+    });
+});
+
 describe("migrated dialogs (batch 3)", () => {
     for (const [name, file] of Object.entries(FRAMES)) {
         describe(`${name}: ${file}`, () => {

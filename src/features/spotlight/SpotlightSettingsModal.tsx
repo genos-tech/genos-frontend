@@ -28,8 +28,8 @@ interface Props {
     teamId: string;
 }
 
-// The frame writes the picker layer (13210) above this layer on the modal
-// root, so the Select popups clear the dialog (they used to be pinned to 13300).
+// This dialog is the sole owner of the Select popups that open over it, so it asks the
+// frame to write the picker layer (13210) for them (they used to be pinned to 13300).
 const SPOTLIGHT_SETTINGS_Z_INDEX = 13200;
 
 export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
@@ -43,6 +43,7 @@ export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
             // Above the Spotlight overlay (13100), which remains open behind us.
             zIndex={SPOTLIGHT_SETTINGS_Z_INDEX}
             headerDivider
+            ownsListboxPopups
             onClose={onClose}
         >
             <GenosSettingsPanel teamId={teamId}>

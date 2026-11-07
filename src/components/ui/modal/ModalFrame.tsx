@@ -116,6 +116,17 @@ export type ModalFrameProps = {
     role?: "dialog" | "alertdialog";
     /** Show the X in the header. */
     closable?: boolean;
+    /**
+     * This dialog owns Select / Autocomplete popups that portal to `<body>` as siblings of
+     * its root, and it is raised above Joy's modal layer: write the picker layer for them
+     * (Joy's own sibling rule would leave them at 1301, behind the dialog). Off by default
+     * and meant for ONE surface at a time: the rule is a claim on every following sibling
+     * listbox in the page, so two open surfaces that both make it fight by stylesheet
+     * order (the cascade race behind the invisible-dropdown bug, fe #122). Prefer
+     * `slotProps.listbox.sx.zIndex` on the component; use this only when the dialog is the
+     * sole owner of the listboxes that open over it (the Genos settings over Spotlight).
+     */
+    ownsListboxPopups?: boolean;
     /** Accessible name of the X, when a more specific one than "Close" exists. */
     closeLabel?: string;
     /** False while work is under way: Esc, the backdrop and the X do nothing. */
@@ -142,6 +153,7 @@ export const ModalFrame = ({
     hostZIndex,
     role = "dialog",
     closable = true,
+    ownsListboxPopups = false,
     closeLabel,
     dismissible = true,
     tone,
@@ -190,12 +202,13 @@ export const ModalFrame = ({
                 // listboxes portal to <body> as SIBLINGS of this root, so the
                 // variable also has to be written for them (Joy's own rule
                 // does exactly that, with the default layer); the inline popups
-                // inherit it from the root. Only a dialog raised above Joy's
-                // layer needs the sibling rule, and only for its lifetime.
+                // inherit it from the root. The sibling rule is opt-in
+                // (`ownsListboxPopups`): it is a global claim on every listbox.
                 "--unstable_popup-zIndex": layer + 10,
-                ...(layer > JOY_MODAL_LAYER && {
-                    '& ~ [role="listbox"]': { "--unstable_popup-zIndex": layer + 10 },
-                }),
+                ...(ownsListboxPopups &&
+                    layer > JOY_MODAL_LAYER && {
+                        '& ~ [role="listbox"]': { "--unstable_popup-zIndex": layer + 10 },
+                    }),
                 // The blur lives on the root; Joy's Backdrop slot paints the dim.
                 backdropFilter: "blur(4px)",
                 backgroundColor: "transparent",

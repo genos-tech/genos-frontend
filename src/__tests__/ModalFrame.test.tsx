@@ -146,18 +146,27 @@ describe("ModalFrame", () => {
             expect(cssOf(root())).toContain("--unstable_popup-zIndex: 10032");
         });
 
-        it("writes the picker layer for the listboxes that portal to <body> as siblings (above Joy's layer only)", () => {
+        it("does not claim sibling listboxes by default (opt-in)", () => {
             // Select / Autocomplete listboxes are not inside this root, so the variable on it
-            // does not reach them; Joy's own sibling rule would leave them at 1301, under a
-            // dialog raised above 1300 (the Genos settings over Spotlight, a note child dialog).
+            // does not reach them. The sibling rule is a global claim on every following
+            // listbox, so it is opt-in: two surfaces that both made it would fight by
+            // stylesheet order (fe #122).
             mount({ hostZIndex: 10020 });
+            // (Joy writes its own sibling rule at its default layer; ours would carry 10032.)
+            expect(cssOf(root())).not.toMatch(
+                /~\s*\[role="listbox"\]\s*\{[^}]*--unstable_popup-zIndex: 10032/
+            );
+        });
+
+        it("writes it when the dialog owns its listbox popups", () => {
+            mount({ hostZIndex: 10020, ownsListboxPopups: true });
             expect(cssOf(root())).toMatch(
                 /~\s*\[role="listbox"\]\s*\{[^}]*--unstable_popup-zIndex: 10032/
             );
         });
 
-        it("leaves Joy's own sibling rule alone at Joy's default layer", () => {
-            mount({ zIndex: 1300 });
+        it("leaves Joy's own sibling rule alone at Joy's default layer, even when it owns them", () => {
+            mount({ zIndex: 1300, ownsListboxPopups: true });
             expect(cssOf(root())).not.toMatch(
                 /~\s*\[role="listbox"\]\s*\{[^}]*--unstable_popup-zIndex: 13/
             );
