@@ -112,8 +112,8 @@ export const TaskHomeLayout = ({
                         useUISM={useUISM}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
-                        onManageTags={onManageTags}
                         onDeleteProject={onDeleteProject}
+                        onManageTags={onManageTags}
                     />
                     {useTM.isTaskTableVisible && (
                         <>

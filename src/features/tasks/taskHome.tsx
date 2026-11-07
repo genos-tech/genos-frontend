@@ -137,8 +137,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         useUISM={useUISM}
                         onCloseTaskHome={handleCloseTaskHome}
                         onCreateProject={handleCreateProject}
-                        onManageTags={handleManageTags}
                         onDeleteProject={handleDeleteProject}
+                        onManageTags={handleManageTags}
                     />
                 )}
 

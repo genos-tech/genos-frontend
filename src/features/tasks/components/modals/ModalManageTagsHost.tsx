@@ -25,11 +25,11 @@ export const ModalManageTagsHost: React.FC<Props> = ({ myself, usePM, useTM }) =
             myself={myself}
             open={useTM.openManageTags}
             projectTags={project?.projectTags ?? []}
+            usePM={usePM}
+            useTM={useTM}
             setProjectTags={(tags) => {
                 if (project) usePM.setCurrentProject({ ...project, projectTags: tags });
             }}
-            usePM={usePM}
-            useTM={useTM}
             onClose={() => useTM.setOpenManageTags(false)}
         />
     );
