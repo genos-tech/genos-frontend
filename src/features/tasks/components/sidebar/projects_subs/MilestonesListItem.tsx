@@ -617,6 +617,7 @@ const MilestoneTreeFolder = ({
             <NavItem
                 actions={actions}
                 actionsOverlay={FOLDER_ACTIONS_OVERLAY}
+                aria-expanded={open}
                 icon={icon}
                 label={label}
                 // The title never gets less than this; the count or the indent never wins.

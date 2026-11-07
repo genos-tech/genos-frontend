@@ -251,6 +251,20 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
     });
 });
 
+describe("MilestonesListItem: folder rows say whether they are open", () => {
+    it("aria-expanded follows the folder, for assistive tech (the chevron is only drawn)", () => {
+        // The open / closed state is remembered per device: start clean.
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        renderSidebar();
+        // Q4 is open by default, "Past milestones" starts closed.
+        expect(buttonOf("Q4")).toHaveAttribute("aria-expanded", "true");
+        expect(buttonOf("Past milestones")).toHaveAttribute("aria-expanded", "false");
+        fireEvent.click(buttonOf("Past milestones"));
+        expect(buttonOf("Past milestones")).toHaveAttribute("aria-expanded", "true");
+    });
+});
+
 describe("MilestonesListItem: the title always keeps room (MIP-1021)", () => {
     it("gives the milestone title a minimum width, so chips cannot squeeze it to nothing", () => {
         renderSidebar();
