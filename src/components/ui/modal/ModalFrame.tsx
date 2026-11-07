@@ -27,9 +27,31 @@ import { focusRing, g, type } from "../../../theme/tokens";
  *
  * Events: the dialog portals to <body>, but React events still bubble
  * through the COMPONENT tree, i.e. into whatever row, bubble or editor
- * opened it. The frame therefore stops click, double-click and key events at
- * its own root. (Escape is handled by Joy's Modal before it gets there.)
+ * opened it. The frame therefore stops click, double-click, key, mouse,
+ * pointer and touch events at its own root (see FENCE). Escape is handled by
+ * Joy's Modal before it gets there.
  */
+
+const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+
+/** Bubble-phase events kept inside the portal. Touch and press events too: a
+ *  chat bubble's long-press (`useLongPress`) would otherwise count a finger
+ *  held on a dialog button as a long-press on the message under it. (A
+ *  CAPTURE handler on an ancestor still sees everything: mount the dialog
+ *  outside such an element.) */
+const FENCE = {
+    onClick: stop,
+    onDoubleClick: stop,
+    onKeyDown: stop,
+    onMouseDown: stop,
+    onMouseUp: stop,
+    onPointerDown: stop,
+    onPointerUp: stop,
+    onTouchStart: stop,
+    onTouchMove: stop,
+    onTouchEnd: stop,
+    onTouchCancel: stop,
+} as const;
 
 export type ModalFrameSize = "sm" | "md" | "lg";
 
@@ -109,9 +131,7 @@ export const ModalFrame = ({
                 backdropFilter: "blur(4px)",
                 backgroundColor: "transparent",
             }}
-            onClick={(e) => e.stopPropagation()}
-            onDoubleClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+            {...FENCE}
             onClose={() => {
                 if (dismissible) onClose();
             }}

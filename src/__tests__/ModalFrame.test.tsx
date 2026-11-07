@@ -197,6 +197,28 @@ describe("ModalFrame", () => {
             expect(onDoubleClick).not.toHaveBeenCalled();
         });
 
+        it("touch and press events do not reach the opener (a bubble's long-press)", () => {
+            const onTouchStart = vi.fn();
+            const onMouseDown = vi.fn();
+            render(
+                <CssVarsProvider>
+                    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
+                        <ModalFrame
+                            actions={<button type="button">Go</button>}
+                            title="T"
+                            open
+                            onClose={() => {}}
+                        />
+                    </div>
+                </CssVarsProvider>
+            );
+            const go = screen.getByRole("button", { name: "Go" });
+            fireEvent.touchStart(go);
+            fireEvent.mouseDown(go);
+            expect(onTouchStart).not.toHaveBeenCalled();
+            expect(onMouseDown).not.toHaveBeenCalled();
+        });
+
         it("typing and Enter do not reach the opener's key handler", () => {
             const { onKeyDown } = host();
             const input = screen.getByLabelText("field");

@@ -276,8 +276,10 @@ function MessageRow({
         setEditing(false);
     }, [message.bodyText]);
 
-    // The toolbar's trash only ASKS (`confirmingDelete`); the confirm dialog
-    // at the end of the row runs `handleDelete`.
+    // The toolbar's trash only ASKS (`confirmingDelete`); the confirm dialog,
+    // a SIBLING of the row, runs `handleDelete`. Not a child: the row has
+    // `onClickCapture` and long-press touch handlers that would otherwise see
+    // the dialog's events through the React tree.
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const handleDelete = useCallback(async () => {
         try {
@@ -324,196 +326,198 @@ function MessageRow({
     })();
 
     return (
-        <li
-            ref={rowRef}
-            data-testid={`message-row-${message.id}`}
-            id={`message-${message.id}`}
-            style={{
-                padding: "6px 0",
-                opacity: message.deletedAt ? 0.4 : 1,
-                fontStyle: message.deletedAt ? "italic" : "normal",
-            }}
-            onFocus={() => setHovered(true)}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onTouchCancel={longPress.onTouchCancel}
-            onTouchEnd={longPress.onTouchEnd}
-            onTouchMove={longPress.onTouchMove}
-            onTouchStart={longPress.onTouchStart}
-            onBlur={(e) => {
-                // Keep the toolbar visible if focus moves to a child
-                // (e.g. clicking the react button to open the emoji
-                // popover). Only collapse when focus leaves the row.
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                    setHovered(false);
-                }
-            }}
-            onClickCapture={(e) => {
-                // A long-press that opened the toolbar also produces a
-                // synthetic click on whatever child is under the finger
-                // (a link, a reaction chip). Swallow that one click so
-                // opening the toolbar never doubles as an action.
-                if (longPress.consumedTap()) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }}
-        >
-            {/* flexWrap: at coarse-pointer tap-target size the toolbar can
+        <>
+            <li
+                ref={rowRef}
+                data-testid={`message-row-${message.id}`}
+                id={`message-${message.id}`}
+                style={{
+                    padding: "6px 0",
+                    opacity: message.deletedAt ? 0.4 : 1,
+                    fontStyle: message.deletedAt ? "italic" : "normal",
+                }}
+                onFocus={() => setHovered(true)}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                onTouchCancel={longPress.onTouchCancel}
+                onTouchEnd={longPress.onTouchEnd}
+                onTouchMove={longPress.onTouchMove}
+                onTouchStart={longPress.onTouchStart}
+                onBlur={(e) => {
+                    // Keep the toolbar visible if focus moves to a child
+                    // (e.g. clicking the react button to open the emoji
+                    // popover). Only collapse when focus leaves the row.
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setHovered(false);
+                    }
+                }}
+                onClickCapture={(e) => {
+                    // A long-press that opened the toolbar also produces a
+                    // synthetic click on whatever child is under the finger
+                    // (a link, a reaction chip). Swallow that one click so
+                    // opening the toolbar never doubles as an action.
+                    if (longPress.consumedTap()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }}
+            >
+                {/* flexWrap: at coarse-pointer tap-target size the toolbar can
                 be wider than a phone row — wrapping drops it onto its own
                 line instead of overflowing the pane horizontally. */}
-            <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
-                <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
-                {editing ? (
-                    <span style={{ display: "flex", gap: 4, flex: 1 }}>
-                        <input
-                            data-testid={`message-row-edit-input-${message.id}`}
-                            style={{ flex: 1, padding: "2px 6px" }}
-                            type="text"
-                            value={editDraft}
-                            autoFocus
-                            onChange={(e) => setEditDraft(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") void handleSaveEdit();
-                                if (e.key === "Escape") handleCancelEdit();
-                            }}
-                        />
-                        <button
-                            data-testid={`message-row-edit-save-${message.id}`}
-                            type="button"
-                            onClick={() => void handleSaveEdit()}
-                        >
-                            Save
-                        </button>
-                        <button type="button" onClick={handleCancelEdit}>
-                            Cancel
-                        </button>
-                    </span>
-                ) : (
-                    <>
-                        {message.deletedAt ? (
-                            t.chat.channel.pane.deleted
-                        ) : (
-                            <MessageBody
-                                body={message.body}
-                                bodyText={message.bodyText}
-                                currentUserId={
-                                    typeof window === "undefined"
-                                        ? null
-                                        : localStorage.getItem("userId")
-                                }
+                <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
+                    {editing ? (
+                        <span style={{ display: "flex", gap: 4, flex: 1 }}>
+                            <input
+                                data-testid={`message-row-edit-input-${message.id}`}
+                                style={{ flex: 1, padding: "2px 6px" }}
+                                type="text"
+                                value={editDraft}
+                                autoFocus
+                                onChange={(e) => setEditDraft(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") void handleSaveEdit();
+                                    if (e.key === "Escape") handleCancelEdit();
+                                }}
                             />
-                        )}
-                        {!message.deletedAt && mentionsMe(message) && (
-                            <AppTooltip title={t.chat.channel.pane.mentionsYouBadge}>
-                                <span
-                                    data-testid={`message-row-mention-me-${message.id}`}
-                                    style={{
-                                        marginLeft: 6,
-                                        padding: "0 4px",
-                                        background: "rgba(239, 68, 68, 0.18)",
-                                        color: "#b91c1c",
-                                        borderRadius: 3,
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        textTransform: "uppercase",
-                                    }}
-                                >
-                                    @you
-                                </span>
-                            </AppTooltip>
-                        )}
-                        {message.editedAt && !message.deletedAt && (
-                            <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
-                                {t.chat.channel.pane.edited}
-                            </span>
-                        )}
-                    </>
-                )}
-                {!editing && !message.deletedAt && isFlagged && (
-                    <AppTooltip title={t.chat.channel.pane.flaggedIndicator}>
-                        <span
-                            data-testid={`message-row-flagged-indicator-${message.id}`}
-                            style={{ marginLeft: 6, fontSize: 12 }}
-                        >
-                            ⭐
+                            <button
+                                data-testid={`message-row-edit-save-${message.id}`}
+                                type="button"
+                                onClick={() => void handleSaveEdit()}
+                            >
+                                Save
+                            </button>
+                            <button type="button" onClick={handleCancelEdit}>
+                                Cancel
+                            </button>
                         </span>
-                    </AppTooltip>
-                )}
-                {!editing && !message.deletedAt && (
-                    <MessageRowHoverToolbar
-                        messageId={message.id}
-                        // The popover stays open after the reaction is
-                        // toggled (handleToggleReaction closes it), so
-                        // keep the toolbar visible while it's open even
-                        // if hover has moved away — otherwise the user
-                        // can't see what they're clicking on.
-                        isFlagged={isFlagged}
-                        isMine={!!isMine}
-                        replyCount={message.replyCount}
-                        visible={hovered || showEmoji || touchOpen}
-                        onCopyLink={copyLink}
-                        onDelete={() => setConfirmingDelete(true)}
-                        onFlag={() => void handleToggleFlag()}
-                        onReact={() => setShowEmoji((v) => !v)}
-                        onEdit={() => {
-                            setEditDraft(message.bodyText);
-                            setEditing(true);
+                    ) : (
+                        <>
+                            {message.deletedAt ? (
+                                t.chat.channel.pane.deleted
+                            ) : (
+                                <MessageBody
+                                    body={message.body}
+                                    bodyText={message.bodyText}
+                                    currentUserId={
+                                        typeof window === "undefined"
+                                            ? null
+                                            : localStorage.getItem("userId")
+                                    }
+                                />
+                            )}
+                            {!message.deletedAt && mentionsMe(message) && (
+                                <AppTooltip title={t.chat.channel.pane.mentionsYouBadge}>
+                                    <span
+                                        data-testid={`message-row-mention-me-${message.id}`}
+                                        style={{
+                                            marginLeft: 6,
+                                            padding: "0 4px",
+                                            background: "rgba(239, 68, 68, 0.18)",
+                                            color: "#b91c1c",
+                                            borderRadius: 3,
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            textTransform: "uppercase",
+                                        }}
+                                    >
+                                        @you
+                                    </span>
+                                </AppTooltip>
+                            )}
+                            {message.editedAt && !message.deletedAt && (
+                                <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 12 }}>
+                                    {t.chat.channel.pane.edited}
+                                </span>
+                            )}
+                        </>
+                    )}
+                    {!editing && !message.deletedAt && isFlagged && (
+                        <AppTooltip title={t.chat.channel.pane.flaggedIndicator}>
+                            <span
+                                data-testid={`message-row-flagged-indicator-${message.id}`}
+                                style={{ marginLeft: 6, fontSize: 12 }}
+                            >
+                                ⭐
+                            </span>
+                        </AppTooltip>
+                    )}
+                    {!editing && !message.deletedAt && (
+                        <MessageRowHoverToolbar
+                            messageId={message.id}
+                            // The popover stays open after the reaction is
+                            // toggled (handleToggleReaction closes it), so
+                            // keep the toolbar visible while it's open even
+                            // if hover has moved away — otherwise the user
+                            // can't see what they're clicking on.
+                            isFlagged={isFlagged}
+                            isMine={!!isMine}
+                            replyCount={message.replyCount}
+                            visible={hovered || showEmoji || touchOpen}
+                            onCopyLink={copyLink}
+                            onDelete={() => setConfirmingDelete(true)}
+                            onFlag={() => void handleToggleFlag()}
+                            onReact={() => setShowEmoji((v) => !v)}
+                            onEdit={() => {
+                                setEditDraft(message.bodyText);
+                                setEditing(true);
+                            }}
+                            onReply={
+                                onOpenThread && !message.isThreadReply
+                                    ? () => onOpenThread(message.id)
+                                    : undefined
+                            }
+                        />
+                    )}
+                </div>
+                {showEmoji && !editing && !message.deletedAt && (
+                    <div
+                        data-testid={`message-row-emoji-picker-${message.id}`}
+                        style={{
+                            marginTop: 4,
+                            display: "flex",
+                            gap: 4,
+                            padding: "4px 6px",
+                            background: "#f4f4f4",
+                            borderRadius: 4,
+                            width: "fit-content",
                         }}
-                        onReply={
-                            onOpenThread && !message.isThreadReply
-                                ? () => onOpenThread(message.id)
-                                : undefined
-                        }
+                    >
+                        {QUICK_EMOJI.map((e) => (
+                            <button
+                                key={e}
+                                data-testid={`message-row-emoji-${message.id}-${e}`}
+                                type="button"
+                                style={{
+                                    fontSize: 14,
+                                    padding: "2px 6px",
+                                    background: "transparent",
+                                    border: "1px solid transparent",
+                                    cursor: "pointer",
+                                }}
+                                onClick={() => void handleToggleReaction(e)}
+                            >
+                                {e}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                {!message.deletedAt && message.attachments.length > 0 && (
+                    <MessageAttachments
+                        attachments={message.attachments}
+                        messageId={message.id}
+                        onImportAsNote={onImportAsNote}
                     />
                 )}
-            </div>
-            {showEmoji && !editing && !message.deletedAt && (
-                <div
-                    data-testid={`message-row-emoji-picker-${message.id}`}
-                    style={{
-                        marginTop: 4,
-                        display: "flex",
-                        gap: 4,
-                        padding: "4px 6px",
-                        background: "#f4f4f4",
-                        borderRadius: 4,
-                        width: "fit-content",
-                    }}
-                >
-                    {QUICK_EMOJI.map((e) => (
-                        <button
-                            key={e}
-                            data-testid={`message-row-emoji-${message.id}-${e}`}
-                            type="button"
-                            style={{
-                                fontSize: 14,
-                                padding: "2px 6px",
-                                background: "transparent",
-                                border: "1px solid transparent",
-                                cursor: "pointer",
-                            }}
-                            onClick={() => void handleToggleReaction(e)}
-                        >
-                            {e}
-                        </button>
-                    ))}
-                </div>
-            )}
-            {!message.deletedAt && message.attachments.length > 0 && (
-                <MessageAttachments
-                    attachments={message.attachments}
-                    messageId={message.id}
-                    onImportAsNote={onImportAsNote}
-                />
-            )}
-            {message.reactions.length > 0 && !message.deletedAt && (
-                <ReactionChips
-                    messageId={message.id}
-                    reactions={message.reactions}
-                    onToggle={handleToggleReaction}
-                />
-            )}
+                {message.reactions.length > 0 && !message.deletedAt && (
+                    <ReactionChips
+                        messageId={message.id}
+                        reactions={message.reactions}
+                        onToggle={handleToggleReaction}
+                    />
+                )}
+            </li>
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={t.common.actions.delete}
@@ -524,7 +528,7 @@ function MessageRow({
                 onClose={() => setConfirmingDelete(false)}
                 onConfirm={handleDelete}
             />
-        </li>
+        </>
     );
 }
 
