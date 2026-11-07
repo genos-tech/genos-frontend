@@ -87,7 +87,7 @@ export const scaleVars = (): [string, string][] => [
     ["motion-slow", MOTION.slow],
     ["ease", MOTION.ease],
     ["ease-out", MOTION.easeOut],
-    ["font-body", FONT_STACKS.inter],
+    ["font-body", FONT_STACKS.geist],
     ["font-mono", FONT_STACKS.mono],
 ];
 

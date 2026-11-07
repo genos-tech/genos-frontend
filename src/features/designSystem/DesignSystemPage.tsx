@@ -14,7 +14,6 @@
  * also how P2 will wire Joy to them.
  */
 
-import "@fontsource-variable/inter/wght.css";
 import "@fontsource-variable/geist/index.css";
 
 import { ReactNode, useMemo, useState } from "react";
@@ -34,7 +33,7 @@ import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
 import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
 import { composite, contrast } from "../../theme/tokens/color";
 import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
-import { FONT_STACKS, MOTION, RADIUS } from "../../theme/tokens/scales";
+import { MOTION, RADIUS } from "../../theme/tokens/scales";
 import { installDesignTokens } from "../../theme/tokens/tokenStyles";
 import {
     Button,
@@ -53,8 +52,6 @@ import {
 } from "./samples";
 
 installDesignTokens();
-
-type FontId = "inter" | "geist";
 
 /** The accent each theme renders with. It doesn't depend on mode, and the
  *  picker would otherwise rebuild every theme's roles on each click. */
@@ -616,7 +613,7 @@ const TYPE_SAMPLES: Partial<Record<TypeLevel, [string, string]>> = {
     caption: ["Counts and timestamps", "件数と時刻"],
 };
 
-const TypeScale = ({ font }: { font: FontId }) => (
+const TypeScale = () => (
     <Panel>
         {(Object.keys(TYPE_SCALE) as TypeLevel[]).map((level) => {
             const s = TYPE_SCALE[level];
@@ -654,7 +651,6 @@ const TypeScale = ({ font }: { font: FontId }) => (
                             flexWrap: "wrap",
                             columnGap: 2.5,
                             rowGap: 0.25,
-                            fontFamily: FONT_STACKS[font],
                         }}
                     >
                         <Text level={level}>{en}</Text>
@@ -942,7 +938,6 @@ const DesignSystemPage = () => {
 
     const [theme, setTheme] = useState<ThemeId>(themeId);
     const [mode, setMode] = useState<Mode>(initialMode);
-    const [font, setFont] = useState<FontId>("inter");
     const roles = useMemo(() => buildRoles(theme, mode), [theme, mode]);
 
     return (
@@ -950,9 +945,6 @@ const DesignSystemPage = () => {
             data-g-mode={mode}
             data-g-theme={theme}
             sx={{
-                // The typeface toggle drives the token, so anything using
-                // `g.font.body` follows it, not just this page.
-                "--g-font-body": FONT_STACKS[font],
                 ...joyBridge(mode),
                 // The page owns its scroll, like PlansHome: the shell is
                 // `overflow: hidden`, so a taller page would scroll the
@@ -1010,15 +1002,6 @@ const DesignSystemPage = () => {
                             ]}
                             onChange={setMode}
                         />
-                        <Segmented
-                            label="Typeface"
-                            value={font}
-                            options={[
-                                { id: "inter", label: "Inter" },
-                                { id: "geist", label: "Geist" },
-                            ]}
-                            onChange={setFont}
-                        />
                     </Box>
                 </Box>
             </Box>
@@ -1066,10 +1049,10 @@ const DesignSystemPage = () => {
                 </Section>
 
                 <Section
-                    intro="Twelve steps replace about 65 sizes in use today. Body text in lists and tables is 13px; reading text is 14px. Weights are 400, 500 and 600 only. Switch the typeface above to compare."
+                    intro="Twelve steps replace about 65 sizes in use today. Body text in lists and tables is 13px; reading text is 14px. Weights are 400, 500 and 600 only. The typeface is Geist; Japanese falls back to the system face."
                     title="Type"
                 >
-                    <TypeScale font={font} />
+                    <TypeScale />
                 </Section>
 
                 <Section title="Shape, depth and motion">
