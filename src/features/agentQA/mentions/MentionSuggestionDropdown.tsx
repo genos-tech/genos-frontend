@@ -123,8 +123,8 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
 // thing" cue.
 const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
     if (c.ref.kind === "user") {
-        return; // 36 on purpose: it must match `MentionIconDisc`, the sibling rows.
-        <BaseAvatar name={c.ref.label} size={36} src={buildAvatarSrc(c.avatarImgPath)} />;
+        // 36 on purpose: it must match `MentionIconDisc`, the sibling rows.
+        return <BaseAvatar name={c.ref.label} size={36} src={buildAvatarSrc(c.avatarImgPath)} />;
     }
     return (
         <MentionIconDisc
