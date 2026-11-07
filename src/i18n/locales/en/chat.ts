@@ -345,6 +345,7 @@ export const chat = {
         clickToOpenTask: "Click to open task",
         clickToOpenThread: "{modKey}+Click to open thread",
         updated: "Updated",
+        edited: "Edited",
     },
     messageActions: {
         openTask: "Open task",

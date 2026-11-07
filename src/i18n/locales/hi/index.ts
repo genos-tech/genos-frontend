@@ -1314,6 +1314,7 @@ export const hi: DeepPartial<Messages> = {
             clickToOpenTask: "टास्क खोलने के लिए क्लिक करें",
             clickToOpenThread: "थ्रेड खोलने के लिए {modKey}+क्लिक",
             updated: "अपडेट किया गया",
+            edited: "संपादित",
         },
         messageActions: {
             openTask: "टास्क खोलें",

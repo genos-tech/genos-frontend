@@ -1024,6 +1024,7 @@ export const fr: DeepPartial<Messages> = {
             clickToOpenTask: "Cliquer pour ouvrir la tâche",
             clickToOpenThread: "{modKey}+clic pour ouvrir le fil",
             updated: "Mis à jour",
+            edited: "Modifié",
         },
         messageActions: {
             openTask: "Ouvrir la tâche",
