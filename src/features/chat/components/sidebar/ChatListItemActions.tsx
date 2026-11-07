@@ -248,7 +248,8 @@ export const ChatListItemMeta: React.FC<{ chat: AllChatProps }> = ({ chat }) => 
                 <Typography
                     className={NAV_HIDE_ON_ACTIONS_CLASS}
                     level="body-xs"
-                    sx={{ display: { xs: "none", md: "block" }, color: g.text.tertiary }}
+                    // The time stays on a phone too: when a message came is core to a chat row (MIP-1177).
+                    sx={{ color: g.text.tertiary }}
                     noWrap
                 >
                     {time}

@@ -789,7 +789,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             <Typography
                                 level="body-xs"
                                 sx={{
-                                    display: { xs: "none", md: "block" },
+                                    // Shown on a phone too (MIP-1177).
                                     opacity: 0.7,
                                 }}
                                 noWrap
