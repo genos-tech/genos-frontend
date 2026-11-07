@@ -2,17 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import {
     Box,
     Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
     FormControl,
     FormHelperText,
     FormLabel,
     Input,
     Link,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Sheet,
@@ -20,10 +14,12 @@ import {
     Switch,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { Sprint } from "../types";
 
 type Props = {
@@ -102,8 +98,7 @@ const computeRealignmentPlan = (
 
 export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
+    const theme = useTheme();
     const [durationDays, setDurationDays] = useState<number>(14);
     const [anchorDate, setAnchorDate] = useState<string>(todayIso());
     const [autoRoll, setAutoRoll] = useState<boolean>(true);
@@ -247,212 +242,19 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: 460 },
-                    maxWidth: { xs: "100vw", md: 700 },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
-                    overflow: "auto",
-                }}
-            >
-                <DialogTitle>{t.tasks.sprint.configDialogTitle}</DialogTitle>
-                <Divider />
-                <DialogContent sx={{ overflowY: "auto" }}>
-                    <Stack spacing={2.5} sx={{ pt: 1 }}>
-                        <Typography level="body-sm">{t.tasks.sprint.configIntro}</Typography>
-
-                        <FormControl>
-                            <FormLabel>{t.tasks.sprint.sprintLength}</FormLabel>
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <Select
-                                    size="sm"
-                                    sx={{ minWidth: 140 }}
-                                    value={isPreset ? String(durationDays) : "custom"}
-                                    onChange={(_, v) => {
-                                        if (v == null || v === "custom") return;
-                                        const n = parseInt(v, 10);
-                                        if (!Number.isNaN(n) && n > 0) setDurationDays(n);
-                                    }}
-                                >
-                                    {DURATION_PRESETS.map((p) => (
-                                        <Option key={p.value} value={String(p.value)}>
-                                            {t.tasks.sprint.durations[p.labelKey]}
-                                        </Option>
-                                    ))}
-                                    <Option value="custom">{t.tasks.sprint.customOption}</Option>
-                                </Select>
-                                <Input
-                                    size="sm"
-                                    sx={{ width: 140 }}
-                                    type="number"
-                                    value={durationDays}
-                                    endDecorator={
-                                        <Typography level="body-xs">
-                                            {t.tasks.sprint.days}
-                                        </Typography>
-                                    }
-                                    onChange={(e) => {
-                                        const n = parseInt(e.target.value, 10);
-                                        if (!Number.isNaN(n) && n > 0) setDurationDays(n);
-                                    }}
-                                />
-                            </Stack>
-                        </FormControl>
-
-                        <FormControl>
-                            <FormLabel>{t.tasks.sprint.sprintStartsOn}</FormLabel>
-                            <Stack alignItems="center" direction="row" spacing={1.5}>
-                                <Select
-                                    size="sm"
-                                    sx={{ minWidth: 160 }}
-                                    value={String(selectedWeekday)}
-                                    onChange={(_, v) => {
-                                        if (v == null) return;
-                                        setAnchorDate(nextOnOrAfter(todayIso(), parseInt(v, 10)));
-                                        setShowDateOverride(false);
-                                    }}
-                                >
-                                    {WEEKDAYS.map((w) => (
-                                        <Option key={w.value} value={String(w.value)}>
-                                            {t.tasks.sprint.weekdays[w.labelKey]}
-                                        </Option>
-                                    ))}
-                                </Select>
-                                <Typography level="body-xs" sx={{ color: "neutral.500" }}>
-                                    {t.tasks.sprint.startsOnLabel}
-                                    {anchorDate}
-                                </Typography>
-                            </Stack>
-                            {showDateOverride ? (
-                                <Input
-                                    size="sm"
-                                    sx={{ mt: 1, width: 200 }}
-                                    type="date"
-                                    value={anchorDate}
-                                    onChange={(e) => setAnchorDate(e.target.value)}
-                                />
-                            ) : (
-                                <Link
-                                    component="button"
-                                    level="body-xs"
-                                    sx={{ mt: 0.5, alignSelf: "flex-start" }}
-                                    type="button"
-                                    onClick={() => setShowDateOverride(true)}
-                                >
-                                    {t.tasks.sprint.pickSpecificDate}
-                                </Link>
-                            )}
-                            <FormHelperText>
-                                {t.tasks.sprint.futureGeneratedHelper}
-                                {durationDays % 7 !== 0 && t.tasks.sprint.weekdayWarning}
-                            </FormHelperText>
-                        </FormControl>
-
-                        <FormControl>
-                            <FormLabel>{t.tasks.sprint.autoRollSprints}</FormLabel>
-                            <Stack alignItems="center" direction="row" spacing={1.5}>
-                                <Switch
-                                    checked={autoRoll}
-                                    onChange={(e) => setAutoRoll(e.target.checked)}
-                                />
-                                <Typography level="body-sm">
-                                    {autoRoll
-                                        ? t.tasks.sprint.autoRollEnabled
-                                        : t.tasks.sprint.autoRollDisabled}
-                                </Typography>
-                            </Stack>
-                        </FormControl>
-
-                        <FormControl>
-                            <FormLabel>{t.tasks.sprint.upcomingSprintsToKeep}</FormLabel>
-                            <Input
-                                size="sm"
-                                sx={{ width: 140 }}
-                                type="number"
-                                value={upcomingHorizon}
-                                onChange={(e) => {
-                                    const n = parseInt(e.target.value, 10);
-                                    if (!Number.isNaN(n) && n > 0) setUpcomingHorizon(n);
-                                }}
-                            />
-                            <FormHelperText>{t.tasks.sprint.upcomingHelper}</FormHelperText>
-                        </FormControl>
-
-                        {realignmentPlan.length > 0 && (
-                            <Sheet color="warning" sx={{ p: 1.5, borderRadius: 8 }} variant="soft">
-                                <Typography level="title-sm" sx={{ color: "inherit", mb: 1 }}>
-                                    {fmt(t.tasks.sprint.realignWarningTitle, {
-                                        count: realignmentPlan.length,
-                                        plural: realignmentPlan.length === 1 ? "" : "s",
-                                    })}
-                                </Typography>
-                                <Stack spacing={0.5}>
-                                    {realignmentPlan.map((p) => (
-                                        <Stack
-                                            key={p.sprintId}
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1}
-                                            sx={{ flexWrap: "wrap" }}
-                                        >
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    minWidth: 110,
-                                                    fontWeight: 600,
-                                                    color: "inherit",
-                                                }}
-                                            >
-                                                {p.name}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: "inherit", opacity: 0.65 }}
-                                            >
-                                                {p.oldStart} → {p.oldEnd}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: "inherit", opacity: 0.5 }}
-                                            >
-                                                ⇒
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ fontWeight: 700, color: "inherit" }}
-                                            >
-                                                {p.newStart} → {p.newEnd}
-                                            </Typography>
-                                        </Stack>
-                                    ))}
-                                </Stack>
-                            </Sheet>
-                        )}
-
-                        {error && (
-                            <Box
-                                sx={{
-                                    p: 1,
-                                    borderRadius: 8,
-                                    bgcolor: "danger.softBg",
-                                    color: "danger.softColor",
-                                }}
-                            >
-                                <Typography color="danger" level="body-sm">
-                                    {error}
-                                </Typography>
-                            </Box>
-                        )}
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
+        <ModalFrame
+            description={t.tasks.sprint.configIntro}
+            headerDivider
+            open={open}
+            size="lg"
+            title={t.tasks.sprint.configDialogTitle}
+            zIndex={theme.zIndex.modal}
+            actions={
+                <>
                     {willRealign && (
                         <Typography
                             level="body-xs"
-                            sx={{ color: "warning.plainColor", mr: "auto" }}
+                            sx={{ color: g.warning.text, marginInlineEnd: "auto" }}
                         >
                             {fmt(t.tasks.sprint.willRealign, {
                                 count: realignmentPlan.length,
@@ -466,8 +268,192 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                     <Button loading={isSaving} onClick={handleSave}>
                         {t.tasks.sprint.saveButton}
                     </Button>
-                </DialogActions>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={onClose}
+        >
+            <Stack spacing={2.5} sx={{ pt: 1 }}>
+                <FormControl>
+                    <FormLabel>{t.tasks.sprint.sprintLength}</FormLabel>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Select
+                            size="sm"
+                            sx={{ minWidth: 140 }}
+                            value={isPreset ? String(durationDays) : "custom"}
+                            onChange={(_, v) => {
+                                if (v == null || v === "custom") return;
+                                const n = parseInt(v, 10);
+                                if (!Number.isNaN(n) && n > 0) setDurationDays(n);
+                            }}
+                        >
+                            {DURATION_PRESETS.map((p) => (
+                                <Option key={p.value} value={String(p.value)}>
+                                    {t.tasks.sprint.durations[p.labelKey]}
+                                </Option>
+                            ))}
+                            <Option value="custom">{t.tasks.sprint.customOption}</Option>
+                        </Select>
+                        <Input
+                            size="sm"
+                            sx={{ width: 140 }}
+                            type="number"
+                            value={durationDays}
+                            endDecorator={
+                                <Typography level="body-xs">{t.tasks.sprint.days}</Typography>
+                            }
+                            onChange={(e) => {
+                                const n = parseInt(e.target.value, 10);
+                                if (!Number.isNaN(n) && n > 0) setDurationDays(n);
+                            }}
+                        />
+                    </Stack>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>{t.tasks.sprint.sprintStartsOn}</FormLabel>
+                    <Stack alignItems="center" direction="row" spacing={1.5}>
+                        <Select
+                            size="sm"
+                            sx={{ minWidth: 160 }}
+                            value={String(selectedWeekday)}
+                            onChange={(_, v) => {
+                                if (v == null) return;
+                                setAnchorDate(nextOnOrAfter(todayIso(), parseInt(v, 10)));
+                                setShowDateOverride(false);
+                            }}
+                        >
+                            {WEEKDAYS.map((w) => (
+                                <Option key={w.value} value={String(w.value)}>
+                                    {t.tasks.sprint.weekdays[w.labelKey]}
+                                </Option>
+                            ))}
+                        </Select>
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                            {t.tasks.sprint.startsOnLabel}
+                            {anchorDate}
+                        </Typography>
+                    </Stack>
+                    {showDateOverride ? (
+                        <Input
+                            size="sm"
+                            sx={{ mt: 1, width: 200 }}
+                            type="date"
+                            value={anchorDate}
+                            onChange={(e) => setAnchorDate(e.target.value)}
+                        />
+                    ) : (
+                        <Link
+                            component="button"
+                            level="body-xs"
+                            sx={{ mt: 0.5, alignSelf: "flex-start" }}
+                            type="button"
+                            onClick={() => setShowDateOverride(true)}
+                        >
+                            {t.tasks.sprint.pickSpecificDate}
+                        </Link>
+                    )}
+                    <FormHelperText>
+                        {t.tasks.sprint.futureGeneratedHelper}
+                        {durationDays % 7 !== 0 && t.tasks.sprint.weekdayWarning}
+                    </FormHelperText>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>{t.tasks.sprint.autoRollSprints}</FormLabel>
+                    <Stack alignItems="center" direction="row" spacing={1.5}>
+                        <Switch
+                            checked={autoRoll}
+                            onChange={(e) => setAutoRoll(e.target.checked)}
+                        />
+                        <Typography level="body-sm">
+                            {autoRoll
+                                ? t.tasks.sprint.autoRollEnabled
+                                : t.tasks.sprint.autoRollDisabled}
+                        </Typography>
+                    </Stack>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel>{t.tasks.sprint.upcomingSprintsToKeep}</FormLabel>
+                    <Input
+                        size="sm"
+                        sx={{ width: 140 }}
+                        type="number"
+                        value={upcomingHorizon}
+                        onChange={(e) => {
+                            const n = parseInt(e.target.value, 10);
+                            if (!Number.isNaN(n) && n > 0) setUpcomingHorizon(n);
+                        }}
+                    />
+                    <FormHelperText>{t.tasks.sprint.upcomingHelper}</FormHelperText>
+                </FormControl>
+
+                {realignmentPlan.length > 0 && (
+                    <Sheet color="warning" sx={{ p: 1.5, borderRadius: 8 }} variant="soft">
+                        <Typography level="title-sm" sx={{ color: "inherit", mb: 1 }}>
+                            {fmt(t.tasks.sprint.realignWarningTitle, {
+                                count: realignmentPlan.length,
+                                plural: realignmentPlan.length === 1 ? "" : "s",
+                            })}
+                        </Typography>
+                        <Stack spacing={0.5}>
+                            {realignmentPlan.map((p) => (
+                                <Stack
+                                    key={p.sprintId}
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={1}
+                                    sx={{ flexWrap: "wrap" }}
+                                >
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            minWidth: 110,
+                                            fontWeight: 600,
+                                            color: "inherit",
+                                        }}
+                                    >
+                                        {p.name}
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ color: "inherit", opacity: 0.65 }}
+                                    >
+                                        {p.oldStart} → {p.oldEnd}
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ color: "inherit", opacity: 0.5 }}
+                                    >
+                                        ⇒
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ fontWeight: 600, color: "inherit" }}
+                                    >
+                                        {p.newStart} → {p.newEnd}
+                                    </Typography>
+                                </Stack>
+                            ))}
+                        </Stack>
+                    </Sheet>
+                )}
+
+                {error && (
+                    <Box
+                        sx={{
+                            p: 1,
+                            borderRadius: 8,
+                            bgcolor: g.danger.subtle,
+                            color: g.danger.text,
+                        }}
+                    >
+                        <Typography color="danger" level="body-sm">
+                            {error}
+                        </Typography>
+                    </Box>
+                )}
+            </Stack>
+        </ModalFrame>
     );
 };
