@@ -8,7 +8,11 @@ import { Alert, Box, Button, Chip, IconButton, Stack, Typography } from "@mui/jo
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import {
+    MODAL_FRAME_DEFAULT_Z_INDEX,
+    MODAL_FRAME_HOST_OFFSET,
+    ModalFrame,
+} from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -233,7 +237,8 @@ export const ModalManageDependencies = ({
 
     // The frame lifts itself host + 2 (10010 on the page); the pickers that
     // portal to <body> take the layer above it.
-    const modalZIndex = hostZIndex != null ? hostZIndex + 2 : 10010;
+    const modalZIndex =
+        hostZIndex != null ? hostZIndex + MODAL_FRAME_HOST_OFFSET : MODAL_FRAME_DEFAULT_Z_INDEX;
 
     return (
         <ModalFrame
@@ -241,7 +246,7 @@ export const ModalManageDependencies = ({
             hostZIndex={hostZIndex}
             icon={<BlockRoundedIcon sx={{ color: g.warning.text }} />}
             open={open}
-            size="xl"
+            size="wide"
             title={depsT.modal.title}
             actions={
                 <Button color="neutral" variant="plain" onClick={onClose}>

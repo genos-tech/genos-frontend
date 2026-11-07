@@ -188,6 +188,11 @@ describe("ModalFrame", () => {
             expect(seq("width")).toEqual(["calc(100vw - 24px)", "550px", "700px", "920px"]);
         });
 
+        it("wide is 550, then 806 from md up (the dependencies dialog)", () => {
+            mount({ size: "wide" });
+            expect(seq("width")).toEqual(["calc(100vw - 24px)", "550px", "806px"]);
+        });
+
         it("profile is 1000px from md up", () => {
             mount({ size: "profile" });
             expect(seq("width")).toEqual(["calc(100vw - 24px)", "1000px"]);

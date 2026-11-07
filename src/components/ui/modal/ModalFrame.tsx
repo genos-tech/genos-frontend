@@ -55,18 +55,21 @@ const FENCE = {
 
 /**
  * `sm` / `md` / `lg` are fixed widths for dialogs. `xl` is the wide tabbed
- * panel (Settings): 550 / 700 / 920 as the screen grows. `profile` is the
+ * panel (Settings): 550 / 700 / 920 as the screen grows. `wide` is the wider
+ * ladder (550 / 806 from md up) for a dialog that holds two side-by-side pickers
+ * (dependencies). `profile` is the
  * 1000px profile card (project, group, team); it is built to be used with
  * `fullScreenOnMobile` (below `md` the card is the screen, with the close X as
  * the only way out), so pass both.
  */
-export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "profile";
+export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "wide" | "profile";
 
 const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = {
     sm: 400,
     md: 480,
     lg: 640,
     xl: { sm: 550, md: 700, lg: 920 },
+    wide: { sm: 550, md: 806 },
     profile: { md: 1000 },
 };
 
