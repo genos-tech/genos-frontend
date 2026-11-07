@@ -1305,6 +1305,7 @@ export const es: DeepPartial<Messages> = {
             clickToOpenTask: "Haz clic para abrir la tarea",
             clickToOpenThread: "{modKey}+clic para abrir el hilo",
             updated: "Actualizado",
+            edited: "Editado",
         },
         messageActions: {
             openTask: "Abrir tarea",

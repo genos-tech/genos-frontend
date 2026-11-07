@@ -1,36 +1,35 @@
-import { Box, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Stack } from "@mui/joy";
 
 import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
+import { BubbleAuthor, BubbleMeta } from "../../../../components/ui/bubble";
 import { useTranslation } from "../../../../i18n";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
+import { StatusLabel } from "../../../tasks/components/meta/StatusLabel";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { statuses } from "../../../tasks/utils/taskMeta";
 
-// Status chip color configuration - improved for better visibility
-const getStatusChipStyles = (
-    taskStatusDetails: { color?: string | null; textColor?: string | null } | undefined,
-    isDark: boolean
-) => {
-    if (!taskStatusDetails?.color) {
-        return {
-            background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
-            color: isDark ? "#e2e8f0" : "#1e293b",
-            borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
-        };
-    }
-
-    const baseColor = taskStatusDetails.color;
-    // For light mode, use darker background and ensure text is visible
-    return {
-        background: isDark
-            ? `linear-gradient(135deg, ${baseColor}40 0%, ${baseColor}25 100%)`
-            : `${baseColor}`,
-        color: isDark ? "#ffffff" : taskStatusDetails.textColor || "#ffffff",
-        borderColor: isDark ? `${baseColor}60` : `${baseColor}`,
-    };
-};
+// The task's display id: a quiet accent chip. (The status is the shared
+// StatusLabel: its color is in the icon.)
+const IdChip = ({ children }: { children: React.ReactNode }) => (
+    <Box
+        sx={{
+            ...type("title-sm"),
+            display: "inline-flex",
+            alignItems: "center",
+            height: 24,
+            px: 1,
+            borderRadius: g.radius.sm,
+            border: "1px solid",
+            borderColor: g.accent.border,
+            bgcolor: g.accent.subtle,
+            color: g.accent.text,
+        }}
+    >
+        {children}
+    </Box>
+);
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
@@ -63,9 +62,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
         isThread,
     } = props;
 
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
     const isEdited = extractMMDDHHMMSSs(tsSent) !== extractMMDDHHMMSSs(tsUpdated);
     // Render the task-card header (display-id chip + status chip + date)
@@ -79,46 +76,6 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
     //     v3 adapter filters out PM messages without a `taskId`, so
     //     any PM that reaches this renderer is a real task header.
     const renderAsTaskCard = sender.isSystemUser === true || (chatType === 3 && taskId !== null);
-
-    // Modern chip component with improved visibility
-    const ModernChip = ({
-        children,
-        variant = "neutral",
-        customStyles,
-    }: {
-        children: React.ReactNode;
-        variant?: "neutral" | "status";
-        customStyles?: Record<string, any>;
-    }) => (
-        <Box
-            sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                height: 24,
-                px: 1,
-                borderRadius: "6px",
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                letterSpacing: "0.01em",
-                border: "1px solid",
-                transition: "all 0.15s ease",
-                ...(variant === "neutral"
-                    ? {
-                          // Improved neutral chip with better contrast
-                          background: isDark
-                              ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
-                              : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                          color: isDark ? "var(--gp-brand-100)" : "#ffffff",
-                          borderColor: isDark
-                              ? "rgba(var(--gp-brand-700-rgb), 0.4)"
-                              : "var(--gp-brand-800)",
-                      }
-                    : customStyles),
-            }}
-        >
-            {children}
-        </Box>
-    );
 
     return (
         <Box sx={{ flex: 1 }}>
@@ -141,30 +98,17 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             still render in the card layout but skip the
                             chips so the header stays just the date. */}
                         {isThread === false && taskId !== null && (
-                            <ModernChip>
+                            <IdChip>
                                 {formatTaskDisplayId({ taskId, displayId }) ||
                                     t.chat.modals.gmProfile.na}
-                            </ModernChip>
+                            </IdChip>
                         )}
 
                         {taskId !== null && taskStatusDetails && (
-                            <ModernChip
-                                customStyles={getStatusChipStyles(taskStatusDetails, isDark)}
-                                variant="status"
-                            >
-                                {taskStatus || t.chat.modals.gmProfile.na}
-                            </ModernChip>
+                            <StatusLabel status={taskStatus} />
                         )}
 
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 500,
-                                fontSize: "0.7rem",
-                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                                letterSpacing: "0.02em",
-                            }}
-                        >
+                        <BubbleMeta>
                             {isEdited ? (
                                 <>
                                     {dtSent} {isThread ? "" : t.chat.bubble.updated}
@@ -172,7 +116,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             ) : (
                                 dtSent
                             )}
-                        </Typography>
+                        </BubbleMeta>
                     </Stack>
                 )}
 
@@ -180,15 +124,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                 {!renderAsTaskCard && (
                     <Stack alignItems="center" direction="row" spacing={1}>
                         {isSimpleBubble === false && (
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "0.85rem",
-                                    color: isDark ? "#f1f5f9" : "#0f172a",
-                                    letterSpacing: "-0.01em",
-                                }}
-                            >
+                            <BubbleAuthor>
                                 {/* Live-resolve the sender's current name in
                                     this leaf so the AvatarContext
                                     subscription is isolated here — the
@@ -200,21 +136,12 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     fallbackName={sender.userName}
                                     userId={sender.userId}
                                 />
-                            </Typography>
+                            </BubbleAuthor>
                         )}
 
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 500,
-                                fontSize: "0.7rem",
-                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
-                                letterSpacing: "0.02em",
-                                pt: isSimpleBubble ? 0.5 : 0,
-                            }}
-                        >
-                            {isEdited ? `${dtSent} Edited` : dtSent}
-                        </Typography>
+                        <BubbleMeta sx={{ pt: isSimpleBubble ? 0.5 : 0 }}>
+                            {isEdited ? `${dtSent} ${t.chat.bubble.edited}` : dtSent}
+                        </BubbleMeta>
                     </Stack>
                 )}
             </Stack>

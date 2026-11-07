@@ -971,6 +971,7 @@ export const zh: DeepPartial<Messages> = {
             clickToOpenTask: "点击打开任务",
             clickToOpenThread: "{modKey}+点击打开话题",
             updated: "已更新",
+            edited: "已编辑",
         },
         messageActions: {
             openTask: "打开任务",

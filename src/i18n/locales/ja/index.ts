@@ -1176,6 +1176,7 @@ export const ja: DeepPartial<Messages> = {
             clickToOpenTask: "クリックでタスクを開く",
             clickToOpenThread: "{modKey}＋クリックでスレッドを開く",
             updated: "更新済み",
+            edited: "編集済み",
         },
         messageActions: {
             openTask: "タスクを開く",

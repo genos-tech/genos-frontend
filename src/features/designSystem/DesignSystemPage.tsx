@@ -27,6 +27,7 @@ import MoreHorizRounded from "@mui/icons-material/MoreHorizRounded";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { Bubble, BubbleAuthor, BubbleMeta } from "../../components/ui/bubble";
 import { NavItem } from "../../components/ui/nav/NavItem";
 import { SectionHeader } from "../../components/ui/nav/SectionHeader";
 import { useColorTheme } from "../../theme/ColorThemeProvider";
@@ -38,6 +39,7 @@ import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles
 import { MOTION, RADIUS, ROW } from "../../theme/tokens/scales";
 import { PRIORITY_NAMES, STATUS_NAMES } from "../tasks/meta/taskTone";
 import {
+    Avatar,
     Button,
     EmptyState,
     FilterChip,
@@ -838,6 +840,108 @@ const DensityStrip = () => (
     </Box>
 );
 
+/** The shared message frame, in both styles of the bubble-style preference. */
+const BubbleSamples = () => {
+    const author = (name: string, time: string, edited = false) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <BubbleAuthor>{name}</BubbleAuthor>
+            <BubbleMeta>{edited ? `${time} · Edited` : time}</BubbleMeta>
+        </Box>
+    );
+    const toolbar = (
+        <Box sx={{ ...type("body-xs"), color: g.text.secondary, px: 0.75, py: 0.5 }}>
+            React · Edit · More
+        </Box>
+    );
+    const body = (text: string) => (
+        <Text level="body-md" sx={{ ...type("body-md"), color: g.text.primary }}>
+            {text}
+        </Text>
+    );
+    return (
+        <Box
+            sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                gap: 1.5,
+            }}
+        >
+            <Panel data-testid="bubble-compact" sx={{ py: 0.5 }}>
+                <Bubble
+                    avatar={<Avatar name="Mika" size={32} />}
+                    header={author("Mika", "09:12")}
+                    layout="compact"
+                >
+                    {body("Can someone review the token PR before lunch?")}
+                </Bubble>
+                <Bubble avatar="reserve" layout="compact" grouped>
+                    {body("It is small, I promise.")}
+                </Bubble>
+                <Bubble
+                    actions={toolbar}
+                    avatar={<Avatar name="Dev" size={32} />}
+                    header={author("Dev", "09:14", true)}
+                    layout="compact"
+                    actionsOpen
+                >
+                    {body("On it. Hover shows the actions toolbar.")}
+                </Bubble>
+                <Bubble
+                    avatar={<Avatar name="Mika" size={32} />}
+                    emphasis="focused"
+                    header={author("Mika", "09:20")}
+                    layout="compact"
+                >
+                    {body("Deep-linked message.")}
+                </Bubble>
+                <Bubble
+                    avatar={<Avatar name="Dev" size={32} />}
+                    emphasis="threadActive"
+                    footer={<BubbleMeta>3 replies</BubbleMeta>}
+                    header={author("Dev", "09:31")}
+                    layout="compact"
+                >
+                    {body("The root of the open thread.")}
+                </Bubble>
+            </Panel>
+            <Panel
+                data-testid="bubble-balloon"
+                sx={{ p: 1.5, display: "flex", flexDirection: "column", gap: 1.5 }}
+            >
+                <Bubble
+                    avatar={<Avatar name="Mika" size={32} />}
+                    header={author("Mika", "09:12")}
+                    layout="bubble"
+                    side="received"
+                    wrapperSx={{ maxWidth: "90%" }}
+                >
+                    {body("Can someone review the token PR before lunch?")}
+                </Bubble>
+                <Bubble
+                    actions={toolbar}
+                    avatar={<Avatar name="Dev" size={32} />}
+                    header={author("You", "09:14")}
+                    layout="bubble"
+                    side="sent"
+                    wrapperSx={{ alignSelf: "flex-end", maxWidth: "90%" }}
+                    actionsOpen
+                >
+                    {body("On it.")}
+                </Bubble>
+                <Bubble
+                    avatar={<Avatar name="Mika" size={32} />}
+                    emphasis="focused"
+                    header={author("Mika", "09:20")}
+                    layout="bubble"
+                    wrapperSx={{ maxWidth: "90%" }}
+                >
+                    {body("Deep-linked message.")}
+                </Bubble>
+            </Panel>
+        </Box>
+    );
+};
+
 const Components = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Labelled
@@ -866,6 +970,13 @@ const Components = () => (
             title="Row density"
         >
             <DensityStrip />
+        </Labelled>
+
+        <Labelled
+            note="One frame for chat, thread, task comment, inbox and the note comment list. Left: the compact row (default). Right: the bubble style. A deep link is green, the open thread is the accent, your own bubble is tinted. The toolbar floats top-right on hover."
+            title="Messages and comments"
+        >
+            <BubbleSamples />
         </Labelled>
 
         <Box

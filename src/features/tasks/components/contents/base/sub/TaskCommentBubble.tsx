@@ -1,17 +1,17 @@
-import { memo, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import WrapTextIcon from "@mui/icons-material/WrapText";
-import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { ResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
+import { Bubble, BubbleAuthor, BubbleMeta } from "../../../../../../components/ui/bubble";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/TaskCommentEmojiReaction";
@@ -22,6 +22,7 @@ import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/use
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../../../i18n";
+import { g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { ReactionProps } from "../../../../../../types/common";
@@ -31,12 +32,6 @@ import {
     extractYYYYMMDDHHMM,
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
-import {
-    BUBBLE_COLORS,
-    COMPACT_BODY_INDENT,
-    COMPACT_FOCUSED_BG,
-    COMPACT_TOOLBAR_OFFSET,
-} from "../../../../../chat/components/bubbles/bubbleStyleTokens";
 import { ModalDeleteTaskComment } from "../../../modals/ModalDeleteTaskComment";
 
 type TaskCommentBubbleProps = {
@@ -84,80 +79,6 @@ type TaskCommentBubbleProps = {
     hostZIndex?: number;
 };
 
-// Static bubble shadows hoisted out of render so they aren't
-// re-serialized on every re-render (emotion re-serializes inline `sx`
-// objects each pass). Keyed by dark-mode / focused / hover state.
-const BUBBLE_SHADOW = {
-    focused: {
-        dark: `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`,
-        light: `0 4px 20px rgba(22,163,74,0.15)`,
-    },
-    rest: {
-        dark: "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)",
-        light: "0 2px 8px rgba(0,0,0,0.06)",
-    },
-    hover: {
-        dark: "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
-        light: "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
-    },
-} as const;
-
-/**
- * Avatar and header (name, time) on the first row, the body below.
- *
- * From `md` up (the same breakpoint as `useIsMobile`) the body stays in the
- * column beside the avatar, so it lines up under the name. Below it, on a
- * phone, the body spans the full width under the avatar: the avatar column is
- * about 44px that would otherwise stay empty down the whole list (MIP-1033).
- *
- * One grid, not a media-query-driven restructure, so the header and body
- * markup is the same at every width. The avatar spans all rows beside the
- * body, so it never makes the first row taller than the header.
- */
-const CommentLayout = ({
-    avatar,
-    header,
-    body,
-    footer,
-    bodyOffset,
-}: {
-    avatar: ReactNode;
-    header: ReactNode;
-    body: ReactNode;
-    footer?: ReactNode;
-    /** Space above the body beside the avatar (theme spacing units). */
-    bodyOffset: number;
-}) => (
-    <Box
-        sx={{
-            display: "grid",
-            gridTemplateColumns: "auto minmax(0, 1fr)",
-            columnGap: 1.5,
-            alignItems: "start",
-        }}
-    >
-        <Box sx={{ gridColumn: 1, gridRow: { xs: 1, md: "1 / span 3" }, flexShrink: 0 }}>
-            {avatar}
-        </Box>
-        <Box sx={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}>{header}</Box>
-        <Box
-            sx={{
-                gridColumn: { xs: "1 / -1", md: 2 },
-                gridRow: 2,
-                minWidth: 0,
-                mt: { xs: 0.75, md: bodyOffset },
-            }}
-        >
-            {body}
-        </Box>
-        {footer != null && (
-            <Box sx={{ gridColumn: { xs: "1 / -1", md: 2 }, gridRow: 3, minWidth: 0, mt: 0.5 }}>
-                {footer}
-            </Box>
-        )}
-    </Box>
-);
-
 const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const {
         socket,
@@ -179,8 +100,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         hostZIndex,
     } = props;
 
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
@@ -190,19 +109,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // leaf in the name slot (so a rename shows on existing comments) —
     // isolating that AvatarContext subscription to the leaf lets this
     // memoized bubble skip the periodic `teamMemberProfiles` churn.
-
-    // Palette harmonised with MessageBubble: sent → purple, received →
-    // neutral, focused → green deep-link tint.
-    const variantColors = isSent
-        ? isDark
-            ? BUBBLE_COLORS.sent.dark
-            : BUBBLE_COLORS.sent.light
-        : isDark
-          ? BUBBLE_COLORS.received.dark
-          : BUBBLE_COLORS.received.light;
-    const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
-    const colors = isFocused ? focusedColors : variantColors;
-    const secondaryText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)";
 
     // Two date-parses; memoize so they don't run on every re-render.
     const isEdited = useMemo(
@@ -403,13 +309,13 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                 sx={{
                     width: 28,
                     height: 28,
-                    borderRadius: "8px",
+                    borderRadius: g.radius.md,
                     transition: "all 0.15s ease",
-                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
+                    color: g.text.secondary,
                     background: "transparent",
                     "&:hover": {
-                        background: isDark ? "rgba(251,191,36,0.15)" : "rgba(245,158,11,0.1)",
-                        color: isDark ? "#fbbf24" : "#f59e0b",
+                        background: g.warning.subtle,
+                        color: g.warning.text,
                     },
                 }}
                 onClick={(e) => {
@@ -538,281 +444,77 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         </Box>
     );
 
-    if (isCompact) {
-        const focusAccent = isFocused
-            ? BUBBLE_COLORS.focused[isDark ? "dark" : "light"].border
-            : "transparent";
+    const header = (
+        <Stack alignItems="center" direction="row" spacing={1}>
+            <BubbleAuthor>
+                <ResolvedUserName fallbackName={comment.senderName} userId={comment.senderId} />
+            </BubbleAuthor>
+            <BubbleMeta>
+                {isEdited ? `${sentLabel} ${t.chat.bubble.edited}` : sentLabel}
+            </BubbleMeta>
+        </Stack>
+    );
 
-        return (
-            <Box
-                ref={boxRef}
-                sx={{
-                    width: "100%",
-                    position: "relative",
-                    py: 0.25,
-                    pl: 2,
-                    pr: 2,
-                    cursor: onCommentClick ? "pointer" : "default",
-                    borderLeft: "3px solid",
-                    borderLeftColor: focusAccent,
-                    borderTop: "1px solid",
-                    borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                    backgroundColor: isFocused
-                        ? COMPACT_FOCUSED_BG.focused[isDark ? "dark" : "light"]
-                        : showUnderBarOption
-                          ? isDark
-                              ? "rgba(255,255,255,0.03)"
-                              : "rgba(0,0,0,0.025)"
-                          : "transparent",
-                    transition: "background-color 0.15s ease",
-                }}
-                onClick={handleCommentClick}
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
-                onDoubleClick={
-                    doubleClickTodoEnabled
-                        ? () => {
-                              if (setTodoFromMessageBubble) {
-                                  setTodoFromMessageBubble({
-                                      ...comment,
-                                      projectId: currentProjectId ?? null,
-                                  });
-                              }
-                          }
-                        : undefined
-                }
-            >
-                {emojiPickerPositionCalculated === true && (
-                    <EmojiPicker
-                        pickerBottomPosition={pickerBottomPosition}
-                        pickerLeftPosition={pickerLeftPosition}
-                        pickerRightPosition={pickerRightPosition}
-                        pickerTopPosition={pickerTopPosition}
-                        setSelectedEmoji={setSelectedEmoji}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        showEmojiPicker={showEmojiPicker}
-                        useFixedPosition={true}
-                    />
-                )}
-
-                {deleteCommentModal}
-
-                {(showUnderBarOption || isMoreMenuOpen) && (
-                    <Box
-                        ref={toolbarRef}
-                        sx={{
-                            position: "absolute",
-                            top: COMPACT_TOOLBAR_OFFSET.top,
-                            right: COMPACT_TOOLBAR_OFFSET.right,
-                            zIndex: 2,
-                            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-                            border: "1px solid",
-                            borderColor: isDark ? "#374151" : "#e5e7eb",
-                            borderRadius: "8px",
-                            px: 0.5,
-                            boxShadow: isDark
-                                ? "0 2px 8px rgba(0,0,0,0.4)"
-                                : "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onDoubleClick={(e) => e.stopPropagation()}
-                    >
-                        <Stack alignItems="center" direction="row" spacing={0.25}>
-                            {quickEmojiReaction}
-                            {editButton}
-                            {moreMenu}
-                        </Stack>
-                    </Box>
-                )}
-
-                <CommentLayout
-                    avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
-                    body={commentBody}
-                    bodyOffset={0.25}
-                    footer={reactionsDisplay}
-                    header={
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography
-                                level="title-sm"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "0.85rem",
-                                    color: isDark ? "#f1f5f9" : "#0f172a",
-                                    letterSpacing: "-0.01em",
-                                }}
-                            >
-                                <ResolvedUserName
-                                    fallbackName={comment.senderName}
-                                    userId={comment.senderId}
-                                />
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    fontWeight: 500,
-                                    fontSize: "0.7rem",
-                                    color: secondaryText,
-                                    letterSpacing: "0.02em",
-                                }}
-                            >
-                                {isEdited ? `${sentLabel} Edited` : sentLabel}
-                            </Typography>
-                        </Stack>
-                    }
-                />
-            </Box>
-        );
-    }
-
-    // Bubble variant — sent/received palette mirroring MessageBubble.
+    // One frame for both looks of the bubble-style preference. The toolbar
+    // (quick emoji, edit, more menu) stays mounted while the ⋮ menu is open.
+    // The keyed remount on `tsUpdated` is the bubble look's (as before).
     return (
-        <Box ref={boxRef} sx={{ py: 0.5 }}>
-            {emojiPickerPositionCalculated === true && (
-                <EmojiPicker
-                    pickerBottomPosition={pickerBottomPosition}
-                    pickerLeftPosition={pickerLeftPosition}
-                    pickerRightPosition={pickerRightPosition}
-                    pickerTopPosition={pickerTopPosition}
-                    setSelectedEmoji={setSelectedEmoji}
-                    setShowEmojiPicker={setShowEmojiPicker}
-                    showEmojiPicker={showEmojiPicker}
-                    useFixedPosition={true}
-                />
-            )}
-
-            {deleteCommentModal}
-
-            <Box
-                key={`${comment.commentId}-${comment.tsUpdated}`}
-                sx={{ cursor: onCommentClick ? "pointer" : "default" }}
-                onClick={handleCommentClick}
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
-                onDoubleClick={
-                    doubleClickTodoEnabled
-                        ? () => {
-                              if (setTodoFromMessageBubble) {
-                                  setTodoFromMessageBubble({
-                                      ...comment,
-                                      projectId: currentProjectId ?? null,
-                                  });
-                              }
-                          }
-                        : undefined
-                }
-            >
-                <Sheet
-                    sx={{
-                        p: 1.25,
-                        borderRadius: "16px",
-                        position: "relative",
-                        overflow: "hidden",
-                        // Animate only paint properties — `transition: all`
-                        // also animated layout props (border-radius etc.),
-                        // which forced non-composited work on every hover.
-                        transition:
-                            "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        ...(isSent
-                            ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
-                            : { borderTopRightRadius: "16px", borderTopLeftRadius: "4px" }),
-                        background: colors.bg,
-                        color: colors.text,
-                        border: "1px solid",
-                        borderColor: colors.border,
-                        boxShadow: isFocused
-                            ? BUBBLE_SHADOW.focused[isDark ? "dark" : "light"]
-                            : BUBBLE_SHADOW.rest[isDark ? "dark" : "light"],
-                        "&:hover": {
-                            boxShadow: BUBBLE_SHADOW.hover[isDark ? "dark" : "light"],
-                        },
-                    }}
-                >
-                    {/* Subtle highlight for sent messages */}
-                    {isSent && !isFocused && (
-                        <Box
-                            sx={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                height: "1px",
-                                background: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(255,255,255,0.5)",
-                                pointerEvents: "none",
-                            }}
+        <Bubble
+            key={isCompact ? undefined : `${comment.commentId}-${comment.tsUpdated}`}
+            actionsOpen={showToolbarActions}
+            avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
+            bodyOffset={isCompact ? 0.25 : 0.5}
+            emphasis={isFocused ? "focused" : false}
+            footer={reactionsDisplay}
+            header={header}
+            interactive={!!onCommentClick}
+            layout={isCompact ? "compact" : "bubble"}
+            rootRef={boxRef}
+            side={isSent ? "sent" : "received"}
+            toolbarRef={toolbarRef}
+            wrapperSx={{ py: 0.5 }}
+            actions={
+                <Stack alignItems="center" direction="row" spacing={0.25}>
+                    {quickEmojiReaction}
+                    {editButton}
+                    {moreMenu}
+                </Stack>
+            }
+            overlay={
+                <>
+                    {emojiPickerPositionCalculated === true && (
+                        <EmojiPicker
+                            pickerBottomPosition={pickerBottomPosition}
+                            pickerLeftPosition={pickerLeftPosition}
+                            pickerRightPosition={pickerRightPosition}
+                            pickerTopPosition={pickerTopPosition}
+                            setSelectedEmoji={setSelectedEmoji}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            showEmojiPicker={showEmojiPicker}
+                            useFixedPosition={true}
                         />
                     )}
-
-                    <CommentLayout
-                        avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
-                        body={commentBody}
-                        bodyOffset={0.5}
-                        header={
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <Typography
-                                    level="title-sm"
-                                    sx={{
-                                        fontWeight: 600,
-                                        fontSize: "0.85rem",
-                                        color: colors.text,
-                                        letterSpacing: "-0.01em",
-                                    }}
-                                >
-                                    <ResolvedUserName
-                                        fallbackName={comment.senderName}
-                                        userId={comment.senderId}
-                                    />
-                                </Typography>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.7rem",
-                                        color: isDark
-                                            ? "rgba(var(--gp-brand-100-rgb), 0.6)"
-                                            : isSent
-                                              ? "rgba(var(--gp-brand-950-rgb), 0.55)"
-                                              : "rgba(17, 24, 39, 0.55)",
-                                        letterSpacing: "0.02em",
-                                    }}
-                                >
-                                    {isEdited ? `${sentLabel} Edited` : sentLabel}
-                                </Typography>
-                            </Stack>
-                        }
-                    />
-
-                    {/* Quick-emoji + edit + ⋮ more-menu affordances,
-                        top-right of bubble (mirrors MessageBubble's
-                        EmojiReaction + BubbleMoreMenu pairing). All
-                        fade in with the hover toolbar so they don't add
-                        visual noise at rest; kept interactive only
-                        while shown so the invisible buttons can't
-                        swallow clicks on the body. */}
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            opacity: showUnderBarOption || isMoreMenuOpen ? 1 : 0,
-                            pointerEvents: showUnderBarOption || isMoreMenuOpen ? "auto" : "none",
-                            transition: "opacity 0.15s ease",
-                        }}
-                    >
-                        <Stack alignItems="center" direction="row" spacing={0.25}>
-                            {quickEmojiReaction}
-                            {editButton}
-                            {moreMenu}
-                        </Stack>
-                    </Box>
-
-                    <Box sx={{ position: "absolute", bottom: 0, right: 10 }}>
-                        {reactionsDisplay}
-                    </Box>
-                </Sheet>
-            </Box>
-        </Box>
+                    {deleteCommentModal}
+                </>
+            }
+            onClick={handleCommentClick}
+            onMouseEnter={() => setShowUnderBarOption(true)}
+            onMouseLeave={() => setShowUnderBarOption(false)}
+            onDoubleClick={
+                doubleClickTodoEnabled
+                    ? () => {
+                          if (setTodoFromMessageBubble) {
+                              setTodoFromMessageBubble({
+                                  ...comment,
+                                  projectId: currentProjectId ?? null,
+                              });
+                          }
+                      }
+                    : undefined
+            }
+        >
+            {commentBody}
+        </Bubble>
     );
 };
 

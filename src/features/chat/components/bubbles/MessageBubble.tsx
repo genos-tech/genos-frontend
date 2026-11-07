@@ -1,12 +1,12 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Stack } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Bubble } from "../../../../components/ui/bubble";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
@@ -32,12 +32,6 @@ import { isMac } from "../../../../utils/platform";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
-import {
-    BUBBLE_COLORS,
-    COMPACT_BODY_INDENT,
-    COMPACT_FOCUSED_BG,
-    COMPACT_TOOLBAR_OFFSET,
-} from "./bubbleStyleTokens";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -91,9 +85,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         setTodoFromMessageBubble,
     } = props;
 
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
     const { accessToken } = useAuth();
@@ -117,15 +109,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     // messages with system "X has joined" notices, and only the
     // latter should hide the slot.
     const hideAvatarSlot = chat.chatType === 3 || (chat.chatType === 4 && isSystemUser);
-
-    // Get bubble colors based on variant and theme
-    const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
-    const colors = isDark ? bubbleColors.dark : bubbleColors.light;
-    const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
-    const threadActiveColors = isDark
-        ? BUBBLE_COLORS.threadActive.dark
-        : BUBBLE_COLORS.threadActive.light;
-    const highlightColors = isFocused === "threadActive" ? threadActiveColors : focusedColors;
 
     const handleOpenTaskClick = () => {
         if (message.taskId !== null) {
@@ -519,95 +502,154 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         </Stack>
     );
 
-    if (isCompact) {
-        const focusAccent =
-            isFocused === "focused"
-                ? BUBBLE_COLORS.focused[isDark ? "dark" : "light"].border
-                : isFocused === "threadActive"
-                  ? BUBBLE_COLORS.threadActive[isDark ? "dark" : "light"].border
-                  : "transparent";
-
-        const messageBody = message.content && message.content.length > 0 && (
-            <AppTooltip
-                enterDelay={1000}
-                suppressed={isMoreMenuOpen}
-                placement="right"
-                title={
-                    <>
-                        {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
-                        {chat.chatType === 3 ? <br /> : null}
-                        {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "⌘" : "Alt" })}
-                    </>
-                }
-            >
-                <Box
-                    className={previewWrapClassName || undefined}
-                    sx={{
-                        mt: isSimpleBubble ? 0 : 0.25,
-                    }}
-                >
-                    <MessageBody
-                        key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
-                        content={message.content}
-                        isSent={isSent}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                    />
-                </Box>
-            </AppTooltip>
-        );
-
+    // A balloon with an attachment has no frame or hover of its own (as before).
+    if (!isCompact && message.attachment) {
         return (
             <Box
-                ref={bubbleRef}
-                sx={{
-                    width: "100%",
-                    position: "relative",
-                    py: 0.25,
-                    pl: 2,
-                    pr: 2,
-                    cursor: "pointer",
-                    borderLeft: "3px solid",
-                    borderLeftColor: focusAccent,
-                    borderTop: isSimpleBubble ? "none" : "1px solid",
-                    borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                    backgroundColor:
-                        isFocused === "focused"
-                            ? COMPACT_FOCUSED_BG.focused[isDark ? "dark" : "light"]
-                            : isFocused === "threadActive"
-                              ? COMPACT_FOCUSED_BG.threadActive[isDark ? "dark" : "light"]
-                              : showUnderBarOption
-                                ? isDark
-                                    ? "rgba(255,255,255,0.03)"
-                                    : "rgba(0,0,0,0.025)"
-                                : "transparent",
-                    transition: "background-color 0.15s ease",
-                    // The 500ms long-press below opens this app's message
-                    // toolbar — but iOS answers the same gesture with its
-                    // own Copy / Look Up callout, so both appeared at once.
-                    // Suppressing the callout leaves the app's toolbar as
-                    // the single response.
-                    //
-                    // Deliberately NOT `user-select: none`: that would also
-                    // kill selecting message text, and the in-app menu only
-                    // offers "copy link", not "copy text" — so this is the
-                    // user's only way to copy what someone wrote.
-                    WebkitTouchCallout: "none",
-                }}
-                onClick={handleMessageClick}
-                onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
-                onMouseEnter={() => setShowUnderBarOption(true)}
-                onMouseLeave={() => setShowUnderBarOption(false)}
-                onTouchCancel={longPress.onTouchCancel}
-                onTouchEnd={longPress.onTouchEnd}
-                onTouchMove={longPress.onTouchMove}
-                onTouchStart={longPress.onTouchStart}
+                sx={balloonWrapperSx(
+                    chat.chatType,
+                    isSimpleBubble,
+                    numRepliesWithoutFirstMessage,
+                    uniqueReactionEmojiCount
+                )}
             >
-                {emojiPickerPositionCalculated === true && (
+                <BubbleAttachmentSheet
+                    fileName={message.attachment.fileName}
+                    fileSize={message.attachment.size}
+                    isSent={isSent}
+                />
+            </Box>
+        );
+    }
+
+    const userName = (simple: boolean) => (
+        <BubbleUserName
+            chatType={chat.chatType}
+            displayId={message.displayId}
+            dtSent={dtSent}
+            isSent={isSent}
+            isSimpleBubble={simple}
+            isThread={false}
+            sender={message.sender}
+            taskId={message.taskId}
+            taskStatus={message.taskStatus}
+            tsSent={message.tsSent}
+            tsUpdated={message.tsUpdated}
+        />
+    );
+
+    // The hint wraps the BODY in both looks (it used to wrap the whole balloon
+    // in the bubble look, so it also showed over the padding and the name).
+    // In the bubble look a click on the body of a task card also opens the
+    // task, before the balloon's own click handling, as before.
+    const body = message.attachment ? (
+        <BubbleAttachmentSheet
+            fileName={message.attachment.fileName}
+            fileSize={message.attachment.size}
+            isSent={isSent}
+        />
+    ) : message.content && message.content.length > 0 ? (
+        <AppTooltip
+            enterDelay={1000}
+            placement="right"
+            suppressed={isMoreMenuOpen}
+            title={
+                <>
+                    {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
+                    {chat.chatType === 3 ? <br /> : null}
+                    {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "⌘" : "Alt" })}
+                </>
+            }
+        >
+            <Box
+                className={previewWrapClassName || undefined}
+                sx={isCompact ? undefined : { cursor: message.taskId ? "pointer" : "default" }}
+                onClick={
+                    isCompact
+                        ? undefined
+                        : () => {
+                              if (message.taskId !== null) {
+                                  useCM.setIsMainChatVisible(true);
+                                  useCM.setIsThreadVisible(false);
+                                  useTM.setIsCreatingTask((prev) => ({
+                                      ...prev,
+                                      flag: false,
+                                  }));
+                                  useTM.setCurrentPreviewTaskId(message.taskId);
+                              }
+                          }
+                }
+            >
+                <MessageBody
+                    key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
+                    content={message.content}
+                    isSent={isSent}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            </Box>
+        </AppTooltip>
+    ) : null;
+
+    // Compact: a grouped follow-up has no author line, only an empty avatar
+    // column. Bubble: it shows the author line only while hovered.
+    const header = isCompact
+        ? isSimpleBubble
+            ? undefined
+            : userName(false)
+        : isSimpleBubble
+          ? showUnderBarOption
+              ? userName(true)
+              : undefined
+          : userName(false);
+    const avatar = hideAvatarSlot ? undefined : isSimpleBubble ? (
+        isCompact ? (
+            "reserve"
+        ) : undefined
+    ) : (
+        <UserAvatar userId={isSent ? myself.userId : message.sender.userId} />
+    );
+
+    return (
+        <Bubble
+            actions={showUnderBarOption ? BubbleActions() : undefined}
+            actionsOpen={showUnderBarOption}
+            avatar={avatar}
+            bodyOffset={isCompact ? 0.25 : 0.5}
+            emphasis={isFocused}
+            footerOffset={0}
+            grouped={isSimpleBubble}
+            header={header}
+            layout={isCompact ? "compact" : "bubble"}
+            narrowBody="beside"
+            rootRef={bubbleRef}
+            side={isSent ? "sent" : "received"}
+            toolbarRef={toolbarRef}
+            footer={
+                <BubbleUnderBar
+                    chatName={chat.chatName}
+                    chatType={chat.chatType}
+                    dmPartnerUser={chat.dmPartnerUser}
+                    isThread={false}
+                    message={message}
+                    myself={myself}
+                    numReplies={message.numReplies}
+                    reactions={reactions}
+                    replayHandler={replayHandler}
+                    setReactions={setReactions}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                    showUnderBarOption={showUnderBarOption}
+                    socket={socket}
+                    taskCommentCount={message.taskCommentCount}
+                />
+            }
+            overlay={
+                emojiPickerPositionCalculated === true && (
                     <EmojiPicker
                         pickerBottomPosition={pickerBottomPosition}
                         pickerLeftPosition={pickerLeftPosition}
@@ -618,338 +660,49 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         showEmojiPicker={showEmojiPicker}
                         useFixedPosition={true}
                     />
-                )}
-
-                {showUnderBarOption === true && (
-                    <Box
-                        ref={toolbarRef}
-                        sx={{
-                            position: "absolute",
-                            top: COMPACT_TOOLBAR_OFFSET.top,
-                            right: COMPACT_TOOLBAR_OFFSET.right,
-                            zIndex: 2,
-                            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-                            border: "1px solid",
-                            borderColor: isDark ? "#374151" : "#e5e7eb",
-                            borderRadius: "8px",
-                            px: 0.5,
-                            boxShadow: isDark
-                                ? "0 2px 8px rgba(0,0,0,0.4)"
-                                : "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onDoubleClick={(e) => e.stopPropagation()}
-                    >
-                        {BubbleActions()}
-                    </Box>
-                )}
-
-                <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-                    {!hideAvatarSlot &&
-                        (isSimpleBubble ? (
-                            <Box sx={{ flexShrink: 0, width: COMPACT_BODY_INDENT - 12 }} />
-                        ) : (
-                            <Box sx={{ flexShrink: 0 }}>
-                                <UserAvatar
-                                    userId={isSent ? myself.userId : message.sender.userId}
-                                />
-                            </Box>
-                        ))}
-
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        {!isSimpleBubble && (
-                            <BubbleUserName
-                                chatType={chat.chatType}
-                                displayId={message.displayId}
-                                dtSent={dtSent}
-                                isSent={isSent}
-                                isSimpleBubble={false}
-                                isThread={false}
-                                sender={message.sender}
-                                taskId={message.taskId}
-                                taskStatus={message.taskStatus}
-                                tsSent={message.tsSent}
-                                tsUpdated={message.tsUpdated}
-                            />
-                        )}
-
-                        {message.attachment ? (
-                            <Box sx={{ mt: isSimpleBubble ? 0 : 0.5 }}>
-                                <BubbleAttachmentSheet
-                                    fileName={message.attachment.fileName}
-                                    fileSize={message.attachment.size}
-                                    isSent={isSent}
-                                />
-                            </Box>
-                        ) : (
-                            messageBody
-                        )}
-
-                        <BubbleUnderBar
-                            chatName={chat.chatName}
-                            chatType={chat.chatType}
-                            dmPartnerUser={chat.dmPartnerUser}
-                            isThread={false}
-                            message={message}
-                            myself={myself}
-                            numReplies={message.numReplies}
-                            reactions={reactions}
-                            replayHandler={replayHandler}
-                            setReactions={setReactions}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                            showUnderBarOption={showUnderBarOption}
-                            socket={socket}
-                            taskCommentCount={message.taskCommentCount}
-                        />
-                    </Box>
-                </Stack>
-            </Box>
-        );
-    }
-
-    return (
-        <Box
-            sx={{
-                maxWidth: "90%",
-                minWidth:
-                    chat.chatType === 3
-                        ? 500
-                        : (isSimpleBubble
-                              ? numRepliesWithoutFirstMessage > 0
-                                  ? 150
-                                  : 100
-                              : 200) +
-                          (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
-                whiteSpace: "normal",
-                wordBreak: "break-word",
-            }}
-        >
-            {message.attachment ? (
-                <BubbleAttachmentSheet
-                    fileName={message.attachment.fileName}
-                    fileSize={message.attachment.size}
-                    isSent={isSent}
-                />
-            ) : (
-                <Box ref={bubbleRef} sx={{ position: "relative" }}>
-                    {emojiPickerPositionCalculated === true && (
-                        <EmojiPicker
-                            pickerBottomPosition={pickerBottomPosition}
-                            pickerLeftPosition={pickerLeftPosition}
-                            pickerRightPosition={pickerRightPosition}
-                            pickerTopPosition={pickerTopPosition}
-                            setSelectedEmoji={setSelectedEmoji}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            showEmojiPicker={showEmojiPicker}
-                            useFixedPosition={true}
-                        />
-                    )}
-                    <AppTooltip
-                        enterDelay={1000}
-                        suppressed={isMoreMenuOpen}
-                        placement="right"
-                        title={
-                            <>
-                                {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
-                                {chat.chatType === 3 ? <br /> : null}
-                                {fmt(t.chat.bubble.clickToOpenThread, {
-                                    modKey: isMac() ? "\u2318" : "Alt",
-                                })}
-                            </>
-                        }
-                    >
-                        <Sheet
-                            sx={{
-                                p: 1.25,
-                                borderRadius: "16px",
-                                position: "relative",
-                                overflow: "hidden",
-                                cursor: "pointer",
-                                // Animate only paint properties — `all` also
-                                // animated layout props (border-radius etc.),
-                                // forcing non-composited work on every hover.
-                                transition:
-                                    "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                // Variant-specific border radius
-                                ...(isSent
-                                    ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
-                                    : {
-                                          borderTopRightRadius: "16px",
-                                          borderTopLeftRadius: "4px",
-                                      }),
-                                // Background styling - solid colors for better text contrast
-                                background: isFocused ? highlightColors.bg : colors.bg,
-                                // Text color for proper contrast
-                                color: isFocused ? highlightColors.text : colors.text,
-                                // Border styling
-                                border: "1px solid",
-                                borderColor: isFocused ? highlightColors.border : colors.border,
-                                // Shadow for depth
-                                boxShadow: isFocused
-                                    ? isFocused === "focused"
-                                        ? isDark
-                                            ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                            : `0 4px 20px rgba(22,163,74,0.15)`
-                                        : isDark
-                                          ? `0 4px 20px rgba(var(--gp-brand-700-rgb), 0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                          : `0 4px 20px rgba(var(--gp-brand-700-rgb), 0.15)`
-                                    : isDark
-                                      ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
-                                      : "0 2px 8px rgba(0,0,0,0.06)",
-                                // Hover effect
-                                "&:hover": {
-                                    boxShadow: isDark
-                                        ? "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
-                                        : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
-                                },
-                            }}
-                            onClick={handleMessageClick}
-                            onMouseEnter={() => setShowUnderBarOption(true)}
-                            onMouseLeave={() => setShowUnderBarOption(false)}
-                            onTouchCancel={longPress.onTouchCancel}
-                            onTouchEnd={longPress.onTouchEnd}
-                            onTouchMove={longPress.onTouchMove}
-                            onTouchStart={longPress.onTouchStart}
-                            onDoubleClick={
-                                doubleClickTodoEnabled ? handleAddMessageToToDo : undefined
-                            }
-                        >
-                            {/* Subtle highlight for sent messages */}
-                            {isSent && !isFocused && (
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: "1px",
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(255,255,255,0.5)",
-                                        pointerEvents: "none",
-                                    }}
-                                />
-                            )}
-
-                            <Stack direction="column" sx={{ position: "relative", zIndex: 1 }}>
-                                {showUnderBarOption === true && isSimpleBubble === true && (
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        spacing={0}
-                                        sx={{ mb: 0.5 }}
-                                    >
-                                        <BubbleUserName
-                                            chatType={chat.chatType}
-                                            displayId={message.displayId}
-                                            dtSent={dtSent}
-                                            isSent={isSent}
-                                            isSimpleBubble={isSimpleBubble}
-                                            isThread={false}
-                                            sender={message.sender}
-                                            taskId={message.taskId}
-                                            taskStatus={message.taskStatus}
-                                            tsSent={message.tsSent}
-                                            tsUpdated={message.tsUpdated}
-                                        />
-                                        {BubbleActions()}
-                                    </Stack>
-                                )}
-
-                                {isSimpleBubble === false && (
-                                    <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-                                        {!hideAvatarSlot && (
-                                            <Box sx={{ flexShrink: 0 }}>
-                                                <UserAvatar
-                                                    userId={
-                                                        isSent
-                                                            ? myself.userId
-                                                            : message.sender.userId
-                                                    }
-                                                />
-                                            </Box>
-                                        )}
-                                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Stack alignItems="center" direction="row" spacing={0}>
-                                                <BubbleUserName
-                                                    chatType={chat.chatType}
-                                                    displayId={message.displayId}
-                                                    dtSent={dtSent}
-                                                    isSent={isSent}
-                                                    isSimpleBubble={isSimpleBubble}
-                                                    isThread={false}
-                                                    sender={message.sender}
-                                                    taskId={message.taskId}
-                                                    taskStatus={message.taskStatus}
-                                                    tsSent={message.tsSent}
-                                                    tsUpdated={message.tsUpdated}
-                                                />
-                                                {showUnderBarOption === true && BubbleActions()}
-                                            </Stack>
-                                        </Box>
-                                    </Stack>
-                                )}
-
-                                {message.content && message.content.length > 0 && (
-                                    <Box
-                                        className={previewWrapClassName || undefined}
-                                        sx={{
-                                            mt: isSimpleBubble ? 0 : 0.5,
-                                            cursor: message.taskId ? "pointer" : "default",
-                                        }}
-                                        onClick={() => {
-                                            if (message.taskId !== null) {
-                                                useCM.setIsMainChatVisible(true);
-                                                useCM.setIsThreadVisible(false);
-                                                // useTM.setIsTaskPreviewVisible(true);
-                                                useTM.setIsCreatingTask((prev) => ({
-                                                    ...prev,
-                                                    flag: false,
-                                                }));
-                                                useTM.setCurrentPreviewTaskId(message.taskId);
-                                            }
-                                        }}
-                                    >
-                                        <MessageBody
-                                            key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
-                                            content={message.content}
-                                            isSent={isSent}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            useCM={useCM}
-                                            useTEM={useTEM}
-                                            useUISM={useUISM}
-                                        />
-                                    </Box>
-                                )}
-                            </Stack>
-
-                            <BubbleUnderBar
-                                chatName={chat.chatName}
-                                chatType={chat.chatType}
-                                dmPartnerUser={chat.dmPartnerUser}
-                                isThread={false}
-                                message={message}
-                                myself={myself}
-                                numReplies={message.numReplies}
-                                reactions={reactions}
-                                replayHandler={replayHandler}
-                                setReactions={setReactions}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                                setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                                showUnderBarOption={showUnderBarOption}
-                                socket={socket}
-                                taskCommentCount={message.taskCommentCount}
-                            />
-                        </Sheet>
-                    </AppTooltip>
-                </Box>
+                )
+            }
+            wrapperSx={balloonWrapperSx(
+                chat.chatType,
+                isSimpleBubble,
+                numRepliesWithoutFirstMessage,
+                uniqueReactionEmojiCount
             )}
-        </Box>
+            interactive
+            suppressTouchCallout
+            onClick={handleMessageClick}
+            onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
+            onMouseEnter={() => setShowUnderBarOption(true)}
+            onMouseLeave={() => setShowUnderBarOption(false)}
+            onTouchCancel={longPress.onTouchCancel}
+            onTouchEnd={longPress.onTouchEnd}
+            onTouchMove={longPress.onTouchMove}
+            onTouchStart={longPress.onTouchStart}
+        >
+            {body}
+        </Bubble>
     );
 };
+
+// The balloon's width limits (task cards are wide, a bare message is narrow,
+// reactions widen it). A module function so a hot row does not rebuild the
+// calculation inline.
+const balloonWrapperSx = (
+    chatType: number,
+    isSimpleBubble: boolean,
+    numReplies: number,
+    uniqueReactionEmojiCount: number
+) =>
+    ({
+        maxWidth: "90%",
+        minWidth:
+            chatType === 3
+                ? 500
+                : (isSimpleBubble ? (numReplies > 0 ? 150 : 100) : 200) +
+                  (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
+        whiteSpace: "normal",
+        wordBreak: "break-word",
+    }) as const;
 
 // Memoized export. The custom comparator compares only the props that
 // actually affect the rendered output of this bubble. Excluded on purpose:

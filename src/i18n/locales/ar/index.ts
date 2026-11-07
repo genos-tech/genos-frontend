@@ -1284,6 +1284,7 @@ export const ar: DeepPartial<Messages> = {
             clickToOpenTask: "انقر لفتح المهمة",
             clickToOpenThread: "{modKey}+انقر لفتح الموضوع",
             updated: "محدّث",
+            edited: "تم التعديل",
         },
         messageActions: {
             openTask: "فتح المهمة",

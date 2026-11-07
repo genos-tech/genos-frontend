@@ -13,11 +13,12 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Button, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../components/messageBody/MessageBody";
+import { Bubble, BubbleMeta } from "../../../components/ui/bubble";
 import { EmojiText } from "../../../components/ui/emoji/EmojiText";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -26,6 +27,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, getMessages, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
@@ -76,6 +78,10 @@ const ITEM_TYPE_CONFIG: Record<
         // carries no events and is dispatched separately below.
         approveEvent?: string;
         rejectEvent?: string;
+        /** A status role when the hue IS that status (blue info, green success,
+         *  amber warning, red danger); otherwise a literal hue (pink, purple,
+         *  teal, violet have no role). */
+        role?: "info" | "success" | "warning" | "danger";
         colorScheme: { dark: string; light: string };
     }
 > = {
@@ -84,6 +90,7 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_join_team_request",
         rejectEvent: "reject_join_team_request",
+        role: "info",
         colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     2: {
@@ -91,6 +98,7 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <FolderRoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_join_project_request",
         rejectEvent: "reject_join_project_request",
+        role: "success",
         colorScheme: { dark: "#4ade80", light: "#22c55e" },
     },
     3: {
@@ -105,6 +113,7 @@ const ITEM_TYPE_CONFIG: Record<
         icon: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_note_access_request",
         rejectEvent: "reject_note_access_request",
+        role: "warning",
         colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
     },
     // Red, alone among the request types, and deliberately so: this is
@@ -112,6 +121,7 @@ const ITEM_TYPE_CONFIG: Record<
     5: {
         labelKey: "ownershipClaim",
         icon: <ShieldRoundedIcon sx={{ fontSize: 14 }} />,
+        role: "danger",
         colorScheme: { dark: "#f87171", light: "#ef4444" },
     },
     // Proactive Genos digest (UX tier model §8): system-authored, not a
@@ -213,7 +223,6 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
-    const [isHovered, setIsHovered] = useState<boolean>(false);
     // Only the HTTP paths can report a refusal — a socket emit is
     // fire-and-forget. Answering something you no longer have standing to
     // answer (a claim after ownership moved, a share the host withdrew)
@@ -257,7 +266,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                   acceptedObjectType as keyof typeof t.inbox.crossTeam.acceptedIn
               ] ?? null)
             : null;
-    const labelSubtleColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
+    const labelSubtleColor = g.text.tertiary;
     // The cross-team types were first written with a digest-style
     // `{title, text}` body, which the BlockNote renderer below reads as an
     // empty document — the rows already filed that way would stay blank
@@ -384,101 +393,52 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         }
     };
 
-    return (
-        <Card
-            variant="outlined"
-            sx={{
-                p: { xs: 1.5, md: 2 },
-                background: isDark
-                    ? isHovered
-                        ? "linear-gradient(135deg, rgba(35,35,45,0.95) 0%, rgba(30,30,40,0.98) 100%)"
-                        : "linear-gradient(135deg, rgba(28,28,35,0.9) 0%, rgba(24,24,30,0.95) 100%)"
-                    : isHovered
-                      ? "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(250,250,255,1) 100%)"
-                      : "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(252,252,255,1) 100%)",
-                border: "1px solid",
-                borderColor: isHovered
-                    ? isDark
-                        ? "rgba(var(--gp-brandalt-500-rgb), 0.25)"
-                        : "rgba(var(--gp-brand-700-rgb), 0.15)"
-                    : isDark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.06)",
-                borderRadius: "14px",
-                boxShadow: isHovered
-                    ? isDark
-                        ? "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--gp-brandalt-500-rgb), 0.1)"
-                        : "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(var(--gp-brand-700-rgb), 0.05)"
-                    : isDark
-                      ? "0 2px 8px rgba(0,0,0,0.2)"
-                      : "0 2px 8px rgba(0,0,0,0.04)",
-                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                transform: isHovered ? "translateY(-2px)" : "translateY(0)",
-                position: "relative",
-                overflow: "hidden",
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            {/* Subtle glow effect on hover */}
-            {isHovered && (
-                <Box
+    const headerRow = (
+        <Stack alignItems="center" direction="row" justifyContent="space-between">
+            {config && (
+                <Chip
+                    size="sm"
+                    startDecorator={config.icon}
+                    variant="soft"
                     sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: "1px",
-                        background: isDark
-                            ? "linear-gradient(90deg, transparent 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 50%, transparent 100%)"
-                            : "linear-gradient(90deg, transparent 0%, rgba(var(--gp-brand-700-rgb), 0.3) 50%, transparent 100%)",
+                        borderRadius: g.radius.sm,
+                        fontWeight: 600,
+                        fontSize: "0.7rem",
+                        px: 1,
+                        py: 0.25,
+                        border: "1px solid",
+                        "& .MuiChip-startDecorator": { color: "inherit" },
+                        ...(config.role
+                            ? {
+                                  background: g[config.role].subtle,
+                                  borderColor: g[config.role].border,
+                                  color: g[config.role].text,
+                              }
+                            : {
+                                  background: `${isDark ? config.colorScheme.dark : config.colorScheme.light}14`,
+                                  borderColor: `${isDark ? config.colorScheme.dark : config.colorScheme.light}30`,
+                                  color: isDark
+                                      ? config.colorScheme.dark
+                                      : config.colorScheme.light,
+                              }),
                     }}
-                />
+                >
+                    {t.inbox.requestTypes[typeLabelKey ?? config.labelKey]}
+                </Chip>
             )}
+            <BubbleMeta>{extractYYYYMMDDHHMM(inboxItem.tsSent)}</BubbleMeta>
+        </Stack>
+    );
 
+    return (
+        <Bubble
+            bodyOffset={1.5}
+            header={headerRow}
+            layout="bubble"
+            sx={{ p: { xs: 1.5, md: 2 } }}
+            tail={false}
+        >
             <Stack spacing={1.5}>
-                {/* Header Row */}
-                <Stack alignItems="center" direction="row" justifyContent="space-between">
-                    {config && (
-                        <Chip
-                            size="sm"
-                            startDecorator={config.icon}
-                            variant="soft"
-                            sx={{
-                                borderRadius: "8px",
-                                fontWeight: 600,
-                                fontSize: "0.7rem",
-                                px: 1,
-                                py: 0.25,
-                                background: isDark
-                                    ? `linear-gradient(135deg, ${config.colorScheme.dark}15 0%, ${config.colorScheme.dark}08 100%)`
-                                    : `linear-gradient(135deg, ${config.colorScheme.light}12 0%, ${config.colorScheme.light}06 100%)`,
-                                color: isDark ? config.colorScheme.dark : config.colorScheme.light,
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? `${config.colorScheme.dark}25`
-                                    : `${config.colorScheme.light}20`,
-                                "& .MuiChip-startDecorator": {
-                                    color: "inherit",
-                                },
-                            }}
-                        >
-                            {t.inbox.requestTypes[typeLabelKey ?? config.labelKey]}
-                        </Chip>
-                    )}
-
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            fontSize: "0.7rem",
-                            fontWeight: 500,
-                        }}
-                    >
-                        {extractYYYYMMDDHHMM(inboxItem.tsSent)}
-                    </Typography>
-                </Stack>
-
                 {/* Content — digest items carry {title, text} rather than
                     BlockNote blocks. The text is agent-authored MARKDOWN
                     (bold, bullets, workspace links resolved server-side),
@@ -499,7 +459,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 level="body-sm"
                                 sx={{
                                     whiteSpace: "pre-wrap",
-                                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                                    color: g.text.primary,
                                 }}
                             >
                                 {String(
@@ -525,7 +485,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         level="body-sm"
                         sx={{
                             whiteSpace: "pre-wrap",
-                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                            color: g.text.primary,
                         }}
                     >
                         {legacyText}
@@ -533,10 +493,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 )}
                 {reminderOptionals && (
                     <Stack spacing={0.75}>
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)" }}
-                        >
+                        <Typography level="body-sm" sx={{ color: g.text.primary }}>
                             {isTodoReminder
                                 ? t.inbox.todoReminder.headline
                                 : reminderSender
@@ -564,11 +521,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     whiteSpace: "pre-wrap",
                                     pl: 1,
                                     borderLeft: "2px solid",
-                                    borderColor: isDark
-                                        ? "rgba(196,181,253,0.45)"
-                                        : "rgba(124,58,237,0.35)",
+                                    borderColor: g.accent.border,
                                     fontStyle: "italic",
-                                    color: isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.68)",
+                                    color: g.text.secondary,
                                 }}
                             >
                                 <EmojiText text={reminderPreview} />
@@ -584,7 +539,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             sx={{
                                 "& .inbox-preview": {
                                     fontSize: "0.85rem",
-                                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                                    color: g.text.primary,
                                 },
                             }}
                         >
@@ -675,10 +630,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 maxWidth: "100%",
                                 borderRadius: "8px",
                                 fontWeight: 600,
-                                background: isDark
-                                    ? "rgba(196,181,253,0.16)"
-                                    : "rgba(124,58,237,0.10)",
-                                color: isDark ? "#c4b5fd" : "#7c3aed",
+                                background: g.accent.subtle,
+                                color: g.accent.text,
                                 "& .MuiChip-startDecorator": { color: "inherit" },
                                 "& .MuiChip-label": {
                                     overflow: "hidden",
@@ -715,7 +668,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             level="body-xs"
                             startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 14 }} />}
                             sx={{
-                                color: isDark ? "#f87171" : "#ef4444",
+                                color: g.danger.text,
                                 fontWeight: 600,
                             }}
                         >
@@ -872,7 +825,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Stack>
                 )}
             </Stack>
-        </Card>
+        </Bubble>
     );
 };
 
