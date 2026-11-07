@@ -11,6 +11,7 @@ import { useTranslation } from "../../../../i18n";
 import { authApi } from "../../../../services/api";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
+import { errorMessageFrom } from "../../../../utils/errorMessage";
 
 const disableOpenDeleteModalParams = {
     flag: false,
@@ -56,14 +57,24 @@ export const ModalDeleteProject: React.FC<Props> = ({
                         )
                     );
                 } else if (res.status === 200) {
-                    setErrorMessage(res.data.message);
+                    setErrorMessage(
+                        errorMessageFrom(
+                            res.data?.message,
+                            t.tasks.modals.deleteProject.unexpectedError
+                        )
+                    );
                 }
             } else {
                 console.error("Unauthorized. Auth toke is not found.");
             }
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
-                setErrorMessage(error.response?.data);
+                setErrorMessage(
+                    errorMessageFrom(
+                        error.response?.data,
+                        t.tasks.modals.deleteProject.unexpectedError
+                    )
+                );
                 console.error("API error:", error.response?.status, error.response?.data);
             } else {
                 setErrorMessage(t.tasks.modals.deleteProject.unexpectedError);
