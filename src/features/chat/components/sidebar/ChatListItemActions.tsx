@@ -67,7 +67,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         <IconButton
                             className={NAV_KEEP_CLASS}
                             color="neutral"
-                            component="a"
                             size="sm"
                             variant="plain"
                             onClick={() => setIsToDoVisible(false)}
@@ -88,7 +87,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         >
                             <IconButton
                                 color="neutral"
-                                component="a"
                                 size="sm"
                                 variant="plain"
                                 onClick={() => setIsToDoVisible(true)}
@@ -108,8 +106,10 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     // A pinned chat keeps its pin showing (state, not just an action).
                     className={chat.isPinned ? NAV_KEEP_CLASS : undefined}
                     color={chat.isPinned ? "danger" : "neutral"}
-                    component="a"
                     size="sm"
+                    // AppTooltip's own surface style (a 1px border) reaches its child;
+                    // the pin is a plain icon button.
+                    sx={{ border: "none", borderRadius: g.radius.sm }}
                     variant="plain"
                     onClick={onPinClick}
                 >
