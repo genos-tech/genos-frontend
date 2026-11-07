@@ -392,3 +392,81 @@ describe("Bubble toolbar side (bubble look)", () => {
         expect(toolbarCss("sent")).not.toContain("inset-inline-start");
     });
 });
+
+describe("Bubble actions at the bottom (the Genos answer)", () => {
+    const css = (el: Element) => {
+        // The reveal rules live on an ancestor (the root), keyed by class.
+        const root = el.closest("[data-bubble-layout]") as HTMLElement;
+        const cls = Array.from(root.classList).find((c) => c.startsWith("css-"));
+        return Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+    };
+
+    it.each(["compact", "bubble"] as const)(
+        "%s: the row comes after the body, is not the floating toolbar, and is in the frame",
+        (layout) => {
+            const { container } = render(
+                <Bubble actions={<button>act</button>} actionsPosition="bottom" layout={layout}>
+                    <p>the body</p>
+                </Bubble>
+            );
+            const row = screen.getByText("act").closest(".bubble-actions-bottom") as HTMLElement;
+            expect(row).toBeTruthy();
+            expect(container.querySelector(".bubble-toolbar")).toBeNull();
+            const body = screen.getByText("the body");
+            expect(
+                body.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING
+            ).toBeTruthy();
+            // In the clickable surface for the balloon, in the row for compact.
+            const frame = container.querySelector("[data-bubble-layout]") as HTMLElement;
+            expect(frame.contains(row)).toBe(true);
+        }
+    );
+
+    it("is revealed by CSS on hover / focus / touch (no hover state held by the caller)", () => {
+        render(
+            <Bubble actions={<button>act</button>} actionsPosition="bottom" layout="compact">
+                body
+            </Bubble>
+        );
+        const rules = css(screen.getByText("act"));
+        expect(rules).toContain(".bubble-actions-bottom");
+        expect(rules).toContain(":hover");
+        expect(rules).toContain(":focus-within");
+        expect(rules).toContain("(hover: none)");
+    });
+
+    it("renders nothing without actions, and nothing while a controlled bar is closed", () => {
+        const { container, rerender } = render(
+            <Bubble actionsPosition="bottom" layout="compact">
+                body
+            </Bubble>
+        );
+        expect(container.querySelector(".bubble-actions-bottom")).toBeNull();
+        rerender(
+            <Bubble
+                actions={<button>act</button>}
+                actionsOpen={false}
+                actionsPosition="bottom"
+                layout="bubble"
+            >
+                body
+            </Bubble>
+        );
+        expect(container.querySelector(".bubble-actions-bottom")).toBeNull();
+    });
+
+    it("the default stays the floating toolbar (every other surface is unchanged)", () => {
+        const { container } = render(
+            <Bubble actions={<button>act</button>} layout="compact">
+                body
+            </Bubble>
+        );
+        expect(container.querySelector(".bubble-toolbar")).toBeTruthy();
+        expect(container.querySelector(".bubble-actions-bottom")).toBeNull();
+    });
+});
