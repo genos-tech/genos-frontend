@@ -9,13 +9,14 @@ import { useState } from "react";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Box, Chip, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { agentMarkdownComponents } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
+import { MetaChip } from "./previewHelpers";
 
 interface PlanTaskArg {
     title?: string;
@@ -41,12 +42,6 @@ interface PlanMilestoneArg {
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
-
-const MetaChip = ({ label }: { label: string }) => (
-    <Chip size="sm" sx={{ fontSize: "0.75rem", "--Chip-minHeight": "18px" }} variant="soft">
-        {label}
-    </Chip>
-);
 
 const TaskRow = ({
     task,

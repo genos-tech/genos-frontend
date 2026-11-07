@@ -32,6 +32,7 @@ import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";
 import { composite, contrast } from "../../theme/tokens/color";
 import { alphaCss, buildRoles, Mode, RoleColors } from "../../theme/tokens/roles";
 import { MOTION, RADIUS } from "../../theme/tokens/scales";
+import { PRIORITY_NAMES, STATUS_NAMES } from "../tasks/meta/taskTone";
 import {
     Button,
     EmptyState,
@@ -39,9 +40,8 @@ import {
     Input,
     NavItem,
     Panel,
+    PriorityIcon,
     SampleTask,
-    Status,
-    STATUSES,
     StatusLabel,
     Tag,
     TaskRow,
@@ -862,8 +862,13 @@ const Components = () => (
 
             <Labelled note="Same five hues on every theme." title="Status">
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                    {(Object.keys(STATUSES) as Status[]).map((s) => (
+                    {STATUS_NAMES.filter((s) => s !== "Deleted").map((s) => (
                         <StatusLabel key={s} status={s} />
+                    ))}
+                </Box>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    {PRIORITY_NAMES.map((p) => (
+                        <PriorityIcon key={p} priority={p} showLabel />
                     ))}
                 </Box>
                 <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>

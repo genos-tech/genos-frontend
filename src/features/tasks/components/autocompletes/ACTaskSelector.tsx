@@ -24,6 +24,7 @@ import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { statuses, taskMetaLabel } from "../../utils/taskMeta";
+import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 
@@ -322,31 +323,13 @@ export const ACTaskSelector = ({
     );
 };
 
-// Shared status chip — same shape as `ACTaskStatus.tsx`'s renderOption
-// chip: soft variant, alpha-tinted background using the meta color,
-// bold text, rounded 5px corners. Sized to content (no min-width) so
-// the label sits flush within the chip's padding instead of being
-// left-aligned inside a wider box. Exported so the modal + the compact
-// chip block render identical chips end-to-end.
-export const StatusChip = ({ meta, isDark }: { meta: TaskStatusProps; isDark: boolean }) => {
-    const { t } = useTranslation();
-    return (
-        <Chip
-            size="sm"
-            variant="soft"
-            sx={{
-                backgroundColor: meta.color
-                    ? alpha(meta.color, isDark ? 0.5 : 0.75)
-                    : "transparent",
-                color: meta.textColor ?? undefined,
-                fontWeight: "bold",
-                borderRadius: "5px",
-            }}
-        >
-            {taskMetaLabel(meta.status, t.tasks.filters) || "—"}
-        </Chip>
-    );
-};
+// The status, drawn once for every place that shows a task's status next to its
+// title (the dependency graph, parent/dependency rows, the dependencies modal):
+// the shared quiet label (MIP-1122). `isDark` is accepted and ignored so the six
+// callers need no change; the colors follow the theme by themselves.
+export const StatusChip = ({ meta }: { meta: TaskStatusProps; isDark?: boolean }) => (
+    <StatusLabel status={meta.status} />
+);
 
 const CAPTION_ICON_SX = { fontSize: 13, opacity: 0.6 } as const;
 
