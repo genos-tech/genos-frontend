@@ -6,7 +6,7 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import DesignSystemPage from "../features/designSystem/DesignSystemPage";
@@ -33,7 +33,10 @@ describe("DesignSystemPage", () => {
             "Shape, depth and motion",
             "Components",
         ]) {
-            expect(screen.getByRole("heading", { level: 2, name: title })).toBeTruthy();
+            // Plain DOM queries: getByRole walks this large page's whole
+            // accessibility tree and is slow enough to time out under load.
+            const headings = Array.from(container.querySelectorAll("h2"), (h) => h.textContent);
+            expect(headings).toContain(title);
         }
         // 7 themes × 2 modes, plus the page wrapper itself.
         expect(container.querySelectorAll("[data-g-theme][data-g-mode]")).toHaveLength(15);
@@ -48,14 +51,17 @@ describe("DesignSystemPage", () => {
     it("previews another theme and mode without saving them", () => {
         localStorage.removeItem(THEME_STORAGE_KEY);
         const { container } = renderPage();
-        fireEvent.click(screen.getByRole("button", { name: "Teal" }));
-        fireEvent.click(screen.getByRole("button", { name: "Dark" }));
+        const header = container.querySelector("[data-g-theme] > header")!;
+        const button = (label: string) =>
+            Array.from(header.querySelectorAll("button")).find(
+                (b) => b.getAttribute("aria-label") === label || b.textContent === label
+            )!;
+        fireEvent.click(button("Teal"));
+        fireEvent.click(button("Dark"));
         const el = wrapper(container);
         expect(el.dataset.gTheme).toBe("teal");
         expect(el.dataset.gMode).toBe("dark");
-        expect(screen.getByRole("button", { name: "Teal" }).getAttribute("aria-pressed")).toBe(
-            "true"
-        );
+        expect(button("Teal").getAttribute("aria-pressed")).toBe("true");
         expect(localStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
     });
 });

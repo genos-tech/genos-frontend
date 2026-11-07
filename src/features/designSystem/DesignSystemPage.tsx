@@ -970,7 +970,9 @@ const DesignSystemPage = () => {
             <Box
                 component="header"
                 sx={{
-                    position: "sticky",
+                    // Sticky only on wide screens: on a phone the controls wrap
+                    // to three rows and would cover a third of the page.
+                    position: { xs: "static", md: "sticky" },
                     top: 0,
                     zIndex: 1,
                     background: g.bg.default,
