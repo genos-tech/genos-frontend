@@ -263,7 +263,7 @@ export const ModalFrame = ({
                             </Box>
                         )}
                     </Box>
-                    {headerAccessory != null && (
+                    {Boolean(headerAccessory) && (
                         <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center" }}>
                             {headerAccessory}
                         </Box>

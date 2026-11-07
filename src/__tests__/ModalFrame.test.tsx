@@ -246,6 +246,13 @@ describe("ModalFrame", () => {
             expect(after(chip, close)).toBe(true);
         });
 
+        it("renders no accessory slot for a false or null accessory", () => {
+            mount({ headerAccessory: false });
+            expect(
+                screen.getByRole("heading").parentElement!.parentElement!.children
+            ).toHaveLength(2);
+        });
+
         it("none of it brings a gradient or a second shadow", () => {
             mount({ size: "profile", fullScreenOnMobile: true, headerDivider: true, flush: true });
             expect(css()).not.toMatch(/gradient/i);

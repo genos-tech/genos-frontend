@@ -24,13 +24,9 @@ import {
     IconButton,
     Input,
     ListItemButton,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -43,10 +39,8 @@ import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberR
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import {
-    PROFILE_MODAL_Z_INDEX,
-    ProfileModalStyles,
-} from "../../../../components/ui/styles/commonStyle";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -55,6 +49,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { addMembersToGMWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
 import { v3ApiBaseURL } from "../../../../services/v3Api";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps, GMProfileProps } from "../../../../types/chat";
@@ -104,10 +99,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Resolve the legacy integer `gm_id` from the v3 channel UUID via
     // `Channel.legacyChatId` (denormalized into the v3 channel list by
@@ -454,841 +446,686 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Modal
+            <ModalFrame
                 open={openModalGMProfile}
-                sx={{
-                    zIndex: PROFILE_MODAL_Z_INDEX,
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "transparent",
-                }}
+                size="profile"
+                title={`Group Message Profile - ${liveChat.chatName}`}
+                zIndex={PROFILE_MODAL_Z_INDEX}
+                headerAccessory={
+                    gmProfile?.isExternal === true && (
+                        <ExternalChip
+                            label={t.chat.modals.gmProfile.externalBadge}
+                            maxWidth={200}
+                            size="md"
+                            hint={
+                                gmChat.hostTeamName
+                                    ? fmt(t.chat.sidebar.sharedByTeamHint, {
+                                          team: gmChat.hostTeamName,
+                                      })
+                                    : t.chat.sidebar.externalBadgeHint
+                            }
+                        />
+                    )
+                }
+                flush
+                fullScreenOnMobile
                 onClose={() => setOpenModalGMProfile(false)}
             >
-                <ModalDialog
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                <Stack
+                    spacing={4}
                     sx={{
-                        background: styles.bg,
-                        border: `1px solid ${styles.border}`,
-                        boxShadow: styles.shadow,
-                        borderRadius: { xs: "0", md: "20px" },
-                        overflow: "auto",
-                        transition: "all 0.3s ease",
-                        width: { xs: "100vw", md: "auto" },
-                        height: { xs: "100dvh", md: "auto" },
-                        maxWidth: { xs: "100vw", md: "1000px" },
-                        maxHeight: { xs: "100dvh", md: "90vh" },
-                        m: { xs: 0, md: "auto" },
+                        display: "flex",
+                        mx: "auto",
+                        px: { xs: 2, md: 6 },
+                        py: { xs: 2, md: 3 },
                     }}
                 >
-                    <Box
+                    <Card
                         sx={{
-                            flex: 1,
-                            width: { xs: "100%", md: "1000px" },
-                            maxWidth: "100%",
+                            background: g.surface.default,
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            boxShadow: "none",
                         }}
                     >
-                        {/* Header */}
-                        <Box
-                            sx={{
-                                position: "sticky",
-                                top: { sm: -100, md: -110 },
-                                zIndex: 9995,
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 1,
-                                    px: { xs: 2, md: 3 },
-                                }}
-                            >
-                                <Typography
-                                    component="h1"
-                                    level="h2"
-                                    sx={{
-                                        mt: 1,
-                                        mb: 1,
-                                        flex: 1,
-                                        minWidth: 0,
-                                        background: styles.headerGradient,
-                                        backgroundClip: "text",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.02em",
-                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
-                                    }}
-                                    noWrap
-                                >
-                                    Group Message Profile - {liveChat.chatName}
-                                </Typography>
-                                {/* The member list below mixes two companies'
-                                    people. Say so at the top, next to the
-                                    name, before anyone reads the list and
-                                    assumes one team. */}
-                                {gmProfile?.isExternal === true && (
-                                    <ExternalChip
-                                        hint={
-                                            gmChat.hostTeamName
-                                                ? fmt(t.chat.sidebar.sharedByTeamHint, {
-                                                      team: gmChat.hostTeamName,
-                                                  })
-                                                : t.chat.sidebar.externalBadgeHint
-                                        }
-                                        label={t.chat.modals.gmProfile.externalBadge}
-                                        maxWidth={200}
-                                        size="md"
-                                    />
-                                )}
-                                {/* Close button — without it mobile users
-                                    have no way to dismiss the modal,
-                                    since it's full-screen on xs and
-                                    there's no backdrop to click. */}
-                                <ModalClose
-                                    variant="plain"
-                                    sx={{
-                                        position: "static",
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-
-                        <Stack
-                            spacing={4}
-                            sx={{
-                                display: "flex",
-                                mx: "auto",
-                                px: { xs: 2, md: 6 },
-                                py: { xs: 2, md: 3 },
-                            }}
-                        >
-                            <Card
-                                sx={{
-                                    background: styles.cardBg,
-                                    border: `1px solid ${styles.border}`,
-                                    borderRadius: "16px",
-                                    boxShadow: isDark
-                                        ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
-                                    transition: "all 0.3s ease",
-                                    "&:hover": {
-                                        boxShadow: isDark
-                                            ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
-                                    },
-                                }}
-                            >
-                                {/* Column under the avatar on a phone, the same
+                        {/* Column under the avatar on a phone, the same
                                     shape ModalTeamProfile and
                                     ModalProjectProfile use. This is the modal's
                                     only body — no separate mobile branch
                                     renders these fields — and the dialog around
                                     it is full-screen on xs, so hiding this at a
                                     breakpoint leaves an empty sheet. */}
-                                <Stack
-                                    alignItems={{ xs: "stretch", md: "flex-start" }}
-                                    direction={{ xs: "column", md: "row" }}
-                                    sx={{ display: "flex", my: 1, width: "100%", minWidth: 0 }}
+                        <Stack
+                            alignItems={{ xs: "stretch", md: "flex-start" }}
+                            direction={{ xs: "column", md: "row" }}
+                            sx={{ display: "flex", my: 1, width: "100%", minWidth: 0 }}
+                        >
+                            {/* Avatar Section */}
+                            <Box
+                                sx={{
+                                    pl: { xs: 0, md: "20px" },
+                                    pr: { xs: 0, md: "40px" },
+                                    mb: { xs: 2, md: 0 },
+                                    position: "relative",
+                                    display: "inline-block",
+                                    alignSelf: { xs: "center", md: "auto" },
+                                }}
+                            >
+                                <BaseAvatar
+                                    size="display"
+                                    src={avatarSrc}
+                                    sx={{
+                                        fontSize: "50px",
+                                        border: `3px solid ${g.border.default}`,
+                                    }}
                                 >
-                                    {/* Avatar Section */}
-                                    <Box
-                                        sx={{
-                                            pl: { xs: 0, md: "20px" },
-                                            pr: { xs: 0, md: "40px" },
-                                            mb: { xs: 2, md: 0 },
-                                            position: "relative",
-                                            display: "inline-block",
-                                            alignSelf: { xs: "center", md: "auto" },
-                                        }}
-                                    >
-                                        <BaseAvatar
-                                            size="display"
-                                            src={avatarSrc}
-                                            sx={{
-                                                fontSize: "50px",
-                                                boxShadow: styles.avatarGlow,
-                                                border: `3px solid ${styles.border}`,
-                                                transition: "all 0.3s ease",
-                                                "&:hover": {
-                                                    transform: "scale(1.02)",
-                                                    boxShadow: isDark
-                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brand-500-rgb), 0.3)"
-                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brand-500-rgb), 0.15)",
-                                                },
-                                            }}
-                                        >
-                                            <GroupsRoundedIcon sx={{ fontSize: 100 }} />
-                                        </BaseAvatar>
+                                    <GroupsRoundedIcon sx={{ fontSize: 100 }} />
+                                </BaseAvatar>
 
-                                        {/* Edit Button — owner/editor only, matching
+                                {/* Edit Button — owner/editor only, matching
                                             the backend gate on the v3 channel image
                                             endpoint. Previously shown to everyone. */}
-                                        {canManage && (
-                                            <Box
-                                                sx={{
-                                                    position: "absolute",
-                                                    top: 150,
-                                                    right: 30,
-                                                }}
-                                            >
-                                                <input
-                                                    ref={inputRef}
-                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                    multiple={false}
-                                                    style={{ display: "none" }}
-                                                    type="file"
-                                                    onChange={handleSelectedFiles}
-                                                />
-                                                <AppTooltip
-                                                    size="sm"
-                                                    title={
-                                                        t.chat.modals.gmProfile
-                                                            .editProfileImageTooltip
-                                                    }
-                                                >
-                                                    <IconButton
-                                                        variant="soft"
-                                                        sx={{
-                                                            background: isDark
-                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.3) 0%, rgba(var(--gp-brand-500-rgb), 0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-500-rgb), 0.15) 100%)",
-                                                            border: `1px solid ${styles.border}`,
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.5) 0%, rgba(var(--gp-brand-500-rgb), 0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brand-500-rgb), 0.25) 100%)",
-                                                                transform: "scale(1.1)",
-                                                            },
-                                                        }}
-                                                        onClick={handleButtonClick}
-                                                    >
-                                                        <EditIcon
-                                                            sx={{
-                                                                fontSize: "30px",
-                                                                color: styles.accentColor,
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    {/* Details Section */}
-                                    <Stack
-                                        spacing={2}
+                                {canManage && (
+                                    <Box
                                         sx={{
-                                            flexGrow: 1,
-                                            minWidth: 0,
-                                            width: "100%",
-                                            maxWidth: "100%",
+                                            position: "absolute",
+                                            top: 150,
+                                            right: 30,
                                         }}
                                     >
-                                        <Stack direction="column" spacing={1.5}>
-                                            {/* Group name — inline rename for owners. */}
-                                            <FormControl>
-                                                <FormLabel
+                                        <input
+                                            ref={inputRef}
+                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                            multiple={false}
+                                            style={{ display: "none" }}
+                                            type="file"
+                                            onChange={handleSelectedFiles}
+                                        />
+                                        <AppTooltip
+                                            size="sm"
+                                            title={t.chat.modals.gmProfile.editProfileImageTooltip}
+                                        >
+                                            <IconButton
+                                                variant="soft"
+                                                sx={{
+                                                    background: g.accent.subtle,
+                                                    border: `1px solid ${g.border.default}`,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.accent.border,
+                                                        transform: "scale(1.1)",
+                                                    },
+                                                }}
+                                                onClick={handleButtonClick}
+                                            >
+                                                <EditIcon
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
+                                                        fontSize: "30px",
+                                                        color: g.accent.text,
+                                                    }}
+                                                />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            {/* Details Section */}
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    flexGrow: 1,
+                                    minWidth: 0,
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                }}
+                            >
+                                <Stack direction="column" spacing={1.5}>
+                                    {/* Group name — inline rename for owners. */}
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            Group name
+                                        </FormLabel>
+                                        {nameEditMode ? (
+                                            <Stack alignItems="center" direction="row" spacing={1}>
+                                                <Input
+                                                    size="sm"
+                                                    value={nameDraft}
+                                                    slotProps={{
+                                                        input: {
+                                                            onKeyDown: (e) => {
+                                                                if (e.key === "Enter") {
+                                                                    e.preventDefault();
+                                                                    void handleNameSave();
+                                                                }
+                                                                if (e.key === "Escape") {
+                                                                    setNameEditMode(false);
+                                                                    setNameError(null);
+                                                                }
+                                                            },
+                                                        },
+                                                    }}
+                                                    // Pin keydown to the inner <input>
+                                                    // so Enter/Escape never get
+                                                    // swallowed by Joy's slot wrapper.
+                                                    sx={{
+                                                        flex: 1,
+                                                        "--Input-radius": g.radius.md,
+                                                    }}
+                                                    autoFocus
+                                                    onChange={(e) => setNameDraft(e.target.value)}
+                                                />
+                                                <Button
+                                                    loading={nameSaving}
+                                                    size="sm"
+                                                    variant="solid"
+                                                    onClick={handleNameSave}
+                                                >
+                                                    {t.common.profileEdit.save}
+                                                </Button>
+                                                <Button
+                                                    color="neutral"
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() => {
+                                                        setNameEditMode(false);
+                                                        setNameError(null);
                                                     }}
                                                 >
-                                                    Group name
-                                                </FormLabel>
-                                                {nameEditMode ? (
-                                                    <Stack
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        spacing={1}
+                                                    {t.common.profileEdit.cancel}
+                                                </Button>
+                                            </Stack>
+                                        ) : (
+                                            <Stack alignItems="center" direction="row" spacing={1}>
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: g.text.primary,
+                                                        fontSize: "18px",
+                                                    }}
+                                                >
+                                                    {liveChat.chatName}
+                                                </Typography>
+                                                {canManage && (
+                                                    <AppTooltip
+                                                        size="sm"
+                                                        title={t.common.profileEdit.rename}
                                                     >
-                                                        <Input
-                                                            size="sm"
-                                                            value={nameDraft}
-                                                            slotProps={{
-                                                                input: {
-                                                                    onKeyDown: (e) => {
-                                                                        if (e.key === "Enter") {
-                                                                            e.preventDefault();
-                                                                            void handleNameSave();
-                                                                        }
-                                                                        if (e.key === "Escape") {
-                                                                            setNameEditMode(false);
-                                                                            setNameError(null);
-                                                                        }
-                                                                    },
-                                                                },
-                                                            }}
-                                                            // Pin keydown to the inner <input>
-                                                            // so Enter/Escape never get
-                                                            // swallowed by Joy's slot wrapper.
-                                                            sx={{
-                                                                flex: 1,
-                                                                "--Input-radius": "8px",
-                                                            }}
-                                                            autoFocus
-                                                            onChange={(e) =>
-                                                                setNameDraft(e.target.value)
-                                                            }
-                                                        />
-                                                        <Button
-                                                            loading={nameSaving}
-                                                            size="sm"
-                                                            variant="solid"
-                                                            onClick={handleNameSave}
-                                                        >
-                                                            {t.common.profileEdit.save}
-                                                        </Button>
-                                                        <Button
-                                                            color="neutral"
+                                                        <IconButton
                                                             size="sm"
                                                             variant="plain"
                                                             onClick={() => {
-                                                                setNameEditMode(false);
+                                                                setNameDraft(liveChat.chatName);
                                                                 setNameError(null);
+                                                                setNameEditMode(true);
                                                             }}
                                                         >
-                                                            {t.common.profileEdit.cancel}
-                                                        </Button>
-                                                    </Stack>
-                                                ) : (
-                                                    <Stack
-                                                        alignItems="center"
-                                                        direction="row"
-                                                        spacing={1}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: styles.valueColor,
-                                                                fontSize: "18px",
-                                                            }}
-                                                        >
-                                                            {liveChat.chatName}
-                                                        </Typography>
-                                                        {canManage && (
-                                                            <AppTooltip
-                                                                size="sm"
-                                                                title={t.common.profileEdit.rename}
-                                                            >
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() => {
-                                                                        setNameDraft(
-                                                                            liveChat.chatName
-                                                                        );
-                                                                        setNameError(null);
-                                                                        setNameEditMode(true);
-                                                                    }}
-                                                                >
-                                                                    <EditIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                </IconButton>
-                                                            </AppTooltip>
-                                                        )}
-                                                    </Stack>
+                                                            <EditIcon sx={{ fontSize: 16 }} />
+                                                        </IconButton>
+                                                    </AppTooltip>
                                                 )}
-                                                {nameError && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                            mt: 0.5,
-                                                        }}
-                                                    >
-                                                        {nameError}
-                                                    </Typography>
-                                                )}
-                                            </FormControl>
+                                            </Stack>
+                                        )}
+                                        {nameError && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: g.danger.text,
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                {nameError}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
 
-                                            {/* Owner */}
-                                            <FormControl>
-                                                <FormLabel
+                                    {/* Owner */}
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.chat.modals.gmProfile.owner}
+                                        </FormLabel>
+                                        {/* Name + email on one (wrap-friendly) row,
+                                                    Transfer button on its own row below. */}
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={2}
+                                            sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                        >
+                                            <Button
+                                                color="neutral"
+                                                variant="plain"
+                                                sx={{
+                                                    justifyContent: "flex-start",
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.md,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.hover,
+                                                    },
+                                                }}
+                                                onClick={() => {
+                                                    if (gmProfile?.ownerUserId) {
+                                                        setAvatarUserId(gmProfile.ownerUserId);
+                                                        setOpenUserProfile(true);
+                                                    }
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
+                                                        userSelect: "text",
+                                                        fontSize: "20px",
+                                                        color: g.text.primary,
+                                                        whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    {t.chat.modals.gmProfile.owner}
-                                                </FormLabel>
-                                                {/* Name + email on one (wrap-friendly) row,
-                                                    Transfer button on its own row below. */}
-                                                <Stack
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={2}
-                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                                    {ownerName}
+                                                </Typography>
+                                            </Button>
+                                            <Typography
+                                                component="a"
+                                                href={`mailto:${ownerEmail}`}
+                                                startDecorator={
+                                                    <EmailRoundedIcon
+                                                        fontSize="small"
+                                                        sx={{ color: g.accent.text }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    textDecoration: "none",
+                                                    color: g.text.primary,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        color: g.accent.text,
+                                                    },
+                                                }}
+                                            >
+                                                {ownerEmail}
+                                            </Typography>
+                                        </Stack>
+                                        {isGMOwner && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "flex-end",
+                                                    mt: 1,
+                                                    mb: 1.5,
+                                                }}
+                                            >
+                                                <Button
+                                                    color="neutral"
+                                                    size="sm"
+                                                    sx={{ borderRadius: g.radius.md }}
+                                                    variant="outlined"
+                                                    startDecorator={
+                                                        <SwapHorizRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    onClick={() => setOpenTransfer(true)}
                                                 >
-                                                    <Button
-                                                        color="neutral"
-                                                        variant="plain"
-                                                        sx={{
-                                                            justifyContent: "flex-start",
-                                                            px: 1.5,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: styles.hoverBg,
-                                                            },
-                                                        }}
-                                                        onClick={() => {
-                                                            if (gmProfile?.ownerUserId) {
-                                                                setAvatarUserId(
-                                                                    gmProfile.ownerUserId
-                                                                );
-                                                                setOpenUserProfile(true);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                fontSize: "20px",
-                                                                color: styles.valueColor,
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
-                                                            {ownerName}
-                                                        </Typography>
-                                                    </Button>
-                                                    <Typography
-                                                        component="a"
-                                                        href={`mailto:${ownerEmail}`}
-                                                        startDecorator={
-                                                            <EmailRoundedIcon
-                                                                fontSize="small"
-                                                                sx={{ color: styles.accentColor }}
-                                                            />
-                                                        }
-                                                        sx={{
-                                                            textDecoration: "none",
-                                                            color: styles.valueColor,
-                                                            cursor: "pointer",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                color: styles.accentColor,
-                                                            },
-                                                        }}
-                                                    >
-                                                        {ownerEmail}
-                                                    </Typography>
-                                                </Stack>
-                                                {isGMOwner && (
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            justifyContent: "flex-end",
-                                                            mt: 1,
-                                                            mb: 1.5,
-                                                        }}
-                                                    >
-                                                        <Button
-                                                            color="neutral"
-                                                            size="sm"
-                                                            sx={{ borderRadius: "8px" }}
-                                                            variant="outlined"
-                                                            startDecorator={
-                                                                <SwapHorizRoundedIcon
-                                                                    sx={{ fontSize: 16 }}
-                                                                />
-                                                            }
-                                                            onClick={() => setOpenTransfer(true)}
-                                                        >
-                                                            {t.common.profileEdit.transferOwner}
-                                                        </Button>
-                                                    </Box>
-                                                )}
-                                            </FormControl>
+                                                    {t.common.profileEdit.transferOwner}
+                                                </Button>
+                                            </Box>
+                                        )}
+                                    </FormControl>
 
-                                            {/* Members with Search.
+                                    {/* Members with Search.
                                                 The list is a SIBLING of the FormControl, not a
                                                 child: Joy allows only one control component per
                                                 FormControl, and the list now holds a role
                                                 <Select> per row — with the search <Input> that
                                                 was two controls in one instance. */}
-                                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                                <FormControl>
-                                                    <Stack
-                                                        direction={{ xs: "column", sm: "row" }}
-                                                        justifyContent="space-between"
-                                                        spacing={{ xs: 1, sm: 0 }}
-                                                        sx={{ mb: 1 }}
-                                                        alignItems={{
-                                                            xs: "stretch",
-                                                            sm: "center",
-                                                        }}
-                                                    >
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                        >
-                                                            <FormLabel
-                                                                sx={{
-                                                                    color: styles.labelColor,
-                                                                    fontSize: "0.75rem",
-                                                                    fontWeight: 600,
-                                                                    textTransform: "uppercase",
-                                                                    letterSpacing: "0.05em",
-                                                                    mb: 0,
-                                                                }}
-                                                            >
-                                                                {fmt(
-                                                                    t.chat.modals.gmProfile
-                                                                        .membersCount,
-                                                                    {
-                                                                        filtered:
-                                                                            filteredMembers.length,
-                                                                        total: visibleMembers.length,
-                                                                    }
-                                                                )}
-                                                            </FormLabel>
-                                                            {/* Any member can add teammates — no
-                                                            owner gate. */}
-                                                            <Button
-                                                                disabled={!gmProfile}
-                                                                size="sm"
-                                                                variant="soft"
-                                                                startDecorator={
-                                                                    <PersonAddAltRoundedIcon
-                                                                        sx={{ fontSize: 14 }}
-                                                                    />
-                                                                }
-                                                                sx={{
-                                                                    borderRadius: "8px",
-                                                                    fontSize: "12px",
-                                                                    fontWeight: 600,
-                                                                    flexShrink: 0,
-                                                                }}
-                                                                onClick={() =>
-                                                                    setOpenAddMembers(true)
-                                                                }
-                                                            >
-                                                                {t.common.addMembers.openButton}
-                                                            </Button>
-                                                        </Stack>
-                                                        <Input
-                                                            value={memberSearchQuery}
-                                                            endDecorator={
-                                                                memberSearchQuery && (
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        sx={{
-                                                                            minWidth: "24px",
-                                                                            minHeight: "24px",
-                                                                            borderRadius: "50%",
-                                                                        }}
-                                                                        onClick={() =>
-                                                                            setMemberSearchQuery(
-                                                                                ""
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <CloseIcon
-                                                                            sx={{
-                                                                                fontSize: "16px",
-                                                                            }}
-                                                                        />
-                                                                    </IconButton>
-                                                                )
-                                                            }
-                                                            placeholder={
-                                                                t.chat.modals.gmProfile
-                                                                    .searchMembersPlaceholder
-                                                            }
-                                                            startDecorator={
-                                                                <SearchIcon
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                        fontSize: "18px",
-                                                                    }}
-                                                                />
-                                                            }
-                                                            sx={{
-                                                                width: { xs: "100%", sm: "220px" },
-                                                                maxWidth: "100%",
-                                                                "--Input-focusedThickness": "1px",
-                                                                "--Input-radius": "8px",
-                                                                background: styles.inputBg,
-                                                                border: `1px solid ${styles.border}`,
-                                                                fontSize: "14px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                },
-                                                                "&:focus-within": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                    boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.2)"
-                                                                        : "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.1)",
-                                                                },
-                                                            }}
-                                                            onChange={(e) =>
-                                                                setMemberSearchQuery(
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </Stack>
-                                                </FormControl>
-                                                <Box
-                                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                                    sx={{
-                                                        maxHeight: "300px",
-                                                        overflow: "auto",
-                                                        background: isDark
-                                                            ? "rgba(0,0,0,0.2)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.03)",
-                                                        borderRadius: "12px",
-                                                        border: `1px solid ${styles.border}`,
-                                                        p: 1,
-                                                    }}
-                                                >
-                                                    {filteredMembers.length > 0 ? (
-                                                        filteredMembers.map((member) => (
-                                                            <ListItemButton
-                                                                key={`gm-member-${member.userId}`}
-                                                                sx={{
-                                                                    ml: 1,
-                                                                    my: 0.3,
-                                                                    borderRadius: "8px",
-                                                                    transition: "all 0.2s ease",
-                                                                    "&:hover": {
-                                                                        background: styles.hoverBg,
-                                                                    },
-                                                                }}
-                                                                onClick={() => {
-                                                                    setAvatarUserId(member.userId);
-                                                                    setOpenUserProfile(true);
-                                                                }}
-                                                            >
-                                                                <AvatarWithStatus
-                                                                    avatarUser={member}
-                                                                    clickable={false}
-                                                                    isYou={false}
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    showNameAndEmail={true}
-                                                                    socket={socket}
-                                                                    useCM={useCM}
-                                                                    useUISM={useUISM}
-                                                                />
-                                                                <Box sx={{ ml: "auto", pl: 1 }}>
-                                                                    <MemberRoleControl
-                                                                        canManage={canManage}
-                                                                        userId={member.userId}
-                                                                        isSelf={
-                                                                            member.userId ===
-                                                                            myself.userId
-                                                                        }
-                                                                        memberRole={
-                                                                            member.memberRole
-                                                                        }
-                                                                        ownerUserId={
-                                                                            gmProfile?.ownerUserId
-                                                                        }
-                                                                        popupZIndex={
-                                                                            PROFILE_MODAL_Z_INDEX +
-                                                                            2
-                                                                        }
-                                                                        onChange={
-                                                                            handleMemberRoleChange
-                                                                        }
-                                                                    />
-                                                                </Box>
-                                                            </ListItemButton>
-                                                        ))
-                                                    ) : (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                py: 3,
-                                                                color: styles.labelColor,
-                                                            }}
-                                                        >
-                                                            <Typography level="body-sm">
-                                                                {fmt(
-                                                                    t.chat.modals.gmProfile
-                                                                        .noMembersFound,
-                                                                    { query: memberSearchQuery }
-                                                                )}
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-                                            </Box>
-
-                                            {/* Is Private & Created Date */}
+                                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                        <FormControl>
                                             <Stack
-                                                direction="row"
-                                                spacing={4}
-                                                sx={{ mt: 1, flexWrap: "wrap", rowGap: 1.5 }}
+                                                direction={{ xs: "column", sm: "row" }}
+                                                justifyContent="space-between"
+                                                spacing={{ xs: 1, sm: 0 }}
+                                                sx={{ mb: 1 }}
+                                                alignItems={{
+                                                    xs: "stretch",
+                                                    sm: "center",
+                                                }}
                                             >
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
-                                                        }}
-                                                    >
-                                                        {t.chat.modals.gmProfile.isPrivate}
-                                                    </FormLabel>
-                                                    <Box
-                                                        sx={{
-                                                            display: "inline-flex",
-                                                            px: 2,
-                                                            py: 0.5,
-                                                            borderRadius: "20px",
-                                                            background: gmProfile?.isPrivate
-                                                                ? isDark
-                                                                    ? "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.2) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.2) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.15) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.15) 100%)"
-                                                                : isDark
-                                                                  ? "linear-gradient(135deg, rgba(var(--gp-brand-400-rgb), 0.2) 0%, rgba(var(--gp-brand-500-rgb), 0.2) 100%)"
-                                                                  : "linear-gradient(135deg, rgba(var(--gp-brand-600-rgb), 0.12) 0%, rgba(var(--gp-brand-800-rgb), 0.12) 100%)",
-                                                            border: `1px solid ${
-                                                                gmProfile?.isPrivate
-                                                                    ? "rgba(var(--gp-tint-danger-rgb), 0.3)"
-                                                                    : "rgba(var(--gp-brand-400-rgb), 0.3)"
-                                                            }`,
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight={600}
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: gmProfile?.isPrivate
-                                                                    ? isDark
-                                                                        ? "var(--gp-tint-danger)"
-                                                                        : "var(--gp-tint-danger-alt)"
-                                                                    : isDark
-                                                                      ? "var(--gp-brand-400)"
-                                                                      : "var(--gp-brand-600)",
-                                                            }}
-                                                        >
-                                                            {gmProfile?.isPrivate
-                                                                ? t.chat.modals.gmProfile.yes
-                                                                : t.chat.modals.gmProfile.no}
-                                                        </Typography>
-                                                    </Box>
-                                                </FormControl>
-
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
-                                                        }}
-                                                    >
-                                                        {t.chat.modals.gmProfile.createdDate}
-                                                    </FormLabel>
-                                                    <Box
-                                                        sx={{
-                                                            display: "inline-flex",
-                                                            px: 2,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            background: isDark
-                                                                ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                            border: `1px solid ${styles.border}`,
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight={600}
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: styles.valueColor,
-                                                            }}
-                                                        >
-                                                            {gmProfile?.tsCreatedAt
-                                                                ? extractYYYYMMDD(
-                                                                      gmProfile.tsCreatedAt
-                                                                  )
-                                                                : t.chat.modals.gmProfile.na}
-                                                        </Typography>
-                                                    </Box>
-                                                </FormControl>
-                                            </Stack>
-
-                                            {gmProfile?.isExternal && (
-                                                <ExternalSharesPanel
-                                                    borderColor={styles.border}
-                                                    channelId={gmChat.chatId}
-                                                    labelColor={styles.labelColor}
-                                                    myUserId={myself.userId}
-                                                    valueColor={styles.valueColor}
-                                                />
-                                            )}
-
-                                            {canShowLeave && (
-                                                <Box
-                                                    sx={{
-                                                        mt: 2,
-                                                        display: "flex",
-                                                        justifyContent: "flex-end",
-                                                    }}
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1}
                                                 >
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: g.text.secondary,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0,
+                                                        }}
+                                                    >
+                                                        {fmt(
+                                                            t.chat.modals.gmProfile.membersCount,
+                                                            {
+                                                                filtered: filteredMembers.length,
+                                                                total: visibleMembers.length,
+                                                            }
+                                                        )}
+                                                    </FormLabel>
+                                                    {/* Any member can add teammates — no
+                                                            owner gate. */}
                                                     <Button
-                                                        color="danger"
-                                                        variant="outlined"
+                                                        disabled={!gmProfile}
+                                                        size="sm"
+                                                        variant="soft"
                                                         startDecorator={
-                                                            <LogoutRoundedIcon fontSize="small" />
+                                                            <PersonAddAltRoundedIcon
+                                                                sx={{ fontSize: 14 }}
+                                                            />
                                                         }
                                                         sx={{
-                                                            borderRadius: "10px",
-                                                            borderColor:
-                                                                "rgba(var(--gp-tint-danger-rgb), 0.4)",
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
+                                                            borderRadius: g.radius.md,
+                                                            fontSize: "12px",
+                                                            fontWeight: 600,
+                                                            flexShrink: 0,
+                                                        }}
+                                                        onClick={() => setOpenAddMembers(true)}
+                                                    >
+                                                        {t.common.addMembers.openButton}
+                                                    </Button>
+                                                </Stack>
+                                                <Input
+                                                    value={memberSearchQuery}
+                                                    endDecorator={
+                                                        memberSearchQuery && (
+                                                            <IconButton
+                                                                size="sm"
+                                                                variant="plain"
+                                                                sx={{
+                                                                    minWidth: "24px",
+                                                                    minHeight: "24px",
+                                                                    borderRadius: "50%",
+                                                                }}
+                                                                onClick={() =>
+                                                                    setMemberSearchQuery("")
+                                                                }
+                                                            >
+                                                                <CloseIcon
+                                                                    sx={{
+                                                                        fontSize: "16px",
+                                                                    }}
+                                                                />
+                                                            </IconButton>
+                                                        )
+                                                    }
+                                                    placeholder={
+                                                        t.chat.modals.gmProfile
+                                                            .searchMembersPlaceholder
+                                                    }
+                                                    startDecorator={
+                                                        <SearchIcon
+                                                            sx={{
+                                                                color: g.accent.text,
+                                                                fontSize: "18px",
+                                                            }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        width: { xs: "100%", sm: "220px" },
+                                                        maxWidth: "100%",
+                                                        "--Input-focusedThickness": "1px",
+                                                        "--Input-radius": g.radius.md,
+                                                        background: g.bg.subtle,
+                                                        border: `1px solid ${g.border.default}`,
+                                                        fontSize: "14px",
+                                                        transition: "all 0.2s ease",
+                                                        "&:hover": {
+                                                            borderColor: g.accent.text,
+                                                        },
+                                                        "&:focus-within": {
+                                                            borderColor: g.accent.text,
+                                                        },
+                                                    }}
+                                                    onChange={(e) =>
+                                                        setMemberSearchQuery(e.target.value)
+                                                    }
+                                                />
+                                            </Stack>
+                                        </FormControl>
+                                        <Box
+                                            sx={{
+                                                maxHeight: "300px",
+                                                overflow: "auto",
+                                                background: "transparent",
+                                                borderRadius: g.radius.md,
+                                                border: `1px solid ${g.border.default}`,
+                                                p: 1,
+                                            }}
+                                        >
+                                            {filteredMembers.length > 0 ? (
+                                                filteredMembers.map((member) => (
+                                                    <ListItemButton
+                                                        key={`gm-member-${member.userId}`}
+                                                        sx={{
+                                                            ml: 1,
+                                                            my: 0.3,
+                                                            borderRadius: g.radius.md,
+                                                            transition: "all 0.2s ease",
                                                             "&:hover": {
-                                                                background:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.08)",
-                                                                borderColor:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.6)",
+                                                                background: g.hover,
                                                             },
                                                         }}
-                                                        onClick={() => setOpenLeaveConfirm(true)}
+                                                        onClick={() => {
+                                                            setAvatarUserId(member.userId);
+                                                            setOpenUserProfile(true);
+                                                        }}
                                                     >
-                                                        {t.common.actions.leave}
-                                                    </Button>
+                                                        <AvatarWithStatus
+                                                            avatarUser={member}
+                                                            clickable={false}
+                                                            isYou={false}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            showNameAndEmail={true}
+                                                            socket={socket}
+                                                            useCM={useCM}
+                                                            useUISM={useUISM}
+                                                        />
+                                                        <Box sx={{ ml: "auto", pl: 1 }}>
+                                                            <MemberRoleControl
+                                                                canManage={canManage}
+                                                                memberRole={member.memberRole}
+                                                                userId={member.userId}
+                                                                isSelf={
+                                                                    member.userId === myself.userId
+                                                                }
+                                                                ownerUserId={
+                                                                    gmProfile?.ownerUserId
+                                                                }
+                                                                popupZIndex={
+                                                                    PROFILE_MODAL_Z_INDEX + 2
+                                                                }
+                                                                onChange={handleMemberRoleChange}
+                                                            />
+                                                        </Box>
+                                                    </ListItemButton>
+                                                ))
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        py: 3,
+                                                        color: g.text.secondary,
+                                                    }}
+                                                >
+                                                    <Typography level="body-sm">
+                                                        {fmt(
+                                                            t.chat.modals.gmProfile.noMembersFound,
+                                                            { query: memberSearchQuery }
+                                                        )}
+                                                    </Typography>
                                                 </Box>
                                             )}
-                                        </Stack>
+                                        </Box>
+                                    </Box>
+
+                                    {/* Is Private & Created Date */}
+                                    <Stack
+                                        direction="row"
+                                        spacing={4}
+                                        sx={{ mt: 1, flexWrap: "wrap", rowGap: 1.5 }}
+                                    >
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.chat.modals.gmProfile.isPrivate}
+                                            </FormLabel>
+                                            <Box
+                                                sx={{
+                                                    display: "inline-flex",
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.full,
+                                                    background: gmProfile?.isPrivate
+                                                        ? g.danger.subtle
+                                                        : g.accent.subtle,
+                                                    border: `1px solid ${
+                                                        gmProfile?.isPrivate
+                                                            ? g.danger.border
+                                                            : g.accent.border
+                                                    }`,
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: gmProfile?.isPrivate
+                                                            ? g.danger.text
+                                                            : g.accent.text,
+                                                    }}
+                                                >
+                                                    {gmProfile?.isPrivate
+                                                        ? t.chat.modals.gmProfile.yes
+                                                        : t.chat.modals.gmProfile.no}
+                                                </Typography>
+                                            </Box>
+                                        </FormControl>
+
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.chat.modals.gmProfile.createdDate}
+                                            </FormLabel>
+                                            <Box
+                                                sx={{
+                                                    display: "inline-flex",
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.md,
+                                                    background: g.bg.subtle,
+                                                    border: `1px solid ${g.border.default}`,
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: g.text.primary,
+                                                    }}
+                                                >
+                                                    {gmProfile?.tsCreatedAt
+                                                        ? extractYYYYMMDD(gmProfile.tsCreatedAt)
+                                                        : t.chat.modals.gmProfile.na}
+                                                </Typography>
+                                            </Box>
+                                        </FormControl>
                                     </Stack>
+
+                                    {gmProfile?.isExternal && (
+                                        <ExternalSharesPanel
+                                            borderColor={g.border.default}
+                                            channelId={gmChat.chatId}
+                                            labelColor={g.text.secondary}
+                                            myUserId={myself.userId}
+                                            valueColor={g.text.primary}
+                                        />
+                                    )}
+
+                                    {canShowLeave && (
+                                        <Box
+                                            sx={{
+                                                mt: 2,
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Button
+                                                color="danger"
+                                                variant="outlined"
+                                                startDecorator={
+                                                    <LogoutRoundedIcon fontSize="small" />
+                                                }
+                                                sx={{
+                                                    borderRadius: g.radius.sm,
+                                                    borderColor: g.danger.border,
+                                                    color: g.danger.text,
+                                                    "&:hover": {
+                                                        background: g.danger.subtle,
+                                                        borderColor: g.danger.border,
+                                                    },
+                                                }}
+                                                onClick={() => setOpenLeaveConfirm(true)}
+                                            >
+                                                {t.common.actions.leave}
+                                            </Button>
+                                        </Box>
+                                    )}
                                 </Stack>
-                            </Card>
+                            </Stack>
                         </Stack>
-                    </Box>
-                </ModalDialog>
-            </Modal>
+                    </Card>
+                </Stack>
+            </ModalFrame>
             <ModalLeaveConfirm
                 description={t.common.leaveConfirm.gmDescription}
                 entityName={gmChat.chatName}
