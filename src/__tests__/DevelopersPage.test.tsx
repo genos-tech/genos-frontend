@@ -202,7 +202,6 @@ describe("DevelopersPage", () => {
             "list_pr_files",
             "list_pr_commits",
             "get_my_briefing",
-            "list_my_worklog",
         ],
         write: [
             "update_task",
@@ -241,9 +240,6 @@ describe("DevelopersPage", () => {
             "delete_note_folder",
             "manage_note_sharing",
             "restore_note_version",
-            "capture_worklog",
-            "update_worklog_item",
-            "delete_worklog_entry",
         ],
     };
 
@@ -307,7 +303,6 @@ describe("DevelopersPage", () => {
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
-            "delete_worklog_entry",
         ]);
     });
 
@@ -333,7 +328,7 @@ describe("DevelopersPage", () => {
         ).toBe(false);
     });
 
-    // ── the secretary: briefing, worklog, prompts ────────────────────
+    // ── the secretary: briefing, prompts ────────────────────
 
     const rowOf = (name: string) =>
         [...document.querySelectorAll("tr")].find(
@@ -344,14 +339,10 @@ describe("DevelopersPage", () => {
         renderPage();
         const typeOf = (name: string) => rowOf(name)?.querySelectorAll("td")[1].textContent;
         expect(typeOf("get_my_briefing")).toBe("read");
-        expect(typeOf("list_my_worklog")).toBe("read");
-        expect(typeOf("capture_worklog")).toBe("write");
-        expect(typeOf("update_worklog_item")).toBe("write");
-        expect(typeOf("delete_worklog_entry")).toBe("write");
-        // Only the delete needs the opt-in: saving and rewording destroy nothing.
-        expect(rowOf("delete_worklog_entry")?.textContent).toContain("destructive opt-in");
-        expect(rowOf("capture_worklog")?.textContent).not.toContain("destructive opt-in");
-        expect(rowOf("update_worklog_item")?.textContent).not.toContain("destructive opt-in");
+        // The worklog tools are gone (MIP-1170): nothing on the page names them.
+        expect(rowOf("capture_worklog")).toBeUndefined();
+        expect(rowOf("list_my_worklog")).toBeUndefined();
+        expect(document.body.textContent).not.toMatch(/worklog/i);
     });
 
     it("says the briefing reads the calendar live and never stores it", () => {
@@ -362,17 +353,11 @@ describe("DevelopersPage", () => {
         expect(document.body.textContent).toMatch(/Genos does not\s+keep your calendar events/);
     });
 
-    it("says the worklog is private to the member, in the table and in the prose", () => {
+    it("says the briefing is private to the member, in the prose", () => {
         renderPage();
-        expect(rowOf("capture_worklog")?.textContent).toContain("Only you can read it");
-        expect(rowOf("list_my_worklog")?.textContent).toContain("private to you");
-        expect(screen.getByText("Your worklog is private")).toBeTruthy();
+        expect(screen.getByText("The briefing is yours alone")).toBeTruthy();
         const text = document.body.textContent ?? "";
-        expect(text).toMatch(/not a teammate, not an admin, not the owner of the team/);
-        expect(text).toMatch(/same answer as asking for\s+one that does not exist/);
-        expect(text).toMatch(
-            /It goes when you delete your account, and it is in your data export/
-        );
+        expect(text).toMatch(/built from what you can open and from other\s+people/);
     });
 
     it("lists both prompts as the commands a client shows", () => {
