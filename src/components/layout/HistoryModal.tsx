@@ -12,7 +12,6 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import {
-    Avatar,
     Box,
     Button,
     Chip,
@@ -48,6 +47,7 @@ import { fmt, useTranslation, type Messages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 import { useAvatarContext } from "../ui/avatars/AvatarContext";
+import { BaseAvatar } from "../ui/avatars/BaseAvatar";
 import { MDMAvatar } from "../ui/avatars/MDMAvatar";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { EmojiText } from "../ui/emoji/EmojiText";
@@ -147,12 +147,10 @@ const GroupOrProjectAvatar = ({
     fallback: React.ReactNode;
     isDark: boolean;
 }) => (
-    <Avatar
-        size="sm"
+    <BaseAvatar
+        size={AVATAR_SIZE}
         src={src}
         sx={{
-            width: AVATAR_SIZE,
-            height: AVATAR_SIZE,
             bgcolor: isDark
                 ? "rgba(var(--gp-brand-700-rgb), 0.18)"
                 : "rgba(var(--gp-brand-700-rgb), 0.12)",
@@ -160,7 +158,7 @@ const GroupOrProjectAvatar = ({
         }}
     >
         {fallback}
-    </Avatar>
+    </BaseAvatar>
 );
 
 // Pick the right avatar for a chat-kind history row.

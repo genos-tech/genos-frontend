@@ -33,7 +33,7 @@
 // focused through the pick — same trick as the ThreadPanelV3 picker.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { Avatar, Box, Sheet } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
 import {
@@ -54,6 +54,7 @@ import {
     TODO_PALETTE,
     type MentionPalette,
 } from "../../../components/editors/mentionPalettes";
+import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { TaskStatusChip } from "../../tasks/components/TaskStatusChip";
@@ -122,15 +123,8 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
 // thing" cue.
 const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
     if (c.ref.kind === "user") {
-        return (
-            <Avatar
-                size="sm"
-                src={buildAvatarSrc(c.avatarImgPath)}
-                sx={{ width: 36, height: 36, fontSize: "0.9rem" }}
-            >
-                {(c.ref.label || "?").charAt(0).toUpperCase()}
-            </Avatar>
-        );
+        // 36 on purpose: it must match `MentionIconDisc`, the sibling rows.
+        return <BaseAvatar name={c.ref.label} size={36} src={buildAvatarSrc(c.avatarImgPath)} />;
     }
     return (
         <MentionIconDisc

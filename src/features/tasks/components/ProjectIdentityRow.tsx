@@ -1,9 +1,10 @@
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import { Avatar, Stack, Typography } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { ProjectProps } from "../../../types/tasks";
@@ -36,14 +37,14 @@ type ProjectIdentity = Pick<
 
 const ProjectAvatar = ({ avatarSrc, iconColor }: { avatarSrc?: string; iconColor?: string }) => {
     return (
-        <Avatar size="sm" src={avatarSrc} sx={{ width: 20, height: 20, flexShrink: 0 }}>
+        <BaseAvatar size="xs" src={avatarSrc}>
             <AssignmentIcon
                 sx={{
                     fontSize: 14,
                     color: iconColor ?? g.text.tertiary,
                 }}
             />
-        </Avatar>
+        </BaseAvatar>
     );
 };
 

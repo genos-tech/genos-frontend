@@ -3,7 +3,6 @@ import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRou
 import {
     Autocomplete,
     AutocompleteOption,
-    Avatar,
     Box,
     Button,
     Checkbox,
@@ -26,6 +25,7 @@ import {
 import dayjs from "dayjs";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
+import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { useTranslation } from "../../../i18n";
 import { RepeatPicker } from "../../calendar/components/RepeatPicker";
 import {
@@ -602,16 +602,14 @@ export const CalendarEventModal = ({
                             renderOption={(props, option) => (
                                 <AutocompleteOption {...props} key={attendeeKey(option)}>
                                     <ListItemDecorator>
-                                        <Avatar
-                                            size="sm"
+                                        <BaseAvatar
+                                            name={option.displayName}
                                             src={
                                                 option.avatarImgPath
                                                     ? `${media_url}/${option.avatarImgPath}`
                                                     : undefined
                                             }
-                                        >
-                                            {option.displayName.charAt(0).toUpperCase()}
-                                        </Avatar>
+                                        />
                                     </ListItemDecorator>
                                     <ListItemContent sx={{ minWidth: 0 }}>
                                         <Typography level="body-sm" noWrap>

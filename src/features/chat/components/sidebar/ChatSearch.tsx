@@ -4,7 +4,6 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
     AutocompleteOption,
-    Avatar,
     Box,
     ListItemContent,
     Stack,
@@ -14,6 +13,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
@@ -287,8 +287,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             useUISM={useUISM}
                                         />
                                     ) : option.type === "Group" ? (
-                                        <Avatar
-                                            size="sm"
+                                        <BaseAvatar
                                             src={
                                                 option.profileImageUrl
                                                     ? `${mediaUrl}/${option.profileImageUrl}`
@@ -296,7 +295,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             }
                                         >
                                             <GroupsIcon sx={{ fontSize: 20 }} />
-                                        </Avatar>
+                                        </BaseAvatar>
                                     ) : null}
                                     <Box>
                                         <Typography

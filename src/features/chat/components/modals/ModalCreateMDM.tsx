@@ -6,7 +6,6 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Alert,
-    Avatar,
     Box,
     Button,
     Checkbox,

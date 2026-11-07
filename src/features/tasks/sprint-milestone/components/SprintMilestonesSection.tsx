@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Avatar, AvatarGroup, Box, Card, Chip, LinearProgress, Stack, Typography } from "@mui/joy";
+import { Box, Card, Chip, LinearProgress, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { AvatarGroup, BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -196,19 +197,16 @@ export const SprintMilestonesSection = ({
                                                         showPulseDot={false}
                                                     />
                                                 ) : (
-                                                    <Avatar
+                                                    <BaseAvatar
                                                         key={userIdKey || `idx-${idx}`}
                                                         alt={a.username ?? ""}
+                                                        name={a.username}
                                                         src={
                                                             a.profileImageUrl
                                                                 ? `${media_url}${a.profileImageUrl}`
                                                                 : undefined
                                                         }
-                                                    >
-                                                        {(a.username ?? "?")
-                                                            .slice(0, 1)
-                                                            .toUpperCase()}
-                                                    </Avatar>
+                                                    />
                                                 );
                                             })}
                                         </AvatarGroup>

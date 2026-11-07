@@ -7,7 +7,6 @@ import PublicIcon from "@mui/icons-material/Public";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Alert,
-    Avatar,
     Box,
     Button,
     Checkbox,

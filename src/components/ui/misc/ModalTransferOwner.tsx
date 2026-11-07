@@ -6,7 +6,6 @@ import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
     Alert,
-    Avatar,
     Box,
     Button,
     IconButton,
@@ -20,6 +19,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
+import { BaseAvatar } from "../avatars/BaseAvatar";
 
 const fadeIn = keyframes`
     from { opacity: 0; transform: scale(0.95) translateY(-10px); }
@@ -262,7 +262,7 @@ export const ModalTransferOwner = ({
                                         onClick={() => setSelectedId(m.userId)}
                                     >
                                         <Stack alignItems="center" direction="row" spacing={1.25}>
-                                            <Avatar size="sm">{m.userName?.[0] ?? "?"}</Avatar>
+                                            <BaseAvatar name={m.userName} />
                                             <Stack spacing={0} sx={{ minWidth: 0 }}>
                                                 <Typography
                                                     level="body-sm"

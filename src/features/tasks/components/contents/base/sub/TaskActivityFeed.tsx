@@ -16,12 +16,13 @@ import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../../../components/ui/avatars/BaseAvatar";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
@@ -234,9 +235,7 @@ const PrCommentActivityRow = ({
                 },
             }}
         >
-            <Avatar size="sm" src={githubAvatarUrl} sx={{ width: 24, height: 24, fontSize: 11 }}>
-                {githubUsername[0]?.toUpperCase()}
-            </Avatar>
+            <BaseAvatar name={githubUsername} size="sm" src={githubAvatarUrl} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack
                     alignItems="center"
@@ -365,9 +364,9 @@ const PrMergeCloseActivityRow = ({
                 },
             }}
         >
-            <Avatar size="sm" sx={{ width: 30, height: 30 }}>
+            <BaseAvatar>
                 <GitHubIcon sx={{ fontSize: 18 }} />
-            </Avatar>
+            </BaseAvatar>
             <Box
                 sx={{
                     flex: 1,
@@ -472,9 +471,9 @@ const PrLinkActivityRow = ({
                 },
             }}
         >
-            <Avatar size="sm" sx={{ width: 30, height: 30 }}>
+            <BaseAvatar>
                 <GitHubIcon sx={{ fontSize: 18 }} />
-            </Avatar>
+            </BaseAvatar>
             <Box
                 sx={{
                     flex: 1,

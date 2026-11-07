@@ -5,7 +5,6 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
-    Avatar,
     Box,
     Divider,
     Dropdown,
@@ -19,6 +18,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { TeamDropdownStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -173,13 +173,13 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 },
                             }}
                         >
-                            <Avatar
+                            <BaseAvatar
+                                shape="rounded"
+                                size="lg"
                                 src={buildAvatarSrc(useTEM.currentTeam.teamImgPath)}
                                 variant="outlined"
                                 sx={{
                                     borderRadius: "10px",
-                                    width: 40,
-                                    height: 40,
                                     border: `2px solid ${styles.avatarBorder}`,
                                     boxShadow: styles.avatarShadow,
                                     transition: "all 0.2s ease",
@@ -189,7 +189,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 }}
                             >
                                 {myself.teamName.slice(0, 2).toUpperCase()}
-                            </Avatar>
+                            </BaseAvatar>
                         </Box>
                     </IconButton>
                 </AppTooltip>

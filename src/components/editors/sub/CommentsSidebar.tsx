@@ -8,10 +8,11 @@ import {
     useThreads,
 } from "@blocknote/react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import { Avatar, Box, Chip, Sheet, Typography } from "@mui/joy";
+import { Box, Chip, Sheet, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
+import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { commentFirstLine } from "./commentMentions";
 import { useCommentAuthor } from "./useCommentAuthor";
@@ -136,17 +137,13 @@ const ThreadRow = memo(
         return (
             <Bubble
                 align="stacked"
-                bodyOffset={0.5}
                 aria-pressed={selected}
+                avatar={<BaseAvatar name={authorName} src={author?.avatarUrl || undefined} />}
+                bodyOffset={0.5}
                 component="button"
                 layout="compact"
                 selected={selected}
                 sx={rowSx}
-                avatar={
-                    <Avatar size="sm" src={author?.avatarUrl || undefined}>
-                        {authorName.charAt(0).toUpperCase()}
-                    </Avatar>
-                }
                 footer={
                     replyCount > 0 || thread.resolved ? (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

@@ -9,7 +9,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
-    Avatar,
     Box,
     Button,
     Card,
@@ -30,6 +29,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
@@ -448,11 +448,10 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
-                                        <Avatar
+                                        <BaseAvatar
+                                            size="display"
                                             src={buildAvatarSrc(teamProfile.teamImgPath)}
                                             sx={{
-                                                width: 180,
-                                                height: 180,
                                                 fontSize: "50px",
                                                 boxShadow: styles.avatarGlow,
                                                 border: `3px solid ${styles.border}`,
@@ -466,7 +465,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             }}
                                         >
                                             <AssignmentIcon sx={{ fontSize: 100 }} />
-                                        </Avatar>
+                                        </BaseAvatar>
 
                                         {canManage && (
                                             <Box

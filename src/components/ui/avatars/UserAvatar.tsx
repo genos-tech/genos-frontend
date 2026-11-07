@@ -1,19 +1,22 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
 import { fmt, useTranslation } from "../../../i18n";
+import { initialOf } from "../../../utils/initials";
 import { AppTooltip } from "../AppTooltip";
 import { PulseDot } from "../misc/PulseDot";
 import { useAvatarContext, useUserProfile } from "./AvatarContext";
+import { avatarPx } from "./avatarSize";
+import { AvatarSize, BaseAvatar } from "./BaseAvatar";
 
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type UserAvatarProps = {
     userId: string | number | null | undefined;
-    /** Pixel size of the avatar circle. Default 32. */
-    size?: number;
+    /** A step of the avatar scale (preferred) or a pixel size. Default 32. */
+    size?: AvatarSize | number;
     /** When true, clicking opens the user-profile modal. Default true. */
     clickable?: boolean;
     /** Render the user's display name and email next to the avatar. */
@@ -51,8 +54,7 @@ const buildInitial = (
 ): string => {
     const candidates = [fallbackInitial, userName, userEmail];
     for (const candidate of candidates) {
-        const trimmed = (candidate ?? "").trim();
-        if (trimmed.length > 0) return trimmed.charAt(0).toUpperCase();
+        if ((candidate ?? "").trim().length > 0) return initialOf(candidate);
     }
     return "?";
 };
@@ -73,7 +75,7 @@ const UserAvatarInner = (props: UserAvatarProps) => {
 
     const [openUserProfile, setOpenUserProfile] = useState(false);
 
-    const _size = size ?? 32;
+    const _size = avatarPx(size);
 
     const isYou = useMemo(
         () => userId != null && String(userId) === String(ctx.myself.userId),
@@ -181,9 +183,9 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                     width={_size}
                     onClick={handleOpen}
                 >
-                    <Avatar size="sm" src={src} sx={{ height: _size, width: _size }}>
+                    <BaseAvatar size={_size} src={src}>
                         {initial}
-                    </Avatar>
+                    </BaseAvatar>
                     {showPulseDot && (
                         <Box
                             bottom={dotInset + avatarBaselineBottom}
@@ -210,23 +212,21 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                         // on: the click still opens the profile, because the
                         // handler is on the wrapper this bubbles to.
                         <AppTooltip title={badgeTitle}>
-                            <Avatar
+                            <BaseAvatar
                                 aria-label={badgeTitle}
-                                size="sm"
+                                size={badgeSize}
                                 src={badgeSrc}
                                 sx={{
                                     position: "absolute",
                                     top: -2,
                                     left: -2,
-                                    height: badgeSize,
-                                    width: badgeSize,
                                     fontSize: Math.max(7, Math.round(badgeSize * 0.6)),
                                     border: "1.5px solid",
                                     borderColor: "background.surface",
                                 }}
                             >
-                                {(badgeTitle || "?").charAt(0).toUpperCase()}
-                            </Avatar>
+                                {initialOf(badgeTitle)}
+                            </BaseAvatar>
                         </AppTooltip>
                     )}
                     {isPaused && (

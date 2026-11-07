@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 
+import { BaseAvatar } from "../../components/ui/avatars/BaseAvatar";
 import { Toast } from "../../components/ui/feedback/Toast";
 import { NotificationIntent } from "./types";
 
@@ -62,9 +63,9 @@ export const NotificationToastHost = ({
                         // not prepend the media root again, or the URL
                         // becomes `${media}/${media}/...` and Avatar
                         // silently falls back to the initials.
-                        <Avatar size="md" src={active.icon} />
+                        <BaseAvatar size="lg" src={active.icon} />
                     ) : (
-                        <Avatar size="md">{active.title?.[0] ?? "?"}</Avatar>
+                        <BaseAvatar name={active.title} size="lg" />
                     )}
 
                     <Box
