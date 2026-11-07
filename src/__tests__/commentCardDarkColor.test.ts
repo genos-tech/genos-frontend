@@ -5,7 +5,9 @@
  * BlockNote's dark theme gives the menu background (which the card uses) and the
  * editor the same #1f1f1f, and the card's border a darker #161616, so an open
  * comment card on a dark note was the page's own black and could not be found.
- * App.css sets a lighter background and a visible border for it.
+ * App.css sets a lighter background and a visible border for it. Since MIP-1131 those are
+ * design-token roles (`--g-surface-raised`, `--g-border-strong`) instead of two hex values, so
+ * "lighter than the editor" is checked on the roles' real values, for every color theme.
  *
  * Two things make this easy to undo without noticing:
  *   - The override only lands if it out-specifies BlockNote's
@@ -23,6 +25,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+
+import { THEME_IDS } from "../theme/themePalettes";
+import { composite, luminance } from "../theme/tokens/color";
+import { buildRoles } from "../theme/tokens/roles";
 
 const appCss = readFileSync(join(__dirname, "..", "App.css"), "utf8");
 
@@ -44,22 +50,27 @@ describe("dark-mode comment card", () => {
     const declarations = rule('.bn-mantine[data-color-scheme="dark"] .bn-thread');
 
     it("is not the editor's colour", () => {
-        expect(variable("--comment-card-dark-bg")).not.toBe(variable("--editor-dark-bg"));
-        expect(declarations).toContain("background-color: var(--comment-card-dark-bg)");
+        expect(variable("--comment-card-bg")).not.toBe(variable("--editor-bg"));
+        expect(declarations).toContain("background-color: var(--comment-card-bg)");
     });
 
-    it("is lighter than the editor, not darker", () => {
-        const channel = (hex: string) => parseInt(hex.slice(1, 3), 16);
-        expect(channel(variable("--comment-card-dark-bg"))).toBeGreaterThan(
-            channel(variable("--editor-dark-bg"))
-        );
+    it("takes the card from the raised-surface role and the border from the strong border role", () => {
+        expect(variable("--comment-card-bg")).toBe("var(--g-surface-raised)");
+        expect(variable("--comment-card-border")).toBe("var(--g-border-strong)");
+        expect(variable("--editor-bg")).toBe("var(--g-bg-subtle)");
     });
 
-    it("has a border that shows against the editor and the card", () => {
-        const channel = (hex: string) => parseInt(hex.slice(1, 3), 16);
-        const border = channel(variable("--comment-card-dark-border"));
-        expect(border).toBeGreaterThan(channel(variable("--comment-card-dark-bg")));
-        expect(declarations).toContain("border-color: var(--comment-card-dark-border)");
+    it.each(THEME_IDS)("is lighter than the editor, not darker (%s)", (theme) => {
+        const r = buildRoles(theme, "dark");
+        expect(luminance(r.surfaceRaised)).toBeGreaterThan(luminance(r.bgSubtle));
+    });
+
+    it.each(THEME_IDS)("has a border that shows against the editor and the card (%s)", (theme) => {
+        const r = buildRoles(theme, "dark");
+        const edge = composite(r.borderStrong.hex, r.borderStrong.a, r.surfaceRaised);
+        expect(luminance(edge)).toBeGreaterThan(luminance(r.surfaceRaised));
+        expect(luminance(edge)).toBeGreaterThan(luminance(r.bgSubtle));
+        expect(declarations).toContain("border-color: var(--comment-card-border)");
     });
 
     it("out-specifies BlockNote's `.bn-mantine .bn-thread`", () => {

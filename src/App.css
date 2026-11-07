@@ -33,15 +33,16 @@
     --datagrid-dark-button-color: white;
     --datagrid-dark-main-bg: #000000;
 
-    /* Editor Colors */
-    --editor-light-bg: rgb(214, 214, 214);
-    --editor-dark-bg: #1f1f1f;
-    /* The floating comment card on a dark editor: a step lighter than the page,
-       with an edge that shows (MIP-1064). */
-    --comment-card-dark-bg: #2b2b2b;
-    --comment-card-dark-border: #4a4a4a;
-    --editor-placeholder-light: #9c9c9c;
-    --editor-placeholder-dark: #909090;
+    /* Editor chrome (MIP-1131): roles from the design tokens. They switch with the
+       mode, so each is ONE value where there used to be a light and a dark one. */
+    --editor-bg: var(--g-bg-subtle);
+    --editor-placeholder: var(--g-text-tertiary);
+    --editor-code-bg: var(--g-active);
+    --editor-code-color: var(--g-text);
+    /* The floating comment card: a step above the editor, with an edge that shows
+       (MIP-1064). */
+    --comment-card-bg: var(--g-surface-raised);
+    --comment-card-border: var(--g-border-strong);
 
     /* Responsive breakpoints */
     --breakpoint-mobile: 480px;
@@ -629,7 +630,7 @@ input[type="checkbox"] {
 
 .bn-editor code {
     padding: 1px 4px;
-    border-radius: 4px;
+    border-radius: var(--g-radius-xs);
 }
 
 .bn-editor pre code.bn-inline-content {
@@ -681,8 +682,9 @@ input[type="checkbox"] {
  * `with-subchat` modifier tightens the cap when the split sub-chat is
  * visible (set by `bnChatEditor.tsx` based on `useCM.isSubChatVisible`).
  */
-.bn-chat-editor-box-light .bn-editor {
-    background-color: var(--editor-light-bg);
+.bn-chat-editor-box-light .bn-editor,
+.bn-chat-editor-box-dark .bn-editor {
+    background-color: var(--editor-bg);
     padding-top: 55px;
     min-height: 200px;
     max-height: 500px;
@@ -695,36 +697,19 @@ input[type="checkbox"] {
     max-height: 290px;
 }
 
-.bn-chat-editor-box-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
-}
-
-.bn-chat-editor-box-dark .bn-editor {
-    background-color: var(--editor-dark-bg);
-    padding-top: 55px;
-    min-height: 200px;
-    max-height: 500px;
-    overflow: auto;
-    padding-inline-start: 15px;
-}
-
+.bn-chat-editor-box-light code,
 .bn-chat-editor-box-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
-}
-
-.bn-chat-editor-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: var(--editor-placeholder-dark) !important;
-    opacity: 1 !important;
+    background-color: var(--editor-code-bg) !important;
+    color: var(--editor-code-color);
 }
 
 .bn-chat-editor-box-light
     .bn-block-content[data-is-empty-and-focused="true"]
+    .bn-inline-content::before,
+.bn-chat-editor-box-dark
+    .bn-block-content[data-is-empty-and-focused="true"]
     .bn-inline-content::before {
-    color: var(--editor-placeholder-light) !important;
+    color: var(--editor-placeholder) !important;
     opacity: 1 !important;
 }
 
@@ -734,22 +719,9 @@ input[type="checkbox"] {
  * scroll, replacing the legacy JS-driven `--task-comment-editor-height`
  * variable.
  */
-.bn-task-comment-box-light .bn-editor {
-    background-color: var(--editor-light-bg);
-    padding-top: 55px;
-    min-height: 200px;
-    max-height: 800px;
-    overflow: auto;
-    padding-inline-start: 15px;
-}
-
-.bn-task-comment-box-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
-}
-
+.bn-task-comment-box-light .bn-editor,
 .bn-task-comment-box-dark .bn-editor {
-    background-color: var(--editor-dark-bg);
+    background-color: var(--editor-bg);
     padding-top: 55px;
     min-height: 200px;
     max-height: 800px;
@@ -757,28 +729,26 @@ input[type="checkbox"] {
     padding-inline-start: 15px;
 }
 
+.bn-task-comment-box-light code,
 .bn-task-comment-box-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
-}
-
-.bn-task-comment-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: var(--editor-placeholder-dark) !important;
-    opacity: 1 !important;
+    background-color: var(--editor-code-bg) !important;
+    color: var(--editor-code-color);
 }
 
 .bn-task-comment-box-light
     .bn-block-content[data-is-empty-and-focused="true"]
+    .bn-inline-content::before,
+.bn-task-comment-box-dark
+    .bn-block-content[data-is-empty-and-focused="true"]
     .bn-inline-content::before {
-    color: var(--editor-placeholder-light) !important;
+    color: var(--editor-placeholder) !important;
     opacity: 1 !important;
 }
 
 /* Task body editor styles */
-.bn-task-body-box-light .bn-editor {
-    background-color: var(--editor-light-bg);
+.bn-task-body-box-light .bn-editor,
+.bn-task-body-box-dark .bn-editor {
+    background-color: var(--editor-bg);
     padding: 30px 50px;
     height: var(--task-body-editor-height, 500px);
     overflow-y: scroll;
@@ -793,16 +763,10 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
-.bn-task-body-box-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
-}
-
-.bn-task-body-box-dark .bn-editor {
-    background-color: var(--editor-dark-bg);
-    padding: 30px 50px;
-    height: var(--task-body-editor-height, 500px);
-    overflow-y: scroll;
+.bn-task-body-box-light code,
+.bn-task-body-box-dark code {
+    background-color: var(--editor-code-bg) !important;
+    color: var(--editor-code-color);
 }
 
 .bn-task-body-box-dark .bn-editor img {
@@ -814,28 +778,20 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
-.bn-task-body-box-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
-}
-
+.bn-task-body-box-light
+    .bn-block-content[data-is-empty-and-focused="true"]
+    .bn-inline-content::before,
 .bn-task-body-box-dark
     .bn-block-content[data-is-empty-and-focused="true"]
     .bn-inline-content::before {
-    color: var(--editor-placeholder-dark) !important;
-    opacity: 1 !important;
-}
-
-.bn-task-body-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: var(--editor-placeholder-light) !important;
+    color: var(--editor-placeholder) !important;
     opacity: 1 !important;
 }
 
 /* Note body editor styles */
-.bn-note-body-box-light .bn-editor {
-    background-color: var(--editor-light-bg);
+.bn-note-body-box-light .bn-editor,
+.bn-note-body-box-dark .bn-editor {
+    background-color: var(--editor-bg);
     padding: 55px 50px 20px;
     height: 92dvh;
     overflow-y: scroll;
@@ -850,16 +806,10 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
-.bn-note-body-box-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
-}
-
-.bn-note-body-box-dark .bn-editor {
-    background-color: var(--editor-dark-bg);
-    padding: 55px 50px 20px;
-    height: 92dvh;
-    overflow-y: scroll;
+.bn-note-body-box-light code,
+.bn-note-body-box-dark code {
+    background-color: var(--editor-code-bg) !important;
+    color: var(--editor-code-color);
 }
 
 .bn-note-body-box-dark .bn-editor img {
@@ -871,22 +821,13 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
-.bn-note-body-box-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
-}
-
+.bn-note-body-box-light
+    .bn-block-content[data-is-empty-and-focused="true"]
+    .bn-inline-content::before,
 .bn-note-body-box-dark
     .bn-block-content[data-is-empty-and-focused="true"]
     .bn-inline-content::before {
-    color: var(--editor-placeholder-dark) !important;
-    opacity: 1 !important;
-}
-
-.bn-note-body-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: var(--editor-placeholder-light) !important;
+    color: var(--editor-placeholder) !important;
     opacity: 1 !important;
 }
 
@@ -961,8 +902,8 @@ input[type="checkbox"] {
    stylesheet loads with the lazy editor chunk, after this one, so a tie loses.
    Light mode is untouched. */
 .bn-mantine[data-color-scheme="dark"] .bn-thread {
-    background-color: var(--comment-card-dark-bg);
-    border-color: var(--comment-card-dark-border);
+    background-color: var(--comment-card-bg);
+    border-color: var(--comment-card-border);
 }
 
 /* Thread comments section – scrollable when many comments */
@@ -987,28 +928,30 @@ input[type="checkbox"] {
 
 /* BlockNote utility styles */
 .bn-file-name-with-icon {
-    color: #1e3a5f !important;
+    color: var(--g-accent-text) !important;
 }
 .bn-file-name-with-icon:hover {
-    color: #000000 !important;
+    color: var(--g-text) !important;
 }
 
 /* Dark mode file block text colors */
 .bn-message-bubble-box-dark .bn-file-name-with-icon,
-.bn-message-bubble-box-dark-me .bn-file-name-with-icon,
-.bn-chat-editor-box-dark .bn-file-name-with-icon {
+.bn-message-bubble-box-dark-me .bn-file-name-with-icon {
     color: #1b60ae !important;
 }
 .bn-message-bubble-box-dark .bn-file-name-with-icon:hover,
-.bn-message-bubble-box-dark-me .bn-file-name-with-icon:hover,
-.bn-chat-editor-box-dark .bn-file-name-with-icon:hover {
+.bn-message-bubble-box-dark-me .bn-file-name-with-icon:hover {
     color: #0800ff !important;
 }
 
 .bn-message-bubble-box-dark .bn-file-size,
-.bn-message-bubble-box-dark-me .bn-file-size,
-.bn-chat-editor-box-dark .bn-file-size {
+.bn-message-bubble-box-dark-me .bn-file-size {
     color: #af9c9e !important;
+}
+
+.bn-chat-editor-box-light .bn-file-size,
+.bn-chat-editor-box-dark .bn-file-size {
+    color: var(--g-text-tertiary) !important;
 }
 
 /* Hide the drag preview completely */
@@ -1064,17 +1007,17 @@ input[type="checkbox"] {
 }
 
 .bn-box::-webkit-scrollbar-thumb {
-    background-color: #888;
+    background-color: var(--g-border-strong);
     border-radius: 4px;
 }
 
 .bn-box::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
+    background-color: var(--g-text-tertiary);
 }
 
 .bn-box {
     scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+    scrollbar-color: var(--g-border-strong) transparent;
 }
 
 .bn-root[data-changing-font-demo] .bn-editor * {
@@ -1215,35 +1158,24 @@ div[data-floating-ui-focusable] {
  * height) because the notes editor inlines under the row rather than
  * docking like the chat composer.
  */
-.todo-item-notes-light .bn-editor {
-    background-color: var(--editor-light-bg);
+.todo-item-notes-light .bn-editor,
+.todo-item-notes-dark .bn-editor {
+    background-color: var(--editor-bg);
 }
 
-.todo-item-notes-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
+.todo-item-notes-light code,
+.todo-item-notes-dark code {
+    background-color: var(--editor-code-bg) !important;
+    color: var(--editor-code-color);
 }
 
 .todo-item-notes-light
     .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: var(--editor-placeholder-light) !important;
-    opacity: 1 !important;
-}
-
-.todo-item-notes-dark .bn-editor {
-    background-color: var(--editor-dark-bg);
-}
-
-.todo-item-notes-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
-}
-
+    .bn-inline-content::before,
 .todo-item-notes-dark
     .bn-block-content[data-is-empty-and-focused="true"]
     .bn-inline-content::before {
-    color: var(--editor-placeholder-dark) !important;
+    color: var(--editor-placeholder) !important;
     opacity: 1 !important;
 }
 
@@ -1337,6 +1269,35 @@ html .bn-root {
 }
 html .bn-default-styles {
     font-family: var(--g-font-body);
+}
+
+/* BlockNote's chrome (menus, toolbars, tooltips, hover and selected states, borders, shadows)
+   takes its colors from the design tokens (MIP-1131). BlockNote paints all of it from
+   `--bn-colors-*`, which it sets per light and dark on `.bn-root`; each is pointed at a role
+   here, and the roles already follow the mode and the color theme, so there is no second
+   light/dark set to keep in step. `html` and the doubled class out-specify BlockNote's
+   `.bn-root[data-color-scheme="dark"]` (the editor chunk loads after this sheet, so a tie
+   loses). The `highlights` palette is NOT here: those colors are document content a person
+   chose (text color, background), stored in the document, not chrome. */
+html .bn-root.bn-root {
+    --bn-colors-editor-text: var(--g-text);
+    --bn-colors-editor-background: var(--g-surface);
+    --bn-colors-menu-text: var(--g-text);
+    --bn-colors-menu-background: var(--g-surface-raised);
+    --bn-colors-tooltip-text: var(--g-text);
+    --bn-colors-tooltip-background: var(--g-surface-raised);
+    --bn-colors-hovered-text: var(--g-text);
+    --bn-colors-hovered-background: var(--g-hover);
+    --bn-colors-selected-text: var(--g-accent-text);
+    --bn-colors-selected-background: var(--g-accent-subtle);
+    --bn-colors-disabled-text: var(--g-text-disabled);
+    --bn-colors-disabled-background: var(--g-hover);
+    --bn-colors-shadow: rgba(var(--g-ink-rgb), 0.18);
+    --bn-colors-border: var(--g-border);
+    --bn-colors-side-menu: var(--g-text-tertiary);
+    --bn-border-radius: var(--g-radius-md);
+    --bn-shadow-medium: var(--g-shadow-md);
+    --bn-shadow-light: var(--g-shadow-sm);
 }
 
 .bn-side-menu,
