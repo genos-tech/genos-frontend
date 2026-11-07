@@ -129,6 +129,11 @@ const MENU_RESERVE_TOUCH = "32px";
 // button; plus the row's right padding. On touch in a wide list the reserved
 // 32px already keeps the chevron clear, so the menu goes back to the edge.
 const FOLDER_MENU_RIGHT = "max(0px, calc(var(--ms-li-pr, 8px) + 18px - var(--ms-menu-reserve)))";
+// The row's hover colour, OPAQUE: a button that overlays the row's right end has
+// to hide what is under it. Joy's `neutral.plainHoverBg` is translucent since the
+// theme moved to the tokens, so the star and "..." showed the title through them
+// (MIP-1156). Hover tint (`--g-hover`, ink at 4.5%) laid over the sidebar surface.
+const MENU_OVERLAY_BG = "color-mix(in srgb, var(--g-bg-subtle) 95.5%, var(--g-text))";
 const END_ACTION = ".MuiListItem-endAction";
 const REVEAL_SELECTORS = [
     `&:hover > ${END_ACTION} button`,
@@ -486,8 +491,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 // Room a visible row menu keeps: none for a mouse (the menu is
                 // hidden until hover), the button's width on touch.
                 "--ms-menu-reserve": "0px",
-                "--ms-menu-bg": theme.vars.palette.neutral.plainHoverBg,
-                "--ms-menu-fade": `-10px 0 8px 0 ${theme.vars.palette.neutral.plainHoverBg}`,
+                "--ms-menu-bg": MENU_OVERLAY_BG,
+                "--ms-menu-fade": `-10px 0 8px 0 ${MENU_OVERLAY_BG}`,
                 "@media (hover: none)": {
                     "--ms-menu-reserve": MENU_RESERVE_TOUCH,
                     "--ms-menu-bg": "transparent",
@@ -498,8 +503,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         "--ms-indent-base": theme.spacing(3),
                         "--ms-indent-step": theme.spacing(1),
                         "--ms-menu-reserve": "0px",
-                        "--ms-menu-bg": theme.vars.palette.neutral.plainHoverBg,
-                        "--ms-menu-fade": `-10px 0 8px 0 ${theme.vars.palette.neutral.plainHoverBg}`,
+                        "--ms-menu-bg": MENU_OVERLAY_BG,
+                        "--ms-menu-fade": `-10px 0 8px 0 ${MENU_OVERLAY_BG}`,
                     },
                 },
                 [`@container ${MS_LIST} (max-width: ${LIST_TIGHT_MAX_PX}px)`]: {

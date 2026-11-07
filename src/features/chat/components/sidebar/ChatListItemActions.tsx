@@ -19,7 +19,10 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
+import {
+    NAV_HIDE_ON_ACTIONS_CLASS,
+    NAV_KEEP_CLASS,
+} from "../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -243,6 +246,7 @@ export const ChatListItemMeta: React.FC<{ chat: AllChatProps }> = ({ chat }) => 
         <Stack alignItems="center" direction="row" spacing={0.75}>
             {time && (
                 <Typography
+                    className={NAV_HIDE_ON_ACTIONS_CLASS}
                     level="body-xs"
                     sx={{ display: { xs: "none", md: "block" }, color: g.text.tertiary }}
                     noWrap

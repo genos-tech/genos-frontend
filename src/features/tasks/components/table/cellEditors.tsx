@@ -233,6 +233,12 @@ export const ChipSelect = ({
 
 // ── CellTextInput: the title / text-field editor ──────────────────────────────
 
+// A title is typed into this field, so it is taller than the 28px a select or
+// picker in a cell is (MIP-1156: "so tight when editing the title").
+// (`fieldSx` sets `minHeight: 0`, so the height has to be a real min-height: the
+// `--Input-minHeight` variable alone is not read.)
+const titleFieldSx = { minHeight: 34, fontSize: "0.875rem" } as const;
+
 export const CellTextInput = ({
     value,
     onChange,
@@ -265,7 +271,7 @@ export const CellTextInput = ({
             error={!!error}
             placeholder={placeholder}
             size="sm"
-            sx={[fieldSx, ...asArray(sx)]}
+            sx={[fieldSx, titleFieldSx, ...asArray(sx)]}
             value={value}
             endDecorator={
                 busy ? (

@@ -500,7 +500,9 @@ const ActivityListRenderer = ({
                         },
                     }}
                 >
-                    <Stack direction="row">
+                    {/* A column, not a row: Joy's ListItem is `flex: none`, so in a row it kept
+                        its content's width, past the sidebar's, and widened every card. */}
+                    <Stack>
                         <ChatListItemForActivity
                             key={`${activityMessage.activityId}-${activityMessage.isRead}`}
                             activity={activityMessage}
@@ -576,7 +578,9 @@ const FlaggedListRenderer = ({
                         },
                     }}
                 >
-                    <Stack direction="row">
+                    {/* A column, not a row: Joy's ListItem is `flex: none`, so in a row it kept
+                        its content's width, past the sidebar's, and widened every card. */}
+                    <Stack>
                         <ChatListItemForFlagMessages
                             key={`${flaggedMessage.flaggedMessageId}`}
                             flaggedMessage={flaggedMessage}

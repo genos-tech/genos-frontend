@@ -34,6 +34,9 @@ export const NAV_PAD_X = 8;
 export const NAV_ROW_GAP = 1;
 /** Class for an action that carries state and so is never hidden. */
 export const NAV_KEEP_CLASS = "NavItem-keep";
+/** Class for trailing content (a timestamp) that gives way to the row's actions
+ *  while they show, in a row with `actionsInPlace`. */
+export const NAV_HIDE_ON_ACTIONS_CLASS = "NavItem-hide-on-actions";
 
 /** The list that holds a folder's children: one tree level in, with a hairline
  *  guide. Joy's own nested inset is switched off, the row owns its indent. */

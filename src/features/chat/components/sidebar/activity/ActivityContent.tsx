@@ -48,7 +48,13 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                         background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                         border: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                        maxWidth: "100%",
+                        // The same width in every row, whatever the text: the 44px
+                        // indent is part of it. (`maxWidth: 100%` plus the indent
+                        // overshot the row by 44px, widened the whole card and pushed
+                        // the time out of view: MIP-1156.)
+                        boxSizing: "border-box",
+                        minWidth: 0,
+                        width: "calc(100% - 44px)",
                     }}
                 >
                     <Typography
@@ -89,6 +95,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
                     mt: 0.75,
                     py: 0.5,
                     px: 1,
+                    minWidth: 0,
                     borderRadius: "8px",
                     background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                     border: "1px solid",

@@ -36,6 +36,9 @@ export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusL
                 alignItems: "center",
                 gap: 6,
                 minWidth: 0,
+                // An icon alone never shrinks: in a narrow row it used to be squeezed
+                // to nothing while its glyph overflowed onto the title beside it.
+                ...(iconOnly ? { flexShrink: 0 } : {}),
                 color: "var(--g-text-secondary)",
                 fontSize: "var(--g-type-body-sm-size, 0.8125rem)",
                 lineHeight: 1.2,

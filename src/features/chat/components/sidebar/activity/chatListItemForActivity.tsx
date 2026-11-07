@@ -734,7 +734,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 unread={activity.isRead === false}
                 onClick={onClickHandler}
             >
-                <Stack direction="column" spacing={0.5} sx={{ position: "relative", zIndex: 1 }}>
+                <Stack
+                    direction="column"
+                    spacing={0.5}
+                    sx={{ position: "relative", zIndex: 1, minWidth: 0 }}
+                >
                     <ActivityHeader
                         activity={activity}
                         chatTypeLookup={chatTypeLookup}

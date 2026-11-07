@@ -130,7 +130,7 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                         component="span"
                                         sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
                                     >
-                                        <StatusLabel status={row.status} />
+                                        <StatusLabel status={row.status} iconOnly />
                                         <Box
                                             component="span"
                                             sx={{

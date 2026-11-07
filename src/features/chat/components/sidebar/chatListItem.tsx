@@ -128,6 +128,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                 }
                 secondary={<ChatListItemMessage chat={chat} />}
                 trailing={<ChatListItemMeta chat={chat} />}
+                // No empty column at rest: the time shows, and gives way to the pin and
+                // "..." on hover (a pinned chat's pin stays beside the time).
+                actionsInPlace
                 actions={
                     <ChatListItemActions
                         chat={chat}

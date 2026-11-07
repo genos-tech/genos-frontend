@@ -171,6 +171,72 @@ describe("NavItem", () => {
         });
     });
 
+    describe("actionsInPlace (chat rows: the time gives way to the actions)", () => {
+        const time = <span className="NavItem-hide-on-actions">12:00</span>;
+        const mountInPlace = (extra: Partial<NavItemProps> = {}) =>
+            mount({
+                actionsInPlace: true,
+                trailing: time,
+                actions: (
+                    <>
+                        <button aria-label="More" type="button">
+                            m
+                        </button>
+                        <button aria-label="Pin" className="NavItem-keep" type="button">
+                            p
+                        </button>
+                    </>
+                ),
+                ...extra,
+            });
+
+        it("a hidden action takes no room but stays in the tab order", () => {
+            mountInPlace();
+            const more = screen.getByRole("button", { name: "More" });
+            const css = cssOf(more.parentElement as Element);
+            // Out of the flow (so there is no empty column), never display: none (a
+            // button that cannot be focused cannot reveal itself to a keyboard user).
+            expect(css).toContain("position: absolute");
+            expect(css).toContain("pointer-events: none");
+            expect(css).not.toMatch(/display:\s*none/);
+            // It is still found by role, i.e. it is not hidden from assistive tech.
+            expect(more).toBeTruthy();
+            more.focus();
+            expect(document.activeElement).toBe(more);
+        });
+
+        it("hover and keyboard focus bring the actions back and hide what gives way", () => {
+            mountInPlace();
+            const css = cssOf(row());
+            expect(css).toMatch(/:focus-within \.NavItem-actions\s*>\s*\*[^}]*position: static/);
+            expect(css).toMatch(/:focus-within \.NavItem-hide-on-actions[^}]*display: none/);
+            expect(css).toMatch(/:hover \.NavItem-actions\s*>\s*\*[^}]*position: static/);
+            expect(css).toMatch(/:hover \.NavItem-hide-on-actions[^}]*display: none/);
+        });
+
+        it("an action with the keep class is never moved out of the row (a pinned chat's pin)", () => {
+            mountInPlace();
+            expect(cssOf(row())).toBeTruthy();
+            expect(
+                cssOf(screen.getByRole("button", { name: "More" }).parentElement as Element)
+            ).toContain(":not(.NavItem-keep)");
+        });
+
+        it("actionsVisible (a menu is open) keeps them in the flow and hides the time", () => {
+            mountInPlace({ actionsVisible: true });
+            const css = cssOf(
+                screen.getByRole("button", { name: "More" }).parentElement as Element
+            );
+            expect(css).toContain("position: static");
+            expect(css).toMatch(/\.NavItem-hide-on-actions[^}]*display: none/);
+        });
+
+        it("the row keeps its own end padding, since the actions no longer provide it", () => {
+            mountInPlace();
+            expect(cssOf(button())).toMatch(/padding-inline-end:\s*8px/);
+        });
+    });
+
     it("an action that carries state opts out of the fade", () => {
         mount({ actions: <span>a</span> });
         const css = cssOf(screen.getByText("a").parentElement as Element);
