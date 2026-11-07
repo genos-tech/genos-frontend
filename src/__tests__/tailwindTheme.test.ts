@@ -167,11 +167,11 @@ describe("global CSS carries no dead rules", () => {
         }
     });
 
-    it("the DataGrid rules use stable MUI class names", () => {
-        expect(appCss).toContain(".MuiTablePagination-toolbar {");
-        expect(appCss).toContain(".task-datagrid-dark .MuiButton-root {");
-        expect(appCss).toContain(
-            ".MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {"
-        );
+    it("the dead DataGrid block and --datagrid-* variables are gone (MIP-1154)", () => {
+        // No DataGrid / TablePagination renders in the app and `task-datagrid-*` is never
+        // applied, so none of these selectors or variables can match anything.
+        for (const dead of [/DataGrid/i, /datagrid/i, /MuiTablePagination/, /task-datagrid/]) {
+            expect(appCss, String(dead)).not.toMatch(dead);
+        }
     });
 });
