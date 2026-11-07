@@ -403,20 +403,20 @@ describe("MessagesPaneV3 — interactions", () => {
             },
         });
         const spy = vi.spyOn(channelService, "deleteMessage").mockResolvedValue(undefined);
-        const confirmStub = vi.spyOn(window, "confirm").mockReturnValue(true);
 
         render(<MessagesPaneV3 channelId="c-1" />);
         fireEvent.click(screen.getByTestId("message-row-delete-m-1"));
+        // Asks first (the app's own dialog, not the browser's confirm()).
+        expect(spy).not.toHaveBeenCalled();
+        fireEvent.click(await screen.findByRole("button", { name: "Delete" }));
 
         await waitFor(() => {
             expect(spy).toHaveBeenCalledWith("m-1", "c-1", ChannelKind.GM);
         });
-        expect(confirmStub).toHaveBeenCalled();
         spy.mockRestore();
-        confirmStub.mockRestore();
     });
 
-    it("clicking delete and cancelling does NOT call deleteMessage", () => {
+    it("clicking delete and cancelling does NOT call deleteMessage", async () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
         channelService.handleMessageCreated({
             ...fakeMessage("m-1", "c-1", "safe", "Me"),
@@ -429,14 +429,13 @@ describe("MessagesPaneV3 — interactions", () => {
             },
         });
         const spy = vi.spyOn(channelService, "deleteMessage").mockResolvedValue(undefined);
-        const confirmStub = vi.spyOn(window, "confirm").mockReturnValue(false);
 
         render(<MessagesPaneV3 channelId="c-1" />);
         fireEvent.click(screen.getByTestId("message-row-delete-m-1"));
+        fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
-        confirmStub.mockRestore();
     });
 
     it("emoji-picker button reveals quick emojis; clicking one calls react()", async () => {

@@ -25,6 +25,7 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 
+import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
@@ -872,12 +873,12 @@ const CanvasInner = ({
         [myself, projectId, accessToken, useTM, refresh] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
-    const handleDelete = useCallback(
+    // The card's trash button only ASKS; the dialog (in the return) runs `deleteTask`.
+    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+    const handleDelete = useCallback((taskId: number) => setPendingDeleteId(taskId), []);
+
+    const deleteTask = useCallback(
         async (taskId: number) => {
-            // Soft prompt — using window.confirm because a full
-            // confirmation modal nested inside this modal is overkill
-            // for a single-task action.
-            if (!window.confirm(t.tasks.diagram.confirmDelete)) return;
             const res = await deleteDiagramTask(myself, taskId, accessToken);
             if (!res.ok) {
                 setError(res.error ?? t.tasks.diagram.errors.delete);
@@ -1261,6 +1262,20 @@ const CanvasInner = ({
 
     return (
         <Box sx={containerSx}>
+            {/* The graph is itself a modal; the confirm takes its layer from it. */}
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={t.common.actions.delete}
+                hostZIndex={diagramZIndex}
+                open={pendingDeleteId != null}
+                title={t.tasks.diagram.confirmDelete}
+                closeOnConfirm
+                destructive
+                onClose={() => setPendingDeleteId(null)}
+                onConfirm={async () => {
+                    if (pendingDeleteId != null) await deleteTask(pendingDeleteId);
+                }}
+            />
             {loading && (
                 <Stack
                     alignItems="center"

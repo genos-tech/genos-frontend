@@ -28,6 +28,7 @@ import { CreateTodoScheduleInput, UpdateTodoSchedulePatch } from "./services/tod
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalConfirmAction } from "../../../../components/ui/misc/ModalConfirmAction";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { TodoCategoryProps, TodoScheduleProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
 import { RepeatPicker } from "../../../calendar/components/RepeatPicker";
@@ -340,11 +341,7 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
                 confirmLabel={ts.delete}
                 description={ts.deleteBody}
                 entityName={deleting ? plainTitle(deleting.title) : undefined}
-                icon={
-                    <DeleteOutlineRoundedIcon
-                        sx={{ color: "rgba(var(--gp-tint-danger-rgb), 0.9)", fontSize: 28 }}
-                    />
-                }
+                icon={<DeleteOutlineRoundedIcon sx={{ color: g.danger.text }} />}
                 open={deleting != null}
                 title={ts.deleteTitle}
                 tone="danger"

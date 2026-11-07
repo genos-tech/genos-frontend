@@ -1,5 +1,3 @@
-import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
-
 import { ModalConfirmAction } from "../../../../components/ui/misc/ModalConfirmAction";
 import { useTranslation } from "../../../../i18n";
 
@@ -45,11 +43,6 @@ export const ModalConvertTaskMilestone = ({
         <ModalConfirmAction
             cancelLabel={t.common.actions.cancel}
             entityName={name}
-            icon={
-                <SwapHorizRoundedIcon
-                    sx={{ color: "rgba(var(--gp-brand-500-rgb), 0.9)", fontSize: 28 }}
-                />
-            }
             open={open}
             zIndex={zIndex}
             onClose={onClose}

@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useLongPress } from "../../../hooks/common/useLongPress";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
@@ -275,14 +276,16 @@ function MessageRow({
         setEditing(false);
     }, [message.bodyText]);
 
+    // The toolbar's trash only ASKS (`confirmingDelete`); the confirm dialog
+    // at the end of the row runs `handleDelete`.
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
     const handleDelete = useCallback(async () => {
-        if (!window.confirm(t.chat.channel.pane.deleteConfirm)) return;
         try {
             await channelService.deleteMessage(message.id, channelId, channelKind);
         } catch (e) {
             reportError(e);
         }
-    }, [channelId, channelKind, message.id, reportError, t.chat.channel.pane.deleteConfirm]);
+    }, [channelId, channelKind, message.id, reportError]);
 
     const handleToggleFlag = useCallback(async () => {
         try {
@@ -450,7 +453,7 @@ function MessageRow({
                         replyCount={message.replyCount}
                         visible={hovered || showEmoji || touchOpen}
                         onCopyLink={copyLink}
-                        onDelete={() => void handleDelete()}
+                        onDelete={() => setConfirmingDelete(true)}
                         onFlag={() => void handleToggleFlag()}
                         onReact={() => setShowEmoji((v) => !v)}
                         onEdit={() => {
@@ -511,6 +514,16 @@ function MessageRow({
                     onToggle={handleToggleReaction}
                 />
             )}
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={t.common.actions.delete}
+                open={confirmingDelete}
+                title={t.chat.channel.pane.deleteConfirm}
+                closeOnConfirm
+                destructive
+                onClose={() => setConfirmingDelete(false)}
+                onConfirm={handleDelete}
+            />
         </li>
     );
 }
