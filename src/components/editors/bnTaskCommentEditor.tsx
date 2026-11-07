@@ -4,7 +4,6 @@ import "../../App.css";
 
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -26,7 +25,6 @@ import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -38,10 +36,8 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
+import { useGenosEditor } from "./genos/useGenosEditor";
 import { EditorSendButton } from "./sub/EditorSendButton";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
 type BnTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -142,16 +138,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
           )
         : undefined;
 
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        uploadFile,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
-        dictionary,
-    });
+    const editor = useGenosEditor({ surface: "composer", schema, dictionary, uploadFile });
 
     // Per-task draft cache: see `useEditorDraft` for the
     // load/save/clear lifecycle. Replaces the old `prevTaskIdRef`
