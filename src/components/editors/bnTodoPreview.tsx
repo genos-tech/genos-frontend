@@ -2,13 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useRef } from "react";
-import {
-    BlockNoteSchema,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    PartialBlock,
-} from "@blocknote/core";
+import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -34,26 +28,16 @@ import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
+import { useGenosSchema } from "./genos/genosSchema";
+import { HashSuggestionMenuController } from "./HashMention";
+import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
 import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
+
+/** Block types the todo toolbar does not offer. They are in the schema (see above). */
+const HIDDEN_BLOCK_TYPES = new Set(["heading", "quote"]);
 
 type BnTodoPreviewProps = {
     useTEM: TeamManagementState;
@@ -89,43 +73,23 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
 
-    // Disable the Audio and Image blocks from the built-in schema
-    // This is done by picking out the blocks you want to disable
-    const { heading, table, file, audio, image, video, quote, ...remainingBlockSpecs } =
-        defaultBlockSpecs;
-
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Our schema with inline content specs, which contain the configs and
-    // implementations for inline content  that we want our editor to use.
-    const schema = BlockNoteSchema.create({
-        styleSpecs: genosStyleSpecs,
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
+    // The shared Genos schema, with every block type. A todo body used to be built on a
+    // smaller schema (no headings, tables, files, images or quotes, and a plain code block),
+    // which is the drift MIP-1019 forbids: a schema that lacks a type rejects a body that has
+    // one. The toolbar below still offers only what this surface offered (`HIDDEN_BLOCK_TYPES`).
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
         },
-        blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-        },
-    });
+        "mount"
+    );
 
     const dictionary = useBlockNoteDictionary();
     const editor = useCreateBlockNote({
@@ -164,7 +128,9 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect
                                 key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor).filter(
+                                    (item) => !HIDDEN_BLOCK_TYPES.has(item.type)
+                                )}
                             />
 
                             <BasicTextStyleButton
