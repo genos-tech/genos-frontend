@@ -335,3 +335,60 @@ describe("Bubble: the body below md", () => {
         expect(css).not.toContain("1/-1");
     });
 });
+
+describe("Bubble: a reserved avatar column", () => {
+    const reservedCss = (narrowBody: "below" | "beside") => {
+        const { container } = render(
+            <Bubble avatar="reserve" header={<b>h</b>} layout="compact" narrowBody={narrowBody}>
+                body
+            </Bubble>
+        );
+        const cell = container.querySelector("[data-bubble-layout] > div > div") as HTMLElement;
+        const cls = Array.from(cell.firstElementChild?.classList ?? []).find((c) =>
+            c.startsWith("css-")
+        );
+        return Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+    };
+
+    it("below md it is hidden where the body spans the full width (no blank row)", () => {
+        expect(reservedCss("below")).toContain("display:none");
+    });
+
+    it("it stays where the body stays beside the avatar (chat's grouped follow-ups)", () => {
+        expect(reservedCss("beside")).not.toContain("display:none");
+    });
+});
+
+describe("Bubble toolbar side (bubble look)", () => {
+    const toolbarCss = (side: "sent" | "received") => {
+        const { unmount } = render(
+            <Bubble actions={<button>act</button>} layout="bubble" side={side} actionsOpen>
+                body
+            </Bubble>
+        );
+        const tb = screen.getByText("act").closest(".bubble-toolbar") as HTMLElement;
+        const cls = Array.from(tb.classList).find((c) => c.startsWith("css-"));
+        const css = Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+        unmount();
+        return css;
+    };
+
+    // The toolbar is wider than a short balloon: it must open into the empty
+    // side or it spills past the list's edge (seen in a real chat).
+    it("a received balloon opens it toward the end, a sent one toward the start", () => {
+        expect(toolbarCss("received")).toContain("inset-inline-start");
+        expect(toolbarCss("received")).not.toContain("inset-inline-end");
+        expect(toolbarCss("sent")).toContain("inset-inline-end");
+        expect(toolbarCss("sent")).not.toContain("inset-inline-start");
+    });
+});

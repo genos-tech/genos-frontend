@@ -126,7 +126,6 @@ const hoverTransition = `background-color ${g.motion.fast} ${g.ease}, border-col
 
 const toolbarBase = {
     position: "absolute",
-    insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right,
     zIndex: 2,
     bgcolor: g.surface.raised,
     border: "1px solid",
@@ -139,8 +138,20 @@ const toolbarBase = {
 /** Inside the row's top-right corner (compact), or straddling the balloon's top
  *  edge so it never covers a one-word message. */
 const toolbarPlace = {
-    compact: { top: BUBBLE_TOOLBAR_OFFSET.top },
-    bubble: { top: 0, transform: "translateY(-50%)" },
+    compact: { insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right, top: BUBBLE_TOOLBAR_OFFSET.top },
+    // The toolbar is wider than a short balloon, so it opens into the empty
+    // side: a received balloon sits at the start edge of the list, a sent one at
+    // the end edge. Anchored the other way it spills past the list's edge.
+    bubbleReceived: {
+        insetInlineStart: BUBBLE_TOOLBAR_OFFSET.right,
+        top: 0,
+        transform: "translateY(-50%)",
+    },
+    bubbleSent: {
+        insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right,
+        top: 0,
+        transform: "translateY(-50%)",
+    },
 } as const;
 
 /** Always mounted, shown by CSS (`:hover`, `:focus-within`, and always on touch):
@@ -154,19 +165,20 @@ const cssRevealed = {
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
 /** The floating actions toolbar. Clicks on it are not clicks on the message. */
-const BubbleToolbar = forwardRef<HTMLDivElement, { children: ReactNode; layout: BubbleLayout }>(
-    ({ children, layout }, ref) => (
-        <Box
-            ref={ref}
-            className="bubble-toolbar"
-            sx={{ ...toolbarBase, ...toolbarPlace[layout] }}
-            onClick={stop}
-            onDoubleClick={stop}
-        >
-            {children}
-        </Box>
-    )
-);
+const BubbleToolbar = forwardRef<
+    HTMLDivElement,
+    { children: ReactNode; place: keyof typeof toolbarPlace }
+>(({ children, place }, ref) => (
+    <Box
+        ref={ref}
+        className="bubble-toolbar"
+        sx={{ ...toolbarBase, ...toolbarPlace[place] }}
+        onClick={stop}
+        onDoubleClick={stop}
+    >
+        {children}
+    </Box>
+));
 BubbleToolbar.displayName = "BubbleToolbar";
 
 /** The author's name: one style for every surface. */
@@ -191,7 +203,18 @@ export const BubbleMeta = ({ children, sx }: { children: ReactNode; sx?: SxProps
 );
 
 const gutterNode = (avatar: ReactNode | "reserve" | undefined, narrowBody: "below" | "beside") =>
-    avatar === "reserve" ? <Box sx={{ width: BUBBLE_AVATAR_SIZE }} /> : avatar;
+    avatar === "reserve" ? (
+        // Where the body spans the full width below `md`, an empty column would
+        // only add a blank row above it.
+        <Box
+            sx={{
+                width: BUBBLE_AVATAR_SIZE,
+                display: narrowBody === "below" ? { xs: "none", md: "block" } : "block",
+            }}
+        />
+    ) : (
+        avatar
+    );
 
 export const Bubble = (props: BubbleProps) => {
     const {
@@ -226,7 +249,16 @@ export const Bubble = (props: BubbleProps) => {
 
     const toolbar =
         actions != null && actionsOpen !== false ? (
-            <BubbleToolbar ref={toolbarRef} layout={layout}>
+            <BubbleToolbar
+                ref={toolbarRef}
+                place={
+                    layout === "compact"
+                        ? "compact"
+                        : side === "sent"
+                          ? "bubbleSent"
+                          : "bubbleReceived"
+                }
+            >
                 {actions}
             </BubbleToolbar>
         ) : null;
