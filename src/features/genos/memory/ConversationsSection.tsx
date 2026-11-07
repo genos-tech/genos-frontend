@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     deleteAgentSession,
@@ -22,7 +23,7 @@ import {
 import { emitAgentSessionsDeleted } from "../../agentQA";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
 import { useGenosSessions } from "../useGenosSessions";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
 
 interface Props {
     accessToken: string | null;
@@ -236,14 +237,16 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
             </Box>
 
             <ConfirmDialog
-                body={m.deleteBody}
                 busy={busy}
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={m.deleteConfirm}
+                description={m.deleteBody}
                 error={error}
                 open={target?.kind === "one"}
                 title={m.deleteTitle}
-                onCancel={closeConfirm}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                destructive
+                onClose={closeConfirm}
                 onConfirm={confirmDelete}
             >
                 {target?.kind === "one" && (
@@ -264,15 +267,17 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
             </ConfirmDialog>
 
             <ConfirmDialog
-                body={m.deleteAllBody}
                 busy={busy}
                 cancelLabel={t.common.actions.cancel}
                 confirmDisabled={!acknowledged}
                 confirmLabel={m.deleteAllConfirm}
+                description={m.deleteAllBody}
                 error={error}
                 open={target?.kind === "all"}
                 title={m.deleteAllTitle}
-                onCancel={closeConfirm}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                destructive
+                onClose={closeConfirm}
                 onConfirm={confirmDelete}
             >
                 <Checkbox
