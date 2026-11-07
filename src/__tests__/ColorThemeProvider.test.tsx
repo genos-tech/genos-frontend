@@ -21,6 +21,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ColorThemeProvider, useColorTheme } from "../theme/ColorThemeProvider";
 import { DEFAULT_THEME_ID, THEME_PRIMITIVES } from "../theme/themePalettes";
 import { THEME_STORAGE_KEY } from "../theme/themeStyles";
+import { resolvedPrimitives } from "../theme/tokens/primitives";
 
 let api: ReturnType<typeof useColorTheme>;
 
@@ -65,8 +66,14 @@ describe("ColorThemeProvider", () => {
         act(() => api.setThemeId("rose"));
         // React Flow's MiniMap writes this into an SVG fill attribute, which
         // never resolves a var() — so it has to be a real color.
-        expect(api.raw).toBe(THEME_PRIMITIVES.rose);
+        // The RESOLVED primitives: brand fields straight from the theme data,
+        // neutrals and status overlaid from the design roles (MIP-1118), so
+        // canvas colors agree with what the CSS variables paint.
+        expect(api.raw).toBe(resolvedPrimitives("rose"));
+        expect(api.raw.ramp).toBe(THEME_PRIMITIVES.rose.ramp);
         expect(api.raw.dark.accent).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(api.raw.dark.bg).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(api.raw.dark.bg).not.toBe(THEME_PRIMITIVES.rose.dark.bg);
     });
 
     it("ignores a corrupt stored theme rather than rendering unresolved vars", () => {
