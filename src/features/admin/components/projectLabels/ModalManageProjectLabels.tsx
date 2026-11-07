@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -13,17 +12,16 @@ import {
     CircularProgress,
     IconButton,
     Input,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { ProjectLabelProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
 import {
@@ -70,8 +68,6 @@ export const ModalManageProjectLabels = ({
     onAssignedChange,
 }: ModalManageProjectLabelsProps) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     const [catalog, setCatalog] = useState<ProjectLabelProps[]>([]);
@@ -237,323 +233,281 @@ export const ModalManageProjectLabels = ({
         }
     };
 
-    const border = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
-    const rowBg = isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)";
-    const subtleText = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
-
     return (
-        <Modal
+        <ModalFrame
+            description={t.admin.projectLabels.manageDescription}
+            icon={<LocalOfferIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                // One above the profile modal that launches us — a
-                // hardcoded page-level default would open BEHIND it.
-                zIndex: PROFILE_MODAL_Z_INDEX + 1,
-                backdropFilter: "blur(4px)",
-                // Joy's ModalDialog already paints its own Backdrop;
-                // a second layer here composites to near-solid black.
-                backgroundColor: "transparent",
-            }}
+            size="lg"
+            title={t.admin.projectLabels.manageHeading}
+            // One above the profile modal that launches us: a page-level
+            // default would open BEHIND it.
+            zIndex={PROFILE_MODAL_Z_INDEX + 1}
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            {errorMessage && (
+                <Alert color="danger" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+
+            {/* Create row */}
+            <Stack
+                alignItems="center"
+                direction="row"
+                spacing={1}
                 sx={{
-                    borderRadius: "16px",
-                    border: `1px solid ${border}`,
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "480px" },
-                    maxWidth: { xs: "100vw", md: "620px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "80vh" },
-                    p: { xs: 2, md: 3 },
-                    overflow: "auto",
+                    mb: 2,
+                    p: 1,
+                    borderRadius: g.radius.md,
+                    border: `1px solid ${g.border.default}`,
+                    background: g.bg.subtle,
                 }}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <LocalOfferIcon sx={{ fontSize: 22, color: "var(--gp-brandalt-500)" }} />
-                    <Typography level="h4" sx={{ fontWeight: 600, flex: 1 }}>
-                        {t.admin.projectLabels.manageHeading}
-                    </Typography>
-                    <IconButton size="sm" variant="plain" onClick={onClose}>
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                </Box>
-
-                <Typography level="body-xs" sx={{ color: subtleText, mb: 2 }}>
-                    {t.admin.projectLabels.manageDescription}
-                </Typography>
-
-                {errorMessage && (
-                    <Alert color="danger" sx={{ mb: 2, borderRadius: "10px" }}>
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                {/* Create row */}
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={1}
+                <Chip
+                    size="sm"
+                    variant="solid"
                     sx={{
-                        mb: 2,
-                        p: 1,
-                        borderRadius: "10px",
-                        border: `1px solid ${border}`,
-                        background: rowBg,
+                        backgroundColor: newColor.color,
+                        color: newColor.textColor,
+                        borderRadius: "5px",
+                        fontWeight: 600,
+                        flexShrink: 0,
+                        maxWidth: 140,
                     }}
                 >
-                    <Chip
-                        size="sm"
-                        variant="solid"
-                        sx={{
-                            backgroundColor: newColor.color,
-                            color: newColor.textColor,
-                            borderRadius: "5px",
-                            fontWeight: 600,
-                            flexShrink: 0,
-                            maxWidth: 140,
-                        }}
-                    >
-                        {newName.trim() || t.admin.projectLabels.newLabelPreview}
-                    </Chip>
-                    <Input
-                        placeholder={t.admin.projectLabels.newLabelPlaceholder}
-                        size="sm"
-                        sx={{ flex: 1, "--Input-radius": "8px" }}
-                        value={newName}
-                        slotProps={{
-                            input: {
-                                maxLength: 30,
-                                onKeyDown: (e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        void handleCreate();
-                                    }
-                                },
+                    {newName.trim() || t.admin.projectLabels.newLabelPreview}
+                </Chip>
+                <Input
+                    placeholder={t.admin.projectLabels.newLabelPlaceholder}
+                    size="sm"
+                    sx={{ flex: 1, "--Input-radius": "8px" }}
+                    value={newName}
+                    slotProps={{
+                        input: {
+                            maxLength: 30,
+                            onKeyDown: (e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    void handleCreate();
+                                }
                             },
-                        }}
-                        onChange={(e) => setNewName(e.target.value)}
-                    />
-                    <ColorPickerMenu
-                        onSelectColor={(c) =>
-                            setNewColor({ color: c.value, textColor: c.textColor })
-                        }
-                    />
-                    <Button
-                        disabled={busy || newName.trim().length === 0}
-                        size="sm"
-                        startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-                        sx={{ borderRadius: "8px", flexShrink: 0 }}
-                        onClick={handleCreate}
-                    >
-                        {t.admin.projectLabels.add}
-                    </Button>
-                </Stack>
-
-                {/* Catalog list — checkbox = assign to this project,
-                    pencil/trash = edit the team-wide entry. */}
-                <Stack
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    spacing={0.5}
-                    sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}
+                        },
+                    }}
+                    onChange={(e) => setNewName(e.target.value)}
+                />
+                <ColorPickerMenu
+                    onSelectColor={(c) => setNewColor({ color: c.value, textColor: c.textColor })}
+                />
+                <Button
+                    disabled={busy || newName.trim().length === 0}
+                    size="sm"
+                    startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+                    sx={{ borderRadius: g.radius.md, flexShrink: 0 }}
+                    onClick={handleCreate}
                 >
-                    {loading && (
-                        <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-                            <CircularProgress size="sm" />
-                        </Box>
-                    )}
+                    {t.admin.projectLabels.add}
+                </Button>
+            </Stack>
 
-                    {!loading && catalog.length === 0 && (
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: subtleText, textAlign: "center", py: 3 }}
-                        >
-                            {t.admin.projectLabels.empty}
-                        </Typography>
-                    )}
+            {/* Catalog list — checkbox = assign to this project,
+                    pencil/trash = edit the team-wide entry. */}
+            <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
+                {loading && (
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                        <CircularProgress size="sm" />
+                    </Box>
+                )}
 
-                    {!loading &&
-                        catalog.map((label) => {
-                            const isEditing = editingId === label.labelId;
-                            const isConfirmingDelete = confirmDeleteId === label.labelId;
-                            return (
-                                <Box
-                                    key={label.labelId}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        p: 1,
-                                        borderRadius: "10px",
-                                        border: `1px solid ${border}`,
-                                        background: rowBg,
-                                    }}
-                                >
-                                    {isEditing ? (
-                                        <>
-                                            <Chip
-                                                size="sm"
-                                                variant="solid"
-                                                sx={{
-                                                    backgroundColor: editColor.color,
-                                                    color: editColor.textColor,
-                                                    borderRadius: "5px",
-                                                    fontWeight: 600,
-                                                    flexShrink: 0,
-                                                    maxWidth: 120,
-                                                }}
-                                            >
-                                                {editName.trim() || label.name}
-                                            </Chip>
-                                            <Input
-                                                size="sm"
-                                                sx={{ flex: 1, "--Input-radius": "8px" }}
-                                                value={editName}
-                                                slotProps={{
-                                                    input: {
-                                                        maxLength: 30,
-                                                        onKeyDown: (e) => {
-                                                            if (e.key === "Enter") {
-                                                                e.preventDefault();
-                                                                void handleSaveEdit(label.labelId);
-                                                            }
-                                                            if (e.key === "Escape") {
-                                                                setEditingId(null);
-                                                            }
-                                                        },
+                {!loading && catalog.length === 0 && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.secondary, textAlign: "center", py: 3 }}
+                    >
+                        {t.admin.projectLabels.empty}
+                    </Typography>
+                )}
+
+                {!loading &&
+                    catalog.map((label) => {
+                        const isEditing = editingId === label.labelId;
+                        const isConfirmingDelete = confirmDeleteId === label.labelId;
+                        return (
+                            <Box
+                                key={label.labelId}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    p: 1,
+                                    borderRadius: g.radius.md,
+                                    border: `1px solid ${g.border.default}`,
+                                    background: g.bg.subtle,
+                                }}
+                            >
+                                {isEditing ? (
+                                    <>
+                                        <Chip
+                                            size="sm"
+                                            variant="solid"
+                                            sx={{
+                                                backgroundColor: editColor.color,
+                                                color: editColor.textColor,
+                                                borderRadius: "5px",
+                                                fontWeight: 600,
+                                                flexShrink: 0,
+                                                maxWidth: 120,
+                                            }}
+                                        >
+                                            {editName.trim() || label.name}
+                                        </Chip>
+                                        <Input
+                                            size="sm"
+                                            sx={{ flex: 1, "--Input-radius": "8px" }}
+                                            value={editName}
+                                            slotProps={{
+                                                input: {
+                                                    maxLength: 30,
+                                                    onKeyDown: (e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            void handleSaveEdit(label.labelId);
+                                                        }
+                                                        if (e.key === "Escape") {
+                                                            setEditingId(null);
+                                                        }
                                                     },
-                                                }}
-                                                autoFocus
-                                                onChange={(e) => setEditName(e.target.value)}
-                                            />
-                                            <ColorPickerMenu
-                                                onSelectColor={(c) =>
-                                                    setEditColor({
-                                                        color: c.value,
-                                                        textColor: c.textColor,
-                                                    })
-                                                }
-                                            />
-                                            <Button
-                                                disabled={busy}
-                                                size="sm"
-                                                sx={{ borderRadius: "8px" }}
-                                                onClick={() => handleSaveEdit(label.labelId)}
-                                            >
-                                                {t.common.profileEdit.save}
-                                            </Button>
-                                            <Button
-                                                color="neutral"
-                                                size="sm"
-                                                variant="plain"
-                                                onClick={() => setEditingId(null)}
-                                            >
-                                                {t.common.profileEdit.cancel}
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Checkbox
-                                                checked={assignedIds.has(label.labelId)}
-                                                disabled={busy}
-                                                size="sm"
-                                                sx={{ flexShrink: 0 }}
-                                                onChange={() => toggleAssigned(label.labelId)}
-                                            />
-                                            <Chip
-                                                size="sm"
-                                                variant="solid"
-                                                sx={{
-                                                    backgroundColor: label.color,
-                                                    color: label.textColor,
-                                                    borderRadius: "5px",
-                                                    fontWeight: 600,
-                                                    flexShrink: 0,
-                                                    maxWidth: 180,
-                                                }}
-                                            >
-                                                {label.name}
-                                            </Chip>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: subtleText, flex: 1, minWidth: 0 }}
-                                                noWrap
-                                            >
-                                                {fmt(t.admin.projectLabels.usedByProjects, {
-                                                    count: label.projectCount ?? 0,
-                                                })}
-                                            </Typography>
+                                                },
+                                            }}
+                                            autoFocus
+                                            onChange={(e) => setEditName(e.target.value)}
+                                        />
+                                        <ColorPickerMenu
+                                            onSelectColor={(c) =>
+                                                setEditColor({
+                                                    color: c.value,
+                                                    textColor: c.textColor,
+                                                })
+                                            }
+                                        />
+                                        <Button
+                                            disabled={busy}
+                                            size="sm"
+                                            sx={{ borderRadius: g.radius.md }}
+                                            onClick={() => handleSaveEdit(label.labelId)}
+                                        >
+                                            {t.common.profileEdit.save}
+                                        </Button>
+                                        <Button
+                                            color="neutral"
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={() => setEditingId(null)}
+                                        >
+                                            {t.common.profileEdit.cancel}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Checkbox
+                                            checked={assignedIds.has(label.labelId)}
+                                            disabled={busy}
+                                            size="sm"
+                                            sx={{ flexShrink: 0 }}
+                                            onChange={() => toggleAssigned(label.labelId)}
+                                        />
+                                        <Chip
+                                            size="sm"
+                                            variant="solid"
+                                            sx={{
+                                                backgroundColor: label.color,
+                                                color: label.textColor,
+                                                borderRadius: "5px",
+                                                fontWeight: 600,
+                                                flexShrink: 0,
+                                                maxWidth: 180,
+                                            }}
+                                        >
+                                            {label.name}
+                                        </Chip>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.text.secondary, flex: 1, minWidth: 0 }}
+                                            noWrap
+                                        >
+                                            {fmt(t.admin.projectLabels.usedByProjects, {
+                                                count: label.projectCount ?? 0,
+                                            })}
+                                        </Typography>
 
-                                            {isConfirmingDelete ? (
-                                                <>
-                                                    {/* The count above is the blast radius: a
+                                        {isConfirmingDelete ? (
+                                            <>
+                                                {/* The count above is the blast radius: a
                                                         delete detaches the label from EVERY
                                                         project using it, not just this one. */}
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{ color: "#ef4444" }}
-                                                    >
-                                                        {t.admin.projectLabels.deleteConfirm}
-                                                    </Typography>
-                                                    <Button
-                                                        color="danger"
-                                                        disabled={busy}
-                                                        size="sm"
-                                                        sx={{ borderRadius: "8px" }}
-                                                        onClick={() => handleDelete(label.labelId)}
-                                                    >
-                                                        {t.common.actions.delete}
-                                                    </Button>
-                                                    <Button
-                                                        color="neutral"
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{ color: g.danger.text }}
+                                                >
+                                                    {t.admin.projectLabels.deleteConfirm}
+                                                </Typography>
+                                                <Button
+                                                    color="danger"
+                                                    disabled={busy}
+                                                    size="sm"
+                                                    sx={{ borderRadius: g.radius.md }}
+                                                    onClick={() => handleDelete(label.labelId)}
+                                                >
+                                                    {t.common.actions.delete}
+                                                </Button>
+                                                <Button
+                                                    color="neutral"
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                >
+                                                    {t.common.profileEdit.cancel}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <AppTooltip
+                                                    size="sm"
+                                                    title={t.admin.projectLabels.editLabel}
+                                                >
+                                                    <IconButton
                                                         size="sm"
                                                         variant="plain"
-                                                        onClick={() => setConfirmDeleteId(null)}
+                                                        onClick={() => startEdit(label)}
                                                     >
-                                                        {t.common.profileEdit.cancel}
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <AppTooltip
+                                                        <EditRoundedIcon sx={{ fontSize: 16 }} />
+                                                    </IconButton>
+                                                </AppTooltip>
+                                                <AppTooltip
+                                                    size="sm"
+                                                    title={t.admin.projectLabels.deleteLabel}
+                                                >
+                                                    <IconButton
+                                                        color="danger"
                                                         size="sm"
-                                                        title={t.admin.projectLabels.editLabel}
+                                                        variant="plain"
+                                                        onClick={() =>
+                                                            setConfirmDeleteId(label.labelId)
+                                                        }
                                                     >
-                                                        <IconButton
-                                                            size="sm"
-                                                            variant="plain"
-                                                            onClick={() => startEdit(label)}
-                                                        >
-                                                            <EditRoundedIcon
-                                                                sx={{ fontSize: 16 }}
-                                                            />
-                                                        </IconButton>
-                                                    </AppTooltip>
-                                                    <AppTooltip
-                                                        size="sm"
-                                                        title={t.admin.projectLabels.deleteLabel}
-                                                    >
-                                                        <IconButton
-                                                            color="danger"
-                                                            size="sm"
-                                                            variant="plain"
-                                                            onClick={() =>
-                                                                setConfirmDeleteId(label.labelId)
-                                                            }
-                                                        >
-                                                            <DeleteOutlineRoundedIcon
-                                                                sx={{ fontSize: 16 }}
-                                                            />
-                                                        </IconButton>
-                                                    </AppTooltip>
-                                                </>
-                                            )}
-                                        </>
-                                    )}
-                                </Box>
-                            );
-                        })}
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                                                        <DeleteOutlineRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    </IconButton>
+                                                </AppTooltip>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </Box>
+                        );
+                    })}
+            </Stack>
+        </ModalFrame>
     );
 };
