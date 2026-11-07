@@ -27,7 +27,7 @@ const show = (events: ToolEvent[], locale?: string) => {
     return render(
         <CssVarsProvider>
             <I18nProvider>
-                <ToolProgressList events={events} isDark={false} />
+                <ToolProgressList events={events} />
             </I18nProvider>
         </CssVarsProvider>
     );

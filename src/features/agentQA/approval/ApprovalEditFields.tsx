@@ -57,6 +57,7 @@ const controlSx = (invalid: boolean) => ({
     "&:focus": {
         ...focusRing,
         outlineOffset: 0,
+        ...(invalid ? { outlineColor: g.danger.solid } : {}),
         borderColor: invalid ? g.danger.text : g.focus,
     },
 });

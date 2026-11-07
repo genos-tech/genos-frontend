@@ -120,7 +120,7 @@ describe("ToolProgressList durations", () => {
         ];
         render(
             <CssVarsProvider>
-                <ToolProgressList events={events} isDark={false} />
+                <ToolProgressList events={events} />
             </CssVarsProvider>
         );
         expect(screen.getByText("1.2s")).toBeInTheDocument();

@@ -131,7 +131,6 @@ describe.each(LOCALES)("in %s", (locale) => {
                         askedQuery="What shipped?"
                         askError={null}
                         isCurrent={false}
-                        isDark={false}
                         labels={buildAgentTurnLabels(msgs, "spotlight")}
                         renderAnswerStatus={renderSaveAnswerStatus}
                         renderExtraActions={renderSaveAnswerActions}
