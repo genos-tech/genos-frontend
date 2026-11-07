@@ -42,6 +42,10 @@ export const navNestedListSx = {
     "--List-padding": "0px",
     "--List-gap": "0px",
     marginInlineStart: "8px",
+    // Joy gives a List a negative end margin of its own; it pushed nested rows
+    // 8px past their parent per level (measured: a 318px parent, 310px children
+    // ending 8px further right).
+    marginInlineEnd: 0,
     paddingInlineStart: "7px",
     borderInlineStart: `1px solid ${g.border.subtle}`,
 } as const;
