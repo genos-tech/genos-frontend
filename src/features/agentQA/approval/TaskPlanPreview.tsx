@@ -8,12 +8,15 @@
 import { useState } from "react";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import { Box, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
+import { MilestoneFlag } from "../../tasks/components/card/parts";
+import { EffortLabel } from "../../tasks/components/meta/EffortLabel";
+import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
+import { isPriorityName } from "../../tasks/meta/taskTone";
 import { agentMarkdownComponents } from "../agentMarkdown";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip } from "./previewHelpers";
@@ -43,6 +46,16 @@ interface PlanMilestoneArg {
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
 
+// A priority as the task family draws it (the shared icon with its name). A value
+// that is not one of the product's priorities (the model can send anything)
+// stays a text chip, so it is never silently dropped.
+const PlanPriority = ({ value }: { value: string }) =>
+    isPriorityName(value) ? (
+        <PriorityIcon priority={value} showLabel />
+    ) : (
+        <MetaChip label={value} />
+    );
+
 const TaskRow = ({
     task,
     allTasks,
@@ -60,18 +73,18 @@ const TaskRow = ({
         .filter(Boolean) as string[];
 
     const chips: string[] = [];
-    if (task.priority) chips.push(task.priority);
-    if (task.effort_level) chips.push(task.effort_level);
     if (task.due_date) chips.push(`${t.agentApproval.due} ${task.due_date}`);
     if (task.assignee_id) chips.push(String(task.assignee_id));
 
     return (
         <Box sx={{ ml: isSubtask ? 2.25 : 0 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
+                <Typography level="body-sm" sx={{ fontWeight: 500, color: g.text.primary }}>
                     {isSubtask ? "↳ " : ""}
                     {task.title || "—"}
                 </Typography>
+                {task.priority ? <PlanPriority value={task.priority} /> : null}
+                {task.effort_level ? <EffortLabel level={task.effort_level} /> : null}
                 {chips.map((c) => (
                     <MetaChip key={c} label={c} />
                 ))}
@@ -141,8 +154,6 @@ export const TaskPlanPreview = ({ args }: ApprovalPreviewProps) => {
     const parentTask = asString(args.parent_task_id);
 
     const milestoneChips: string[] = [];
-    if (milestone?.priority) milestoneChips.push(milestone.priority);
-    if (milestone?.effort_level) milestoneChips.push(milestone.effort_level);
     if (milestone?.due_date) milestoneChips.push(`${t.agentApproval.due} ${milestone.due_date}`);
     if (milestone?.assignee_ids?.length) {
         milestoneChips.push(milestone.assignee_ids.join(", "));
@@ -160,8 +171,8 @@ export const TaskPlanPreview = ({ args }: ApprovalPreviewProps) => {
 
             {(milestone || existingMilestone) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-                    <FlagRoundedIcon sx={{ fontSize: 16, color: g.warning.text }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
+                    <MilestoneFlag size={16} />
+                    <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                         {milestone?.title || existingMilestone}
                     </Typography>
                     <Typography level="body-xs" sx={{ color: g.text.secondary }}>
@@ -169,6 +180,10 @@ export const TaskPlanPreview = ({ args }: ApprovalPreviewProps) => {
                             ? t.agentApproval.newMilestone
                             : t.agentApproval.existingMilestone}
                     </Typography>
+                    {milestone?.priority ? <PlanPriority value={milestone.priority} /> : null}
+                    {milestone?.effort_level ? (
+                        <EffortLabel level={milestone.effort_level} />
+                    ) : null}
                     {milestoneChips.map((c) => (
                         <MetaChip key={c} label={c} />
                     ))}
@@ -177,7 +192,7 @@ export const TaskPlanPreview = ({ args }: ApprovalPreviewProps) => {
 
             {parentTask ? (
                 // Sub-task mode: the whole batch nests under this task.
-                <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {fmt(t.agentApproval.subtasksOf, { task: parentTask })}
                 </Typography>
             ) : null}

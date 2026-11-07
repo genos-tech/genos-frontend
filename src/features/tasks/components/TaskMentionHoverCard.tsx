@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Box, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
+import { Box, CircularProgress, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { useAuth } from "../../../context/AuthContext";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { getCachedOrFetchTaskStatus, type TaskStatusResult } from "../services/taskStatusCache";
 import { deriveDaysLeft } from "../utils/daysLeft";
-import { effortLevels, priorities, statuses, taskMetaLabel } from "../utils/taskMeta";
+import { MilestoneFlag, TagStrip } from "./card/parts";
+import { EffortLabel } from "./meta/EffortLabel";
+import { PriorityIcon } from "./meta/PriorityIcon";
+import { StatusLabel } from "./meta/StatusLabel";
 
 interface Props {
     projectId: string;
@@ -23,41 +23,23 @@ interface Props {
     title: string;
 }
 
-// One normalized badge. `allTasks` carries status/priority/effort as bare
-// strings, the fetched `TaskProps` carries them as `{ color, textColor }`
-// objects — both collapse to this so the card renders from one shape.
-type Pill = { label: string; color?: string | null; textColor?: string | null };
-
 type CardVM = {
     displayId: string;
     title: string;
     projectName?: string;
     isMilestone: boolean;
-    status?: Pill;
-    priority?: Pill;
-    effort?: Pill;
+    // `allTasks` carries these as bare strings, the fetched `TaskProps` as
+    // `{ status, color, textColor }` objects; both collapse to the name, since
+    // the colors come from the shared status / priority components now.
+    status?: string;
+    priority?: string;
+    effort?: string;
     assignee?: { userId: string | number; name?: string };
     reporterName?: string;
     startDate?: string | null;
     dueDate?: string | null;
     daysLeft?: number | null;
-    tags: { name: string; color?: string; textColor?: string }[];
-};
-
-const statusPill = (name?: string | null): Pill | undefined => {
-    if (!name) return undefined;
-    const m = statuses.find((s) => s.status === name);
-    return { label: name, color: m?.color, textColor: m?.textColor };
-};
-const priorityPill = (name?: string | null): Pill | undefined => {
-    if (!name) return undefined;
-    const m = priorities.find((p) => p.priority === name);
-    return { label: name, color: m?.color, textColor: m?.textColor };
-};
-const effortPill = (name?: string | null): Pill | undefined => {
-    if (!name) return undefined;
-    const m = effortLevels.find((e) => e.level === name);
-    return { label: name, color: m?.color, textColor: m?.textColor };
+    tags: { tagName: string; tagColor: string; tagTextColor: string }[];
 };
 
 // From the in-memory project task row (instant, current project only).
@@ -66,9 +48,9 @@ const vmFromTable = (t: TaskTableProps, projectName?: string): CardVM => ({
     title: t.title || "",
     projectName,
     isMilestone: !!t.isMilestone,
-    status: statusPill(t.status),
-    priority: priorityPill(t.priority),
-    effort: effortPill(t.effortLevel),
+    status: t.status || undefined,
+    priority: t.priority || undefined,
+    effort: t.effortLevel || undefined,
     assignee: t.assigneeId
         ? { userId: t.assigneeId, name: t.assigneeName ?? undefined }
         : undefined,
@@ -76,11 +58,7 @@ const vmFromTable = (t: TaskTableProps, projectName?: string): CardVM => ({
     dueDate: t.dueDate,
     // Fresh from dueDate — the row's `daysLeft` is a stale server snapshot.
     daysLeft: deriveDaysLeft(t.dueDate),
-    tags: (t.tags ?? []).map((tag) => ({
-        name: tag.tagName,
-        color: tag.tagColor,
-        textColor: tag.tagTextColor,
-    })),
+    tags: t.tags ?? [],
 });
 
 // From the fetched full task (richest: real color objects, assignee +
@@ -90,55 +68,17 @@ const vmFromFull = (t: TaskProps): CardVM => ({
     title: t.title || "",
     projectName: t.project?.projectName,
     isMilestone: !!t.isMilestone,
-    status: t.status?.status
-        ? { label: t.status.status, color: t.status.color, textColor: t.status.textColor }
-        : undefined,
-    priority: t.priority?.priority
-        ? { label: t.priority.priority, color: t.priority.color, textColor: t.priority.textColor }
-        : undefined,
-    effort: t.effortLevel?.level
-        ? {
-              label: t.effortLevel.level,
-              color: t.effortLevel.color,
-              textColor: t.effortLevel.textColor,
-          }
-        : undefined,
+    status: t.status?.status || undefined,
+    priority: t.priority?.priority || undefined,
+    effort: t.effortLevel?.level || undefined,
     assignee: t.assignee ? { userId: t.assignee.userId, name: t.assignee.userName } : undefined,
     reporterName: t.reporter?.userName,
     startDate: t.startDate,
     dueDate: t.dueDate,
     // Fresh from dueDate — the row's `daysLeft` is a stale server snapshot.
     daysLeft: deriveDaysLeft(t.dueDate),
-    tags: (t.tags ?? []).map((tag) => ({
-        name: tag.tagName,
-        color: tag.tagColor,
-        textColor: tag.tagTextColor,
-    })),
+    tags: t.tags ?? [],
 });
-
-const MetaPill = ({
-    pill,
-    isDark,
-    labels,
-}: {
-    pill?: Pill;
-    isDark: boolean;
-    labels: Parameters<typeof taskMetaLabel>[1];
-}) =>
-    pill?.label ? (
-        <Chip
-            size="sm"
-            variant="soft"
-            sx={{
-                backgroundColor: pill.color ? alpha(pill.color, isDark ? 0.5 : 0.75) : undefined,
-                color: pill.textColor ?? undefined,
-                fontWeight: "bold",
-                borderRadius: "5px",
-            }}
-        >
-            {taskMetaLabel(pill.label, labels)}
-        </Chip>
-    ) : null;
 
 const fmtDate = (iso?: string | null): string | null => {
     if (!iso) return null;
@@ -148,11 +88,11 @@ const fmtDate = (iso?: string | null): string | null => {
         : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 
-const dueColor = (daysLeft: number | null | undefined, muted: string): string => {
-    if (daysLeft === -1) return "#ef4444";
-    if (daysLeft != null && daysLeft <= 3) return "#f44336";
-    if (daysLeft != null && daysLeft <= 7) return "#ff9800";
-    return muted;
+// Same rule as the cards: red when expired, amber within a week, else quiet.
+const dueColor = (daysLeft: number | null | undefined): string => {
+    if (daysLeft === -1) return g.danger.text;
+    if (daysLeft != null && daysLeft <= 7) return g.warning.text;
+    return g.text.tertiary;
 };
 
 // Rich hover content for a task / milestone mention chip: status, priority,
@@ -160,13 +100,10 @@ const dueColor = (daysLeft: number | null | undefined, muted: string): string =>
 // in-memory project task list (`allTasks`) when the task is in the current
 // project, and a hover fetch fills in the rest (reporter, fresh colors) and
 // covers cross-project references. A spinner shows only while nothing is
-// available yet. Colors flow through `purplePalette` to match the app's
-// popovers. Mirrors `LinkedPrCard` + `PrHoverDetails`.
+// available yet. Mirrors `LinkedPrCard` + `PrHoverDetails`. The pieces are the task
+// family's (MIP-1124): status, priority, effort and tags read as on every card.
 export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Props) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const { accessToken } = useAuth();
     const { myself, tasks, projects } = useHashMentionData();
     const [result, setResult] = useState<TaskStatusResult | null>(null);
@@ -208,10 +145,10 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
         minWidth: 240,
         maxWidth: 340,
         p: 1.25,
-        bgcolor: palette.surfaceSolid,
-        border: `1px solid ${palette.menuBorder}`,
-        borderRadius: "10px",
-        boxShadow: palette.shadow,
+        bgcolor: g.surface.raised,
+        border: `1px solid ${g.border.default}`,
+        borderRadius: g.radius.md,
+        boxShadow: g.shadow.md,
     } as const;
 
     const headerId = vm?.displayId || displayId;
@@ -224,13 +161,11 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
             {/* Header: milestone flag + id · title, with project subtitle. */}
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                 <Stack alignItems="center" direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
-                    {vm?.isMilestone && (
-                        <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", flexShrink: 0 }} />
-                    )}
+                    {vm?.isMilestone && <MilestoneFlag size={14} />}
                     <Typography
                         level="body-sm"
                         sx={{
-                            color: palette.text,
+                            color: g.text.primary,
                             fontWeight: 600,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -242,7 +177,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                     </Typography>
                 </Stack>
                 {vm?.projectName && (
-                    <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                    <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                         {vm.projectName}
                     </Typography>
                 )}
@@ -255,18 +190,22 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                 </Stack>
             )}
             {!vm && result?.kind === "error" && (
-                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                     {t.tasks.mentionHover.statusUnavailable}
                 </Typography>
             )}
 
             {vm && (
                 <>
-                    {/* Status / priority / effort badges. */}
-                    <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
-                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.status} />
-                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.priority} />
-                        <MetaPill isDark={isDark} labels={t.tasks.filters} pill={vm.effort} />
+                    {/* Status / priority / effort: the shared pieces. */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        sx={{ flexWrap: "wrap", columnGap: 1.5, rowGap: 0.5 }}
+                    >
+                        {vm.status && <StatusLabel status={vm.status} />}
+                        <PriorityIcon priority={vm.priority} showLabel />
+                        {vm.effort && <EffortLabel level={vm.effort} />}
                     </Stack>
 
                     {/* Assignee + due. */}
@@ -292,7 +231,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                                 <Typography
                                     level="body-xs"
                                     sx={{
-                                        color: palette.text,
+                                        color: g.text.primary,
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
@@ -302,17 +241,14 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                                 </Typography>
                             </Stack>
                         ) : (
-                            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                            <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                                 {t.tasks.mentionHover.unassigned}
                             </Typography>
                         )}
 
                         {(dueStr || vm.daysLeft === -1) && (
                             <Box sx={{ flexShrink: 0 }}>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ color: dueColor(vm.daysLeft, palette.textMuted) }}
-                                >
+                                <Typography level="body-xs" sx={{ color: dueColor(vm.daysLeft) }}>
                                     {vm.daysLeft === -1
                                         ? t.tasks.mentionHover.expired
                                         : vm.daysLeft != null && vm.daysLeft >= 0
@@ -330,7 +266,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
 
                     {/* Reporter + start date. */}
                     {(vm.reporterName || startStr) && (
-                        <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                             {vm.reporterName
                                 ? fmt(t.tasks.mentionHover.reportedBy, { name: vm.reporterName })
                                 : ""}
@@ -340,32 +276,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
                     )}
 
                     {/* Tags. */}
-                    {vm.tags.length > 0 && (
-                        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.4 }}>
-                            {vm.tags.slice(0, 6).map((tag, i) => (
-                                <Chip
-                                    key={`${tag.name}-${i}`}
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: tag.color
-                                            ? alpha(tag.color, isDark ? 0.45 : 0.7)
-                                            : undefined,
-                                        color: tag.textColor ?? undefined,
-                                        borderRadius: "5px",
-                                        fontSize: "0.65rem",
-                                    }}
-                                >
-                                    {tag.name}
-                                </Chip>
-                            ))}
-                            {vm.tags.length > 6 && (
-                                <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                                    +{vm.tags.length - 6}
-                                </Typography>
-                            )}
-                        </Stack>
-                    )}
+                    {vm.tags.length > 0 && <TagStrip max={6} tags={vm.tags} />}
                 </>
             )}
         </Stack>
