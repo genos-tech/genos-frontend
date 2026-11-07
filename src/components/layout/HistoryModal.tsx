@@ -2,7 +2,6 @@ import { useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -11,22 +10,8 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    Divider,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Stack,
-    Tab,
-    TabList,
-    TabPanel,
-    Tabs,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } from "@mui/joy";
+import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
 import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
@@ -51,6 +36,7 @@ import { BaseAvatar } from "../ui/avatars/BaseAvatar";
 import { MDMAvatar } from "../ui/avatars/MDMAvatar";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { EmojiText } from "../ui/emoji/EmojiText";
+import { ModalFrame } from "../ui/modal/ModalFrame";
 
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -455,6 +441,7 @@ export const HistoryModal = ({
     onOpenNote,
 }: Props) => {
     const { mode } = useColorScheme();
+    const theme = useTheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const { myself, teamMemberProfiles } = useAvatarContext();
@@ -669,86 +656,72 @@ export const HistoryModal = ({
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
-                sx={{
-                    width: { xs: "92vw", sm: 500, md: 580 },
-                    maxHeight: "85vh",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    borderRadius: "xl",
-                    p: 2.5,
+        <ModalFrame
+            closeLabel={t.history.close}
+            headerDivider
+            icon={<HistoryRoundedIcon />}
+            open={open}
+            size="lg"
+            title={t.history.title}
+            // Where Joy's own modals sit (this dialog never set a layer).
+            zIndex={theme.zIndex.modal}
+            actions={
+                <Button color="neutral" size="sm" variant="plain" onClick={clear}>
+                    {t.history.clear}
+                </Button>
+            }
+            onClose={onClose}
+        >
+            <Tabs
+                sx={{ bgcolor: "transparent" }}
+                value={tab}
+                onChange={(_e, v) => {
+                    if (typeof v === "string") setTab(v as HistoryTabKey);
                 }}
             >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <HistoryRoundedIcon />
-                    <Typography level="title-lg">{t.history.title}</Typography>
-                    <Box sx={{ flex: 1 }} />
-                    <IconButton aria-label={t.history.close} variant="plain" onClick={onClose}>
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-                <Tabs
-                    sx={{ bgcolor: "transparent" }}
-                    value={tab}
-                    onChange={(_e, v) => {
-                        if (typeof v === "string") setTab(v as HistoryTabKey);
-                    }}
-                >
-                    <TabList sx={{ gap: 0.5, mb: 1.5 }}>
-                        <Tab sx={TAB_SX} value="chats">
-                            <ChatBubbleOutlineRoundedIcon sx={TAB_ICON_SX} />
-                            {t.history.tabs.chats}
-                        </Tab>
-                        <Tab sx={TAB_SX} value="tasks">
-                            <AssignmentRoundedIcon sx={TAB_ICON_SX} />
-                            {t.history.tabs.tasks}
-                        </Tab>
-                        <Tab sx={TAB_SX} value="notes">
-                            <NoteAltRoundedIcon sx={TAB_ICON_SX} />
-                            {t.history.tabs.notes}
-                        </Tab>
-                    </TabList>
+                <TabList sx={{ gap: 0.5, mb: 1.5 }}>
+                    <Tab sx={TAB_SX} value="chats">
+                        <ChatBubbleOutlineRoundedIcon sx={TAB_ICON_SX} />
+                        {t.history.tabs.chats}
+                    </Tab>
+                    <Tab sx={TAB_SX} value="tasks">
+                        <AssignmentRoundedIcon sx={TAB_ICON_SX} />
+                        {t.history.tabs.tasks}
+                    </Tab>
+                    <Tab sx={TAB_SX} value="notes">
+                        <NoteAltRoundedIcon sx={TAB_ICON_SX} />
+                        {t.history.tabs.notes}
+                    </Tab>
+                </TabList>
 
-                    <TabPanel sx={{ px: 0, py: 0.5 }} value="chats">
-                        <Stack spacing={0.25}>
-                            {chatsEntries.length === 0 ? (
-                                <EmptyState message={t.history.empty} />
-                            ) : (
-                                chatsEntries.map(renderEntry)
-                            )}
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 0.5 }} value="tasks">
-                        <Stack spacing={0.25}>
-                            {tasksEntries.length === 0 ? (
-                                <EmptyState message={t.history.empty} />
-                            ) : (
-                                tasksEntries.map(renderEntry)
-                            )}
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 0.5 }} value="notes">
-                        <Stack spacing={0.25}>
-                            {notesEntries.length === 0 ? (
-                                <EmptyState message={t.history.empty} />
-                            ) : (
-                                notesEntries.map(renderEntry)
-                            )}
-                        </Stack>
-                    </TabPanel>
-                </Tabs>
-
-                <Divider sx={{ mt: 2, mb: 1.5 }} />
-                <Stack alignItems="center" direction="row" justifyContent="flex-end">
-                    <Button color="neutral" size="sm" variant="plain" onClick={clear}>
-                        {t.history.clear}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                <TabPanel sx={{ px: 0, py: 0.5 }} value="chats">
+                    <Stack spacing={0.25}>
+                        {chatsEntries.length === 0 ? (
+                            <EmptyState message={t.history.empty} />
+                        ) : (
+                            chatsEntries.map(renderEntry)
+                        )}
+                    </Stack>
+                </TabPanel>
+                <TabPanel sx={{ px: 0, py: 0.5 }} value="tasks">
+                    <Stack spacing={0.25}>
+                        {tasksEntries.length === 0 ? (
+                            <EmptyState message={t.history.empty} />
+                        ) : (
+                            tasksEntries.map(renderEntry)
+                        )}
+                    </Stack>
+                </TabPanel>
+                <TabPanel sx={{ px: 0, py: 0.5 }} value="notes">
+                    <Stack spacing={0.25}>
+                        {notesEntries.length === 0 ? (
+                            <EmptyState message={t.history.empty} />
+                        ) : (
+                            notesEntries.map(renderEntry)
+                        )}
+                    </Stack>
+                </TabPanel>
+            </Tabs>
+        </ModalFrame>
     );
 };

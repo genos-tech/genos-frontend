@@ -53,9 +53,22 @@ const FENCE = {
     onTouchCancel: stop,
 } as const;
 
-export type ModalFrameSize = "sm" | "md" | "lg";
+/**
+ * `sm` / `md` / `lg` are fixed widths for dialogs. `xl` is the wide tabbed
+ * panel (Settings): 550 / 700 / 920 as the screen grows. `profile` is the
+ * 1000px profile card (project, group, team); it is built to be used with
+ * `fullScreenOnMobile` (below `md` the card is the screen, with the close X as
+ * the only way out), so pass both.
+ */
+export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "profile";
 
-const WIDTH: Record<ModalFrameSize, number> = { sm: 400, md: 480, lg: 640 };
+const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = {
+    sm: 400,
+    md: 480,
+    lg: 640,
+    xl: { sm: 550, md: 700, lg: 920 },
+    profile: { md: 1000 },
+};
 
 /** Where page-level dialogs have always sat. */
 export const MODAL_FRAME_DEFAULT_Z_INDEX = 10010;
@@ -79,6 +92,17 @@ export type ModalFrameProps = {
     /** Footer buttons. Placed at the end of the row (the left in RTL). */
     actions?: ReactNode;
     size?: ModalFrameSize;
+    /** A header-bottom hairline, for a panel whose body is its own surface (tabs). */
+    headerDivider?: boolean;
+    /** Something to show between the title and the close button (a chip, say). */
+    headerAccessory?: ReactNode;
+    /** The body brings its own padding (tabs, a scrolling card). Default: 20px. */
+    flush?: boolean;
+    /** On a phone the frame fills the screen with square corners, not an inset card. */
+    fullScreenOnMobile?: boolean;
+    /** Keep the frame clear of the mobile bottom tab bar (a dialog that paints over it).
+     *  Not combinable with `fullScreenOnMobile`, which is the whole screen. */
+    clearBottomBar?: boolean;
     /** Exact layer. Wins over the default, loses to nothing but `hostZIndex`. */
     zIndex?: number;
     /** The layer of the surface that opened this dialog; the frame sits above it. */
@@ -87,6 +111,8 @@ export type ModalFrameProps = {
     role?: "dialog" | "alertdialog";
     /** Show the X in the header. */
     closable?: boolean;
+    /** Accessible name of the X, when a more specific one than "Close" exists. */
+    closeLabel?: string;
     /** False while work is under way: Esc, the backdrop and the X do nothing. */
     dismissible?: boolean;
     /** Free-form marker for tests and styling hooks (e.g. "danger"). */
@@ -102,16 +128,46 @@ export const ModalFrame = ({
     children,
     actions,
     size = "md",
+    headerDivider = false,
+    headerAccessory,
+    flush = false,
+    fullScreenOnMobile = false,
+    clearBottomBar = false,
     zIndex,
     hostZIndex,
     role = "dialog",
     closable = true,
+    closeLabel,
     dismissible = true,
     tone,
 }: ModalFrameProps) => {
     const { t } = useTranslation();
     const titleId = useId();
     const descriptionId = useId();
+
+    const inset = "calc(100vw - 24px)";
+    const inner = "calc(100dvh - 32px)";
+    const width = WIDTH[size];
+    const sizing = fullScreenOnMobile
+        ? {
+              // Below `md` the card IS the screen; from `md` up it is the
+              // centered card again.
+              width: { xs: "100vw", md: typeof width === "number" ? width : width.md },
+              maxWidth: { xs: "100vw", md: inset },
+              height: { xs: "100dvh", md: "auto" },
+              maxHeight: { xs: "100dvh", md: inner },
+              m: { xs: 0, md: "auto" },
+          }
+        : {
+              width: { xs: inset, ...(typeof width === "number" ? { sm: width } : width) },
+              maxWidth: inset,
+              maxHeight: clearBottomBar
+                  ? {
+                        xs: "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
+                        sm: inner,
+                    }
+                  : inner,
+          };
 
     const layer =
         hostZIndex != null
@@ -144,16 +200,14 @@ export const ModalFrame = ({
                 sx={{
                     p: 0,
                     gap: 0,
-                    width: { xs: "calc(100vw - 24px)", sm: WIDTH[size] },
-                    maxWidth: "calc(100vw - 24px)",
-                    maxHeight: "calc(100dvh - 32px)",
+                    ...sizing,
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
                     // Flat: solid surface, one thin line, no gradient, no glow.
                     background: g.surface.raised,
                     border: `1px solid ${g.border.default}`,
-                    borderRadius: g.radius.lg,
+                    borderRadius: fullScreenOnMobile ? { xs: 0, md: g.radius.lg } : g.radius.lg,
                     boxShadow: g.shadow.lg,
                     color: g.text.primary,
                     fontFamily: g.font.body,
@@ -169,8 +223,9 @@ export const ModalFrame = ({
                         gap: 1.5,
                         px: 2.5,
                         pt: 2.5,
-                        pb: 1,
+                        pb: headerDivider ? 1.5 : 1,
                         flexShrink: 0,
+                        ...(headerDivider && { borderBottom: `1px solid ${g.border.subtle}` }),
                     }}
                 >
                     {icon && (
@@ -214,9 +269,14 @@ export const ModalFrame = ({
                             </Box>
                         )}
                     </Box>
+                    {Boolean(headerAccessory) && (
+                        <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center" }}>
+                            {headerAccessory}
+                        </Box>
+                    )}
                     {closable && (
                         <IconButton
-                            aria-label={t.common.actions.close}
+                            aria-label={closeLabel ?? t.common.actions.close}
                             color="neutral"
                             disabled={!dismissible}
                             size="sm"
@@ -239,8 +299,8 @@ export const ModalFrame = ({
                 {children != null && (
                     <Box
                         sx={{
-                            px: 2.5,
-                            py: 1,
+                            px: flush ? 0 : 2.5,
+                            py: flush ? 0 : 1,
                             flex: "1 1 auto",
                             minHeight: 0,
                             overflowY: "auto",

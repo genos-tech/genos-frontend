@@ -1,5 +1,5 @@
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -125,5 +125,44 @@ describe("SettingsModal tab rail", () => {
         expect(css).not.toMatch(/gradient|rgba?\(\s*\d/);
         // The selected tab is the first one (General) on open.
         expect(tab).toHaveAttribute("aria-selected", "true");
+    });
+});
+
+describe("SettingsModal frame (MIP-1126 batch 1)", () => {
+    it("is a ModalFrame dialog titled Settings", () => {
+        renderModal();
+        const dialog = screen.getByRole("dialog");
+        const title = document.getElementById(dialog.getAttribute("aria-labelledby")!)!;
+        expect(title.tagName).toBe("H2");
+        expect(title.textContent).toBe("Settings");
+    });
+
+    it("keeps Joy's default modal layer (above the mobile tab bar)", () => {
+        renderModal();
+        expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe("1300");
+    });
+
+    it("clears the mobile bottom bar and brings no gradient, glow or own radius", () => {
+        renderModal();
+        const css = cssOf(screen.getByRole("dialog"));
+        expect(css).toContain("--mobile-bottom-inset");
+        expect(css).not.toMatch(/gradient/i);
+        expect(css.match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+        expect(css).not.toContain("--Card-radius: var(--joy-radius-xl");
+    });
+
+    it("does not leak a click inside to the component that opened it", () => {
+        const onClick = vi.fn();
+        render(
+            <CssVarsProvider>
+                <MemoryRouter>
+                    <div onClick={onClick}>
+                        <SettingsModal open onClose={vi.fn()} />
+                    </div>
+                </MemoryRouter>
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getAllByRole("tab")[0]);
+        expect(onClick).not.toHaveBeenCalled();
     });
 });

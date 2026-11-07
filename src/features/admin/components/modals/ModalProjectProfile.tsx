@@ -24,13 +24,9 @@ import {
     IconButton,
     Input,
     ListItemButton,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -41,10 +37,8 @@ import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSize
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
-import {
-    PROFILE_MODAL_Z_INDEX,
-    ProfileModalStyles,
-} from "../../../../components/ui/styles/commonStyle";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -53,7 +47,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { addMembersToProjectWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
-import { purplePalette } from "../../../../theme/purplePalette";
+import { g } from "../../../../theme/tokens";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { AllChatProps } from "../../../../types/chat";
@@ -103,11 +97,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     // Resolve the legacy integer `project_id` from the v3 channel UUID
     // via `Channel.legacyChatId`. Every legacy project service this
@@ -520,514 +510,399 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Modal
+            <ModalFrame
                 open={openModalProjectProfile}
-                sx={{
-                    zIndex: PROFILE_MODAL_Z_INDEX,
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "transparent",
-                }}
+                title={fmt(t.admin.projectProfile.title, {
+                    projectName: projectProfile?.projectName ?? pmChat.chatName,
+                })}
+                size="profile"
+                zIndex={PROFILE_MODAL_Z_INDEX}
+                flush
+                fullScreenOnMobile
                 onClose={() => setOpenModalProjectProfile(false)}
             >
-                <ModalDialog
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                <Stack
+                    spacing={4}
                     sx={{
-                        background: styles.bg,
-                        border: `1px solid ${styles.border}`,
-                        boxShadow: styles.shadow,
-                        borderRadius: { xs: "0", md: "20px" },
-                        overflow: "auto",
-                        transition: "all 0.3s ease",
-                        // Fill the viewport on mobile so the modal feels
-                        // native; cap at 1000px on desktop to match the
-                        // original layout.
-                        width: { xs: "100vw", md: "auto" },
-                        height: { xs: "100dvh", md: "auto" },
-                        maxWidth: { xs: "100vw", md: "1000px" },
-                        maxHeight: { xs: "100dvh", md: "90vh" },
-                        m: { xs: 0, md: "auto" },
+                        display: "flex",
+                        mx: "auto",
+                        px: { xs: 2, md: 6 },
+                        py: { xs: 2, md: 3 },
                     }}
                 >
-                    <Box
+                    <Card
                         sx={{
-                            flex: 1,
-                            width: { xs: "100%", md: "1000px" },
-                            maxWidth: "100%",
+                            background: g.surface.default,
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            boxShadow: "none",
                         }}
                     >
-                        <Box
+                        <Stack
+                            direction={{ xs: "column", md: "row" }}
+                            alignItems={{ xs: "stretch", md: "flex-start" }}
                             sx={{
-                                position: "sticky",
-                                top: { sm: -100, md: -110 },
-                                zIndex: 9995,
+                                display: "flex",
+                                my: 1,
+                                width: "100%",
+                                minWidth: 0,
                             }}
                         >
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 1,
-                                    px: { xs: 2, md: 3 },
+                                    pl: { xs: 0, md: "20px" },
+                                    pr: { xs: 0, md: "40px" },
+                                    mb: { xs: 2, md: 0 },
+                                    position: "relative",
+                                    display: "inline-block",
+                                    alignSelf: { xs: "center", md: "auto" },
                                 }}
                             >
-                                <Typography
-                                    component="h1"
-                                    level="h2"
+                                <BaseAvatar
+                                    size="display"
+                                    src={buildAvatarSrc(liveChat.profileImagePath)}
                                     sx={{
-                                        mt: 1,
-                                        mb: 1,
-                                        flex: 1,
-                                        minWidth: 0,
-                                        background: styles.headerGradient,
-                                        backgroundClip: "text",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.02em",
-                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
-                                    }}
-                                    noWrap
-                                >
-                                    {fmt(t.admin.projectProfile.title, {
-                                        projectName:
-                                            projectProfile?.projectName ?? pmChat.chatName,
-                                    })}
-                                </Typography>
-                                {/* Close button — without it mobile users
-                                    have no way to dismiss the modal,
-                                    since it's full-screen on xs and
-                                    there's no backdrop to click. */}
-                                <ModalClose
-                                    variant="plain"
-                                    sx={{
-                                        position: "static",
-                                        flexShrink: 0,
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-
-                        <Stack
-                            spacing={4}
-                            sx={{
-                                display: "flex",
-                                mx: "auto",
-                                px: { xs: 2, md: 6 },
-                                py: { xs: 2, md: 3 },
-                            }}
-                        >
-                            <Card
-                                sx={{
-                                    background: styles.cardBg,
-                                    border: `1px solid ${styles.border}`,
-                                    borderRadius: "16px",
-                                    boxShadow: isDark
-                                        ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
-                                    transition: "all 0.3s ease",
-                                    "&:hover": {
-                                        boxShadow: isDark
-                                            ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(var(--gp-brand-700-rgb), 0.12)",
-                                    },
-                                }}
-                            >
-                                <Stack
-                                    direction={{ xs: "column", md: "row" }}
-                                    alignItems={{ xs: "stretch", md: "flex-start" }}
-                                    sx={{
-                                        display: "flex",
-                                        my: 1,
-                                        width: "100%",
-                                        minWidth: 0,
+                                        fontSize: "50px",
+                                        border: `3px solid ${g.border.default}`,
                                     }}
                                 >
-                                    <Box
-                                        sx={{
-                                            pl: { xs: 0, md: "20px" },
-                                            pr: { xs: 0, md: "40px" },
-                                            mb: { xs: 2, md: 0 },
-                                            position: "relative",
-                                            display: "inline-block",
-                                            alignSelf: { xs: "center", md: "auto" },
-                                        }}
-                                    >
-                                        <BaseAvatar
-                                            size="display"
-                                            src={buildAvatarSrc(liveChat.profileImagePath)}
-                                            sx={{
-                                                fontSize: "50px",
-                                                boxShadow: styles.avatarGlow,
-                                                border: `3px solid ${styles.border}`,
-                                                transition: "all 0.3s ease",
-                                                "&:hover": {
-                                                    transform: "scale(1.02)",
-                                                    boxShadow: isDark
-                                                        ? "0 0 50px rgba(var(--gp-brand-700-rgb), 0.5), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                                                        : "0 0 50px rgba(var(--gp-brand-700-rgb), 0.3), 0 0 100px rgba(var(--gp-brandalt-500-rgb), 0.15)",
-                                                },
-                                            }}
-                                        >
-                                            <AssignmentIcon sx={{ fontSize: 100 }} />
-                                        </BaseAvatar>
+                                    <AssignmentIcon sx={{ fontSize: 100 }} />
+                                </BaseAvatar>
 
-                                        {/* Image upload is owner/editor now — the
+                                {/* Image upload is owner/editor now — the
                                             endpoint had no gate at all before, and
                                             this button was shown to everyone. */}
-                                        {canManage && (
-                                            <Box
-                                                sx={{
-                                                    position: "absolute",
-                                                    top: 150,
-                                                    right: 30,
-                                                }}
-                                            >
-                                                <input
-                                                    ref={inputRef}
-                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                    multiple={false}
-                                                    style={{ display: "none" }}
-                                                    type="file"
-                                                    onChange={handleSelectedFiles}
-                                                />
-                                                <AppTooltip
-                                                    size="sm"
-                                                    title={t.admin.projectProfile.editProfileImage}
-                                                >
-                                                    <IconButton
-                                                        variant="soft"
-                                                        sx={{
-                                                            background: isDark
-                                                                ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.3) 0%, rgba(var(--gp-brandalt-500-rgb), 0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brandalt-500-rgb), 0.15) 100%)",
-                                                            border: `1px solid ${styles.border}`,
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.5) 0%, rgba(var(--gp-brandalt-500-rgb), 0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.25) 0%, rgba(var(--gp-brandalt-500-rgb), 0.25) 100%)",
-                                                                transform: "scale(1.1)",
-                                                            },
-                                                        }}
-                                                        onClick={() => {
-                                                            if (pmChat.project) {
-                                                                handleButtonClick();
-                                                            } else {
-                                                                console.error("Project not found");
-                                                            }
-                                                        }}
-                                                    >
-                                                        <EditIcon
-                                                            sx={{
-                                                                fontSize: "30px",
-                                                                color: styles.accentColor,
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </AppTooltip>
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    <Stack
-                                        spacing={2}
+                                {canManage && (
+                                    <Box
                                         sx={{
-                                            flexGrow: 1,
-                                            minWidth: 0,
-                                            width: "100%",
-                                            maxWidth: "100%",
+                                            position: "absolute",
+                                            top: 150,
+                                            right: 30,
                                         }}
                                     >
-                                        <Stack direction="column" spacing={1.5}>
-                                            {/* Project name — inline rename for owners. */}
-                                            <FormControl>
-                                                <FormLabel
+                                        <input
+                                            ref={inputRef}
+                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                            multiple={false}
+                                            style={{ display: "none" }}
+                                            type="file"
+                                            onChange={handleSelectedFiles}
+                                        />
+                                        <AppTooltip
+                                            size="sm"
+                                            title={t.admin.projectProfile.editProfileImage}
+                                        >
+                                            <IconButton
+                                                variant="soft"
+                                                sx={{
+                                                    background: g.accent.subtle,
+                                                    border: `1px solid ${g.border.default}`,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.accent.border,
+                                                        transform: "scale(1.1)",
+                                                    },
+                                                }}
+                                                onClick={() => {
+                                                    if (pmChat.project) {
+                                                        handleButtonClick();
+                                                    } else {
+                                                        console.error("Project not found");
+                                                    }
+                                                }}
+                                            >
+                                                <EditIcon
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
+                                                        fontSize: "30px",
+                                                        color: g.accent.text,
+                                                    }}
+                                                />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    flexGrow: 1,
+                                    minWidth: 0,
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                }}
+                            >
+                                <Stack direction="column" spacing={1.5}>
+                                    {/* Project name — inline rename for owners. */}
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            Project name
+                                        </FormLabel>
+                                        {nameEditMode ? (
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <Input
+                                                    size="sm"
+                                                    autoFocus
+                                                    value={nameDraft}
+                                                    onChange={(e) => setNameDraft(e.target.value)}
+                                                    // See ModalTeamProfile for the
+                                                    // rationale on routing keydown through
+                                                    // slotProps.input.
+                                                    slotProps={{
+                                                        input: {
+                                                            onKeyDown: (e) => {
+                                                                if (e.key === "Enter") {
+                                                                    e.preventDefault();
+                                                                    void handleNameSave();
+                                                                }
+                                                                if (e.key === "Escape") {
+                                                                    setNameEditMode(false);
+                                                                    setNameError(null);
+                                                                }
+                                                            },
+                                                        },
+                                                    }}
+                                                    sx={{
+                                                        flex: 1,
+                                                        "--Input-radius": g.radius.md,
+                                                    }}
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    variant="solid"
+                                                    loading={nameSaving}
+                                                    onClick={handleNameSave}
+                                                >
+                                                    {t.common.profileEdit.save}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="plain"
+                                                    color="neutral"
+                                                    onClick={() => {
+                                                        setNameEditMode(false);
+                                                        setNameError(null);
                                                     }}
                                                 >
-                                                    Project name
-                                                </FormLabel>
-                                                {nameEditMode ? (
-                                                    <Stack
-                                                        direction="row"
-                                                        spacing={1}
-                                                        alignItems="center"
+                                                    {t.common.profileEdit.cancel}
+                                                </Button>
+                                            </Stack>
+                                        ) : (
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: g.text.primary,
+                                                        fontSize: "18px",
+                                                    }}
+                                                >
+                                                    {projectProfile?.projectName ??
+                                                        pmChat.chatName}
+                                                </Typography>
+                                                {canManage && (
+                                                    <AppTooltip
+                                                        title={t.common.profileEdit.rename}
+                                                        size="sm"
                                                     >
-                                                        <Input
-                                                            size="sm"
-                                                            autoFocus
-                                                            value={nameDraft}
-                                                            onChange={(e) =>
-                                                                setNameDraft(e.target.value)
-                                                            }
-                                                            // See ModalTeamProfile for the
-                                                            // rationale on routing keydown through
-                                                            // slotProps.input.
-                                                            slotProps={{
-                                                                input: {
-                                                                    onKeyDown: (e) => {
-                                                                        if (e.key === "Enter") {
-                                                                            e.preventDefault();
-                                                                            void handleNameSave();
-                                                                        }
-                                                                        if (e.key === "Escape") {
-                                                                            setNameEditMode(false);
-                                                                            setNameError(null);
-                                                                        }
-                                                                    },
-                                                                },
-                                                            }}
-                                                            sx={{
-                                                                flex: 1,
-                                                                "--Input-radius": "8px",
-                                                            }}
-                                                        />
-                                                        <Button
-                                                            size="sm"
-                                                            variant="solid"
-                                                            loading={nameSaving}
-                                                            onClick={handleNameSave}
-                                                        >
-                                                            {t.common.profileEdit.save}
-                                                        </Button>
-                                                        <Button
+                                                        <IconButton
                                                             size="sm"
                                                             variant="plain"
-                                                            color="neutral"
                                                             onClick={() => {
-                                                                setNameEditMode(false);
+                                                                setNameDraft(
+                                                                    projectProfile?.projectName ??
+                                                                        pmChat.chatName
+                                                                );
                                                                 setNameError(null);
+                                                                setNameEditMode(true);
                                                             }}
                                                         >
-                                                            {t.common.profileEdit.cancel}
-                                                        </Button>
-                                                    </Stack>
-                                                ) : (
-                                                    <Stack
-                                                        direction="row"
-                                                        spacing={1}
-                                                        alignItems="center"
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: styles.valueColor,
-                                                                fontSize: "18px",
-                                                            }}
-                                                        >
-                                                            {projectProfile?.projectName ??
-                                                                pmChat.chatName}
-                                                        </Typography>
-                                                        {canManage && (
-                                                            <AppTooltip
-                                                                title={t.common.profileEdit.rename}
-                                                                size="sm"
-                                                            >
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() => {
-                                                                        setNameDraft(
-                                                                            projectProfile?.projectName ??
-                                                                                pmChat.chatName
-                                                                        );
-                                                                        setNameError(null);
-                                                                        setNameEditMode(true);
-                                                                    }}
-                                                                >
-                                                                    <EditIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                </IconButton>
-                                                            </AppTooltip>
-                                                        )}
-                                                    </Stack>
+                                                            <EditIcon sx={{ fontSize: 16 }} />
+                                                        </IconButton>
+                                                    </AppTooltip>
                                                 )}
-                                                {nameError && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{
-                                                            color: palette.dangerTint,
-                                                            mt: 0.5,
-                                                        }}
-                                                    >
-                                                        {nameError}
-                                                    </Typography>
-                                                )}
-                                            </FormControl>
+                                            </Stack>
+                                        )}
+                                        {nameError && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: g.danger.text,
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                {nameError}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
 
-                                            <FormControl>
-                                                <FormLabel
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.admin.projectProfile.owner}
+                                        </FormLabel>
+                                        {/* Name + email on one (wrap-friendly) row,
+                                                    Transfer button on its own row below. */}
+                                        <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            spacing={2}
+                                            sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                        >
+                                            <Button
+                                                color="neutral"
+                                                variant="plain"
+                                                sx={{
+                                                    justifyContent: "flex-start",
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.md,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: g.hover,
+                                                    },
+                                                }}
+                                                onClick={() => {
+                                                    if (projectProfile?.ownerUserId) {
+                                                        setAvatarUserId(
+                                                            projectProfile.ownerUserId
+                                                        );
+                                                        setOpenUserProfile(true);
+                                                    }
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
+                                                        userSelect: "text",
+                                                        fontSize: "20px",
+                                                        color: g.text.primary,
+                                                        whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    {t.admin.projectProfile.owner}
-                                                </FormLabel>
-                                                {/* Name + email on one (wrap-friendly) row,
-                                                    Transfer button on its own row below. */}
-                                                <Stack
-                                                    direction="row"
-                                                    alignItems="center"
-                                                    spacing={2}
-                                                    sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                                    {projectProfile
+                                                        ? useTEM.teamMemberProfiles[
+                                                              projectProfile?.ownerUserId
+                                                          ]?.userName
+                                                        : t.admin.projectProfile.notAvailable}
+                                                </Typography>
+                                            </Button>
+                                            <Typography
+                                                component="a"
+                                                href={`mailto:${
+                                                    projectProfile
+                                                        ? useTEM.teamMemberProfiles[
+                                                              projectProfile?.ownerUserId
+                                                          ]?.userEmail
+                                                        : t.admin.projectProfile.notAvailable
+                                                }`}
+                                                startDecorator={
+                                                    <EmailRoundedIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: g.accent.text,
+                                                        }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    textDecoration: "none",
+                                                    color: g.text.primary,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        color: g.accent.text,
+                                                    },
+                                                }}
+                                            >
+                                                {projectProfile
+                                                    ? useTEM.teamMemberProfiles[
+                                                          projectProfile?.ownerUserId
+                                                      ]?.userEmail
+                                                    : t.admin.projectProfile.notAvailable}
+                                            </Typography>
+                                        </Stack>
+                                        {isProjectOwner && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "flex-end",
+                                                    mt: 1,
+                                                    mb: 1.5,
+                                                }}
+                                            >
+                                                <Button
+                                                    size="sm"
+                                                    variant="outlined"
+                                                    color="neutral"
+                                                    startDecorator={
+                                                        <SwapHorizRoundedIcon
+                                                            sx={{ fontSize: 16 }}
+                                                        />
+                                                    }
+                                                    onClick={() => setOpenTransfer(true)}
+                                                    sx={{ borderRadius: g.radius.md }}
                                                 >
-                                                    <Button
-                                                        color="neutral"
-                                                        variant="plain"
-                                                        sx={{
-                                                            justifyContent: "flex-start",
-                                                            px: 1.5,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                background: styles.hoverBg,
-                                                            },
-                                                        }}
-                                                        onClick={() => {
-                                                            if (projectProfile?.ownerUserId) {
-                                                                setAvatarUserId(
-                                                                    projectProfile.ownerUserId
-                                                                );
-                                                                setOpenUserProfile(true);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight="bold"
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                fontSize: "20px",
-                                                                color: styles.valueColor,
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
-                                                            {projectProfile
-                                                                ? useTEM.teamMemberProfiles[
-                                                                      projectProfile?.ownerUserId
-                                                                  ]?.userName
-                                                                : t.admin.projectProfile
-                                                                      .notAvailable}
-                                                        </Typography>
-                                                    </Button>
-                                                    <Typography
-                                                        component="a"
-                                                        href={`mailto:${
-                                                            projectProfile
-                                                                ? useTEM.teamMemberProfiles[
-                                                                      projectProfile?.ownerUserId
-                                                                  ]?.userEmail
-                                                                : t.admin.projectProfile
-                                                                      .notAvailable
-                                                        }`}
-                                                        startDecorator={
-                                                            <EmailRoundedIcon
-                                                                fontSize="small"
-                                                                sx={{
-                                                                    color: styles.accentColor,
-                                                                }}
-                                                            />
-                                                        }
-                                                        sx={{
-                                                            textDecoration: "none",
-                                                            color: styles.valueColor,
-                                                            cursor: "pointer",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                color: styles.accentColor,
-                                                            },
-                                                        }}
-                                                    >
-                                                        {projectProfile
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  projectProfile?.ownerUserId
-                                                              ]?.userEmail
-                                                            : t.admin.projectProfile.notAvailable}
-                                                    </Typography>
-                                                </Stack>
-                                                {isProjectOwner && (
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            justifyContent: "flex-end",
-                                                            mt: 1,
-                                                            mb: 1.5,
-                                                        }}
-                                                    >
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outlined"
-                                                            color="neutral"
-                                                            startDecorator={
-                                                                <SwapHorizRoundedIcon
-                                                                    sx={{ fontSize: 16 }}
-                                                                />
-                                                            }
-                                                            onClick={() => setOpenTransfer(true)}
-                                                            sx={{ borderRadius: "8px" }}
-                                                        >
-                                                            {t.common.profileEdit.transferOwner}
-                                                        </Button>
-                                                    </Box>
-                                                )}
-                                            </FormControl>
+                                                    {t.common.profileEdit.transferOwner}
+                                                </Button>
+                                            </Box>
+                                        )}
+                                    </FormControl>
 
-                                            {/* The member list is a SIBLING of the FormControl,
+                                    {/* The member list is a SIBLING of the FormControl,
                                                 not a child. Joy allows only one control component
                                                 per FormControl, and the list now holds a role
                                                 <Select> per row — with the search <Input> that
                                                 was two controls in one instance. */}
-                                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                                <FormControl>
-                                                    <Stack
-                                                        direction={{ xs: "column", sm: "row" }}
-                                                        alignItems={{
-                                                            xs: "stretch",
-                                                            sm: "center",
+                                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                        <FormControl>
+                                            <Stack
+                                                direction={{ xs: "column", sm: "row" }}
+                                                alignItems={{
+                                                    xs: "stretch",
+                                                    sm: "center",
+                                                }}
+                                                justifyContent="space-between"
+                                                spacing={{ xs: 1, sm: 0 }}
+                                                sx={{ mb: 1 }}
+                                            >
+                                                <Stack
+                                                    alignItems="center"
+                                                    direction="row"
+                                                    spacing={1}
+                                                >
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: g.text.secondary,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0,
                                                         }}
-                                                        justifyContent="space-between"
-                                                        spacing={{ xs: 1, sm: 0 }}
-                                                        sx={{ mb: 1 }}
                                                     >
-                                                        <Stack
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                        >
-                                                            <FormLabel
-                                                                sx={{
-                                                                    color: styles.labelColor,
-                                                                    fontSize: "0.75rem",
-                                                                    fontWeight: 600,
-                                                                    textTransform: "uppercase",
-                                                                    letterSpacing: "0.05em",
-                                                                    mb: 0,
-                                                                }}
-                                                            >
-                                                                {fmt(
-                                                                    t.admin.projectProfile.members,
-                                                                    {
-                                                                        filtered:
-                                                                            filteredMembers.length,
-                                                                        total: visibleMembers.length,
-                                                                    }
-                                                                )}
-                                                            </FormLabel>
-                                                            {/* Any member can add teammates — no
+                                                        {fmt(t.admin.projectProfile.members, {
+                                                            filtered: filteredMembers.length,
+                                                            total: visibleMembers.length,
+                                                        })}
+                                                    </FormLabel>
+                                                    {/* Any member can add teammates — no
                                                             owner gate. Disabled until the
                                                             profile (and so the project id)
                                                             has loaded.
@@ -1040,594 +915,538 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             share panel below instead — so this
                                                             is a control with a replacement,
                                                             not a missing one. */}
-                                                            {!isExternalProject && (
-                                                                <Button
-                                                                    disabled={
-                                                                        !projectProfile?.projectId
-                                                                    }
-                                                                    size="sm"
-                                                                    variant="soft"
-                                                                    startDecorator={
-                                                                        <PersonAddAltRoundedIcon
-                                                                            sx={{ fontSize: 14 }}
-                                                                        />
-                                                                    }
-                                                                    sx={{
-                                                                        borderRadius: "8px",
-                                                                        fontSize: "12px",
-                                                                        fontWeight: 600,
-                                                                        flexShrink: 0,
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        setOpenAddMembers(true)
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        t.common.addMembers
-                                                                            .openButton
-                                                                    }
-                                                                </Button>
-                                                            )}
-                                                            {/* Guests are invited BY EMAIL, not picked
+                                                    {!isExternalProject && (
+                                                        <Button
+                                                            disabled={!projectProfile?.projectId}
+                                                            size="sm"
+                                                            variant="soft"
+                                                            startDecorator={
+                                                                <PersonAddAltRoundedIcon
+                                                                    sx={{ fontSize: 14 }}
+                                                                />
+                                                            }
+                                                            sx={{
+                                                                borderRadius: g.radius.md,
+                                                                fontSize: "12px",
+                                                                fontWeight: 600,
+                                                                flexShrink: 0,
+                                                            }}
+                                                            onClick={() => setOpenAddMembers(true)}
+                                                        >
+                                                            {t.common.addMembers.openButton}
+                                                        </Button>
+                                                    )}
+                                                    {/* Guests are invited BY EMAIL, not picked
                                                                 from the team roster, because the whole
                                                                 point is that they aren't in it. Hence a
                                                                 second button rather than a mode on the
                                                                 member picker. */}
-                                                            {canManage && !isExternalProject && (
-                                                                <Button
-                                                                    color="neutral"
-                                                                    size="sm"
-                                                                    variant="outlined"
-                                                                    startDecorator={
-                                                                        <PersonAddAltRoundedIcon
-                                                                            sx={{ fontSize: 14 }}
-                                                                        />
-                                                                    }
-                                                                    sx={{
-                                                                        borderRadius: "8px",
-                                                                        fontSize: "12px",
-                                                                        fontWeight: 600,
-                                                                        flexShrink: 0,
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        setOpenInviteGuests(true)
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        t.admin.inviteMembers
-                                                                            .openButtonGuest
-                                                                    }
-                                                                </Button>
-                                                            )}
-                                                        </Stack>
-                                                        <Input
-                                                            placeholder={
-                                                                t.admin.projectProfile
-                                                                    .searchMembers
-                                                            }
-                                                            value={memberSearchQuery}
-                                                            onChange={(e) =>
-                                                                setMemberSearchQuery(
-                                                                    e.target.value
-                                                                )
-                                                            }
+                                                    {canManage && !isExternalProject && (
+                                                        <Button
+                                                            color="neutral"
+                                                            size="sm"
+                                                            variant="outlined"
                                                             startDecorator={
-                                                                <SearchIcon
-                                                                    sx={{
-                                                                        color: styles.accentColor,
-                                                                        fontSize: "18px",
-                                                                    }}
+                                                                <PersonAddAltRoundedIcon
+                                                                    sx={{ fontSize: 14 }}
                                                                 />
                                                             }
-                                                            endDecorator={
-                                                                memberSearchQuery && (
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        onClick={() =>
-                                                                            setMemberSearchQuery(
-                                                                                ""
-                                                                            )
-                                                                        }
-                                                                        sx={{
-                                                                            minWidth: "24px",
-                                                                            minHeight: "24px",
-                                                                            borderRadius: "50%",
-                                                                        }}
-                                                                    >
-                                                                        <CloseIcon
-                                                                            sx={{
-                                                                                fontSize: "16px",
-                                                                            }}
-                                                                        />
-                                                                    </IconButton>
-                                                                )
-                                                            }
                                                             sx={{
-                                                                width: { xs: "100%", sm: "220px" },
-                                                                maxWidth: "100%",
-                                                                "--Input-focusedThickness": "1px",
-                                                                "--Input-radius": "8px",
-                                                                background: isDark
-                                                                    ? "rgba(0,0,0,0.3)"
-                                                                    : "rgba(255,255,255,0.8)",
-                                                                border: `1px solid ${styles.border}`,
-                                                                fontSize: "14px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                },
-                                                                "&:focus-within": {
-                                                                    borderColor:
-                                                                        styles.accentColor,
-                                                                    boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.2)"
-                                                                        : "0 0 0 2px rgba(var(--gp-brand-700-rgb), 0.1)",
-                                                                },
+                                                                borderRadius: g.radius.md,
+                                                                fontSize: "12px",
+                                                                fontWeight: 600,
+                                                                flexShrink: 0,
+                                                            }}
+                                                            onClick={() =>
+                                                                setOpenInviteGuests(true)
+                                                            }
+                                                        >
+                                                            {t.admin.inviteMembers.openButtonGuest}
+                                                        </Button>
+                                                    )}
+                                                </Stack>
+                                                <Input
+                                                    placeholder={
+                                                        t.admin.projectProfile.searchMembers
+                                                    }
+                                                    value={memberSearchQuery}
+                                                    onChange={(e) =>
+                                                        setMemberSearchQuery(e.target.value)
+                                                    }
+                                                    startDecorator={
+                                                        <SearchIcon
+                                                            sx={{
+                                                                color: g.accent.text,
+                                                                fontSize: "18px",
                                                             }}
                                                         />
-                                                    </Stack>
-                                                </FormControl>
-                                                <Box
-                                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                                    sx={{
-                                                        maxHeight: "300px",
-                                                        overflow: "auto",
-                                                        background: isDark
-                                                            ? "rgba(0,0,0,0.2)"
-                                                            : "rgba(var(--gp-brand-700-rgb), 0.03)",
-                                                        borderRadius: "12px",
-                                                        border: `1px solid ${styles.border}`,
-                                                        p: 1,
-                                                    }}
-                                                >
-                                                    {filteredMembers.length > 0 ? (
-                                                        filteredMembers.map((member) => (
-                                                            <ListItemButton
-                                                                key={`project-member-${member.userId}`}
+                                                    }
+                                                    endDecorator={
+                                                        memberSearchQuery && (
+                                                            <IconButton
+                                                                size="sm"
+                                                                variant="plain"
+                                                                onClick={() =>
+                                                                    setMemberSearchQuery("")
+                                                                }
                                                                 sx={{
-                                                                    ml: 1,
-                                                                    my: 0.3,
-                                                                    borderRadius: "8px",
-                                                                    transition: "all 0.2s ease",
-                                                                    "&:hover": {
-                                                                        background: styles.hoverBg,
-                                                                    },
-                                                                }}
-                                                                onClick={() => {
-                                                                    setAvatarUserId(member.userId);
-                                                                    setOpenUserProfile(true);
+                                                                    minWidth: "24px",
+                                                                    minHeight: "24px",
+                                                                    borderRadius: "50%",
                                                                 }}
                                                             >
-                                                                <AvatarWithStatus
-                                                                    avatarUser={member}
-                                                                    clickable={false}
-                                                                    useCM={useCM}
-                                                                    isYou={false}
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    showNameAndEmail={true}
-                                                                    socket={socket}
-                                                                    useUISM={useUISM}
+                                                                <CloseIcon
+                                                                    sx={{
+                                                                        fontSize: "16px",
+                                                                    }}
                                                                 />
-                                                                <Box sx={{ ml: "auto", pl: 1 }}>
-                                                                    <MemberRoleControl
-                                                                        canManage={canManage}
-                                                                        isSelf={
-                                                                            member.userId ===
-                                                                            myself.userId
-                                                                        }
-                                                                        memberRole={
-                                                                            member.memberRole
-                                                                        }
-                                                                        ownerUserId={
-                                                                            projectProfile?.ownerUserId
-                                                                        }
-                                                                        popupZIndex={
-                                                                            PROFILE_MODAL_Z_INDEX +
-                                                                            2
-                                                                        }
-                                                                        userId={member.userId}
-                                                                        onChange={
-                                                                            handleMemberRoleChange
-                                                                        }
-                                                                    />
-                                                                </Box>
-                                                            </ListItemButton>
-                                                        ))
-                                                    ) : (
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                py: 3,
-                                                                color: styles.labelColor,
-                                                            }}
-                                                        >
-                                                            <Typography level="body-sm">
-                                                                {fmt(
-                                                                    t.admin.projectProfile
-                                                                        .noMembersFound,
-                                                                    { query: memberSearchQuery }
-                                                                )}
-                                                            </Typography>
+                                                            </IconButton>
+                                                        )
+                                                    }
+                                                    sx={{
+                                                        width: { xs: "100%", sm: "220px" },
+                                                        maxWidth: "100%",
+                                                        "--Input-focusedThickness": "1px",
+                                                        "--Input-radius": g.radius.md,
+                                                        background: g.bg.subtle,
+                                                        border: `1px solid ${g.border.default}`,
+                                                        fontSize: "14px",
+                                                        transition: "all 0.2s ease",
+                                                        "&:hover": {
+                                                            borderColor: g.accent.text,
+                                                        },
+                                                        "&:focus-within": {
+                                                            borderColor: g.accent.text,
+                                                        },
+                                                    }}
+                                                />
+                                            </Stack>
+                                        </FormControl>
+                                        <Box
+                                            sx={{
+                                                maxHeight: "300px",
+                                                overflow: "auto",
+                                                background: "transparent",
+                                                borderRadius: g.radius.md,
+                                                border: `1px solid ${g.border.default}`,
+                                                p: 1,
+                                            }}
+                                        >
+                                            {filteredMembers.length > 0 ? (
+                                                filteredMembers.map((member) => (
+                                                    <ListItemButton
+                                                        key={`project-member-${member.userId}`}
+                                                        sx={{
+                                                            ml: 1,
+                                                            my: 0.3,
+                                                            borderRadius: g.radius.md,
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: g.hover,
+                                                            },
+                                                        }}
+                                                        onClick={() => {
+                                                            setAvatarUserId(member.userId);
+                                                            setOpenUserProfile(true);
+                                                        }}
+                                                    >
+                                                        <AvatarWithStatus
+                                                            avatarUser={member}
+                                                            clickable={false}
+                                                            useCM={useCM}
+                                                            isYou={false}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            showNameAndEmail={true}
+                                                            socket={socket}
+                                                            useUISM={useUISM}
+                                                        />
+                                                        <Box sx={{ ml: "auto", pl: 1 }}>
+                                                            <MemberRoleControl
+                                                                canManage={canManage}
+                                                                isSelf={
+                                                                    member.userId === myself.userId
+                                                                }
+                                                                memberRole={member.memberRole}
+                                                                ownerUserId={
+                                                                    projectProfile?.ownerUserId
+                                                                }
+                                                                popupZIndex={
+                                                                    PROFILE_MODAL_Z_INDEX + 2
+                                                                }
+                                                                userId={member.userId}
+                                                                onChange={handleMemberRoleChange}
+                                                            />
                                                         </Box>
-                                                    )}
+                                                    </ListItemButton>
+                                                ))
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        py: 3,
+                                                        color: g.text.secondary,
+                                                    }}
+                                                >
+                                                    <Typography level="body-sm">
+                                                        {fmt(
+                                                            t.admin.projectProfile.noMembersFound,
+                                                            { query: memberSearchQuery }
+                                                        )}
+                                                    </Typography>
                                                 </Box>
-                                            </Box>
+                                            )}
+                                        </Box>
+                                    </Box>
 
-                                            {/* Cross-team sharing sits directly under the member
+                                    {/* Cross-team sharing sits directly under the member
                                                 list because it answers the same question one
                                                 level up — which OTHER organizations are in this
                                                 project — and because the two lists must be read
                                                 together: an external participant appears in both,
                                                 and only this section says which team they came
                                                 from. Renders nothing for an unshared project. */}
-                                            <ObjectSharesSection
-                                                borderColor={styles.border}
-                                                canOffer={canManageTeam && !isExternalProject}
-                                                hostTeamId={hostTeamId}
-                                                labelColor={styles.labelColor}
-                                                myUserId={myself.userId}
-                                                objectId={
-                                                    projectProfile?.projectId != null
-                                                        ? String(projectProfile.projectId)
-                                                        : undefined
-                                                }
-                                                objectType="project"
-                                                socket={socket}
-                                                valueColor={styles.valueColor}
-                                            />
+                                    <ObjectSharesSection
+                                        borderColor={g.border.default}
+                                        canOffer={canManageTeam && !isExternalProject}
+                                        hostTeamId={hostTeamId}
+                                        labelColor={g.text.secondary}
+                                        myUserId={myself.userId}
+                                        objectId={
+                                            projectProfile?.projectId != null
+                                                ? String(projectProfile.projectId)
+                                                : undefined
+                                        }
+                                        objectType="project"
+                                        socket={socket}
+                                        valueColor={g.text.primary}
+                                    />
 
-                                            {/* Metadata row. `flexWrap` because this row now
+                                    {/* Metadata row. `flexWrap` because this row now
                                                 carries four fields and the Tags chips are
                                                 variable-width — without it a heavily tagged
                                                 project pushes Created Date off the card. */}
-                                            <Stack
-                                                direction="row"
-                                                spacing={4}
-                                                sx={{ mt: 1, flexWrap: "wrap", rowGap: 2 }}
-                                            >
-                                                {/* Project tags — team-scoped labels used to
+                                    <Stack
+                                        direction="row"
+                                        spacing={4}
+                                        sx={{ mt: 1, flexWrap: "wrap", rowGap: 2 }}
+                                    >
+                                        {/* Project tags — team-scoped labels used to
                                                     organize the project list. Chips are visible
                                                     to every member; only the owner gets the
                                                     edit affordance, which mirrors the pencil on
                                                     Code rather than shouting with its own
                                                     button. */}
-                                                <FormControl>
-                                                    <FormLabel
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.admin.projectLabels.sectionLabel}
+                                            </FormLabel>
+                                            <Stack
+                                                direction="row"
+                                                spacing={0.5}
+                                                alignItems="center"
+                                            >
+                                                {projectLabels.length > 0 ? (
+                                                    <ProjectLabelChips
+                                                        labels={projectLabels}
+                                                        size="md"
+                                                    />
+                                                ) : (
+                                                    // Same em-dash placeholder Code
+                                                    // uses for an unset value, so the
+                                                    // row reads consistently.
+                                                    <Typography
+                                                        fontWeight={600}
+                                                        sx={{ color: g.text.primary }}
+                                                    >
+                                                        —
+                                                    </Typography>
+                                                )}
+                                                {canManage && (
+                                                    <AppTooltip
+                                                        size="sm"
+                                                        title={t.admin.projectLabels.manageTooltip}
+                                                    >
+                                                        <IconButton
+                                                            disabled={!projectProfile?.projectId}
+                                                            size="sm"
+                                                            variant="plain"
+                                                            onClick={() =>
+                                                                setOpenManageLabels(true)
+                                                            }
+                                                        >
+                                                            <EditIcon sx={{ fontSize: 16 }} />
+                                                        </IconButton>
+                                                    </AppTooltip>
+                                                )}
+                                            </Stack>
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                Code
+                                            </FormLabel>
+                                            {codeEditMode ? (
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={0.5}
+                                                    alignItems="center"
+                                                >
+                                                    <Input
+                                                        size="sm"
+                                                        value={codeDraft}
+                                                        autoFocus
+                                                        onChange={(e) =>
+                                                            setCodeDraft(
+                                                                e.target.value.toUpperCase()
+                                                            )
+                                                        }
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter")
+                                                                void handleCodeSave();
+                                                            if (e.key === "Escape") {
+                                                                setCodeEditMode(false);
+                                                                setCodeError(null);
+                                                            }
+                                                        }}
+                                                        slotProps={{
+                                                            input: {
+                                                                maxLength: 6,
+                                                                spellCheck: false,
+                                                                style: {
+                                                                    textTransform: "uppercase",
+                                                                },
+                                                            },
+                                                        }}
                                                         sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
+                                                            width: 90,
+                                                            "--Input-radius": g.radius.md,
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        variant="solid"
+                                                        loading={codeSaving}
+                                                        onClick={handleCodeSave}
+                                                    >
+                                                        Save
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="plain"
+                                                        color="neutral"
+                                                        onClick={() => {
+                                                            setCodeEditMode(false);
+                                                            setCodeError(null);
                                                         }}
                                                     >
-                                                        {t.admin.projectLabels.sectionLabel}
-                                                    </FormLabel>
-                                                    <Stack
-                                                        direction="row"
-                                                        spacing={0.5}
-                                                        alignItems="center"
-                                                    >
-                                                        {projectLabels.length > 0 ? (
-                                                            <ProjectLabelChips
-                                                                labels={projectLabels}
-                                                                size="md"
-                                                            />
-                                                        ) : (
-                                                            // Same em-dash placeholder Code
-                                                            // uses for an unset value, so the
-                                                            // row reads consistently.
-                                                            <Typography
-                                                                fontWeight={600}
-                                                                sx={{ color: styles.valueColor }}
-                                                            >
-                                                                —
-                                                            </Typography>
-                                                        )}
-                                                        {canManage && (
-                                                            <AppTooltip
-                                                                size="sm"
-                                                                title={
-                                                                    t.admin.projectLabels
-                                                                        .manageTooltip
-                                                                }
-                                                            >
-                                                                <IconButton
-                                                                    disabled={
-                                                                        !projectProfile?.projectId
-                                                                    }
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    onClick={() =>
-                                                                        setOpenManageLabels(true)
-                                                                    }
-                                                                >
-                                                                    <EditIcon
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                </IconButton>
-                                                            </AppTooltip>
-                                                        )}
-                                                    </Stack>
-                                                </FormControl>
-                                                <FormControl>
-                                                    <FormLabel
+                                                        Cancel
+                                                    </Button>
+                                                </Stack>
+                                            ) : (
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={0.5}
+                                                    alignItems="center"
+                                                >
+                                                    <Box
                                                         sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
+                                                            display: "inline-flex",
+                                                            px: 1.5,
+                                                            py: 0.5,
+                                                            borderRadius: g.radius.md,
+                                                            background: g.bg.subtle,
+                                                            border: `1px solid ${g.border.default}`,
+                                                            fontFamily:
+                                                                "ui-monospace, SFMono-Regular, Menlo, monospace",
                                                         }}
                                                     >
-                                                        Code
-                                                    </FormLabel>
-                                                    {codeEditMode ? (
-                                                        <Stack
-                                                            direction="row"
-                                                            spacing={0.5}
-                                                            alignItems="center"
+                                                        <Typography
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                color: g.text.primary,
+                                                            }}
                                                         >
-                                                            <Input
-                                                                size="sm"
-                                                                value={codeDraft}
-                                                                autoFocus
-                                                                onChange={(e) =>
-                                                                    setCodeDraft(
-                                                                        e.target.value.toUpperCase()
-                                                                    )
-                                                                }
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter")
-                                                                        void handleCodeSave();
-                                                                    if (e.key === "Escape") {
-                                                                        setCodeEditMode(false);
-                                                                        setCodeError(null);
-                                                                    }
-                                                                }}
-                                                                slotProps={{
-                                                                    input: {
-                                                                        maxLength: 6,
-                                                                        spellCheck: false,
-                                                                        style: {
-                                                                            textTransform:
-                                                                                "uppercase",
-                                                                        },
-                                                                    },
-                                                                }}
-                                                                sx={{
-                                                                    width: 90,
-                                                                    "--Input-radius": "8px",
-                                                                }}
-                                                            />
-                                                            <Button
-                                                                size="sm"
-                                                                variant="solid"
-                                                                loading={codeSaving}
-                                                                onClick={handleCodeSave}
-                                                            >
-                                                                Save
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="plain"
-                                                                color="neutral"
-                                                                onClick={() => {
-                                                                    setCodeEditMode(false);
-                                                                    setCodeError(null);
-                                                                }}
-                                                            >
-                                                                Cancel
-                                                            </Button>
-                                                        </Stack>
-                                                    ) : (
-                                                        <Stack
-                                                            direction="row"
-                                                            spacing={0.5}
-                                                            alignItems="center"
-                                                        >
-                                                            <Box
-                                                                sx={{
-                                                                    display: "inline-flex",
-                                                                    px: 1.5,
-                                                                    py: 0.5,
-                                                                    borderRadius: "8px",
-                                                                    background: isDark
-                                                                        ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                                        : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                                    border: `1px solid ${styles.border}`,
-                                                                    fontFamily:
-                                                                        "ui-monospace, SFMono-Regular, Menlo, monospace",
-                                                                }}
-                                                            >
-                                                                <Typography
-                                                                    fontWeight={600}
-                                                                    sx={{
-                                                                        color: styles.valueColor,
-                                                                    }}
-                                                                >
-                                                                    {projectProfile?.code || "—"}
-                                                                </Typography>
-                                                            </Box>
-                                                            {/* The code pencil used to show for
+                                                            {projectProfile?.code || "—"}
+                                                        </Typography>
+                                                    </Box>
+                                                    {/* The code pencil used to show for
                                                                 everyone (the endpoint was open to
                                                                 any caller). Now owner/editor,
                                                                 matching the backend. */}
-                                                            {canManage && (
-                                                                <AppTooltip
-                                                                    title={
-                                                                        t.admin.projectProfile
-                                                                            .editCode
-                                                                    }
-                                                                    size="sm"
-                                                                >
-                                                                    <IconButton
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        onClick={() => {
-                                                                            setCodeDraft(
-                                                                                projectProfile?.code ||
-                                                                                    ""
-                                                                            );
-                                                                            setCodeError(null);
-                                                                            setCodeEditMode(true);
-                                                                        }}
-                                                                    >
-                                                                        <EditIcon
-                                                                            sx={{ fontSize: 16 }}
-                                                                        />
-                                                                    </IconButton>
-                                                                </AppTooltip>
-                                                            )}
-                                                        </Stack>
+                                                    {canManage && (
+                                                        <AppTooltip
+                                                            title={t.admin.projectProfile.editCode}
+                                                            size="sm"
+                                                        >
+                                                            <IconButton
+                                                                size="sm"
+                                                                variant="plain"
+                                                                onClick={() => {
+                                                                    setCodeDraft(
+                                                                        projectProfile?.code || ""
+                                                                    );
+                                                                    setCodeError(null);
+                                                                    setCodeEditMode(true);
+                                                                }}
+                                                            >
+                                                                <EditIcon sx={{ fontSize: 16 }} />
+                                                            </IconButton>
+                                                        </AppTooltip>
                                                     )}
-                                                    {codeError && (
-                                                        <Typography
-                                                            level="body-xs"
-                                                            sx={{
-                                                                color: palette.dangerTint,
-                                                                mt: 0.5,
-                                                            }}
-                                                        >
-                                                            {codeError}
-                                                        </Typography>
-                                                    )}
-                                                </FormControl>
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
-                                                        }}
-                                                    >
-                                                        {t.admin.projectProfile.isPrivate}
-                                                    </FormLabel>
-                                                    <Box
-                                                        sx={{
-                                                            display: "inline-flex",
-                                                            px: 2,
-                                                            py: 0.5,
-                                                            borderRadius: "20px",
-                                                            background: projectProfile?.isPrivate
-                                                                ? palette.dangerTintBg
-                                                                : palette.successTintBg,
-                                                            border: `1px solid ${
-                                                                projectProfile?.isPrivate
-                                                                    ? palette.dangerTintBorder
-                                                                    : palette.successTintBorder
-                                                            }`,
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight={600}
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: projectProfile?.isPrivate
-                                                                    ? palette.dangerTint
-                                                                    : palette.successTint,
-                                                            }}
-                                                        >
-                                                            {projectProfile?.isPrivate
-                                                                ? t.admin.projectProfile.yes
-                                                                : t.admin.projectProfile.no}
-                                                        </Typography>
-                                                    </Box>
-                                                </FormControl>
-
-                                                <FormControl>
-                                                    <FormLabel
-                                                        sx={{
-                                                            color: styles.labelColor,
-                                                            fontSize: "0.75rem",
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            letterSpacing: "0.05em",
-                                                            mb: 0.5,
-                                                        }}
-                                                    >
-                                                        {t.admin.projectProfile.createdDate}
-                                                    </FormLabel>
-                                                    <Box
-                                                        sx={{
-                                                            display: "inline-flex",
-                                                            px: 2,
-                                                            py: 0.5,
-                                                            borderRadius: "8px",
-                                                            background: isDark
-                                                                ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                                                            border: `1px solid ${styles.border}`,
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight={600}
-                                                            sx={{
-                                                                userSelect: "text",
-                                                                color: styles.valueColor,
-                                                            }}
-                                                        >
-                                                            {projectProfile?.tsCreatedAt
-                                                                ? extractYYYYMMDD(
-                                                                      projectProfile.tsCreatedAt
-                                                                  )
-                                                                : t.admin.projectProfile
-                                                                      .notAvailable}
-                                                        </Typography>
-                                                    </Box>
-                                                </FormControl>
-                                            </Stack>
-
-                                            {canShowLeave && (
-                                                <Box
+                                                </Stack>
+                                            )}
+                                            {codeError && (
+                                                <Typography
+                                                    level="body-xs"
                                                     sx={{
-                                                        mt: 2,
-                                                        display: "flex",
-                                                        justifyContent: "flex-end",
+                                                        color: g.danger.text,
+                                                        mt: 0.5,
                                                     }}
                                                 >
-                                                    <Button
-                                                        color="danger"
-                                                        variant="outlined"
-                                                        startDecorator={
-                                                            <LogoutRoundedIcon fontSize="small" />
-                                                        }
-                                                        onClick={() => setOpenLeaveConfirm(true)}
-                                                        sx={{
-                                                            borderRadius: "10px",
-                                                            borderColor:
-                                                                "rgba(var(--gp-tint-danger-rgb), 0.4)",
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                            "&:hover": {
-                                                                background:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.08)",
-                                                                borderColor:
-                                                                    "rgba(var(--gp-tint-danger-rgb), 0.6)",
-                                                            },
-                                                        }}
-                                                    >
-                                                        {t.common.actions.leave}
-                                                    </Button>
-                                                </Box>
+                                                    {codeError}
+                                                </Typography>
                                             )}
-                                        </Stack>
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.admin.projectProfile.isPrivate}
+                                            </FormLabel>
+                                            <Box
+                                                sx={{
+                                                    display: "inline-flex",
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: "20px",
+                                                    background: projectProfile?.isPrivate
+                                                        ? g.danger.subtle
+                                                        : g.success.subtle,
+                                                    border: `1px solid ${
+                                                        projectProfile?.isPrivate
+                                                            ? g.danger.border
+                                                            : g.success.border
+                                                    }`,
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: projectProfile?.isPrivate
+                                                            ? g.danger.text
+                                                            : g.success.text,
+                                                    }}
+                                                >
+                                                    {projectProfile?.isPrivate
+                                                        ? t.admin.projectProfile.yes
+                                                        : t.admin.projectProfile.no}
+                                                </Typography>
+                                            </Box>
+                                        </FormControl>
+
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: g.text.secondary,
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                {t.admin.projectProfile.createdDate}
+                                            </FormLabel>
+                                            <Box
+                                                sx={{
+                                                    display: "inline-flex",
+                                                    px: 2,
+                                                    py: 0.5,
+                                                    borderRadius: g.radius.md,
+                                                    background: g.bg.subtle,
+                                                    border: `1px solid ${g.border.default}`,
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: g.text.primary,
+                                                    }}
+                                                >
+                                                    {projectProfile?.tsCreatedAt
+                                                        ? extractYYYYMMDD(
+                                                              projectProfile.tsCreatedAt
+                                                          )
+                                                        : t.admin.projectProfile.notAvailable}
+                                                </Typography>
+                                            </Box>
+                                        </FormControl>
                                     </Stack>
+
+                                    {canShowLeave && (
+                                        <Box
+                                            sx={{
+                                                mt: 2,
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Button
+                                                color="danger"
+                                                variant="outlined"
+                                                startDecorator={
+                                                    <LogoutRoundedIcon fontSize="small" />
+                                                }
+                                                onClick={() => setOpenLeaveConfirm(true)}
+                                                sx={{
+                                                    borderRadius: g.radius.sm,
+                                                    borderColor: g.danger.border,
+                                                    color: g.danger.text,
+                                                    "&:hover": {
+                                                        background: g.danger.subtle,
+                                                        borderColor: g.danger.border,
+                                                    },
+                                                }}
+                                            >
+                                                {t.common.actions.leave}
+                                            </Button>
+                                        </Box>
+                                    )}
                                 </Stack>
-                            </Card>
+                            </Stack>
                         </Stack>
-                    </Box>
-                </ModalDialog>
-            </Modal>
+                    </Card>
+                </Stack>
+            </ModalFrame>
             <ModalLeaveConfirm
                 open={openLeaveConfirm}
                 title={t.common.leaveConfirm.projectTitle}
