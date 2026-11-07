@@ -303,3 +303,35 @@ describe.each(THEME_IDS.flatMap((id) => MODES.map((m) => [id, m] as const)))(
         });
     }
 );
+
+describe("Bubble: the body below md", () => {
+    // jsdom does not apply media queries, but emotion writes the rules into the
+    // document, so the CSS text of the body cell can be read.
+    const cssOf = (el: Element) => {
+        const cls = Array.from(el.classList).find((c) => c.startsWith("css-")) ?? "";
+        return Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+    };
+    const bodyCell = (narrowBody?: "below" | "beside") => {
+        render(
+            <Bubble avatar={<i>av</i>} header={<b>h</b>} layout="compact" narrowBody={narrowBody}>
+                <p data-testid="body">body</p>
+            </Bubble>
+        );
+        return screen.getByTestId("body").parentElement as HTMLElement;
+    };
+
+    it("by default the body spans the full width under the avatar on a phone", () => {
+        expect(cssOf(bodyCell())).toContain("grid-column:1/-1");
+    });
+
+    it("beside keeps the body in the avatar's neighbouring column at every width (chat)", () => {
+        const css = cssOf(bodyCell("beside"));
+        expect(css).toContain("grid-column:2");
+        expect(css).not.toContain("1/-1");
+    });
+});

@@ -396,6 +396,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             grouped={isSimpleBubble}
             header={header}
             layout={isCompact ? "compact" : "bubble"}
+            narrowBody="beside"
             rootRef={bubbleRef}
             side={isSent ? "sent" : "received"}
             toolbarRef={toolbarRef}

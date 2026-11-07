@@ -76,6 +76,10 @@ export type BubbleProps = {
     interactive?: boolean;
     /** Bubble layout: the pointed corner that says who spoke. Off for a card. */
     tail?: boolean;
+    /** Gutter align, below `md`: `"below"` (default) lets the body span the full
+     *  width under the avatar (task comments, MIP-1033); `"beside"` keeps it in
+     *  the column next to the avatar at every width (chat, as it always was). */
+    narrowBody?: "below" | "beside";
     /** Space between the author line and the body, in theme spacing units. */
     bodyOffset?: number;
     /** Space above the footer when the text sits beside the avatar. */
@@ -186,7 +190,7 @@ export const BubbleMeta = ({ children, sx }: { children: ReactNode; sx?: SxProps
     </Typography>
 );
 
-const gutterNode = (avatar: ReactNode | "reserve" | undefined) =>
+const gutterNode = (avatar: ReactNode | "reserve" | undefined, narrowBody: "below" | "beside") =>
     avatar === "reserve" ? <Box sx={{ width: BUBBLE_AVATAR_SIZE }} /> : avatar;
 
 export const Bubble = (props: BubbleProps) => {
@@ -206,6 +210,7 @@ export const Bubble = (props: BubbleProps) => {
         interactive = false,
         tail = true,
         bodyOffset = 0.25,
+        narrowBody = "below",
         footerOffset = 0.5,
         overlay,
         rootRef,
@@ -252,7 +257,9 @@ export const Bubble = (props: BubbleProps) => {
                             mb: bodyOffset,
                         }}
                     >
-                        {hasGutter && <Box sx={{ flexShrink: 0 }}>{gutterNode(avatar)}</Box>}
+                        {hasGutter && (
+                            <Box sx={{ flexShrink: 0 }}>{gutterNode(avatar, narrowBody)}</Box>
+                        )}
                         <Box sx={{ flex: 1, minWidth: 0 }}>{header}</Box>
                     </Box>
                 )}
@@ -271,16 +278,28 @@ export const Bubble = (props: BubbleProps) => {
                     alignItems: "start",
                 }}
             >
-                <Box sx={{ gridColumn: 1, gridRow: { xs: 1, md: "1 / span 3" }, flexShrink: 0 }}>
-                    {gutterNode(avatar)}
+                <Box
+                    sx={{
+                        gridColumn: 1,
+                        gridRow:
+                            narrowBody === "below" ? { xs: 1, md: "1 / span 3" } : "1 / span 3",
+                        flexShrink: 0,
+                    }}
+                >
+                    {gutterNode(avatar, narrowBody)}
                 </Box>
                 <Box sx={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}>{header}</Box>
                 <Box
                     sx={{
-                        gridColumn: { xs: "1 / -1", md: 2 },
+                        gridColumn: narrowBody === "below" ? { xs: "1 / -1", md: 2 } : 2,
                         gridRow: 2,
                         minWidth: 0,
-                        mt: header != null ? { xs: 0.75, md: bodyOffset } : 0,
+                        mt:
+                            header != null
+                                ? narrowBody === "below"
+                                    ? { xs: 0.75, md: bodyOffset }
+                                    : bodyOffset
+                                : 0,
                     }}
                 >
                     {children}
@@ -288,7 +307,7 @@ export const Bubble = (props: BubbleProps) => {
                 {footer != null && (
                     <Box
                         sx={{
-                            gridColumn: { xs: "1 / -1", md: 2 },
+                            gridColumn: narrowBody === "below" ? { xs: "1 / -1", md: 2 } : 2,
                             gridRow: 3,
                             minWidth: 0,
                             mt: footerOffset,
