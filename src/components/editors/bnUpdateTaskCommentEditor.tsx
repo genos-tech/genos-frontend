@@ -3,21 +3,8 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    DefaultReactSuggestionItem,
-    FileCaptionButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    getDefaultReactSlashMenuItems,
-    SuggestionMenuController,
-    useCreateBlockNote,
-} from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -40,18 +27,14 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps } from "../../types/tasks";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
-import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
+import { GenosChatToolbar } from "./genos/GenosToolbars";
+import { codeFenceInputRule } from "./sub/codeBlockExtras";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "./sub/tabIndent";
 
@@ -123,12 +106,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         },
         "mount"
     );
-
-    // List containing all default Slash Menu Items, as well as our custom one.
-    const getCustomSlashMenuItems = (
-        editor: typeof schema.BlockNoteEditor
-    ): DefaultReactSuggestionItem[] =>
-        withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
 
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line (MIP-1039; see bnUpdateEditor).
@@ -372,87 +349,23 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             p: 0.7,
                         }}
                     >
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={getBlockTypeSelectItemsWithCodeBlock(editor)}
-                            />
-
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            {/* Extra button to toggle code styles */}
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
-
-                            {/* Extra button to toggle blue text & background */}
-                            {!isMobile && (
-                                <CustomEmojiToolbar
-                                    key={"customButton"}
-                                    setShowEmojiPicker={setShowEmojiPicker}
-                                />
-                            )}
-                            {!isMobile && (
-                                <GifToolbarButton
-                                    key={"gifButton"}
-                                    setShowGifPicker={setShowGifPicker}
-                                />
-                            )}
-                        </FormattingToolbar>
+                        <GenosChatToolbar
+                            editor={editor}
+                            isMobile={isMobile}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setShowGifPicker={setShowGifPicker}
+                        />
                     </Box>
 
-                    {/* "#" mentions: tasks / notes / GM chats / projects */}
-                    <HashSuggestionMenuController editor={editor} />
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        suggestionMenuComponent={MentionSuggestionMenu}
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterAndRankSuggestionItems(
-                                MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
-                                    editor,
-                                    useTEM.teamMembers,
-                                    myself.userId,
-                                    mentionGroups
-                                ),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        // Replaces the default Slash Menu items with our custom ones.
-                        getItems={async (query) =>
-                            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                        }
-                    />
-                    <SuggestionMenuController
-                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                        minQueryLength={2}
-                        triggerCharacter={":"}
+                    <GenosSuggestionMenus
+                        editor={editor}
+                        getMentionSources={() => ({
+                            teamMemberProfiles: useTEM.teamMemberProfiles,
+                            teamMembers: useTEM.teamMembers,
+                            myselfUserId: myself.userId,
+                            mentionGroups,
+                        })}
+                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>
