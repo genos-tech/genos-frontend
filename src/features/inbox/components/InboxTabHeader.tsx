@@ -1,11 +1,11 @@
+import { useMemo } from "react";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
-import { Box, Chip, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { TabStrip, type TabItem } from "../../../components/ui/feedback/TabStrip";
 import { useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
 
 type InboxTab = "requests" | "activities";
 
@@ -13,11 +13,13 @@ type InboxTabHeaderProps = {
     requestCount?: number;
 };
 
+const PATHS: Record<InboxTab, string> = {
+    activities: "/workspace/inbox/activities",
+    requests: "/workspace/inbox/requests",
+};
+
 export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -28,138 +30,33 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
 
     // Activities first (left): it is the default landing and where the
     // steady stream (notices + the Genos digest) lives; Requests sit on
-    // the right with the unread badge pulling attention when needed.
-    const tabs: {
-        id: InboxTab;
-        labelKey: "requests" | "activities";
-        path: string;
-        icon: React.ReactNode;
-        count?: number;
-    }[] = [
-        {
-            id: "activities",
-            labelKey: "activities",
-            path: "/workspace/inbox/activities",
-            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
-        },
-        {
-            id: "requests",
-            labelKey: "requests",
-            path: "/workspace/inbox/requests",
-            icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
-            count: requestCount,
-        },
-    ];
+    // the right with the count pulling attention when needed.
+    const tabs = useMemo<TabItem[]>(
+        () => [
+            {
+                id: "activities",
+                label: t.inbox.tabs.activities,
+                icon: <NotificationsActiveRoundedIcon />,
+            },
+            {
+                id: "requests",
+                label: t.inbox.tabs.requests,
+                icon: <PendingActionsRoundedIcon />,
+                count: requestCount,
+                attention: true,
+            },
+        ],
+        [t, requestCount]
+    );
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                gap: 0.5,
-                px: { xs: 1.5, md: 3 },
-                py: { xs: 1, md: 1.5 },
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark
-                    ? "rgba(var(--gp-dark-surface-b-rgb), 0.6)"
-                    : "rgba(250,248,255,0.8)",
-            }}
-        >
-            {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                    <Box
-                        key={tab.id}
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.75,
-                            px: { xs: 1.5, md: 2 },
-                            py: 0.875,
-                            borderRadius: "10px",
-                            cursor: "pointer",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            background: isActive
-                                ? isDark
-                                    ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.18) 0%, rgba(var(--gp-brandalt-500-rgb), 0.12) 100%)"
-                                    : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)"
-                                : "transparent",
-                            border: "1px solid",
-                            borderColor: isActive
-                                ? isDark
-                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                : "transparent",
-                            "&:hover": {
-                                background: isActive
-                                    ? isDark
-                                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.22) 0%, rgba(var(--gp-brandalt-500-rgb), 0.16) 100%)"
-                                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.16) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.04)"
-                                      : "rgba(0,0,0,0.03)",
-                            },
-                        }}
-                        onClick={() => navigate(tab.path)}
-                    >
-                        <Box
-                            sx={{
-                                color: isActive
-                                    ? palette.accentSoft
-                                    : isDark
-                                      ? "rgba(255,255,255,0.5)"
-                                      : "rgba(0,0,0,0.45)",
-                                display: "flex",
-                                alignItems: "center",
-                                transition: "color 0.2s ease",
-                            }}
-                        >
-                            {tab.icon}
-                        </Box>
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                fontWeight: isActive ? 600 : 500,
-                                color: isActive
-                                    ? isDark
-                                        ? "rgba(255,255,255,0.95)"
-                                        : "rgba(0,0,0,0.85)"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.6)"
-                                      : "rgba(0,0,0,0.55)",
-                                fontSize: "0.8rem",
-                                transition: "all 0.2s ease",
-                            }}
-                        >
-                            {t.inbox.tabs[tab.labelKey]}
-                        </Typography>
-                        {tab.count && tab.count > 0 && (
-                            <Chip
-                                size="sm"
-                                variant="solid"
-                                sx={{
-                                    minWidth: 20,
-                                    height: 20,
-                                    fontSize: "0.65rem",
-                                    fontWeight: 700,
-                                    px: 0.85,
-                                    pt: 0.15,
-                                    background: palette.primaryButtonBg,
-                                    border: "none",
-                                    boxShadow: palette.shadowSoft,
-                                    animation: "pulse 2s infinite",
-                                    "@keyframes pulse": {
-                                        "0%, 100%": { opacity: 1 },
-                                        "50%": { opacity: 0.85 },
-                                    },
-                                }}
-                            >
-                                {tab.count > 99 ? "99+" : tab.count}
-                            </Chip>
-                        )}
-                    </Box>
-                );
-            })}
+        <Box sx={{ px: { xs: 1.5, md: 3 }, pt: { xs: 0.5, md: 1 }, minWidth: 0 }}>
+            <TabStrip
+                ariaLabel={t.inbox.tabs.ariaLabel}
+                tabs={tabs}
+                value={activeTab}
+                onChange={(id) => navigate(PATHS[id as InboxTab])}
+            />
         </Box>
     );
 };
