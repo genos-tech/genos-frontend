@@ -1,83 +1,67 @@
-import { memo, useEffect, useState } from "react";
+import { KeyboardEvent, memo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    Dropdown,
-    FormControl,
-    FormLabel,
-    IconButton,
-    Input,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
-import { Handle, NodeProps, Position } from "@xyflow/react";
+import { Box, Dropdown, Input, Menu, MenuButton, MenuItem } from "@mui/joy";
+import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
-import { purplePalette } from "../../../../theme/purplePalette";
-import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
-import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
-import { statuses, taskMetaLabel } from "../../utils/taskMeta";
+import { g, type } from "../../../../theme/tokens";
+import {
+    AssigneeAvatar,
+    DueText,
+    TaskCardFrame,
+    TaskIdText,
+    TaskTitle,
+    type CardEmphasis,
+} from "../../components/card";
+import { PriorityIcon } from "../../components/meta/PriorityIcon";
+import { StatusLabel } from "../../components/meta/StatusLabel";
+import { statuses } from "../../utils/taskMeta";
 import { useDiagramZIndex } from "../diagramZIndex";
-import { HANDLE, TaskNodeData } from "../types";
-import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
+import { TaskNodeData } from "../types";
+import { NODE_WIDTH } from "../utils/layoutDiagram";
+import { getScheduleStatus } from "../utils/scheduleStatus";
+import {
+    BlockerCount,
+    DurationText,
+    NodeBadge,
+    NodeDateEditor,
+    NodeHandles,
+    NodeIconButton,
+} from "./nodeParts";
+import { dueToneOf, useScheduleLabel } from "./nodeTone";
 
-const statusMeta = (label: string | null | undefined) => {
-    const found = statuses.find((s) => s.status === label);
-    return (
-        found ?? {
-            code: 0,
-            status: label ?? "—",
-            color: null as string | null,
-            textColor: null as string | null,
-        }
-    );
-};
+// A title is reserved two lines, so a one-line card is as tall as a two-line
+// one and the edges (which meet the card's top and bottom) keep their rhythm.
+const TITLE_MIN_HEIGHT = `calc(2 * ${type("body-sm").lineHeight})`;
 
-const HANDLE_BASE = {
-    width: 10,
-    height: 10,
-    border: "2px solid",
-    borderRadius: "50%",
-} as const;
-
-// Focus color for "assigned to the viewer" nodes (dashboard's Assigned
-// Milestones section). Deliberately amber — a hue distinct from the purple
-// `isCurrentPreview` accent, so a card that is BOTH the anchor and one of the
-// viewer's tasks never blurs the two treatments together.
-const ASSIGNED_FOCUS_COLOR = "#f59e0b";
-
-// Accent for a card the user JUST created from the diagram (see
-// `TaskNodeData.isNewlyCreated`). Cyan — a hue distinct from the purple
-// `isCurrentPreview` anchor, the amber `isAssignedToViewer` focus, and
-// every status tint (green/orange/red) — so a freshly-added task pops out
-// of a tree of siblings the moment it appears.
-const NEW_TASK_COLOR = "#06b6d4";
-
-export const TaskNodeCard = memo((props: NodeProps) => {
-    const { mode } = useColorScheme();
+/**
+ * One task as a node of the graph (MIP-1124 3/3): the family's card surface and
+ * parts, plus what a node adds (handles, an inline title, a date editor, a status
+ * menu). It takes the node's `data` only, so it renders without React Flow
+ * (the reference page and the tests); `withHandles` is what `TaskNodeCard` turns
+ * on inside the canvas, where the handles have a node to belong to.
+ *
+ * The graph's highlights are the frame's typed states, resolved here in the
+ * order they always had: the card the preview came from, then a card just added,
+ * then a card assigned to the viewer; a ghost (or a dimmed card) is plain.
+ * Status is the table's icon and word, priority its icon: no tinted border or
+ * glow per status.
+ */
+export const TaskNodeView = ({
+    data,
+    withHandles = false,
+}: {
+    data: TaskNodeData;
+    withHandles?: boolean;
+}) => {
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const P = isDark ? purplePalette.dark : purplePalette.light;
-    // Popups (status menu, date editor) must stack ABOVE the enclosing
-    // diagram dialog, whose z varies by host surface — see
-    // diagramZIndex.ts. Default context (9999) keeps the historical
-    // 10000 for page-hosted diagrams.
+    // Popups (status menu, date editor) must stack ABOVE the enclosing diagram
+    // dialog, whose z varies by host surface (diagramZIndex.ts). The default
+    // context (9999) keeps the historical 10000 for page-hosted diagrams.
     const popupZIndex = useDiagramZIndex() + 1;
 
     const {
@@ -93,73 +77,24 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         onChange,
         onAddSubtask,
         onOpenPreview,
-    } = props.data as unknown as TaskNodeData;
+    } = data;
 
     // Everything below reads `isExternal` to mean "render as a read-only,
-    // dimmed card". That's a true ghost (a task outside this tree) OR — only
-    // in the dashboard's highlight mode — another member's task (`isDimmed`),
-    // which we deliberately give the exact ghost treatment so the viewer's
-    // own tasks stand out and others' work can't be edited from this view.
-    // The two ghost-ONLY bits (the "External" chip and hiding the assignee)
-    // stay keyed to `isGhost`, so a dimmed card still shows whose task it is
-    // and never mislabels itself "External".
+    // dimmed card". That's a true ghost (a task outside this tree) OR, only in
+    // the dashboard's highlight mode, another member's task (`isDimmed`), which
+    // gets the exact ghost treatment so the viewer's own tasks stand out and
+    // others' work can't be edited from this view. The two ghost-ONLY bits (the
+    // "External" label and hiding the assignee) stay keyed to `isGhost`, so a
+    // dimmed card still shows whose task it is and never mislabels itself.
     const isExternal = isGhost || !!isDimmed;
 
     const [editing, setEditing] = useState(false);
     const [draftTitle, setDraftTitle] = useState(task.title ?? "");
-    // Inline date editor (Issue #5). A small Joy modal opens above the
-    // diagram when the user clicks the edit-calendar icon. We keep the
-    // drafts local and PUT both fields on Save so the user can pick a
-    // start/due pair in one motion instead of two round-trips.
     const [dateEditorOpen, setDateEditorOpen] = useState(false);
-    const [draftStart, setDraftStart] = useState<string>(task.startDate ?? "");
-    const [draftDue, setDraftDue] = useState<string>(task.dueDate ?? "");
+    const [statusMenuOpen, setStatusMenuOpen] = useState(false);
 
-    // Keep drafts in sync when task data changes externally (e.g. a
-    // graph refresh after a sibling edit). Only when the editor is
-    // closed — don't clobber in-progress input.
-    useEffect(() => {
-        if (!dateEditorOpen) {
-            setDraftStart(task.startDate ?? "");
-            setDraftDue(task.dueDate ?? "");
-        }
-    }, [task.startDate, task.dueDate, dateEditorOpen]);
-
-    const openDateEditor = () => {
-        setDraftStart(task.startDate ?? "");
-        setDraftDue(task.dueDate ?? "");
-        setDateEditorOpen(true);
-    };
-
-    const saveDateEditor = () => {
-        // Empty strings flow through as `null` so the user can clear
-        // a date by blanking the input.
-        void onChange({
-            startDate: draftStart || null,
-            dueDate: draftDue || null,
-        });
-        setDateEditorOpen(false);
-    };
-
-    const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
-    const toneColor = TONE_COLOR[schedule.tone];
-    const scheduleLabel =
-        schedule.daysUntilDue == null
-            ? null
-            : task.status?.toLowerCase() === "closed"
-              ? t.tasks.diagram.schedule.closed
-              : schedule.daysUntilDue < 0
-                ? fmt(t.tasks.diagram.schedule.overdueDays, {
-                      count: -schedule.daysUntilDue,
-                  })
-                : schedule.daysUntilDue === 0
-                  ? t.tasks.diagram.schedule.dueToday
-                  : schedule.daysUntilDue === 1
-                    ? t.tasks.diagram.schedule.dueTomorrow
-                    : fmt(t.tasks.diagram.schedule.dueInDays, {
-                          count: schedule.daysUntilDue,
-                      });
+    const scheduleLabel = useScheduleLabel(schedule, task.status);
 
     const commitTitle = () => {
         const next = draftTitle.trim();
@@ -171,227 +106,75 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         }
     };
 
-    // Visual treatment: ghosts stay neutral (dim + dashed). Internal
-    // cards mix the existing purple border with the task's *status*
-    // color so the board reads as "all the green cards are closed"
-    // at a glance, without the status chip having to do all the work.
-    // The schedule tone takes over the left edge stripe (red on
-    // overdue) so urgency still pops over status.
-    const borderStyle = isExternal ? "dashed" : "solid";
-    // `color-mix` is widely supported (Chromium 111+ / Safari 16.2+ /
-    // Firefox 113+); we lean on CSS to blend so the result interpolates
-    // in both theme modes without two color stops to maintain manually.
-    // "Current preview" takes the strongest border so it pops from a
-    // tree of siblings; root falls back to `borderStrong`; regular
-    // tasks use the default border. Status tint still mixes in.
-    const baseBorder = isCurrentPreview ? P.accent : isRoot ? P.borderStrong : P.border;
-    const statusTintColor = meta.color;
-    const borderColor = isExternal
-        ? (P.borderMuted ?? P.border)
-        : isCurrentPreview
-          ? // Current-preview card keeps the accent border pure (no
-            // status mix) so it reads as an unambiguous "you are here"
-            // marker regardless of the task's status color.
-            P.accent
-          : isNewlyCreated
-            ? // Just-created card — pure cyan border (no status mix) so the
-              // "you just added this" cue reads unambiguously.
-              NEW_TASK_COLOR
-            : isAssignedToViewer
-              ? // Viewer's own task — amber-tinted border (takes precedence
-                // over the status tint; status is still legible via the chip
-                // and glow). Paired with the amber ring below.
-                `color-mix(in srgb, ${baseBorder}, ${ASSIGNED_FOCUS_COLOR} 55%)`
-              : statusTintColor
-                ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
-                : baseBorder;
-    // Subtle status glow on non-ghost cards so the eye sweeps over
-    // closed (green) / WIP (orange) tasks as a group.
-    const statusGlow =
-        !isExternal && statusTintColor
-            ? `0 4px 18px ${alpha(statusTintColor, isDark ? 0.18 : 0.12)}`
-            : null;
-    // "Current preview" ring: an accent-colored outline drawn via an
-    // outer box-shadow layer so it sits OUTSIDE the card's border
-    // without nudging layout. Combined with whatever existing glow the
-    // card already has so root + current cards still show their glow.
-    const currentRing = isCurrentPreview
-        ? `0 0 0 2px ${P.accentRingStrong}, 0 0 22px ${P.accentRingSoft}`
-        : null;
-    // "Newly created" ring — same additive box-shadow trick as
-    // `currentRing`, but cyan. Suppressed when the card is also the
-    // current-preview anchor so the two rings never double up (the anchor
-    // wins; the border tint still marks the card as new).
-    const newRing =
-        isNewlyCreated && !isExternal && !isCurrentPreview
-            ? `0 0 0 2px ${alpha(NEW_TASK_COLOR, isDark ? 0.9 : 0.75)}, 0 0 20px ${alpha(NEW_TASK_COLOR, isDark ? 0.4 : 0.28)}`
-            : null;
-    // "Assigned to viewer" ring — same additive box-shadow trick as
-    // `currentRing`, but amber. Skipped when the card is already the
-    // current-preview anchor so the two rings don't double up (the anchor
-    // treatment wins; the amber border tint still marks it as the viewer's).
-    const assignedRing =
-        isAssignedToViewer && !isExternal && !isCurrentPreview && !isNewlyCreated
-            ? `0 0 0 2px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.9 : 0.75)}, 0 0 20px ${alpha(ASSIGNED_FOCUS_COLOR, isDark ? 0.4 : 0.28)}`
-            : null;
-    // "Current preview" surface tint. Contrast by *lightness*, not
-    // hue: every other card is already some shade of purple against a
-    // purple canvas, so blending in MORE purple wouldn't make the
-    // focal card stand out. Dark mode → layer a translucent white
-    // wash so the card reads brighter than its siblings; light mode →
-    // layer a translucent black wash so it reads darker. Using a
-    // gradient overlay (vs flat color-mix) renders more reliably
-    // across browsers AND produces a visible step against the already-
-    // elevated surface — a flat mix at the same alpha tends to look
-    // identical to the base. Border + ring still carry the brand
-    // accent so the card stays tied to the diagram's palette.
-    const cardBackground = isCurrentPreview
-        ? isDark
-            ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
-            : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
-        : isNewlyCreated && !isExternal
-          ? // Subtle cyan wash tying the surface to the new-task border/ring
-            // (same gradient-overlay technique as the current-preview tint).
-            `linear-gradient(${alpha(NEW_TASK_COLOR, isDark ? 0.22 : 0.1)}, ${alpha(NEW_TASK_COLOR, isDark ? 0.22 : 0.1)}), ${P.surfaceElevated}`
-          : P.surfaceElevated;
-    const stripeColor = isExternal
-        ? null
-        : schedule.tone === "neutral" || schedule.tone === "success"
-          ? null
-          : toneColor;
+    const emphasis: CardEmphasis | undefined = isCurrentPreview
+        ? "current"
+        : isNewlyCreated
+          ? "new"
+          : isAssignedToViewer
+            ? "assigned"
+            : undefined;
+    // The schedule tone owns the leading edge (red on overdue) so urgency still
+    // pops; a closed or unscheduled task has none.
+    const stripe =
+        schedule.tone === "red" ? "danger" : schedule.tone === "amber" ? "warning" : undefined;
+
+    const dateText =
+        schedule.startLabel && schedule.dueLabel
+            ? `${schedule.startLabel} – ${schedule.dueLabel}`
+            : (schedule.startLabel ?? schedule.dueLabel ?? null);
+    const dateEmpty = dateText == null;
+    const dateEditable = !isExternal;
 
     return (
-        <Box
-            sx={{
-                width: 260,
-                p: 1.25,
-                pl: stripeColor ? 1.5 : 1.25,
-                borderRadius: "12px",
-                background: cardBackground,
-                border: "1px solid",
-                borderStyle,
-                borderColor,
-                opacity: isExternal ? 0.92 : 1,
-                cursor: isExternal ? "pointer" : "default",
-                boxShadow: isExternal
-                    ? "none"
-                    : [
-                          // Order matters: outer ring first so it sits
-                          // outside any internal glow layers. `filter()`
-                          // out nulls so a card with only one applicable
-                          // shadow doesn't end up with stray commas.
-                          // `assignedRing`, `currentRing` and `newRing` are
-                          // mutually exclusive (guards above), so at most one
-                          // ring fires.
-                          assignedRing,
-                          currentRing,
-                          newRing,
-                          isRoot ? `0 6px 22px ${P.glow}` : null,
-                          statusGlow,
-                          !isRoot && !statusGlow ? P.shadowSoft : null,
-                      ]
-                          .filter(Boolean)
-                          .join(", ") || "none",
-                transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
-                position: "relative",
-                "&:hover": isExternal
-                    ? { opacity: 1, borderColor: P.borderStrong }
-                    : { borderColor: P.borderStrong },
-                "&::before": stripeColor
-                    ? {
-                          content: '""',
-                          position: "absolute",
-                          left: 0,
-                          top: 8,
-                          bottom: 8,
-                          width: "3px",
-                          borderRadius: "0 3px 3px 0",
-                          background: stripeColor,
-                      }
-                    : undefined,
-            }}
+        <TaskCardFrame
+            clickable={false}
+            emphasis={emphasis}
+            ghost={isExternal}
+            prominent={isRoot}
+            stripe={stripe}
+            width={NODE_WIDTH}
             onClick={isExternal ? () => onOpenPreview() : undefined}
         >
-            {/* Handles — fully inert for ghosts. External tasks are
-                a read-only window; editing relations from this diagram
-                would surprise the user (they'd need to manage them
-                from the other task's own preview/diagram). Structure
-                AND dependency handles both disable on ghosts. */}
-            <Handle
-                id={HANDLE.structureTop}
-                isConnectable={!isExternal}
-                position={Position.Top}
-                type="target"
-                style={{
-                    ...HANDLE_BASE,
-                    background: P.accent,
-                    borderColor: P.accentSoft,
-                    opacity: isExternal ? 0.35 : 1,
-                }}
-            />
-            <Handle
-                id={HANDLE.structureBottom}
-                isConnectable={!isExternal}
-                position={Position.Bottom}
-                type="source"
-                style={{
-                    ...HANDLE_BASE,
-                    background: P.accent,
-                    borderColor: P.accentSoft,
-                    opacity: isExternal ? 0.35 : 1,
-                }}
-            />
-            <Handle
-                id={HANDLE.dependencyLeft}
-                isConnectable={!isExternal}
-                position={Position.Left}
-                type="target"
-                style={{
-                    ...HANDLE_BASE,
-                    background: "#ff8c00",
-                    borderColor: "#fbbf24",
-                    opacity: isExternal ? 0.35 : 1,
-                }}
-            />
-            <Handle
-                id={HANDLE.dependencyRight}
-                isConnectable={!isExternal}
-                position={Position.Right}
-                type="source"
-                style={{
-                    ...HANDLE_BASE,
-                    background: "#ff8c00",
-                    borderColor: "#fbbf24",
-                    opacity: isExternal ? 0.35 : 1,
-                }}
-            />
+            {withHandles && (
+                <NodeHandles
+                    dependencyConnectable={!isExternal}
+                    dim={isExternal}
+                    structureConnectable={!isExternal}
+                />
+            )}
 
             {/* Header row */}
-            <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mb: 0.75 }}>
-                <CopyableTaskIdChip
-                    size="sm"
-                    sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
-                    task={task}
-                    variant="outlined"
-                />
-                {/* Status picker — ghosts stay read-only (their status
-                    lives in another tree). For everyone else the chip
-                    is a dropdown trigger so users can move a task
-                    Open → WIP → Closed without opening the preview. */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    minHeight: 22,
+                    minWidth: 0,
+                }}
+            >
+                <TaskIdText task={task} />
+                {/* Status picker — ghosts stay read-only (their status lives in
+                    another tree). For everyone else the status is a dropdown
+                    trigger so users can move a task Open → WIP → Closed
+                    without opening the preview. */}
                 {isExternal ? (
-                    <StatusChip isDark={isDark} meta={meta} />
+                    <StatusLabel status={task.status} />
                 ) : (
-                    <Dropdown>
+                    <Dropdown
+                        open={statusMenuOpen}
+                        onOpenChange={(_, open) => setStatusMenuOpen(open)}
+                    >
                         <MenuButton
                             slots={{ root: "button" }}
                             slotProps={{
                                 root: {
-                                    // `nodrag nopan nowheel` stops React
-                                    // Flow grabbing the gesture before
-                                    // Joy's MenuButton can handle it.
-                                    // Stopping pointerdown/mousedown is
-                                    // belt-and-suspenders because RF
-                                    // listens to pointer events too.
+                                    // `nodrag nopan nowheel` stops React Flow
+                                    // grabbing the gesture before Joy's
+                                    // MenuButton can handle it. Stopping
+                                    // pointerdown/mousedown is belt-and-
+                                    // suspenders because RF listens to pointer
+                                    // events too.
                                     className: "nodrag nopan nowheel",
                                     onPointerDown: (e) => e.stopPropagation(),
                                     onMouseDown: (e) => e.stopPropagation(),
@@ -403,128 +186,97 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                         borderRadius: "5px",
                                         display: "inline-flex",
                                         alignItems: "center",
+                                        minWidth: 0,
                                     },
                                 },
                             }}
                         >
-                            <StatusChip isDark={isDark} meta={meta} />
+                            <StatusLabel status={task.status} />
                         </MenuButton>
                         <Menu
                             placement="bottom-start"
                             size="sm"
                             sx={{ minWidth: 140 }}
                             slotProps={{
-                                // `slotProps.root` here spreads onto the
-                                // Popper `<ul>` directly. Joy's `sx` is
-                                // not processed on that slot (we saw it
-                                // serialise as `sx="[object Object]"` in
-                                // the DOM) — use plain `style` so the
-                                // z-index lands on the inline style and
+                                // `slotProps.root` here spreads onto the Popper
+                                // `<ul>` directly. Joy's `sx` is not processed
+                                // on that slot (it serialises as
+                                // `sx="[object Object]"` in the DOM): use plain
+                                // `style` so the z-index lands inline and
                                 // out-ranks the diagram modal's stacking
                                 // context.
-                                root: { style: { zIndex: popupZIndex } },
+                                root: {
+                                    style: { zIndex: popupZIndex },
+                                    // Escape closes the menu and stops there: it
+                                    // must not go on to close the graph dialog the
+                                    // menu is rendered in.
+                                    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+                                        if (e.key !== "Escape") return;
+                                        e.stopPropagation();
+                                        setStatusMenuOpen(false);
+                                    },
+                                },
                             }}
                         >
-                            {statuses.map((s) => {
-                                const isActive = s.status === task.status;
-                                return (
-                                    <MenuItem
-                                        key={s.status}
-                                        selected={isActive}
-                                        sx={{ fontWeight: isActive ? 700 : 500 }}
-                                        onClick={() => {
-                                            if (isActive || s.status == null) return;
-                                            void onChange({
-                                                status: s.status,
-                                                statusCode: s.code,
-                                            });
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: 10,
-                                                height: 10,
-                                                borderRadius: "50%",
-                                                background: s.color ?? "#94a3b8",
-                                                flexShrink: 0,
-                                                mr: 1,
-                                            }}
-                                        />
-                                        {taskMetaLabel(s.status, t.tasks.filters)}
-                                    </MenuItem>
-                                );
-                            })}
+                            {statuses.map((s) => (
+                                <MenuItem
+                                    key={s.status}
+                                    selected={s.status === task.status}
+                                    onClick={() => {
+                                        if (s.status === task.status || s.status == null) return;
+                                        void onChange({ status: s.status, statusCode: s.code });
+                                    }}
+                                >
+                                    <StatusLabel status={s.status} />
+                                </MenuItem>
+                            ))}
                         </Menu>
                     </Dropdown>
                 )}
                 {openBlockerCount > 0 && !isExternal && (
-                    <AppTooltip
-                        title={fmt(
+                    <BlockerCount
+                        count={openBlockerCount}
+                        tooltip={fmt(
                             openBlockerCount === 1
                                 ? t.tasks.diagram.tooltips.openBlockerOne
                                 : t.tasks.diagram.tooltips.openBlockerOther,
                             { count: openBlockerCount }
                         )}
-                    >
-                        <Chip
-                            color="warning"
-                            size="sm"
-                            startDecorator={<BlockRoundedIcon sx={{ fontSize: 12 }} />}
-                            variant="soft"
-                            sx={{
-                                fontSize: "0.65rem",
-                                fontWeight: 700,
-                                borderRadius: "5px",
-                                "--Chip-paddingInline": "6px",
-                            }}
-                        >
-                            {openBlockerCount}
-                        </Chip>
-                    </AppTooltip>
+                    />
                 )}
                 <Box sx={{ flex: 1 }} />
                 {isExternal ? (
-                    // Ghost cards don't get the "…" menu — instead, a
-                    // small "open in preview" hint so the click target
-                    // is obvious.
+                    // Ghost cards don't get the "…" menu — a small "open in
+                    // preview" hint makes the click target obvious.
                     <AppTooltip title={t.tasks.diagram.tooltips.openTaskInPreview}>
                         <OpenInNewRoundedIcon
-                            sx={{ fontSize: 14, color: P.textMuted, opacity: 0.7 }}
+                            sx={{
+                                fontSize: 14,
+                                color: g.text.tertiary,
+                                "--Icon-color": g.text.tertiary,
+                            }}
                         />
                     </AppTooltip>
                 ) : (
-                    // Direct "open task" affordance. Clicking opens the
-                    // task as an overlay modal ABOVE the diagram — the
-                    // graph stays open behind it (the canvas wires both
-                    // this and the ghost-card click into `onOpenPreview`).
+                    // Direct "open task" affordance: the task opens as an
+                    // overlay ABOVE the diagram, the graph stays open behind it
+                    // (the canvas wires this and the ghost-card click into
+                    // `onOpenPreview`).
                     <AppTooltip title={t.tasks.diagram.tooltips.openTask}>
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                "--IconButton-size": "22px",
-                                color: P.textMuted,
-                                opacity: 0.7,
-                                borderRadius: "5px",
-                                "&:hover": {
-                                    opacity: 1,
-                                    background: P.hoverBg,
-                                    color: P.accentSoft,
-                                },
-                            }}
-                            onClick={onOpenPreview}
-                        >
-                            <LaunchRoundedIcon sx={{ fontSize: 14 }} />
-                        </IconButton>
+                        <Box component="span" sx={{ display: "inline-flex" }}>
+                            <NodeIconButton onClick={onOpenPreview}>
+                                <LaunchRoundedIcon sx={{ fontSize: 14 }} />
+                            </NodeIconButton>
+                        </Box>
                     </AppTooltip>
                 )}
-            </Stack>
+            </Box>
 
             {/* Title — double-click to edit (disabled for ghosts) */}
             {editing && !isExternal ? (
                 <Input
                     size="sm"
-                    sx={{ mb: 0.75, fontWeight: 600 }}
+                    sx={{ fontWeight: 500 }}
                     value={draftTitle}
                     autoFocus
                     onBlur={commitTitle}
@@ -532,6 +284,9 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     onKeyDown={(e) => {
                         if (e.key === "Enter") commitTitle();
                         if (e.key === "Escape") {
+                            // Cancel the rename only: the key must not reach
+                            // the graph dialog and close it with the title.
+                            e.stopPropagation();
                             setEditing(false);
                             setDraftTitle(task.title ?? "");
                         }
@@ -543,20 +298,11 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     enterDelay={500}
                     title={isExternal ? "" : t.tasks.diagram.tooltips.doubleClickToRename}
                 >
-                    <Typography
-                        level="body-sm"
+                    <Box
                         sx={{
-                            fontWeight: 600,
-                            mb: 0.75,
-                            color: P.text,
+                            display: "flex",
+                            minHeight: TITLE_MIN_HEIGHT,
                             cursor: isExternal ? "pointer" : "text",
-                            overflow: "hidden",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            wordBreak: "break-word",
-                            lineHeight: 1.3,
-                            minHeight: "2.6em",
                         }}
                         onDoubleClick={() => {
                             if (isExternal) return;
@@ -564,316 +310,138 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             setEditing(true);
                         }}
                     >
-                        {task.title || t.tasks.diagram.untitled}
-                    </Typography>
+                        <TaskTitle lines={2}>{task.title || t.tasks.diagram.untitled}</TaskTitle>
+                    </Box>
                 </AppTooltip>
             )}
 
-            {/* Schedule row — dates + duration + relative status. The
-                triple-pill row is the diagram's key scheduling cue and
-                deliberately reads compact-but-complete. */}
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={0.5}
-                sx={{ mb: 0.5, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
+            {/* Schedule row — dates, duration and the relative due words. It is
+                the diagram's key scheduling cue, so it stays on the card. */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 0.75,
+                    rowGap: 0.5,
+                    minHeight: 22,
+                }}
             >
                 <CalendarMonthRoundedIcon
-                    sx={{ fontSize: 14, color: P.textMuted, opacity: 0.7 }}
+                    aria-hidden="true"
+                    sx={{ fontSize: 14, color: g.text.tertiary, "--Icon-color": g.text.tertiary }}
                 />
-                {/* Date label — clickable on non-external nodes so the
-                    user can edit start/due directly. Hover/focus give a
-                    subtle hint without a separate icon button. */}
-                {(() => {
-                    const dateText =
-                        schedule.startLabel && schedule.dueLabel
-                            ? `${schedule.startLabel} – ${schedule.dueLabel}`
-                            : (schedule.startLabel ?? schedule.dueLabel ?? null);
-                    const placeholder = t.tasks.diagram.setDates;
-                    const isEmpty = dateText == null;
-                    const labelText = isEmpty ? placeholder : dateText;
-                    const editable = !isExternal;
-                    return (
-                        <AppTooltip
-                            disableHoverListener={!editable}
-                            enterDelay={500}
-                            title={editable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
-                        >
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: isEmpty ? P.textMuted : P.text,
-                                    fontWeight: 500,
-                                    opacity: isEmpty ? 0.7 : 1,
-                                    cursor: editable ? "pointer" : "default",
-                                    borderRadius: "4px",
-                                    px: 0.5,
-                                    mx: -0.25,
-                                    transition: "background 0.12s ease, color 0.12s ease",
-                                    "&:hover": editable
-                                        ? {
-                                              background: P.hoverBg,
-                                              color: P.accentSoft,
-                                          }
-                                        : undefined,
-                                }}
-                                onClick={editable ? openDateEditor : undefined}
-                            >
-                                {labelText}
-                            </Typography>
-                        </AppTooltip>
-                    );
-                })()}
-                {schedule.durationDays != null && (
-                    <Chip
-                        size="sm"
-                        variant="outlined"
+                {/* Date label — clickable on non-external nodes so the user can
+                    edit start/due directly. Hover/focus give a subtle hint
+                    without a separate icon button. */}
+                <AppTooltip
+                    disableHoverListener={!dateEditable}
+                    enterDelay={500}
+                    title={dateEditable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
+                >
+                    <Box
+                        component="span"
+                        data-testid="node-dates"
                         sx={{
-                            fontSize: "0.6rem",
-                            fontWeight: 600,
-                            borderRadius: "4px",
-                            "--Chip-paddingInline": "5px",
-                            color: P.textMuted,
+                            ...type("body-xs"),
+                            fontWeight: 500,
+                            color: dateEmpty ? g.text.tertiary : g.text.primary,
+                            cursor: dateEditable ? "pointer" : "default",
+                            borderRadius: g.radius.xs,
+                            px: 0.5,
+                            mx: -0.5,
+                            transition: `background ${g.motion.fast}, color ${g.motion.fast}`,
+                            "&:hover": dateEditable
+                                ? { background: g.hover, color: g.accent.text }
+                                : undefined,
                         }}
+                        onClick={dateEditable ? () => setDateEditorOpen(true) : undefined}
                     >
-                        {fmt(t.tasks.diagram.durationDays, {
-                            count: schedule.durationDays,
-                        })}
-                    </Chip>
+                        {dateEmpty ? t.tasks.diagram.setDates : dateText}
+                    </Box>
+                </AppTooltip>
+                {schedule.durationDays != null && (
+                    <DurationText>
+                        {fmt(t.tasks.diagram.durationDays, { count: schedule.durationDays })}
+                    </DurationText>
                 )}
                 {scheduleLabel && (
-                    <Chip
-                        size="sm"
-                        startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 11 }} />}
-                        variant="soft"
-                        sx={{
-                            fontSize: "0.6rem",
-                            fontWeight: 700,
-                            borderRadius: "4px",
-                            "--Chip-paddingInline": "5px",
-                            background: alpha(toneColor, isDark ? 0.22 : 0.16),
-                            color: toneColor,
-                        }}
-                    >
-                        {scheduleLabel}
-                    </Chip>
+                    <DueText text={scheduleLabel} tone={dueToneOf(schedule.tone)} icon />
                 )}
-            </Stack>
+            </Box>
 
             {/* Footer row */}
-            <Stack alignItems="center" direction="row" spacing={0.75}>
-                {/* Show the assignee on internal cards — including dimmed
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+                {/* Show the assignee on internal cards, including dimmed
                     other-member cards, so the viewer can see WHOSE task it is.
                     Only true ghosts (isGhost) hide it (they carry the
-                    "External" chip instead). */}
+                    "External" label instead). The name is in the tooltip. */}
                 {!isGhost && task.assigneeId && (
-                    // Avatar instead of name text — packs more identity
-                    // into the same horizontal space and matches the
-                    // affordance used everywhere else in the app
-                    // (comments, table cells, modals). Tooltip with the
-                    // name covers the "who is this?" case.
                     <AppTooltip enterDelay={400} title={task.assigneeName ?? ""}>
                         <Box sx={{ display: "inline-flex" }}>
-                            <UserAvatar
-                                showNameAndEmail={false}
-                                showPulseDot={false}
-                                size={22}
-                                userId={task.assigneeId}
-                            />
+                            <AssigneeAvatar size="xs" userId={task.assigneeId} />
                         </Box>
                     </AppTooltip>
                 )}
-                {/* "External" chip only for TRUE ghosts. Dimmed other-member
-                    cards fall through to the priority chip like any internal
-                    card — they're not external, just not the viewer's. */}
+                {/* "External" only for TRUE ghosts. Dimmed other-member cards
+                    fall through to the priority like any internal card:
+                    they're not external, just not the viewer's. */}
                 {isGhost ? (
-                    <Chip
-                        size="sm"
-                        variant="soft"
-                        sx={{
-                            fontSize: "0.6rem",
-                            fontWeight: 700,
-                            letterSpacing: "0.06em",
-                            textTransform: "uppercase",
-                            borderRadius: "4px",
-                            "--Chip-paddingInline": "5px",
-                            background: isDark
-                                ? "rgba(148,163,184,0.18)"
-                                : "rgba(100,116,139,0.14)",
-                            color: P.textMuted,
-                        }}
-                    >
-                        {t.tasks.diagram.external}
-                    </Chip>
+                    <NodeBadge>{t.tasks.diagram.external}</NodeBadge>
                 ) : (
-                    task.priority && (
-                        <Chip
-                            size="sm"
-                            variant="outlined"
-                            sx={{
-                                fontSize: "0.65rem",
-                                borderRadius: "5px",
-                                "--Chip-paddingInline": "6px",
-                                color: P.textMuted,
-                            }}
-                        >
-                            {taskMetaLabel(task.priority, t.tasks.filters)}
-                        </Chip>
-                    )
+                    <PriorityIcon priority={task.priority} />
                 )}
-                {projectName && (
-                    <Typography
-                        level="body-xs"
+                {projectName ? (
+                    <Box
+                        component="span"
                         sx={{
-                            color: P.textMuted,
-                            fontWeight: 500,
+                            ...type("body-xs"),
+                            color: g.text.tertiary,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
-                            // `flex: 1` claims the remaining row width
-                            // so the project name can use it all before
-                            // ellipsising. Previously a sibling
-                            // `<Box flex:1>` spacer existed alongside
-                            // this one — two flex:1 elements split the
-                            // space and truncated the name long before
-                            // it had to.
+                            // `flex: 1` claims the remaining row width so the
+                            // project name can use it all before ellipsising.
                             flex: 1,
                             minWidth: 0,
-                            textAlign: "right",
-                            pr: 0.5,
+                            textAlign: "end",
+                            paddingInlineEnd: "2px",
                         }}
                     >
                         {projectName}
-                    </Typography>
+                    </Box>
+                ) : (
+                    <Box sx={{ flex: 1 }} />
                 )}
-                {!projectName && <Box sx={{ flex: 1 }} />}
                 {!isExternal && (
                     <AppTooltip title={t.tasks.diagram.tooltips.addSubTask}>
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                "--IconButton-size": "24px",
-                                color: P.accentSoft,
-                                opacity: 0.8,
-                                borderRadius: "6px",
-                                "&:hover": { opacity: 1, background: P.hoverBg },
-                            }}
-                            onClick={() => void onAddSubtask()}
-                        >
-                            <AddRoundedIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
+                        <Box component="span" sx={{ display: "inline-flex" }}>
+                            <NodeIconButton size={24} onClick={() => void onAddSubtask()}>
+                                <AddRoundedIcon sx={{ fontSize: 16 }} />
+                            </NodeIconButton>
+                        </Box>
                     </AppTooltip>
                 )}
-            </Stack>
+            </Box>
 
-            {/* Inline date editor modal — opens above the diagram so
-                the user can adjust start/due without leaving the
-                canvas. Empty inputs flow as `null`, so the user can
-                clear a date by blanking the field. Plain Stack layout
-                instead of Joy's DialogTitle/DialogContent: those
-                wrappers ship their own padding/typography that fought
-                with the compact look we want here.
-                zIndex: Joy's default modal z (~1300) would put this
-                BEHIND the enclosing diagram dialog — the editor
-                "opened" but was invisible. Diagram z + 1 matches the
-                status Menu above, which solved the same stacking
-                problem the same way. */}
-            <Modal
-                open={dateEditorOpen}
-                sx={{ zIndex: popupZIndex }}
-                onClose={() => setDateEditorOpen(false)}
-            >
-                <ModalDialog
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    variant="outlined"
-                    sx={{
-                        minWidth: 340,
-                        maxWidth: 380,
-                        p: 0,
-                        borderRadius: "12px",
-                        background: P.surfaceElevated,
-                        border: `1px solid ${P.border}`,
-                        boxShadow: P.shadow,
-                        overflow: "hidden",
+            {dateEditorOpen && (
+                <NodeDateEditor
+                    dueDate={task.dueDate}
+                    startDate={task.startDate}
+                    zIndex={popupZIndex}
+                    onClose={() => setDateEditorOpen(false)}
+                    onSave={(patch) => {
+                        void onChange(patch);
+                        setDateEditorOpen(false);
                     }}
-                >
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                        sx={{
-                            px: 2,
-                            py: 1.25,
-                            borderBottom: `1px solid ${P.border}`,
-                        }}
-                    >
-                        <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: P.accentSoft }} />
-                        <Typography level="title-sm" sx={{ fontWeight: 700, color: P.text }}>
-                            Edit schedule
-                        </Typography>
-                    </Stack>
-                    <Stack spacing={1.5} sx={{ px: 2, py: 1.75 }}>
-                        <FormControl size="sm">
-                            <FormLabel sx={{ color: P.textMuted, fontWeight: 600 }}>
-                                Start date
-                            </FormLabel>
-                            <Input
-                                type="date"
-                                value={draftStart}
-                                sx={{
-                                    "& input::-webkit-calendar-picker-indicator": {
-                                        filter: isDark ? "invert()" : "none",
-                                        cursor: "pointer",
-                                    },
-                                }}
-                                onChange={(e) => setDraftStart(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl size="sm">
-                            <FormLabel sx={{ color: P.textMuted, fontWeight: 600 }}>
-                                Due date
-                            </FormLabel>
-                            <Input
-                                type="date"
-                                value={draftDue}
-                                sx={{
-                                    "& input::-webkit-calendar-picker-indicator": {
-                                        filter: isDark ? "invert()" : "none",
-                                        cursor: "pointer",
-                                    },
-                                }}
-                                onChange={(e) => setDraftDue(e.target.value)}
-                            />
-                        </FormControl>
-                    </Stack>
-                    <Stack
-                        direction="row"
-                        justifyContent="flex-end"
-                        spacing={1}
-                        sx={{
-                            px: 2,
-                            py: 1.25,
-                            borderTop: `1px solid ${P.border}`,
-                            background: P.surface,
-                        }}
-                    >
-                        <Button
-                            color="neutral"
-                            size="sm"
-                            variant="plain"
-                            onClick={() => setDateEditorOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button size="sm" variant="solid" onClick={saveDateEditor}>
-                            Save
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
-        </Box>
+                />
+            )}
+        </TaskCardFrame>
     );
-});
+};
+
+export const TaskNodeCard = memo((props: NodeProps) => (
+    <TaskNodeView data={props.data as unknown as TaskNodeData} withHandles />
+));
 
 TaskNodeCard.displayName = "TaskNodeCard";

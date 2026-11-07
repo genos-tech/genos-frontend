@@ -3,6 +3,7 @@ import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath } from "@xyflow/r
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
+import { DEPENDENCY_COLOR, DEPENDENCY_COLOR_ACTIVE } from "../types";
 
 // Edge data carries the source/target titles so we can name the edge
 // for assistive tech (via `<title>` on the SVG group) and label the
@@ -40,7 +41,7 @@ export const DependencyEdge = memo(
         });
 
         const active = selected || hovered;
-        const stroke = active ? "#fbbf24" : "#f97316";
+        const stroke = active ? DEPENDENCY_COLOR_ACTIVE : DEPENDENCY_COLOR;
 
         const d = (data as DependencyEdgeData | undefined) ?? {};
         const tooltipText =
