@@ -11,7 +11,6 @@ import {
     CreateLinkButton,
     FormattingToolbar,
     FormattingToolbarController,
-    useCreateBlockNote,
 } from "@blocknote/react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -24,13 +23,11 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
-import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
-import { linkHostCaption } from "./sub/linkHostCaption";
-import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
+import { useGenosEditor } from "./genos/useGenosEditor";
+import { getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 
 /** Block types the todo toolbar does not offer. They are in the schema (see above). */
 const HIDDEN_BLOCK_TYPES = new Set(["heading", "quote"]);
@@ -88,16 +85,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     );
 
     const dictionary = useBlockNoteDictionary();
-    const editor = useCreateBlockNote({
-        ...TAB_INDENT_OPTIONS,
-        schema,
-        resolveFileUrl: resolveInsecureFileUrl,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption, tabStaysInEditor],
-        dictionary,
-        initialContent: body,
-    });
+    const editor = useGenosEditor({ surface: "todo", schema, dictionary, initialContent: body });
 
     return (
         <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ px: "10px" }}>
