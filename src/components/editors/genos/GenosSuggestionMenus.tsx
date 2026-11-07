@@ -1,22 +1,16 @@
 import { filterSuggestionItems } from "@blocknote/core";
-import {
-    DefaultReactSuggestionItem,
-    getDefaultReactSlashMenuItems,
-    SuggestionMenuController,
-} from "@blocknote/react";
+import { SuggestionMenuController } from "@blocknote/react";
 
 import { UserProps } from "../../../types/admin";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { getEmojiSuggestionItems } from "../EmojiSuggestion";
-import { withGenosBlockSlashItems } from "../genosBlockSpecs";
-import { withGifSlashItem } from "../GifToolbarButton";
 import { HashSuggestionMenuController } from "../HashMention";
 import { MentionMenuItems, MentionSuggestionMenu } from "../Mention";
+import { genosSlashItems, SlashPreset } from "./genosSlashItems";
 
-// The editors only ever hand these helpers the editor they built, whose type depends on the
-// schema; the helpers themselves take it loosely (`MentionMenuItems`, `HashSuggestionMenuController`).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyEditor = any;
+// The editors hand these helpers the editor they built, whose type depends on the schema; the
+// helpers themselves take it loosely (`MentionMenuItems`, `HashSuggestionMenuController`).
+type AnyEditor = Parameters<typeof genosSlashItems>[1];
 
 /** What the `@` menu lists. A function, so an editor can hand over refs (chat composers read
  *  the latest values without re-creating anything) or plain props (documents). */
@@ -25,22 +19,6 @@ export type MentionSources = {
     teamMembers: UserProps[];
     myselfUserId: string;
     mentionGroups: Parameters<typeof MentionMenuItems>[4];
-};
-
-/**
- * The `/` menu per surface kind (MIP-1131). Both start from BlockNote's default items plus
- * the Genos GIF entry; `document` (notes, task bodies, templates) adds the math and diagram
- * blocks. Every type is in every SCHEMA either way; this only decides what a menu offers.
- */
-export type SlashPreset = "chat" | "document";
-
-export const genosSlashItems = (
-    preset: SlashPreset,
-    editor: AnyEditor,
-    setShowGifPicker: (value: boolean) => void
-): DefaultReactSuggestionItem[] => {
-    const withGif = withGifSlashItem(getDefaultReactSlashMenuItems(editor), setShowGifPicker);
-    return preset === "document" ? withGenosBlockSlashItems(editor, withGif) : withGif;
 };
 
 type GenosSuggestionMenusProps = {

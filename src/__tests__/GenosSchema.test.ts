@@ -46,6 +46,7 @@ const SURFACE_SCHEMAS = {
 
 // What a body round trip depends on: node and mark types, and each node's attributes with
 // their defaults. A render function is not part of it.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const describePm = (editor: BlockNoteEditor<any, any, any>) => ({
     nodes: Object.fromEntries(
         Object.entries(editor.pmSchema.nodes)
