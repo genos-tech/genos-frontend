@@ -4,7 +4,6 @@ import "@blocknote/mantine/style.css";
 import { useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -23,10 +22,11 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { downloadFile, resolveInsecureFileUrl } from "../../utils/downloadUtils";
+import { downloadFile } from "../../utils/downloadUtils";
 import { AppTooltip } from "../ui/AppTooltip";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useGenosSchema } from "./genos/genosSchema";
+import { useGenosEditor } from "./genos/useGenosEditor";
 
 // Cap the number of inline PR previews per message body. Anyone pasting
 // more than this is abusing the channel; the rest are silently dropped.
@@ -71,16 +71,13 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         "mount"
     );
 
-    const editor = useCreateBlockNote({
+    // `initialContent` drops the stored trailing blank line, and only that: a message typed
+    // since BlockNote 0.57 may not end with one, and a blind `slice(0, -1)` hid its last real
+    // line (MIP-1039). `resolveFileUrl` (upgrading http media) comes with the surface.
+    const editor = useGenosEditor({
+        surface: "preview",
         schema,
         dictionary,
-        // Upgrade http:// media URLs baked into saved image/file blocks to
-        // https:// so the HTTPS SPA renders them without a Mixed-Content
-        // warning (older bodies carry an http scheme; see the helper).
-        resolveFileUrl: resolveInsecureFileUrl,
-        // Drops the stored trailing blank line, and only that: a message typed
-        // since BlockNote 0.57 may not end with one, and a blind `slice(0, -1)`
-        // hid its last real line (MIP-1039).
         initialContent: withoutTrailingBlank(content),
     });
 
