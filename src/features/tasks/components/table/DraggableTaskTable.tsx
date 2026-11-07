@@ -336,7 +336,7 @@ const getTableHeaderStyles = (mode: "light" | "dark" | undefined): React.CSSProp
     borderBottom:
         mode === "dark" ? "2px solid rgba(255, 255, 255, 0.08)" : "2px solid rgba(0, 0, 0, 0.08)",
     fontWeight: 600,
-    fontSize: "0.7rem",
+    fontSize: "0.75rem",
     textTransform: "uppercase" as const,
     letterSpacing: "0.5px",
 });
@@ -1630,7 +1630,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     open={isColumnSettingsOpen}
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
-                <div
+                <Box
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     style={{
                         ...getTableContainerStyles(mode),
@@ -1639,6 +1639,25 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         width: "100%",
                         backgroundColor: mode === "dark" ? "#0a0a14" : "#ffffff",
                         cursor: resizingColumn ? "col-resize" : "auto",
+                    }}
+                    // Everything in the table is one step larger than the app's small text
+                    // (13 → 14px, 12 → 13px; MIP-1175). Shared pieces read the tokens (status,
+                    // priority, tags, chips); Joy's `body-sm` / `body-xs` levels are fixed rem,
+                    // so they are matched here. Scoped to the table: the filter bar above and
+                    // the rest of the app keep the normal scale.
+                    sx={{
+                        "--g-type-body-sm-size": "14px",
+                        "--g-type-body-sm-line": "20px",
+                        "--g-type-body-xs-size": "13px",
+                        "--g-type-body-xs-line": "18px",
+                        // The tag chip's own size (ProjectTagChip keeps 0.7rem elsewhere).
+                        "--table-tag-size": "0.8125rem",
+                        "& .MuiTypography-root.MuiTypography-body-sm": {
+                            fontSize: "var(--g-type-body-sm-size)",
+                        },
+                        "& .MuiTypography-root.MuiTypography-body-xs": {
+                            fontSize: "var(--g-type-body-xs-size)",
+                        },
                     }}
                 >
                     {/* Table Header */}
@@ -1902,7 +1921,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 </Typography>
                             </Box>
                         ))}
-                </div>
+                </Box>
             </div>
 
             {/* Shared task-graph modal for the per-row gutter trigger.

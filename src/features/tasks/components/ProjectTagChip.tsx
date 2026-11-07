@@ -22,5 +22,5 @@ export const ProjectTagChip = ({
     tagColor,
     // The size the chip always had (0.7rem): the table's tag column is narrow
     // and a larger default truncates "sample-tag".
-    fontSize = "0.7rem",
+    fontSize = "var(--table-tag-size, 0.7rem)",
 }: ProjectTagChipProps) => <Tag color={tagColor} fontSize={fontSize} label={label} />;

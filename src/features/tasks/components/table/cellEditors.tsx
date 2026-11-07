@@ -113,7 +113,7 @@ export const PillChip = ({
                 height: 24,
                 px: "8px",
                 borderRadius: "16px",
-                fontSize: "0.8125rem",
+                fontSize: "var(--g-type-body-sm-size, 0.8125rem)",
                 fontWeight: 500,
                 lineHeight: 1,
                 whiteSpace: "nowrap",
@@ -585,8 +585,8 @@ export const TagAutocomplete = <T,>({
                         variant="outlined"
                         sx={{
                             minHeight: 0,
-                            height: 20,
-                            fontSize: "0.7rem",
+                            height: 22,
+                            fontSize: "var(--g-type-body-xs-size, 0.75rem)",
                             fontWeight: 600,
                             borderColor: getColor(option),
                             borderStyle: "solid",

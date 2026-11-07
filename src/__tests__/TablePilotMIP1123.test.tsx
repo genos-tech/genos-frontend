@@ -153,6 +153,35 @@ describe("status, priority and effort in the table are the shared components", (
     });
 });
 
+describe("the table text is one step larger than the app's small text (MIP-1175)", () => {
+    const table = source("features/tasks/components/table/DraggableTaskTable.tsx");
+
+    it("the table container re-scales the small levels, and only the table", () => {
+        expect(table).toContain('"--g-type-body-sm-size": "14px"');
+        expect(table).toContain('"--g-type-body-xs-size": "13px"');
+        expect(table).toContain('"--table-tag-size": "0.8125rem"');
+        // Joy's body-sm / body-xs are fixed rem, so they are matched explicitly.
+        expect(table).toContain("& .MuiTypography-root.MuiTypography-body-sm");
+        expect(table).toContain("& .MuiTypography-root.MuiTypography-body-xs");
+        // The override lives on the scroll container below the filter bar, not above it.
+        expect(table.indexOf('"--g-type-body-sm-size": "14px"')).toBeGreaterThan(
+            table.indexOf("<TaskFilterMenu")
+        );
+    });
+
+    it("no table cell keeps a hard-coded size below the new base", () => {
+        const row = source("features/tasks/components/table/DraggableTaskRow.tsx");
+        expect(row).not.toMatch(/fontSize: "0\.(7|72|8)rem"/);
+        // The editors' tag chip follows the scale; only a validation message stays small.
+        const editors = source("features/tasks/components/table/cellEditors.tsx");
+        expect(editors).toContain('fontSize: "var(--g-type-body-xs-size, 0.75rem)"');
+        // Tag chips elsewhere keep their 0.7rem unless a surface sets the variable.
+        expect(source("features/tasks/components/ProjectTagChip.tsx")).toContain(
+            'fontSize = "var(--table-tag-size, 0.7rem)"'
+        );
+    });
+});
+
 describe("CellButton", () => {
     it("is a button for the keyboard and stops the row from also opening the task", () => {
         const onClick = vi.fn();
