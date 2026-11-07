@@ -1,25 +1,15 @@
 import React, { useState } from "react";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { PersonalTag } from "../../../../types/personalTags";
 import { TagColorOption } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
@@ -139,9 +129,7 @@ type ModalManageGMTagsProps = {
 };
 
 export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const { tags, updateTag, deleteTag } = usePersonalGMTags();
 
     // Inline rename: one row at a time.
@@ -158,190 +146,146 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
     };
 
     return (
-        <Modal
+        <ModalFrame
+            description={t.chat.gmTags.privateHint}
+            icon={<LabelOutlinedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{ zIndex: 10010 }}
+            size="sm"
+            title={t.chat.gmTags.manageTitle}
+            zIndex={10010}
             onClose={() => {
                 setArmedDeleteTagId(null);
                 setEditingTagId(null);
                 setOpen(false);
             }}
         >
-            <ModalDialog
-                sx={{
-                    borderRadius: "16px",
-                    maxWidth: 420,
-                    p: 2.5,
-                    width: "92%",
-                }}
-            >
-                <Stack alignItems="center" direction="row" justifyContent="space-between">
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <LabelOutlinedIcon
+            <Box sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}>
+                {tags.length === 0 && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
+                    >
+                        {t.chat.gmTags.emptyList}
+                    </Typography>
+                )}
+                {tags.map((tag) => {
+                    const isEditing = editingTagId === tag.tagId;
+                    const isArmed = armedDeleteTagId === tag.tagId;
+                    return (
+                        <Stack
+                            key={tag.tagId}
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.75}
                             sx={{
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                                fontSize: 20,
-                            }}
-                        />
-                        <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                            {t.chat.gmTags.manageTitle}
-                        </Typography>
-                    </Stack>
-                    <IconButton size="sm" variant="plain" onClick={() => setOpen(false)}>
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-
-                <Typography
-                    level="body-xs"
-                    sx={{ color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)" }}
-                >
-                    {t.chat.gmTags.privateHint}
-                </Typography>
-
-                <Box
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}
-                >
-                    {tags.length === 0 && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                py: 1.5,
-                                textAlign: "center",
+                                "&:hover": { background: g.hover },
+                                borderRadius: g.radius.md,
+                                px: 0.75,
+                                py: 0.5,
                             }}
                         >
-                            {t.chat.gmTags.emptyList}
-                        </Typography>
-                    )}
-                    {tags.map((tag) => {
-                        const isEditing = editingTagId === tag.tagId;
-                        const isArmed = armedDeleteTagId === tag.tagId;
-                        return (
-                            <Stack
-                                key={tag.tagId}
-                                alignItems="center"
-                                direction="row"
-                                spacing={0.75}
+                            <Box
                                 sx={{
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                    },
-                                    borderRadius: "8px",
-                                    px: 0.75,
-                                    py: 0.5,
+                                    background: tag.color,
+                                    borderRadius: "50%",
+                                    flexShrink: 0,
+                                    height: 12,
+                                    width: 12,
                                 }}
-                            >
-                                <Box
-                                    sx={{
-                                        background: tag.color,
-                                        borderRadius: "50%",
-                                        flexShrink: 0,
-                                        height: 12,
-                                        width: 12,
+                            />
+                            <ColorPickerMenu
+                                onSelectColor={(c) =>
+                                    void updateTag(tag.tagId, {
+                                        color: c.value,
+                                        textColor: c.textColor,
+                                    })
+                                }
+                            />
+                            {isEditing ? (
+                                <Input
+                                    size="sm"
+                                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
+                                    sx={{ flex: 1 }}
+                                    value={editingName}
+                                    autoFocus
+                                    onBlur={() => void commitRename(tag)}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            void commitRename(tag);
+                                        }
+                                        if (e.key === "Escape") setEditingTagId(null);
                                     }}
                                 />
-                                <ColorPickerMenu
-                                    onSelectColor={(c) =>
+                            ) : (
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ cursor: "text", flex: 1 }}
+                                    noWrap
+                                    onClick={() => {
+                                        setEditingTagId(tag.tagId);
+                                        setEditingName(tag.name);
+                                    }}
+                                >
+                                    {tag.name}
+                                </Typography>
+                            )}
+                            <AppTooltip
+                                size="sm"
+                                title={
+                                    tag.isDefaultVisible
+                                        ? t.chat.sidebar.gmTagUnpinDefault
+                                        : t.chat.sidebar.gmTagPinDefault
+                                }
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        color: tag.isDefaultVisible ? g.accent.text : undefined,
+                                    }}
+                                    onClick={() =>
                                         void updateTag(tag.tagId, {
-                                            color: c.value,
-                                            textColor: c.textColor,
+                                            isDefaultVisible: !tag.isDefaultVisible,
                                         })
                                     }
-                                />
-                                {isEditing ? (
-                                    <Input
-                                        size="sm"
-                                        slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                                        sx={{ flex: 1 }}
-                                        value={editingName}
-                                        autoFocus
-                                        onBlur={() => void commitRename(tag)}
-                                        onChange={(e) => setEditingName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                void commitRename(tag);
-                                            }
-                                            if (e.key === "Escape") setEditingTagId(null);
-                                        }}
-                                    />
-                                ) : (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{ cursor: "text", flex: 1 }}
-                                        noWrap
-                                        onClick={() => {
-                                            setEditingTagId(tag.tagId);
-                                            setEditingName(tag.name);
-                                        }}
-                                    >
-                                        {tag.name}
-                                    </Typography>
-                                )}
-                                <AppTooltip
-                                    size="sm"
-                                    title={
-                                        tag.isDefaultVisible
-                                            ? t.chat.sidebar.gmTagUnpinDefault
-                                            : t.chat.sidebar.gmTagPinDefault
-                                    }
                                 >
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            color: tag.isDefaultVisible
-                                                ? isDark
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)"
-                                                : undefined,
-                                        }}
-                                        onClick={() =>
-                                            void updateTag(tag.tagId, {
-                                                isDefaultVisible: !tag.isDefaultVisible,
-                                            })
-                                        }
-                                    >
-                                        {tag.isDefaultVisible ? (
-                                            <PushPinRoundedIcon sx={{ fontSize: 16 }} />
-                                        ) : (
-                                            <PushPinOutlinedIcon sx={{ fontSize: 16 }} />
-                                        )}
-                                    </IconButton>
-                                </AppTooltip>
-                                {isArmed ? (
-                                    <Button
-                                        color="danger"
-                                        size="sm"
-                                        variant="solid"
-                                        onClick={() => {
-                                            setArmedDeleteTagId(null);
-                                            void deleteTag(tag.tagId);
-                                        }}
-                                    >
-                                        {t.chat.gmTags.deleteConfirm}
-                                    </Button>
-                                ) : (
-                                    <IconButton
-                                        color="danger"
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={() => setArmedDeleteTagId(tag.tagId)}
-                                    >
-                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                )}
-                            </Stack>
-                        );
-                    })}
-                </Box>
+                                    {tag.isDefaultVisible ? (
+                                        <PushPinRoundedIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                        <PushPinOutlinedIcon sx={{ fontSize: 16 }} />
+                                    )}
+                                </IconButton>
+                            </AppTooltip>
+                            {isArmed ? (
+                                <Button
+                                    color="danger"
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() => {
+                                        setArmedDeleteTagId(null);
+                                        void deleteTag(tag.tagId);
+                                    }}
+                                >
+                                    {t.chat.gmTags.deleteConfirm}
+                                </Button>
+                            ) : (
+                                <IconButton
+                                    color="danger"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => setArmedDeleteTagId(tag.tagId)}
+                                >
+                                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    );
+                })}
+            </Box>
 
-                <GMTagCreateRow />
-            </ModalDialog>
-        </Modal>
+            <GMTagCreateRow />
+        </ModalFrame>
     );
 };

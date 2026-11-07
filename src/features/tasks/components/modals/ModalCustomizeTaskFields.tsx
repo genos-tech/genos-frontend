@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { keyframes } from "@emotion/react";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -11,25 +9,24 @@ import {
     Box,
     Button,
     Chip,
-    IconButton,
     Input,
     ListItemContent,
-    Modal,
-    ModalDialog,
     Stack,
     Switch,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskEffortLevelProps, TaskPriorityProps } from "../../../../types/tasks";
 import { getFormattedNDaysAfterDateStr } from "../../../../utils/dateUtils";
@@ -37,11 +34,6 @@ import { loadProjectTags } from "../../services/loadProjectTags";
 import { saveProjectTaskFieldRules } from "../../services/projectTaskFieldRules";
 import { ConfigurableTaskField, TaskFieldRule, TaskFieldRules } from "../../utils/taskFieldRules";
 import { effortLevels, priorities } from "../../utils/taskMeta";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
 
 // Sentinel value for the "Creator" option in the assignee/reporter
 // default pickers (resolves to the task creator at creation time).
@@ -98,6 +90,7 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const { mode } = useColorScheme();
+    const theme = useTheme();
     const isDark = mode === "dark";
     const tc = t.tasks.modals.customizeFields;
 
@@ -141,10 +134,10 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
         }
     };
 
-    // ---- Theme-aware palette (mirrors the create-form surfaces) ----
-    const textPrimary = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)";
-    const textMuted = isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)";
-    const rowBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+    // Roles that follow the theme by themselves (no `isDark` branch).
+    const textPrimary = g.text.primary;
+    const textMuted = g.text.tertiary;
+    const rowBorder = g.border.subtle;
 
     const labelSx = { color: textPrimary, fontWeight: 600 };
     const hintSx = { color: textMuted, fontStyle: "italic" };
@@ -185,7 +178,7 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
                         ? alpha(opt.color, isDark ? 0.5 : 1)
                         : "transparent",
                     color: opt.textColor,
-                    fontWeight: "bold",
+                    fontWeight: 600,
                     borderRadius: "5px",
                 }}
             >
@@ -251,8 +244,8 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
 
     // Tags default picker — outlined mode-aware chip, same as ACProjectTags.
     const tagChipSx = (tag: TagListProps) => ({
-        color: isDark ? "white" : "black",
-        fontWeight: "bold",
+        color: g.text.primary,
+        fontWeight: 600,
         borderRadius: "5px",
         borderWidth: "3px",
         borderColor: alpha(tag.tagColor, isDark ? 0.5 : 0.75),
@@ -334,248 +327,143 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
     const dueOffset = rules.dueDate?.defaultOffsetDays ?? null;
 
     return (
-        <Modal
+        <ModalFrame
+            description={tc.description}
+            icon={<TuneRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                backdropFilter: "blur(4px)",
-                // Joy's own Backdrop slot already paints the backdrop.
-                backgroundColor: "transparent",
-            }}
+            size="lg"
+            title={tc.heading}
+            zIndex={theme.zIndex.modal}
+            actions={
+                <>
+                    <Button color="neutral" variant="plain" onClick={onClose}>
+                        {tc.cancel}
+                    </Button>
+                    <Button loading={isSaving} onClick={handleSave}>
+                        {tc.save}
+                    </Button>
+                </>
+            }
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background: isDark
-                        ? "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)"
-                        : "linear-gradient(145deg, #ffffff 0%, #fafaff 100%)",
-                    border: `1px solid ${isDark ? "rgba(var(--gp-brand-700-rgb), 0.2)" : "rgba(var(--gp-brand-700-rgb), 0.15)"}`,
-                    borderRadius: "16px",
-                    boxShadow: isDark
-                        ? "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)"
-                        : "0 25px 50px -12px rgba(0, 0, 0, 0.18)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "640px" },
-                    maxWidth: { xs: "100vw", md: "760px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "88vh" },
-                    p: { xs: 2, md: 3 },
-                    overflow: "auto",
-                }}
-            >
-                {/* Header */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            background:
-                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
-                        }}
-                    >
-                        <TuneRoundedIcon
-                            sx={{ color: "rgba(var(--gp-brandalt-500-rgb), 0.9)", fontSize: 22 }}
-                        />
-                    </Box>
-                    <Typography
-                        level="h4"
-                        sx={{
-                            background: isDark
-                                ? "linear-gradient(135deg, var(--gp-brandalt-200) 0%, var(--gp-brandalt-300) 100%)"
-                                : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 600,
-                            flex: 1,
-                        }}
-                    >
-                        {tc.heading}
+            {errorMessage && (
+                <Alert color="danger" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+
+            {/* Grid header + rows */}
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: "120px 80px 1fr",
+                        gap: 1,
+                        pb: 0.5,
+                        borderBottom: `1px solid ${g.border.default}`,
+                    }}
+                >
+                    <span />
+                    <Typography level="body-xs" sx={{ color: textMuted, textAlign: "center" }}>
+                        {tc.requiredLabel}
                     </Typography>
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            color: textMuted,
-                            "&:hover": { color: textPrimary },
-                        }}
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
+                    <Typography level="body-xs" sx={{ color: textMuted }}>
+                        {tc.defaultLabel}
+                    </Typography>
                 </Box>
 
-                <Typography level="body-xs" sx={{ color: textMuted, mb: 2 }}>
-                    {tc.description}
-                </Typography>
-
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                        }}
-                    >
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                {/* Grid header + rows. A real element, not a fragment:
-                    ModalDialog injects `data-last-child` into its direct
-                    children, which a React.Fragment can't accept. */}
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gridTemplateColumns: "120px 80px 1fr",
-                            gap: 1,
-                            pb: 0.5,
-                            borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
-                        }}
-                    >
-                        <span />
-                        <Typography level="body-xs" sx={{ color: textMuted, textAlign: "center" }}>
-                            {tc.requiredLabel}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ color: textMuted }}>
-                            {tc.defaultLabel}
-                        </Typography>
-                    </Box>
-
-                    {/* Order per product: Project, Reporter, Assignee, Due
+                {/* Order per product: Project, Reporter, Assignee, Due
                         Date, Tags, Effort Level, Priority, Status. */}
 
-                    {/* Project — always required, nothing to configure. */}
-                    {row(t.tasks.fields.project, lockedRequired, autoDefault(tc.alwaysRequired))}
+                {/* Project — always required, nothing to configure. */}
+                {row(t.tasks.fields.project, lockedRequired, autoDefault(tc.alwaysRequired))}
 
-                    {/* Reporter */}
-                    {row(
-                        t.tasks.fields.reporter,
-                        requiredSwitch("reporter"),
-                        peoplePicker("reporter")
-                    )}
+                {/* Reporter */}
+                {row(
+                    t.tasks.fields.reporter,
+                    requiredSwitch("reporter"),
+                    peoplePicker("reporter")
+                )}
 
-                    {/* Assignee */}
-                    {row(
-                        t.tasks.fields.assignee,
-                        requiredSwitch("assignee"),
-                        peoplePicker("assignee")
-                    )}
+                {/* Assignee */}
+                {row(
+                    t.tasks.fields.assignee,
+                    requiredSwitch("assignee"),
+                    peoplePicker("assignee")
+                )}
 
-                    {/* Due date — offset default ("today + N"). */}
-                    {row(
-                        t.tasks.fields.dueDate,
-                        requiredSwitch("dueDate"),
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                flexWrap: "wrap",
+                {/* Due date — offset default ("today + N"). */}
+                {row(
+                    t.tasks.fields.dueDate,
+                    requiredSwitch("dueDate"),
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                        <Typography level="body-sm" sx={{ color: textPrimary }}>
+                            {tc.dueOffsetPrefix}
+                        </Typography>
+                        <Input
+                            size="sm"
+                            sx={{ width: "72px" }}
+                            type="number"
+                            value={dueOffset ?? ""}
+                            slotProps={{
+                                input: { min: 0, max: 3650, "aria-label": tc.dueOffsetLabel },
                             }}
-                        >
-                            <Typography level="body-sm" sx={{ color: textPrimary }}>
-                                {tc.dueOffsetPrefix}
-                            </Typography>
-                            <Input
-                                size="sm"
-                                sx={{ width: "72px" }}
-                                type="number"
-                                value={dueOffset ?? ""}
-                                slotProps={{
-                                    input: { min: 0, max: 3650, "aria-label": tc.dueOffsetLabel },
-                                }}
-                                onChange={(e) => {
-                                    const raw = e.target.value;
-                                    const parsed = raw === "" ? null : Number(raw);
-                                    patchRule("dueDate", {
-                                        defaultOffsetDays:
-                                            parsed == null ||
-                                            !Number.isInteger(parsed) ||
-                                            parsed < 0
-                                                ? null
-                                                : Math.min(parsed, 3650),
-                                    });
-                                }}
-                            />
-                            <Typography level="body-sm" sx={{ color: textPrimary }}>
-                                {tc.dueOffsetSuffix}
-                            </Typography>
-                            {dueOffset != null && (
-                                <Typography level="body-xs" sx={hintSx}>
-                                    → {getFormattedNDaysAfterDateStr(dueOffset)}
-                                </Typography>
-                            )}
-                        </Box>
-                    )}
-
-                    {/* Tags — "a field with no options can't be required". */}
-                    {row(
-                        t.tasks.fields.tags,
-                        projectTags.length === 0 ? (
-                            <AppTooltip title={tc.noTagsHint}>
-                                <span>{requiredSwitch("tags", true)}</span>
-                            </AppTooltip>
-                        ) : (
-                            requiredSwitch("tags")
-                        ),
-                        tagsPicker
-                    )}
-
-                    {/* Effort level */}
-                    {row(
-                        t.tasks.fields.effortLevel,
-                        requiredSwitch("effortLevel"),
-                        vocabPicker("effortLevel", effortLevels, (opt) =>
-                            "level" in opt ? opt.level : null
-                        )
-                    )}
-
-                    {/* Priority */}
-                    {row(
-                        t.tasks.fields.priority,
-                        requiredSwitch("priority"),
-                        vocabPicker("priority", priorities, (opt) =>
-                            "priority" in opt ? opt.priority : null
-                        )
-                    )}
-
-                    {/* Status — always auto-set at creation, fully locked. */}
-                    {row(t.tasks.fields.status, lockedRequired, autoDefault(tc.statusAuto))}
-
-                    {/* Footer */}
-                    <Stack
-                        direction="row"
-                        spacing={1.5}
-                        sx={{ justifyContent: "flex-end", mt: 2 }}
-                    >
-                        <Button
-                            color="neutral"
-                            sx={{ borderRadius: "10px" }}
-                            variant="plain"
-                            onClick={onClose}
-                        >
-                            {tc.cancel}
-                        </Button>
-                        <Button
-                            loading={isSaving}
-                            sx={{
-                                borderRadius: "10px",
-                                background:
-                                    "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
+                            onChange={(e) => {
+                                const raw = e.target.value;
+                                const parsed = raw === "" ? null : Number(raw);
+                                patchRule("dueDate", {
+                                    defaultOffsetDays:
+                                        parsed == null || !Number.isInteger(parsed) || parsed < 0
+                                            ? null
+                                            : Math.min(parsed, 3650),
+                                });
                             }}
-                            onClick={handleSave}
-                        >
-                            {tc.save}
-                        </Button>
-                    </Stack>
-                </Box>
-            </ModalDialog>
-        </Modal>
+                        />
+                        <Typography level="body-sm" sx={{ color: textPrimary }}>
+                            {tc.dueOffsetSuffix}
+                        </Typography>
+                        {dueOffset != null && (
+                            <Typography level="body-xs" sx={hintSx}>
+                                → {getFormattedNDaysAfterDateStr(dueOffset)}
+                            </Typography>
+                        )}
+                    </Box>
+                )}
+
+                {/* Tags — "a field with no options can't be required". */}
+                {row(
+                    t.tasks.fields.tags,
+                    projectTags.length === 0 ? (
+                        <AppTooltip title={tc.noTagsHint}>
+                            <span>{requiredSwitch("tags", true)}</span>
+                        </AppTooltip>
+                    ) : (
+                        requiredSwitch("tags")
+                    ),
+                    tagsPicker
+                )}
+
+                {/* Effort level */}
+                {row(
+                    t.tasks.fields.effortLevel,
+                    requiredSwitch("effortLevel"),
+                    vocabPicker("effortLevel", effortLevels, (opt) =>
+                        "level" in opt ? opt.level : null
+                    )
+                )}
+
+                {/* Priority */}
+                {row(
+                    t.tasks.fields.priority,
+                    requiredSwitch("priority"),
+                    vocabPicker("priority", priorities, (opt) =>
+                        "priority" in opt ? opt.priority : null
+                    )
+                )}
+
+                {/* Status — always auto-set at creation, fully locked. */}
+                {row(t.tasks.fields.status, lockedRequired, autoDefault(tc.statusAuto))}
+            </Box>
+        </ModalFrame>
     );
 };

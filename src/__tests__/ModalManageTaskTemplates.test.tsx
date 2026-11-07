@@ -9,6 +9,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { ModalManageTaskTemplates } from "../features/tasks/components/modals/ModalManageTaskTemplates";
 import { CustomTaskTemplate } from "../features/tasks/utils/taskTemplates";
 import { ChatManagementState } from "../hooks/chats/useChatManagement";
@@ -127,5 +129,44 @@ describe("ModalManageTaskTemplates", () => {
         expect(init.method).toBe("DELETE");
         expect(JSON.parse(init.body).id).toBe(5);
         await waitFor(() => expect(useTM.setTemplatesDirty).toHaveBeenCalledWith(true));
+    });
+
+    it("is a ModalFrame dialog on Joy's modal layer (the BlockNote menus sit above it), flat", () => {
+        renderModal(makeTM());
+        const dialog = screen.getByRole("dialog");
+        expect(document.getElementById(dialog.getAttribute("aria-labelledby")!)!.textContent).toBe(
+            "Project templates"
+        );
+        expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe("1300");
+        const css = cssOf(dialog);
+        expect(css).not.toMatch(/gradient/i);
+        expect(css.match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+    });
+
+    it("the list view's footer closes the dialog; authoring swaps it for Cancel and Create", () => {
+        const onClose = vi.fn();
+        render(
+            <CssVarsProvider>
+                <ModalManageTaskTemplates
+                    myself={{ userId: "u1", teamId: "t1" } as UserProps}
+                    open={true}
+                    setMyself={vi.fn()}
+                    socket={null}
+                    useCM={{} as unknown as ChatManagementState}
+                    useTEM={{} as unknown as TeamManagementState}
+                    useTM={makeTM()}
+                    useUISM={{} as unknown as UIStateManagementState}
+                    usePM={
+                        { currentProject: { projectId: 7 } } as unknown as ProjectManagementState
+                    }
+                    onClose={onClose}
+                />
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getAllByRole("button", { name: "Close" }).at(-1)!);
+        expect(onClose).toHaveBeenCalled();
+        fireEvent.click(screen.getByText("New template"));
+        expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Create" })).toBeTruthy();
     });
 });

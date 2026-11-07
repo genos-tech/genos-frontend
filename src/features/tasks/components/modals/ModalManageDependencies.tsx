@@ -4,28 +4,20 @@ import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, Chip, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import {
+    MODAL_FRAME_DEFAULT_Z_INDEX,
+    MODAL_FRAME_HOST_OFFSET,
+    ModalFrame,
+} from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskDependencyRef, TaskProps } from "../../../../types/tasks";
 import { ACTaskSelector, StatusChip } from "../autocompletes/ACTaskSelector";
@@ -59,14 +51,16 @@ type Props = {
 // English copy into the visual palette.
 const DIRECTION_ACCENT: Record<
     "blocking" | "blockedBy",
-    { color: string; icon: React.ReactNode }
+    { color: string; bg: string; icon: React.ReactNode }
 > = {
     blocking: {
-        color: "#ff8c00",
+        color: g.warning.text,
+        bg: g.warning.subtle,
         icon: <ArrowUpwardRoundedIcon sx={{ fontSize: 14 }} />,
     },
     blockedBy: {
-        color: "#b91c1c",
+        color: g.danger.text,
+        bg: g.danger.subtle,
         icon: <ArrowDownwardRoundedIcon sx={{ fontSize: 14 }} />,
     },
 };
@@ -90,25 +84,18 @@ const DependencyRow = ({
             sx={{
                 p: 1,
                 pl: 1.25,
-                borderRadius: "10px",
-                background: isDark ? "rgba(255,255,255,0.025)" : "rgba(0,0,0,0.025)",
+                borderRadius: g.radius.md,
+                background: g.bg.subtle,
                 border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                borderColor: g.border.subtle,
                 transition: "background 0.15s ease, border-color 0.15s ease",
-                "&:hover": {
-                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                },
+                "&:hover": { background: g.hover, borderColor: g.border.default },
             }}
         >
             <Chip
                 size="sm"
+                sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
                 variant="outlined"
-                sx={{
-                    fontWeight: 600,
-                    fontFamily: "monospace",
-                    borderRadius: "5px",
-                }}
             >
                 {ref_.displayId ?? `#${ref_.otherTaskId}`}
             </Chip>
@@ -120,12 +107,8 @@ const DependencyRow = ({
                 <AppTooltip title={ref_.projectName}>
                     <Chip
                         size="sm"
+                        sx={{ maxWidth: 160, borderRadius: "5px", color: g.text.primary }}
                         variant="outlined"
-                        sx={{
-                            maxWidth: 160,
-                            borderRadius: "5px",
-                            color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)",
-                        }}
                     >
                         {ref_.projectName}
                     </Chip>
@@ -135,12 +118,8 @@ const DependencyRow = ({
                 <IconButton
                     color="danger"
                     size="sm"
+                    sx={{ "--IconButton-size": "28px", opacity: 0.7, "&:hover": { opacity: 1 } }}
                     variant="plain"
-                    sx={{
-                        "--IconButton-size": "28px",
-                        opacity: 0.7,
-                        "&:hover": { opacity: 1 },
-                    }}
                     onClick={onRemove}
                 >
                     <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
@@ -256,165 +235,80 @@ export const ModalManageDependencies = ({
             ? { items: deps.blocking, resetKey: resetBlocking }
             : { items: deps.blockedBy, resetKey: resetBlockedBy };
 
-    const modalZIndex = hostZIndex != null ? hostZIndex + 2 : 10010;
+    // The frame lifts itself host + 2 (10010 on the page); the pickers that
+    // portal to <body> take the layer above it.
+    const modalZIndex =
+        hostZIndex != null ? hostZIndex + MODAL_FRAME_HOST_OFFSET : MODAL_FRAME_DEFAULT_Z_INDEX;
 
     return (
-        <Modal
+        <ModalFrame
+            description={depsT.modal.subtitle}
+            hostZIndex={hostZIndex}
+            icon={<BlockRoundedIcon sx={{ color: g.warning.text }} />}
             open={open}
-            sx={{
-                zIndex: modalZIndex,
-                // Joy pins popups to ~theme.zIndex.modal + 1 and doesn't
-                // track the sx override above. Stamping the var on the
-                // modal root lifts every popup that renders INLINE in this
-                // subtree (tooltips included — CSS custom properties
-                // inherit). The ACTaskSelector listboxes PORTAL to <body>
-                // and can't inherit it, so they take the same value via
-                // `popupZIndex` below.
-                "--unstable_popup-zIndex": modalZIndex + 1,
-            }}
+            size="wide"
+            title={depsT.modal.title}
+            actions={
+                <Button color="neutral" variant="plain" onClick={onClose}>
+                    {depsT.modal.doneButton}
+                </Button>
+            }
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="md"
-                variant="outlined"
-                sx={{
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    // ~+30% wider than the original 620/780 so the two
-                    // dependency sections and the cross-project picker
-                    // rows breathe (user request). xs stays full-width.
-                    minWidth: { xs: 0, md: 806 },
-                    maxWidth: { xs: "100vw", md: 1014 },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
-                    overflowY: "auto",
-                    p: 0,
-                    background: isDark
-                        ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
-                        : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                    border: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                }}
-            >
-                {/* Gradient accent at top — matches the create-form treatment */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: "3px",
-                        background: isDark
-                            ? "linear-gradient(90deg, #fbbf24 0%, #f97316 50%, #ef4444 100%)"
-                            : "linear-gradient(90deg, #d97706 0%, #ea580c 50%, #dc2626 100%)",
-                        borderRadius: "8px 8px 0 0",
-                        opacity: 0.85,
-                    }}
-                />
-
-                <DialogTitle sx={{ px: 3, pt: 2.5, pb: 1 }}>
-                    <Stack alignItems="center" direction="row" spacing={1.25}>
-                        <Box
-                            sx={{
-                                width: 30,
-                                height: 30,
-                                borderRadius: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: isDark
-                                    ? "rgba(249,115,22,0.15)"
-                                    : "rgba(234,88,12,0.1)",
-                                color: isDark ? "#fbbf24" : "#ea580c",
-                            }}
-                        >
-                            <BlockRoundedIcon sx={{ fontSize: 18 }} />
-                        </Box>
-                        <Stack spacing={0}>
-                            <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                                {depsT.modal.title}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                {depsT.modal.subtitle}
-                            </Typography>
-                        </Stack>
-                    </Stack>
-                    <IconButton
-                        color="neutral"
-                        size="sm"
-                        sx={{ position: "absolute", top: 12, right: 12 }}
-                        variant="plain"
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </DialogTitle>
-                <Divider />
-
-                <DialogContent sx={{ px: 3, py: 2 }}>
-                    {error && (
-                        <Alert
+            {error && (
+                <Alert
+                    color="danger"
+                    size="sm"
+                    sx={{ mb: 1.5 }}
+                    variant="soft"
+                    endDecorator={
+                        <IconButton
                             color="danger"
                             size="sm"
-                            sx={{ mb: 1.5 }}
-                            variant="soft"
-                            endDecorator={
-                                <IconButton
-                                    color="danger"
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={() => setError(null)}
-                                >
-                                    <CloseRoundedIcon />
-                                </IconButton>
-                            }
+                            variant="plain"
+                            onClick={() => setError(null)}
                         >
-                            {error}
-                        </Alert>
-                    )}
+                            <CloseRoundedIcon />
+                        </IconButton>
+                    }
+                >
+                    {error}
+                </Alert>
+            )}
 
-                    <Stack spacing={2}>
-                        {order.map((k) => {
-                            const { items, resetKey } = sectionDataFor(k);
-                            const title =
-                                k === "blocking" ? depsT.blockingLabel : depsT.blockedByLabel;
-                            const description =
-                                k === "blocking"
-                                    ? depsT.modal.blockingDescription
-                                    : depsT.modal.blockedByDescription;
-                            return (
-                                <DependencySection
-                                    key={k}
-                                    busy={busy}
-                                    defaultProjectId={initialProjectId}
-                                    deps={items}
-                                    description={description}
-                                    emptyLabel={depsT.modal.emptySection}
-                                    excludeIds={excludeIds}
-                                    isDark={isDark}
-                                    kind={k}
-                                    myself={myself}
-                                    popupZIndex={modalZIndex + 1}
-                                    removeTooltip={depsT.modal.removeTooltip}
-                                    resetKey={resetKey}
-                                    title={title}
-                                    useCM={useCM}
-                                    usePM={usePM}
-                                    onAdd={(p) => handleAdd(k, p)}
-                                    onRemove={handleRemove}
-                                />
-                            );
-                        })}
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-                <Stack direction="row" justifyContent="flex-end" sx={{ px: 3, py: 1.5 }}>
-                    <Button color="neutral" variant="plain" onClick={onClose}>
-                        {depsT.modal.doneButton}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+            <Stack spacing={2}>
+                {order.map((k) => {
+                    const { items, resetKey } = sectionDataFor(k);
+                    const title = k === "blocking" ? depsT.blockingLabel : depsT.blockedByLabel;
+                    const description =
+                        k === "blocking"
+                            ? depsT.modal.blockingDescription
+                            : depsT.modal.blockedByDescription;
+                    return (
+                        <DependencySection
+                            key={k}
+                            busy={busy}
+                            defaultProjectId={initialProjectId}
+                            deps={items}
+                            description={description}
+                            emptyLabel={depsT.modal.emptySection}
+                            excludeIds={excludeIds}
+                            isDark={isDark}
+                            kind={k}
+                            myself={myself}
+                            popupZIndex={modalZIndex + 1}
+                            removeTooltip={depsT.modal.removeTooltip}
+                            resetKey={resetKey}
+                            title={title}
+                            useCM={useCM}
+                            usePM={usePM}
+                            onAdd={(p) => handleAdd(k, p)}
+                            onRemove={handleRemove}
+                        />
+                    );
+                })}
+            </Stack>
+        </ModalFrame>
     );
 };
 
@@ -463,10 +357,10 @@ const DependencySection = ({
         <Box
             sx={{
                 p: 1.5,
-                borderRadius: "12px",
-                background: isDark ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.01)",
+                borderRadius: g.radius.md,
+                background: g.bg.subtle,
                 border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                borderColor: g.border.subtle,
             }}
         >
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.25 }}>
@@ -478,13 +372,13 @@ const DependencySection = ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: alpha(accent.color, isDark ? 0.18 : 0.12),
+                        background: accent.bg,
                         color: accent.color,
                     }}
                 >
                     {accent.icon}
                 </Box>
-                <Typography level="title-md" sx={{ fontWeight: 700 }}>
+                <Typography level="title-md" sx={{ fontWeight: 600 }}>
                     {title}
                 </Typography>
                 <Chip size="sm" sx={{ fontWeight: 600, borderRadius: "5px" }} variant="soft">
@@ -513,9 +407,9 @@ const DependencySection = ({
                         mb: 1.25,
                         py: 1.75,
                         px: 1,
-                        borderRadius: "10px",
+                        borderRadius: g.radius.md,
                         border: "1px dashed",
-                        borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+                        borderColor: g.border.default,
                         textAlign: "center",
                     }}
                 >

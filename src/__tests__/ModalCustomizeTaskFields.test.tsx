@@ -7,6 +7,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { ModalCustomizeTaskFields } from "../features/tasks/components/modals/ModalCustomizeTaskFields";
 import { loadProjectTags } from "../features/tasks/services/loadProjectTags";
 import { saveProjectTaskFieldRules } from "../features/tasks/services/projectTaskFieldRules";
@@ -158,5 +160,27 @@ describe("ModalCustomizeTaskFields", () => {
         );
         expect(useTM.setTaskFieldRules).not.toHaveBeenCalled();
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("is a ModalFrame dialog on Joy's modal layer with a flat surface (MIP-1126)", async () => {
+        renderModal(makeTM());
+        await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+        const dialog = screen.getByRole("dialog");
+        expect(document.getElementById(dialog.getAttribute("aria-labelledby")!)!.textContent).toBe(
+            "Customize Task Fields"
+        );
+        // Opened from the page header: Joy's modal layer, as before the migration.
+        expect(getComputedStyle(screen.getByRole("presentation")).zIndex).toBe("1300");
+        const css = cssOf(dialog);
+        expect(css).not.toMatch(/gradient/i);
+        expect(css.match(/box-shadow:[^;]*/g)).toEqual(["box-shadow: var(--g-shadow-lg)"]);
+    });
+
+    it("keeps Save and Cancel in the footer and the X closes it", () => {
+        const onClose = vi.fn();
+        renderModal(makeTM(), onClose);
+        fireEvent.click(screen.getByText("Cancel"));
+        fireEvent.click(screen.getByRole("button", { name: "Close" }));
+        expect(onClose).toHaveBeenCalledTimes(2);
     });
 });

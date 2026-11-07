@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { keyframes } from "@emotion/react";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
@@ -11,20 +10,14 @@ import {
     IconButton,
     Input,
     ListItemButton,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { BaseAvatar } from "../avatars/BaseAvatar";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
+import { ModalFrame } from "../modal/ModalFrame";
 
 export type TransferOwnerCandidate = {
     userId: string;
@@ -50,8 +43,6 @@ export const ModalTransferOwner = ({
     onConfirm,
     onCancel,
 }: Props) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const [query, setQuery] = useState("");
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,248 +87,121 @@ export const ModalTransferOwner = ({
     };
 
     return (
-        <Modal
+        <ModalFrame
+            description={description}
+            dismissible={!submitting}
+            icon={<SwapHorizRoundedIcon sx={{ color: g.danger.text }} />}
             open={open}
-            sx={{
-                zIndex: 10010,
-                backdropFilter: "blur(4px)",
-                // Transparent: Joy's own Backdrop slot already paints
-                // `palette.background.backdrop` + blur(8px). Stacking a
-                // second 50% black on the modal root composited to ~75%,
-                // which read as a solid black page. Matches ModalUserProfile.
-                backgroundColor: "transparent",
-            }}
-            onClose={handleClose}
-        >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background:
-                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.2)",
-                    borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-tint-danger-rgb), 0.1)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "480px" },
-                    maxWidth: "100vw",
-                    p: { xs: 2, md: 3 },
-                }}
-            >
-                <Box sx={{ textAlign: "center" }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 56,
-                            height: 56,
-                            borderRadius: "14px",
-                            background:
-                                "linear-gradient(135deg, rgba(var(--gp-tint-danger-rgb), 0.15) 0%, rgba(var(--gp-tint-danger-alt-rgb), 0.15) 100%)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.25)",
-                            mx: "auto",
-                            mb: 2,
-                        }}
-                    >
-                        <SwapHorizRoundedIcon
-                            sx={{ color: "rgba(var(--gp-tint-danger-rgb), 0.9)", fontSize: 28 }}
-                        />
-                    </Box>
-                    <Typography
-                        level="h4"
-                        sx={{ color: "rgba(255, 255, 255, 0.9)", fontWeight: 600, mb: 1 }}
-                    >
-                        {title}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.6)", mb: 2 }}>
-                        {description}
-                    </Typography>
-                </Box>
-
-                {candidates.length === 0 ? (
-                    <Alert
-                        color="neutral"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(255,255,255,0.04)",
-                        }}
-                    >
-                        {t.common.profileEdit.noOtherMembers}
-                    </Alert>
-                ) : (
-                    <>
-                        <Input
-                            placeholder={t.common.profileEdit.transferPickMember}
-                            value={query}
-                            endDecorator={
-                                query && (
-                                    <IconButton
-                                        size="sm"
-                                        sx={{ minWidth: 24, minHeight: 24, borderRadius: "50%" }}
-                                        variant="plain"
-                                        onClick={() => setQuery("")}
-                                    >
-                                        <CloseIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                )
-                            }
-                            startDecorator={
-                                <SearchIcon
-                                    sx={{
-                                        fontSize: 18,
-                                        color: "rgba(var(--gp-tint-danger-rgb), 0.8)",
-                                    }}
-                                />
-                            }
-                            sx={{
-                                mb: 1.5,
-                                "--Input-radius": "10px",
-                                background: "rgba(0,0,0,0.3)",
-                                border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.25)",
-                                fontSize: "14px",
-                            }}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
-                        <Box
-                            sx={{
-                                maxHeight: 240,
-                                overflow: "auto",
-                                borderRadius: "10px",
-                                border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.2)",
-                                background: "rgba(0,0,0,0.15)",
-                                p: 0.5,
-                                mb: 2,
-                            }}
-                        >
-                            {filtered.length === 0 ? (
-                                <Box sx={{ p: 2, textAlign: "center" }}>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{ color: "rgba(255,255,255,0.5)" }}
-                                    >
-                                        {t.common.empty.noResults}
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                filtered.map((m) => (
-                                    <ListItemButton
-                                        key={`transfer-owner-${m.userId}`}
-                                        selected={selectedId === m.userId}
-                                        sx={{
-                                            borderRadius: "8px",
-                                            my: 0.25,
-                                            px: 1.25,
-                                            py: 0.75,
-                                            // This dialog is dark in BOTH colour schemes (its
-                                            // background and text are hardcoded), so the row
-                                            // states have to be pinned too — left to Joy they
-                                            // resolve from the active palette and light mode
-                                            // painted an off-white row under white text.
-                                            //
-                                            // Set via Joy's own CSS variables rather than an
-                                            // `&:hover` block: Joy applies hover as
-                                            // `&:not(.Mui-selected, [aria-selected="true"]):hover`
-                                            // — specificity (0,3,0) — which outranks a plain
-                                            // `&:hover` from sx (0,2,0) whatever the source
-                                            // order. That's why the override here never took
-                                            // effect. Feeding the variables makes Joy's own
-                                            // rule paint these colours, so there's no
-                                            // specificity fight to lose.
-                                            "--variant-plainHoverBg": "rgba(255,255,255,0.08)",
-                                            "--variant-plainHoverColor": "rgba(255,255,255,0.9)",
-                                            "--variant-plainActiveBg":
-                                                "rgba(var(--gp-tint-danger-rgb), 0.18)",
-                                            "--variant-plainActiveColor": "rgba(255,255,255,0.9)",
-                                            // `selected` renders through the plainActive
-                                            // variant, hence the pink above; this keeps the
-                                            // hover-while-selected tint distinct from it.
-                                            "&.Mui-selected:hover": {
-                                                background:
-                                                    "rgba(var(--gp-tint-danger-rgb), 0.22)",
-                                            },
-                                        }}
-                                        onClick={() => setSelectedId(m.userId)}
-                                    >
-                                        <Stack alignItems="center" direction="row" spacing={1.25}>
-                                            <BaseAvatar name={m.userName} />
-                                            <Stack spacing={0} sx={{ minWidth: 0 }}>
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        color: "rgba(255,255,255,0.9)",
-                                                    }}
-                                                    noWrap
-                                                >
-                                                    {m.userName}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{ color: "rgba(255,255,255,0.5)" }}
-                                                    noWrap
-                                                >
-                                                    {m.userEmail}
-                                                </Typography>
-                                            </Stack>
-                                        </Stack>
-                                    </ListItemButton>
-                                ))
-                            )}
-                        </Box>
-                    </>
-                )}
-
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        startDecorator={<WarningAmberIcon />}
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
-                        }}
-                    >
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
+            size="md"
+            title={title}
+            zIndex={10010}
+            actions={
+                <>
                     <Button
+                        color="neutral"
                         disabled={submitting}
                         variant="plain"
-                        sx={{
-                            color: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: "10px",
-                            px: 3,
-                            "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                color: "rgba(255, 255, 255, 0.9)",
-                            },
-                        }}
                         onClick={handleClose}
                     >
                         {t.common.profileEdit.cancel}
                     </Button>
                     <Button
+                        color="danger"
                         disabled={!selectedId || candidates.length === 0}
                         loading={submitting}
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-tint-danger-alt) 0%, var(--gp-tint-danger-deep) 100%)",
-                            borderRadius: "10px",
-                            px: 3,
-                            fontWeight: 600,
-                        }}
                         onClick={handleConfirm}
                     >
                         {t.common.profileEdit.transferConfirm}
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={handleClose}
+        >
+            {candidates.length === 0 ? (
+                <Alert color="neutral">{t.common.profileEdit.noOtherMembers}</Alert>
+            ) : (
+                <>
+                    <Input
+                        placeholder={t.common.profileEdit.transferPickMember}
+                        sx={{ mb: 1.5 }}
+                        value={query}
+                        endDecorator={
+                            query && (
+                                <IconButton
+                                    size="sm"
+                                    sx={{ minWidth: 24, minHeight: 24, borderRadius: "50%" }}
+                                    variant="plain"
+                                    onClick={() => setQuery("")}
+                                >
+                                    <CloseIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            )
+                        }
+                        startDecorator={
+                            <SearchIcon sx={{ fontSize: 18, color: g.text.tertiary }} />
+                        }
+                        onChange={(e) => setQuery(e.target.value)}
+                    />
+                    <Box
+                        sx={{
+                            maxHeight: 240,
+                            overflow: "auto",
+                            borderRadius: g.radius.md,
+                            border: `1px solid ${g.border.default}`,
+                            p: 0.5,
+                            mb: 1,
+                        }}
+                    >
+                        {filtered.length === 0 ? (
+                            <Box sx={{ p: 2, textAlign: "center" }}>
+                                <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
+                                    {t.common.empty.noResults}
+                                </Typography>
+                            </Box>
+                        ) : (
+                            filtered.map((m) => (
+                                <ListItemButton
+                                    key={`transfer-owner-${m.userId}`}
+                                    selected={selectedId === m.userId}
+                                    sx={{
+                                        borderRadius: g.radius.sm,
+                                        my: 0.25,
+                                        px: 1.25,
+                                        py: 0.75,
+                                    }}
+                                    onClick={() => setSelectedId(m.userId)}
+                                >
+                                    <Stack alignItems="center" direction="row" spacing={1.25}>
+                                        <BaseAvatar name={m.userName} />
+                                        <Stack spacing={0} sx={{ minWidth: 0 }}>
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{ fontWeight: 600, color: g.text.primary }}
+                                                noWrap
+                                            >
+                                                {m.userName}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: g.text.tertiary }}
+                                                noWrap
+                                            >
+                                                {m.userEmail}
+                                            </Typography>
+                                        </Stack>
+                                    </Stack>
+                                </ListItemButton>
+                            ))
+                        )}
+                    </Box>
+                </>
+            )}
+
+            {errorMessage && (
+                <Alert color="danger" startDecorator={<WarningAmberIcon />} sx={{ mt: 1 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };

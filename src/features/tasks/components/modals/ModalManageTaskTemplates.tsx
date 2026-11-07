@@ -1,27 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import { keyframes } from "@emotion/react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { BnLocalBodyEditor } from "../../../../components/editors/bnLocalBodyEditor";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -29,13 +18,9 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { CustomTaskTemplate } from "../../utils/taskTemplates";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -70,8 +55,7 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
+    const theme = useTheme();
     const tt = t.tasks.modals.manageTemplates;
 
     const templates = useTM.projectTaskTemplates;
@@ -185,363 +169,221 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
     };
 
     return (
-        <Modal
+        <ModalFrame
+            icon={<DescriptionRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                // Deliberately NOT the 10010 the tag modals use: this modal
-                // hosts a BlockNote editor, and BlockNote's floating menus
-                // (slash / formatting / link) are lifted to z-index 1400 by
-                // a global App.css override tuned for the 1300-family Joy
-                // modals. Sitting at Joy's default modal z-index keeps those
-                // menus above the dialog instead of trapped behind it. Same
-                // reason ModalTaskView / ModalNoteView host their editors at
-                // the default z-index.
-                backdropFilter: "blur(4px)",
-                // Transparent: Joy's own Backdrop slot already paints the
-                // backdrop + blur; a second layer here reads as near-black.
-                backgroundColor: "transparent",
-            }}
+            // The author / edit view carries the body editor, so it wants
+            // more room than the plain list.
+            size={draft ? "xl" : "lg"}
+            title={tt.heading}
+            // Deliberately NOT the 10010 the tag modals use: this modal
+            // hosts a BlockNote editor, and BlockNote's floating menus
+            // (slash / formatting / link) are lifted to z-index 1400 by a
+            // global App.css override tuned for the 1300-family Joy modals.
+            // Sitting at Joy's modal layer keeps those menus above the
+            // dialog instead of trapped behind it (same reason ModalTaskView /
+            // ModalNoteView host their editors at the default layer).
+            zIndex={theme.zIndex.modal}
+            actions={
+                draft ? (
+                    <>
+                        <Button color="neutral" variant="plain" onClick={() => setDraft(null)}>
+                            {tt.cancel}
+                        </Button>
+                        <Button
+                            disabled={!draft.name.trim()}
+                            loading={isSaving}
+                            onClick={saveDraft}
+                        >
+                            {draft.id === null ? tt.create : tt.save}
+                        </Button>
+                    </>
+                ) : (
+                    <Button color="neutral" variant="plain" onClick={onClose}>
+                        {tt.close}
+                    </Button>
+                )
+            }
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background:
-                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                    borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    // The author/edit view carries the body editor, so it
-                    // wants noticeably more room than the plain list view.
-                    minWidth: { xs: 0, md: draft ? "760px" : "560px" },
-                    maxWidth: { xs: "100vw", md: draft ? "920px" : "680px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "88vh" },
-                    p: { xs: 2, md: 3 },
-                    overflow: "auto",
-                }}
-            >
-                {/* Header */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            background:
-                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
-                        }}
-                    >
-                        <DescriptionRoundedIcon
-                            sx={{ color: "rgba(var(--gp-brandalt-500-rgb), 0.9)", fontSize: 22 }}
-                        />
-                    </Box>
-                    <Typography
-                        level="h4"
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brandalt-200) 0%, var(--gp-brandalt-300) 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 600,
-                            flex: 1,
-                        }}
-                    >
-                        {tt.heading}
+            {errorMessage && (
+                <Alert color="danger" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+
+            {draft ? (
+                // ---- Author / edit view -------------------------------
+                <Stack spacing={1.5}>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                        {tt.nameLabel}
                     </Typography>
-                    <IconButton
+                    <Input
+                        placeholder={tt.namePlaceholder}
                         size="sm"
-                        variant="plain"
+                        value={draft.name}
                         sx={{
-                            color: "rgba(255,255,255,0.5)",
-                            "&:hover": { color: "rgba(255,255,255,0.9)" },
+                            backgroundColor: g.bg.subtle,
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            color: g.text.primary,
                         }}
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                </Box>
-
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
-                        }}
-                    >
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                {draft ? (
-                    // ---- Author / edit view -------------------------------
-                    <Stack spacing={1.5}>
-                        <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>
-                            {tt.nameLabel}
-                        </Typography>
-                        <Input
-                            placeholder={tt.namePlaceholder}
-                            size="sm"
-                            value={draft.name}
-                            sx={{
-                                "--Input-focusedThickness": "1px",
-                                backgroundColor: "rgba(255,255,255,0.05)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                borderRadius: "8px",
-                                color: "#e0e0e0",
-                            }}
-                            autoFocus
-                            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                        />
-                        <Typography level="body-xs" sx={{ color: "rgba(255,255,255,0.6)" }}>
-                            {tt.bodyLabel}
-                        </Typography>
-                        {/* The editor renders its own `bn-task-body-box`
+                        autoFocus
+                        onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    />
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                        {tt.bodyLabel}
+                    </Typography>
+                    {/* The editor renders its own `bn-task-body-box`
                             container (same surface as the task body), so this
                             wrapper is just a rounded frame — no background of
                             its own, or it'd show through as the grey gutter the
                             old version had. */}
-                        <Box
-                            sx={{
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                borderRadius: "10px",
-                                overflow: "hidden",
+                    <Box
+                        sx={{
+                            border: `1px solid ${g.border.default}`,
+                            borderRadius: g.radius.md,
+                            overflow: "hidden",
+                        }}
+                    >
+                        <BnLocalBodyEditor
+                            key={draft.id === null ? "new" : `edit-${draft.id}`}
+                            initialBody={draft.initialBody}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            onChange={(blocks) => {
+                                bodyRef.current = blocks;
                             }}
-                        >
-                            <BnLocalBodyEditor
-                                key={draft.id === null ? "new" : `edit-${draft.id}`}
-                                initialBody={draft.initialBody}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                                onChange={(blocks) => {
-                                    bodyRef.current = blocks;
-                                }}
-                            />
-                        </Box>
-                        <Stack
-                            direction="row"
-                            spacing={1.5}
-                            sx={{ justifyContent: "flex-end", mt: 0.5 }}
-                        >
-                            <Button
-                                sx={{
-                                    borderRadius: "10px",
-                                    // Override the Joy variant CSS vars, not
-                                    // an sx `&:hover` — Joy's own
-                                    // `&:not(.selected):hover` rule outspecifies
-                                    // it and would paint the default light
-                                    // neutral hover bg, leaving white text on a
-                                    // near-white background (invisible).
-                                    "--variant-plainColor": "rgba(255,255,255,0.7)",
-                                    "--variant-plainHoverColor": "#ffffff",
-                                    "--variant-plainHoverBg": "rgba(255,255,255,0.1)",
-                                    "--variant-plainActiveBg": "rgba(255,255,255,0.16)",
-                                }}
-                                variant="plain"
-                                onClick={() => setDraft(null)}
-                            >
-                                {tt.cancel}
-                            </Button>
-                            <Button
-                                disabled={!draft.name.trim()}
-                                loading={isSaving}
-                                sx={{
-                                    borderRadius: "10px",
-                                    background:
-                                        "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
-                                }}
-                                onClick={saveDraft}
-                            >
-                                {draft.id === null ? tt.create : tt.save}
-                            </Button>
-                        </Stack>
-                    </Stack>
-                ) : (
-                    // ---- List view ----------------------------------------
-                    // A real element, not a fragment: ModalDialog injects
-                    // `data-last-child` into its direct children, which a
-                    // React.Fragment can't accept (console warning).
-                    <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Button
-                            size="sm"
-                            startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
-                            variant="soft"
-                            sx={{
-                                mb: 1.5,
-                                borderRadius: "10px",
-                                color: "var(--gp-brandalt-200)",
-                                backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.15)",
-                                "&:hover": {
-                                    backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.25)",
-                                },
-                            }}
-                            onClick={startCreate}
-                        >
-                            {tt.newTemplate}
-                        </Button>
+                        />
+                    </Box>
+                </Stack>
+            ) : (
+                // ---- List view ----------------------------------------
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Button
+                        size="sm"
+                        startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
+                        variant="soft"
+                        sx={{
+                            mb: 1.5,
+                            borderRadius: g.radius.md,
+                            color: g.accent.text,
+                            backgroundColor: g.accent.subtle,
+                            "&:hover": { backgroundColor: g.accent.subtle },
+                        }}
+                        onClick={startCreate}
+                    >
+                        {tt.newTemplate}
+                    </Button>
 
-                        <Stack
-                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                            spacing={0.5}
-                            sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}
-                        >
-                            {templates.length === 0 && (
+                    <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
+                        {templates.length === 0 && (
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: g.text.tertiary, textAlign: "center", py: 3 }}
+                            >
+                                {tt.empty}
+                            </Typography>
+                        )}
+
+                        {templates.map((tpl) => (
+                            <Box
+                                key={tpl.id}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    p: 1,
+                                    borderRadius: g.radius.md,
+                                    backgroundColor: g.bg.subtle,
+                                    border: `1px solid ${g.border.subtle}`,
+                                    "&:hover": { backgroundColor: g.hover },
+                                }}
+                            >
+                                <DescriptionRoundedIcon
+                                    sx={{ fontSize: 16, color: g.accent.text }}
+                                />
                                 <Typography
                                     level="body-sm"
-                                    sx={{
-                                        color: "rgba(255,255,255,0.4)",
-                                        textAlign: "center",
-                                        py: 3,
-                                    }}
+                                    sx={{ flex: 1, color: g.text.primary, fontWeight: 500 }}
                                 >
-                                    {tt.empty}
+                                    {tpl.templateName}
                                 </Typography>
-                            )}
-
-                            {templates.map((tpl) => (
-                                <Box
-                                    key={tpl.id}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        p: 1,
-                                        borderRadius: "10px",
-                                        backgroundColor: "rgba(255,255,255,0.02)",
-                                        border: "1px solid rgba(255,255,255,0.05)",
-                                        "&:hover": { backgroundColor: "rgba(255,255,255,0.04)" },
-                                    }}
-                                >
-                                    <DescriptionRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: "rgba(var(--gp-brandalt-500-rgb), 0.8)",
-                                        }}
-                                    />
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{ flex: 1, color: "#e0e0e0", fontWeight: 500 }}
+                                {confirmDeleteId === tpl.id ? (
+                                    <Stack
+                                        direction="row"
+                                        spacing={0.5}
+                                        sx={{ alignItems: "center" }}
                                     >
-                                        {tpl.templateName}
-                                    </Typography>
-                                    {confirmDeleteId === tpl.id ? (
-                                        <Stack
-                                            direction="row"
-                                            spacing={0.5}
-                                            sx={{ alignItems: "center" }}
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.danger.text, mr: 0.5 }}
                                         >
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: "rgba(var(--gp-tint-danger-rgb), 0.8)",
-                                                    mr: 0.5,
-                                                }}
-                                            >
-                                                {tt.deletePrompt}
-                                            </Typography>
-                                            <Button
-                                                color="danger"
-                                                size="sm"
-                                                sx={{ minHeight: 26, fontSize: "0.7rem" }}
-                                                variant="soft"
-                                                onClick={() => deleteTemplate(tpl.id)}
-                                            >
-                                                {tt.yes}
-                                            </Button>
-                                            <Button
+                                            {tt.deletePrompt}
+                                        </Typography>
+                                        <Button
+                                            color="danger"
+                                            size="sm"
+                                            sx={{ minHeight: 26, fontSize: "0.7rem" }}
+                                            variant="soft"
+                                            onClick={() => deleteTemplate(tpl.id)}
+                                        >
+                                            {tt.yes}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                minHeight: 26,
+                                                fontSize: "0.7rem",
+                                                color: g.text.secondary,
+                                            }}
+                                            onClick={() => setConfirmDeleteId(null)}
+                                        >
+                                            {tt.no}
+                                        </Button>
+                                    </Stack>
+                                ) : (
+                                    <>
+                                        <AppTooltip title={tt.editTooltip}>
+                                            <IconButton
+                                                aria-label={tt.editTooltip}
                                                 size="sm"
                                                 variant="plain"
                                                 sx={{
-                                                    minHeight: 26,
-                                                    fontSize: "0.7rem",
-                                                    color: "rgba(255,255,255,0.5)",
+                                                    color: g.text.tertiary,
+                                                    "&:hover": { color: g.accent.text },
                                                 }}
-                                                onClick={() => setConfirmDeleteId(null)}
+                                                onClick={() => startEdit(tpl)}
                                             >
-                                                {tt.no}
-                                            </Button>
-                                        </Stack>
-                                    ) : (
-                                        <>
-                                            <AppTooltip title={tt.editTooltip}>
-                                                <IconButton
-                                                    aria-label={tt.editTooltip}
-                                                    size="sm"
-                                                    variant="plain"
-                                                    sx={{
-                                                        color: "rgba(255,255,255,0.4)",
-                                                        "&:hover": {
-                                                            color: "rgba(var(--gp-brand-700-rgb), 0.9)",
-                                                        },
-                                                    }}
-                                                    onClick={() => startEdit(tpl)}
-                                                >
-                                                    <EditRoundedIcon sx={{ fontSize: 16 }} />
-                                                </IconButton>
-                                            </AppTooltip>
-                                            <AppTooltip title={tt.deleteTooltip}>
-                                                <IconButton
-                                                    aria-label={tt.deleteTooltip}
-                                                    size="sm"
-                                                    variant="plain"
-                                                    sx={{
-                                                        color: "rgba(255,255,255,0.4)",
-                                                        "&:hover": {
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                        },
-                                                    }}
-                                                    onClick={() => setConfirmDeleteId(tpl.id)}
-                                                >
-                                                    <DeleteOutlineRoundedIcon
-                                                        sx={{ fontSize: 16 }}
-                                                    />
-                                                </IconButton>
-                                            </AppTooltip>
-                                        </>
-                                    )}
-                                </Box>
-                            ))}
-                        </Stack>
-
-                        <Stack
-                            direction="row"
-                            spacing={1.5}
-                            sx={{ justifyContent: "flex-end", mt: 2 }}
-                        >
-                            <Button
-                                variant="plain"
-                                sx={{
-                                    borderRadius: "10px",
-                                    px: 2.5,
-                                    // See the Cancel button: override the Joy
-                                    // variant vars so hover doesn't paint white
-                                    // text on the default light neutral bg.
-                                    "--variant-plainColor": "rgba(255,255,255,0.7)",
-                                    "--variant-plainHoverColor": "#ffffff",
-                                    "--variant-plainHoverBg": "rgba(255,255,255,0.1)",
-                                    "--variant-plainActiveBg": "rgba(255,255,255,0.16)",
-                                }}
-                                onClick={onClose}
-                            >
-                                {tt.close}
-                            </Button>
-                        </Stack>
-                    </Box>
-                )}
-            </ModalDialog>
-        </Modal>
+                                                <EditRoundedIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </AppTooltip>
+                                        <AppTooltip title={tt.deleteTooltip}>
+                                            <IconButton
+                                                aria-label={tt.deleteTooltip}
+                                                size="sm"
+                                                variant="plain"
+                                                sx={{
+                                                    color: g.text.tertiary,
+                                                    "&:hover": { color: g.danger.text },
+                                                }}
+                                                onClick={() => setConfirmDeleteId(tpl.id)}
+                                            >
+                                                <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </>
+                                )}
+                            </Box>
+                        ))}
+                    </Stack>
+                </Box>
+            )}
+        </ModalFrame>
     );
 };

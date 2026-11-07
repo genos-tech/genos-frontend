@@ -1,21 +1,11 @@
 import { useEffect, useState } from "react";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
-import {
-    Alert,
-    Box,
-    Button,
-    Checkbox,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, Checkbox, Stack, Typography } from "@mui/joy";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 import { GMTagCreateRow } from "./ModalManageGMTags";
 
@@ -38,9 +28,7 @@ type ModalAssignGMTagsProps = {
 };
 
 export const ModalAssignGMTags = ({ chat, open, setOpen }: ModalAssignGMTagsProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const { tags, assignmentsByChannelId, setChannelTags } = usePersonalGMTags();
 
     const [draftIds, setDraftIds] = useState<number[]>([]);
@@ -82,114 +70,79 @@ export const ModalAssignGMTags = ({ chat, open, setOpen }: ModalAssignGMTagsProp
     };
 
     return (
-        <Modal open={open} sx={{ zIndex: 10010 }} onClose={() => setOpen(false)}>
-            <ModalDialog
-                sx={{
-                    borderRadius: "16px",
-                    maxWidth: 400,
-                    p: 2.5,
-                    width: "92%",
-                }}
-            >
-                <Stack alignItems="center" direction="row" justifyContent="space-between">
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
-                        <SellOutlinedIcon
-                            sx={{
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                                fontSize: 20,
-                            }}
-                        />
-                        <Typography level="title-md" sx={{ fontWeight: 700 }} noWrap>
-                            {fmt(t.chat.gmTags.assignTitle, { name: chat.chatName || "" })}
-                        </Typography>
-                    </Stack>
-                    <IconButton size="sm" variant="plain" onClick={() => setOpen(false)}>
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-
-                <Typography
-                    level="body-xs"
-                    sx={{ color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)" }}
-                >
-                    {t.chat.gmTags.privateHint}
-                </Typography>
-
-                <Box
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{ maxHeight: 260, my: 1, overflowY: "auto" }}
-                >
-                    {tags.length === 0 && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                py: 1.5,
-                                textAlign: "center",
-                            }}
-                        >
-                            {t.chat.gmTags.emptyAssign}
-                        </Typography>
-                    )}
-                    {tags.map((tag) => (
-                        <Stack
-                            key={tag.tagId}
-                            alignItems="center"
-                            direction="row"
-                            spacing={1}
-                            sx={{
-                                "&:hover": {
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.04)"
-                                        : "rgba(0,0,0,0.03)",
-                                },
-                                borderRadius: "8px",
-                                cursor: "pointer",
-                                px: 0.75,
-                                py: 0.6,
-                            }}
-                            onClick={() => toggle(tag.tagId)}
-                        >
-                            <Checkbox
-                                checked={draftIds.includes(tag.tagId)}
-                                size="sm"
-                                sx={{ pointerEvents: "none" }}
-                            />
-                            <Box
-                                sx={{
-                                    background: tag.color,
-                                    borderRadius: "50%",
-                                    flexShrink: 0,
-                                    height: 12,
-                                    width: 12,
-                                }}
-                            />
-                            <Typography level="body-sm" sx={{ flex: 1 }} noWrap>
-                                {tag.name}
-                            </Typography>
-                        </Stack>
-                    ))}
-                </Box>
-
-                {/* Create-and-check: a tag made here is immediately part
-                    of the draft selection. */}
-                <GMTagCreateRow onCreated={(tag) => setDraftIds((prev) => [...prev, tag.tagId])} />
-
-                {error && (
-                    <Alert color="warning" size="sm" sx={{ mt: 1 }}>
-                        {error}
-                    </Alert>
-                )}
-
-                <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1.5 }}>
-                    <Button size="sm" variant="plain" onClick={() => setOpen(false)}>
+        <ModalFrame
+            description={t.chat.gmTags.privateHint}
+            icon={<SellOutlinedIcon sx={{ color: g.accent.text }} />}
+            open={open}
+            size="sm"
+            title={fmt(t.chat.gmTags.assignTitle, { name: chat.chatName || "" })}
+            zIndex={10010}
+            actions={
+                <>
+                    <Button color="neutral" variant="plain" onClick={() => setOpen(false)}>
                         {t.chat.gmTags.cancelButton}
                     </Button>
-                    <Button disabled={busy} size="sm" onClick={() => void handleSave()}>
+                    <Button disabled={busy} onClick={() => void handleSave()}>
                         {t.chat.gmTags.saveButton}
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={() => setOpen(false)}
+        >
+            <Box sx={{ maxHeight: 260, my: 1, overflowY: "auto" }}>
+                {tags.length === 0 && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
+                    >
+                        {t.chat.gmTags.emptyAssign}
+                    </Typography>
+                )}
+                {tags.map((tag) => (
+                    <Stack
+                        key={tag.tagId}
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                        sx={{
+                            "&:hover": { background: g.hover },
+                            borderRadius: g.radius.md,
+                            cursor: "pointer",
+                            px: 0.75,
+                            py: 0.6,
+                        }}
+                        onClick={() => toggle(tag.tagId)}
+                    >
+                        <Checkbox
+                            checked={draftIds.includes(tag.tagId)}
+                            size="sm"
+                            sx={{ pointerEvents: "none" }}
+                        />
+                        <Box
+                            sx={{
+                                background: tag.color,
+                                borderRadius: "50%",
+                                flexShrink: 0,
+                                height: 12,
+                                width: 12,
+                            }}
+                        />
+                        <Typography level="body-sm" sx={{ flex: 1 }} noWrap>
+                            {tag.name}
+                        </Typography>
+                    </Stack>
+                ))}
+            </Box>
+
+            {/* Create-and-check: a tag made here is immediately part
+                    of the draft selection. */}
+            <GMTagCreateRow onCreated={(tag) => setDraftIds((prev) => [...prev, tag.tagId])} />
+
+            {error && (
+                <Alert color="warning" size="sm" sx={{ mt: 1 }}>
+                    {error}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };

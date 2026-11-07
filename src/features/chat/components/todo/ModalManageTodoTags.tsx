@@ -1,26 +1,17 @@
 import { useState } from "react";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { TodoCategoryProps } from "../../../../types/chat";
 import { TagColorOption } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
-import { popupLayerSx, useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./TodoHostLayer";
 import { todoTagColor } from "./todoTagColor";
 
 // Matches `ToDoCategory.name` (max_length=64) on the server.
@@ -140,198 +131,158 @@ export const ModalManageTodoTags = ({
     const layer = useTodoDialogLayer(10010);
 
     return (
-        <Modal
+        <ModalFrame
+            closeLabel={t.chat.todoPane.tags.close}
+            description={t.chat.todoPane.tags.privateHint}
+            icon={<LocalOfferRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{ zIndex: layer, ...popupLayerSx(layer) }}
+            size="sm"
+            title={t.chat.todoPane.tags.manageTitle}
+            zIndex={layer}
             onClose={() => {
                 reset();
                 onClose();
             }}
         >
-            <ModalDialog sx={{ borderRadius: "16px", maxWidth: 420, p: 2.5, width: "92%" }}>
-                <Stack alignItems="center" direction="row" justifyContent="space-between">
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <LocalOfferRoundedIcon
-                            sx={{
-                                color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                                fontSize: 20,
-                            }}
-                        />
-                        <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                            {t.chat.todoPane.tags.manageTitle}
-                        </Typography>
-                    </Stack>
-                    <IconButton
-                        aria-label={t.chat.todoPane.tags.close}
-                        size="sm"
-                        variant="plain"
-                        onClick={() => {
-                            reset();
-                            onClose();
-                        }}
+            <Box sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}>
+                {categories.length === 0 && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
                     >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-
-                <Typography
-                    level="body-xs"
-                    sx={{ color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)" }}
-                >
-                    {t.chat.todoPane.tags.privateHint}
-                </Typography>
-
-                <Box
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}
-                >
-                    {categories.length === 0 && (
-                        <Typography
-                            level="body-sm"
+                        {t.chat.todoPane.tags.emptyList}
+                    </Typography>
+                )}
+                {categories.map((category) => {
+                    const isEditing = editingId === category.categoryId;
+                    const isArmed = armedDeleteId === category.categoryId;
+                    return (
+                        <Stack
+                            key={category.categoryId}
+                            alignItems="center"
+                            data-testid={`todo-tag-row-${category.categoryId}`}
+                            direction="row"
+                            spacing={0.75}
                             sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                py: 1.5,
-                                textAlign: "center",
+                                "&:hover": { background: g.hover },
+                                borderRadius: g.radius.md,
+                                px: 0.75,
+                                py: 0.5,
                             }}
                         >
-                            {t.chat.todoPane.tags.emptyList}
-                        </Typography>
-                    )}
-                    {categories.map((category) => {
-                        const isEditing = editingId === category.categoryId;
-                        const isArmed = armedDeleteId === category.categoryId;
-                        return (
-                            <Stack
-                                key={category.categoryId}
-                                alignItems="center"
-                                data-testid={`todo-tag-row-${category.categoryId}`}
-                                direction="row"
-                                spacing={0.75}
-                                sx={{
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                    },
-                                    borderRadius: "8px",
-                                    px: 0.75,
-                                    py: 0.5,
-                                }}
-                            >
-                                <ColorPickerMenu
-                                    onSelectColor={(c) => void handleRecolor(category, c)}
+                            <ColorPickerMenu
+                                onSelectColor={(c) => void handleRecolor(category, c)}
+                            />
+                            {isEditing ? (
+                                <Input
+                                    size="sm"
+                                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
+                                    sx={{ flex: 1 }}
+                                    value={editingName}
+                                    autoFocus
+                                    onBlur={() => void commitRename(category)}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            void commitRename(category);
+                                        }
+                                        if (e.key === "Escape") setEditingId(null);
+                                    }}
                                 />
-                                {isEditing ? (
-                                    <Input
-                                        size="sm"
-                                        slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                                        sx={{ flex: 1 }}
-                                        value={editingName}
-                                        autoFocus
-                                        onBlur={() => void commitRename(category)}
-                                        onChange={(e) => setEditingName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                void commitRename(category);
-                                            }
-                                            if (e.key === "Escape") setEditingId(null);
-                                        }}
-                                    />
-                                ) : (
-                                    <Box
-                                        role="button"
-                                        sx={{ cursor: "text", flex: 1, minWidth: 0 }}
-                                        tabIndex={0}
-                                        onClick={() => {
+                            ) : (
+                                <Box
+                                    role="button"
+                                    sx={{ cursor: "text", flex: 1, minWidth: 0 }}
+                                    tabIndex={0}
+                                    onClick={() => {
+                                        setEditingId(category.categoryId);
+                                        setEditingName(category.name);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
                                             setEditingId(category.categoryId);
                                             setEditingName(category.name);
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                setEditingId(category.categoryId);
-                                                setEditingName(category.name);
-                                            }
-                                        }}
-                                    >
-                                        <ProjectTagChip
-                                            isDark={isDark}
-                                            label={category.name}
-                                            tagColor={todoTagColor(category)}
-                                        />
-                                    </Box>
-                                )}
-                                {isArmed ? (
-                                    <Button
-                                        color="danger"
-                                        size="sm"
-                                        variant="solid"
-                                        onClick={() => {
-                                            setArmedDeleteId(null);
-                                            void onDelete(category.categoryId);
-                                        }}
-                                    >
-                                        {t.chat.todoPane.tags.deleteConfirm}
-                                    </Button>
-                                ) : (
-                                    <IconButton
-                                        aria-label={t.chat.todoPane.delete}
-                                        color="danger"
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={() => setArmedDeleteId(category.categoryId)}
-                                    >
-                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                )}
-                            </Stack>
-                        );
-                    })}
-                </Box>
+                                        }
+                                    }}
+                                >
+                                    <ProjectTagChip
+                                        isDark={isDark}
+                                        label={category.name}
+                                        tagColor={todoTagColor(category)}
+                                    />
+                                </Box>
+                            )}
+                            {isArmed ? (
+                                <Button
+                                    color="danger"
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() => {
+                                        setArmedDeleteId(null);
+                                        void onDelete(category.categoryId);
+                                    }}
+                                >
+                                    {t.chat.todoPane.tags.deleteConfirm}
+                                </Button>
+                            ) : (
+                                <IconButton
+                                    aria-label={t.chat.todoPane.delete}
+                                    color="danger"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => setArmedDeleteId(category.categoryId)}
+                                >
+                                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            )}
+                        </Stack>
+                    );
+                })}
+            </Box>
 
-                <Stack alignItems="center" direction="row" spacing={0.5}>
-                    <Box
-                        sx={{
-                            background: newColor.value,
-                            borderRadius: "50%",
-                            flexShrink: 0,
-                            height: 14,
-                            width: 14,
-                        }}
-                    />
-                    <ColorPickerMenu onSelectColor={setNewColor} />
-                    <Input
-                        placeholder={t.chat.todoPane.newTagPlaceholder}
-                        size="sm"
-                        slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                        sx={{ flex: 1 }}
-                        value={newName}
-                        onChange={(e) => {
-                            setNewName(e.target.value);
-                            setError(null);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                void handleCreate();
-                            }
-                        }}
-                    />
-                    <Button
-                        disabled={busy || newName.trim().length === 0}
-                        size="sm"
-                        variant="soft"
-                        onClick={() => void handleCreate()}
-                    >
-                        {t.chat.todoPane.tags.createButton}
-                    </Button>
-                </Stack>
-                {error && (
-                    <Alert color="warning" size="sm" sx={{ mt: 0.75 }}>
-                        {error}
-                    </Alert>
-                )}
-            </ModalDialog>
-        </Modal>
+            <Stack alignItems="center" direction="row" spacing={0.5}>
+                <Box
+                    sx={{
+                        background: newColor.value,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        height: 14,
+                        width: 14,
+                    }}
+                />
+                <ColorPickerMenu onSelectColor={setNewColor} />
+                <Input
+                    placeholder={t.chat.todoPane.newTagPlaceholder}
+                    size="sm"
+                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
+                    sx={{ flex: 1 }}
+                    value={newName}
+                    onChange={(e) => {
+                        setNewName(e.target.value);
+                        setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            void handleCreate();
+                        }
+                    }}
+                />
+                <Button
+                    disabled={busy || newName.trim().length === 0}
+                    size="sm"
+                    variant="soft"
+                    onClick={() => void handleCreate()}
+                >
+                    {t.chat.todoPane.tags.createButton}
+                </Button>
+            </Stack>
+            {error && (
+                <Alert color="warning" size="sm" sx={{ mt: 0.75 }}>
+                    {error}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };

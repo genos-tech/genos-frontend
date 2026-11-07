@@ -1,38 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { keyframes } from "@emotion/react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Checkbox,
-    Chip,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { addMembersToChat } from "../../services/addMembersToChat";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
 
 type Props = {
     socket: Socket | null;
@@ -82,8 +66,6 @@ export const ModalAddMembers: React.FC<Props> = ({
     zIndex = 10000,
 }) => {
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -200,381 +182,231 @@ export const ModalAddMembers: React.FC<Props> = ({
     };
 
     return (
-        <Modal
+        <ModalFrame
+            icon={<PersonAddIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                zIndex,
-                backdropFilter: "blur(4px)",
-                // Transparent: Joy's own Backdrop slot already paints
-                // `palette.background.backdrop` + blur(8px). Stacking a
-                // second 50% black on the modal root composited to ~75%,
-                // which read as a solid black page. Matches ModalUserProfile.
-                backgroundColor: "transparent",
-            }}
-            onClose={() => setOpen(false)}
-        >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background:
-                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                    borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "420px" },
-                    maxWidth: { xs: "100vw", md: "500px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "80vh" },
-                    p: { xs: 2, md: 3 },
-                    overflow: "auto",
-                }}
-            >
-                {/* Header */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            background:
-                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.2) 100%)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
-                        }}
-                    >
-                        <PersonAddIcon
-                            sx={{ color: "rgba(var(--gp-brand-700-rgb), 0.9)", fontSize: 22 }}
-                        />
-                    </Box>
-                    <Typography
-                        level="h4"
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 600,
-                        }}
-                    >
-                        {heading ?? t.chat.modals.addMembers.title}
-                    </Typography>
-                </Box>
-
-                {/* Current chat info */}
-                {chat.chatType === 1 && chat.dmPartnerUser && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 2,
-                            p: 1.5,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                        }}
-                    >
-                        <AvatarWithStatus
-                            avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
-                            isYou={myself.userId === chat.dmPartnerUser.userId}
-                            myself={myself}
-                            setMyself={setMyself}
-                            showNameAndEmail={false}
-                            socket={socket}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                        />
-                        <Box>
-                            <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
-                                {t.chat.modals.addMembers.currentConversationWith}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
-                                {chat.dmPartnerUser.userName}
-                            </Typography>
-                        </Box>
-                    </Box>
-                )}
-                {chat.chatType === 4 && chat.mdmMembers && chat.mdmMembers.length > 0 && (
-                    <Box
-                        sx={{
-                            mb: 2,
-                            p: 1.5,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                        }}
-                    >
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 0.5 }}
-                        >
-                            {t.chat.modals.addMembers.currentMembers}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
-                            {chat.mdmMembers.map((m) => m.userName).join(", ")}
-                        </Typography>
-                    </Box>
-                )}
-
-                {/* Selected Members Chips */}
-                {selectedMembers.length > 0 && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
-                            mb: 2,
-                            p: 1.5,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                        }}
-                    >
-                        {selectedMembers.map((member) => (
-                            <Chip
-                                key={member.userId}
-                                color="primary"
-                                size="sm"
-                                variant="soft"
-                                endDecorator={
-                                    <CloseRoundedIcon
-                                        sx={{ fontSize: 14, cursor: "pointer" }}
-                                        onClick={() => handleRemoveMember(member.userId)}
-                                    />
-                                }
-                                sx={{
-                                    "--Chip-gap": "4px",
-                                    // This dialog is hardcoded dark in BOTH
-                                    // colour schemes, so the chip's colours have
-                                    // to be pinned too. Left to Joy, `soft` +
-                                    // `primary` resolves its TEXT from the ACTIVE
-                                    // palette: `primary-200` (light purple) in
-                                    // dark mode, but `primary-700` (dark purple)
-                                    // in light mode — which disappeared against
-                                    // the purple background, taking the ✕ with it
-                                    // (the icon inherits currentColor).
-                                    //
-                                    // Fed as Joy's own variables rather than a
-                                    // bare `color` / `backgroundColor`: the
-                                    // variant styles read these, so there's no
-                                    // cascade to fight.
-                                    "--variant-softBg": "rgba(var(--gp-brand-700-rgb), 0.2)",
-                                    "--variant-softColor": "rgba(255,255,255,0.95)",
-                                }}
-                            >
-                                {member.userName}
-                            </Chip>
-                        ))}
-                    </Box>
-                )}
-
-                {/* Search Input */}
-                <Input
-                    placeholder={t.chat.modals.addMembers.searchPlaceholder}
-                    value={searchQuery}
-                    startDecorator={
-                        <SearchRoundedIcon sx={{ color: "rgba(255, 255, 255, 0.4)" }} />
-                    }
-                    sx={{
-                        mb: 2,
-                        "--Input-focusedThickness": "1px",
-                        "--Input-focusedHighlight": "rgba(var(--gp-brand-700-rgb), 0.5)",
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                        borderRadius: "10px",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                            borderColor: "rgba(var(--gp-brand-700-rgb), 0.3)",
-                        },
-                    }}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-
-                {/* Member List */}
-                <Box
-                    sx={{
-                        maxHeight: "250px",
-                        overflowY: "auto",
-                        mb: 2,
-                        borderRadius: "10px",
-                        backgroundColor: "rgba(255, 255, 255, 0.02)",
-                        border: "1px solid rgba(255, 255, 255, 0.05)",
-                    }}
-                >
-                    {filteredMembers.length === 0 ? (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                p: 3,
-                                textAlign: "center",
-                                color: "rgba(255, 255, 255, 0.4)",
-                            }}
-                        >
-                            {searchQuery
-                                ? t.chat.modals.addMembers.noMembersMatchingSearch
-                                : t.chat.modals.addMembers.noMembersAvailable}
-                        </Typography>
-                    ) : (
-                        filteredMembers.map((member) => {
-                            const isSelected = selectedMembers.some(
-                                (m) => m.userId === member.userId
-                            );
-                            return (
-                                <Box
-                                    key={member.userId}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1.5,
-                                        p: 1.5,
-                                        cursor: "pointer",
-                                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-                                        transition: "all 0.15s ease",
-                                        backgroundColor: isSelected
-                                            ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                                            : "transparent",
-                                        "&:hover": {
-                                            backgroundColor: isSelected
-                                                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                                                : "rgba(255, 255, 255, 0.05)",
-                                        },
-                                        "&:last-child": {
-                                            borderBottom: "none",
-                                        },
-                                    }}
-                                    onClick={() => handleToggleMember(member)}
-                                >
-                                    <Checkbox
-                                        checked={isSelected}
-                                        color="primary"
-                                        sx={{ pointerEvents: "none" }}
-                                        variant="soft"
-                                    />
-                                    <AvatarWithStatus
-                                        avatarUser={useTEM.teamMemberProfiles[member.userId]}
-                                        isYou={myself.userId === member.userId}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        showNameAndEmail={false}
-                                        socket={socket}
-                                        useCM={useCM}
-                                        useUISM={useUISM}
-                                    />
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: 500,
-                                                color: "rgba(255, 255, 255, 0.9)",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {member.userName}
-                                        </Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{
-                                                color: "rgba(255, 255, 255, 0.4)",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {member.userEmail}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            );
-                        })
-                    )}
-                </Box>
-
-                {/* Selected Count */}
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        mb: 2,
-                        color:
-                            selectedMembers.length >= 1
-                                ? "rgba(var(--gp-brand-700-rgb), 0.8)"
-                                : "rgba(255, 255, 255, 0.4)",
-                    }}
-                >
-                    {fmt(t.chat.modals.addMembers.membersSelected, {
-                        count: selectedMembers.length,
-                    })}
-                </Typography>
-
-                {/* Error Alert */}
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
-                            // Same reason as the chips above: `danger` + the
-                            // default `soft` variant resolves the text from the
-                            // active palette — `danger-700` in light mode, i.e.
-                            // dark red on this always-dark dialog. Pin it to the
-                            // app's pink so it still reads as an error.
-                            "--variant-softColor": "rgba(var(--gp-tint-danger-rgb), 0.95)",
-                        }}
-                    >
-                        {errorMessage}
-                    </Alert>
-                )}
-
-                {/* Action Buttons */}
-                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
-                    <Button
-                        variant="plain"
-                        sx={{
-                            color: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: "10px",
-                            px: 2.5,
-                            "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                color: "rgba(255, 255, 255, 0.9)",
-                            },
-                        }}
-                        onClick={() => setOpen(false)}
-                    >
+            size="md"
+            title={heading ?? t.chat.modals.addMembers.title}
+            zIndex={zIndex}
+            actions={
+                <>
+                    <Button color="neutral" variant="plain" onClick={() => setOpen(false)}>
                         {t.chat.modals.addMembers.cancel}
                     </Button>
                     <Button
                         disabled={selectedMembers.length === 0 || isLoading}
                         loading={isLoading}
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                            borderRadius: "10px",
-                            px: 3,
-                            fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(var(--gp-brand-700-rgb), 0.3)",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(var(--gp-brand-700-rgb), 0.4)",
-                            },
-                            "&:disabled": {
-                                background: "rgba(255, 255, 255, 0.1)",
-                                color: "rgba(255, 255, 255, 0.3)",
-                            },
-                        }}
                         onClick={handleAddMembers}
                     >
                         {t.chat.modals.addMembers.addMembers}
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            onClose={() => setOpen(false)}
+        >
+            {/* Current chat info */}
+            {chat.chatType === 1 && chat.dmPartnerUser && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 2,
+                        p: 1.5,
+                        borderRadius: g.radius.md,
+                        backgroundColor: g.accent.subtle,
+                        border: `1px solid ${g.accent.border}`,
+                    }}
+                >
+                    <AvatarWithStatus
+                        avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                        isYou={myself.userId === chat.dmPartnerUser.userId}
+                        myself={myself}
+                        setMyself={setMyself}
+                        showNameAndEmail={false}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                    <Box>
+                        <Typography level="body-sm" sx={{ color: g.text.primary }}>
+                            {t.chat.modals.addMembers.currentConversationWith}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                            {chat.dmPartnerUser.userName}
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
+            {chat.chatType === 4 && chat.mdmMembers && chat.mdmMembers.length > 0 && (
+                <Box
+                    sx={{
+                        mb: 2,
+                        p: 1.5,
+                        borderRadius: g.radius.md,
+                        backgroundColor: g.accent.subtle,
+                        border: `1px solid ${g.accent.border}`,
+                    }}
+                >
+                    <Typography level="body-sm" sx={{ color: g.text.primary, mb: 0.5 }}>
+                        {t.chat.modals.addMembers.currentMembers}
+                    </Typography>
+                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                        {chat.mdmMembers.map((m) => m.userName).join(", ")}
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Selected Members Chips */}
+            {selectedMembers.length > 0 && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        mb: 2,
+                        p: 1.5,
+                        borderRadius: g.radius.md,
+                        backgroundColor: g.accent.subtle,
+                        border: `1px solid ${g.accent.border}`,
+                    }}
+                >
+                    {selectedMembers.map((member) => (
+                        <Chip
+                            key={member.userId}
+                            color="primary"
+                            size="sm"
+                            sx={{ "--Chip-gap": "4px" }}
+                            variant="soft"
+                            endDecorator={
+                                <CloseRoundedIcon
+                                    sx={{ fontSize: 14, cursor: "pointer" }}
+                                    onClick={() => handleRemoveMember(member.userId)}
+                                />
+                            }
+                        >
+                            {member.userName}
+                        </Chip>
+                    ))}
+                </Box>
+            )}
+
+            {/* Search Input */}
+            <Input
+                placeholder={t.chat.modals.addMembers.searchPlaceholder}
+                startDecorator={<SearchRoundedIcon sx={{ color: g.text.tertiary }} />}
+                sx={{ mb: 2 }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            {/* Member List */}
+            <Box
+                sx={{
+                    maxHeight: "250px",
+                    overflowY: "auto",
+                    mb: 2,
+                    borderRadius: g.radius.md,
+                    backgroundColor: g.bg.subtle,
+                    border: `1px solid ${g.border.subtle}`,
+                }}
+            >
+                {filteredMembers.length === 0 ? (
+                    <Typography
+                        level="body-sm"
+                        sx={{ p: 3, textAlign: "center", color: g.text.tertiary }}
+                    >
+                        {searchQuery
+                            ? t.chat.modals.addMembers.noMembersMatchingSearch
+                            : t.chat.modals.addMembers.noMembersAvailable}
+                    </Typography>
+                ) : (
+                    filteredMembers.map((member) => {
+                        const isSelected = selectedMembers.some((m) => m.userId === member.userId);
+                        return (
+                            <Box
+                                key={member.userId}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                    p: 1.5,
+                                    cursor: "pointer",
+                                    borderBottom: `1px solid ${g.border.subtle}`,
+                                    backgroundColor: isSelected ? g.accent.subtle : "transparent",
+                                    "&:hover": {
+                                        backgroundColor: isSelected ? g.accent.subtle : g.hover,
+                                    },
+                                    "&:last-child": { borderBottom: "none" },
+                                }}
+                                onClick={() => handleToggleMember(member)}
+                            >
+                                <Checkbox
+                                    checked={isSelected}
+                                    color="primary"
+                                    sx={{ pointerEvents: "none" }}
+                                    variant="outlined"
+                                />
+                                <AvatarWithStatus
+                                    avatarUser={useTEM.teamMemberProfiles[member.userId]}
+                                    isYou={myself.userId === member.userId}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    showNameAndEmail={false}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: 500,
+                                            color: g.text.primary,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {member.userName}
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: g.text.tertiary,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {member.userEmail}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        );
+                    })
+                )}
+            </Box>
+
+            {/* Selected Count */}
+            <Typography
+                level="body-xs"
+                sx={{
+                    mb: 2,
+                    color: selectedMembers.length >= 1 ? g.accent.text : g.text.tertiary,
+                }}
+            >
+                {fmt(t.chat.modals.addMembers.membersSelected, {
+                    count: selectedMembers.length,
+                })}
+            </Typography>
+
+            {/* Error Alert */}
+            {errorMessage && (
+                <Alert color="danger" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };
