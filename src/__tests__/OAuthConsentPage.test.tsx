@@ -253,7 +253,7 @@ describe("OAuthConsentPage", () => {
             context: { ...CONTEXT, planAllowed: false },
         });
         render();
-        expect(await screen.findByText(/Pro plan and above/)).toBeTruthy();
+        expect(await screen.findByText(/Core plan and above/)).toBeTruthy();
         expect((screen.getByRole("button", { name: "Allow" }) as HTMLButtonElement).disabled).toBe(
             true
         );
@@ -271,7 +271,7 @@ describe("OAuthConsentPage", () => {
         render();
         await screen.findByRole("heading", { name: /Connect Claude/ });
         await userEvent.setup().click(screen.getByRole("button", { name: "Allow" }));
-        expect(await screen.findByText(/Pro plan and above/)).toBeTruthy();
+        expect(await screen.findByText(/Core plan and above/)).toBeTruthy();
         expect(assign).not.toHaveBeenCalled();
     });
 

@@ -190,7 +190,7 @@ export interface PlanLimits {
     agent_history_retention_days?: number | null;
     integrations?: IntegrationName[];
     digest_cadence?: DigestCadence | null;
-    /** MCP is a Pro-and-up capability; absent on a server that predates it. */
+    /** MCP is a Core-and-up capability; absent on a server that predates it. */
     mcp_enabled?: boolean;
 }
 
