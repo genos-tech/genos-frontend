@@ -3,14 +3,7 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-} from "@blocknote/core";
+import { defaultBlockSpecs, filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -60,25 +53,13 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { AttachFileToolbarButton } from "./AttachFileToolbarButton";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
+import { insertEmojiValue } from "./CustomEmoji";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
+import { useGenosSchema } from "./genos/genosSchema";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
+import { HashSuggestionMenuController } from "./HashMention";
+import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
 import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
 import { linkHostCaption } from "./sub/linkHostCaption";
@@ -148,50 +129,21 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         .filter(Boolean)
         .join(" ");
 
-    // Disable only the Audio and Video blocks from the built-in schema.
-    // Image + File stay in (same set as BnChatEditor) so files dropped
-    // on the comment tab can ride inside the comment body itself —
-    // TaskCommentBubble renders comments through BnChatPreview, which
-    // already displays both block types.
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-
-    // Our schema with inline content specs, which contain the configs and
-    // implementations for inline content  that we want our editor to use.
+    // The shared Genos schema (`genos/genosSchema.ts`), built once per mount:
+    // `useCreateBlockNote` keeps the first schema it is given.
     const { mentionGroups } = useMentionGroupsContext();
 
-    const schema = BlockNoteSchema.create({
-        styleSpecs: genosStyleSpecs,
-        inlineContentSpecs: {
-            // Adds all default inline content.
-            ...defaultInlineContentSpecs,
-            ...genosExtraInlineContentSpecs,
-            // Adds the mention tag.
-            mention: CreateMentionSpec(
-                useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM
-            ),
-            mentionGroup: CreateMentionGroupSpec(),
-            customEmoji: CreateCustomEmojiSpec(),
-            hashTask: CreateHashTaskSpec(),
-            hashNote: CreateHashNoteSpec(),
-            hashChat: CreateHashChatSpec(),
-            hashProject: CreateHashProjectSpec(),
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
         },
-        blockSpecs: {
-            // remainingBlockSpecs contains all the other blocks
-            ...remainingBlockSpecs,
-            ...genosExtraBlockSpecs,
-            // BlockNote 0.49 moved the code-block options out of
-            // `useCreateBlockNote` and into the schema. We override
-            // the default plain-text codeBlock with the syntax-
-            // highlighted one shipped by `@blocknote/code-block`.
-            codeBlock: createCodeBlockSpec(codeBlockOptions),
-        },
-    });
+        "mount"
+    );
 
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
