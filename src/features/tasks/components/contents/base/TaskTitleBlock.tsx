@@ -453,7 +453,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         )}
                         <PreviewTaskIdChip
                             key={`task-title-block-${taskContent.id}`}
-                            isDark={isDark}
                             task={taskContent}
                         />
                         {/* The same icon + word as the task table (MIP-1157). */}

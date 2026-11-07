@@ -2235,7 +2235,6 @@ const MilestonePreviewInner = ({
                         )}
                         <PreviewTaskIdChip
                             key={`milestone-id-${milestone.milestoneId}`}
-                            isDark={isDark}
                             task={{ displayId: milestone.displayId, id: milestone.taskId }}
                         />
                         {/* The same icon + word as the task table (MIP-1157). */}

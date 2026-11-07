@@ -31,7 +31,7 @@ import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLand
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
-import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
+import { TaskIdText } from "../../card";
 import { StatusLabel } from "../../meta/StatusLabel";
 
 type TaskSubTasksBlockProps = {
@@ -395,18 +395,11 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     useTM.setCurrentPreviewTaskId(id);
                                                 }}
                                             >
-                                                <Chip
-                                                    key={`id-chip-${id}-${index}`} // pass the key directly
-                                                    color="neutral"
-                                                    size="md"
-                                                    variant="outlined"
-                                                    sx={{
-                                                        fontWeight: "bold",
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    {formatTaskDisplayId({ id, displayId })}
-                                                </Chip>
+                                                <TaskIdText
+                                                    key={`id-chip-${id}-${index}`}
+                                                    copyable={false}
+                                                    task={{ id, displayId }}
+                                                />
                                                 <Box
                                                     key={`status-chip-${id}-${index}`}
                                                     sx={{ mx: "5px" }}
