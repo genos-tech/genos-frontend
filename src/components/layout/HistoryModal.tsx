@@ -10,17 +10,7 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    Stack,
-    Tab,
-    TabList,
-    TabPanel,
-    Tabs,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
