@@ -74,11 +74,10 @@ export const MOTION = {
     easeOut: "cubic-bezier(0, 0, 0.2, 1)",
 } as const;
 
-/** Font stacks. The body face is Ken's choice at the P1 review: Inter is
- *  what renders today (it arrives with BlockNote's stylesheet), Geist is
- *  Vercel's. CJK falls through to the system face, then Noto Sans JP. */
+/** Font stacks. The body face is Geist (Ken, 2026-11-07, chosen over
+ *  Inter at the P1 review). Geist has no Japanese glyphs, so CJK falls
+ *  through to the system face, then Noto Sans JP. */
 export const FONT_STACKS = {
-    inter: '"Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", "Segoe UI", sans-serif',
     geist: '"Geist Variable", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP Variable", "Segoe UI", sans-serif',
     mono: 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace',
 } as const;
