@@ -1,6 +1,4 @@
-import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import { Chip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { CSSProperties } from "react";
 
 import { useTranslation } from "../../../i18n";
 
@@ -10,39 +8,44 @@ type SprintChipProps = {
     name: string | null | undefined;
 };
 
+const chip: CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    boxSizing: "border-box",
+    maxWidth: 120,
+    height: 20,
+    padding: "0 6px",
+    flexShrink: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    borderRadius: "var(--g-radius-xs, 4px)",
+    border: "1px solid var(--g-border, rgba(128,128,128,0.2))",
+    background: "var(--g-surface, transparent)",
+    fontSize: "var(--g-type-body-xs-size, 0.75rem)",
+    fontWeight: 500,
+    lineHeight: 1,
+};
+
 /**
- * Compact, read-only sprint indicator. Shows the sprint name, or a muted
- * "No Sprint" when there's none. Shared by the dashboard's "Up Next" and
- * "Top by Weight" task rows and the "Assigned Milestones" card so the sprint
- * pill reads the same everywhere.
+ * Compact, read-only sprint indicator: the neutral chip the table's sprint
+ * column draws (a sprint is a place, not a status), or a muted "No Sprint"
+ * when there is none. Shared by the dashboard rows and the milestone card
+ * body so the sprint pill reads the same everywhere.
  */
 export const SprintChip = ({ name }: SprintChipProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
     const has = !!(name && name.trim());
     return (
-        <Chip
-            size="sm"
-            startDecorator={<BoltRoundedIcon sx={{ fontSize: 11 }} />}
-            variant="outlined"
-            sx={{
-                fontSize: "0.6rem",
-                fontWeight: 600,
-                borderRadius: "6px",
-                maxWidth: 130,
-                flexShrink: 0,
-                color: has
-                    ? isDark
-                        ? "rgba(255,255,255,0.75)"
-                        : "rgba(0,0,0,0.7)"
-                    : isDark
-                      ? "rgba(255,255,255,0.4)"
-                      : "rgba(0,0,0,0.4)",
-                borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)",
+        <span
+            data-testid="sprint-chip"
+            title={has ? name! : undefined}
+            style={{
+                ...chip,
+                color: has ? "var(--g-text-secondary)" : "var(--g-text-tertiary)",
             }}
         >
             {has ? name : t.tasks.fields.noSprint}
-        </Chip>
+        </span>
     );
 };

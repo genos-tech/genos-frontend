@@ -62,7 +62,9 @@ export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusL
                 {getStatusIcon(name, iconSize)}
             </span>
             {!iconOnly && (
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }} data-status-word>
+                    {label}
+                </span>
             )}
         </span>
     );

@@ -209,10 +209,6 @@ describe("names are bidi-isolated", () => {
         src.includes(`<bdi className="g-bidi-island">${expr}</bdi>`);
 
     const CASES: [string, string[]][] = [
-        [
-            "features/tasks/components/board/SprintBoardCard.tsx",
-            ["{assigneeName || t.tasks.board.unassigned}"],
-        ],
         ["features/tasks/components/dashboard/TaskVelocitySection.tsx", ["{m.name}"]],
         // The member filter's menu rows (MIP-1135); the chip's value is wrapped inline.
         ["features/tasks/components/table/TaskFilterMenu.tsx", ["{m.userName}"]],
@@ -224,6 +220,11 @@ describe("names are bidi-isolated", () => {
             ["{selectedMember.name}", "{o.name}", "{m.name}", "{a.name}"],
         ],
     ];
+    // The board card's assignee name now lives in the shared TaskCard (MIP-1124).
+    it("TaskCard.tsx (the board card's assignee name)", () => {
+        const src = read("features/tasks/components/card/TaskCard.tsx").replace(/\s+/g, " ");
+        expect(src).toMatch(/<bdi className="g-bidi-island"> \{task\.assigneeId \? \(/);
+    });
     for (const [file, exprs] of CASES) {
         it(file.split("/").pop()!, () => {
             const src = read(file);

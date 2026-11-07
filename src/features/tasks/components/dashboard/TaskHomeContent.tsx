@@ -60,6 +60,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { isDeletedUser } from "../../../../utils/teamRoster";
@@ -70,15 +71,14 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
-import { PRIORITY_COLORS } from "../../utils/dashboardRowFormat";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
-import { CopyableTaskIdText } from "../CopyableTaskId";
+import { TaskCard, TaskListItem, TaskListPanel } from "../card";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { ProjectTagChip } from "../ProjectTagChip";
-import { getStatusIcon, STATUS_COLORS } from "../TaskStatusChip";
+import { STATUS_COLORS } from "../TaskStatusChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
 import { TaskVelocitySection } from "./TaskVelocitySection";
@@ -1406,18 +1406,18 @@ export const TaskHomeContent = ({
                                                         }}
                                                     >
                                                         <ProjectIdentityRow
+                                                            maxLabels={2}
+                                                            project={project}
                                                             avatarSrc={projectAvatarSrc(
                                                                 project.projectId,
                                                                 useCM.allChats
                                                             )}
-                                                            maxLabels={2}
                                                             nameWeight={
                                                                 project.projectId ===
                                                                 usePM.currentProject?.projectId
                                                                     ? 700
                                                                     : 500
                                                             }
-                                                            project={project}
                                                         />
                                                     </Option>
                                                 ))}
@@ -2057,166 +2057,36 @@ export const TaskHomeContent = ({
                                                 </Chip>
                                             </Typography>
                                             <Grid spacing={1.5} container>
-                                                {recentTasks.map((task) => {
-                                                    const sc =
-                                                        STATUS_COLORS[task.effectiveStatus] ||
-                                                        STATUS_COLORS.Open;
-                                                    return (
-                                                        <Grid key={task.id} md={4} sm={6} xs={12}>
-                                                            <Card
-                                                                variant="outlined"
-                                                                sx={{
-                                                                    p: 2,
-                                                                    cursor: "pointer",
-                                                                    background: cardBg,
-                                                                    borderColor: cardBorder,
-                                                                    transition: "all 0.2s ease",
-                                                                    "&:hover": {
-                                                                        borderColor: sc.text,
-                                                                        background: isDark
-                                                                            ? "rgba(255,255,255,0.04)"
-                                                                            : "rgba(255,255,255,0.9)",
-                                                                    },
-                                                                }}
-                                                                onClick={() =>
-                                                                    handleTaskClick(
-                                                                        Number(task.id)
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Stack spacing={1}>
-                                                                    <Stack
-                                                                        alignItems="flex-start"
-                                                                        direction="row"
-                                                                        justifyContent="space-between"
-                                                                    >
-                                                                        <Stack
-                                                                            alignItems="center"
-                                                                            direction="row"
-                                                                            spacing={0.5}
-                                                                        >
-                                                                            <CopyableTaskIdText
-                                                                                level="body-xs"
-                                                                                task={task}
-                                                                                sx={{
-                                                                                    fontWeight: 600,
-                                                                                    color: textMuted,
-                                                                                }}
-                                                                            />
-                                                                            {task.isMilestone ===
-                                                                                true && (
-                                                                                <AppTooltip
-                                                                                    title={
-                                                                                        t.tasks
-                                                                                            .dashboard
-                                                                                            .milestoneTooltip
-                                                                                    }
-                                                                                >
-                                                                                    <FlagRoundedIcon
-                                                                                        sx={{
-                                                                                            fontSize: 12,
-                                                                                            color: "#f97316",
-                                                                                        }}
-                                                                                    />
-                                                                                </AppTooltip>
-                                                                            )}
-                                                                        </Stack>
-                                                                        <Chip
-                                                                            size="sm"
-                                                                            variant="soft"
-                                                                            startDecorator={getStatusIcon(
-                                                                                task.effectiveStatus
-                                                                            )}
-                                                                            sx={{
-                                                                                fontSize:
-                                                                                    "0.65rem",
-                                                                                backgroundColor:
-                                                                                    sc.bg,
-                                                                                color: sc.text,
-                                                                            }}
-                                                                        >
-                                                                            {taskMetaLabel(
-                                                                                task.effectiveStatus,
-                                                                                t.tasks.filters
-                                                                            )}
-                                                                        </Chip>
-                                                                    </Stack>
-                                                                    <Typography
-                                                                        level="title-sm"
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                            color: textPrimary,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                    <Stack
-                                                                        alignItems="center"
-                                                                        direction="row"
-                                                                        justifyContent="space-between"
-                                                                    >
-                                                                        {task.priority &&
-                                                                            (() => {
-                                                                                const swatch =
-                                                                                    PRIORITY_COLORS[
-                                                                                        task
-                                                                                            .priority
-                                                                                    ];
-                                                                                const color =
-                                                                                    swatch
-                                                                                        ? isDark
-                                                                                            ? swatch.dark
-                                                                                            : swatch.light
-                                                                                        : textMuted;
-                                                                                return (
-                                                                                    <Chip
-                                                                                        size="sm"
-                                                                                        variant="soft"
-                                                                                        sx={{
-                                                                                            fontSize:
-                                                                                                "0.65rem",
-                                                                                            fontWeight: 600,
-                                                                                            // ~12% alpha
-                                                                                            // matches the
-                                                                                            // adjacent
-                                                                                            // status chip.
-                                                                                            backgroundColor: `${color}1F`,
-                                                                                            color,
-                                                                                        }}
-                                                                                    >
-                                                                                        {taskMetaLabel(
-                                                                                            task.priority,
-                                                                                            t.tasks
-                                                                                                .filters
-                                                                                        )}
-                                                                                    </Chip>
-                                                                                );
-                                                                            })()}
-                                                                        <Typography
-                                                                            level="body-xs"
-                                                                            sx={{
-                                                                                color: textMuted,
-                                                                                ml: "auto",
-                                                                                fontStyle:
-                                                                                    "italic",
-                                                                            }}
-                                                                        >
-                                                                            {formatRelativeTime(
-                                                                                task.updatedAt
-                                                                            )}
-                                                                        </Typography>
-                                                                    </Stack>
-                                                                </Stack>
-                                                            </Card>
-                                                        </Grid>
-                                                    );
-                                                })}
+                                                {recentTasks.map((task) => (
+                                                    <Grid key={task.id} md={4} sm={6} xs={12}>
+                                                        <TaskCard
+                                                            showAssignee={false}
+                                                            showTags={false}
+                                                            status={task.effectiveStatus}
+                                                            task={task}
+                                                            footerEnd={
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{
+                                                                        color: g.text.tertiary,
+                                                                        ml: "auto",
+                                                                    }}
+                                                                >
+                                                                    {formatRelativeTime(
+                                                                        task.updatedAt
+                                                                    )}
+                                                                </Typography>
+                                                            }
+                                                            untitled={
+                                                                t.tasks.dashboard.untitledTask
+                                                            }
+                                                            showStatus
+                                                            onOpen={() =>
+                                                                handleTaskClick(Number(task.id))
+                                                            }
+                                                        />
+                                                    </Grid>
+                                                ))}
                                             </Grid>
                                         </Box>
                                     )}
@@ -2834,7 +2704,7 @@ export const TaskHomeContent = ({
                                                         </Typography>
                                                     </Card>
                                                 ) : (
-                                                    <Stack spacing={0.75}>
+                                                    <TaskListPanel>
                                                         {focusUpNext.map((task) => (
                                                             <DashboardTaskRow
                                                                 key={task.id}
@@ -2849,7 +2719,7 @@ export const TaskHomeContent = ({
                                                                 }
                                                             />
                                                         ))}
-                                                    </Stack>
+                                                    </TaskListPanel>
                                                 )}
                                             </Box>
                                         </Stack>
@@ -3192,63 +3062,25 @@ export const TaskHomeContent = ({
                                                             {overdueAndUpcoming.overdue.length}
                                                         </Chip>
                                                     </Stack>
-                                                    <Stack spacing={0.75}>
+                                                    <Stack spacing={0}>
                                                         {overdueAndUpcoming.overdue
                                                             .slice(0, 5)
                                                             .map((task) => (
-                                                                <Stack
+                                                                <TaskListItem
                                                                     key={task.id}
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={1}
-                                                                    sx={{
-                                                                        cursor: "pointer",
-                                                                        borderRadius: "6px",
-                                                                        px: 1,
-                                                                        py: 0.5,
-                                                                        "&:hover": {
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(239,68,68,0.08)"
-                                                                                : "rgba(239,68,68,0.06)",
-                                                                        },
-                                                                    }}
-                                                                    onClick={() =>
+                                                                    status={task.effectiveStatus}
+                                                                    task={task}
+                                                                    variant="compact"
+                                                                    untitled={
+                                                                        t.tasks.dashboard
+                                                                            .untitledTask
+                                                                    }
+                                                                    onOpen={() =>
                                                                         handleTaskClick(
                                                                             Number(task.id)
                                                                         )
                                                                     }
-                                                                >
-                                                                    {getStatusIcon(
-                                                                        task.effectiveStatus,
-                                                                        12
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            flex: 1,
-                                                                            color: textPrimary,
-                                                                            fontWeight: 500,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: "#ef4444",
-                                                                            fontWeight: 600,
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.dueDate}
-                                                                    </Typography>
-                                                                </Stack>
+                                                                />
                                                             ))}
                                                         {overdueAndUpcoming.overdue.length > 5 && (
                                                             <Typography
@@ -3329,63 +3161,25 @@ export const TaskHomeContent = ({
                                                             {overdueAndUpcoming.upcoming.length}
                                                         </Chip>
                                                     </Stack>
-                                                    <Stack spacing={0.75}>
+                                                    <Stack spacing={0}>
                                                         {overdueAndUpcoming.upcoming
                                                             .slice(0, 5)
                                                             .map((task) => (
-                                                                <Stack
+                                                                <TaskListItem
                                                                     key={task.id}
-                                                                    alignItems="center"
-                                                                    direction="row"
-                                                                    spacing={1}
-                                                                    sx={{
-                                                                        cursor: "pointer",
-                                                                        borderRadius: "6px",
-                                                                        px: 1,
-                                                                        py: 0.5,
-                                                                        "&:hover": {
-                                                                            backgroundColor: isDark
-                                                                                ? "rgba(59,130,246,0.08)"
-                                                                                : "rgba(59,130,246,0.06)",
-                                                                        },
-                                                                    }}
-                                                                    onClick={() =>
+                                                                    status={task.effectiveStatus}
+                                                                    task={task}
+                                                                    variant="compact"
+                                                                    untitled={
+                                                                        t.tasks.dashboard
+                                                                            .untitledTask
+                                                                    }
+                                                                    onOpen={() =>
                                                                         handleTaskClick(
                                                                             Number(task.id)
                                                                         )
                                                                     }
-                                                                >
-                                                                    {getStatusIcon(
-                                                                        task.effectiveStatus,
-                                                                        12
-                                                                    )}
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            flex: 1,
-                                                                            color: textPrimary,
-                                                                            fontWeight: 500,
-                                                                            overflow: "hidden",
-                                                                            textOverflow:
-                                                                                "ellipsis",
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.title ||
-                                                                            t.tasks.dashboard
-                                                                                .untitledTask}
-                                                                    </Typography>
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{
-                                                                            color: "#3b82f6",
-                                                                            fontWeight: 600,
-                                                                            whiteSpace: "nowrap",
-                                                                        }}
-                                                                    >
-                                                                        {task.dueDate}
-                                                                    </Typography>
-                                                                </Stack>
+                                                                />
                                                             ))}
                                                         {overdueAndUpcoming.upcoming.length >
                                                             5 && (
@@ -3555,7 +3349,7 @@ export const TaskHomeContent = ({
                                             >
                                                 {t.tasks.dashboard.topWeight.subtitle}
                                             </Typography>
-                                            <Stack spacing={0.75}>
+                                            <TaskListPanel>
                                                 {topByWeightRows.map(({ task }) => (
                                                     <DashboardTaskRow
                                                         key={task.id}
@@ -3566,7 +3360,7 @@ export const TaskHomeContent = ({
                                                         }
                                                     />
                                                 ))}
-                                            </Stack>
+                                            </TaskListPanel>
                                         </Box>
                                     )}
 
