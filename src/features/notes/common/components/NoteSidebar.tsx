@@ -15,25 +15,15 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    Divider,
-    List,
-    ListItem,
-    Modal,
-    ModalDialog,
-    Sheet,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Button, Chip, Divider, List, ListItem, Sheet, Typography } from "@mui/joy";
+import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../context/AuthContext";
@@ -468,6 +458,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const { useNM, myself, setMyself, socket, useTEM, useCM, useUISM } = props;
     const allChats = useCM.allChats;
     const { mode } = useColorScheme();
+    const theme = useTheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const { accessToken } = useAuth();
@@ -2215,24 +2206,29 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     });
                 }}
             />
-            <Modal open={teamDeleteBlocked !== null} onClose={() => setTeamDeleteBlocked(null)}>
-                <ModalDialog sx={{ maxWidth: 440 }}>
-                    <Typography level="title-md">
-                        {t.notes.teamNotes.deleteBlockedTitle}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ mt: 1 }}>
-                        {fmt(t.notes.teamNotes.deleteBlockedBody, {
-                            noteCount: teamDeleteBlocked?.noteCount ?? 0,
-                            folderCount: teamDeleteBlocked?.folderCount ?? 0,
-                        })}
-                    </Typography>
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                        <Button variant="plain" onClick={() => setTeamDeleteBlocked(null)}>
-                            {t.notes.folders.cancel}
-                        </Button>
-                    </Box>
-                </ModalDialog>
-            </Modal>
+            <ModalFrame
+                open={teamDeleteBlocked !== null}
+                size="sm"
+                title={t.notes.teamNotes.deleteBlockedTitle}
+                zIndex={theme.zIndex.modal}
+                actions={
+                    <Button
+                        color="neutral"
+                        variant="plain"
+                        onClick={() => setTeamDeleteBlocked(null)}
+                    >
+                        {t.notes.folders.cancel}
+                    </Button>
+                }
+                onClose={() => setTeamDeleteBlocked(null)}
+            >
+                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                    {fmt(t.notes.teamNotes.deleteBlockedBody, {
+                        noteCount: teamDeleteBlocked?.noteCount ?? 0,
+                        folderCount: teamDeleteBlocked?.folderCount ?? 0,
+                    })}
+                </Typography>
+            </ModalFrame>
 
             {/* Footer */}
             <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />

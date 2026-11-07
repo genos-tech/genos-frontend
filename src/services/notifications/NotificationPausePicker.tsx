@@ -12,14 +12,12 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Switch,
     Typography,
 } from "@mui/joy";
 
+import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
 import { fmt, useTranslation } from "../../i18n";
 import { Messages } from "../../i18n/types";
@@ -217,19 +215,19 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 <Box sx={{ flex: 1 }} />
                 <Dropdown>
                     <MenuButton
-                        size="sm"
-                        variant={isPausedNow ? "soft" : "outlined"}
                         color={isPausedNow ? "warning" : "neutral"}
+                        size="sm"
                         startDecorator={<NotificationsPausedRoundedIcon />}
+                        variant={isPausedNow ? "soft" : "outlined"}
                     >
                         {p.durationMenuLabel}
                     </MenuButton>
-                    <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                    <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
                         <NotificationPausePresetItems
                             isPausedNow={isPausedNow}
                             pauseFor={pauseFor}
-                            pauseUntilTomorrow={pauseUntilTomorrow}
                             pauseUntilNextWeek={pauseUntilNextWeek}
+                            pauseUntilTomorrow={pauseUntilTomorrow}
                             resume={resume}
                             onCustom={openCustom}
                         />
@@ -237,10 +235,10 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Dropdown>
                 {untilActive && (
                     <Button
-                        size="sm"
                         color="danger"
-                        variant="plain"
+                        size="sm"
                         startDecorator={<PlayArrowRoundedIcon />}
+                        variant="plain"
                         onClick={resume}
                     >
                         {p.resumeShort}
@@ -275,13 +273,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 spacing={1.5}
                 sx={{ opacity: schedEnabled ? 1 : 0.5 }}
             >
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleStart}</Typography>
                     <Input
-                        type="time"
-                        size="sm"
-                        value={schedStart}
                         disabled={!schedEnabled}
+                        size="sm"
+                        type="time"
+                        value={schedStart}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -291,13 +289,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         }
                     />
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleEnd}</Typography>
                     <Input
-                        type="time"
-                        size="sm"
-                        value={schedEnd}
                         disabled={!schedEnabled}
+                        size="sm"
+                        type="time"
+                        value={schedEnd}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -309,17 +307,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Stack>
             </Stack>
 
-            <Modal open={customOpen} sx={{ zIndex: 10020 }} onClose={() => setCustomOpen(false)}>
-                <ModalDialog>
-                    <ModalClose />
-                    <Typography level="title-md">{p.customTitle}</Typography>
-                    <Input
-                        type="datetime-local"
-                        value={customValue}
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
-                        onChange={(e) => setCustomValue(e.target.value)}
-                    />
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+            <ModalFrame
+                open={customOpen}
+                size="sm"
+                title={p.customTitle}
+                zIndex={10020}
+                actions={
+                    <>
                         <Button
                             color="neutral"
                             variant="plain"
@@ -330,9 +324,17 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         <Button disabled={!customValue} onClick={commitCustom}>
                             {p.customSet}
                         </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+                    </>
+                }
+                onClose={() => setCustomOpen(false)}
+            >
+                <Input
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                    type="datetime-local"
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                />
+            </ModalFrame>
         </Box>
     );
 };
