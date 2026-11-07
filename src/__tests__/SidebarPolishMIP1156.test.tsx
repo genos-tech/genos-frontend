@@ -41,16 +41,14 @@ describe("a chat row's time gives way to the actions on hover (MIP-1167)", () =>
 });
 
 describe("the title field is taller than a picker in a cell (MIP-1156)", () => {
-    it("34px, where a select or picker in a cell stays 28px", () => {
+    it("34px (a real min-height: the --Input-minHeight variable alone is cancelled by the cell editors' `minHeight: 0`)", () => {
         render(
             <CssVarsProvider>
                 <CellTextInput value="" onChange={() => {}} />
             </CssVarsProvider>
         );
         const input = screen.getByRole("textbox");
-        expect(cssOf(input.closest(".MuiInput-root") as Element)).toContain(
-            "--Input-minHeight: 34px"
-        );
+        expect(cssOf(input.closest(".MuiInput-root") as Element)).toMatch(/min-height:\s*34px/);
     });
 });
 
