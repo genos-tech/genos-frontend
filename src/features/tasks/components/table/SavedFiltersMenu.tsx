@@ -24,7 +24,6 @@
 // read `theme.transitions.duration`); nothing here needs a Material theme now.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import BookmarkAddedRoundedIcon from "@mui/icons-material/BookmarkAddedRounded";
 import BookmarksRoundedIcon from "@mui/icons-material/BookmarksRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
@@ -37,14 +36,12 @@ import {
     CircularProgress,
     IconButton,
     Input,
-    MenuButton,
     Modal,
     ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
@@ -58,7 +55,7 @@ import {
     type ProjectSavedFilter,
     type SavedFilterPayload,
 } from "../../services/projectSavedFilters";
-import { FilterDropdown, FilterMenu, FilterMenuItem } from "./filterBarParts";
+import { FilterChipButton, FilterDropdown, FilterMenu, FilterMenuItem } from "./filterBarParts";
 
 // Accent for this control — teal, deliberately outside the palette the
 // dimension filters use (status/tag colors, milestone orange, member
@@ -304,63 +301,14 @@ export const SavedFiltersMenu = ({
     return (
         <FilterDropdown open={menuOpen} onOpenChange={setMenuOpen}>
             <AppTooltip title={ts.tooltip}>
-                <MenuButton
-                    // AppTooltip writes its title onto the child as
-                    // `aria-label`, so this button's accessible name is the
-                    // tooltip sentence rather than its visible text — true
-                    // of every tooltip-wrapped button in this bar. The
-                    // testid gives tests a stable handle without querying
-                    // that sentence.
+                <FilterChipButton
+                    // AppTooltip writes its title onto the child as `aria-label`, so
+                    // the accessible name is the tooltip sentence; the testid gives
+                    // tests a stable handle without querying that sentence.
+                    active={Boolean(appliedName)}
                     data-testid="saved-filters-button"
-                    variant="outlined"
-                    endDecorator={
-                        appliedName ? undefined : (
-                            <BookmarksRoundedIcon sx={{ fontSize: "14px" }} />
-                        )
-                    }
-                    startDecorator={
-                        appliedName ? (
-                            <BookmarkAddedRoundedIcon sx={{ fontSize: "16px" }} />
-                        ) : undefined
-                    }
-                    sx={{
-                        // Filled while a saved filter is applied, quiet
-                        // otherwise — same "active vs idle" grammar the
-                        // milestone/member buttons use.
-                        color: appliedName ? "#fff" : accent,
-                        background: appliedName
-                            ? isDark
-                                ? `linear-gradient(135deg, ${alpha(SAVED_ACCENT_DARK, 0.5)} 0%, ${alpha(SAVED_ACCENT_DARK, 0.7)} 100%)`
-                                : `linear-gradient(135deg, ${alpha(SAVED_ACCENT, 0.75)} 0%, ${alpha(SAVED_ACCENT, 0.95)} 100%)`
-                            : isDark
-                              ? alpha(SAVED_ACCENT_DARK, 0.12)
-                              : alpha(SAVED_ACCENT, 0.08),
-                        border: `1px solid ${alpha(accent, isDark ? 0.45 : 0.4)}`,
-                        borderRadius: "10px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        height: "32px",
-                        whiteSpace: "nowrap",
-                        maxWidth: "220px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        px: 1.5,
-                        my: 0.5,
-                        // Joy's Button has a 36px minimum; the bar's buttons are 32.
-                        minHeight: 0,
-                        flexShrink: 0,
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                            background: appliedName
-                                ? isDark
-                                    ? `linear-gradient(135deg, ${alpha(SAVED_ACCENT_DARK, 0.6)} 0%, ${alpha(SAVED_ACCENT_DARK, 0.8)} 100%)`
-                                    : `linear-gradient(135deg, ${alpha(SAVED_ACCENT, 0.85)} 0%, ${alpha(SAVED_ACCENT, 1)} 100%)`
-                                : isDark
-                                  ? alpha(SAVED_ACCENT_DARK, 0.2)
-                                  : alpha(SAVED_ACCENT, 0.16),
-                            transform: "translateY(-1px)",
-                        },
-                    }}
+                    field={ts.button}
+                    value={appliedName ?? ""}
                     onClick={() => {
                         // Refetch on open. These rows are shared, so a
                         // filter a teammate just created would otherwise
@@ -371,9 +319,7 @@ export const SavedFiltersMenu = ({
                         // rendered while it lands, so there's no flash.
                         if (!menuOpen) void refresh();
                     }}
-                >
-                    {appliedName ?? ts.button}
-                </MenuButton>
+                />
             </AppTooltip>
 
             <FilterMenu isDark={isDark} maxHeight="340px" minWidth="260px" styles={styles}>
