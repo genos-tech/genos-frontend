@@ -114,6 +114,7 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
         <Autocomplete
             key={`ac-project-tags-${useTM.currentPreviewTaskId}`}
             aria-label={t.tasks.sidebar.searchAriaLabel}
+            endDecorator={loading ? <Spinner /> : null}
             filterOptions={(opts, state) => filterTaskSearchOptions(opts, state.inputValue)}
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}
@@ -123,7 +124,6 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
             options={options}
             placeholder={t.tasks.sidebar.searchPlaceholder}
             size="sm"
-            endDecorator={loading ? <Spinner /> : null}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>

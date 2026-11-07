@@ -1122,7 +1122,7 @@ const Components = () => (
                 title="Loading"
             >
                 <Panel sx={{ background: g.bg.default }}>
-                    <SkeletonRows avatar count={3} twoLines />
+                    <SkeletonRows count={3} avatar twoLines />
                 </Panel>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5 }}>
                     <Spinner />

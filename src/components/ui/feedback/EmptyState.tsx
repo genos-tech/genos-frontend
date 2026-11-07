@@ -68,7 +68,6 @@ export const EmptyState = ({
         >
             {icon && (
                 <Box
-                    aria-hidden
                     sx={{
                         width: small ? 32 : 40,
                         height: small ? 32 : 40,
@@ -84,6 +83,7 @@ export const EmptyState = ({
                         mb: 0.5,
                         "& svg": { fontSize: small ? 16 : 20 },
                     }}
+                    aria-hidden
                 >
                     {icon}
                 </Box>

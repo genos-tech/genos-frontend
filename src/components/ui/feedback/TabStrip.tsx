@@ -186,12 +186,12 @@ export const TabStrip = ({
                         >
                             {tab.icon && (
                                 <Box
-                                    aria-hidden
                                     sx={{
                                         display: "flex",
                                         "--Icon-color": "currentColor",
                                         "& svg": { fontSize: 16 },
                                     }}
+                                    aria-hidden
                                 >
                                     {tab.icon}
                                 </Box>

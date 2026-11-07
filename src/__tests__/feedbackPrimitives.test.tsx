@@ -57,7 +57,7 @@ describe("EmptyState", () => {
 
 describe("Skeleton", () => {
     it("announces once as Loading and draws the requested rows", () => {
-        render(wrap(<SkeletonRows avatar count={4} />));
+        render(wrap(<SkeletonRows count={4} avatar />));
         const status = screen.getByRole("status", { name: getMessages().common.feedback.loading });
         expect(status.getAttribute("aria-busy")).toBe("true");
         // 4 rows x (avatar + 1 line)
@@ -118,7 +118,7 @@ describe("toast host", () => {
         const onClose = vi.fn();
         render(
             wrap(
-                <Toast open duration={3000} onClose={onClose}>
+                <Toast duration={3000} open onClose={onClose}>
                     bye
                 </Toast>
             )
@@ -134,7 +134,7 @@ describe("toast host", () => {
         const onClose = vi.fn();
         const { rerender } = render(
             wrap(
-                <Toast open duration={1000} onClose={onClose}>
+                <Toast duration={1000} open onClose={onClose}>
                     pause me
                 </Toast>
             )
@@ -150,7 +150,7 @@ describe("toast host", () => {
         onClose.mockClear();
         rerender(
             wrap(
-                <Toast open duration={null} onClose={onClose}>
+                <Toast duration={null} open onClose={onClose}>
                     stay
                 </Toast>
             )

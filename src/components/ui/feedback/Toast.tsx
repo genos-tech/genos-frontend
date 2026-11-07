@@ -41,7 +41,7 @@ const REGION_ID = "genos-toast-region";
  *  thing that must never be hidden by the surface that caused it. */
 const REGION_Z_INDEX = 13500;
 
-export const getToastRegion = (): HTMLElement | null => {
+const getToastRegion = (): HTMLElement | null => {
     if (typeof document === "undefined") return null;
     let el = document.getElementById(REGION_ID);
     if (!el) {
@@ -169,7 +169,6 @@ const ToastCard = ({
         >
             {leading && (
                 <Box
-                    aria-hidden
                     sx={{
                         display: "flex",
                         flexShrink: 0,
@@ -177,6 +176,7 @@ const ToastCard = ({
                         "--Icon-color": toneColor,
                         "& svg": { fontSize: 18 },
                     }}
+                    aria-hidden
                 >
                     {leading}
                 </Box>
@@ -217,8 +217,8 @@ const ToastCard = ({
                     aria-label={t.common.actions.close}
                     color="neutral"
                     size="sm"
-                    variant="plain"
                     sx={{ flexShrink: 0, "&:focus-visible": focusRing }}
+                    variant="plain"
                     onClick={() => onClose("dismiss")}
                 >
                     <CloseRoundedIcon sx={{ fontSize: 16 }} />
@@ -267,6 +267,8 @@ export const Toast = ({
             action={action}
             actions={actions}
             dismissible={dismissible}
+            icon={icon}
+            tone={tone}
             duration={
                 duration !== undefined
                     ? duration
@@ -274,8 +276,6 @@ export const Toast = ({
                       ? ACTION_DURATION
                       : DEFAULT_DURATION
             }
-            icon={icon}
-            tone={tone}
             onClick={onClick}
             onClose={(reason) => onClose?.(reason)}
         >

@@ -10,7 +10,6 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import CircularProgress from "@mui/joy/CircularProgress";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -224,6 +223,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         >
             <Autocomplete
                 aria-label={t.chat.sidebar.searchAriaLabel}
+                endDecorator={loading ? <Spinner /> : null}
                 groupBy={(option) => option.type}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
                 loading={loading}
@@ -231,7 +231,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 options={options}
                 placeholder={t.chat.sidebar.searchPlaceholder}
                 size="sm"
-                endDecorator={loading ? <Spinner /> : null}
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? personLabel(

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
 import {

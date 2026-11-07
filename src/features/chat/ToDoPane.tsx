@@ -329,16 +329,16 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     >
                         <Stack
                             alignItems="center"
-                            data-todo-header-row
                             direction="row"
                             justifyContent="space-between"
+                            sx={hostedInModal ? { pr: "76px" } : undefined}
                             mb={1.5}
                             // In a modal the "open full page" and ✕ buttons float over
                             // this corner (UrlLinkModal: right 56 and 12, 36px wide,
                             // so 92px from the edge). The box already pads 20px; keep
                             // the rest of that corner free so they don't cover the
                             // actions (MIP-1044).
-                            sx={hostedInModal ? { pr: "76px" } : undefined}
+                            data-todo-header-row
                         >
                             <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Box
@@ -538,10 +538,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 <Chip
                                     color="warning"
                                     size="sm"
+                                    sx={{ cursor: "pointer", borderRadius: "6px" }}
                                     startDecorator={
                                         <FilterListRoundedIcon sx={{ fontSize: 14 }} />
                                     }
-                                    sx={{ cursor: "pointer", borderRadius: "6px" }}
                                     variant={
                                         !showCompletedToday && useCM.showOnlyInCompleteTodos
                                             ? "solid"
@@ -588,10 +588,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             <Virtuoso
                                 ref={virtuosoRef}
                                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0
                                 }
-                                totalCount={displayGroups.length}
                                 itemContent={(index) => {
                                     const group = displayGroups[index] as TodoGroupProps;
                                     return (
@@ -681,6 +681,8 @@ const TodoEmpty = ({
     const { t } = useTranslation();
     return (
         <EmptyState
+            data-empty="todo"
+            icon={<CheckCircleOutlineRoundedIcon />}
             action={
                 !showIncompleteOnly && !showCompletedToday
                     ? {
@@ -697,8 +699,6 @@ const TodoEmpty = ({
                       ? t.chat.todoPane.incompleteEmptySubtitle
                       : t.chat.todoPane.emptySubtitle
             }
-            data-empty="todo"
-            icon={<CheckCircleOutlineRoundedIcon />}
             title={
                 showCompletedToday
                     ? t.chat.todoPane.completedTodayEmptyTitle

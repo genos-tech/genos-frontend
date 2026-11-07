@@ -1,5 +1,4 @@
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
-import { Button } from "@mui/joy";
 
 import { createEvent, deleteEvent, getEvent } from "../../features/integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
@@ -155,6 +154,8 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
 
         return (
             <Toast
+                duration={snackbar?.kind === "info" ? null : 5000}
+                open={snackbar !== null}
                 action={
                     snackbar?.needsGrant || snackbar?.needsReconnect
                         ? {
@@ -165,8 +166,6 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
                           }
                         : undefined
                 }
-                duration={snackbar?.kind === "info" ? null : 5000}
-                open={snackbar !== null}
                 tone={
                     snackbar?.kind === "error"
                         ? "danger"

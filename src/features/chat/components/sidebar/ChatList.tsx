@@ -8,7 +8,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import { Box, Button, List, Stack, Typography } from "@mui/joy";
+import { Box, List, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -262,6 +262,10 @@ export const EmptyState = ({
 
     return (
         <FeedbackEmptyState
+            body={t.chat.sidebar[resolvedSubtitleKey]}
+            data-empty="chat-list"
+            icon={<Icon />}
+            title={t.chat.sidebar[resolvedTitleKey]}
             action={
                 actionLabelKey && onAction
                     ? {
@@ -271,10 +275,6 @@ export const EmptyState = ({
                       }
                     : undefined
             }
-            body={t.chat.sidebar[resolvedSubtitleKey]}
-            data-empty="chat-list"
-            icon={<Icon />}
-            title={t.chat.sidebar[resolvedTitleKey]}
             fill
         />
     );
