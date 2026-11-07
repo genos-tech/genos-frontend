@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useRef } from "react";
-import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
+import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
@@ -11,7 +11,6 @@ import {
     CreateLinkButton,
     FormattingToolbar,
     FormattingToolbarController,
-    SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
 import { Box } from "@mui/joy";
@@ -26,12 +25,9 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { resolveInsecureFileUrl } from "../../utils/downloadUtils";
-import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { useGenosSchema } from "./genos/genosSchema";
-import { HashSuggestionMenuController } from "./HashMention";
-import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
+import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { codeFenceInputRule, getBlockTypeSelectItemsWithCodeBlock } from "./sub/codeBlockExtras";
 import { linkHostCaption } from "./sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "./sub/tabIndent";
@@ -160,30 +156,14 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                     )}
                 />
 
-                {/* "#" mentions: tasks / notes / GM chats / projects */}
-                <HashSuggestionMenuController editor={editor} />
-                {/* Adds a mentions menu which opens with the "@" key */}
-                <SuggestionMenuController
-                    suggestionMenuComponent={MentionSuggestionMenu}
-                    triggerCharacter={"@"}
-                    getItems={async (query) =>
-                        // Gets the mentions menu items
-                        filterAndRankSuggestionItems(
-                            MentionMenuItems(
-                                useTEM.teamMemberProfiles,
-                                editor,
-                                useTEM.teamMembers,
-                                myself.userId,
-                                mentionGroups
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                    minQueryLength={2}
-                    triggerCharacter={":"}
+                <GenosSuggestionMenus
+                    editor={editor}
+                    getMentionSources={() => ({
+                        teamMemberProfiles: useTEM.teamMemberProfiles,
+                        teamMembers: useTEM.teamMembers,
+                        myselfUserId: myself.userId,
+                        mentionGroups,
+                    })}
                 />
             </BlockNoteView>
         </Box>
