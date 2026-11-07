@@ -18,7 +18,9 @@ import { NAV_HOVER_MEDIA, NAV_ICON_SIZE, NAV_PAD_X, navFocusSx } from "./navStyl
  * Collapsible when it gets `expanded`: the whole heading is the toggle, the
  * chevron leads, and `aria-expanded` says which. `actions` (a filter menu, a
  * "+") sit beside it, never inside it: a button inside a button is invalid.
- * Plain when `expanded` is undefined: just a label (the chat dividers).
+ * Plain when `expanded` is undefined: just a label (the chat dividers). A plain
+ * header is not interactive, so `onClick`, `aria-*` and the other button props
+ * apply only to a collapsible one.
  */
 export type SectionHeaderProps = {
     label: ReactNode;

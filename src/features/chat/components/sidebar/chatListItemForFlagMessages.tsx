@@ -741,7 +741,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 selected={isSelected}
                 sx={{
                     mx: 1,
-                    my: 0.25,
                     height: "auto",
                     py: 0.75,
                     opacity: navigationDisabled ? 0.65 : 1,

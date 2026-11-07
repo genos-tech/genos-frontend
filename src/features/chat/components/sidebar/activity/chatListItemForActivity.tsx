@@ -730,7 +730,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 data-chat-list-key={`activity-${activity.activityId}`}
                 lines={2}
                 selected={isSelected}
-                sx={{ mx: 1, my: 0.25, height: "auto", py: 0.75 }}
+                sx={{ mx: 1, height: "auto", py: 0.75 }}
                 unread={activity.isRead === false}
                 onClick={onClickHandler}
             >

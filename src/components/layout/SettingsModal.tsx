@@ -184,6 +184,8 @@ const SIDEBAR_TAB_SX = {
     // the cross axis, where the tabs are fixed-height anyway — a no-op
     // there, and one value that a test can actually assert.
     flex: "0 0 auto",
+    // Joy's Tab has a 36px floor, which would hold the Compact density up.
+    minHeight: 0,
     whiteSpace: "nowrap",
     justifyContent: "flex-start",
     gap: 1,

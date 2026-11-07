@@ -115,6 +115,8 @@ export const NavItem = ({
     // keyboard route to a chevron that is a separate mouse target.
     const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
         onKeyDown?.(event as KeyboardEvent<HTMLDivElement>);
+        // Only for the row itself: arrows inside something it contains (an input) are theirs.
+        if (event.target !== event.currentTarget) return;
         if (event.defaultPrevented || !onToggleExpanded || !expandable) return;
         const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
         const open = rtl ? "ArrowLeft" : "ArrowRight";
@@ -143,20 +145,19 @@ export const NavItem = ({
                         position: "relative",
                         display: "flex",
                         alignItems: "center",
-                        ...(variant === "dashed" && {
-                            border: `1px dashed ${g.border.default}`,
-                            [NAV_HOVER_MEDIA]: {
+                        ...(variant === "dashed" && { border: `1px dashed ${g.border.default}` }),
+                        "&:focus-within .NavItem-actions > *": { opacity: 1 },
+                        // ONE hover key: a second `[NAV_HOVER_MEDIA]` would replace this one.
+                        [NAV_HOVER_MEDIA]: {
+                            "&:hover .NavItem-actions > *": { opacity: 1 },
+                            ...(variant === "dashed" && {
                                 "&:hover": {
                                     background: "transparent",
                                     borderColor: g.accent.border,
                                     color: g.accent.text,
                                     "--Icon-color": g.accent.text,
                                 },
-                            },
-                        }),
-                        "&:focus-within .NavItem-actions > *": { opacity: 1 },
-                        [NAV_HOVER_MEDIA]: {
-                            "&:hover .NavItem-actions > *": { opacity: 1 },
+                            }),
                         },
                     },
                     ...(Array.isArray(sx) ? sx : sx ? [sx] : []),

@@ -242,6 +242,18 @@ describe("NavItem", () => {
             expect(onToggleExpanded).toHaveBeenCalledTimes(1);
         });
 
+        it("ignores arrows that bubble up from something inside the row", () => {
+            const onToggleExpanded = vi.fn();
+            const { container } = mount({
+                expanded: false,
+                onToggleExpanded,
+                label: <input data-testid="inner" />,
+            });
+            expect(container.querySelector("input")).not.toBeNull();
+            fireEvent.keyDown(screen.getByTestId("inner"), { key: "ArrowRight" });
+            expect(onToggleExpanded).not.toHaveBeenCalled();
+        });
+
         it("keeps the caller's own onKeyDown", () => {
             const onKeyDown = vi.fn();
             mount({ onKeyDown });
@@ -260,9 +272,14 @@ describe("NavItem", () => {
         expect(screen.queryByRole("listitem")).toBeNull();
     });
 
-    it("dashed is an outline, not a fill", () => {
+    it("dashed is an outline, not a fill, and lights up to the accent on hover", () => {
         mount({ variant: "dashed" });
-        expect(cssOf(row())).toContain("1px dashed var(--g-border)");
+        const css = cssOf(row());
+        expect(css).toContain("1px dashed var(--g-border)");
+        // A second hover key in the style object would silently replace this one.
+        expect(css).toContain("border-color: var(--g-accent-border)");
+        // ...without losing the actions reveal that shares the same media query.
+        expect(css).toMatch(/:hover \.NavItem-actions\s*>\s*\*/);
     });
 
     it("renders under the RTL cache and mirrors the chevron", () => {

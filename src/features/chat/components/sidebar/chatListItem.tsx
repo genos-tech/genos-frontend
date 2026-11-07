@@ -109,7 +109,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                 lines={2}
                 selected={selected}
                 unread={Boolean(hasUnread)}
-                sx={{ mx: 1, my: 0.25 }}
+                sx={{ mx: 1 }}
                 icon={
                     <ChatListItemAvatar
                         chat={chat}
@@ -128,9 +128,6 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                 }
                 secondary={<ChatListItemMessage chat={chat} />}
                 trailing={<ChatListItemMeta chat={chat} />}
-                // A pinned chat keeps its pin showing: that is state, not just
-                // an action. Everything else appears on hover / focus / touch.
-                actionsVisible={isPinned || isToDoVisible}
                 actions={
                     <ChatListItemActions
                         chat={chat}
@@ -145,22 +142,29 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                         isToDoVisible={isToDoVisible}
                     />
                 }
-                onMouseEnter={() => {
-                    // Warm this channel's messages while the pointer is
-                    // still travelling to the click. A cold channel
-                    // otherwise blanks the pane for the whole sync
-                    // round-trip (see `channelPrefetch`). Delayed so
-                    // sweeping the cursor down the list doesn't fire a
-                    // sync per row it crosses.
-                    prefetchTimerRef.current = window.setTimeout(() => {
-                        prefetchChannel(chat.chatId);
-                    }, HOVER_PREFETCH_DELAY_MS);
-                }}
-                onMouseLeave={() => {
-                    if (prefetchTimerRef.current !== undefined) {
-                        clearTimeout(prefetchTimerRef.current);
-                        prefetchTimerRef.current = undefined;
-                    }
+                // On the row, not the row button: the actions beside it are part of
+                // the row, so moving onto them must not cancel the prefetch.
+                rootProps={{
+                    onMouseEnter: () => {
+                        // Warm this channel's messages while the pointer is
+                        // still travelling to the click. A cold channel
+                        // otherwise blanks the pane for the whole sync
+                        // round-trip (see `channelPrefetch`). Delayed so
+                        // sweeping the cursor down the list doesn't fire a
+                        // sync per row it crosses.
+                        if (prefetchTimerRef.current !== undefined) {
+                            clearTimeout(prefetchTimerRef.current);
+                        }
+                        prefetchTimerRef.current = window.setTimeout(() => {
+                            prefetchChannel(chat.chatId);
+                        }, HOVER_PREFETCH_DELAY_MS);
+                    },
+                    onMouseLeave: () => {
+                        if (prefetchTimerRef.current !== undefined) {
+                            clearTimeout(prefetchTimerRef.current);
+                            prefetchTimerRef.current = undefined;
+                        }
+                    },
                 }}
                 onClick={() => {
                     // See `handleSplitClick` — live read, not the

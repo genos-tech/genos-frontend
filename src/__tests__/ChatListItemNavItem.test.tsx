@@ -147,24 +147,26 @@ describe("ChatListItem on NavItem", () => {
         expect(button().contains(screen.getByTestId("meta"))).toBe(true);
     });
 
-    it("a pinned chat keeps its pin showing; an unpinned one reveals it on hover", () => {
-        mount({ isPinnedChat: true });
-        const slot = screen.getByRole("button", { name: "Pin chat" }).parentElement as Element;
-        // A pinned row's actions are never faded out.
-        expect(cssOf(slot)).not.toContain("opacity: 0");
-        cleanup();
-        mount();
-        const idle = screen.getByRole("button", { name: "Pin chat" }).parentElement as Element;
-        expect(cssOf(idle)).toContain("opacity: 0");
-    });
-
     describe("hover prefetch (chat-switch perf work)", () => {
+        it("moving from the row button onto its actions does not cancel the prefetch", () => {
+            vi.useFakeTimers();
+            mount();
+            fireEvent.mouseEnter(row());
+            // Pointer slides from the button to the pin beside it: still the row.
+            fireEvent.mouseOver(screen.getByRole("button", { name: "Pin chat" }));
+            act(() => {
+                vi.advanceTimersByTime(130);
+            });
+            expect(prefetchChannel).toHaveBeenCalledWith("c1");
+            vi.useRealTimers();
+        });
+
         beforeEach(() => vi.useFakeTimers());
         afterEach(() => vi.useRealTimers());
 
         it("warms the channel only once the hover has persisted", () => {
             mount();
-            fireEvent.mouseEnter(button());
+            fireEvent.mouseEnter(row());
             expect(prefetchChannel).not.toHaveBeenCalled();
             act(() => {
                 vi.advanceTimersByTime(130);
@@ -174,8 +176,8 @@ describe("ChatListItem on NavItem", () => {
 
         it("sweeping the cursor across the row does not prefetch", () => {
             mount();
-            fireEvent.mouseEnter(button());
-            fireEvent.mouseLeave(button());
+            fireEvent.mouseEnter(row());
+            fireEvent.mouseLeave(row());
             act(() => {
                 vi.advanceTimersByTime(500);
             });

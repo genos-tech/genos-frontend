@@ -19,6 +19,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -58,12 +59,13 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     const showManageTags = chat.chatType === 2 && onManageTagsClick;
 
     return (
-        <Stack alignItems="center" direction="row" spacing={0.25}>
+        <>
             {/* To-Do Button */}
             {chat.dmPartnerUser.userId === myself.userId &&
                 (isToDoVisible ? (
                     <AppTooltip size="sm" title={t.chat.listItem.backToChat}>
                         <IconButton
+                            className={NAV_KEEP_CLASS}
                             color="neutral"
                             component="a"
                             size="sm"
@@ -76,6 +78,8 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 ) : (
                     <AppTooltip size="sm" title={t.chat.listItem.openTodo}>
                         <Badge
+                            // The open to-do count is state, like a pin: it stays showing.
+                            className={incompleteTodoCount > 0 ? NAV_KEEP_CLASS : undefined}
                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             badgeContent={incompleteTodoCount}
                             color="primary"
@@ -101,6 +105,8 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 title={chat.isPinned ? t.chat.listItem.unpinChat : t.chat.listItem.pinChat}
             >
                 <IconButton
+                    // A pinned chat keeps its pin showing (state, not just an action).
+                    className={chat.isPinned ? NAV_KEEP_CLASS : undefined}
                     color={chat.isPinned ? "danger" : "neutral"}
                     component="a"
                     size="sm"
@@ -216,7 +222,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     )}
                 </Menu>
             </Dropdown>
-        </Stack>
+        </>
     );
 };
 
