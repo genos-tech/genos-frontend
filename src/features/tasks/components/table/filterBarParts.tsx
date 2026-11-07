@@ -18,7 +18,8 @@
 //  - Escape, Tab and clicking away close it (Dropdown reports `open: false`).
 
 import { forwardRef, type ReactNode } from "react";
-import { Dropdown, Menu, MenuItem, type MenuItemProps } from "@mui/joy";
+import { Chip, ChipDelete, Dropdown, Menu, MenuItem, type MenuItemProps } from "@mui/joy";
+import type { SxProps } from "@mui/joy/styles/types";
 
 import type { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 
@@ -44,14 +45,15 @@ export const FilterMenu = ({
     isDark,
     styles,
     minWidth,
-    maxHeight,
+    // Material's Menu defaulted to the viewport minus a margin.
+    maxHeight = "calc(100vh - 96px)",
     placement = "bottom-start",
     children,
 }: {
     isDark: boolean;
     styles: FilterBarStyles;
     minWidth: number | string;
-    maxHeight: number | string;
+    maxHeight?: number | string;
     placement?: "bottom-start" | "bottom-end";
     children: ReactNode;
 }) => (
@@ -91,3 +93,29 @@ export const FilterMenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function
         />
     );
 });
+
+/**
+ * The bar's small chip (a "+2" count on a button, a sprint's status in its row, the
+ * milestone scope pill). Material's `Chip` took a `label` prop and sized itself from
+ * the label's own padding; Joy's takes children and has a 24px minimum, so the
+ * callers' explicit `height` needs `minHeight: 0` to win.
+ */
+export const BarChip = ({
+    label,
+    onDelete,
+    sx,
+}: {
+    label: ReactNode;
+    onDelete?: () => void;
+    sx?: SxProps;
+}) => (
+    <Chip
+        color="neutral"
+        endDecorator={onDelete ? <ChipDelete onDelete={onDelete} /> : undefined}
+        size="sm"
+        sx={[{ minHeight: 0 }, ...(Array.isArray(sx) ? sx : [sx])]}
+        variant="soft"
+    >
+        {label}
+    </Chip>
+);
