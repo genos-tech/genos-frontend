@@ -41,7 +41,6 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     DefaultReactSuggestionItem,
@@ -49,19 +48,8 @@ import {
     useCreateBlockNote,
 } from "@blocknote/react";
 
-import { CreateCustomEmojiSpec } from "../../../components/editors/CustomEmoji";
-import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-} from "../../../components/editors/genosBlockSpecs";
-import { genosStyleSpecs } from "../../../components/editors/genosStyleSpecs";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "../../../components/editors/HashMention";
+import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
+import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
 import { linkHostCaption } from "../../../components/editors/sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS } from "../../../components/editors/sub/tabIndent";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
@@ -175,26 +163,14 @@ export function MessageComposerV3({
     // Build the schema once per (currentUserId, placeholder). The
     // mention spec captures currentUserId at creation time for the
     // self-highlight render branch.
-    const schema = useMemo(() => {
-        const { audio, video, ...remaining } = defaultBlockSpecs;
-        void audio;
-        void video;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
+    const schema = useMemo(
+        () =>
+            createGenosSchema({
                 mention: createMentionSpecV3(currentUserId),
                 mentionGroup: createMentionGroupSpecV3(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: { ...remaining, ...genosExtraBlockSpecs },
-        });
-    }, [currentUserId]);
+            }),
+        [currentUserId]
+    );
 
     const editor = useCreateBlockNote({
         ...TAB_INDENT_OPTIONS,
