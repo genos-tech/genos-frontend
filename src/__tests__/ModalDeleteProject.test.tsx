@@ -62,6 +62,18 @@ describe("errorMessageFrom", () => {
         expect(errorMessageFrom({ message: "m", error: "e" }, fb)).toBe("m");
         expect(errorMessageFrom({ error: "e" }, fb)).toBe("e");
     });
+    it("reads non_field_errors, a list, and the first readable field error", () => {
+        expect(errorMessageFrom({ non_field_errors: ["a", "b"] }, fb)).toBe("a");
+        expect(errorMessageFrom(["Cannot delete"], fb)).toBe("Cannot delete");
+        expect(errorMessageFrom({ project_id: ["Has active sprints"] }, fb)).toBe(
+            "Has active sprints"
+        );
+    });
+    it("keeps a message that merely starts with an angle bracket", () => {
+        expect(errorMessageFrom("<owner> must transfer ownership first", fb)).toBe(
+            "<owner> must transfer ownership first"
+        );
+    });
     it("falls back for anything that is not a usable string", () => {
         for (const bad of [
             undefined,
@@ -70,9 +82,12 @@ describe("errorMessageFrom", () => {
             "  ",
             42,
             {},
+            [],
+            [1, {}],
             { detail: { nested: 1 } },
-            ["a"],
+            { project_id: [{}] },
             "<html><body>502 Bad Gateway</body></html>",
+            "<!DOCTYPE html><title>x</title>",
         ]) {
             expect(errorMessageFrom(bad, fb)).toBe(fb);
         }
@@ -90,7 +105,7 @@ describe("ModalDeleteProject failures", () => {
     });
 
     it("shows the fallback for an object it cannot read", async () => {
-        rejectWith(400, { project_id: ["bad"] });
+        rejectWith(400, { project_id: [{ code: 1 }] });
         mount();
         confirm();
         await waitFor(() =>
