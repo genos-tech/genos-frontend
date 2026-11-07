@@ -6,6 +6,7 @@ import type { SxProps } from "@mui/joy/styles/types";
 
 import { g, type } from "../../../theme/tokens";
 import {
+    NAV_HIDE_ON_ACTIONS_CLASS,
     NAV_HOVER_MEDIA,
     NAV_ICON_SIZE,
     NAV_KEEP_CLASS,
@@ -48,6 +49,11 @@ export type NavItemProps = {
     /** Row actions. Hidden until hover or keyboard focus on a pointer device,
      *  always shown on touch. Rendered beside the row button, not in it. */
     actions?: ReactNode;
+    /** Actions take NO room until they show, and replace the content marked
+     *  `NAV_HIDE_ON_ACTIONS_CLASS` (a timestamp) while they do: no empty
+     *  column at rest, the same width either way. An action with
+     *  `NAV_KEEP_CLASS` (a lit pin) shows at rest too, beside what stays. */
+    actionsInPlace?: boolean;
     /** Keep `actions` shown: a menu is open. (An action that carries state, a
      *  lit star or a pin, stays visible by itself: give it `NAV_KEEP_CLASS`.) */
     actionsVisible?: boolean;
@@ -81,6 +87,11 @@ export type NavItemProps = {
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
+// `actionsInPlace`: a hidden action leaves the layout (absolute, invisible, not
+// clickable) but stays focusable; showing it puts it back in the flow.
+const ACTION_OUT_OF_FLOW = { position: "absolute", pointerEvents: "none" } as const;
+const ACTION_IN_FLOW = { position: "static", pointerEvents: "auto" } as const;
+
 export const NavItem = ({
     label,
     children,
@@ -90,6 +101,7 @@ export const NavItem = ({
     trailing,
     actions,
     actionsVisible = false,
+    actionsInPlace = false,
     selected = false,
     unread = false,
     indent,
@@ -147,9 +159,23 @@ export const NavItem = ({
                         alignItems: "center",
                         ...(variant === "dashed" && { border: `1px dashed ${g.border.default}` }),
                         "&:focus-within .NavItem-actions > *": { opacity: 1 },
+                        ...(actionsInPlace && {
+                            "&:focus-within .NavItem-actions > *": {
+                                opacity: 1,
+                                ...ACTION_IN_FLOW,
+                            },
+                            [`&:focus-within .${NAV_HIDE_ON_ACTIONS_CLASS}`]: { display: "none" },
+                        }),
                         // ONE hover key: a second `[NAV_HOVER_MEDIA]` would replace this one.
                         [NAV_HOVER_MEDIA]: {
                             "&:hover .NavItem-actions > *": { opacity: 1 },
+                            ...(actionsInPlace && {
+                                "&:hover .NavItem-actions > *": {
+                                    opacity: 1,
+                                    ...ACTION_IN_FLOW,
+                                },
+                                [`&:hover .${NAV_HIDE_ON_ACTIONS_CLASS}`]: { display: "none" },
+                            }),
                             ...(variant === "dashed" && {
                                 "&:hover": {
                                     background: "transparent",
@@ -201,7 +227,7 @@ export const NavItem = ({
                     m: 0,
                     paddingBlock: 0,
                     paddingInlineStart: `calc(${NAV_PAD_X}px + ${navIndentLength(indent)})`,
-                    paddingInlineEnd: hasActions ? 0 : `${NAV_PAD_X}px`,
+                    paddingInlineEnd: hasActions && !actionsInPlace ? 0 : `${NAV_PAD_X}px`,
                     gap: 1,
                     borderRadius: "inherit",
                     background: "transparent",
@@ -380,9 +406,23 @@ export const NavItem = ({
                         [`& > *:not(.${NAV_KEEP_CLASS})`]: {
                             opacity: actionsVisible ? 1 : 0,
                             transition: `opacity ${g.motion.fast} ${g.ease}`,
+                            // In place: no room while hidden, but still in the tab order
+                            // (a `display: none` button cannot be focused, and focus is
+                            // what reveals it for a keyboard user).
+                            ...(actionsInPlace &&
+                                (actionsVisible ? ACTION_IN_FLOW : ACTION_OUT_OF_FLOW)),
                         },
+                        ...(actionsInPlace &&
+                            actionsVisible && {
+                                [`.${NAV_HIDE_ON_ACTIONS_CLASS}`]: { display: "none" },
+                            }),
                         // No hover to reveal them on touch.
-                        "@media (hover: none)": { "& > *": { opacity: 1 } },
+                        "@media (hover: none)": {
+                            "& > *": {
+                                opacity: 1,
+                                ...(actionsInPlace && ACTION_IN_FLOW),
+                            },
+                        },
                     }}
                 >
                     {actions}
