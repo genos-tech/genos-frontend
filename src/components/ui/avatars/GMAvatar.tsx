@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
-import { Avatar, Box } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
@@ -11,6 +11,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { useGMProfileImageVersion } from "../../../utils/gmProfileImageVersion";
+import { BaseAvatar } from "./BaseAvatar";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -66,9 +67,9 @@ export const GMAvatar = (props: GMAvatarProps) => {
                 width={_avatarSize}
                 onClick={() => setOpenModalGMProfile(true)}
             >
-                <Avatar size="sm" src={avatarSrc} sx={{ width: _avatarSize, height: _avatarSize }}>
-                    <GroupsIcon sx={{ fontSize: 26 }} />
-                </Avatar>
+                <BaseAvatar size={_avatarSize} src={avatarSrc}>
+                    <GroupsIcon />
+                </BaseAvatar>
             </Box>
 
             <ModalGMProfile

@@ -4,6 +4,7 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ThreadProps } from "../../../types/chat";
+import { initialOf } from "../../../utils/initials";
 import { UserAvatar } from "./UserAvatar";
 
 // Backwards-compat prop surface. The legacy `myself`, `setMyself`, `useCM`,
@@ -50,12 +51,12 @@ const resolveFallbackInitial = (
     if (chat) {
         if (chat.chatType === 1) return undefined;
         const ch = chat.chatName?.trim();
-        return ch ? ch.charAt(0).toUpperCase() : undefined;
+        return ch ? initialOf(ch) : undefined;
     }
     if (thread) {
         if (thread.chatType === 1) return undefined;
         const th = thread.chatName?.trim();
-        return th ? th.charAt(0).toUpperCase() : undefined;
+        return th ? initialOf(th) : undefined;
     }
     return undefined;
 };

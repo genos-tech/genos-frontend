@@ -1,12 +1,14 @@
 import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import { Avatar, Box } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
+import { initialOf } from "../../../utils/initials";
 import { PulseDot } from "../misc/PulseDot";
+import { BaseAvatar } from "./BaseAvatar";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -39,10 +41,9 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
 
     if (!members || members.length === 0) {
         return (
-            <Avatar
-                size={size}
+            <BaseAvatar
+                size={avatarSize ?? (size === "sm" ? "md" : "lg")}
                 sx={{
-                    ...(avatarSize ? { width: avatarSize, height: avatarSize } : {}),
                     background: isDark
                         ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%)"
                         : "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)",
@@ -60,7 +61,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                         color: isDark ? "#60a5fa" : "#3b82f6",
                     }}
                 />
-            </Avatar>
+            </BaseAvatar>
         );
     }
 
@@ -103,14 +104,12 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                             height: miniSize,
                         }}
                     >
-                        <Avatar
-                            size="sm"
+                        <BaseAvatar
+                            size={miniSize}
                             src={imgSrc}
                             sx={{
-                                width: miniSize,
-                                height: miniSize,
                                 fontSize: 10,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 border: "1.5px solid",
                                 borderColor: isDark
                                     ? "var(--joy-palette-background-surface)"
@@ -123,8 +122,8 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                                     : `hsl(${(index * 90 + 200) % 360}, 60%, 40%)`,
                             }}
                         >
-                            {member.userName?.[0]?.toUpperCase() || "?"}
-                        </Avatar>
+                            {initialOf(member.userName)}
+                        </BaseAvatar>
                         {teamMemberProfiles && (
                             <Box
                                 sx={{

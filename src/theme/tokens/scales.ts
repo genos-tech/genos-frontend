@@ -66,6 +66,23 @@ export const CONTROL = { sm: 28, md: 32, lg: 36 } as const;
 /** Row heights for lists and tables. The tasks table is 53px today. */
 export const ROW = { compact: 32, default: 36, comfortable: 44 } as const;
 
+/** Avatar diameters in px. One scale for every avatar in the app
+ *  (`BaseAvatar`, `UserAvatar`): chat/task rows use sm or md, headers lg,
+ *  profile cards xl to display. A size that isn't here means the scale needs a
+ *  step, not that the call site needs a literal. */
+export const AVATAR = {
+    xs: 20,
+    sm: 24,
+    md: 32,
+    lg: 40,
+    xl: 64,
+    xxl: 96,
+    hero: 150,
+    display: 180,
+} as const;
+
+export type AvatarSize = keyof typeof AVATAR;
+
 export const MOTION = {
     fast: "120ms", // hover, press, toggles
     base: "180ms", // menus, popovers, tabs
