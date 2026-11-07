@@ -66,8 +66,12 @@ describe("NavItem", () => {
     it("selected is the accent tint, never a gradient or a literal colour", () => {
         mount({ selected: true });
         const css = cssOf(row());
-        expect(css).toContain("var(--g-accent-subtle)");
-        expect(css).toContain("var(--g-accent-text)");
+        // The selected rule itself (not its hover twin) paints the tint.
+        const selectedRule = css
+            .split("\n")
+            .find((r) => r.includes('[data-selected="true"]') && !r.includes(":hover"));
+        expect(selectedRule).toContain("background: var(--g-accent-subtle)");
+        expect(selectedRule).toContain("color: var(--g-accent-text)");
         expect(css).not.toMatch(/gradient|#[0-9a-f]{3,8}\b|rgba?\(\s*\d/i);
     });
 
