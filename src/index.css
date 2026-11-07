@@ -221,9 +221,16 @@
         border-color: var(--color-button-border-hover);
     }
 
-    button:focus,
+    /* The keyboard focus ring (focusRing in src/theme/tokens), and only for
+       the keyboard: the Vite template's `button:focus { outline: 4px auto }`
+       ringed every button on a mouse click too. */
+    button:focus:not(:focus-visible) {
+        outline: none;
+    }
+
     button:focus-visible {
-        outline: 4px auto -webkit-focus-ring-color;
+        outline: 2px solid var(--g-focus);
+        outline-offset: 2px;
     }
 
     @media (prefers-color-scheme: light) {

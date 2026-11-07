@@ -828,12 +828,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     kind: "delete",
                                     label: t.tasks.titleBlock.menu.deleteTask,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
-                                    // ModalDeleteTask sits at z 10010 — BELOW
-                                    // the UrlLinkModal (10020) — so inside the
-                                    // modal the confirm dialog would open
-                                    // invisibly behind the preview.
-                                    visible:
-                                        taskContent.status.status !== "Closed" && !isModalHosted,
+                                    // Offered in a modal-hosted preview too:
+                                    // ModalDeleteTask lifts itself above the host
+                                    // (`hostZIndex` below).
+                                    visible: taskContent.status.status !== "Closed",
                                     danger: true,
                                     onClick: () => {
                                         setOpenDeleteTask(true);
@@ -1017,6 +1015,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
             <ModalDeleteTask
                 currentTaskContent={taskContent}
+                hostZIndex={hostZIndex}
                 openDeleteTask={openDeleteTask}
                 setCurrentTaskContent={setTaskContent}
                 setOpenDeleteTask={setOpenDeleteTask}
