@@ -3,15 +3,7 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
-import {
-    BlockNoteSchema,
-    createCodeBlockSpec,
-    defaultBlockSpecs,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    PartialBlock,
-} from "@blocknote/core";
+import { filterSuggestionItems, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
@@ -69,29 +61,13 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { CreateCustomEmojiSpec, insertEmojiValue } from "./CustomEmoji";
+import { insertEmojiValue } from "./CustomEmoji";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import {
-    genosExtraBlockSpecs,
-    genosExtraInlineContentSpecs,
-    withGenosBlockSlashItems,
-} from "./genosBlockSpecs";
-import { genosStyleSpecs } from "./genosStyleSpecs";
+import { useGenosSchema } from "./genos/genosSchema";
+import { withGenosBlockSlashItems } from "./genosBlockSpecs";
 import { GifToolbarButton, withGifSlashItem } from "./GifToolbarButton";
-import {
-    CreateHashChatSpec,
-    CreateHashNoteSpec,
-    CreateHashProjectSpec,
-    CreateHashTaskSpec,
-    HashSuggestionMenuController,
-} from "./HashMention";
-import {
-    CreateMentionGroupSpec,
-    CreateMentionSpec,
-    MentionMenuItems,
-    MentionSuggestionMenu,
-} from "./Mention";
-import { Alert } from "./sub/Alert";
+import { HashSuggestionMenuController } from "./HashMention";
+import { MentionMenuItems, MentionSuggestionMenu } from "./Mention";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
 import { codeFenceInputRule, getBlockTypeSelectItemsForDocuments } from "./sub/codeBlockExtras";
 import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
@@ -178,44 +154,17 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     // the live editor only reads it at (re)build time, and this component
     // re-renders on every parent update. Deps are exactly the values
     // `CreateMentionSpec` closes over.
-    const schema = useMemo(() => {
-        // Disable the Audio and Video blocks from the built-in schema
-        // This is done by picking out the blocks you want to disable
-        const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
-        return BlockNoteSchema.create({
-            styleSpecs: genosStyleSpecs,
-            inlineContentSpecs: {
-                // Adds all default inline content.
-                ...defaultInlineContentSpecs,
-                ...genosExtraInlineContentSpecs,
-                // Adds the mention tag.
-                mention: CreateMentionSpec(
-                    useTEM.teamMemberProfiles,
-                    socket,
-                    myself,
-                    setMyself,
-                    useUISM,
-                    useCM
-                ),
-                mentionGroup: CreateMentionGroupSpec(),
-                customEmoji: CreateCustomEmojiSpec(),
-                hashTask: CreateHashTaskSpec(),
-                hashNote: CreateHashNoteSpec(),
-                hashChat: CreateHashChatSpec(),
-                hashProject: CreateHashProjectSpec(),
-            },
-            blockSpecs: {
-                ...remainingBlockSpecs,
-                ...genosExtraBlockSpecs,
-                // BlockNote 0.49 moved the code-block options out of
-                // `useCreateBlockNote` and into the schema. We override
-                // the default plain-text codeBlock with the syntax-
-                // highlighted one shipped by `@blocknote/code-block`.
-                codeBlock: createCodeBlockSpec(codeBlockOptions),
-                alert: Alert(),
-            },
-        });
-    }, [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]);
+    const schema = useGenosSchema(
+        {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
+        "live"
+    );
 
     // Mention-capable schema for the inline body-COMMENT editors (composer,
     // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
