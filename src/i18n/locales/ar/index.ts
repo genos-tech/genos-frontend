@@ -2726,7 +2726,7 @@ export const ar: DeepPartial<Messages> = {
             renameFolder: "إعادة تسمية المجلد",
             deleteFolder: "حذف المجلد",
             moveToFolder: "نقل إلى مجلد",
-            moveActions: "إجراءات المعلم",
+            moveActions: "إجراءات المَعلَم",
             folderActions: "إجراءات المجلد",
             namePlaceholder: "اسم المجلد",
             createTitle: "مجلد جديد",
