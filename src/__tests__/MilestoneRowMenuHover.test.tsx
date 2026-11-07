@@ -180,7 +180,11 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
         expect(touch).toContain("--ms-menu-bg: transparent");
         expect(touch).toContain("--ms-menu-fade: none");
         const compact = rulesMatching("@container ms-list (max-width: 299px)").join(" ");
-        expect(compact).toMatch(/--ms-menu-bg: var\(--joy-palette-neutral-plainHoverBg/);
+        // Opaque: the hover tint laid over the sidebar surface. Joy's own
+        // `neutral.plainHoverBg` is translucent, and the star and "..." showed the
+        // title through it (MIP-1156).
+        expect(compact).toMatch(/--ms-menu-bg: color-mix\(in srgb,\s*var\(--g-bg-subtle\)/);
+        expect(compact).not.toContain("plainHoverBg");
         expect(compact).toContain("--ms-menu-fade: -10px 0 8px 0");
         const list = document.querySelector("ul") as HTMLElement;
         expect(list.getAttribute("class")).toBeTruthy();

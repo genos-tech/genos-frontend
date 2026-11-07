@@ -136,7 +136,10 @@ describe("the Favorites folder", () => {
         expect(titles).toEqual(["favorite-milestone-2", "favorite-milestone-1"]);
         const row = screen.getByTestId("favorite-milestone-2");
         expect(within(row).getByText("Beta")).toBeTruthy();
-        expect(within(row).getByText("WIP")).toBeTruthy();
+        // The status is the icon with its name (the same as in Recents), not the word:
+        // MIP-1157, the two lists drew the same status differently.
+        expect(within(row).getByRole("img", { name: "WIP" })).toBeTruthy();
+        expect(within(row).queryByText("WIP")).toBeNull();
     });
 
     it("hides a favorite whose project this sidebar does not list", () => {
@@ -154,7 +157,7 @@ describe("the Favorites folder", () => {
         });
         expect(screen.getByText("New name")).toBeTruthy();
         expect(screen.queryByText("Old name")).toBeNull();
-        expect(screen.getByText("Closed")).toBeTruthy();
+        expect(screen.getByRole("img", { name: "Closed" })).toBeTruthy();
     });
 
     it("a click in the open project opens the preview and scopes the table to it", () => {
