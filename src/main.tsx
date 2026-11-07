@@ -48,6 +48,7 @@ const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
 const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
+const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
 
 // Initialize PostHog once, before React mounts. No-ops when
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
@@ -150,6 +151,12 @@ const tree = (
                 customer portal's privacy link and the landing footer. */}
             <Route element={publicPage(GenosDevelopersPage)} path="/developers" />
             <Route element={publicPage(GenosPrivacyPage)} path="/privacy" />
+
+            {/* Support — how to reach us and how to disconnect a connected AI
+                app. Public and auth-free like /legal and /privacy; holds its
+                own ja + en copy. (There is no /terms route: the terms are an
+                unpublished draft.) */}
+            <Route element={publicPage(GenosSupportPage)} path="/support" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

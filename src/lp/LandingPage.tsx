@@ -234,6 +234,7 @@ const copy = {
             legal: "特定商取引法に基づく表記",
             privacy: "プライバシーポリシー",
             developers: "開発者向け API",
+            support: "サポート",
             blog: "ブログ",
         },
     },
@@ -436,6 +437,7 @@ const copy = {
             legal: "Legal Notice",
             privacy: "Privacy Policy",
             developers: "Developers",
+            support: "Support",
             blog: "Blog",
         },
     },
@@ -1435,6 +1437,12 @@ export default function GenosLandingPage() {
                                 to="/developers"
                             >
                                 {t.footer.developers}
+                            </Link>
+                            <Link
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                to="/support"
+                            >
+                                {t.footer.support}
                             </Link>
                             <a
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"
