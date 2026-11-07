@@ -213,7 +213,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             }}
                             noWrap
                         >
-                            {isYou ? `${dmDisplayName} (you)` : dmDisplayName}
+                            {isYou
+                                ? `${dmDisplayName} ${t.chat.sidebar.youSuffix}`
+                                : dmDisplayName}
                         </Typography>
                     )}
 

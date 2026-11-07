@@ -91,7 +91,8 @@ export const defaultColumns: ColumnDef[] = [
         field: "id",
         headerName: "ID",
         headerLabelKey: "id",
-        width: 100,
+        // Wide enough for "MIP-1150" + the open icon on one line (it wrapped at 100).
+        width: 124,
         align: "center",
         resizable: false,
     },
@@ -171,8 +172,9 @@ export const defaultColumns: ColumnDef[] = [
         field: "effortLevel",
         headerName: "Effort Level",
         headerLabelKey: "effortLevel",
-        width: 100,
-        minWidth: 80,
+        // Room for the colored chip ("Extensive" with its dot) without cutting it.
+        width: 124,
+        minWidth: 100,
         align: "center",
         editable: true,
         resizable: true,
@@ -334,7 +336,7 @@ const getTableHeaderStyles = (mode: "light" | "dark" | undefined): React.CSSProp
     borderBottom:
         mode === "dark" ? "2px solid rgba(255, 255, 255, 0.08)" : "2px solid rgba(0, 0, 0, 0.08)",
     fontWeight: 600,
-    fontSize: "0.7rem",
+    fontSize: "0.75rem",
     textTransform: "uppercase" as const,
     letterSpacing: "0.5px",
 });
@@ -1628,7 +1630,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     open={isColumnSettingsOpen}
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
-                <div
+                <Box
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     style={{
                         ...getTableContainerStyles(mode),
@@ -1637,6 +1639,25 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         width: "100%",
                         backgroundColor: mode === "dark" ? "#0a0a14" : "#ffffff",
                         cursor: resizingColumn ? "col-resize" : "auto",
+                    }}
+                    // Everything in the table is one step larger than the app's small text
+                    // (13 → 14px, 12 → 13px; MIP-1175). Shared pieces read the tokens (status,
+                    // priority, tags, chips); Joy's `body-sm` / `body-xs` levels are fixed rem,
+                    // so they are matched here. Scoped to the table: the filter bar above and
+                    // the rest of the app keep the normal scale.
+                    sx={{
+                        "--g-type-body-sm-size": "14px",
+                        "--g-type-body-sm-line": "20px",
+                        "--g-type-body-xs-size": "13px",
+                        "--g-type-body-xs-line": "18px",
+                        // The tag chip's own size (ProjectTagChip keeps 0.7rem elsewhere).
+                        "--table-tag-size": "0.8125rem",
+                        "& .MuiTypography-root.MuiTypography-body-sm": {
+                            fontSize: "var(--g-type-body-sm-size)",
+                        },
+                        "& .MuiTypography-root.MuiTypography-body-xs": {
+                            fontSize: "var(--g-type-body-xs-size)",
+                        },
                     }}
                 >
                     {/* Table Header */}
@@ -1871,7 +1892,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     level="body-md"
                                     sx={{ fontWeight: 500, color: "inherit" }}
                                 >
-                                    Waiting to load tasks...
+                                    {t.tasks.table.loadingTasks}
                                 </Typography>
                             </Box>
                         ) : (
@@ -1890,17 +1911,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     level="body-lg"
                                     sx={{ fontWeight: 500, color: "inherit" }}
                                 >
-                                    No tasks to display
+                                    {t.tasks.table.emptyTitle}
                                 </Typography>
                                 <Typography
                                     level="body-sm"
                                     sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
                                 >
-                                    Try adjusting your filters
+                                    {t.tasks.table.emptyHint}
                                 </Typography>
                             </Box>
                         ))}
-                </div>
+                </Box>
             </div>
 
             {/* Shared task-graph modal for the per-row gutter trigger.

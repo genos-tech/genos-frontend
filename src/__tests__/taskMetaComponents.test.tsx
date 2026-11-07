@@ -225,8 +225,11 @@ describe("Tag", () => {
         const light = render(<ProjectTagChip isDark={false} label="bug" tagColor="#ef4444" />);
         const dark = render(<ProjectTagChip label="bug" tagColor="#ef4444" isDark />);
         expect(dark.container.innerHTML).toBe(light.container.innerHTML);
-        // ...at the 0.7rem it always had: the table's tag column is narrow.
-        const bare = render(<Tag color="#ef4444" fontSize="0.7rem" label="bug" />);
+        // ...at the 0.7rem it always had (the table's tag column is narrow), unless a surface
+        // sets --table-tag-size: the task table does (MIP-1175).
+        const bare = render(
+            <Tag color="#ef4444" fontSize="var(--table-tag-size, 0.7rem)" label="bug" />
+        );
         expect(light.container.innerHTML).toBe(bare.container.innerHTML);
     });
 });

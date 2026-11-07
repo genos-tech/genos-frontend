@@ -27,7 +27,8 @@ import {
     statusSelectNode,
     TagAutocomplete,
 } from "./cellEditors";
-import { depthRowLeftBorder, getTableCellStyles } from "./DraggableTaskRow";
+import { depthRowLeftBorder } from "./depthTone";
+import { getTableCellStyles } from "./DraggableTaskRow";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
 export type { QuickAddDraft };

@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
@@ -36,6 +37,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     useCM,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // The activity payload's `chatName` is frozen when the row is adapted
@@ -112,7 +114,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                         noWrap
                     >
                         {activity.chatType === 1 && isYou
-                            ? `${resolvedChatName} (you)`
+                            ? `${resolvedChatName} ${t.chat.sidebar.youSuffix}`
                             : resolvedChatName}
                     </Typography>
                 )}

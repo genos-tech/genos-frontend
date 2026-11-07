@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -46,7 +45,6 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { MultiMemberPicker } from "../../autocompletes/MultiMemberPicker";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
-import { ModalManageTags } from "../../modals/ModalManageTags";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
@@ -132,7 +130,6 @@ type TaskMainBlockProps = {
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     projectTags: TagListProps[];
-    setProjectTags: (tags: TagListProps[]) => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     assignee: UserProps | null;
@@ -189,7 +186,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         taskContent,
         setTaskContent,
         projectTags,
-        setProjectTags,
         myself,
         setMyself,
         assignee,
@@ -230,7 +226,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // lock is a task under an ordinary task: its parent is what to move.
     const projectLockHint = t.tasks.tooltips.subTaskProjectLocked;
 
-    const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
     // Start date is collapsed by default — the user opts in via the `+`
     // affordance in the Due Date row. Reset when switching tasks so each
@@ -783,38 +778,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     taskContent={taskContent}
                                 />
                             </Box>
-                            {/* Create/Manage sit AFTER the autocomplete so
-                                they read as actions on it, and never
-                                shrink away. */}
-                            <AppTooltip title={t.tasks.tooltips.createNewTag}>
-                                <IconButton
-                                    size="sm"
-                                    sx={{ ...subtleIconButtonSx(isDark), flexShrink: 0, ml: 0.5 }}
-                                    variant="plain"
-                                    onClick={() => useTM.setOpenCreateTag(true)}
-                                >
-                                    <AddRoundedIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            </AppTooltip>
-                            <AppTooltip title={t.tasks.tooltips.manageTags}>
-                                <IconButton
-                                    size="sm"
-                                    sx={{ ...subtleIconButtonSx(isDark), flexShrink: 0 }}
-                                    variant="plain"
-                                    onClick={() => setOpenManageTags(true)}
-                                >
-                                    <SettingsRoundedIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                            </AppTooltip>
-                            <ModalManageTags
-                                myself={myself}
-                                open={openManageTags}
-                                projectTags={projectTags}
-                                setProjectTags={setProjectTags}
-                                usePM={usePM}
-                                useTM={useTM}
-                                onClose={() => setOpenManageTags(false)}
-                            />
                         </ListItem>
                     </Grid>
                 </Grid>

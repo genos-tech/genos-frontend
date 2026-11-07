@@ -1324,7 +1324,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 setIsOpenTagList={setIsOpenTagList}
                                 setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                                 setMyself={setMyself}
-                                setProjectTags={setProjectTags}
                                 setReporter={setReporter}
                                 setTaskContent={setTaskContent}
                                 socket={socket}

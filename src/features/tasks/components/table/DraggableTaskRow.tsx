@@ -59,13 +59,8 @@ import {
     statusSelectNode,
     TagAutocomplete,
 } from "./cellEditors";
+import { depthRowBackground, depthRowLeftBorder } from "./depthTone";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
-
-// A nested row is told apart by its indent and a quiet guide on its left edge, not by
-// a colored background per depth (blue, teal, amber: MIP-1123). Exported so the
-// QuickAddTaskRow draft row renders the same chrome as real rows.
-export const depthRowLeftBorder = (rowDepth: number): string =>
-    rowDepth > 0 ? `3px solid ${g.border.default}` : "3px solid transparent";
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
@@ -88,7 +83,7 @@ const getTableRowStyles = (
     // A min-height, so a row whose tags wrap still grows.
     minHeight: g.row.current,
     borderBottom: isDragging ? "none" : `1px solid ${g.border.subtle}`,
-    backgroundColor: isDragging || isSelected ? g.accent.subtle : "transparent",
+    backgroundColor: isDragging || isSelected ? g.accent.subtle : depthRowBackground(rowDepth),
     borderLeft: isSelected ? `3px solid ${g.accent.solid}` : depthRowLeftBorder(rowDepth),
     boxShadow: isDragging ? g.shadow.lg : "none",
     borderRadius: isDragging ? 6 : 0,
@@ -382,7 +377,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     };
 
     const emptyCellPlaceholder = (
-        <Typography sx={{ fontSize: "0.72rem", color: g.text.tertiary }}>-</Typography>
+        <Typography sx={{ fontSize: "var(--g-type-body-xs-size)", color: g.text.tertiary }}>
+            -
+        </Typography>
     );
 
     // One cell of a `cf_<id>` column. Editing mirrors the built-in
@@ -525,7 +522,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     "--Avatar-size": "24px",
                                     bgcolor: g.bg.subtle,
                                     color: g.text.tertiary,
-                                    fontSize: "0.7rem",
+                                    fontSize: "var(--g-type-body-xs-size)",
                                 }}
                             >
                                 ?
@@ -534,7 +531,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     </Box>
                     <Box sx={{ overflow: "hidden" }}>
                         <Typography
-                            level="body-xs"
+                            level="body-sm"
                             sx={{
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -645,7 +642,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         <Typography
                             level="body-sm"
                             sx={{
-                                fontSize: "0.8rem",
+                                fontSize: "var(--g-type-body-sm-size)",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
@@ -717,6 +714,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             minHeight: 0,
                             height: 24,
                             px: 0.75,
+                            // One line, whatever the key's length (it wrapped, MIP-1175).
+                            whiteSpace: "nowrap",
                             "&:hover": { backgroundColor: g.hover, color: g.accent.text },
                         }}
                         onClick={(e) => {
@@ -844,7 +843,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {tags.length === 0 ? (
                             <Typography
                                 sx={{
-                                    fontSize: "0.72rem",
+                                    fontSize: "var(--g-type-body-xs-size)",
                                     color: g.text.tertiary,
                                 }}
                             >
@@ -991,7 +990,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         "--Avatar-size": "24px",
                                         bgcolor: g.bg.subtle,
                                         color: g.text.tertiary,
-                                        fontSize: "0.7rem",
+                                        fontSize: "var(--g-type-body-xs-size)",
                                     }}
                                 >
                                     ?
@@ -1000,7 +999,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         </Box>
                         <Box sx={{ overflow: "hidden" }}>
                             <Typography
-                                level="body-xs"
+                                level="body-sm"
                                 sx={{
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -1120,6 +1119,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "6px",
                                 minWidth: 30,
+                                // A one-digit weight sat at the left of its 30px chip.
+                                justifyContent: "center",
                             }}
                         />
                     </AppTooltip>
@@ -1234,7 +1235,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             sx={{
                                 color: g.text.tertiary,
                                 fontStyle: "italic",
-                                fontSize: "0.8rem",
+                                fontSize: "var(--g-type-body-sm-size)",
                             }}
                         >
                             —
@@ -1272,7 +1273,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         level="body-sm"
                         sx={{
                             color: g.text.tertiary,
-                            fontSize: "0.8rem",
+                            fontSize: "var(--g-type-body-sm-size)",
                         }}
                     >
                         {task.updatedAt ? dayjs(task.updatedAt).format("YYYY-MM-DD HH:mm") : "-"}
@@ -1285,7 +1286,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         level="body-sm"
                         sx={{
                             color: g.text.tertiary,
-                            fontSize: "0.8rem",
+                            fontSize: "var(--g-type-body-sm-size)",
                         }}
                     >
                         {task.createdDate ? dayjs(task.createdDate).format("YYYY-MM-DD") : "-"}
@@ -1466,7 +1467,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     borderRadius: "8px",
                                     background: `linear-gradient(135deg, ${accent} 0%, ${accentHot} 100%)`,
                                     color: "#fff",
-                                    fontSize: "0.7rem",
+                                    fontSize: "var(--g-type-body-xs-size)",
                                     fontWeight: 700,
                                     letterSpacing: "0.04em",
                                     textTransform: "uppercase",

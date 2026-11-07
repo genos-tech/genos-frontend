@@ -589,7 +589,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     }}
                     noWrap
                 >
-                    {isYou ? `${resolvedChatName} (you)` : resolvedChatName}
+                    {isYou ? `${resolvedChatName} ${t.chat.sidebar.youSuffix}` : resolvedChatName}
                 </Typography>
             );
         }

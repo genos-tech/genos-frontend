@@ -46,7 +46,9 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
             {mediaKind ? (
                 t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
             ) : (
-                <EmojiText text={chat.latestMessageText} />
+                <bdi className="g-bidi-island">
+                    <EmojiText text={chat.latestMessageText} />
+                </bdi>
             )}
         </Box>
     );

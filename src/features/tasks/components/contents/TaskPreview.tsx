@@ -942,7 +942,6 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                     setIsOpenTagList={setIsOpenTagList}
                                     setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                                     setMyself={setMyself}
-                                    setProjectTags={setProjectTags}
                                     setReporter={setReporter}
                                     setTaskContent={taskEditState.setTmpCurrentTaskContent}
                                     setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
@@ -2460,12 +2459,12 @@ const MilestonePreviewInner = ({
                                     },
                                 },
                                 {
-                                    id: "newTag",
-                                    kind: "newTag",
-                                    label: t.tasks.preview.menu.newTag,
+                                    id: "manageTags",
+                                    kind: "tags",
+                                    label: t.tasks.preview.menu.manageTags,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
-                                        useTM.setOpenCreateTag(true);
+                                        useTM.setOpenManageTags(true);
                                     },
                                 },
                                 {
@@ -2723,7 +2722,6 @@ const MilestonePreviewInner = ({
                             setIsOpenTagList={setIsOpenTagList}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
-                            setProjectTags={setProjectTags}
                             setReporter={setReporter}
                             setTaskUpdated={setTaskUpdated}
                             socket={socket}

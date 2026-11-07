@@ -371,7 +371,9 @@ const SprintBoardCardImpl = ({
                                             fontSize: "0.65rem",
                                         }}
                                     >
-                                        {assigneeName || t.tasks.board.unassigned}
+                                        <bdi className="g-bidi-island">
+                                            {assigneeName || t.tasks.board.unassigned}
+                                        </bdi>
                                     </Typography>
                                 </Box>
 

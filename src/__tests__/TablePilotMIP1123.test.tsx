@@ -20,7 +20,10 @@ import {
     prioritySelectNode,
     statusSelectNode,
 } from "../features/tasks/components/table/cellEditors";
-import { depthRowLeftBorder } from "../features/tasks/components/table/DraggableTaskRow";
+import {
+    depthRowBackground,
+    depthRowLeftBorder,
+} from "../features/tasks/components/table/depthTone";
 import {
     FilterChipButton,
     FilterDropdown,
@@ -53,11 +56,24 @@ describe("row chrome (rules behind the measured 32 / 36 / 44px)", () => {
         expect(row).not.toMatch(/height:\s*32,/);
     });
 
-    it("a nested row has a quiet guide, not a color per depth", () => {
+    it("each nesting level has its own tone: a guide and a faint wash (MIP-1175)", () => {
         expect(depthRowLeftBorder(0)).toBe("3px solid transparent");
-        expect(depthRowLeftBorder(1)).toContain("var(--g-border");
-        expect(depthRowLeftBorder(3)).toBe(depthRowLeftBorder(1));
+        expect(depthRowBackground(0)).toBe("transparent");
+        const guides = [1, 2, 3].map(depthRowLeftBorder);
+        expect(new Set(guides).size).toBe(3);
+        expect(new Set([1, 2, 3].map(depthRowBackground)).size).toBe(3);
+        // Deeper than the palette repeats the last tone; tones come from tokens.
+        expect(depthRowLeftBorder(6)).toBe(depthRowLeftBorder(3));
+        expect(guides.every((g) => g.includes("var(--g-"))).toBe(true);
+        expect(depthRowBackground(2)).toContain("color-mix");
         expect(row).not.toMatch(/DEPTH_COLORS|DEPTH_HOVER|DEPTH_BORDER/);
+    });
+
+    it("the ID fits on one line and the weight chip centers its digit", () => {
+        const table = source("features/tasks/components/table/DraggableTaskTable.tsx");
+        expect(table).toMatch(/field: "id"[\s\S]{0,200}width: 124/);
+        expect(row).toMatch(/whiteSpace: "nowrap",\s*"&:hover": \{ backgroundColor: g\.hover/);
+        expect(row).toMatch(/minWidth: 30,[\s\S]{0,160}justifyContent: "center"/);
     });
 
     it("hover and selected come from the tokens", () => {
@@ -111,13 +127,58 @@ describe("status, priority and effort in the table are the shared components", (
         }
     );
 
-    it("effort is plain words in the neutral text color, never a colored fill", () => {
-        render(<CssVarsProvider>{effortSelectNode("High")}</CssVarsProvider>);
-        const el = screen.getByText(/High/);
-        expect(cssOf(el)).toContain("var(--g-text-secondary)");
-        expect(cssOf(el)).not.toMatch(/background/);
-        expect(el.textContent).toBeTruthy();
+    it("effort is a tinted chip in its level's own color, the word stays neutral (MIP-1175)", () => {
+        const colors = new Set<string>();
+        for (const level of ["Minimal", "Low", "Moderate", "High", "Extensive"]) {
+            const { unmount } = render(
+                <CssVarsProvider>{effortSelectNode(level)}</CssVarsProvider>
+            );
+            const chip = document.querySelector(`[data-effort-level="${level}"]`) as HTMLElement;
+            expect(chip.textContent).toContain(level);
+            const css = cssOf(chip);
+            // The wash and the hairline are both mixes of the level's color.
+            expect(css).toMatch(/background: color-mix\(in srgb,[^;]*16%/);
+            const hairline = css.match(
+                /box-shadow: inset 0 0 0 1px color-mix\(in srgb, (#[0-9A-Fa-f]{6}) 38%/
+            );
+            expect(hairline).toBeTruthy();
+            // The word stays in the neutral text color.
+            expect(css).toContain("color: var(--g-text);");
+            colors.add(hairline![1]);
+            unmount();
+        }
+        // One distinct color per level, so the table agrees with the task preview.
+        expect(colors.size).toBe(5);
         expect(EffortLabel).toBeTruthy();
+    });
+});
+
+describe("the table text is one step larger than the app's small text (MIP-1175)", () => {
+    const table = source("features/tasks/components/table/DraggableTaskTable.tsx");
+
+    it("the table container re-scales the small levels, and only the table", () => {
+        expect(table).toContain('"--g-type-body-sm-size": "14px"');
+        expect(table).toContain('"--g-type-body-xs-size": "13px"');
+        expect(table).toContain('"--table-tag-size": "0.8125rem"');
+        // Joy's body-sm / body-xs are fixed rem, so they are matched explicitly.
+        expect(table).toContain("& .MuiTypography-root.MuiTypography-body-sm");
+        expect(table).toContain("& .MuiTypography-root.MuiTypography-body-xs");
+        // The override lives on the scroll container below the filter bar, not above it.
+        expect(table.indexOf('"--g-type-body-sm-size": "14px"')).toBeGreaterThan(
+            table.indexOf("<TaskFilterMenu")
+        );
+    });
+
+    it("no table cell keeps a hard-coded size below the new base", () => {
+        const row = source("features/tasks/components/table/DraggableTaskRow.tsx");
+        expect(row).not.toMatch(/fontSize: "0\.(7|72|8)rem"/);
+        // The editors' tag chip follows the scale; only a validation message stays small.
+        const editors = source("features/tasks/components/table/cellEditors.tsx");
+        expect(editors).toContain('fontSize: "var(--g-type-body-xs-size, 0.75rem)"');
+        // Tag chips elsewhere keep their 0.7rem unless a surface sets the variable.
+        expect(source("features/tasks/components/ProjectTagChip.tsx")).toContain(
+            'fontSize = "var(--table-tag-size, 0.7rem)"'
+        );
     });
 });
 
