@@ -105,11 +105,19 @@
         /* Colors - Dark theme (default) */
         --color-text: rgba(255, 255, 255, 0.87);
         --color-background: #242424;
-        --color-link: #646cff;
-        --color-link-hover: #535bf2;
-        --color-button-bg: #1a1a1a;
+        /* Link and raw-button roles follow the app theme (color theme AND mode),
+           not the OS scheme the Vite template keyed them to: a light app on a dark
+           OS got a #1a1a1a button with dark text. The literals are only the
+           fallback until the token stylesheet is injected. */
+        --color-link: var(--g-accent-text, #646cff);
+        --color-link-hover: color-mix(
+            in srgb,
+            var(--g-accent-text, #535bf2) 75%,
+            var(--g-text, #fff)
+        );
+        --color-button-bg: var(--g-surface, #1a1a1a);
         --color-button-border: transparent;
-        --color-button-border-hover: #646cff;
+        --color-button-border-hover: var(--g-border-strong, #646cff);
 
         /* Layout */
         --min-width: 320px;
@@ -237,8 +245,6 @@
         :root {
             --color-text: #213547;
             --color-background: #ffffff;
-            --color-link-hover: #747bff;
-            --color-button-bg: #f9f9f9;
         }
     }
 
