@@ -308,8 +308,8 @@ export const admin = {
         allow: "Allow",
         deny: "Deny",
         planTitle: "Not on your plan",
-        planBody: "Connecting an AI app is available on the Pro plan and above.",
-        planCta: "See plans",
+        planBody:
+            "Connecting an AI app is available on the Pro plan and above. Plan details are under Settings → Plan & Usage in Genos.",
         noTeams: "Join a team in Genos first, then connect again.",
         invalidTitle: "This link is incomplete",
         invalidBody: "Start the connection again from the app you are connecting.",
