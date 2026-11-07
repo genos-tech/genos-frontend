@@ -182,7 +182,20 @@ describe("SavedFiltersMenu", () => {
         // labels/ids against the live lists is the bar's job.
         expect(onApply).toHaveBeenCalledWith({ status: ["Blocked"], memberKeys: ["u1"] });
         // The button then names the applied filter instead of "Saved Filters".
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("My blocked work")
+            )
+        );
+    });
+
+    it("is an icon-only button; its tooltip names it (MIP-1123 review)", async () => {
+        renderMenu({ initial: MANUAL, manual: row().filters });
+        const button = await trigger();
+        expect(button.textContent?.trim()).toBe("");
+        expect(button.querySelector("svg")).toBeTruthy();
+        expect(button.getAttribute("aria-label")).toBeTruthy();
     });
 
     it("drops the badge once the user edits a filter on top of an applied one", async () => {
@@ -191,20 +204,32 @@ describe("SavedFiltersMenu", () => {
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByText("My blocked work"));
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("My blocked work")
+            )
+        );
 
         changeFilterByHand();
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("Saved Filters"));
+        await waitFor(async () =>
+            expect((await trigger()).getAttribute("aria-label")).not.toContain(": ")
+        );
     });
 
     it("shows a saved filter as applied when the selection reaches it by hand", async () => {
         // The mirror case: never touch the menu, just build a selection
         // that happens to equal a saved filter, and it counts as applied.
         renderMenu({ initial: MANUAL, manual: row().filters });
-        expect(await trigger()).toHaveTextContent("Saved Filters");
+        expect((await trigger()).getAttribute("aria-label")).not.toContain(": ");
 
         changeFilterByHand();
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("My blocked work")
+            )
+        );
     });
 
     it("marks the matching row inside the menu, not just the button", async () => {
@@ -227,7 +252,12 @@ describe("SavedFiltersMenu", () => {
         // Derived, so it follows the renamed row with no bookkeeping.
         vi.mocked(updateProjectSavedFilter).mockResolvedValue(row({ filterName: "Renamed" }));
         renderMenu({ initial: row().filters });
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("My blocked work")
+            )
+        );
 
         vi.mocked(loadProjectSavedFilters).mockResolvedValue([row({ filterName: "Renamed" })]);
         await openMenu();
@@ -237,7 +267,12 @@ describe("SavedFiltersMenu", () => {
         });
         fireEvent.click(screen.getByRole("button", { name: "Rename" }));
 
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("Renamed"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("Renamed")
+            )
+        );
     });
 
     it("shows every row's actions, not only the auto-focused first one", async () => {
@@ -283,7 +318,12 @@ describe("SavedFiltersMenu", () => {
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByText("My blocked work"));
-        await waitFor(async () => expect(await trigger()).toHaveTextContent("My blocked work"));
+        await waitFor(async () =>
+            expect(await trigger()).toHaveAttribute(
+                "aria-label",
+                expect.stringContaining("My blocked work")
+            )
+        );
 
         await openMenu();
         fireEvent.click(await screen.findByText("Save current filters…"));

@@ -23,6 +23,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
     CustomFieldOption,
@@ -43,46 +44,28 @@ import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
+import { PriorityIcon } from "../meta/PriorityIcon";
+import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectTagChip } from "../ProjectTagChip";
 import {
+    CellButton,
     CellTextInput,
     ChipSelect,
+    EffortLabel,
+    effortSelectNode,
     MemberAutocomplete,
     PillChip,
+    prioritySelectNode,
+    statusSelectNode,
     TagAutocomplete,
-    ValueChip,
 } from "./cellEditors";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 
-// Depth-based background colors for nested task rows. Exported (along
-// with DEPTH_BORDER_COLORS / getTableCellStyles below) so the
-// QuickAddTaskRow draft row can render the exact same depth/cell chrome
-// as real rows.
-export const DEPTH_COLORS_DARK = [
-    "transparent",
-    "rgba(56, 189, 248, 0.08)",
-    "rgba(45, 212, 191, 0.09)",
-    "rgba(251, 191, 36, 0.08)",
-];
-export const DEPTH_COLORS_LIGHT = [
-    "transparent",
-    "rgba(14, 165, 233, 0.07)",
-    "rgba(20, 184, 166, 0.07)",
-    "rgba(245, 158, 11, 0.07)",
-];
-const DEPTH_HOVER_DARK = [
-    "rgba(255, 255, 255, 0.04)",
-    "rgba(56, 189, 248, 0.16)",
-    "rgba(45, 212, 191, 0.17)",
-    "rgba(251, 191, 36, 0.15)",
-];
-const DEPTH_HOVER_LIGHT = [
-    "rgba(0, 0, 0, 0.02)",
-    "rgba(14, 165, 233, 0.12)",
-    "rgba(20, 184, 166, 0.12)",
-    "rgba(245, 158, 11, 0.11)",
-];
-export const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
+// A nested row is told apart by its indent and a quiet guide on its left edge, not by
+// a colored background per depth (blue, teal, amber: MIP-1123). Exported so the
+// QuickAddTaskRow draft row renders the same chrome as real rows.
+export const depthRowLeftBorder = (rowDepth: number): string =>
+    rowDepth > 0 ? `3px solid ${g.border.default}` : "3px solid transparent";
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
@@ -97,108 +80,63 @@ export const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf2
 const getTableRowStyles = (
     isDragging: boolean,
     isSelected: boolean,
-    mode: "light" | "dark" | undefined,
     rowDepth: number
-): React.CSSProperties => {
-    const depthIdx = Math.min(rowDepth, 3);
-
-    const getBackgroundColor = () => {
-        if (isDragging) {
-            return mode === "dark" ? "var(--gp-brandalt-950)" : "var(--gp-brand-100)";
-        }
-        if (isSelected) {
-            return mode === "dark"
-                ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                : "rgba(var(--gp-brand-700-rgb), 0.08)";
-        }
-        return mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx];
-    };
-
-    return {
-        display: "flex",
-        alignItems: "center",
-        minHeight: 36,
-        borderBottom: isDragging
-            ? "none"
-            : mode === "dark"
-              ? "1px solid rgba(255, 255, 255, 0.08)"
-              : "1px solid rgba(0, 0, 0, 0.08)",
-        backgroundColor: getBackgroundColor(),
-        borderLeft: isSelected
-            ? mode === "dark"
-                ? "3px solid var(--gp-brandalt-400)"
-                : "3px solid var(--gp-brand-700)"
-            : rowDepth > 0
-              ? `3px solid ${DEPTH_BORDER_COLORS[depthIdx]}`
-              : "3px solid transparent",
-        boxShadow: isDragging
-            ? mode === "dark"
-                ? "0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)"
-                : "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
-            : isSelected
-              ? mode === "dark"
-                  ? "inset 0 0 0 1px rgba(var(--gp-brandalt-400-rgb), 0.2)"
-                  : "inset 0 0 0 1px rgba(var(--gp-brand-700-rgb), 0.1)"
-              : "none",
-        borderRadius: isDragging ? 6 : 0,
-        // Don't use transitions when dragging - it interferes with drag positioning
-        //
-        // `opacity` / `filter` are here for the hover family-focus dimming
-        // (familyFocusCss.ts). They must be in THIS list, not the `sx` below:
-        // an inline `transition` shorthand beats the emotion class, so a
-        // transition declared only in `sx` never applies to this element.
-        transition: isDragging
-            ? "none"
-            : "background-color 0.15s ease, box-shadow 0.15s ease, border-left 0.15s ease," +
-              " opacity 0.15s ease, filter 0.15s ease",
-    };
-};
+): React.CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    // The user's row height (Settings > Appearance > Density): 36px by default.
+    // A min-height, so a row whose tags wrap still grows.
+    minHeight: g.row.current,
+    borderBottom: isDragging ? "none" : `1px solid ${g.border.subtle}`,
+    backgroundColor: isDragging || isSelected ? g.accent.subtle : "transparent",
+    borderLeft: isSelected ? `3px solid ${g.accent.solid}` : depthRowLeftBorder(rowDepth),
+    boxShadow: isDragging ? g.shadow.lg : "none",
+    borderRadius: isDragging ? 6 : 0,
+    // Don't use transitions when dragging - it interferes with drag positioning
+    //
+    // `opacity` / `filter` are here for the hover family-focus dimming
+    // (familyFocusCss.ts). They must be in THIS list, not the `sx` below:
+    // an inline `transition` shorthand beats the emotion class, so a
+    // transition declared only in `sx` never applies to this element.
+    transition: isDragging
+        ? "none"
+        : "background-color 0.15s ease, box-shadow 0.15s ease, border-left 0.15s ease," +
+          " opacity 0.15s ease, filter 0.15s ease",
+});
 
 export const getTableCellStyles = (
     width: number,
-    align: string | undefined,
-    mode: "light" | "dark" | undefined
+    align: string | undefined
 ): React.CSSProperties => ({
     minWidth: width,
     width: width,
-    padding: "6px 8px",
+    // Vertical rhythm comes from the row height, not from padding.
+    padding: "0 8px",
     display: "flex",
     alignItems: "center",
     justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
-    color: mode === "dark" ? "#e0e0e0" : "#333333",
-    fontSize: "0.8rem",
+    color: g.text.primary,
+    fontSize: "var(--g-type-body-sm-size)",
 });
 
-const getDragHandleStyles = (
-    isDragging: boolean,
-    mode: "light" | "dark" | undefined
-): React.CSSProperties => ({
+const getDragHandleStyles = (isDragging: boolean): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     width: 28,
     minWidth: 28,
-    height: 32,
+    // Shorter than the Compact row (32px), or it sets the row's height.
+    height: 28,
     cursor: isDragging ? "grabbing" : "grab",
     // Base opacity. The row's `:hover` rule (see the wrapper Box's `sx`)
     // bumps this to 0.8 via `&:hover .task-row-drag-handle` so the handle
     // fades in on hover *without* re-rendering the row.
     opacity: isDragging ? 1 : 0.3,
-    color: isDragging
-        ? mode === "dark"
-            ? "var(--gp-brandalt-400)"
-            : "var(--gp-brand-700)"
-        : mode === "dark"
-          ? "#888"
-          : "#666",
+    color: isDragging ? g.accent.text : g.text.tertiary,
     transition: "opacity 0.2s ease, color 0.2s ease, transform 0.15s ease",
     transform: isDragging ? "scale(1.1)" : "scale(1)",
     borderRadius: 4,
-    backgroundColor: isDragging
-        ? mode === "dark"
-            ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-            : "rgba(var(--gp-brand-700-rgb), 0.1)"
-        : "transparent",
+    backgroundColor: isDragging ? g.accent.subtle : "transparent",
 });
 
 export type DraggableTaskRowProps = {
@@ -444,9 +382,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     };
 
     const emptyCellPlaceholder = (
-        <Typography sx={{ fontSize: "0.72rem", color: mode === "dark" ? "#6b7280" : "#9ca3af" }}>
-            -
-        </Typography>
+        <Typography sx={{ fontSize: "0.72rem", color: g.text.tertiary }}>-</Typography>
     );
 
     // One cell of a `cf_<id>` column. Editing mirrors the built-in
@@ -458,7 +394,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         const editKey = `cf_${def.fieldId}`;
         const stored = task.customFieldValues?.[String(def.fieldId)];
         const storedString = typeof stored === "string" ? stored : "";
-        const accent = mode === "dark" ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
+        const accent = g.accent.text;
 
         if (def.fieldType === "tag") {
             const selected = resolveTagOptions(def, stored);
@@ -566,18 +502,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         gap: 1,
                         alignItems: "center",
                         cursor: "pointer",
-                        padding: "4px 8px",
-                        borderRadius: "6px",
+                        padding: "2px 6px",
+                        borderRadius: g.radius.sm,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         transition: "background-color 0.15s ease",
-                        "&:hover": {
-                            backgroundColor:
-                                mode === "dark"
-                                    ? "rgba(255, 255, 255, 0.08)"
-                                    : "rgba(0, 0, 0, 0.04)",
-                        },
+                        "&:hover": { backgroundColor: g.hover },
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -586,19 +517,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 >
                     <Box sx={{ position: "relative", display: "inline-flex" }}>
                         {storedString !== "" ? (
-                            <UserAvatar showPulseDot={false} userId={storedString} />
+                            <UserAvatar showPulseDot={false} size={24} userId={storedString} />
                         ) : (
                             <Avatar
                                 size="sm"
                                 sx={{
-                                    bgcolor:
-                                        mode === "dark"
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(0,0,0,0.06)",
-                                    color:
-                                        mode === "dark"
-                                            ? "rgba(255,255,255,0.45)"
-                                            : "rgba(0,0,0,0.45)",
+                                    "--Avatar-size": "24px",
+                                    bgcolor: g.bg.subtle,
+                                    color: g.text.tertiary,
                                     fontSize: "0.7rem",
                                 }}
                             >
@@ -783,21 +709,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         size="sm"
                         variant="plain"
                         sx={{
+                            // Quiet: an ID is a reference, not the loudest thing in the row
+                            // (it was orange). The accent appears on hover.
+                            color: g.text.tertiary,
+                            fontWeight: 500,
                             minWidth: 0,
                             minHeight: 0,
-                            color: isMilestoneRow
-                                ? "#f97316"
-                                : mode === "dark"
-                                  ? "var(--gp-brandalt-400)"
-                                  : "var(--gp-brand-700)",
-                            fontWeight: 600,
-                            "&:hover": {
-                                backgroundColor: isMilestoneRow
-                                    ? "rgba(249, 115, 22, 0.12)"
-                                    : mode === "dark"
-                                      ? "rgba(var(--gp-brandalt-400-rgb), 0.15)"
-                                      : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                            },
+                            height: 24,
+                            px: 0.75,
+                            "&:hover": { backgroundColor: g.hover, color: g.accent.text },
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -805,14 +725,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         }}
                     >
                         <Typography
-                            fontSize="13px"
+                            fontSize="var(--g-type-body-sm-size)"
                             sx={{
-                                fontWeight: 600,
-                                color: isMilestoneRow
-                                    ? "#f97316"
-                                    : mode === "dark"
-                                      ? "var(--gp-brandalt-400)"
-                                      : "var(--gp-brand-700)",
+                                fontWeight: 500,
+                                color: "inherit",
+                                fontVariantNumeric: "tabular-nums",
                             }}
                         >
                             {formatTaskDisplayId(task)}
@@ -830,16 +747,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             minWidth={110}
                             value={(value as string) || ""}
                             options={statusOptions.map((opt) => ({
-                                value: opt.value || "",
-                                node: (
-                                    <ValueChip
-                                        color={opt.color || "#888"}
-                                        icon={opt.icon}
-                                        label={taskMetaLabel(opt.value ?? "", t.tasks.filters)}
-                                        minWidth={70}
-                                        textColor={opt.textColor}
-                                    />
-                                ),
+                                value: opt.value,
+                                node: statusSelectNode(opt.value),
                             }))}
                             open
                             onClose={handleCancelEdit}
@@ -851,30 +760,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return statusOption ? (
-                    <PillChip
-                        icon={statusOption.icon}
-                        label={taskMetaLabel(statusOption.value, t.tasks.filters)}
-                        sx={{
-                            cursor: "pointer",
-                            backgroundColor: alpha(
-                                statusOption.color,
-                                mode === "dark" ? 0.5 : 0.75
-                            ),
-                            color: statusOption.textColor,
-                            fontWeight: "bold",
-                            borderRadius: "6px",
-                            transition: "transform 0.1s ease, box-shadow 0.1s ease",
-                            "&:hover": {
-                                transform: "scale(1.02)",
-                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(36, 167, 0, 0.25)"
-                                        : "rgba(36, 167, 0, 0.53)",
-                            },
-                        }}
-                        onClick={() => handleStartEdit("status", value as string)}
-                    />
+                    <CellButton onClick={() => handleStartEdit("status", value as string)}>
+                        <StatusLabel status={statusOption.value} />
+                    </CellButton>
                 ) : null;
 
             case "pr": {
@@ -957,7 +845,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             <Typography
                                 sx={{
                                     fontSize: "0.72rem",
-                                    color: mode === "dark" ? "#6b7280" : "#9ca3af",
+                                    color: g.text.tertiary,
                                 }}
                             >
                                 {t.tasks.table.addTagsMenuItem}
@@ -1005,11 +893,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             pl: depth > 0 ? depth * 1.5 : 0,
                             width: "100%",
                             "&:hover .task-row-title": {
-                                color: isMilestoneRow
-                                    ? "#f97316"
-                                    : mode === "dark"
-                                      ? "var(--gp-brandalt-400)"
-                                      : "var(--gp-brand-700)",
+                                color: isMilestoneRow ? "#f97316" : g.accent.text,
                             },
                         }}
                         onClick={() => handleStartEdit("title", task.title || "")}
@@ -1077,24 +961,24 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             gap: 1,
                             alignItems: "center",
                             cursor: "pointer",
-                            padding: "4px 8px",
-                            borderRadius: "6px",
+                            // 24px avatar + this padding keep the row at the density height.
+                            padding: "2px 6px",
+                            borderRadius: g.radius.sm,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                             transition: "background-color 0.15s ease",
-                            "&:hover": {
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(255, 255, 255, 0.08)"
-                                        : "rgba(0, 0, 0, 0.04)",
-                            },
+                            "&:hover": { backgroundColor: g.hover },
                         }}
                         onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
                             {task.assigneeId ? (
-                                <UserAvatar showPulseDot={false} userId={task.assigneeId} />
+                                <UserAvatar
+                                    showPulseDot={false}
+                                    size={24}
+                                    userId={task.assigneeId}
+                                />
                             ) : (
                                 // Unassigned task — render a neutral
                                 // placeholder, NOT `myself`'s avatar (the
@@ -1104,14 +988,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 <Avatar
                                     size="sm"
                                     sx={{
-                                        bgcolor:
-                                            mode === "dark"
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.06)",
-                                        color:
-                                            mode === "dark"
-                                                ? "rgba(255,255,255,0.45)"
-                                                : "rgba(0,0,0,0.45)",
+                                        "--Avatar-size": "24px",
+                                        bgcolor: g.bg.subtle,
+                                        color: g.text.tertiary,
                                         fontSize: "0.7rem",
                                     }}
                                 >
@@ -1161,14 +1040,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             value={(value as string) || ""}
                             options={priorities.map((opt) => ({
                                 value: opt.priority || "",
-                                node: (
-                                    <ValueChip
-                                        color={opt.color || "#888"}
-                                        label={taskMetaLabel(opt.priority ?? "", t.tasks.filters)}
-                                        minWidth={60}
-                                        textColor={opt.textColor}
-                                    />
-                                ),
+                                node: prioritySelectNode(opt.priority ?? ""),
                             }))}
                             open
                             onClose={handleCancelEdit}
@@ -1180,28 +1052,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return priorityOption ? (
-                    <PillChip
-                        label={taskMetaLabel(priorityOption.priority, t.tasks.filters)}
-                        sx={{
-                            cursor: "pointer",
-                            backgroundColor: alpha(
-                                priorityOption.color || "#888",
-                                mode === "dark" ? 0.5 : 0.75
-                            ),
-                            color: priorityOption.textColor,
-                            fontWeight: "bold",
-                            borderRadius: "6px",
-                            transition: "transform 0.1s ease",
-                            "&:hover": {
-                                transform: "scale(1.02)",
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(36, 167, 0, 0.25)"
-                                        : "rgba(36, 167, 0, 0.53)",
-                            },
-                        }}
-                        onClick={() => handleStartEdit("priority", value as string)}
-                    />
+                    <CellButton onClick={() => handleStartEdit("priority", value as string)}>
+                        <PriorityIcon priority={priorityOption.priority ?? ""} showLabel />
+                    </CellButton>
                 ) : null;
 
             case "effortLevel":
@@ -1214,14 +1067,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             value={(value as string) || ""}
                             options={effortLevels.map((opt) => ({
                                 value: opt.level || "",
-                                node: (
-                                    <ValueChip
-                                        color={opt.color || "#888"}
-                                        label={taskMetaLabel(opt.level ?? "", t.tasks.filters)}
-                                        minWidth={50}
-                                        textColor={opt.textColor}
-                                    />
-                                ),
+                                node: effortSelectNode(opt.level ?? ""),
                             }))}
                             open
                             onClose={handleCancelEdit}
@@ -1233,28 +1079,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return effortOption ? (
-                    <PillChip
-                        label={taskMetaLabel(effortOption.level, t.tasks.filters)}
-                        sx={{
-                            cursor: "pointer",
-                            backgroundColor: alpha(
-                                effortOption.color || "#888",
-                                mode === "dark" ? 0.5 : 1
-                            ),
-                            color: effortOption.textColor,
-                            fontWeight: "bold",
-                            borderRadius: "6px",
-                            transition: "transform 0.1s ease",
-                            "&:hover": {
-                                transform: "scale(1.02)",
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(36, 167, 0, 0.25)"
-                                        : "rgba(36, 167, 0, 0.53)",
-                            },
-                        }}
-                        onClick={() => handleStartEdit("effortLevel", value as string)}
-                    />
+                    <CellButton onClick={() => handleStartEdit("effortLevel", value as string)}>
+                        <EffortLabel level={effortOption.level ?? ""} />
+                    </CellButton>
                 ) : null;
 
             case "weight": {
@@ -1385,10 +1212,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             cursor: "pointer",
                             fontWeight: 500,
                             "&:hover": {
-                                color:
-                                    mode === "dark"
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
+                                color: g.accent.text,
                             },
                         }}
                         onClick={() =>
@@ -1408,7 +1232,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         <Typography
                             level="body-sm"
                             sx={{
-                                color: mode === "dark" ? "#666" : "#aaa",
+                                color: g.text.tertiary,
                                 fontStyle: "italic",
                                 fontSize: "0.8rem",
                             }}
@@ -1425,35 +1249,17 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             label={name}
                             sx={{
                                 maxWidth: "100%",
-                                // Composed with rgba() rather than MUI's `alpha()`:
-                                // brand colors are CSS variables now, and
-                                // `alpha()` runs `decomposeColor`, which throws on
-                                // a `var()`.
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.18)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                                color:
-                                    mode === "dark"
-                                        ? "var(--gp-brandalt-300)"
-                                        : "var(--gp-brand-900)",
-                                fontWeight: 600,
-                                fontSize: "0.72rem",
-                                borderRadius: "6px",
-                                border: `1px solid ${
-                                    mode === "dark"
-                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.32)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.22)"
-                                }`,
+                                // Neutral, like a tag: a sprint is a place, not a status.
+                                backgroundColor: g.surface.default,
+                                color: g.text.secondary,
+                                border: `1px solid ${g.border.default}`,
+                                fontWeight: 500,
+                                fontSize: "var(--g-type-body-xs-size)",
+                                borderRadius: g.radius.xs,
+                                height: 20,
                                 // Italicize the fallback so the user can tell at a
                                 // glance that the sprint hasn't been loaded yet.
                                 fontStyle: resolved ? "normal" : "italic",
-                                "& .MuiChip-label": {
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    px: 1,
-                                },
                             }}
                         />
                     </AppTooltip>
@@ -1465,7 +1271,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     <Typography
                         level="body-sm"
                         sx={{
-                            color: mode === "dark" ? "#999" : "#666",
+                            color: g.text.tertiary,
                             fontSize: "0.8rem",
                         }}
                     >
@@ -1478,7 +1284,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     <Typography
                         level="body-sm"
                         sx={{
-                            color: mode === "dark" ? "#999" : "#666",
+                            color: g.text.tertiary,
                             fontSize: "0.8rem",
                         }}
                     >
@@ -1502,14 +1308,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             }
         }
     };
-
-    // Pre-compute the depth-keyed hover background so the `sx` rule
-    // below stays a plain object literal (no per-render conditionals
-    // inside CSS-in-JS). Hover is a no-op visually when the row is
-    // already dragging or selected, so we strip the rule in those
-    // states by leaving the `&:hover` selector with an empty body.
-    const depthIdx = Math.min(depth, 3);
-    const hoverBg = mode === "dark" ? DEPTH_HOVER_DARK[depthIdx] : DEPTH_HOVER_LIGHT[depthIdx];
 
     return (
         <Draggable
@@ -1579,7 +1377,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         // win over our defaults — same merge order as
                         // before.
                         style={{
-                            ...getTableRowStyles(snapshot.isDragging, isSelected, mode, depth),
+                            ...getTableRowStyles(snapshot.isDragging, isSelected, depth),
                             ...provided.draggableProps.style,
                         }}
                         // Hover lives entirely in CSS so toggling the
@@ -1635,7 +1433,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             }),
                             "&:hover":
                                 showHoverBg && !isCombineTarget
-                                    ? { backgroundColor: hoverBg }
+                                    ? { backgroundColor: g.hover }
                                     : {},
                             "&:hover .task-row-drag-handle": {
                                 opacity: snapshot.isDragging ? 1 : 0.8,
@@ -1719,7 +1517,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 <div
                                     {...provided.dragHandleProps}
                                     className="task-row-drag-handle"
-                                    style={getDragHandleStyles(snapshot.isDragging, mode)}
+                                    style={getDragHandleStyles(snapshot.isDragging)}
                                 >
                                     <DragIndicatorIcon sx={{ fontSize: 20 }} />
                                 </div>
@@ -1746,10 +1544,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                             p: 0,
                                             borderRadius: "4px",
                                             opacity: 0,
-                                            color:
-                                                mode === "dark"
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)",
+                                            color: g.accent.text,
                                             transition: "opacity 0.2s ease",
                                         }}
                                         onClick={(e) => {
@@ -1778,10 +1573,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         // wrapper Box's sx (same zero-re-render CSS
                                         // pattern as the drag handle).
                                         opacity: 0,
-                                        color:
-                                            mode === "dark"
-                                                ? "var(--gp-brandalt-400)"
-                                                : "var(--gp-brand-700)",
+                                        color: g.accent.text,
                                         transition: "opacity 0.2s ease",
                                     }}
                                     onClick={(e) => {
@@ -1807,13 +1599,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             <div
                                 key={column.field}
                                 style={{
-                                    ...getTableCellStyles(column.width, column.align, mode),
+                                    ...getTableCellStyles(column.width, column.align),
                                     borderRight:
                                         idx === columns.length - 1
                                             ? "none"
-                                            : mode === "dark"
-                                              ? "1px solid rgba(255, 255, 255, 0.04)"
-                                              : "1px solid rgba(0, 0, 0, 0.04)",
+                                            : `1px solid ${g.border.subtle}`,
                                 }}
                             >
                                 {renderCellContent(column)}

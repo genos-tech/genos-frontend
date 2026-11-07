@@ -13,7 +13,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskFilterMenu } from "../features/tasks/components/table/TaskFilterMenu";
 import {
-    predefinedEffortLevelFilters,
     predefinedPriorityFilters,
     predefinedStatusFilters,
 } from "../features/tasks/types/TaskTableTypes";
@@ -45,7 +44,8 @@ const mount = () =>
         </CssVarsProvider>
     );
 
-// The trigger's accessible name is AppTooltip's text; find it by its visible label.
+// The trigger's accessible name is AppTooltip's text; find it by its visible label
+// (the field name, then what is chosen: "Status Open +3").
 const trigger = (re: RegExp) =>
     screen.getAllByRole("button").find((b) => re.test(b.textContent ?? ""))!;
 
@@ -55,7 +55,7 @@ describe("the status dropdown", () => {
     it("opens from its trigger and lists the statuses as menu items", async () => {
         mount();
         expect(screen.queryByRole("menu")).toBeNull();
-        fireEvent.click(trigger(/Status:/));
+        fireEvent.click(trigger(/^Status/));
         const menu = await screen.findByRole("menu");
         expect(within(menu).getAllByRole("menuitem").length).toBeGreaterThanOrEqual(
             predefinedStatusFilters.length - 1
@@ -66,52 +66,70 @@ describe("the status dropdown", () => {
     it("ticking values keeps the menu open and the trigger's count follows", async () => {
         mount();
         // The bar starts on its default set: the first is named, the rest are "+N".
-        expect(trigger(/Status:/).textContent).toContain("+3");
-        fireEvent.click(trigger(/Status:/));
+        expect(trigger(/^Status/).textContent).toContain("+3");
+        fireEvent.click(trigger(/^Status/));
         fireEvent.click(await screen.findByRole("menuitem", { name: /Closed/ }));
         expect(screen.getByRole("menu")).toBeTruthy();
-        expect(trigger(/Status:/).textContent).toContain("+4");
+        expect(trigger(/^Status/).textContent).toContain("+4");
         fireEvent.click(screen.getByRole("menuitem", { name: /WIP/ }));
         expect(screen.getByRole("menu")).toBeTruthy();
-        expect(trigger(/Status:/).textContent).toContain("+3");
+        expect(trigger(/^Status/).textContent).toContain("+3");
     });
 
     it("picking All clears the others and closes the menu", async () => {
         mount();
-        fireEvent.click(trigger(/Status:/));
+        fireEvent.click(trigger(/^Status/));
         fireEvent.click(await screen.findByRole("menuitem", { name: /^All/ }));
         await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
-        expect(trigger(/Status:/).textContent).toContain("All");
+        expect(trigger(/^Status/).textContent).toContain("All");
     });
 
     it("Escape closes it", async () => {
         mount();
-        fireEvent.click(trigger(/Status:/));
+        fireEvent.click(trigger(/^Status/));
         fireEvent.keyDown(await screen.findByRole("menu"), { key: "Escape" });
         await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
     });
 });
 
 describe("the other dimensions", () => {
-    it.each([
-        ["Priority:", predefinedPriorityFilters.find((p) => p.label === "High")!.label],
-        ["Effort:", predefinedEffortLevelFilters.find((p) => p.label !== "All")!.label],
-    ])("%s opens its own menu and keeps it open while picking", async (prefix, pick) => {
-        mount();
-        fireEvent.click(trigger(new RegExp(prefix)));
-        fireEvent.click(await screen.findByRole("menuitem", { name: new RegExp(pick) }));
-        expect(screen.getByRole("menu")).toBeTruthy();
-        expect(trigger(new RegExp(prefix)).textContent).toContain(pick);
-    });
+    it.each([["Priority", predefinedPriorityFilters.find((p) => p.label === "High")!.label]])(
+        "%s opens its own menu and keeps it open while picking",
+        async (prefix, pick) => {
+            mount();
+            fireEvent.click(trigger(new RegExp("^" + prefix)));
+            fireEvent.click(await screen.findByRole("menuitem", { name: new RegExp(pick) }));
+            expect(screen.getByRole("menu")).toBeTruthy();
+            expect(trigger(new RegExp("^" + prefix)).textContent).toContain(pick);
+        }
+    );
 
     it("only one dropdown is open at a time", async () => {
         mount();
-        fireEvent.click(trigger(/Status:/));
+        fireEvent.click(trigger(/^Status/));
         await screen.findByRole("menu");
-        fireEvent.click(trigger(/Priority:/));
+        fireEvent.click(trigger(/^Priority/));
         await waitFor(() => expect(screen.getAllByRole("menu")).toHaveLength(1));
         expect(
             within(screen.getByRole("menu")).getByRole("menuitem", { name: /High/ })
         ).toBeTruthy();
+    });
+});
+
+describe("the bar (MIP-1123 review)", () => {
+    it("has no Effort filter for now, but still has the other six", () => {
+        mount();
+        const names = screen.getAllByRole("button").map((b) => b.textContent ?? "");
+        expect(names.some((n) => /^Effort/.test(n))).toBe(false);
+        for (const field of ["Status", "Priority"]) {
+            expect(names.some((n) => n.startsWith(field))).toBe(true);
+        }
+    });
+
+    it("Reset is an icon-only button named by its tooltip", () => {
+        mount();
+        const reset = screen.getByRole("button", { name: "Reset all filters to default" });
+        expect(reset.textContent?.trim()).toBe("");
+        expect(reset.querySelector("svg")).toBeTruthy();
     });
 });

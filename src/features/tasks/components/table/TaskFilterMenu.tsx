@@ -11,15 +11,15 @@ import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRigh
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Avatar, Box, Button, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
+import { Avatar, Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { fmt, useTranslation } from "../../../../i18n";
+import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
@@ -65,7 +65,15 @@ import {
     writeStoredFilters,
 } from "../../utils/taskFilterStorage";
 import { taskMetaLabel } from "../../utils/taskMeta";
-import { BarChip, FilterDropdown, FilterMenu, FilterMenuItem } from "./filterBarParts";
+import {
+    BarChip,
+    FilterChipButton,
+    FilterDropdown,
+    FilterIconButton,
+    FilterMenu,
+    FilterMenuItem,
+    splitFilterLabel,
+} from "./filterBarParts";
 import { SavedFiltersMenu } from "./SavedFiltersMenu";
 
 // Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
@@ -90,8 +98,6 @@ const MILESTONE_NONE: MilestoneFilterKey = "none";
 // the same family.
 const MILESTONE_ACCENT_DARK = "#fb923c";
 const MILESTONE_ACCENT_LIGHT = "#c2410c";
-const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
-const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
 
 // Sprint filter sentinels — same `all` / `none` / numeric-id shape as the
 // milestone filter, one level up the hierarchy (a sprint contains
@@ -106,8 +112,6 @@ const SPRINT_NONE: SprintFilterKey = "none";
 // have to be separable at a glance.
 const SPRINT_ACCENT_DARK = "#38bdf8";
 const SPRINT_ACCENT_LIGHT = "#0369a1";
-const SPRINT_ACCENT_BG_DARK = "rgba(14,165,233,0.35)";
-const SPRINT_ACCENT_BG_LIGHT = "rgba(14,165,233,0.6)";
 
 // Member filter sentinels — mirror the milestone `all`/`none` pattern.
 // Distinct `__…__` strings so they can never collide with a real userId.
@@ -130,6 +134,12 @@ const MEMBER_ACCENT_LIGHT = "#4f46e5";
  *
  *     applyFilters({ ...selection, status: newStatuses });
  */
+/** The Effort filter is switched off for now (Ken, MIP-1123 review): its chip is
+ *  not drawn and a stored or saved effort selection no longer narrows the list.
+ *  The state, the handler and the menu below stay, so flipping this back on is
+ *  the whole change. */
+const EFFORT_FILTER_ENABLED = false;
+
 type FilterSelection = {
     status: FilterProps[];
     tags: FilterProps[];
@@ -1163,11 +1173,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             status: statuses,
             tags,
             priorities: priority,
-            effortLevels: effortLevel,
+            effortLevels: storedEffortLevels,
             sprintKeys: sprintSel,
             milestoneKeys: milestoneSel,
             memberKeys: memberSel,
         } = sel;
+        const effortLevel = EFFORT_FILTER_ENABLED
+            ? storedEffortLevels
+            : [predefinedEffortLevelFilters[0]];
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
         const now = Date.now();
 
@@ -1669,54 +1682,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // was already doing. Both surfaces that host this menu (task table and
     // sprint board) then rebuilt their derived structures a second time.
 
-    // Modern filter button style generator
-    const getFilterButtonStyle = (filter: FilterProps, isAllSelected: boolean) => ({
-        color: isAllSelected ? styles.textColor : "#fff",
-        background: isDark
-            ? `linear-gradient(135deg, ${alpha(filter.darkModeColor, 0.4)} 0%, ${alpha(filter.darkModeColor, 0.6)} 100%)`
-            : `linear-gradient(135deg, ${alpha(filter.lightModeColor, 0.7)} 0%, ${alpha(filter.lightModeColor, 0.9)} 100%)`,
-        border: `1px solid ${isDark ? alpha(filter.darkModeColor, 0.5) : alpha(filter.lightModeColor, 0.6)}`,
-        borderRadius: "10px",
-        fontSize: "12px",
-        fontWeight: 600,
-        height: "32px",
-        whiteSpace: "nowrap",
-        px: 1.5,
-        my: 0.5,
-        minHeight: 0,
-        boxShadow: isDark
-            ? `0 2px 8px ${alpha(filter.darkModeColor, 0.3)}`
-            : `0 2px 8px ${alpha(filter.lightModeColor, 0.25)}`,
-        transition: "all 0.2s ease",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        maxHeight: "2.7em", // show up to ~2 lines, then cut
-        lineHeight: 1.35,
-        display: "-webkit-box",
-        WebkitLineClamp: 2, // limit lines for better UX
-        WebkitBoxOrient: "vertical",
-        "& span, & .MuiChip-label, & .MuiButton-label, & .MuiTypography-root": {
-            overflow: "hidden",
-            whiteSpace: "normal",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-        },
-        "&::after": {
-            content: '""',
-        },
-        "&:hover": {
-            background: isDark
-                ? `linear-gradient(135deg, ${alpha(filter.darkModeColor, 0.5)} 0%, ${alpha(filter.darkModeColor, 0.7)} 100%)`
-                : `linear-gradient(135deg, ${alpha(filter.lightModeColor, 0.8)} 0%, ${alpha(filter.lightModeColor, 1)} 100%)`,
-            transform: "translateY(-1px)",
-            boxShadow: isDark
-                ? `0 4px 12px ${alpha(filter.darkModeColor, 0.4)}`
-                : `0 4px 12px ${alpha(filter.lightModeColor, 0.35)}`,
-        },
-    });
-
     return (
         <Box
             sx={{
@@ -1733,10 +1698,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         >
             <Stack
                 alignItems="center"
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 direction="row"
-                gap={1.5}
-                sx={{ overflowX: "auto" }}
+                // One line that scrolls sideways; every chip keeps its full
+                // text (`flexShrink: 0`), nothing wraps or is cut: MIP-1123.
+                sx={{
+                    flexWrap: "nowrap",
+                    columnGap: 1,
+                    overflowX: "auto",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: `${g.border.strong} transparent`,
+                }}
             >
                 {/* Filter Icon Label */}
                 <Stack alignItems="center" direction="row" gap={0.5} sx={{ flexShrink: 0 }}>
@@ -1894,75 +1865,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         .join(", ");
                                 })()}
                             >
-                                <MenuButton
-                                    variant="solid"
-                                    startDecorator={
-                                        <DirectionsRunRoundedIcon
-                                            sx={{
-                                                fontSize: "16px",
-                                                color: sprintFilterIsAll
-                                                    ? isDark
-                                                        ? SPRINT_ACCENT_DARK
-                                                        : SPRINT_ACCENT_LIGHT
-                                                    : "#fff",
-                                            }}
-                                        />
-                                    }
-                                    sx={{
-                                        color: sprintFilterIsAll ? styles.textColor : "#fff",
-                                        background: sprintFilterIsAll
-                                            ? isDark
-                                                ? "rgba(14,165,233,0.15)"
-                                                : "rgba(14,165,233,0.1)"
-                                            : isDark
-                                              ? `linear-gradient(135deg, ${alpha("#0ea5e9", 0.5)} 0%, ${alpha("#0ea5e9", 0.7)} 100%)`
-                                              : `linear-gradient(135deg, ${alpha("#0ea5e9", 0.75)} 0%, ${alpha("#0ea5e9", 0.95)} 100%)`,
-                                        border: `1px solid ${
-                                            isDark ? SPRINT_ACCENT_BG_DARK : SPRINT_ACCENT_BG_LIGHT
-                                        }`,
-                                        borderRadius: "10px",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        height: "32px",
-                                        whiteSpace: "nowrap",
-                                        px: 1.5,
-                                        my: 0.5,
-                                        minHeight: 0,
-                                        boxShadow: isDark
-                                            ? "0 2px 8px rgba(14,165,233,0.25)"
-                                            : "0 2px 8px rgba(14,165,233,0.2)",
-                                        transition: "all 0.2s ease",
-                                        flexShrink: 0,
-                                        "&:hover": {
-                                            background: sprintFilterIsAll
-                                                ? isDark
-                                                    ? "rgba(14,165,233,0.25)"
-                                                    : "rgba(14,165,233,0.2)"
-                                                : isDark
-                                                  ? `linear-gradient(135deg, ${alpha("#0ea5e9", 0.6)} 0%, ${alpha("#0ea5e9", 0.8)} 100%)`
-                                                  : `linear-gradient(135deg, ${alpha("#0ea5e9", 0.85)} 0%, ${alpha("#0ea5e9", 1)} 100%)`,
-                                            transform: "translateY(-1px)",
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(14,165,233,0.35)"
-                                                : "0 4px 12px rgba(14,165,233,0.3)",
-                                        },
-                                    }}
-                                >
-                                    Sprint: {sprintFilterButtonLabel}
-                                    {selectedSprintKeys.length > 1 && (
-                                        <BarChip
-                                            label={`+${selectedSprintKeys.length - 1}`}
-                                            sx={{
-                                                ml: 0.5,
-                                                height: "18px",
-                                                fontSize: "10px",
-                                                fontWeight: 700,
-                                                background: "rgba(255,255,255,0.2)",
-                                                color: "inherit",
-                                            }}
-                                        />
-                                    )}
-                                </MenuButton>
+                                <FilterChipButton
+                                    active={!sprintFilterIsAll}
+                                    extra={selectedSprintKeys.length - 1}
+                                    field="Sprint"
+                                    value={sprintFilterButtonLabel}
+                                />
                             </AppTooltip>
                             <FilterMenu
                                 isDark={isDark}
@@ -2155,87 +2063,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         .join(", ");
                                 })()}
                             >
-                                <MenuButton
-                                    variant="solid"
-                                    startDecorator={
-                                        <FlagRoundedIcon
-                                            sx={{
-                                                fontSize: "16px",
-                                                color:
-                                                    selectedMilestoneKeys.length === 1 &&
-                                                    selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                        ? isDark
-                                                            ? MILESTONE_ACCENT_DARK
-                                                            : MILESTONE_ACCENT_LIGHT
-                                                        : "#fff",
-                                            }}
-                                        />
+                                <FilterChipButton
+                                    extra={selectedMilestoneKeys.length - 1}
+                                    field="Milestone"
+                                    value={milestoneFilterButtonLabel}
+                                    active={
+                                        !(
+                                            selectedMilestoneKeys.length === 1 &&
+                                            selectedMilestoneKeys[0] === MILESTONE_ALL
+                                        )
                                     }
-                                    sx={{
-                                        color:
-                                            selectedMilestoneKeys.length === 1 &&
-                                            selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                ? styles.textColor
-                                                : "#fff",
-                                        background:
-                                            selectedMilestoneKeys.length === 1 &&
-                                            selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                ? isDark
-                                                    ? "rgba(249,115,22,0.15)"
-                                                    : "rgba(249,115,22,0.1)"
-                                                : isDark
-                                                  ? `linear-gradient(135deg, ${alpha("#f97316", 0.5)} 0%, ${alpha("#f97316", 0.7)} 100%)`
-                                                  : `linear-gradient(135deg, ${alpha("#f97316", 0.75)} 0%, ${alpha("#f97316", 0.95)} 100%)`,
-                                        border: `1px solid ${
-                                            isDark
-                                                ? MILESTONE_ACCENT_BG_DARK
-                                                : MILESTONE_ACCENT_BG_LIGHT
-                                        }`,
-                                        borderRadius: "10px",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        height: "32px",
-                                        whiteSpace: "nowrap",
-                                        px: 1.5,
-                                        my: 0.5,
-                                        minHeight: 0,
-                                        boxShadow: isDark
-                                            ? "0 2px 8px rgba(249,115,22,0.25)"
-                                            : "0 2px 8px rgba(249,115,22,0.2)",
-                                        transition: "all 0.2s ease",
-                                        flexShrink: 0,
-                                        "&:hover": {
-                                            background:
-                                                selectedMilestoneKeys.length === 1 &&
-                                                selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                    ? isDark
-                                                        ? "rgba(249,115,22,0.25)"
-                                                        : "rgba(249,115,22,0.2)"
-                                                    : isDark
-                                                      ? `linear-gradient(135deg, ${alpha("#f97316", 0.6)} 0%, ${alpha("#f97316", 0.8)} 100%)`
-                                                      : `linear-gradient(135deg, ${alpha("#f97316", 0.85)} 0%, ${alpha("#f97316", 1)} 100%)`,
-                                            transform: "translateY(-1px)",
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(249,115,22,0.35)"
-                                                : "0 4px 12px rgba(249,115,22,0.3)",
-                                        },
-                                    }}
-                                >
-                                    Milestone: {milestoneFilterButtonLabel}
-                                    {selectedMilestoneKeys.length > 1 && (
-                                        <BarChip
-                                            label={`+${selectedMilestoneKeys.length - 1}`}
-                                            sx={{
-                                                ml: 0.5,
-                                                height: "18px",
-                                                fontSize: "10px",
-                                                fontWeight: 700,
-                                                background: "rgba(255,255,255,0.2)",
-                                                color: "inherit",
-                                            }}
-                                        />
-                                    )}
-                                </MenuButton>
+                                />
                             </AppTooltip>
                             <FilterMenu
                                 isDark={isDark}
@@ -2506,30 +2344,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     .map((status) => filterLabel(status))
                                     .join(", ")}
                             >
-                                <MenuButton
-                                    variant="solid"
-                                    sx={getFilterButtonStyle(
-                                        selectedStatus[0],
-                                        selectedStatus[0].label === "All"
-                                    )}
-                                >
-                                    {fmt(t.tasks.filterButtons.status, {
-                                        value: filterLabel(selectedStatus[0]),
-                                    })}
-                                    {selectedStatus.length > 1 && (
-                                        <BarChip
-                                            label={`+${selectedStatus.length - 1}`}
-                                            sx={{
-                                                ml: 0.5,
-                                                height: "18px",
-                                                fontSize: "10px",
-                                                fontWeight: 700,
-                                                background: "rgba(255,255,255,0.2)",
-                                                color: "inherit",
-                                            }}
-                                        />
-                                    )}
-                                </MenuButton>
+                                <FilterChipButton
+                                    active={!(selectedStatus[0].label === "All")}
+                                    extra={selectedStatus.length - 1}
+                                    value={filterLabel(selectedStatus[0])}
+                                    field={
+                                        splitFilterLabel(t.tasks.filterButtons.status, "").field
+                                    }
+                                />
                             </AppTooltip>
                             <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
                                 {predefinedStatusFilters.map((status) => {
@@ -2619,30 +2441,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             <AppTooltip
                                 title={selectedTags.map((tag) => filterLabel(tag)).join(", ")}
                             >
-                                <MenuButton
-                                    variant="solid"
-                                    sx={getFilterButtonStyle(
-                                        selectedTags[0],
-                                        selectedTags.some((tag) => tag.label === "All")
-                                    )}
-                                >
-                                    {fmt(t.tasks.filterButtons.tags, {
-                                        value: filterLabel(selectedTags[0]),
-                                    })}
-                                    {selectedTags.length > 1 && (
-                                        <BarChip
-                                            label={`+${selectedTags.length - 1}`}
-                                            sx={{
-                                                ml: 0.5,
-                                                height: "18px",
-                                                fontSize: "10px",
-                                                fontWeight: 700,
-                                                background: "rgba(255,255,255,0.2)",
-                                                color: "inherit",
-                                            }}
-                                        />
-                                    )}
-                                </MenuButton>
+                                <FilterChipButton
+                                    active={!selectedTags.some((tag) => tag.label === "All")}
+                                    extra={selectedTags.length - 1}
+                                    field={splitFilterLabel(t.tasks.filterButtons.tags, "").field}
+                                    value={filterLabel(selectedTags[0])}
+                                />
                             </AppTooltip>
                             <FilterMenu
                                 isDark={isDark}
@@ -2737,30 +2541,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             .map((priority) => filterLabel(priority))
                             .join(", ")}
                     >
-                        <MenuButton
-                            variant="solid"
-                            sx={getFilterButtonStyle(
-                                selectedPriorities[0],
-                                selectedPriorities.some((priority) => priority.label === "All")
-                            )}
-                        >
-                            {fmt(t.tasks.filterButtons.priority, {
-                                value: filterLabel(selectedPriorities[0]),
-                            })}
-                            {selectedPriorities.length > 1 && (
-                                <BarChip
-                                    label={`+${selectedPriorities.length - 1}`}
-                                    sx={{
-                                        ml: 0.5,
-                                        height: "18px",
-                                        fontSize: "10px",
-                                        fontWeight: 700,
-                                        background: "rgba(255,255,255,0.2)",
-                                        color: "inherit",
-                                    }}
-                                />
-                            )}
-                        </MenuButton>
+                        <FilterChipButton
+                            extra={selectedPriorities.length - 1}
+                            field={splitFilterLabel(t.tasks.filterButtons.priority, "").field}
+                            value={filterLabel(selectedPriorities[0])}
+                            active={
+                                !selectedPriorities.some((priority) => priority.label === "All")
+                            }
+                        />
                     </AppTooltip>
                     <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
                         {predefinedPriorityFilters.map((priority) => {
@@ -2841,121 +2629,113 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     </FilterMenu>
                 </FilterDropdown>
 
-                {/* Effort Level Filter */}
-                <FilterDropdown
-                    open={openEffortLevelFilter}
-                    onOpenChange={setOpenEffortLevelFilter}
-                >
-                    <AppTooltip
-                        title={selectedEffortLevels
-                            .map((effortLevel) => filterLabel(effortLevel))
-                            .join(", ")}
-                    >
-                        <MenuButton
-                            variant="solid"
-                            sx={getFilterButtonStyle(
-                                selectedEffortLevels[0],
-                                selectedEffortLevels.some(
-                                    (effortLevel) => effortLevel.label === "All"
-                                )
-                            )}
+                {EFFORT_FILTER_ENABLED && (
+                    <>
+                        {/* Effort Level Filter */}
+                        <FilterDropdown
+                            open={openEffortLevelFilter}
+                            onOpenChange={setOpenEffortLevelFilter}
                         >
-                            {fmt(t.tasks.filterButtons.effort, {
-                                value: filterLabel(selectedEffortLevels[0]),
-                            })}
-                            {selectedEffortLevels.length > 1 && (
-                                <BarChip
-                                    label={`+${selectedEffortLevels.length - 1}`}
-                                    sx={{
-                                        ml: 0.5,
-                                        height: "18px",
-                                        fontSize: "10px",
-                                        fontWeight: 700,
-                                        background: "rgba(255,255,255,0.2)",
-                                        color: "inherit",
-                                    }}
+                            <AppTooltip
+                                title={selectedEffortLevels
+                                    .map((effortLevel) => filterLabel(effortLevel))
+                                    .join(", ")}
+                            >
+                                <FilterChipButton
+                                    extra={selectedEffortLevels.length - 1}
+                                    value={filterLabel(selectedEffortLevels[0])}
+                                    active={
+                                        !selectedEffortLevels.some(
+                                            (effortLevel) => effortLevel.label === "All"
+                                        )
+                                    }
+                                    field={
+                                        splitFilterLabel(t.tasks.filterButtons.effort, "").field
+                                    }
                                 />
-                            )}
-                        </MenuButton>
-                    </AppTooltip>
-                    <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
-                        {predefinedEffortLevelFilters.map((effortLevel) => {
-                            const isSelected = selectedEffortLevels.some(
-                                (items) => items.label === effortLevel.label
-                            );
-                            return (
-                                <FilterMenuItem
-                                    key={effortLevel.label}
-                                    sx={{
-                                        borderRadius: "8px",
-                                        mx: 0.5,
-                                        my: 0.25,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.buttonHoverBg,
-                                        },
-                                    }}
-                                    onClick={() => handleCloseEffortLevelFilter(effortLevel)}
-                                >
-                                    <Box
-                                        sx={{
-                                            width: "100%",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1,
-                                        }}
-                                    >
-                                        <Box
+                            </AppTooltip>
+                            <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
+                                {predefinedEffortLevelFilters.map((effortLevel) => {
+                                    const isSelected = selectedEffortLevels.some(
+                                        (items) => items.label === effortLevel.label
+                                    );
+                                    return (
+                                        <FilterMenuItem
+                                            key={effortLevel.label}
                                             sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: "50%",
-                                                background: isDark
-                                                    ? effortLevel.darkModeColor
-                                                    : effortLevel.lightModeColor,
-                                                boxShadow: `0 0 6px ${isDark ? effortLevel.darkModeColor : effortLevel.lightModeColor}`,
+                                                borderRadius: "8px",
+                                                mx: 0.5,
+                                                my: 0.25,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    background: styles.buttonHoverBg,
+                                                },
                                             }}
-                                        />
-                                        <Typography
-                                            sx={{
-                                                fontSize: "13px",
-                                                fontWeight: isSelected ? 700 : 500,
-                                                color: isSelected
-                                                    ? isDark
-                                                        ? effortLevel.darkModeColor
-                                                        : effortLevel.lightModeColor
-                                                    : styles.textColor,
-                                                flex: 1,
-                                            }}
+                                            onClick={() =>
+                                                handleCloseEffortLevelFilter(effortLevel)
+                                            }
                                         >
-                                            {filterLabel(effortLevel)}
-                                        </Typography>
-                                        {isSelected && (
                                             <Box
                                                 sx={{
-                                                    width: 16,
-                                                    height: 16,
-                                                    borderRadius: "4px",
-                                                    background: isDark
-                                                        ? effortLevel.darkModeColor
-                                                        : effortLevel.lightModeColor,
+                                                    width: "100%",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
-                                                    fontSize: "10px",
-                                                    color: "#fff",
-                                                    fontWeight: 700,
+                                                    gap: 1,
                                                 }}
                                             >
-                                                ✓
+                                                <Box
+                                                    sx={{
+                                                        width: 8,
+                                                        height: 8,
+                                                        borderRadius: "50%",
+                                                        background: isDark
+                                                            ? effortLevel.darkModeColor
+                                                            : effortLevel.lightModeColor,
+                                                        boxShadow: `0 0 6px ${isDark ? effortLevel.darkModeColor : effortLevel.lightModeColor}`,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? effortLevel.darkModeColor
+                                                                : effortLevel.lightModeColor
+                                                            : styles.textColor,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    {filterLabel(effortLevel)}
+                                                </Typography>
+                                                {isSelected && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 16,
+                                                            height: 16,
+                                                            borderRadius: "4px",
+                                                            background: isDark
+                                                                ? effortLevel.darkModeColor
+                                                                : effortLevel.lightModeColor,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "10px",
+                                                            color: "#fff",
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        ✓
+                                                    </Box>
+                                                )}
                                             </Box>
-                                        )}
-                                    </Box>
-                                </FilterMenuItem>
-                            );
-                        })}
-                    </FilterMenu>
-                </FilterDropdown>
+                                        </FilterMenuItem>
+                                    );
+                                })}
+                            </FilterMenu>
+                        </FilterDropdown>
+                    </>
+                )}
 
                 {/* Member Filter — multi-select over the team's members.
                     Filtering by a member surfaces every task/milestone
@@ -2985,84 +2765,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         .join(", ");
                                 })()}
                             >
-                                <MenuButton
-                                    variant="solid"
-                                    startDecorator={
-                                        <PersonRoundedIcon
-                                            sx={{
-                                                fontSize: "16px",
-                                                color:
-                                                    selectedMemberKeys.length === 1 &&
-                                                    selectedMemberKeys[0] === MEMBER_ALL
-                                                        ? isDark
-                                                            ? MEMBER_ACCENT_DARK
-                                                            : MEMBER_ACCENT_LIGHT
-                                                        : "#fff",
-                                            }}
-                                        />
+                                <FilterChipButton
+                                    extra={selectedMemberKeys.length - 1}
+                                    field="Member"
+                                    value={memberFilterButtonLabel}
+                                    active={
+                                        !(
+                                            selectedMemberKeys.length === 1 &&
+                                            selectedMemberKeys[0] === MEMBER_ALL
+                                        )
                                     }
-                                    sx={{
-                                        color:
-                                            selectedMemberKeys.length === 1 &&
-                                            selectedMemberKeys[0] === MEMBER_ALL
-                                                ? styles.textColor
-                                                : "#fff",
-                                        background:
-                                            selectedMemberKeys.length === 1 &&
-                                            selectedMemberKeys[0] === MEMBER_ALL
-                                                ? isDark
-                                                    ? "rgba(99,102,241,0.15)"
-                                                    : "rgba(99,102,241,0.1)"
-                                                : isDark
-                                                  ? `linear-gradient(135deg, ${alpha("#6366f1", 0.5)} 0%, ${alpha("#6366f1", 0.7)} 100%)`
-                                                  : `linear-gradient(135deg, ${alpha("#6366f1", 0.75)} 0%, ${alpha("#6366f1", 0.95)} 100%)`,
-                                        border: `1px solid ${
-                                            isDark
-                                                ? "rgba(99,102,241,0.35)"
-                                                : "rgba(99,102,241,0.6)"
-                                        }`,
-                                        borderRadius: "10px",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        height: "32px",
-                                        whiteSpace: "nowrap",
-                                        px: 1.5,
-                                        my: 0.5,
-                                        minHeight: 0,
-                                        boxShadow: isDark
-                                            ? "0 2px 8px rgba(99,102,241,0.25)"
-                                            : "0 2px 8px rgba(99,102,241,0.2)",
-                                        transition: "all 0.2s ease",
-                                        flexShrink: 0,
-                                        "&:hover": {
-                                            background:
-                                                selectedMemberKeys.length === 1 &&
-                                                selectedMemberKeys[0] === MEMBER_ALL
-                                                    ? isDark
-                                                        ? "rgba(99,102,241,0.25)"
-                                                        : "rgba(99,102,241,0.2)"
-                                                    : isDark
-                                                      ? `linear-gradient(135deg, ${alpha("#6366f1", 0.6)} 0%, ${alpha("#6366f1", 0.8)} 100%)`
-                                                      : `linear-gradient(135deg, ${alpha("#6366f1", 0.85)} 0%, ${alpha("#6366f1", 1)} 100%)`,
-                                            transform: "translateY(-1px)",
-                                        },
-                                    }}
-                                >
-                                    Member: {memberFilterButtonLabel}
-                                    {selectedMemberKeys.length > 1 && (
-                                        <BarChip
-                                            label={`+${selectedMemberKeys.length - 1}`}
-                                            sx={{
-                                                ml: 0.5,
-                                                height: "18px",
-                                                fontSize: "10px",
-                                                fontWeight: 700,
-                                                background: "rgba(255,255,255,0.2)",
-                                                color: "inherit",
-                                            }}
-                                        />
-                                    )}
-                                </MenuButton>
+                                />
                             </AppTooltip>
                             <FilterMenu
                                 isDark={isDark}
@@ -3241,36 +2954,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     onApply={applySavedFilter}
                 />
 
-                {/* Reset Filters Button */}
+                {/* Reset Filters: an icon button, the tooltip names it. */}
                 <AppTooltip title={t.tasks.tooltips.resetFilters}>
-                    <Button
-                        startDecorator={<RestartAltIcon sx={{ fontSize: "16px" }} />}
-                        variant="outlined"
-                        sx={{
-                            color: isDark ? "#f87171" : "#dc2626",
-                            background: styles.resetBg,
-                            border: `1px solid ${styles.resetBorder}`,
-                            borderRadius: "10px",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            height: "32px",
-                            px: 1.5,
-                            minHeight: 0,
-                            flexShrink: 0,
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                background: styles.resetHover,
-                                border: `1px solid ${isDark ? "rgba(239,68,68,0.5)" : "rgba(239,68,68,0.4)"}`,
-                                transform: "translateY(-1px)",
-                                boxShadow: isDark
-                                    ? "0 4px 12px rgba(239,68,68,0.2)"
-                                    : "0 4px 12px rgba(239,68,68,0.15)",
-                            },
-                        }}
-                        onClick={resetFilters}
-                    >
-                        Reset
-                    </Button>
+                    <FilterIconButton onClick={resetFilters}>
+                        <RestartAltIcon />
+                    </FilterIconButton>
                 </AppTooltip>
             </Stack>
         </Box>
