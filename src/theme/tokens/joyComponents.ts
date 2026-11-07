@@ -27,6 +27,8 @@ const transition = {
 
 type OwnerState = { variant?: string; color?: string };
 
+const ENABLED = "&:not(.Mui-disabled):not(.MuiButton-loading)";
+
 export const joyComponents = {
     JoyButton: {
         styleOverrides: {
@@ -35,7 +37,12 @@ export const joyComponents = {
                 ...(ownerState.variant === "solid" &&
                     ownerState.color === "primary" && {
                         background: "var(--g-brand-gradient)",
-                        "&:hover, &:active": { background: "var(--g-brand-gradient-hover)" },
+                        // Enabled only: a disabled or loading button must not
+                        // light up on hover (the `&.Mui-disabled` rule is as
+                        // specific as `:hover`, and this one is emitted later).
+                        [`${ENABLED}:hover, ${ENABLED}:active`]: {
+                            background: "var(--g-brand-gradient-hover)",
+                        },
                     }),
             }),
         },

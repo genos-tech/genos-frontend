@@ -97,6 +97,7 @@ export const joyPalette = (themeId: ThemeId, mode: Mode) => {
     const r = buildRoles(themeId, mode);
     const { ramp } = THEME_PRIMITIVES[themeId];
     const midText = composite(r.textSecondary, 0.5, r.text);
+    const nr = neutralRamp(themeId);
     const backdrops = [r.bg, r.surface];
 
     return {
@@ -124,24 +125,30 @@ export const joyPalette = (themeId: ThemeId, mode: Mode) => {
             outlinedActiveBg: alphaCss(stepped(r.accentSubtle, 0.08, r.accentText, backdrops)),
         },
         neutral: {
-            ...neutralRamp(themeId),
+            ...nr,
             plainColor: r.textSecondary,
             plainHoverColor: r.text,
             plainHoverBg: alphaCss(r.hover),
             plainActiveBg: alphaCss(r.active),
             outlinedColor: r.textSecondary,
-            outlinedBorder: alphaCss(r.border),
+            // The boundary of Input / Select / Textarea / Checkbox / outlined
+            // Button: the stronger line, not the card hairline. The card
+            // `border` role (0.11) was too faint to find a field by.
+            outlinedBorder: alphaCss(r.borderStrong),
             outlinedHoverBg: alphaCss(r.hover),
             outlinedActiveBg: alphaCss(r.active),
             softColor: r.text,
             softBg: opaque(r.hover, r.surface),
             softHoverBg: opaque(r.active, r.surface),
             softActiveBg: opaque(r.border, r.surface),
-            // A neutral solid is the inverse chip: tooltips use it.
-            solidBg: r.textSecondary,
-            solidHoverBg: r.text,
-            solidActiveBg: r.text,
-            solidColor: r.bg,
+            // A neutral solid is a mid-tone fill with WHITE on it, in both
+            // modes, as Joy's own is: tooltips, Switch tracks (white thumb),
+            // Slider and progress tracks. An inverse chip (light fill in dark
+            // mode) left a white Switch thumb nearly invisible.
+            solidBg: nr[600],
+            solidHoverBg: nr[700],
+            solidActiveBg: nr[800],
+            solidColor: "#ffffff",
         },
         danger: status(r.danger, backdrops),
         success: status(r.success, backdrops),
@@ -153,7 +160,7 @@ export const joyPalette = (themeId: ThemeId, mode: Mode) => {
             level1: r.bgSubtle,
             level2: composite(r.hover.hex, 0.06, r.bg),
             level3: composite(r.hover.hex, 0.1, r.bg),
-            tooltip: r.textSecondary,
+            tooltip: nr[600],
             backdrop: alphaCss(r.scrim),
         },
         text: {

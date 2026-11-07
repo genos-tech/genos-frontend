@@ -102,9 +102,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         <NoteUnreadProvider value={noteUnread}>
             <Box sx={LayoutStyles.outerWrapper}>
                 <Sheet sx={ls.serviceSurface}>
-                    <Box sx={ls.decorTopRight} />
-                    <Box sx={ls.decorBottomLeft} />
-
                     {isMobile ? (
                         <MobileNoteHome
                             myself={myself}

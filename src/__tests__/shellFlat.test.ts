@@ -43,9 +43,9 @@ describe("the shell surface", () => {
             expect(surface.background).toBe(purplePalette[mode].bg);
         });
 
-        it(`${mode}: the ambient glows render nothing (five Homes still mount the boxes)`, () => {
-            expect(LayoutStyles[mode].decorTopRight).toEqual({ display: "none" });
-            expect(LayoutStyles[mode].decorBottomLeft).toEqual({ display: "none" });
+        it(`${mode}: the ambient glow decorations are gone`, () => {
+            expect(LayoutStyles[mode]).not.toHaveProperty("decorTopRight");
+            expect(LayoutStyles[mode]).not.toHaveProperty("decorBottomLeft");
         });
     }
 });

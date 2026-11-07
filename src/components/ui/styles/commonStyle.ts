@@ -556,12 +556,6 @@ export const LayoutStyles = {
             overflow: "hidden" as const,
         },
 
-        // Subtle radial glow decorations (position: absolute, pointerEvents: none)
-        // The ambient radial glows are gone (flat canvas, MIP-1118). The
-        // names stay because five Homes still render them as empty boxes.
-        decorTopRight: { display: "none" as const },
-        decorBottomLeft: { display: "none" as const },
-
         // Box that wraps a sidebar Panel (the left resizable column)
         sidebarPanel: {
             height: "100%",
@@ -600,11 +594,6 @@ export const LayoutStyles = {
             position: "relative" as const,
             overflow: "hidden" as const,
         },
-
-        // The ambient radial glows are gone (flat canvas, MIP-1118). The
-        // names stay because five Homes still render them as empty boxes.
-        decorTopRight: { display: "none" as const },
-        decorBottomLeft: { display: "none" as const },
 
         sidebarPanel: {
             height: "100%",

@@ -17,7 +17,7 @@ import { buildJoyTheme } from "../theme/purplePalette";
 import { THEME_IDS } from "../theme/themePalettes";
 import { composite, contrast } from "../theme/tokens/color";
 import { joyComponents } from "../theme/tokens/joyComponents";
-import { buildRoles, Mode } from "../theme/tokens/roles";
+import { alphaCss, buildRoles, Mode } from "../theme/tokens/roles";
 
 const AA = 4.5;
 const NON_TEXT = 3;
@@ -110,6 +110,29 @@ describe.each(cases)("Joy palette: %s / %s", (id, mode) => {
         }
     });
 
+    it("neutral solid is a mid-tone fill with white on it in BOTH modes (Switch track, tooltip)", () => {
+        // A light fill in dark mode left a white Switch thumb almost invisible.
+        const v = p.neutral;
+        for (const k of ["solidBg", "solidHoverBg", "solidActiveBg"]) {
+            const fill = resolve(v[k], body);
+            expect(v.solidColor, k).toBe("#ffffff");
+            expect(contrast("#ffffff", fill), `white on ${k}`).toBeGreaterThanOrEqual(AA);
+        }
+        // ...and the track itself has to be findable on the page.
+        expect(contrast(resolve(v.solidBg, body), body), "track on page").toBeGreaterThanOrEqual(
+            NON_TEXT
+        );
+        expect(resolve(bg.tooltip, body)).toBe(resolve(v.solidBg, body));
+    });
+
+    it("control borders are at least as findable as Joy's old default (about 1.46:1)", () => {
+        // Input, Select, Textarea and Checkbox draw their boundary with
+        // neutral.outlinedBorder. The card hairline (0.11) was too faint.
+        const border = resolve(p.neutral.outlinedBorder, surface);
+        expect(contrast(border, surface)).toBeGreaterThanOrEqual(1.4);
+        expect(p.neutral.outlinedBorder).toBe(alphaCss(buildRoles(id, mode).borderStrong));
+    });
+
     it.each(["danger", "success", "warning"])("%s: fill and text variants pass AA", (k) => {
         const v = p[k];
         for (const bgk of ["solidBg", "solidHoverBg", "solidActiveBg"]) {
@@ -172,9 +195,13 @@ describe("Joy Button: the only gradient left", () => {
             unknown
         >;
         expect(style.background).toBe("var(--g-brand-gradient)");
-        expect(style["&:hover, &:active"]).toEqual({
+        // Hover and pressed only while ENABLED: a disabled or loading button
+        // must not light up (its `.Mui-disabled` rule is as specific as :hover).
+        const enabled = "&:not(.Mui-disabled):not(.MuiButton-loading)";
+        expect(style[`${enabled}:hover, ${enabled}:active`]).toEqual({
             background: "var(--g-brand-gradient-hover)",
         });
+        expect(style["&:hover, &:active"]).toBeUndefined();
     });
 
     it.each([

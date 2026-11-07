@@ -88,8 +88,6 @@ export const InboxHome = (props: InboxHomeProps) => {
         <Box sx={LayoutStyles.outerWrapper}>
             <Sheet sx={{ width: "100%", ...ls.serviceSurface }}>
                 {/* Background decorations */}
-                <Box sx={ls.decorTopRight} />
-                <Box sx={ls.decorBottomLeft} />
 
                 {/* Header */}
                 <InboxHeader />

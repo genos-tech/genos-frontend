@@ -3,7 +3,13 @@ import { extendTheme } from "@mui/joy/styles";
 import { DEFAULT_THEME_ID, ThemeId } from "./themePalettes";
 import { joyComponents } from "./tokens/joyComponents";
 import { joyPalette } from "./tokens/joyPalette";
-import { joyFontWeight, joyRadius, joyShadow, joyTypography } from "./tokens/joyScales";
+import {
+    joyFontSize,
+    joyFontWeight,
+    joyRadius,
+    joyShadow,
+    joyTypography,
+} from "./tokens/joyScales";
 import { FONT_STACKS } from "./tokens/scales";
 
 // Brand-surface palette. The single source of truth for brand-surface colors
@@ -133,7 +139,6 @@ export type PurpleTokens = {
 
 // Mode-independent brand stops.
 const BRAND = "var(--gp-brand-rgb)";
-const BRAND_ALT = "var(--gp-brand-alt-rgb)";
 const GRAD = "linear-gradient(135deg, var(--gp-grad-from) 0%, var(--gp-grad-to) 100%)";
 const GRAD_HOVER =
     "linear-gradient(135deg, var(--gp-grad-from-hover) 0%, var(--gp-grad-to-hover) 100%)";
@@ -279,6 +284,7 @@ export const buildJoyTheme = (
         // Type levels, weights, radius and shadows come from the design
         // tokens (see `tokens/joyScales.ts`).
         typography: joyTypography,
+        fontSize: joyFontSize,
         fontWeight: joyFontWeight,
         radius: joyRadius,
         shadow: joyShadow,

@@ -370,9 +370,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                 </Snackbar>
 
                 <Sheet sx={ls.serviceSurface}>
-                    <Box sx={ls.decorTopRight} />
-                    <Box sx={ls.decorBottomLeft} />
-
                     {isMobile ? (
                         <MobileChatHome
                             chatRouting={chatRouting}

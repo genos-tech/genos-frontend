@@ -13,6 +13,7 @@ type Level = { fontSize: string; lineHeight: number; fontWeight: number; color: 
 const theme = buildJoyTheme("purple") as unknown as {
     typography: Record<string, Level>;
     fontWeight: Record<string, number>;
+    fontSize: Record<string, string>;
     radius: Record<string, string>;
     shadow: Record<string, string>;
 };
@@ -60,6 +61,22 @@ describe("Joy type levels come from the token scale", () => {
             ...Object.values(theme.fontWeight),
         ]);
         expect([...used].sort()).toEqual([400, 500, 600]);
+    });
+});
+
+describe("Joy's own font-size scale agrees with the levels", () => {
+    // Button, Chip and Checkbox size their text from fontSize.sm / md, not from
+    // the type levels; left alone they sat 1px larger than the text beside them.
+    it("sm and md are the body-sm and body-md sizes", () => {
+        expect(theme.fontSize.sm).toBe(theme.typography["body-sm"].fontSize);
+        expect(theme.fontSize.md).toBe(theme.typography["body-md"].fontSize);
+    });
+
+    it("xs, lg, xl and up stay Joy's: xl / xl2 also size icon and decorator glyphs", () => {
+        expect(theme.fontSize.xs).toBe("0.75rem");
+        expect(theme.fontSize.lg).toBe("1.125rem");
+        expect(theme.fontSize.xl).toBe("1.25rem");
+        expect(theme.fontSize.xl2).toBe("1.5rem");
     });
 });
 

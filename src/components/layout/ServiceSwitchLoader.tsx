@@ -49,8 +49,6 @@ const LoaderSurface = () => {
                 gap: 2.5,
             }}
         >
-            <Box sx={ls.decorTopRight} />
-            <Box sx={ls.decorBottomLeft} />
             {/* The surface is there on the first frame; only the dots and the
                 caption wait 150ms (CSS, so it holds while the main thread is
                 busy), so a switch that lands at once never flashes them. */}

@@ -105,12 +105,31 @@ const selectorsFor = (id: ThemeId, mode: Mode): string[] => {
     return [...fallback, ...own];
 };
 
+/**
+ * First paint, before Joy has set `data-joy-color-scheme` (it does so when
+ * React mounts; there is no init script). Without this the bare `:root`
+ * fallback is LIGHT, so a dark-OS user would see a white flash. It follows
+ * the OS, as `index.css`'s old `--color-background` did, then Joy's own
+ * attribute takes over (this only matches while it is absent).
+ */
+const firstPaintDark = (): string =>
+    `@media (prefers-color-scheme: dark) {\n${THEME_IDS.map((id) => {
+        const sel = `:root[data-theme="${id}"]:not([data-joy-color-scheme])`;
+        const selectors =
+            id === DEFAULT_THEME_ID ? [":root:not([data-joy-color-scheme])", sel] : [sel];
+        return block(selectors, roleVars(buildRoles(id, "dark")))
+            .split("\n")
+            .map((line) => `    ${line}`)
+            .join("\n");
+    }).join("\n\n")}\n}`;
+
 export const buildTokenStylesheet = (): string =>
     [
         block([":root"], scaleVars()),
         ...THEME_IDS.flatMap((id) =>
             MODES.map((mode) => block(selectorsFor(id, mode), roleVars(buildRoles(id, mode))))
         ),
+        firstPaintDark(),
     ].join("\n\n");
 
 /** Inject the token stylesheet once. Idempotent. In P1 only the style-guide

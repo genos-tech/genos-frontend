@@ -48,6 +48,18 @@ export const joyTypography = {
     "body-xs": level("body-xs"),
 };
 
+/**
+ * Joy's `fontSize` scale is what Button, Chip and Checkbox size their own
+ * text from (not the type levels), so it has to agree with the levels or
+ * every control sits 1px larger than the body text beside it. Only `sm` and
+ * `md` move: they are text roles (13 and 14px). `xl` and `xl2` also size
+ * decorator and icon glyphs inside Joy components, so they stay Joy's.
+ */
+export const joyFontSize = {
+    sm: rem(TYPE_SCALE["body-sm"].size),
+    md: rem(TYPE_SCALE["body-md"].size),
+};
+
 /** Three weights only: 700 is retired (two bold weights side by side look
  *  like a mistake at these sizes). Joy's `sm` was 300 and `xl` 700. */
 export const joyFontWeight = { sm: 400, md: 500, lg: 600, xl: 600 };
