@@ -68,12 +68,17 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
 
     const isHighlighted = useNM.highlightedFolderId === folder.folderId;
 
+    // A folder you drag a note over takes the accent tint and a dashed
+    // ring; the folder a "jump to folder" landed on flashes the tint.
+    // Keep the "..." trigger visible while its portal menu is open.
     const headerRow = (isDraggingOver: boolean) => (
         <NavItem
+            actionsVisible={menuOpen}
             as="div"
             data-note-folder-id={folder.folderId}
             expanded={isExpanded}
             icon={<FolderIcon />}
+            label={folder.name}
             actions={
                 <>
                     <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
@@ -141,8 +146,6 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                     </Box>
                 </>
             }
-            // A folder you drag a note over takes the accent tint and a dashed
-            // ring; the folder a "jump to folder" landed on flashes the tint.
             sx={
                 isDraggingOver
                     ? { background: g.accent.subtle, outline: `1px dashed ${g.accent.border}` }
@@ -151,15 +154,12 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                       : undefined
             }
             onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
-            label={folder.name}
-            // Keep the "..." trigger visible while its portal menu is open.
-            actionsVisible={menuOpen}
         />
     );
 
     return (
         <Box>
-            <ListItem nested sx={{ p: 0 }}>
+            <ListItem sx={{ p: 0 }} nested>
                 {/* Folder header — always a drop target so notes can be
                     filed into a COLLAPSED folder too. */}
                 <DroppableHeader containerId={myFolderContainerId(folder.folderId)} kind={1}>

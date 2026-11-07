@@ -106,7 +106,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
         );
 
     return (
-        <ListItem nested sx={{ p: 0 }}>
+        <ListItem sx={{ p: 0 }} nested>
             <Toggler
                 key={`toggler-TeamProjects`}
                 defaultExpanded={true}

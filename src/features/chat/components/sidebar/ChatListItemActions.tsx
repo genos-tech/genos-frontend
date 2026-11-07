@@ -78,9 +78,9 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     <AppTooltip size="sm" title={t.chat.listItem.openTodo}>
                         <Badge
                             // The open to-do count is state, like a pin: it stays showing.
-                            className={incompleteTodoCount > 0 ? NAV_KEEP_CLASS : undefined}
                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             badgeContent={incompleteTodoCount}
+                            className={incompleteTodoCount > 0 ? NAV_KEEP_CLASS : undefined}
                             color="primary"
                             size="sm"
                             sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}

@@ -187,12 +187,17 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem nested sx={{ p: 0 }}>
+            <ListItem sx={{ p: 0 }} nested>
+                {/* Passive markers, in the row's end: whose folder, its tags,
+                   and its visibility.
+                   Keep the "..." trigger visible while its portal menu is open. */}
                 <NavItem
+                    actionsVisible={menuOpen}
                     as="div"
                     data-note-folder-id={folder.folderId}
                     expanded={isExpanded}
                     icon={<FolderIcon />}
+                    label={folder.name}
                     actions={
                         <>
                             <FolderFavoriteStar folderId={folder.folderId} useNM={useNM} />
@@ -212,8 +217,6 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                             ? highlightedFolderSx
                             : undefined
                     }
-                    // Passive markers, in the row's end: whose folder, its tags,
-                    // and its visibility.
                     trailing={
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                             {/* Whose folder this is. Only on the share's own root:
@@ -222,6 +225,8 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                                 subtree would crowd out the names. */}
                             {isExternal && folder.parentFolderId === null && (
                                 <ExternalChip
+                                    label={folder.hostTeamName || t.notes.teamNotes.sharedBadge}
+                                    maxWidth={110}
                                     hint={
                                         folder.hostTeamName
                                             ? fmt(t.notes.teamNotes.sharedByTeamHint, {
@@ -229,8 +234,6 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                                               })
                                             : t.notes.teamNotes.sharedByAnotherTeamHint
                                     }
-                                    label={folder.hostTeamName || t.notes.teamNotes.sharedBadge}
-                                    maxWidth={110}
                                 />
                             )}
 
@@ -292,9 +295,6 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                         </Box>
                     }
                     onClick={() => useNM.toggleFolderExpanded(folder.folderId)}
-                    label={folder.name}
-                    // Keep the "..." trigger visible while its portal menu is open.
-                    actionsVisible={menuOpen}
                 />
 
                 {isExpanded && (

@@ -739,6 +739,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
                 lines={2}
                 selected={isSelected}
+                // Active-flag indicator bar: not shown in the past view (those
+                // flags are completed, not outstanding).
+                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
                 sx={{
                     mx: 1,
                     height: "auto",
@@ -748,9 +751,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         "& .MuiListItemButton-root": { cursor: "default" },
                     }),
                 }}
-                // Active-flag indicator bar: not shown in the past view (those
-                // flags are completed, not outstanding).
-                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
                 onClick={onClickHandler}
             >
                 <Stack direction="column" spacing={0.5} sx={{ position: "relative", zIndex: 1 }}>

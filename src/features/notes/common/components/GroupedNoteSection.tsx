@@ -68,26 +68,17 @@ function GroupedNoteSectionComponent({
     // Match MyNoteFolderTree: open-folder icon when expanded, closed when not.
     const FolderIcon = isExpanded ? FolderOpenRoundedIcon : FolderRoundedIcon;
 
+    // Keep the "..." trigger visible while its portal menu is open, or
+    // the hover-reveal hides it as the pointer moves onto the menu.
+    // A `leadingIcon` (milestone flag) overrides the folder glyph, which
+    // swaps open/closed like the my-note folder tree.
+    // Dragging a note over the folder: the accent tint and a dashed ring.
     const headerButton = (isDraggingOver: boolean) => (
         <NavItem
-            as="div"
-            // A `leadingIcon` (milestone flag) overrides the folder glyph, which
-            // swaps open/closed like the my-note folder tree.
             actionsVisible={menuOpen}
-            icon={leadingIcon ?? <FolderIcon />}
+            as="div"
             expanded={isExpanded}
-            // Keep the "..." trigger visible while its portal menu is open, or
-            // the hover-reveal hides it as the pointer moves onto the menu.
-            label={
-                <>
-                    {groupLabel}
-                    {subLabel && (
-                        <Box component="span" sx={{ ml: 0.75, color: "text.tertiary" }}>
-                            {subLabel}
-                        </Box>
-                    )}
-                </>
-            }
+            icon={leadingIcon ?? <FolderIcon />}
             actions={
                 menuItems && menuItems.length > 0 ? (
                     <Box onClick={(e) => e.stopPropagation()}>
@@ -101,7 +92,16 @@ function GroupedNoteSectionComponent({
                     </Box>
                 ) : undefined
             }
-            // Dragging a note over the folder: the accent tint and a dashed ring.
+            label={
+                <>
+                    {groupLabel}
+                    {subLabel && (
+                        <Box component="span" sx={{ ml: 0.75, color: "text.tertiary" }}>
+                            {subLabel}
+                        </Box>
+                    )}
+                </>
+            }
             sx={
                 isDraggingOver
                     ? {
@@ -116,7 +116,7 @@ function GroupedNoteSectionComponent({
 
     return (
         <Box key={groupKey}>
-            <ListItem nested sx={{ p: 0 }}>
+            <ListItem sx={{ p: 0 }} nested>
                 {droppableId && droppableKind ? (
                     <DroppableHeader containerId={droppableId} kind={droppableKind}>
                         {(isDraggingOver) => headerButton(isDraggingOver)}
