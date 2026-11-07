@@ -1,9 +1,7 @@
 import { memo } from "react";
 import TableChartIcon from "@mui/icons-material/TableChart";
-import { Box, ListItem, ListItemContent, Typography } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
-import { useColorScheme } from "@mui/joy/styles";
 
+import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { useTranslation } from "../../../../i18n";
 import type { SidebarTableViewTM } from "./useSidebarSlices";
 
@@ -14,76 +12,19 @@ type TaskTableListItemProps = {
 
 export const TaskTableListItem = memo(function TaskTableListItem(props: TaskTableListItemProps) {
     const { useTM } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const isSelected = useTM.isTaskTableVisible === true;
     const { t } = useTranslation();
 
     return (
-        <ListItem>
-            <ListItemButton
-                selected={isSelected}
-                sx={{
-                    borderRadius: "10px",
-                    py: 1,
-                    px: 1.5,
-                    gap: 1.5,
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        backgroundColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.06)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.04)",
-                    },
-                    "&.Mui-selected": {
-                        backgroundColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.15)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                        },
-                    },
-                }}
-                onClick={() => {
-                    useTM.setIsTaskDashboardVisible(false);
-                    useTM.setIsSprintBoardVisible(false);
-                    useTM.setIsTaskTableVisible(true);
-                }}
-            >
-                <Box
-                    sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: isDark
-                            ? "rgba(var(--gp-brand-700-rgb), 0.08)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                        transition: "all 0.2s ease",
-                    }}
-                >
-                    <TableChartIcon
-                        sx={{
-                            fontSize: 16,
-                            color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.65)",
-                        }}
-                    />
-                </Box>
-                <ListItemContent>
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            fontWeight: 500,
-                            color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
-                        }}
-                    >
-                        {t.tasks.sidebar.table}
-                    </Typography>
-                </ListItemContent>
-            </ListItemButton>
-        </ListItem>
+        <NavItem
+            icon={<TableChartIcon />}
+            label={t.tasks.sidebar.table}
+            selected={isSelected}
+            onClick={() => {
+                useTM.setIsTaskDashboardVisible(false);
+                useTM.setIsSprintBoardVisible(false);
+                useTM.setIsTaskTableVisible(true);
+            }}
+        />
     );
 });
