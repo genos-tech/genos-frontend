@@ -91,7 +91,8 @@ export const defaultColumns: ColumnDef[] = [
         field: "id",
         headerName: "ID",
         headerLabelKey: "id",
-        width: 100,
+        // Wide enough for "MIP-1150" + the open icon on one line (it wrapped at 100).
+        width: 124,
         align: "center",
         resizable: false,
     },
@@ -171,8 +172,9 @@ export const defaultColumns: ColumnDef[] = [
         field: "effortLevel",
         headerName: "Effort Level",
         headerLabelKey: "effortLevel",
-        width: 100,
-        minWidth: 80,
+        // Room for the colored chip ("Extensive" with its dot) without cutting it.
+        width: 124,
+        minWidth: 100,
         align: "center",
         editable: true,
         resizable: true,

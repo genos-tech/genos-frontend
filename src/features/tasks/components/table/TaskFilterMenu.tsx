@@ -121,6 +121,12 @@ const MEMBER_NONE = "__none__";
 const MEMBER_ACCENT_DARK = "#818cf8";
 const MEMBER_ACCENT_LIGHT = "#4f46e5";
 
+/** The Effort filter is switched off for now (Ken, MIP-1123 review): its chip is
+ *  not drawn and a stored or saved effort selection no longer narrows the list.
+ *  The state, the handler and the menu below stay, so flipping this back on is
+ *  the whole change. */
+const EFFORT_FILTER_ENABLED = false;
+
 /**
  * The bar's whole selection, in one object.
  *
@@ -134,12 +140,6 @@ const MEMBER_ACCENT_LIGHT = "#4f46e5";
  *
  *     applyFilters({ ...selection, status: newStatuses });
  */
-/** The Effort filter is switched off for now (Ken, MIP-1123 review): its chip is
- *  not drawn and a stored or saved effort selection no longer narrows the list.
- *  The state, the handler and the menu below stay, so flipping this back on is
- *  the whole change. */
-const EFFORT_FILTER_ENABLED = false;
-
 type FilterSelection = {
     status: FilterProps[];
     tags: FilterProps[];

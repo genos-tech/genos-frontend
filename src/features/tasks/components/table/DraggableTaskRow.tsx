@@ -59,13 +59,8 @@ import {
     statusSelectNode,
     TagAutocomplete,
 } from "./cellEditors";
+import { depthRowBackground, depthRowLeftBorder } from "./depthTone";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
-
-// A nested row is told apart by its indent and a quiet guide on its left edge, not by
-// a colored background per depth (blue, teal, amber: MIP-1123). Exported so the
-// QuickAddTaskRow draft row renders the same chrome as real rows.
-export const depthRowLeftBorder = (rowDepth: number): string =>
-    rowDepth > 0 ? `3px solid ${g.border.default}` : "3px solid transparent";
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
@@ -88,7 +83,7 @@ const getTableRowStyles = (
     // A min-height, so a row whose tags wrap still grows.
     minHeight: g.row.current,
     borderBottom: isDragging ? "none" : `1px solid ${g.border.subtle}`,
-    backgroundColor: isDragging || isSelected ? g.accent.subtle : "transparent",
+    backgroundColor: isDragging || isSelected ? g.accent.subtle : depthRowBackground(rowDepth),
     borderLeft: isSelected ? `3px solid ${g.accent.solid}` : depthRowLeftBorder(rowDepth),
     boxShadow: isDragging ? g.shadow.lg : "none",
     borderRadius: isDragging ? 6 : 0,
@@ -717,6 +712,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             minHeight: 0,
                             height: 24,
                             px: 0.75,
+                            // One line, whatever the key's length (it wrapped, MIP-1175).
+                            whiteSpace: "nowrap",
                             "&:hover": { backgroundColor: g.hover, color: g.accent.text },
                         }}
                         onClick={(e) => {
@@ -1120,6 +1117,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "6px",
                                 minWidth: 30,
+                                // A one-digit weight sat at the left of its 30px chip.
+                                justifyContent: "center",
                             }}
                         />
                     </AppTooltip>

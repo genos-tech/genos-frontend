@@ -99,6 +99,68 @@ describe("ChipSelect", () => {
     });
 });
 
+describe("ChipSelect opened by the table (MIP-1175)", () => {
+    const options = [
+        { value: "Open", node: <span>Open chip</span> },
+        { value: "WIP", node: <span>WIP chip</span> },
+    ];
+    const mountOpen = (onClose: () => void) =>
+        wrap(
+            <div>
+                <button data-testid="outside">outside</button>
+                <ChipSelect
+                    options={options}
+                    value="Open"
+                    open
+                    onChange={() => {}}
+                    onClose={onClose}
+                />
+            </div>
+        );
+
+    it("Escape closes it even though focus never entered the select", async () => {
+        const onClose = vi.fn();
+        mountOpen(onClose);
+        await screen.findByRole("listbox");
+        (document.activeElement as HTMLElement | null)?.blur();
+        fireEvent.keyDown(document.body, { key: "Escape" });
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("a press outside the select and its list closes it; a press inside does not", async () => {
+        const onClose = vi.fn();
+        mountOpen(onClose);
+        const list = await screen.findByRole("listbox");
+        fireEvent.pointerDown(list);
+        fireEvent.pointerDown(screen.getByRole("combobox"));
+        expect(onClose).not.toHaveBeenCalled();
+        fireEvent.pointerDown(screen.getByTestId("outside"));
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("stops listening once it is no longer open", async () => {
+        const onClose = vi.fn();
+        const { rerender } = wrap(
+            <ChipSelect
+                options={options}
+                value="Open"
+                open
+                onChange={() => {}}
+                onClose={onClose}
+            />
+        );
+        await screen.findByRole("listbox");
+        rerender(
+            <CssVarsProvider>
+                <ChipSelect options={options} value="Open" onChange={() => {}} onClose={onClose} />
+            </CssVarsProvider>
+        );
+        fireEvent.keyDown(document.body, { key: "Escape" });
+        fireEvent.pointerDown(document.body);
+        expect(onClose).not.toHaveBeenCalled();
+    });
+});
+
 describe("CellTextInput", () => {
     it("is controlled, and passes Enter and Escape through for the row to act on", () => {
         const onKeyDown = vi.fn();
