@@ -40,9 +40,9 @@ export const ModalLeaveConfirm = ({
             description={description}
             entityName={entityName}
             icon={<LogoutRoundedIcon sx={{ color: g.danger.text }} />}
+            open={open}
             role="dialog"
             title={title}
-            open={open}
             destructive
             onClose={onCancel}
             onConfirm={async () => {
