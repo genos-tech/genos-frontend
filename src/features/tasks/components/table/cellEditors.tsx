@@ -43,6 +43,11 @@ const fieldSx = {
     "--Select-minHeight": "28px",
     "--Input-radius": "6px",
     "--Select-radius": "6px",
+    // A chip has to fit inside the closed select: Joy's default padding and
+    // indicator leave a 105px table cell less than the 70px chip needs.
+    "--Select-paddingInline": "4px",
+    "--Select-gap": "4px",
+    "& .MuiSelect-indicator": { marginInlineStart: 0, "--Icon-fontSize": "0.875rem" },
     "&:hover": { borderColor: g.accent.solid },
     "&:focus-within": {
         borderColor: g.accent.solid,
@@ -90,6 +95,7 @@ export const PillChip = ({
     title?: string;
 }) => (
     <Box
+        className="pill-chip"
         component="span"
         title={title}
         sx={[
@@ -166,7 +172,12 @@ export const ChipSelect = ({
             size="sm"
             value={value}
             {...(open !== undefined ? { listboxOpen: open } : {})}
-            slotProps={{ listbox: { sx: popupSx } }}
+            slotProps={{
+                listbox: { sx: popupSx },
+                // The closed select shows the chip at its natural width: a chip's own
+                // minimum (for the option list) would truncate it in a narrow cell.
+                button: { sx: { "& .pill-chip": { minWidth: 0, px: "4px", gap: "2px" } } },
+            }}
             sx={[fieldSx, { minWidth, width: fullWidth ? "100%" : undefined }]}
             renderValue={(selected) =>
                 all.find((o) => o.value === (selected?.value ?? value))?.node ?? null
