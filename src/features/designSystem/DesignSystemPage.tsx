@@ -57,6 +57,7 @@ import {
     Text,
 } from "./samples";
 import { TailwindSample } from "./TailwindSample";
+import { TaskCardSamples } from "./TaskCardSamples";
 
 /** The accent each theme renders with. It doesn't depend on mode, and the
  *  picker would otherwise rebuild every theme's roles on each click. */
@@ -986,6 +987,13 @@ const Components = () => (
                     <TaskRow key={t.id} hovered={i === 2} task={t} />
                 ))}
             </Panel>
+        </Labelled>
+
+        <Labelled
+            note="The board, mobile list, dashboard rows and milestone cards are one family: TaskCard and TaskListItem, on the shared status, priority, tag and avatar pieces."
+            title="Task card and task row"
+        >
+            <TaskCardSamples />
         </Labelled>
 
         <Labelled

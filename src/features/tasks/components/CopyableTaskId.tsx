@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Chip, ChipProps, Typography, TypographyProps } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { formatTaskDisplayId } from "../utils/taskDisplayId";
+import { useCopyState } from "./useCopyState";
 
 // Shared by both variants — any object that the formatter can resolve
 // a display ID from (TaskProps, TaskTableProps, ActivityMessageProps,
@@ -12,30 +12,6 @@ type TaskLike = {
     displayId?: string | null;
     id?: number | string | null;
     taskId?: number | string | null;
-};
-
-const COPIED_FEEDBACK_MS = 1200;
-
-const useCopyState = () => {
-    const [copied, setCopied] = useState(false);
-    const onClick = (text: string) => (event: React.MouseEvent) => {
-        // Task ID chips are routinely nested inside row click handlers
-        // (open task, navigate to thread, etc.). Without stopPropagation
-        // a click would both copy AND navigate, which is surprising.
-        event.stopPropagation();
-        if (!text) return;
-        navigator.clipboard
-            .writeText(text)
-            .then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
-            })
-            .catch(() => {
-                // Clipboard API rejected (insecure context, permissions
-                // denied). Swallow — the chip is non-essential.
-            });
-    };
-    return { copied, onClick };
 };
 
 // ─────────────────────────────────────────────────────────────────────
