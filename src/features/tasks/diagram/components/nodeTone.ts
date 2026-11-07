@@ -4,7 +4,7 @@
  */
 
 import { fmt, useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
+import { g, type } from "../../../../theme/tokens";
 import type { DueTone } from "../../components/card";
 import type { ScheduleHealthTone, ScheduleStatus, ScheduleTone } from "../utils/scheduleStatus";
 
@@ -36,3 +36,13 @@ export const HEALTH_COLOR: Record<ScheduleHealthTone, string> = {
     "at-risk": g.warning.solid,
     behind: g.danger.solid,
 };
+
+/** The dates under a node's title ("May 22 – Jun 3", one date, or null). */
+export const scheduleDateText = (schedule: ScheduleStatus): string | null =>
+    schedule.startLabel && schedule.dueLabel
+        ? `${schedule.startLabel} – ${schedule.dueLabel}`
+        : (schedule.startLabel ?? schedule.dueLabel ?? null);
+
+/** A title is reserved two lines, so a one-line card is as tall as a two-line
+ *  one and the edges (which meet the card's top and bottom) keep their rhythm. */
+export const NODE_TITLE_MIN_HEIGHT = `calc(2 * ${type("body-sm").lineHeight})`;

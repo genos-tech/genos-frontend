@@ -1242,7 +1242,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     myself.userId === parentTask.assignee.userId
                                 }
                             />
-                            <TaskIdText task={parentTask} />
+                            <TaskIdText focusable task={parentTask} />
                             <StatusChip isDark={isDark} meta={parentTask.status} />
                             <Typography
                                 level="body-sm"

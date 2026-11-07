@@ -21,7 +21,13 @@ import { TaskNodeData } from "../types";
 import { NODE_WIDTH } from "../utils/layoutDiagram";
 import { computeHealth, getMilestoneWindow, getScheduleStatus } from "../utils/scheduleStatus";
 import { DurationText, HealthLabel, NodeBadge, NodeHandles, NodeIconButton } from "./nodeParts";
-import { dueToneOf, HEALTH_COLOR, useScheduleLabel } from "./nodeTone";
+import {
+    dueToneOf,
+    HEALTH_COLOR,
+    NODE_TITLE_MIN_HEIGHT,
+    scheduleDateText,
+    useScheduleLabel,
+} from "./nodeTone";
 
 const fmtDate = (iso: string | null | undefined): string => {
     if (!iso) return "";
@@ -29,8 +35,6 @@ const fmtDate = (iso: string | null | undefined): string => {
     if (Number.isNaN(d.getTime())) return iso;
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
-
-const TITLE_MIN_HEIGHT = `calc(2 * ${type("body-sm").lineHeight})`;
 
 /**
  * A milestone as a node of the graph (MIP-1124 3/3): the family's card surface
@@ -90,10 +94,7 @@ export const MilestoneNodeView = ({
               : t.tasks.diagram.schedule.behind
         : null;
 
-    const dateText =
-        schedule.startLabel && schedule.dueLabel
-            ? `${schedule.startLabel} – ${schedule.dueLabel}`
-            : (schedule.startLabel ?? schedule.dueLabel ?? null);
+    const dateText = scheduleDateText(schedule);
 
     return (
         <TaskCardFrame
@@ -140,7 +141,7 @@ export const MilestoneNodeView = ({
                 </AppTooltip>
             </Box>
 
-            <Box sx={{ display: "flex", minHeight: TITLE_MIN_HEIGHT }}>
+            <Box sx={{ display: "flex", minHeight: NODE_TITLE_MIN_HEIGHT }}>
                 <TaskTitle lines={2}>{task.title || t.tasks.milestones.untitled}</TaskTitle>
             </Box>
 

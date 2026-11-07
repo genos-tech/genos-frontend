@@ -772,6 +772,8 @@ describe("the preview header's id", () => {
         b.unmount();
         const c = withTask({ displayId: null, id: null });
         expect(c.getByText("N/A")).toBeTruthy();
+        // A placeholder is not an id: nothing to focus or copy.
+        expect(c.queryByRole("button")).toBeNull();
     });
 
     it("is the family's quiet id, not a Joy chip", () => {
@@ -865,6 +867,8 @@ describe("the task preview's other id chips are the family's quiet id", () => {
         const text = code(file);
         expect(text).toContain("<TaskIdText");
         expect(text).not.toContain("CopyableTaskIdChip");
+        // The parent row's id was a Joy action button (Tab, Enter): it stays one.
+        if (file.endsWith("TaskMainBlock.tsx")) expect(text).toContain("<TaskIdText focusable");
         // No Joy chip is left around an id (the sub-task tags and the branch
         // links are other chips, and stay).
         expect(text).not.toMatch(/<Chip[^>]*>\s*\{(ref_\.displayId|formatTaskDisplayId)/);

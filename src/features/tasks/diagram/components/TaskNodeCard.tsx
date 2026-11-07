@@ -32,11 +32,7 @@ import {
     NodeHandles,
     NodeIconButton,
 } from "./nodeParts";
-import { dueToneOf, useScheduleLabel } from "./nodeTone";
-
-// A title is reserved two lines, so a one-line card is as tall as a two-line
-// one and the edges (which meet the card's top and bottom) keep their rhythm.
-const TITLE_MIN_HEIGHT = `calc(2 * ${type("body-sm").lineHeight})`;
+import { dueToneOf, NODE_TITLE_MIN_HEIGHT, scheduleDateText, useScheduleLabel } from "./nodeTone";
 
 /**
  * One task as a node of the graph (MIP-1124 3/3): the family's card surface and
@@ -118,10 +114,7 @@ export const TaskNodeView = ({
     const stripe =
         schedule.tone === "red" ? "danger" : schedule.tone === "amber" ? "warning" : undefined;
 
-    const dateText =
-        schedule.startLabel && schedule.dueLabel
-            ? `${schedule.startLabel} – ${schedule.dueLabel}`
-            : (schedule.startLabel ?? schedule.dueLabel ?? null);
+    const dateText = scheduleDateText(schedule);
     const dateEmpty = dateText == null;
     const dateEditable = !isExternal;
 
@@ -301,7 +294,7 @@ export const TaskNodeView = ({
                     <Box
                         sx={{
                             display: "flex",
-                            minHeight: TITLE_MIN_HEIGHT,
+                            minHeight: NODE_TITLE_MIN_HEIGHT,
                             cursor: isExternal ? "pointer" : "text",
                         }}
                         onDoubleClick={() => {

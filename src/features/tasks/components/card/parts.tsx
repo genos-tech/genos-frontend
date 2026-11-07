@@ -98,9 +98,11 @@ export const TaskIdText = ({
     /** Shown when the task has no resolvable id ("N/A"); otherwise nothing is drawn. */
     fallback?: string;
 }) => {
-    const label = text ?? (formatTaskDisplayId(task) || fallback);
+    const real = text ?? formatTaskDisplayId(task);
+    const label = real || fallback;
     if (!label) return null;
-    return copyable ? (
+    // The fallback is a placeholder, not an id: nothing to copy.
+    return copyable && real ? (
         <CopyableId focusable={focusable} text={label} />
     ) : (
         <Box component="span" sx={idSx}>
