@@ -387,7 +387,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
 
     return (
         <Bubble
-            actions={BubbleActions()}
+            actions={showUnderBarOption ? BubbleActions() : undefined}
             actionsOpen={showUnderBarOption}
             avatar={avatar}
             bodyOffset={isCompact ? 0.25 : 0.5}

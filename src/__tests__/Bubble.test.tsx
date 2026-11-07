@@ -157,6 +157,55 @@ describe("Bubble overlay (emoji picker, dialogs)", () => {
         fireEvent.click(screen.getByTestId("ov"));
         expect(onClick).not.toHaveBeenCalled();
     });
+
+    it("compact layout fences the overlay (a portal's click would reach the row)", () => {
+        const onClick = vi.fn();
+        const onDoubleClick = vi.fn();
+        render(
+            <Bubble
+                layout="compact"
+                overlay={<span data-testid="ov" />}
+                onClick={onClick}
+                onDoubleClick={onDoubleClick}
+            >
+                body
+            </Bubble>
+        );
+        fireEvent.click(screen.getByTestId("ov"));
+        fireEvent.doubleClick(screen.getByTestId("ov"));
+        expect(onClick).not.toHaveBeenCalled();
+        expect(onDoubleClick).not.toHaveBeenCalled();
+    });
+});
+
+describe("Bubble hover", () => {
+    it("bubble layout: moving from the balloon onto the toolbar is not leaving the message", () => {
+        const onMouseLeave = vi.fn();
+        render(
+            <Bubble
+                actions={<button>act</button>}
+                layout="bubble"
+                actionsOpen
+                onMouseLeave={onMouseLeave}
+            >
+                <span data-testid="b">body</span>
+            </Bubble>
+        );
+        const toolbar = screen.getByText("act").closest(".bubble-toolbar") as HTMLElement;
+        fireEvent.mouseOut(screen.getByTestId("b"), { relatedTarget: toolbar });
+        expect(onMouseLeave).not.toHaveBeenCalled();
+        fireEvent.mouseOut(screen.getByTestId("b"), { relatedTarget: document.body });
+        expect(onMouseLeave).toHaveBeenCalledTimes(1);
+    });
+
+    it("a button row is type=button (it must not submit a surrounding form)", () => {
+        render(
+            <Bubble component="button" layout="compact">
+                row
+            </Bubble>
+        );
+        expect(screen.getByText("row").closest("button")?.getAttribute("type")).toBe("button");
+    });
 });
 
 describe("Bubble handlers", () => {

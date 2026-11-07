@@ -214,6 +214,8 @@ export const Bubble = (props: BubbleProps) => {
         wrapperSx,
         sx,
         component = "div",
+        onMouseEnter,
+        onMouseLeave,
         ...handlers
     } = props;
 
@@ -222,6 +224,15 @@ export const Bubble = (props: BubbleProps) => {
             <BubbleToolbar ref={toolbarRef} layout={layout}>
                 {actions}
             </BubbleToolbar>
+        ) : null;
+    // A portal's React events bubble through the React tree into the row's own
+    // onClick (a click in the emoji picker would open the message), so in the
+    // compact row, where the overlay is inside the clickable root, fence it.
+    const fencedOverlay =
+        overlay != null && overlay !== false ? (
+            <Box sx={{ display: "contents" }} onClick={stop} onDoubleClick={stop}>
+                {overlay}
+            </Box>
         ) : null;
     const reveal = actions != null && actionsOpen === undefined ? cssRevealed : null;
 
@@ -303,6 +314,7 @@ export const Bubble = (props: BubbleProps) => {
                 ref={rootRef as Ref<HTMLDivElement>}
                 component={component}
                 data-bubble-layout="compact"
+                type={component === "button" ? "button" : undefined}
                 sx={{
                     // A <button> row (the note comment list) starts from a reset.
                     border: "none",
@@ -326,6 +338,7 @@ export const Bubble = (props: BubbleProps) => {
                             ? g.hover
                             : "transparent",
                     transition: hoverTransition,
+                    ...(reveal ? { "&:hover": { bgcolor: accent ? accent.tint : g.hover } } : {}),
                     ...(component === "button"
                         ? {
                               "&:hover": {
@@ -342,9 +355,11 @@ export const Bubble = (props: BubbleProps) => {
                     ...(suppressTouchCallout ? { WebkitTouchCallout: "none" } : {}),
                     ...(sx as object),
                 }}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
                 {...handlers}
             >
-                {overlay}
+                {fencedOverlay}
                 {toolbar}
                 {content}
             </Box>
@@ -363,6 +378,11 @@ export const Bubble = (props: BubbleProps) => {
                 ref={rootRef as Ref<HTMLDivElement>}
                 data-bubble-layout="bubble"
                 sx={{ position: "relative", ...reveal }}
+                // Hover belongs on the root, which contains the toolbar: on the
+                // surface alone, moving the pointer onto the toolbar would count
+                // as leaving the message and unmount the toolbar under it.
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
             >
                 {overlay}
                 {toolbar}
