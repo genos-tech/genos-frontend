@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
@@ -23,14 +23,12 @@ import { getMyNoteRoleId, isNoteEditable } from "../../features/notes/common/uti
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { useDebouncedCallback } from "../../hooks/common/useDebouncedCallback";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatNoteProps, NoteRoleMember } from "../../types/notes";
-import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -44,13 +42,12 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./genos/GenosToolbars";
+import { useGenosCollabEditor } from "./genos/useGenosEditor";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "./sub/bodySync";
-import { codeFenceInputRule } from "./sub/codeBlockExtras";
-import { buildCommentSchema, CommentsWithMentions } from "./sub/CommentEditorWithMentions";
+import { CommentsWithMentions } from "./sub/CommentEditorWithMentions";
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "./sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "./sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "./sub/CustomDragHandleMenu";
-import { linkHostCaption } from "./sub/linkHostCaption";
 import { useCommentMentionEmitter } from "./sub/useCommentMentionEmitter";
 import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
@@ -126,39 +123,6 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
 
     const { mentionGroups } = useMentionGroupsContext();
 
-    // Memoized: see `bnTaskPreview` — schema construction is non-trivial,
-    // the live editor only reads it at (re)build time, and this component
-    // re-renders on every parent update. Deps are exactly the values
-    // `CreateMentionSpec` closes over.
-    const schema = useGenosSchema(
-        {
-            teamMemberProfiles: useTEM.teamMemberProfiles,
-            socket,
-            myself,
-            setMyself,
-            useUISM,
-            useCM,
-        },
-        "live"
-    );
-
-    // Mention-capable schema for the inline body-COMMENT editors (composer,
-    // reply, edit). Handed to `CommentsExtension` so `@`/`#` chips render in
-    // comments. Same deps as the main `schema` — `CreateMentionSpec` closes
-    // over these values.
-    const commentSchema = useMemo(
-        () =>
-            buildCommentSchema({
-                teamMemberProfiles: useTEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                useUISM,
-                useCM,
-            }),
-        [useTEM.teamMemberProfiles, socket, myself, setMyself, useUISM, useCM]
-    );
-
     // See `bnChatEditor` for the rationale on `useUploadCounter`.
     const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
@@ -204,29 +168,22 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
 
-    const collabUser = useMemo(
-        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
-        [myself.userName, myself.userId]
-    );
-
     const documentName = `chat-note:${currentChatNote.noteId}`;
 
-    const { editor, threadStore, collabScope } = useCollaborativeBlockNote({
+    const { editor, threadStore, collabScope } = useGenosCollabEditor({
         documentName,
-        user: collabUser,
-        userId: myself.userId,
-        myself,
+        ctx: {
+            teamMemberProfiles: useTEM.teamMemberProfiles,
+            socket,
+            myself,
+            setMyself,
+            useUISM,
+            useCM,
+        },
         accessToken,
-        schema,
-        commentSchema,
         dictionary,
         uploadFile,
-        initialBody: body,
-        enableComments: true,
-        teamMemberProfiles: useTEM.teamMemberProfiles,
-        // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code
-        // block with a language that exists (see codeBlockExtras.tsx).
-        extensions: [codeFenceInputRule, linkHostCaption],
+        body,
     });
     const isEditable = isNoteEditable(myRoleId, collabScope);
 
