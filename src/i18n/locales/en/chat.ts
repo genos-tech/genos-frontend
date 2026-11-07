@@ -338,6 +338,7 @@ export const chat = {
         quickMeetReconnect: "Reconnect",
     },
     threadTabs: {
+        ariaLabel: "Thread sections",
         comments: "Comments",
         activities: "Activities",
     },

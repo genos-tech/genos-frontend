@@ -1017,6 +1017,7 @@ export const fr: DeepPartial<Messages> = {
             quickMeetReconnect: "Reconnecter",
         },
         threadTabs: {
+            ariaLabel: "Sections du fil",
             comments: "Commentaires",
             activities: "Activités",
         },
@@ -1216,6 +1217,13 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     common: {
+        feedback: {
+            loading: "Chargement",
+            toast: {
+                region: "Notifications",
+                undo: "Annuler",
+            },
+        },
         actions: {
             save: "Enregistrer",
             cancel: "Annuler",
@@ -1957,6 +1965,7 @@ export const fr: DeepPartial<Messages> = {
             subtitle: "Restez informé de vos notifications",
         },
         tabs: {
+            ariaLabel: "Sections de la boîte de réception",
             requests: "Demandes",
             activities: "Activités",
         },
@@ -2299,6 +2308,10 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     notes: {
+        emptyState: {
+            title: "Aucune note ouverte",
+            body: "Choisissez une note dans la barre latérale ou créez-en une.",
+        },
         list: {
             empty: "Aucune note pour le moment",
             newNote: "Nouvelle note",

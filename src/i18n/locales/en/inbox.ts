@@ -16,6 +16,7 @@ export const inbox = {
         subtitle: "Stay on top of notifications",
     },
     tabs: {
+        ariaLabel: "Inbox sections",
         requests: "Requests",
         activities: "Activities",
     },

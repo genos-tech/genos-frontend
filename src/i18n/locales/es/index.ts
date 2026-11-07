@@ -6,6 +6,13 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const es: DeepPartial<Messages> = {
     common: {
+        feedback: {
+            loading: "Cargando",
+            toast: {
+                region: "Notificaciones",
+                undo: "Deshacer",
+            },
+        },
         addMembers: {
             openButton: "Añadir miembros",
             headingProject: "Añadir miembros a {projectName}",
@@ -1373,6 +1380,7 @@ export const es: DeepPartial<Messages> = {
             quickMeetReconnect: "Reconectar",
         },
         threadTabs: {
+            ariaLabel: "Secciones del hilo",
             comments: "Comentarios",
             activities: "Actividad",
         },
@@ -2682,6 +2690,10 @@ export const es: DeepPartial<Messages> = {
         },
     },
     notes: {
+        emptyState: {
+            title: "Ninguna nota abierta",
+            body: "Elige una nota en la barra lateral o crea una nueva.",
+        },
         accessRequest: {
             privateBadge: "Nota privada",
             heading: "No tienes acceso a esta nota",
@@ -3020,6 +3032,7 @@ export const es: DeepPartial<Messages> = {
             subtitle: "No te pierdas ninguna notificación",
         },
         tabs: {
+            ariaLabel: "Secciones de la bandeja",
             requests: "Solicitudes",
             activities: "Actividad",
         },

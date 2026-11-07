@@ -25,9 +25,14 @@ import FilterListRounded from "@mui/icons-material/FilterListRounded";
 import InboxRounded from "@mui/icons-material/InboxRounded";
 import MoreHorizRounded from "@mui/icons-material/MoreHorizRounded";
 import Box from "@mui/joy/Box";
+import JoyButton from "@mui/joy/Button";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../components/ui/bubble";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
+import { TabStrip } from "../../components/ui/feedback/TabStrip";
+import { toast } from "../../components/ui/feedback/toastStore";
 import { NavItem } from "../../components/ui/nav/NavItem";
 import { SectionHeader } from "../../components/ui/nav/SectionHeader";
 import { useColorTheme } from "../../theme/ColorThemeProvider";
@@ -41,7 +46,6 @@ import { PRIORITY_NAMES, STATUS_NAMES } from "../tasks/meta/taskTone";
 import {
     Avatar,
     Button,
-    EmptyState,
     FilterChip,
     Input,
     Panel,
@@ -942,6 +946,25 @@ const BubbleSamples = () => {
     );
 };
 
+const TabStripSample = () => {
+    const [value, setValue] = useState("all");
+    return (
+        <Box sx={{ px: 1.5, pt: 1 }}>
+            <TabStrip
+                ariaLabel="Sample tabs"
+                value={value}
+                tabs={[
+                    { id: "all", label: "All" },
+                    { id: "mine", label: "Mine", count: 4 },
+                    { id: "requests", label: "Requests", count: 2, attention: true },
+                    { id: "archived", label: "Archived", disabled: true },
+                ]}
+                onChange={setValue}
+            />
+        </Box>
+    );
+};
+
 const Components = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Labelled
@@ -1072,15 +1095,84 @@ const Components = () => (
                 </Box>
             </Labelled>
 
-            <Labelled note="One design for chat, notes, inbox and every list." title="Empty state">
+            <Labelled
+                note="The real component. One design for chat, notes, inbox and every list: the title says what is empty, the body says what to do next, at most one action."
+                title="Empty state"
+            >
                 <Panel sx={{ background: g.bg.default }}>
                     <EmptyState
-                        action="New note"
+                        action={{ label: "New note", onClick: () => {}, icon: <AddRounded /> }}
                         body="Pick a note from the sidebar, or start a new one."
                         icon={<DescriptionOutlined />}
-                        title="No note selected"
+                        title="No note open"
                     />
                 </Panel>
+                <Panel sx={{ background: g.bg.default, mt: 1.5, maxWidth: 280 }}>
+                    <EmptyState
+                        body="Flag a message to find it here later."
+                        icon={<ChatRounded />}
+                        size="sm"
+                        title="No flagged messages"
+                    />
+                </Panel>
+            </Labelled>
+
+            <Labelled
+                note="Skeleton rows take the user's row height, so nothing jumps when the data lands. The spinner is only for a small inline wait."
+                title="Loading"
+            >
+                <Panel sx={{ background: g.bg.default }}>
+                    <SkeletonRows avatar count={3} twoLines />
+                </Panel>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1.5 }}>
+                    <Spinner />
+                    <Text level="body-sm" tone="secondary">
+                        Inline spinner
+                    </Text>
+                </Box>
+            </Labelled>
+
+            <Labelled
+                note="One strip: arrow keys, Home and End (mirrored in right-to-left), a count that only asks for attention when it should."
+                title="Tab strip"
+            >
+                <TabStripSample />
+            </Labelled>
+
+            <Labelled
+                note="One host, bottom-center, announced to screen readers. Errors are assertive; hover pauses the timer; Undo is for soft actions."
+                title="Toast"
+            >
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, p: 1.5 }}>
+                    <JoyButton
+                        color="neutral"
+                        size="sm"
+                        variant="outlined"
+                        onClick={() => toast.success("Link copied")}
+                    >
+                        Success
+                    </JoyButton>
+                    <JoyButton
+                        color="neutral"
+                        size="sm"
+                        variant="outlined"
+                        onClick={() =>
+                            toast.error("That didn't save. Check your connection and retry.")
+                        }
+                    >
+                        Error
+                    </JoyButton>
+                    <JoyButton
+                        color="neutral"
+                        size="sm"
+                        variant="outlined"
+                        onClick={() =>
+                            toast.undoable("Task deleted", () => toast.success("Restored"))
+                        }
+                    >
+                        With Undo
+                    </JoyButton>
+                </Box>
             </Labelled>
         </Box>
 

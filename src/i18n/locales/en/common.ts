@@ -1,4 +1,11 @@
 export const common = {
+    feedback: {
+        loading: "Loading",
+        toast: {
+            region: "Notifications",
+            undo: "Undo",
+        },
+    },
     actions: {
         save: "Save",
         cancel: "Cancel",
