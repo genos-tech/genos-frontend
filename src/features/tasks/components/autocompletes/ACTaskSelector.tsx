@@ -6,14 +6,12 @@ import {
     Autocomplete,
     AutocompleteOption,
     Box,
-    Chip,
     CircularProgress,
     ListItemContent,
     Stack,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -23,7 +21,7 @@ import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
-import { statuses, taskMetaLabel } from "../../utils/taskMeta";
+import { statuses } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
 import { TaskIdentityRow } from "../TaskIdentityRow";

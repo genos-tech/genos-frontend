@@ -17,6 +17,10 @@ type ProjectTagChipProps = {
  * `<span>` underneath, so it renders in the Material subtrees of the table and
  * board, which have no Joy palette.
  */
-export const ProjectTagChip = ({ label, tagColor, fontSize }: ProjectTagChipProps) => (
-    <Tag color={tagColor} fontSize={fontSize} label={label} />
-);
+export const ProjectTagChip = ({
+    label,
+    tagColor,
+    // The size the chip always had (0.7rem): the table's tag column is narrow
+    // and a larger default truncates "sample-tag".
+    fontSize = "0.7rem",
+}: ProjectTagChipProps) => <Tag color={tagColor} fontSize={fontSize} label={label} />;

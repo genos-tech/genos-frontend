@@ -28,7 +28,6 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
 import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";

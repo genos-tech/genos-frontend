@@ -12,11 +12,11 @@ type TagProps = {
 const chip: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 5,
+    gap: 4,
     boxSizing: "border-box",
     maxWidth: "100%",
     height: 20,
-    padding: "0 6px",
+    padding: "0 5px",
     overflow: "hidden",
     whiteSpace: "nowrap",
     borderRadius: "var(--g-radius-xs, 4px)",
@@ -45,8 +45,8 @@ export const Tag = ({
             aria-hidden="true"
             style={{
                 flexShrink: 0,
-                width: 6,
-                height: 6,
+                width: 5,
+                height: 5,
                 borderRadius: "50%",
                 background: color,
             }}
