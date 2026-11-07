@@ -13,8 +13,9 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { Direction, getDocumentDirection, subscribeDocumentDirection } from "../i18n";
 import { buildJoyTheme } from "./purplePalette";
 import { getRtlCache } from "./rtlCache";
-import { DEFAULT_THEME_ID, THEME_PRIMITIVES, ThemeId, ThemePrimitives } from "./themePalettes";
+import { DEFAULT_THEME_ID, ThemeId, ThemePrimitives } from "./themePalettes";
 import { applyThemeId, installActiveTheme, storeThemeId } from "./themeStyles";
+import { resolvedPrimitives } from "./tokens/primitives";
 import { installDesignTokens } from "./tokens/tokenStyles";
 
 /**
@@ -79,7 +80,7 @@ export const ColorThemeProvider = ({ children }: { children: ReactNode }) => {
     const joyTheme = useMemo(() => buildJoyTheme(themeId, direction), [themeId, direction]);
 
     const value = useMemo<ColorThemeContextValue>(
-        () => ({ themeId, setThemeId, raw: THEME_PRIMITIVES[themeId] }),
+        () => ({ themeId, setThemeId, raw: resolvedPrimitives(themeId) }),
         [themeId, setThemeId]
     );
 
@@ -114,7 +115,7 @@ export const useColorTheme = (): ColorThemeContextValue => {
         return {
             themeId: DEFAULT_THEME_ID,
             setThemeId: () => {},
-            raw: THEME_PRIMITIVES[DEFAULT_THEME_ID],
+            raw: resolvedPrimitives(DEFAULT_THEME_ID),
         };
     }
     return ctx;
