@@ -178,8 +178,8 @@ export const TaskVelocitySection = ({
     const memberRow = (m: VelocityMember, avatarSize: number) => (
         <Stack alignItems="center" direction="row" spacing={1}>
             <UserAvatar clickable={false} showPulseDot={false} size={avatarSize} userId={m.id} />
-            <Typography dir="auto" level="body-sm" sx={{ whiteSpace: "nowrap" }}>
-                {m.name}
+            <Typography level="body-sm" sx={{ whiteSpace: "nowrap" }}>
+                <bdi className="g-bidi-island">{m.name}</bdi>
             </Typography>
         </Stack>
     );

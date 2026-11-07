@@ -361,7 +361,6 @@ const SprintBoardCardImpl = ({
                                         </Avatar>
                                     )}
                                     <Typography
-                                        dir="auto"
                                         level="body-xs"
                                         sx={{
                                             color: mode === "dark" ? "#999" : "#777",
@@ -372,7 +371,9 @@ const SprintBoardCardImpl = ({
                                             fontSize: "0.65rem",
                                         }}
                                     >
-                                        {assigneeName || t.tasks.board.unassigned}
+                                        <bdi className="g-bidi-island">
+                                            {assigneeName || t.tasks.board.unassigned}
+                                        </bdi>
                                     </Typography>
                                 </Box>
 

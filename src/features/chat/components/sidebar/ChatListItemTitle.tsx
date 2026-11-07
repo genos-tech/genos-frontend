@@ -90,7 +90,9 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {isYou ? `${displayName} (you)` : displayName}
+                        <bdi className="g-bidi-island">
+                            {isYou ? `${displayName} ${t.chat.sidebar.youSuffix}` : displayName}
+                        </bdi>
                     </Box>
                     {/* Never a hover-only affordance: people outside the
                         company are in this room, and that has to be

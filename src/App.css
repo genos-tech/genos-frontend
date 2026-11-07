@@ -88,7 +88,7 @@ input[type="checkbox"] {
    row a truncating parent clips the START of an LTR name ("…Y) Ken Kamiya"), because
    the line ends on the left. Letting the island truncate itself does it at its own
    end ("(DY) Ken Ka…"). RTL only: in LTR the bdi stays plain inline text. */
-[dir="rtl"] .g-person-name {
+[dir="rtl"] .g-bidi-island {
     display: inline-block;
     max-width: 100%;
     overflow: hidden;

@@ -204,16 +204,10 @@ describe("toolbar / board / dashboard components render no literal English", () 
 
 describe("names are bidi-isolated", () => {
     const read = (rel: string) => readFileSync(join(SRC, rel), "utf8");
-    /** The element that renders `expr` must carry dir="auto", or the name sits in a <bdi>. */
-    const isolated = (src: string, expr: string) => {
-        // The rendered occurrence: alone on its line, or the body of a <bdi>.
-        const bdi = src.indexOf(`<bdi>${expr}</bdi>`);
-        if (bdi > -1) return true;
-        const m = new RegExp(`\\n\\s*${expr.replace(/[{}.|]/g, "\\$&")}\\n`).exec(src);
-        expect(m, `${expr} not found as rendered text`).not.toBeNull();
-        const open = src.lastIndexOf("<Typography", m!.index);
-        return open > -1 && src.slice(open, m!.index).includes('dir="auto"');
-    };
+    /** The name is the child of a <bdi class="g-bidi-island"> (the island that truncates itself in RTL). */
+    const isolated = (src: string, expr: string) =>
+        src.replace(/\s+/g, " ").includes(`<bdi className="g-bidi-island"> ${expr} </bdi>`) ||
+        src.includes(`<bdi className="g-bidi-island">${expr}</bdi>`);
 
     const CASES: [string, string[]][] = [
         [
@@ -244,12 +238,24 @@ describe("ResolvedUserName (the name in every table row, comment and milestone c
         const { container } = render(
             <ResolvedUserName fallbackName="(DY) Ken Kamiya" userId={null} />
         );
-        const bdi = container.querySelector("bdi.g-person-name");
+        const bdi = container.querySelector("bdi.g-bidi-island");
         expect(bdi?.textContent).toBe("(DY) Ken Kamiya");
         // jsdom has no layout: pin the rule that does the truncating at the island's own end.
         const css = readFileSync(join(SRC, "App.css"), "utf8").replace(/\s+/g, " ");
         expect(css).toMatch(
-            /\[dir="rtl"\] \.g-person-name \{[^}]*display: inline-block;[^}]*overflow: hidden;[^}]*text-overflow: ellipsis;/
+            /\[dir="rtl"\] \.g-bidi-island \{[^}]*display: inline-block;[^}]*overflow: hidden;[^}]*text-overflow: ellipsis;/
         );
     });
+});
+
+describe("the DM-with-yourself suffix is not hard-coded English", () => {
+    const suffix = (c: unknown) =>
+        (c as { chat?: { sidebar?: { youSuffix?: string } } }).chat?.sidebar?.youSuffix;
+    it("English keeps '(you)'", () => expect(suffix(en)).toBe("(you)"));
+    for (const [name, catalog] of Object.entries(OTHERS)) {
+        it(`${name} translates it`, () => {
+            expect(suffix(catalog)).toBeTruthy();
+            expect(suffix(catalog)).not.toBe("(you)");
+        });
+    }
 });

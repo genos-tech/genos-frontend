@@ -2353,12 +2353,15 @@ export const TaskHomeContent = ({
                                                                     sx={{ minWidth: 0 }}
                                                                 >
                                                                     <Typography
-                                                                        dir="auto"
                                                                         level="body-sm"
-                                                                        sx={{ fontWeight: 600 }}
+                                                                        sx={{
+                                                                            fontWeight: 600,
+                                                                        }}
                                                                         noWrap
                                                                     >
-                                                                        {o.name}
+                                                                        <bdi className="g-bidi-island">
+                                                                            {o.name}
+                                                                        </bdi>
                                                                     </Typography>
                                                                     {o.email && (
                                                                         <Typography
@@ -2424,7 +2427,6 @@ export const TaskHomeContent = ({
                                                             {t.tasks.dashboard.memberTasks.viewing}
                                                         </Typography>
                                                         <Typography
-                                                            dir="auto"
                                                             level="title-sm"
                                                             sx={{
                                                                 fontWeight: 700,
@@ -2436,7 +2438,9 @@ export const TaskHomeContent = ({
                                                                 whiteSpace: "nowrap",
                                                             }}
                                                         >
-                                                            {selectedMember.name}
+                                                            <bdi className="g-bidi-island">
+                                                                {selectedMember.name}
+                                                            </bdi>
                                                         </Typography>
                                                         {selectedMember.email && (
                                                             <Typography
@@ -3695,7 +3699,6 @@ export const TaskHomeContent = ({
                                                                         }
                                                                     />
                                                                     <Typography
-                                                                        dir="auto"
                                                                         level="body-xs"
                                                                         sx={{
                                                                             color: textPrimary,
@@ -3706,7 +3709,9 @@ export const TaskHomeContent = ({
                                                                             whiteSpace: "nowrap",
                                                                         }}
                                                                     >
-                                                                        {m.name}
+                                                                        <bdi className="g-bidi-island">
+                                                                            {m.name}
+                                                                        </bdi>
                                                                     </Typography>
                                                                 </Stack>
                                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -3960,7 +3965,6 @@ export const TaskHomeContent = ({
                                                                             />
                                                                         )}
                                                                         <Typography
-                                                                            dir="auto"
                                                                             level="body-sm"
                                                                             sx={{
                                                                                 fontWeight: 500,
@@ -3973,7 +3977,9 @@ export const TaskHomeContent = ({
                                                                                 maxWidth: 140,
                                                                             }}
                                                                         >
-                                                                            {a.name}
+                                                                            <bdi className="g-bidi-island">
+                                                                                {a.name}
+                                                                            </bdi>
                                                                         </Typography>
                                                                     </Stack>
                                                                 </td>

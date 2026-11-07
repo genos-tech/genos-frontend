@@ -145,7 +145,7 @@ export const useResolvedUserName = (
  *
  * The name sits in a `<bdi>`: a name is its own bidi island. Without it an
  * "(DY) Ken Kamiya" inside an RTL row (Arabic) reorders to "Ken Kamiya (DY)",
- * and a truncated cell clips the FIRST letters ("…n Kamiya (DY)"). `.g-person-name`
+ * and a truncated cell clips the FIRST letters ("…n Kamiya (DY)"). `.g-bidi-island`
  * (App.css) makes the island truncate itself, at its own end, in RTL only.
  */
 export const ResolvedUserName = ({
@@ -154,4 +154,4 @@ export const ResolvedUserName = ({
 }: {
     userId: string | number | null | undefined;
     fallbackName: string;
-}) => <bdi className="g-person-name">{useResolvedUserName(userId, fallbackName)}</bdi>;
+}) => <bdi className="g-bidi-island">{useResolvedUserName(userId, fallbackName)}</bdi>;

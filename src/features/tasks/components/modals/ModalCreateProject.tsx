@@ -452,7 +452,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.2)",
                                 }}
                             >
-                                <bdi>{member.userName}</bdi>
+                                <bdi className="g-bidi-island">{member.userName}</bdi>
                             </Chip>
                         ))}
                     </Box>
@@ -541,7 +541,6 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
-                                            dir="auto"
                                             level="body-sm"
                                             sx={{
                                                 fontWeight: 500,
@@ -551,7 +550,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                                 whiteSpace: "nowrap",
                                             }}
                                         >
-                                            {member.userName}
+                                            <bdi className="g-bidi-island">{member.userName}</bdi>
                                         </Typography>
                                         <Typography
                                             level="body-xs"
