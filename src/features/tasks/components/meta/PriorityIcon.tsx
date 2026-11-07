@@ -1,19 +1,41 @@
 import PriorityHighRoundedIcon from "@mui/icons-material/PriorityHighRounded";
-import SignalCellularAlt1BarRoundedIcon from "@mui/icons-material/SignalCellularAlt1BarRounded";
-import SignalCellularAlt2BarRoundedIcon from "@mui/icons-material/SignalCellularAlt2BarRounded";
-import SignalCellularAltRoundedIcon from "@mui/icons-material/SignalCellularAltRounded";
 
 import { useTranslation } from "../../../../i18n";
 import { PRIORITY_TONE, PriorityName, priorityTone, toneCss } from "../../meta/taskTone";
 import { taskMetaLabel } from "../../utils/taskMeta";
 
-const ICON: Record<PriorityName, typeof SignalCellularAltRoundedIcon> = {
-    Minimal: SignalCellularAlt1BarRoundedIcon,
-    Low: SignalCellularAlt1BarRoundedIcon,
-    Normal: SignalCellularAlt2BarRoundedIcon,
-    High: SignalCellularAltRoundedIcon,
-    Critical: PriorityHighRoundedIcon,
+/** Filled bars out of four. MUI's own one-bar signal icon is a single short
+ *  stroke that reads as a comma at 16px, so the glyph is drawn here. */
+const BARS: Record<Exclude<PriorityName, "Critical">, number> = {
+    Minimal: 1,
+    Low: 2,
+    Normal: 3,
+    High: 4,
 };
+
+const PriorityBars = ({ filled, size }: { filled: number; size: number }) => (
+    <svg
+        aria-hidden="true"
+        data-testid={`PriorityBars${filled}`}
+        fill="currentColor"
+        focusable="false"
+        height={size}
+        viewBox="0 0 16 16"
+        width={size}
+    >
+        {[0, 1, 2, 3].map((i) => (
+            <rect
+                key={i}
+                height={(i + 1) * 3}
+                opacity={i < filled ? 1 : 0.25}
+                rx="0.75"
+                width="3"
+                x={1 + i * 4}
+                y={14 - (i + 1) * 3}
+            />
+        ))}
+    </svg>
+);
 
 type PriorityIconProps = {
     priority: string | null | undefined;
@@ -25,7 +47,7 @@ type PriorityIconProps = {
 /**
  * A task priority, drawn only when one is SET (MIP-1122): an unset or unknown
  * priority renders nothing, so a table is not a column of empty flags. Level is
- * carried by the shape (one, two or three bars, and "!" for Critical) as well
+ * carried by the shape (one to four filled bars, and "!" for Critical) as well
  * as the hue, so it is never color alone.
  */
 export const PriorityIcon = ({ priority, showLabel = false, size = 16 }: PriorityIconProps) => {
@@ -33,7 +55,6 @@ export const PriorityIcon = ({ priority, showLabel = false, size = 16 }: Priorit
     const name = (priority ?? "").trim() as PriorityName;
     if (!name || !(name in PRIORITY_TONE)) return null;
     const label = taskMetaLabel(name, t.tasks.filters) || name;
-    const Icon = ICON[name];
     return (
         <span
             style={{
@@ -47,7 +68,11 @@ export const PriorityIcon = ({ priority, showLabel = false, size = 16 }: Priorit
             }}
             {...(showLabel ? {} : { role: "img", "aria-label": label })}
         >
-            <Icon aria-hidden="true" sx={{ fontSize: size }} />
+            {name === "Critical" ? (
+                <PriorityHighRoundedIcon aria-hidden="true" sx={{ fontSize: size }} />
+            ) : (
+                <PriorityBars filled={BARS[name]} size={size} />
+            )}
             {showLabel && <span>{label}</span>}
         </span>
     );

@@ -110,15 +110,34 @@ describe("PriorityIcon", () => {
         expect(el.style.color).toBe(color);
     });
 
-    it("level is in the SHAPE too: High and Critical and Normal differ", () => {
+    it("level is in the SHAPE too: five distinct glyphs, so it is never color alone", () => {
         const shape = (p: string) => {
             const { container, unmount } = render(<PriorityIcon priority={p} />);
             const id = container.querySelector("svg")!.getAttribute("data-testid");
             unmount();
             return id;
         };
-        expect(new Set(["Normal", "High", "Critical"].map(shape)).size).toBe(3);
-        expect(new Set(PRIORITY_NAMES.map(shape)).size).toBeGreaterThanOrEqual(4);
+        expect(PRIORITY_NAMES.map(shape)).toEqual([
+            "PriorityBars1",
+            "PriorityBars2",
+            "PriorityBars3",
+            "PriorityBars4",
+            "PriorityHighRoundedIcon",
+        ]);
+    });
+
+    it("the bars fill up with the level (a glyph you can actually read, unlike a one-stroke icon)", () => {
+        const opacities = (p: string) => {
+            const { container, unmount } = render(<PriorityIcon priority={p} />);
+            const o = Array.from(container.querySelectorAll("rect"), (r) =>
+                r.getAttribute("opacity")
+            );
+            unmount();
+            return o;
+        };
+        expect(opacities("Minimal")).toEqual(["1", "0.25", "0.25", "0.25"]);
+        expect(opacities("Normal")).toEqual(["1", "1", "1", "0.25"]);
+        expect(opacities("High")).toEqual(["1", "1", "1", "1"]);
     });
 
     it("showLabel puts the name beside the icon instead of on a role=img", () => {
