@@ -442,6 +442,12 @@ export function changedFiles(root = REPO_ROOT) {
     git(["diff", "--name-only", "HEAD"]);
     git(["ls-files", "--others", "--exclude-standard"]);
     git(["diff", "--name-only", "origin/main...HEAD"]);
+    // CI checks a pull request out as a merge commit with one commit of history:
+    // against its first parent that is exactly what the PR changed.
+    git(["diff", "--name-only", "HEAD^1", "HEAD"]);
+    // CI checks a pull request out as a merge commit with one commit of history:
+    // against its first parent that is exactly what the PR changed.
+    git(["diff", "--name-only", "HEAD^1", "HEAD"]);
     return changed;
 }
 

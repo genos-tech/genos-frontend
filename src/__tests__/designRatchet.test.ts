@@ -440,10 +440,19 @@ describe("the update rules and the failure message", () => {
         try {
             expect(changedFiles(dir).size).toBe(0); // not a repository: no names, no throw
             const git = (...args: string[]) =>
-                execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], {
-                    cwd: dir,
-                    stdio: "ignore",
-                });
+                execFileSync(
+                    "git",
+                    [
+                        ...["-c", "user.email=t@t", "-c", "user.name=t"],
+                        // a developer's global config must not make this prompt or hang
+                        ...["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null"],
+                        ...args,
+                    ],
+                    {
+                        cwd: dir,
+                        stdio: "ignore",
+                    }
+                );
             git("init", "-q");
             fs.mkdirSync(path.join(dir, "src"));
             fs.writeFileSync(path.join(dir, "src", "kept.ts"), "a\n");
