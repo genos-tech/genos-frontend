@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import CloseRounded from "@mui/icons-material/CloseRounded";
-import { Avatar, Box, IconButton, Snackbar, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Avatar, Box, Stack, Typography } from "@mui/joy";
 
+import { Toast } from "../../components/ui/feedback/Toast";
 import { NotificationIntent } from "./types";
 
 interface NotificationToastHostProps {
@@ -19,16 +18,13 @@ const QUEUE_LIMIT = 5;
 
 /**
  * App-level toast renderer. Keeps a small queue of `NotificationIntent`s
- * coming out of the manager and shows them one at a time as a Joy Snackbar
- * pinned to the top-right.
+ * coming out of the manager and shows them one at a time in the shared toast
+ * host (bottom-center, like every other toast).
  */
 export const NotificationToastHost = ({
     subscribeToasts,
     onOpenIntent,
 }: NotificationToastHostProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-
     const [queue, setQueue] = useState<NotificationIntent[]>([]);
     const [active, setActive] = useState<NotificationIntent | null>(null);
 
@@ -52,36 +48,7 @@ export const NotificationToastHost = ({
     }, [active, onOpenIntent]);
 
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            autoHideDuration={TOAST_AUTO_HIDE_MS}
-            color="primary"
-            open={!!active}
-            variant="soft"
-            sx={{
-                minWidth: 320,
-                maxWidth: 420,
-                alignItems: "stretch",
-                boxShadow: "lg",
-                borderRadius: "xl",
-                // Joy's `variant="soft"` ships with a translucent
-                // `softBg` token — pleasant on a static surface, but
-                // for a floating toast it lets the page bleed
-                // through and makes the body text hard to read.
-                // Force an opaque surface here and add a matching
-                // border so the edge stays crisp; the soft variant
-                // still drives the text / icon tint.
-                backgroundColor: isDark ? "#1f1d2c" : "#ffffff",
-                border: isDark
-                    ? "1px solid rgba(var(--gp-brandalt-400-rgb), 0.25)"
-                    : "1px solid rgba(var(--gp-brand-700-rgb), 0.18)",
-                backdropFilter: "none",
-            }}
-            onClose={(_event, reason) => {
-                if (reason === "clickaway") return;
-                dismiss();
-            }}
-        >
+        <Toast duration={TOAST_AUTO_HIDE_MS} icon={null} open={!!active} onClose={() => dismiss()}>
             {active ? (
                 <Stack
                     alignItems="flex-start"
@@ -119,12 +86,8 @@ export const NotificationToastHost = ({
                             {active.body}
                         </Typography>
                     </Box>
-
-                    <IconButton color="neutral" size="sm" variant="plain" onClick={dismiss}>
-                        <CloseRounded />
-                    </IconButton>
                 </Stack>
             ) : null}
-        </Snackbar>
+        </Toast>
     );
 };

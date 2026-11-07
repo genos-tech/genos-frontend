@@ -11,7 +11,6 @@
  */
 
 import { ReactNode } from "react";
-import AddRounded from "@mui/icons-material/AddRounded";
 import KeyboardArrowDownRounded from "@mui/icons-material/KeyboardArrowDownRounded";
 import Box, { BoxProps } from "@mui/joy/Box";
 
@@ -313,61 +312,6 @@ export const TaskRow = ({
         )}
         <PriorityIcon priority={task.priority} />
         <Avatar name={task.assignee} />
-    </Box>
-);
-
-/** The single empty state for every surface: neutral icon, one line of
- *  title, one line of direction, at most one action. */
-export const EmptyState = ({
-    icon,
-    title,
-    body,
-    action,
-}: {
-    icon: ReactNode;
-    title: string;
-    body: string;
-    action?: string;
-}) => (
-    <Box
-        sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            gap: 1,
-            py: 4,
-            px: 2,
-        }}
-    >
-        <Box
-            sx={{
-                width: 40,
-                height: 40,
-                borderRadius: g.radius.full,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: g.bg.subtle,
-                boxShadow: `inset 0 0 0 1px ${g.border.subtle}`,
-                color: g.text.tertiary,
-                mb: 0.5,
-                "& svg": { fontSize: 20 },
-            }}
-        >
-            {icon}
-        </Box>
-        <Text level="title-md">{title}</Text>
-        <Text level="body-sm" sx={{ maxWidth: 280 }} tone="secondary">
-            {body}
-        </Text>
-        {action && (
-            <Box sx={{ mt: 1 }}>
-                <Button icon={<AddRounded />} size="sm" variant="secondary">
-                    {action}
-                </Button>
-            </Box>
-        )}
     </Box>
 );
 

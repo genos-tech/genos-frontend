@@ -964,6 +964,7 @@ export const zh: DeepPartial<Messages> = {
             quickMeetReconnect: "重新连接",
         },
         threadTabs: {
+            ariaLabel: "对话串分区",
             comments: "评论",
             activities: "动态",
         },
@@ -1155,6 +1156,13 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     common: {
+        feedback: {
+            loading: "加载中…",
+            toast: {
+                region: "通知",
+                undo: "撤销",
+            },
+        },
         actions: {
             save: "保存",
             cancel: "取消",
@@ -1872,6 +1880,7 @@ export const zh: DeepPartial<Messages> = {
             subtitle: "随时关注通知动态",
         },
         tabs: {
+            ariaLabel: "收件箱分区",
             requests: "申请",
             activities: "动态",
         },
@@ -2201,6 +2210,10 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "已打开的笔记",
+            closeTab: "关闭标签页",
+        },
         list: {
             empty: "暂无笔记",
             newNote: "新建笔记",

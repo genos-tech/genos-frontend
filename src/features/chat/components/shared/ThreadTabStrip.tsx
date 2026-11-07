@@ -1,10 +1,10 @@
-import { ReactElement } from "react";
+import { useMemo } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import { Box, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
 
-import { useTranslation, type Messages } from "../../../../i18n";
+import { TabStrip, type TabItem } from "../../../../components/ui/feedback/TabStrip";
+import { useTranslation } from "../../../../i18n";
 
 export type ThreadTabId = "activities" | "comments";
 
@@ -13,26 +13,8 @@ type ThreadTabStripProps = {
     onChange: (next: ThreadTabId) => void;
 };
 
-type ThreadTab = {
-    id: ThreadTabId;
-    labelKey: keyof Messages["chat"]["threadTabs"];
-    icon: ReactElement;
-};
-const TABS: ThreadTab[] = [
-    {
-        id: "comments",
-        labelKey: "comments",
-        icon: <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />,
-    },
-    {
-        id: "activities",
-        labelKey: "activities",
-        icon: <HistoryRoundedIcon sx={{ fontSize: 16 }} />,
-    },
-];
-
 /**
- * Two-tab pill strip wedged under `ThreadChatPaneHeader` for PM
+ * Two-tab strip (the shared `TabStrip`) wedged under `ThreadChatPaneHeader` for PM
  * threads tied to a task / milestone.
  *
  * "Activities" shows the task's structured audit log (the same
@@ -49,78 +31,32 @@ const TABS: ThreadTab[] = [
  * ever decide to.
  */
 export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
+    const tabs = useMemo<TabItem[]>(
+        () => [
+            {
+                id: "comments",
+                label: t.chat.threadTabs.comments,
+                icon: <ChatBubbleOutlineRoundedIcon />,
+            },
+            {
+                id: "activities",
+                label: t.chat.threadTabs.activities,
+                icon: <HistoryRoundedIcon />,
+            },
+        ],
+        [t]
+    );
 
     return (
-        <Stack
-            direction="row"
-            spacing={0.5}
-            sx={{
-                px: 2,
-                py: 0.75,
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-            }}
-        >
-            {TABS.map((tab) => {
-                const active = tab.id === value;
-                return (
-                    <Box
-                        key={tab.id}
-                        component="button"
-                        sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 0.75,
-                            border: "none",
-                            cursor: "pointer",
-                            background: active
-                                ? isDark
-                                    ? "rgba(var(--gp-brandalt-500-rgb), 0.18)"
-                                    : "rgba(var(--gp-brand-700-rgb), 0.12)"
-                                : "transparent",
-                            color: active
-                                ? isDark
-                                    ? "var(--gp-brandalt-400)"
-                                    : "var(--gp-brand-700)"
-                                : isDark
-                                  ? "rgba(255,255,255,0.6)"
-                                  : "rgba(0,0,0,0.6)",
-                            borderRadius: "999px",
-                            px: 1.5,
-                            py: 0.5,
-                            fontSize: "0.78rem",
-                            fontWeight: 600,
-                            transition: "background 120ms ease, color 120ms ease",
-                            "&:hover": {
-                                background: active
-                                    ? isDark
-                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.24)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.18)"
-                                    : isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.04)",
-                            },
-                        }}
-                        onClick={() => onChange(tab.id)}
-                    >
-                        {tab.icon}
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: "inherit",
-                                fontWeight: 600,
-                                fontSize: "0.78rem",
-                            }}
-                        >
-                            {t.chat.threadTabs[tab.labelKey]}
-                        </Typography>
-                    </Box>
-                );
-            })}
-        </Stack>
+        <Box sx={{ px: 2, pt: 0.5, minWidth: 0 }}>
+            <TabStrip
+                ariaLabel={t.chat.threadTabs.ariaLabel}
+                size="sm"
+                tabs={tabs}
+                value={value}
+                onChange={(id) => onChange(id as ThreadTabId)}
+            />
+        </Box>
     );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import { Button, Snackbar, Stack, Typography } from "@mui/joy";
+import { Button, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
@@ -17,6 +17,7 @@ import {
     unregisterNonMemberMentionListener,
 } from "../../services/nonMemberMentionBus";
 import { UserProps } from "../../types/admin";
+import { Toast } from "../ui/feedback/Toast";
 
 // Folder roles: 1 owner, 2 editor, 3 viewer.
 const FOLDER_ROLE_EDITOR = 2;
@@ -119,44 +120,44 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
     };
 
     return (
-        <Snackbar
+        <Toast
+            // No auto-hide: this asks a question, and a prompt that vanishes
+            // mid-read is worse than none.
+            duration={null}
             open
-            anchorOrigin={{ horizontal: "center", vertical: "bottom" }}
-            color="warning"
-            variant="soft"
-            // No autoHideDuration: this asks a question, and a prompt
-            // that vanishes mid-read is worse than none.
-            onClose={(_e, reason) => {
-                if (reason === "clickaway") return;
-                setPending(null);
-            }}
+            tone="warning"
+            actions={
+                <Stack alignItems="center" direction="row" spacing={0.5}>
+                    <Button
+                        color="warning"
+                        disabled={busy}
+                        loading={busy}
+                        size="sm"
+                        startDecorator={<PersonAddAltRoundedIcon sx={{ fontSize: 16 }} />}
+                        variant="solid"
+                        onClick={() => void handleAdd()}
+                    >
+                        {isNote ? t.common.nonMemberMention.share : t.common.nonMemberMention.add}
+                    </Button>
+                    <Button
+                        color="neutral"
+                        size="sm"
+                        variant="plain"
+                        onClick={() => setPending(null)}
+                    >
+                        {t.common.nonMemberMention.dismiss}
+                    </Button>
+                </Stack>
+            }
         >
-            <Stack alignItems="center" direction="row" spacing={1.5}>
-                <Typography level="body-sm">
-                    {/* A note is SHARED, not joined — the two read very
+            <Typography level="body-sm">
+                {/* A note is SHARED, not joined — the two read very
                         differently and "add them to My note" is wrong. */}
-                    {fmt(
-                        isNote
-                            ? t.common.nonMemberMention.bodyShare
-                            : t.common.nonMemberMention.body,
-                        { names, scope: pending.scopeName }
-                    )}
-                </Typography>
-                <Button
-                    color="warning"
-                    disabled={busy}
-                    loading={busy}
-                    size="sm"
-                    startDecorator={<PersonAddAltRoundedIcon sx={{ fontSize: 16 }} />}
-                    variant="solid"
-                    onClick={() => void handleAdd()}
-                >
-                    {isNote ? t.common.nonMemberMention.share : t.common.nonMemberMention.add}
-                </Button>
-                <Button color="neutral" size="sm" variant="plain" onClick={() => setPending(null)}>
-                    {t.common.nonMemberMention.dismiss}
-                </Button>
-            </Stack>
-        </Snackbar>
+                {fmt(
+                    isNote ? t.common.nonMemberMention.bodyShare : t.common.nonMemberMention.body,
+                    { names, scope: pending.scopeName }
+                )}
+            </Typography>
+        </Toast>
     );
 };

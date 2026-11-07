@@ -8,11 +8,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import { Box, Button, List, Stack, Typography } from "@mui/joy";
+import { Box, List, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { EmptyState as FeedbackEmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -253,107 +254,29 @@ export const EmptyState = ({
     actionLabelKey?: keyof Messages["chat"]["sidebar"];
     onAction?: () => void;
 }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const config = EMPTY_STATES[chatType] || EMPTY_STATES[CHAT_TYPES.DM];
     const Icon = config.icon;
     const resolvedTitleKey = titleKey ?? config.titleKey;
     const resolvedSubtitleKey = subtitleKey ?? config.subtitleKey;
 
     return (
-        <Box
-            sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                px: 3,
-                py: 6,
-                animation: "fadeIn 0.4s ease-out",
-                "@keyframes fadeIn": {
-                    from: { opacity: 0, transform: "translateY(8px)" },
-                    to: { opacity: 1, transform: "translateY(0)" },
-                },
-            }}
-        >
-            <Box
-                sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: isDark
-                        ? "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brandalt-500-rgb), 0.06) 100%)"
-                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.04) 100%)",
-                    border: "1px solid",
-                    borderColor: isDark
-                        ? "rgba(var(--gp-brandalt-500-rgb), 0.12)"
-                        : "rgba(var(--gp-brand-700-rgb), 0.08)",
-                    mb: 2,
-                    position: "relative",
-                    "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        inset: -6,
-                        borderRadius: "50%",
-                        border: "1px dashed",
-                        borderColor: isDark
-                            ? "rgba(var(--gp-brandalt-500-rgb), 0.12)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.1)",
-                        animation: "rotate 25s linear infinite",
-                    },
-                    "@keyframes rotate": {
-                        from: { transform: "rotate(0deg)" },
-                        to: { transform: "rotate(360deg)" },
-                    },
-                }}
-            >
-                <Icon
-                    sx={{
-                        fontSize: 28,
-                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        opacity: 0.7,
-                    }}
-                />
-            </Box>
-
-            <Typography
-                level="title-sm"
-                sx={{
-                    fontWeight: 600,
-                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
-                    mb: 0.5,
-                    textAlign: "center",
-                }}
-            >
-                {t.chat.sidebar[resolvedTitleKey]}
-            </Typography>
-            <Typography
-                level="body-xs"
-                sx={{
-                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                    textAlign: "center",
-                    maxWidth: 180,
-                }}
-            >
-                {t.chat.sidebar[resolvedSubtitleKey]}
-            </Typography>
-            {actionLabelKey && onAction && (
-                <Button
-                    size="sm"
-                    startDecorator={<AddRoundedIcon />}
-                    sx={{ mt: 2 }}
-                    variant="soft"
-                    onClick={onAction}
-                >
-                    {t.chat.sidebar[actionLabelKey]}
-                </Button>
-            )}
-        </Box>
+        <FeedbackEmptyState
+            body={t.chat.sidebar[resolvedSubtitleKey]}
+            data-empty="chat-list"
+            icon={<Icon />}
+            title={t.chat.sidebar[resolvedTitleKey]}
+            action={
+                actionLabelKey && onAction
+                    ? {
+                          label: t.chat.sidebar[actionLabelKey],
+                          onClick: onAction,
+                          icon: <AddRoundedIcon />,
+                      }
+                    : undefined
+            }
+            fill
+        />
     );
 };
 

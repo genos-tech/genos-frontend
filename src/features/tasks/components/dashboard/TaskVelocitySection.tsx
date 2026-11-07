@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import { Box, Card, Chip, CircularProgress, Option, Select, Stack, Typography } from "@mui/joy";
+import { Box, Card, Chip, Option, Select, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
 import {
@@ -259,7 +260,7 @@ export const TaskVelocitySection = ({
 
                 {loading && data === null ? (
                     <Stack alignItems="center" sx={{ py: 4 }}>
-                        <CircularProgress size="sm" />
+                        <Spinner />
                     </Stack>
                 ) : (
                     <>

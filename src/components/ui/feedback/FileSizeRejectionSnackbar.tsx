@@ -1,9 +1,8 @@
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
-import { IconButton, Snackbar, Stack, Typography } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { FileSizeRejection, formatBytes, formatLimitLabel } from "../../../utils/uploadLimits";
+import { Toast } from "./Toast";
 
 type FileSizeRejectionSnackbarProps = {
     /** When non-null, the snackbar is open and lists the rejected files.
@@ -31,34 +30,7 @@ export const FileSizeRejectionSnackbar = ({
     const overflow = (rejection?.files.length ?? 0) - previewFiles.length;
 
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            autoHideDuration={autoHideDuration}
-            color="warning"
-            open={open}
-            startDecorator={<WarningRoundedIcon />}
-            variant="soft"
-            endDecorator={
-                <IconButton
-                    color="warning"
-                    size="sm"
-                    sx={{ ml: 1, alignSelf: "flex-start" }}
-                    variant="soft"
-                    onClick={onDismiss}
-                >
-                    <CloseRoundedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-            }
-            sx={{
-                zIndex: 12000,
-                maxWidth: 420,
-                alignItems: "flex-start",
-            }}
-            onClose={(_event, reason) => {
-                if (reason === "clickaway") return;
-                onDismiss();
-            }}
-        >
+        <Toast duration={autoHideDuration} open={open} tone="warning" onClose={() => onDismiss()}>
             <Stack spacing={0.25}>
                 <Typography level="title-sm" sx={{ fontWeight: 600 }}>
                     {/* The limit that was actually applied travels with
@@ -80,6 +52,6 @@ export const FileSizeRejectionSnackbar = ({
                     </Typography>
                 )}
             </Stack>
-        </Snackbar>
+        </Toast>
     );
 };

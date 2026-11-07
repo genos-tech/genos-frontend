@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Snackbar, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "../../i18n";
 import { refreshBillingTier } from "../../services/billingApi";
+import { Toast } from "../ui/feedback/Toast";
 
 const AUTO_HIDE_MS = 8000;
 
@@ -75,30 +74,14 @@ export const BillingReturnSnackbar = () => {
 
     const p = t.settings.planUsage;
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            autoHideDuration={AUTO_HIDE_MS}
-            color={kind === "success" ? "success" : "neutral"}
+        <Toast
+            duration={AUTO_HIDE_MS}
+            icon={kind === "success" ? undefined : <InfoOutlinedIcon />}
             open={kind !== null}
-            variant="soft"
-            onClose={(_event, reason) => {
-                if (reason === "clickaway") return;
-                setKind(null);
-            }}
+            tone={kind === "success" ? "success" : "neutral"}
+            onClose={() => setKind(null)}
         >
-            <Typography
-                level="body-sm"
-                startDecorator={
-                    kind === "success" ? (
-                        <CheckCircleRoundedIcon sx={{ fontSize: 18 }} />
-                    ) : (
-                        <InfoOutlinedIcon sx={{ fontSize: 18 }} />
-                    )
-                }
-                sx={{ fontWeight: 500 }}
-            >
-                {kind === "success" ? p.billingReturnSuccess : p.billingReturnCancelled}
-            </Typography>
-        </Snackbar>
+            {kind === "success" ? p.billingReturnSuccess : p.billingReturnCancelled}
+        </Toast>
     );
 };

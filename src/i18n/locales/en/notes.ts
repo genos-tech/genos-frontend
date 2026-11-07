@@ -1,4 +1,8 @@
 export const notes = {
+    tabs: {
+        ariaLabel: "Open notes",
+        closeTab: "Close tab",
+    },
     list: {
         empty: "No notes yet",
         newNote: "New note",

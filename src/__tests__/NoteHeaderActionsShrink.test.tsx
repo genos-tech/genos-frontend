@@ -71,7 +71,7 @@ const renderActions = () =>
  *
  * jsdom has no layout engine, so this can't assert pixels. It asserts the
  * two declarations that make the overflow impossible — the same pattern
- * `NoteTabList` already uses for its tab strip. Note that `overflowX`
+ * `TabStrip` uses for its tab strip. Note that `overflowX`
  * pulls double duty: besides scrolling, any non-`visible` overflow value
  * switches OFF the automatic minimum size that caused the bug.
  */

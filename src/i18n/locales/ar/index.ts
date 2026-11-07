@@ -7,6 +7,13 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const ar: DeepPartial<Messages> = {
     common: {
+        feedback: {
+            loading: "جارٍ التحميل…",
+            toast: {
+                region: "الإشعارات",
+                undo: "تراجع",
+            },
+        },
         addMembers: {
             openButton: "إضافة أعضاء",
             headingProject: "إضافة أعضاء إلى {projectName}",
@@ -1351,6 +1358,7 @@ export const ar: DeepPartial<Messages> = {
             quickMeetReconnect: "أعد الاتصال",
         },
         threadTabs: {
+            ariaLabel: "أقسام سلسلة الرسائل",
             comments: "التعليقات",
             activities: "الأنشطة",
         },
@@ -2645,6 +2653,10 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "الملاحظات المفتوحة",
+            closeTab: "إغلاق علامة التبويب",
+        },
         accessRequest: {
             privateBadge: "ملاحظة خاصة",
             heading: "ليس لديك صلاحية الوصول إلى هذه الملاحظة",
@@ -2977,6 +2989,7 @@ export const ar: DeepPartial<Messages> = {
             subtitle: "تابع الإشعارات أولًا بأول",
         },
         tabs: {
+            ariaLabel: "أقسام صندوق الوارد",
             requests: "الطلبات",
             activities: "الأنشطة",
         },

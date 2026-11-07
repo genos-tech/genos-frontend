@@ -3,9 +3,10 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Alert, Box, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import {
     Connection,
@@ -156,11 +157,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
     };
 
     if (loading && !data) {
-        return (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-                <CircularProgress />
-            </Stack>
-        );
+        return <SkeletonRows count={3} twoLines />;
     }
 
     return (

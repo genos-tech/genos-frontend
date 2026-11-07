@@ -44,6 +44,7 @@ import { Sidebar } from "./components/layout/sidebar";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { useAvatarContextValue } from "./components/ui/avatars/useAvatarContextValue";
+import { ToastHost } from "./components/ui/feedback/Toast";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
@@ -1516,6 +1517,7 @@ const AppBody = () => {
                                                             socket={socketInstance}
                                                         />
                                                         <BillingReturnSnackbar />
+                                                        <ToastHost />
                                                         <QuickMeetClipboardHost
                                                             ref={meetClipboardRef}
                                                             accessToken={accessToken}

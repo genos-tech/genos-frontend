@@ -27,8 +27,8 @@ vi.mock("../features/notes/common/components/NoteHeaderActions", () => ({
         <div data-notetype={noteType} data-testid="actions" />
     ),
 }));
-vi.mock("../features/notes/common/components/NoteTabList", () => ({
-    NoteTabList: () => null,
+vi.mock("../features/notes/common/components/NoteTabStrip", () => ({
+    NoteTabStrip: () => null,
 }));
 vi.mock("../features/notes/my-notes/modals/ModalDeleteMyNote", () => ({
     ModalDeleteMyNote: () => null,

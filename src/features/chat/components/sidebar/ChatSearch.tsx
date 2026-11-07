@@ -10,12 +10,12 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import CircularProgress from "@mui/joy/CircularProgress";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -223,6 +223,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         >
             <Autocomplete
                 aria-label={t.chat.sidebar.searchAriaLabel}
+                endDecorator={loading ? <Spinner /> : null}
                 groupBy={(option) => option.type}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
                 loading={loading}
@@ -230,18 +231,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 options={options}
                 placeholder={t.chat.sidebar.searchPlaceholder}
                 size="sm"
-                endDecorator={
-                    loading ? (
-                        <CircularProgress
-                            size="sm"
-                            sx={{
-                                "--CircularProgress-size": "16px",
-                                "--CircularProgress-trackThickness": "2px",
-                                "--CircularProgress-progressThickness": "2px",
-                            }}
-                        />
-                    ) : null
-                }
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? personLabel(

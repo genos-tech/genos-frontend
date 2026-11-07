@@ -1,9 +1,10 @@
 import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
-import { Snackbar, Stack, Typography } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
 import type { ApiDownReason } from "../../services/api";
+import { Toast } from "../ui/feedback/Toast";
 
 interface Props {
     showWsDisconnected: boolean;
@@ -27,12 +28,12 @@ export const ConnectionStatusSnackbar = ({
           }[apiDownReason]
         : t.app.snackbar.apiDown;
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            color="danger"
+        <Toast
+            dismissible={false}
+            duration={null}
+            icon={null}
             open={showWsDisconnected || showApiDown}
-            sx={{ gap: 1 }}
-            variant="soft"
+            tone="danger"
         >
             <Stack spacing={0.5}>
                 {showWsDisconnected && (
@@ -64,6 +65,6 @@ export const ConnectionStatusSnackbar = ({
                     </Typography>
                 )}
             </Stack>
-        </Snackbar>
+        </Toast>
     );
 };

@@ -6,6 +6,13 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const hi: DeepPartial<Messages> = {
     common: {
+        feedback: {
+            loading: "लोड हो रहा है…",
+            toast: {
+                region: "सूचनाएँ",
+                undo: "पूर्ववत करें",
+            },
+        },
         actions: {
             save: "सहेजें",
             cancel: "रद्द करें",
@@ -1382,6 +1389,7 @@ export const hi: DeepPartial<Messages> = {
             quickMeetReconnect: "रिकनेक्ट",
         },
         threadTabs: {
+            ariaLabel: "थ्रेड के खंड",
             comments: "कमेंट",
             activities: "गतिविधियाँ",
         },
@@ -2667,6 +2675,10 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "खुले हुए नोट",
+            closeTab: "टैब बंद करें",
+        },
         list: {
             empty: "अभी कोई नोट नहीं",
             newNote: "नया नोट",
@@ -3002,6 +3014,7 @@ export const hi: DeepPartial<Messages> = {
             subtitle: "नोटिफिकेशन से अपडेट रहें",
         },
         tabs: {
+            ariaLabel: "इनबॉक्स के खंड",
             requests: "अनुरोध",
             activities: "गतिविधियाँ",
         },

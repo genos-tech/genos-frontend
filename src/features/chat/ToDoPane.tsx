@@ -30,6 +30,7 @@ import {
 } from "./utils/todoTagFilter";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -328,16 +329,16 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     >
                         <Stack
                             alignItems="center"
-                            data-todo-header-row
                             direction="row"
                             justifyContent="space-between"
+                            sx={hostedInModal ? { pr: "76px" } : undefined}
                             mb={1.5}
                             // In a modal the "open full page" and ✕ buttons float over
                             // this corner (UrlLinkModal: right 56 and 12, 36px wide,
                             // so 92px from the edge). The box already pads 20px; keep
                             // the rest of that corner free so they don't cover the
                             // actions (MIP-1044).
-                            sx={hostedInModal ? { pr: "76px" } : undefined}
+                            data-todo-header-row
                         >
                             <Stack alignItems="center" direction="row" spacing={1.5}>
                                 <Box
@@ -537,10 +538,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 <Chip
                                     color="warning"
                                     size="sm"
+                                    sx={{ cursor: "pointer", borderRadius: "6px" }}
                                     startDecorator={
                                         <FilterListRoundedIcon sx={{ fontSize: 14 }} />
                                     }
-                                    sx={{ cursor: "pointer", borderRadius: "6px" }}
                                     variant={
                                         !showCompletedToday && useCM.showOnlyInCompleteTodos
                                             ? "solid"
@@ -587,10 +588,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             <Virtuoso
                                 ref={virtuosoRef}
                                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0
                                 }
-                                totalCount={displayGroups.length}
                                 itemContent={(index) => {
                                     const group = displayGroups[index] as TodoGroupProps;
                                     return (
@@ -633,8 +634,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 }}
                             />
                         ) : (
-                            <EmptyState
-                                isDark={isDark}
+                            <TodoEmpty
                                 showCompletedToday={showCompletedToday}
                                 showIncompleteOnly={useCM.showOnlyInCompleteTodos}
                                 onAddTodayClick={handleCreateTodayGroup}
@@ -667,85 +667,46 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     );
 };
 
-interface EmptyStateProps {
+interface TodoEmptyProps {
     showIncompleteOnly: boolean;
     showCompletedToday: boolean;
     onAddTodayClick: () => void;
-    isDark: boolean;
 }
 
-const EmptyState = ({
+const TodoEmpty = ({
     showIncompleteOnly,
     showCompletedToday,
     onAddTodayClick,
-    isDark,
-}: EmptyStateProps) => {
+}: TodoEmptyProps) => {
     const { t } = useTranslation();
     return (
-        <Stack
-            alignItems="center"
-            justifyContent="center"
-            spacing={2}
-            sx={{ height: "100%", py: 8 }}
-        >
-            <Box
-                sx={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: "16px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                }}
-            >
-                <CheckCircleOutlineRoundedIcon
-                    sx={{
-                        fontSize: 32,
-                        color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
-                    }}
-                />
-            </Box>
-            <Stack alignItems="center" spacing={0.5}>
-                <Typography
-                    level="title-sm"
-                    sx={{
-                        fontWeight: 600,
-                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                    }}
-                >
-                    {showCompletedToday
-                        ? t.chat.todoPane.completedTodayEmptyTitle
-                        : showIncompleteOnly
-                          ? t.chat.todoPane.allCaughtUp
-                          : t.chat.todoPane.noTodosYet}
-                </Typography>
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                        textAlign: "center",
-                        maxWidth: 240,
-                    }}
-                >
-                    {showCompletedToday
-                        ? t.chat.todoPane.completedTodayEmptySubtitle
-                        : showIncompleteOnly
-                          ? t.chat.todoPane.incompleteEmptySubtitle
-                          : t.chat.todoPane.emptySubtitle}
-                </Typography>
-                {!showIncompleteOnly && !showCompletedToday && (
-                    <IconButton
-                        size="sm"
-                        sx={{ mt: 1, borderRadius: "8px", px: 1.5 }}
-                        variant="soft"
-                        onClick={onAddTodayClick}
-                    >
-                        <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        {t.chat.todoPane.startToday}
-                    </IconButton>
-                )}
-            </Stack>
-        </Stack>
+        <EmptyState
+            data-empty="todo"
+            icon={<CheckCircleOutlineRoundedIcon />}
+            action={
+                !showIncompleteOnly && !showCompletedToday
+                    ? {
+                          label: t.chat.todoPane.startToday,
+                          onClick: onAddTodayClick,
+                          icon: <AddIcon />,
+                      }
+                    : undefined
+            }
+            body={
+                showCompletedToday
+                    ? t.chat.todoPane.completedTodayEmptySubtitle
+                    : showIncompleteOnly
+                      ? t.chat.todoPane.incompleteEmptySubtitle
+                      : t.chat.todoPane.emptySubtitle
+            }
+            title={
+                showCompletedToday
+                    ? t.chat.todoPane.completedTodayEmptyTitle
+                    : showIncompleteOnly
+                      ? t.chat.todoPane.allCaughtUp
+                      : t.chat.todoPane.noTodosYet
+            }
+            fill
+        />
     );
 };

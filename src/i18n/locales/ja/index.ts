@@ -1169,6 +1169,7 @@ export const ja: DeepPartial<Messages> = {
             quickMeetReconnect: "再接続",
         },
         threadTabs: {
+            ariaLabel: "スレッドのセクション",
             comments: "コメント",
             activities: "アクティビティ",
         },
@@ -1361,6 +1362,13 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     common: {
+        feedback: {
+            loading: "読み込み中…",
+            toast: {
+                region: "通知",
+                undo: "元に戻す",
+            },
+        },
         actions: {
             save: "保存",
             cancel: "キャンセル",
@@ -2102,6 +2110,7 @@ export const ja: DeepPartial<Messages> = {
             subtitle: "通知を見逃さないようにしましょう",
         },
         tabs: {
+            ariaLabel: "受信箱のセクション",
             requests: "リクエスト",
             activities: "アクティビティ",
         },
@@ -2479,6 +2488,10 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     notes: {
+        tabs: {
+            ariaLabel: "開いているノート",
+            closeTab: "タブを閉じる",
+        },
         list: {
             empty: "ノートはまだありません",
             newNote: "新規ノート",

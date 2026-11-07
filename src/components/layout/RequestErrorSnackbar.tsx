@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import { Snackbar, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
 import {
@@ -8,15 +6,17 @@ import {
     subscribeRequestErrors,
     TranslatedRequestErrorKind,
 } from "../../services/requestErrorNotifier";
+import { Toast } from "../ui/feedback/Toast";
 
 const AUTO_HIDE_MS = 5000;
 
 /**
  * App-level host for transient request-error toasts (see
  * `requestErrorNotifier`). Subscribes to the bus and renders the latest
- * failure as a danger Snackbar pinned bottom-center — deliberately distinct
- * from the top connection banners (`ConnectionStatusSnackbar`) so a one-off
- * failure reads as "that just failed" rather than "you're offline".
+ * failure as a danger toast in the shared host (bottom-center, like every
+ * toast). Unlike the connection banner (`ConnectionStatusSnackbar`, which
+ * stays until the link is back and has no close button) this one auto-hides
+ * and can be dismissed, so a one-off failure reads as "that just failed".
  *
  * A newer error replaces the current one: the bus already de-dups identical
  * kinds within a short window, and failures are infrequent enough that a
@@ -32,9 +32,19 @@ const AUTO_HIDE_MS = 5000;
  */
 export const RequestErrorSnackbar = () => {
     const { t } = useTranslation();
-    const [active, setActive] = useState<{ kind: RequestErrorKind; text?: string } | null>(null);
+    const [active, setActive] = useState<{
+        kind: RequestErrorKind;
+        text?: string;
+        n: number;
+    } | null>(null);
 
-    useEffect(() => subscribeRequestErrors((kind, text) => setActive({ kind, text })), []);
+    useEffect(
+        () =>
+            subscribeRequestErrors((kind, text) =>
+                setActive((prev) => ({ kind, text, n: (prev?.n ?? 0) + 1 }))
+            ),
+        []
+    );
 
     const message = !active
         ? ""
@@ -43,24 +53,15 @@ export const RequestErrorSnackbar = () => {
           : t.app.snackbar[active.kind as TranslatedRequestErrorKind];
 
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            autoHideDuration={AUTO_HIDE_MS}
-            color="danger"
+        <Toast
+            // A newer failure replaces the current one AND restarts the timer.
+            key={active?.n ?? 0}
+            duration={AUTO_HIDE_MS}
             open={active !== null}
-            variant="soft"
-            onClose={(_event, reason) => {
-                if (reason === "clickaway") return;
-                setActive(null);
-            }}
+            tone="danger"
+            onClose={() => setActive(null)}
         >
-            <Typography
-                level="body-sm"
-                startDecorator={<ErrorOutlineRoundedIcon sx={{ fontSize: 18 }} />}
-                sx={{ fontWeight: 500 }}
-            >
-                {message}
-            </Typography>
-        </Snackbar>
+            {message}
+        </Toast>
     );
 };
