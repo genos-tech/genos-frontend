@@ -3,7 +3,7 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { defaultBlockSpecs, filterSuggestionItems } from "@blocknote/core";
+import { filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
