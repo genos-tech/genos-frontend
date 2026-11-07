@@ -17,11 +17,10 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
-import { navFocusSx, navRowSx } from "../../../../../components/ui/nav/navStyles";
+import { NavItem } from "../../../../../components/ui/nav/NavItem";
+import { NAV_OVERLAY_BG, NAV_OVERLAY_FADE } from "../../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
@@ -100,69 +99,53 @@ const AVATARS_CLASS = "MsRowAvatars";
 const SURPLUS_CLASS = "MsRowAvatarSurplus";
 const SPRINT_CLASS = "MsRowSprint";
 
-// ── Row menu and title room (MIP-1021) ──
+// ── Row menu and title room (MIP-1021, on NavItem since MIP-1163) ──
 // A row's "..." menu shows only while the row is hovered, keyboard-focused or
 // its menu is open, and always on a touch device (no hover there). While
-// hidden it takes NO width: it is Joy's absolutely positioned `endAction`, and
-// the row no longer keeps a 32px margin for it, so the title gets that room
-// and does not move when the menu appears (it overlays the row's right end).
-//   - The button stays in the DOM and in the tab order (opacity, not display
-//     or visibility), so keyboard and screen-reader users still reach it.
-//   - Opacity and pointer-events sit on the BUTTON, not the endAction wrapper:
-//     an opacity-0 wrapper would hide the button in every state. The wrapper
-//     never takes a click itself, so a hidden menu can't block the row.
-//   - No `:has()` (MIP-963: one cost a second of style recalc). Row focus is
-//     read from Joy's `.Mui-focusVisible` on the preceding row button, so a
-//     mouse click on a row does not leave its menu showing.
-//   - `--ms-menu-reserve` is the margin a touch device keeps for the visible
-//     button (32px, as before) so it never covers the chips; it is 0 for a
-//     mouse, and 0 in a compact (<= 299px) list on touch too: title room is
-//     scarcer than chip room there, and the button simply overlays.
-//   - Where the button overlays, it has the row's hover colour as background
-//     and a same-colour shadow fading to its left (a chip under its edge
-//     fades out instead of being cut). Where it has its own space (touch in a
-//     wide list) both are off: `--ms-menu-bg` / `--ms-menu-fade`.
-const MENU_RESERVE_TOUCH = "32px";
+// hidden it takes NO width and the row no longer keeps a margin for it, so the
+// title gets that room and does not move when the menu appears: it overlays the
+// row's right end. That is `NavItem`'s `actionsOverlay` mode, which owns the
+// mechanics (the button stays in the tab order, opacity and pointer-events sit
+// on the BUTTON, no `:has()` (MIP-963), the keyboard ring reads Joy's
+// `.Mui-focusVisible`, an opaque hover-coloured background and a fade to the
+// left). What this file decides is where the menu sits and how much room it keeps:
+//   - `--nav-actions-reserve` is the room a touch device keeps free for the
+//     visible buttons so they never cover the chips (32px per button). It is 0
+//     for a mouse, and 0 in a compact (<= 299px) list on touch too: title room is
+//     scarcer than chip room there, and the buttons simply overlay (with their
+//     background, which the compact rule below puts back).
+//   - The menu is centred on the first line (title), so it covers the progress
+//     chip and not the second line's chips and avatars.
+const MENU_BUTTON_TOUCH = "32px";
+// How far the buttons sit from the row's end, and the end padding the rows keep
+// (the tight tier narrows the second through `--nav-pad-end`).
+const MENU_END = "4px";
+const ROW_PAD_END = "12px";
 // A folder row ends in a chevron that is also a click target: the menu sits
-// just left of it (over the count chip), not on it. 18px = the chevron (16px)
-// + its margin (4px) + the button's padding (4px) less Joy's 4px shift of the
-// button; plus the row's right padding. On touch in a wide list the reserved
-// 32px already keeps the chevron clear, so the menu goes back to the edge.
-const FOLDER_MENU_RIGHT = "max(0px, calc(var(--ms-li-pr, 8px) + 18px - var(--ms-menu-reserve)))";
-// The row's hover colour, OPAQUE: a button that overlays the row's right end has
-// to hide what is under it. Joy's `neutral.plainHoverBg` is translucent since the
-// theme moved to the tokens, so the star and "..." showed the title through them
-// (MIP-1156). Hover tint (`--g-hover`, ink at 4.5%) laid over the sidebar surface.
-const MENU_OVERLAY_BG = "color-mix(in srgb, var(--g-bg-subtle) 95.5%, var(--g-text))";
-const END_ACTION = ".MuiListItem-endAction";
-const REVEAL_SELECTORS = [
-    `&:hover > ${END_ACTION} button`,
-    `& > .Mui-focusVisible ~ ${END_ACTION} button`,
-    `& > ${END_ACTION} button:focus-visible`,
-    `& > ${END_ACTION} button[aria-expanded="true"]`,
-].join(", ");
-const rowMenuSx = (place: { top?: string; right?: string } = {}) => ({
-    [`& > ${END_ACTION}`]: { pointerEvents: "none", ...place },
-    [`& > ${END_ACTION} button`]: {
-        opacity: 0,
-        pointerEvents: "none",
-        transition: "opacity 0.12s",
-        "--IconButton-size": "28px",
-        // Opaque, as the row's hover colour: it overlays whatever is under it.
-        // The shadow is the same colour, fading out to the left, so a chip
-        // under the button's edge fades instead of being cut off.
-        backgroundColor: "var(--ms-menu-bg)",
-        boxShadow: "var(--ms-menu-fade)",
+// just left of it (over the count chip), not on it. 18px = the chevron (16px) + its
+// margin (4px) less 2px; plus the row's end padding;
+// on touch the reserved 32px already keeps the chevron clear, so the menu goes
+// back to the edge.
+const FOLDER_MENU_END =
+    "max(0px, calc(var(--nav-pad-end, 8px) + 18px - var(--nav-actions-reserve, 0px)))";
+// A milestone row ends in two buttons (the star and the menu), so on touch it keeps
+// twice the room a folder row (one button) does.
+const MILESTONE_ACTIONS_OVERLAY = {
+    top: MS_MENU_TOP,
+    end: MENU_END,
+    reserve: `calc(${MENU_BUTTON_TOUCH} * 2)`,
+};
+const FOLDER_ACTIONS_OVERLAY = { end: FOLDER_MENU_END, reserve: MENU_BUTTON_TOUCH };
+// A compact list (<= 299px) reserves no room for the buttons even on touch, so they
+// overlay again, with their background. Set on each row: a row's rule comes after
+// the touch rule `NavItem` writes for itself.
+const compactActionsSx = {
+    [`@container ${MS_LIST} (max-width: ${LIST_COMPACT_MAX_PX}px)`]: {
+        "--nav-actions-reserve": "0px",
+        "--nav-actions-bg": NAV_OVERLAY_BG,
+        "--nav-actions-fade": NAV_OVERLAY_FADE,
     },
-    [REVEAL_SELECTORS]: { opacity: 1, pointerEvents: "auto" },
-    "@media (hover: none)": {
-        [`& > ${END_ACTION} button`]: {
-            opacity: 1,
-            pointerEvents: "auto",
-            "--IconButton-size": "32px",
-        },
-    },
-});
+} as const;
 
 // Left indent for tree level `depth` (0 = directly under the project row).
 // Normal 40/56/72/88px (spacing 5 + 2 per level); compact 24/32/40/48px;
@@ -170,15 +153,9 @@ const rowMenuSx = (place: { top?: string; right?: string } = {}) => ({
 const indentSx = (depth: number) => ({
     ml: `calc(var(--ms-indent-base) + ${depth} * var(--ms-indent-step))`,
 });
-// Joy gives every button in a nested list an inset of 24px + 8px. The tight
-// tier shrinks it (`--ms-btn-pl`); elsewhere the variable is unset and the
-// fallback is Joy's own value.
-const BTN_PL = "var(--ms-btn-pl, var(--ListItem-paddingLeft))";
-// Joy puts an 8px gap between a row's icon, label and arrow; the icons carry
+// Joy puts an 8px gap between a row's icon and label; the icons carry
 // their own right margin, so the tight tier drops it (`--ms-btn-gap`).
-const BTN_GAP = "var(--ms-btn-gap, var(--ListItem-gap))";
-// The ListItem's right padding (8px): 0 in the tight tier.
-const LI_PR = "var(--ms-li-pr, 8px)";
+const BTN_GAP = "var(--ms-btn-gap, 8px)";
 
 // The managers arrive as slices (MIP-971): TypeScript forbids reading a member
 // outside them, and `memo` skips the render of an `AppBody` pass that changed
@@ -201,8 +178,6 @@ export const MilestonesListItem = memo(function MilestonesListItem({
     useTEM,
     myself,
 }: Props) {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
@@ -280,12 +255,21 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                   t.tasks.sidebar.sprintFallback);
         const favorited = useSM.isMilestoneFavorited(m.milestoneId);
         const toggleFavorite = () => void useSM.toggleMilestoneFavorite(m);
+        const selected =
+            useTM.currentPreviewKind === "milestone" &&
+            useTM.currentPreviewMilestoneId === m.milestoneId;
+        // A mouse keeps no room for the star and the menu (they show over the row's end
+        // on hover); a touch device, where they are always visible, keeps 32px each.
+        const rowSx = { ...indentSx(depth), ...compactActionsSx };
         return (
-            <ListItem
+            <NavItem
                 key={m.milestoneId}
-                sx={{ pl: 0, pr: LI_PR, ...rowMenuSx({ top: MS_MENU_TOP }) }}
-                endAction={
-                    // The star and the "..." menu share the end action, so the row's
+                actionsOverlay={MILESTONE_ACTIONS_OVERLAY}
+                lines={2}
+                selected={selected}
+                sx={rowSx}
+                actions={
+                    // The star and the "..." menu share the actions slot, so the row's
                     // hover reveal shows both. Past milestones keep their folder but
                     // are not filed from here: they sit in the year/sprint tree, not
                     // in a folder, so their menu holds only the favorite item.
@@ -308,31 +292,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                         />
                     </Stack>
                 }
+                onClick={() => handleOpen(m.milestoneId)}
             >
-                <ListItemButton
-                    selected={
-                        useTM.currentPreviewKind === "milestone" &&
-                        useTM.currentPreviewMilestoneId === m.milestoneId
-                    }
-                    // `endAction` is absolutely positioned at the right edge. A
-                    // mouse keeps no room for it (it shows over the row's end on
-                    // hover); a touch device, where it is always visible, keeps
-                    // 32px (see `rowMenuSx`).
-                    sx={{
-                        // The shared row look (selected tint, hover, radius, focus
-                        // ring): see `navStyles`. Structure stays this file's own.
-                        ...navRowSx({ lines: 2 }),
-                        ...navFocusSx,
-                        ...indentSx(depth),
-                        py: 0.5,
-                        pl: BTN_PL,
-                        pr: 0.5,
-                        gap: BTN_GAP,
-                        // Two buttons now (star + menu), so twice the touch reserve.
-                        mr: "calc(var(--ms-menu-reserve) * 2)",
-                    }}
-                    onClick={() => handleOpen(m.milestoneId)}
-                >
+                <Box sx={{ display: "flex", alignItems: "center", gap: BTN_GAP, py: 0.5 }}>
                     <FlagRoundedIcon sx={{ fontSize: 14, color: g.warning.solid, mr: 0.75 }} />
                     <ListItemContent
                         sx={{
@@ -371,7 +333,10 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
-                                    color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                                    // The row's own colour: secondary, primary on hover, the accent
+                                    // when selected (the same as every NavItem).
+                                    color: "inherit",
+                                    fontWeight: "inherit",
                                 }}
                             >
                                 {m.title}
@@ -475,8 +440,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             </AvatarGroup>
                         </Stack>
                     </ListItemContent>
-                </ListItemButton>
-            </ListItem>
+                </Box>
+            </NavItem>
         );
     };
 
@@ -488,32 +453,20 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 containerName: MS_LIST,
                 "--ms-indent-base": theme.spacing(5),
                 "--ms-indent-step": theme.spacing(2),
-                // Room a visible row menu keeps: none for a mouse (the menu is
-                // hidden until hover), the button's width on touch.
-                "--ms-menu-reserve": "0px",
-                "--ms-menu-bg": MENU_OVERLAY_BG,
-                "--ms-menu-fade": `-10px 0 8px 0 ${MENU_OVERLAY_BG}`,
-                "@media (hover: none)": {
-                    "--ms-menu-reserve": MENU_RESERVE_TOUCH,
-                    "--ms-menu-bg": "transparent",
-                    "--ms-menu-fade": "none",
-                },
+                "--nav-pad-end": ROW_PAD_END,
                 [`@container ${MS_LIST} (max-width: ${LIST_COMPACT_MAX_PX}px)`]: {
                     "& > *": {
                         "--ms-indent-base": theme.spacing(3),
                         "--ms-indent-step": theme.spacing(1),
-                        "--ms-menu-reserve": "0px",
-                        "--ms-menu-bg": MENU_OVERLAY_BG,
-                        "--ms-menu-fade": `-10px 0 8px 0 ${MENU_OVERLAY_BG}`,
                     },
                 },
                 [`@container ${MS_LIST} (max-width: ${LIST_TIGHT_MAX_PX}px)`]: {
                     "& > *": {
                         "--ms-indent-base": "16px",
                         "--ms-indent-step": "6px",
-                        "--ms-btn-pl": "8px",
                         "--ms-btn-gap": "0px",
-                        "--ms-li-pr": "0px",
+                        "--nav-pad-end": "4px",
+                        "--nav-gap": "3px",
                     },
                 },
                 [`@container ${MS_LIST} (max-width: ${LIST_NO_FOLDER_COUNT_MAX_PX}px)`]: {
@@ -526,7 +479,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                     key={`folder-${folder.folderId}`}
                     count={inFolder.length}
                     depth={0}
-                    isDark={isDark}
+                    icon={<FolderRoundedIcon sx={{ color: g.text.tertiary }} />}
                     label={folder.name}
                     storageKey={`project:${currentProjectId}:folder:${folder.folderId}`}
                     actions={
@@ -548,22 +501,13 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             }
                         />
                     }
-                    icon={
-                        <FolderRoundedIcon
-                            sx={{
-                                fontSize: 15,
-                                mr: 0.75,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                            }}
-                        />
-                    }
                     defaultOpen
                 >
                     {inFolder.map((m) => renderMilestoneRow(m, 1))}
                 </MilestoneTreeFolder>
             ))}
             {folderGroups.length > 0 && unfiled.length > 0 && (
-                <ListItem sx={{ pl: 0, pb: 0, pr: LI_PR }}>
+                <ListItem sx={{ pl: 0, pb: 0, pr: 1 }}>
                     <Typography
                         level="body-xs"
                         sx={{
@@ -582,18 +526,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 <MilestoneTreeFolder
                     count={pastMilestones.length}
                     depth={0}
-                    isDark={isDark}
+                    icon={<HistoryRoundedIcon sx={{ color: g.text.tertiary }} />}
                     label={t.tasks.sidebar.pastMilestones}
                     storageKey={`project:${currentProjectId}:past`}
-                    icon={
-                        <HistoryRoundedIcon
-                            sx={{
-                                fontSize: 15,
-                                mr: 0.75,
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                            }}
-                        />
-                    }
                 >
                     {pastMilestonesByYear.map((yearGroup) => {
                         const yearCount = yearGroup.sprints.reduce(
@@ -605,38 +540,20 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                 key={yearGroup.year}
                                 count={yearCount}
                                 depth={1}
-                                isDark={isDark}
+                                icon={<CalendarMonthRoundedIcon sx={{ color: g.text.tertiary }} />}
                                 label={yearGroup.year}
                                 storageKey={`project:${currentProjectId}:past:${yearGroup.year}`}
-                                icon={
-                                    <CalendarMonthRoundedIcon
-                                        sx={{
-                                            fontSize: 15,
-                                            mr: 0.75,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.45)"
-                                                : "rgba(0,0,0,0.4)",
-                                        }}
-                                    />
-                                }
                             >
                                 {yearGroup.sprints.map((sprintGroup) => (
                                     <MilestoneTreeFolder
                                         key={sprintGroup.sprintId ?? "none"}
                                         count={sprintGroup.milestones.length}
                                         depth={2}
-                                        isDark={isDark}
                                         label={pastSprintLabel(sprintGroup)}
                                         storageKey={`project:${currentProjectId}:past:${yearGroup.year}:${sprintGroup.sprintId ?? "none"}`}
                                         icon={
                                             <DirectionsRunRoundedIcon
-                                                sx={{
-                                                    fontSize: 15,
-                                                    mr: 0.75,
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.45)"
-                                                        : "rgba(0,0,0,0.4)",
-                                                }}
+                                                sx={{ color: g.text.tertiary }}
                                             />
                                         }
                                     >
@@ -650,8 +567,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                     })}
                 </MilestoneTreeFolder>
             )}
-            <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
-            <AddFolderRow isDark={isDark} onClick={() => setFolderModal({ mode: "create" })} />
+            <AddMilestoneRow onClick={handleAddMilestone} />
+            <AddFolderRow onClick={() => setFolderModal({ mode: "create" })} />
             <ModalMilestoneFolder
                 state={folderModal}
                 onClose={() => setFolderModal(null)}
@@ -676,7 +593,6 @@ const MilestoneTreeFolder = ({
     label,
     count,
     depth,
-    isDark,
     children,
     defaultOpen = false,
     actions,
@@ -686,12 +602,11 @@ const MilestoneTreeFolder = ({
     label: string;
     count: number;
     depth: number;
-    isDark: boolean;
     children: ReactNode;
     // Folders of live milestones open by default (the work is the point);
     // the Past-milestones archive stays collapsed.
     defaultOpen?: boolean;
-    // Row actions (a "..." menu), laid out at the right edge by ListItem.
+    // Row actions (a "..." menu), overlaid at the row's right end.
     actions?: ReactNode;
     // Remembers the folder's open / closed state on this device (MIP-1055).
     storageKey: string;
@@ -699,120 +614,57 @@ const MilestoneTreeFolder = ({
     const [open, setOpen] = useSidebarOpen(storageKey, defaultOpen);
     return (
         <>
-            <ListItem
-                endAction={actions}
-                sx={{ pl: 0, pr: LI_PR, ...rowMenuSx({ right: FOLDER_MENU_RIGHT }) }}
-            >
-                <ListItemButton
-                    // Same as the milestone row: no room kept for the "..." menu
-                    // except on touch.
-                    sx={{
-                        ...navRowSx(),
-                        ...navFocusSx,
-                        ...indentSx(depth),
-                        py: 0.5,
-                        pl: BTN_PL,
-                        pr: 0.5,
-                        gap: BTN_GAP,
-                        mr: actions ? "var(--ms-menu-reserve)" : 0,
-                    }}
-                    onClick={() => setOpen((prev) => !prev)}
-                >
-                    {icon}
-                    <ListItemContent>
-                        <Typography
-                            level="body-sm"
+            <NavItem
+                actions={actions}
+                actionsOverlay={FOLDER_ACTIONS_OVERLAY}
+                icon={icon}
+                label={label}
+                // The title never gets less than this; the count or the indent never wins.
+                labelSx={{ minWidth: TITLE_MIN_WIDTH, fontWeight: 500 }}
+                sx={{ ...indentSx(depth), ...compactActionsSx }}
+                // Count and arrow share one slot, so the row has one gap there, not two.
+                trailing={
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                        <Chip className={FOLDER_COUNT_CLASS} size="sm" variant="soft">
+                            {count}
+                        </Chip>
+                        <KeyboardArrowDownRoundedIcon
                             sx={{
-                                minWidth: TITLE_MIN_WIDTH,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                fontWeight: 500,
-                                // The same weight and colour as the sidebar's "Projects" and
-                                // "Recents" headings, so a folder reads as a peer of those.
-                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
+                                fontSize: 16,
+                                color: g.text.tertiary,
+                                transition: "transform 0.2s ease",
+                                transform: open ? "rotate(180deg)" : "none",
                             }}
-                        >
-                            {label}
-                        </Typography>
-                    </ListItemContent>
-                    <Chip className={FOLDER_COUNT_CLASS} size="sm" variant="soft">
-                        {count}
-                    </Chip>
-                    <KeyboardArrowDownRoundedIcon
-                        sx={{
-                            fontSize: 16,
-                            ml: 0.5,
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
-                            transition: "transform 0.2s ease",
-                            transform: open ? "rotate(180deg)" : "none",
-                        }}
-                    />
-                </ListItemButton>
-            </ListItem>
+                        />
+                    </Box>
+                }
+                onClick={() => setOpen((prev) => !prev)}
+            />
             {open && children}
         </>
     );
 };
 
-const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
+const AddMilestoneRow = ({ onClick }: { onClick: () => void }) => {
     const { t } = useTranslation();
     return (
-        <ListItem sx={{ pl: 0, pr: LI_PR }}>
-            <ListItemButton
-                sx={{
-                    ...navRowSx(),
-                    ...navFocusSx,
-                    ...indentSx(0),
-                    py: 0.5,
-                    pl: BTN_PL,
-                    gap: BTN_GAP,
-                }}
-                onClick={onClick}
-            >
-                <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                    }}
-                >
-                    {t.tasks.sidebar.addMilestone}
-                </Typography>
-            </ListItemButton>
-        </ListItem>
+        <NavItem
+            icon={<AddIcon />}
+            label={t.tasks.sidebar.addMilestone}
+            sx={{ ...indentSx(0), color: g.text.tertiary }}
+            onClick={onClick}
+        />
     );
 };
 
-const AddFolderRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
+const AddFolderRow = ({ onClick }: { onClick: () => void }) => {
     const { t } = useTranslation();
     return (
-        <ListItem sx={{ pl: 0, pr: LI_PR }}>
-            <ListItemButton
-                sx={{
-                    ...navRowSx(),
-                    ...navFocusSx,
-                    ...indentSx(0),
-                    py: 0.5,
-                    pl: BTN_PL,
-                    gap: BTN_GAP,
-                }}
-                onClick={onClick}
-            >
-                <FolderRoundedIcon
-                    sx={{
-                        fontSize: 16,
-                        mr: 0.5,
-                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                    }}
-                />
-                <Typography
-                    level="body-sm"
-                    sx={{ color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)" }}
-                >
-                    {t.tasks.folders.newFolder}
-                </Typography>
-            </ListItemButton>
-        </ListItem>
+        <NavItem
+            icon={<FolderRoundedIcon />}
+            label={t.tasks.folders.newFolder}
+            sx={{ ...indentSx(0), color: g.text.tertiary }}
+            onClick={onClick}
+        />
     );
 };
