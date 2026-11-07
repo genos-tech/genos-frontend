@@ -1338,7 +1338,7 @@ export const TaskHomeContent = ({
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                Current Project
+                                                {t.tasks.dashboard.currentProject}
                                             </Typography>
                                             <Select
                                                 indicator={<KeyboardArrowDownRoundedIcon />}
@@ -1604,7 +1604,7 @@ export const TaskHomeContent = ({
                                     {t.tasks.dashboard.noProjectSelected}
                                 </Typography>
                                 <Typography level="body-sm" sx={{ color: textMuted }}>
-                                    Select a project from the sidebar to view sprint analytics
+                                    {t.tasks.dashboard.selectProjectForAnalytics}
                                 </Typography>
                             </Stack>
                         </Card>
@@ -1697,15 +1697,15 @@ export const TaskHomeContent = ({
                                     >
                                         <Tab value="overall" indicatorInset>
                                             <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                                            Overall Insights
+                                            {t.tasks.dashboard.tabOverall}
                                         </Tab>
                                         <Tab value="sprint" indicatorInset>
                                             <CalendarMonthRoundedIcon sx={{ fontSize: 16 }} />
-                                            Sprint Insights
+                                            {t.tasks.dashboard.tabSprint}
                                         </Tab>
                                         <Tab value="mytasks" indicatorInset>
                                             <PersonRoundedIcon sx={{ fontSize: 16 }} />
-                                            My Tasks
+                                            {t.tasks.dashboard.tabMyTasks}
                                             {myStats.totalCount > 0 && (
                                                 <Box
                                                     component="span"
@@ -1740,7 +1740,7 @@ export const TaskHomeContent = ({
                                         </Tab>
                                         <Tab value="members" indicatorInset>
                                             <GroupsRoundedIcon sx={{ fontSize: 16 }} />
-                                            Member&apos;s Tasks
+                                            {t.tasks.dashboard.tabMemberTasks}
                                         </Tab>
                                     </TabList>
                                 </Tabs>
@@ -1767,7 +1767,7 @@ export const TaskHomeContent = ({
                                         }}
                                         onClick={handleCreateTask}
                                     >
-                                        New Task
+                                        {t.tasks.dashboard.newTask}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -1787,7 +1787,7 @@ export const TaskHomeContent = ({
                                         }}
                                         onClick={handleGoToTable}
                                     >
-                                        Task Table
+                                        {t.tasks.sidebar.taskTable}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -1807,7 +1807,7 @@ export const TaskHomeContent = ({
                                         }}
                                         onClick={handleGoToBoard}
                                     >
-                                        Sprint Board
+                                        {t.tasks.sidebar.sprintBoard}
                                     </Button>
                                 </Stack>
                             </Stack>
@@ -1850,7 +1850,7 @@ export const TaskHomeContent = ({
                                                                 fontWeight: 600,
                                                             }}
                                                         >
-                                                            Sprint Progress
+                                                            {t.tasks.dashboard.sprintProgress}
                                                         </Typography>
                                                         {selectedSprint && (
                                                             <Chip
@@ -1881,8 +1881,14 @@ export const TaskHomeContent = ({
                                                                 fontWeight: 500,
                                                             }}
                                                         >
-                                                            {sprintStats.closed} /{" "}
-                                                            {sprintStats.total} closed
+                                                            {fmt(
+                                                                t.tasks.dashboard
+                                                                    .sprintClosedOfTotal,
+                                                                {
+                                                                    closed: sprintStats.closed,
+                                                                    total: sprintStats.total,
+                                                                }
+                                                            )}
                                                         </Typography>
                                                         <Chip
                                                             size="sm"
@@ -1932,7 +1938,9 @@ export const TaskHomeContent = ({
                                                         color: "var(--gp-brand-500)",
                                                     }}
                                                 >
-                                                    {sprintStats.milestones} Milestones
+                                                    {fmt(t.tasks.dashboard.chipMilestones, {
+                                                        count: sprintStats.milestones,
+                                                    })}
                                                 </Chip>
                                                 <Chip
                                                     size="md"
@@ -1949,7 +1957,9 @@ export const TaskHomeContent = ({
                                                         color: "#3b82f6",
                                                     }}
                                                 >
-                                                    {sprintStats.total} Tasks
+                                                    {fmt(t.tasks.dashboard.chipTasks, {
+                                                        count: sprintStats.total,
+                                                    })}
                                                 </Chip>
                                                 <Chip
                                                     size="md"
@@ -1966,7 +1976,9 @@ export const TaskHomeContent = ({
                                                         color: "#22c55e",
                                                     }}
                                                 >
-                                                    {sprintStats.closed} Done
+                                                    {fmt(t.tasks.dashboard.chipDone, {
+                                                        count: sprintStats.closed,
+                                                    })}
                                                 </Chip>
                                                 <Chip
                                                     size="md"
@@ -1983,7 +1995,9 @@ export const TaskHomeContent = ({
                                                         color: "#fb923c",
                                                     }}
                                                 >
-                                                    {sprintStats.remaining} Remaining
+                                                    {fmt(t.tasks.dashboard.chipRemaining, {
+                                                        count: sprintStats.remaining,
+                                                    })}
                                                 </Chip>
                                             </Stack>
                                         </Stack>
@@ -2339,6 +2353,7 @@ export const TaskHomeContent = ({
                                                                     sx={{ minWidth: 0 }}
                                                                 >
                                                                     <Typography
+                                                                        dir="auto"
                                                                         level="body-sm"
                                                                         sx={{ fontWeight: 600 }}
                                                                         noWrap
@@ -2409,6 +2424,7 @@ export const TaskHomeContent = ({
                                                             {t.tasks.dashboard.memberTasks.viewing}
                                                         </Typography>
                                                         <Typography
+                                                            dir="auto"
                                                             level="title-sm"
                                                             sx={{
                                                                 fontWeight: 700,
@@ -2708,7 +2724,7 @@ export const TaskHomeContent = ({
                                                             fontWeight: 600,
                                                         }}
                                                     >
-                                                        Up Next
+                                                        {t.tasks.dashboard.upNext.title}
                                                     </Typography>
                                                     <AppTooltip
                                                         title={
@@ -2810,8 +2826,7 @@ export const TaskHomeContent = ({
                                                                 textAlign: "center",
                                                             }}
                                                         >
-                                                            All your assigned tasks are closed —
-                                                            nothing to do here.
+                                                            {t.tasks.dashboard.upNext.allClosed}
                                                         </Typography>
                                                     </Card>
                                                 ) : (
@@ -3680,6 +3695,7 @@ export const TaskHomeContent = ({
                                                                         }
                                                                     />
                                                                     <Typography
+                                                                        dir="auto"
                                                                         level="body-xs"
                                                                         sx={{
                                                                             color: textPrimary,
@@ -3832,7 +3848,7 @@ export const TaskHomeContent = ({
                                                 }}
                                             >
                                                 <PersonRoundedIcon sx={{ fontSize: 16 }} />
-                                                Assignee Workload
+                                                {t.tasks.dashboard.assigneeWorkload}
                                             </Typography>
                                             <Card
                                                 variant="outlined"
@@ -3944,6 +3960,7 @@ export const TaskHomeContent = ({
                                                                             />
                                                                         )}
                                                                         <Typography
+                                                                            dir="auto"
                                                                             level="body-sm"
                                                                             sx={{
                                                                                 fontWeight: 500,
@@ -4085,7 +4102,7 @@ export const TaskHomeContent = ({
                                             }}
                                         >
                                             <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />
-                                            Tag Insights
+                                            {t.tasks.dashboard.tagInsights}
                                             <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
                                                 {tagStats.rows.length}
                                             </Chip>
@@ -4371,7 +4388,7 @@ export const TaskHomeContent = ({
                                                         <thead>
                                                             <tr>
                                                                 <th style={{ width: "26%" }}>
-                                                                    Tag
+                                                                    {t.tasks.dashboard.tags.colTag}
                                                                 </th>
                                                                 <th
                                                                     style={{
@@ -4379,10 +4396,13 @@ export const TaskHomeContent = ({
                                                                         textAlign: "center",
                                                                     }}
                                                                 >
-                                                                    Items
+                                                                    {
+                                                                        t.tasks.dashboard.tags
+                                                                            .colItems
+                                                                    }
                                                                 </th>
                                                                 <th style={{ width: "42%" }}>
-                                                                    Status
+                                                                    {t.tasks.dashboard.tags.status}
                                                                 </th>
                                                                 <th
                                                                     style={{
@@ -4390,7 +4410,10 @@ export const TaskHomeContent = ({
                                                                         textAlign: "center",
                                                                     }}
                                                                 >
-                                                                    Progress
+                                                                    {
+                                                                        t.tasks.dashboard.tags
+                                                                            .colProgress
+                                                                    }
                                                                 </th>
                                                                 <th
                                                                     style={{

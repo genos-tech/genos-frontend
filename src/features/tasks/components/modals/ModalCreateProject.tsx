@@ -452,7 +452,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.2)",
                                 }}
                             >
-                                {member.userName}
+                                <bdi>{member.userName}</bdi>
                             </Chip>
                         ))}
                     </Box>
@@ -541,6 +541,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
+                                            dir="auto"
                                             level="body-sm"
                                             sx={{
                                                 fontWeight: 500,

@@ -218,6 +218,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         }
         const allTagFilter: FilterProps = {
             label: "All",
+            labelKey: "all",
             filterModel: { items: [] },
             lightModeColor: "#6b7280",
             darkModeColor: "#9ca3af",

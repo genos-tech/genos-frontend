@@ -269,7 +269,7 @@ const MemberFieldEditor = ({
                                 userId={option.userId}
                             />
                             <Box sx={{ minWidth: 0 }}>
-                                <Typography level="body-sm" noWrap>
+                                <Typography dir="auto" level="body-sm" noWrap>
                                     {option.userName}
                                 </Typography>
                                 <Typography

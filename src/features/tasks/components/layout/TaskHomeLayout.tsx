@@ -14,6 +14,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../../../notes/my-notes/components/MyNoteMain";
@@ -81,6 +82,7 @@ export const TaskHomeLayout = ({
     setOpenJoinProject,
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
     const renderMainContent = () => (
@@ -334,7 +336,7 @@ export const TaskHomeLayout = ({
 
                             <Stack alignItems="center" spacing={0.75}>
                                 <Typography level="h4" sx={{ fontWeight: 700 }}>
-                                    No project selected
+                                    {t.tasks.layout.noProjectTitle}
                                 </Typography>
                                 <Typography
                                     level="body-sm"
@@ -345,8 +347,7 @@ export const TaskHomeLayout = ({
                                         maxWidth: 360,
                                     }}
                                 >
-                                    Pick a project from the sidebar to see its tasks, or spin up a
-                                    new one to get your team organized.
+                                    {t.tasks.layout.noProjectBody}
                                 </Typography>
                             </Stack>
 
@@ -373,7 +374,7 @@ export const TaskHomeLayout = ({
                                 }}
                                 onClick={() => usePM.setOpenCreateProject(true)}
                             >
-                                Create new project
+                                {t.tasks.layout.createProject}
                             </Button>
                         </Stack>
                     </Box>

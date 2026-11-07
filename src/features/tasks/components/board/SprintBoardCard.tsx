@@ -361,6 +361,7 @@ const SprintBoardCardImpl = ({
                                         </Avatar>
                                     )}
                                     <Typography
+                                        dir="auto"
                                         level="body-xs"
                                         sx={{
                                             color: mode === "dark" ? "#999" : "#777",

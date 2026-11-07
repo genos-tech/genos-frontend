@@ -111,7 +111,7 @@ export const MultiMemberPicker = ({
                                 />
                             }
                         >
-                            {user.userName}
+                            <bdi>{user.userName}</bdi>
                         </Chip>
                     );
                 })
