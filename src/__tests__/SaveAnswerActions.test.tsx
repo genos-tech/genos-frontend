@@ -606,13 +606,15 @@ describe("the task dialog cannot be heard by what rendered it", () => {
         off();
     });
 
-    it("control: without isolation the host DOES hear it (the test can fail)", async () => {
+    it("is isolated by the frame even without the flag (ModalFrame fences every dialog)", async () => {
         const { spies, off } = mount(false);
         const title = await screen.findByPlaceholderText("What needs doing?");
         fireEvent.keyDown(title, { key: "a" });
         fireEvent.click(title);
-        expect(spies.key).toHaveBeenCalled();
-        expect(spies.click).toHaveBeenCalled();
+        fireEvent.mouseDown(title);
+        expect(spies.key).not.toHaveBeenCalled();
+        expect(spies.click).not.toHaveBeenCalled();
+        expect(spies.down).not.toHaveBeenCalled();
         off();
     });
 });

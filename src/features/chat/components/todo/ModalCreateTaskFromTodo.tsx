@@ -10,18 +10,19 @@ import {
     FormControl,
     FormLabel,
     Input,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useSprintMilestoneManagement } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { ProjectIdentityRow } from "../../../tasks/components/ProjectIdentityRow";
@@ -31,7 +32,7 @@ import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
 import { SprintMilestonePicker } from "../../../tasks/sprint-milestone/components/SprintMilestonePicker";
 import { MILESTONE_LIST_STATUSES } from "../../../tasks/sprint-milestone/utils/sortMilestones";
 import { projectAvatarSrc } from "../../../tasks/utils/projectAvatar";
-import { popupLayerSx, useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./TodoHostLayer";
 
 // Remembers the last project a to-do was promoted into. Most people
 // funnel their to-dos into the same project, and the picker defaulting
@@ -72,15 +73,6 @@ export type CreatedTaskInfo = {
     title: string;
 };
 
-// Stops the dialog's events at the Modal root. Escape is the Modal's own (it
-// closes itself and stops that key); everything else is for the dialog alone.
-const stopBubbling = (e: React.SyntheticEvent) => e.stopPropagation();
-const ISOLATE_EVENTS = {
-    onKeyDown: stopBubbling,
-    onClick: stopBubbling,
-    onMouseDown: stopBubbling,
-} as const;
-
 type ModalCreateTaskFromTodoProps = {
     open: boolean;
     onClose: () => void;
@@ -102,11 +94,9 @@ type ModalCreateTaskFromTodoProps = {
     /** Open the created task in the shared UrlLinkModal once it exists. Default
      *  true (the to-do flow). A caller that offers its own "Open" says false. */
     openCreatedTask?: boolean;
-    /** Keep keydown, click and mousedown inside the dialog from bubbling up the
-     *  REACT tree. A portal's events reach the components that rendered it, so a
-     *  modal opened from the Spotlight overlay or from another dialog would
-     *  otherwise be heard by them (Enter, a click on the backdrop). Default
-     *  false, so the to-do call sites are unchanged. */
+    /** Kept for callers. The frame now always keeps keydown, click and mousedown
+     *  (and pointer and touch events) inside the dialog, which is what this flag
+     *  asked for; it used to default to false. */
     isolateEvents?: boolean;
     /** Chat list — resolves each project option's avatar from its PM
      *  chat, so the picker matches the task sidebar / TaskPreview. */
@@ -142,10 +132,10 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
         useCM,
         copy,
         openCreatedTask = true,
-        isolateEvents = false,
     } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const theme = useTheme();
     // Inside the to-do modal this opens above it (MIP-1047).
     const todoHostLayer = useTodoDialogLayer();
     const layer = props.layer ?? todoHostLayer;
@@ -279,140 +269,130 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
     const noProjects = !loadingProjects && projects.length === 0;
 
     return (
-        <Modal
+        <ModalFrame
+            description={tc.description}
+            icon={<TaskAltRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{ zIndex: layer, ...popupLayerSx(layer) }}
+            size="md"
+            title={tc.heading}
+            // The page's own dialogs sit at Joy's modal layer; a host raises it.
+            zIndex={layer ?? theme.zIndex.modal}
+            actions={
+                <>
+                    <Button
+                        color="neutral"
+                        disabled={isSubmitting}
+                        variant="plain"
+                        onClick={onClose}
+                    >
+                        {tc.cancel}
+                    </Button>
+                    <Button
+                        disabled={isSubmitting || title.trim() === "" || projectId == null}
+                        startDecorator={isSubmitting ? <CircularProgress size="sm" /> : undefined}
+                        onClick={submit}
+                    >
+                        {tc.submit}
+                    </Button>
+                </>
+            }
             onClose={onClose}
-            {...(isolateEvents ? ISOLATE_EVENTS : {})}
         >
-            <ModalDialog sx={{ width: 420, maxWidth: "92vw" }}>
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                    <TaskAltRoundedIcon />
-                    <Typography level="title-md">{tc.heading}</Typography>
-                </Stack>
-                <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                    {tc.description}
-                </Typography>
+            {error && (
+                <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
+                    {error}
+                </Alert>
+            )}
+            {noProjects && (
+                <Alert color="warning" size="sm" sx={{ mb: 1.5 }}>
+                    {tc.noProjects}
+                </Alert>
+            )}
 
-                {error && (
-                    <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>
-                        {error}
-                    </Alert>
-                )}
-                {noProjects && (
-                    <Alert color="warning" size="sm" sx={{ mb: 1.5 }}>
-                        {tc.noProjects}
-                    </Alert>
-                )}
+            <Stack spacing={1.5}>
+                <FormControl>
+                    <FormLabel>{tc.titleLabel}</FormLabel>
+                    <Input
+                        disabled={isSubmitting}
+                        placeholder={tc.titlePlaceholder}
+                        value={title}
+                        autoFocus
+                        onChange={(e) => setTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                void submit();
+                            }
+                        }}
+                    />
+                </FormControl>
 
-                <Stack spacing={1.5}>
-                    <FormControl>
-                        <FormLabel>{tc.titleLabel}</FormLabel>
-                        <Input
-                            disabled={isSubmitting}
-                            placeholder={tc.titlePlaceholder}
-                            value={title}
-                            autoFocus
-                            onChange={(e) => setTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    void submit();
-                                }
-                            }}
-                        />
-                    </FormControl>
-
-                    <FormControl>
-                        <FormLabel>{tc.projectLabel}</FormLabel>
-                        {/* Same Autocomplete shape as the task pickers —
+                <FormControl>
+                    <FormLabel>{tc.projectLabel}</FormLabel>
+                    {/* Same Autocomplete shape as the task pickers —
                             avatar, label chips, lock, name — so a project
                             looks the same here as in TaskPreview and the
                             sidebar. `getOptionLabel` stays the plain name:
                             that is what type-to-filter matches on. */}
-                        <Autocomplete
-                            disabled={isSubmitting || loadingProjects || noProjects}
-                            getOptionLabel={(option) => option.projectName}
-                            isOptionEqualToValue={(option, value) =>
-                                option.projectId === value.projectId
-                            }
-                            options={projects}
-                            placeholder={loadingProjects ? tc.loadingProjects : tc.projectLabel}
-                            size="sm"
-                            value={projects.find((p) => p.projectId === projectId) ?? null}
-                            renderOption={(optionProps, option) => (
-                                // Joy's option component, same as
-                                // `ACTeamProjects` — it carries the
-                                // padding / hover / selected states that
-                                // make these rows match a Joy Select's
-                                // options, and consumes `ownerState`.
-                                <AutocompleteOption
-                                    {...optionProps}
-                                    key={option.projectId}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        minWidth: 0,
-                                    }}
-                                >
-                                    <ProjectIdentityRow
-                                        avatarSrc={projectAvatarSrc(
-                                            option.projectId,
-                                            useCM?.allChats
-                                        )}
-                                        maxLabels={2}
-                                        project={option}
-                                    />
-                                </AutocompleteOption>
-                            )}
-                            onChange={(_, value) => pickProject(value?.projectId ?? null)}
-                        />
-                    </FormControl>
+                    <Autocomplete
+                        disabled={isSubmitting || loadingProjects || noProjects}
+                        getOptionLabel={(option) => option.projectName}
+                        isOptionEqualToValue={(option, value) =>
+                            option.projectId === value.projectId
+                        }
+                        options={projects}
+                        placeholder={loadingProjects ? tc.loadingProjects : tc.projectLabel}
+                        size="sm"
+                        value={projects.find((p) => p.projectId === projectId) ?? null}
+                        renderOption={(optionProps, option) => (
+                            // Joy's option component, same as
+                            // `ACTeamProjects` — it carries the
+                            // padding / hover / selected states that
+                            // make these rows match a Joy Select's
+                            // options, and consumes `ownerState`.
+                            <AutocompleteOption
+                                {...optionProps}
+                                key={option.projectId}
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <ProjectIdentityRow
+                                    avatarSrc={projectAvatarSrc(option.projectId, useCM?.allChats)}
+                                    maxLabels={2}
+                                    project={option}
+                                />
+                            </AutocompleteOption>
+                        )}
+                        onChange={(_, value) => pickProject(value?.projectId ?? null)}
+                    />
+                </FormControl>
 
-                    {/* Milestone — the same picker TaskPreview uses, so the
+                {/* Milestone — the same picker TaskPreview uses, so the
                         options, ordering and "No milestone" entry match.
                         Sprint is hidden: it is a milestone roll-up on tasks
                         and the backend derives it from the milestone. */}
-                    <FormControl>
-                        <FormLabel>{tc.milestoneLabel}</FormLabel>
-                        <SprintMilestonePicker
-                            disabled={isSubmitting || projectId == null}
-                            milestoneId={milestoneId}
-                            projectId={projectId ?? undefined}
-                            showMilestone={true}
-                            showSprint={false}
-                            sprintId={null}
-                            useSM={useSM}
-                            onChangeMilestone={(mid, taskId) => {
-                                setMilestoneId(mid);
-                                setMilestoneTaskId(taskId);
-                            }}
-                            onChangeSprint={() => undefined}
-                        />
-                    </FormControl>
-
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 0.5 }}>
-                        <Button
-                            disabled={isSubmitting}
-                            variant="plain"
-                            color="neutral"
-                            onClick={onClose}
-                        >
-                            {tc.cancel}
-                        </Button>
-                        <Button
-                            disabled={isSubmitting || title.trim() === "" || projectId == null}
-                            startDecorator={
-                                isSubmitting ? <CircularProgress size="sm" /> : undefined
-                            }
-                            onClick={submit}
-                        >
-                            {tc.submit}
-                        </Button>
-                    </Stack>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                <FormControl>
+                    <FormLabel>{tc.milestoneLabel}</FormLabel>
+                    <SprintMilestonePicker
+                        disabled={isSubmitting || projectId == null}
+                        milestoneId={milestoneId}
+                        projectId={projectId ?? undefined}
+                        showMilestone={true}
+                        showSprint={false}
+                        sprintId={null}
+                        useSM={useSM}
+                        onChangeMilestone={(mid, taskId) => {
+                            setMilestoneId(mid);
+                            setMilestoneTaskId(taskId);
+                        }}
+                        onChangeSprint={() => undefined}
+                    />
+                </FormControl>
+            </Stack>
+        </ModalFrame>
     );
 };
