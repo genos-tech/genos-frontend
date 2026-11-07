@@ -3,7 +3,7 @@
 // simple-import-sort.
 
 import { useEffect, useState } from "react";
-import { Box, Sheet, Snackbar } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
@@ -22,6 +22,7 @@ import { appendTodoFromMessage } from "./components/todo/services/appendTodoFrom
 import { useChatRouting } from "./hooks/useChatRouting";
 import { getFirstLine } from "./utils/common";
 
+import { Toast } from "../../components/ui/feedback/Toast";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -351,23 +352,14 @@ export const ChatHome = (props: ChatHomeProps) => {
             useUISM={useUISM}
         >
             <Box sx={LayoutStyles.outerWrapper}>
-                <Snackbar
-                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                    autoHideDuration={1500}
-                    color="success"
+                <Toast
+                    duration={2000}
                     open={todoAddedFromMessageOpen}
-                    variant="soft"
-                    onClose={(event, reason) => {
-                        if (reason === "clickaway") {
-                            return;
-                        }
-                        if (setTodoAddedFromMessageOpen) {
-                            setTodoAddedFromMessageOpen(false);
-                        }
-                    }}
+                    tone="success"
+                    onClose={() => setTodoAddedFromMessageOpen?.(false)}
                 >
                     {t.chat.feedback.todoAddedFromMessage}
-                </Snackbar>
+                </Toast>
 
                 <Sheet sx={ls.serviceSurface}>
                     {isMobile ? (

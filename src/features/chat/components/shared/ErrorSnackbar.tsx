@@ -1,4 +1,4 @@
-import { Snackbar } from "@mui/joy";
+import { Toast } from "../../../../components/ui/feedback/Toast";
 
 interface ErrorSnackbarProps {
     errorMessage: string | null;
@@ -12,20 +12,8 @@ export const ErrorSnackbar = ({ errorMessage, errorOpen, setErrorOpen }: ErrorSn
     }
 
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            autoHideDuration={5000}
-            color="danger"
-            open={errorOpen}
-            variant="soft"
-            onClose={(event, reason) => {
-                if (reason === "clickaway") {
-                    return;
-                }
-                setErrorOpen(false);
-            }}
-        >
+        <Toast open={errorOpen} tone="danger" onClose={() => setErrorOpen(false)}>
             {errorMessage}
-        </Snackbar>
+        </Toast>
     );
 };

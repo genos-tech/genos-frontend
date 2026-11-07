@@ -15,22 +15,13 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    FormControl,
-    IconButton,
-    Input,
-    Snackbar,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Chip, FormControl, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useLocation } from "react-router-dom";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { Toast } from "../../../../../components/ui/feedback/Toast";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
@@ -1053,23 +1044,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             )}
 
             {isPreviewMode === false && titleError && titleErrorOpen !== undefined && (
-                <Snackbar
-                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                    autoHideDuration={5000}
-                    color="danger"
+                <Toast
                     open={titleErrorOpen}
-                    variant="soft"
-                    onClose={(event, reason) => {
-                        if (reason === "clickaway") {
-                            return;
-                        }
-                        if (setTitleErrorOpen) {
-                            setTitleErrorOpen(false);
-                        }
-                    }}
+                    tone="danger"
+                    onClose={() => setTitleErrorOpen?.(false)}
                 >
                     {titleError}
-                </Snackbar>
+                </Toast>
             )}
         </Box>
     );

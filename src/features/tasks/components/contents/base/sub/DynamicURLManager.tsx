@@ -3,11 +3,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
-import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import SvgIcon from "@mui/joy/SvgIcon";
 
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
+import { Toast } from "../../../../../../components/ui/feedback/Toast";
 import { useOptionalAccessToken } from "../../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
@@ -259,21 +260,9 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
 
             {/* Error Snackbar */}
             {error && (
-                <Snackbar
-                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                    autoHideDuration={5000}
-                    color="danger"
-                    open={errorOpen}
-                    variant="soft"
-                    onClose={(event, reason) => {
-                        if (reason === "clickaway") {
-                            return;
-                        }
-                        setErrorOpen(false);
-                    }}
-                >
+                <Toast open={errorOpen} tone="danger" onClose={() => setErrorOpen(false)}>
                     {error}
-                </Snackbar>
+                </Toast>
             )}
         </Box>
     );

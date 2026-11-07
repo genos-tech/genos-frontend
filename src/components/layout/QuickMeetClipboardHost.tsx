@@ -1,9 +1,10 @@
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
-import { Button, Snackbar } from "@mui/joy";
+import { Button } from "@mui/joy";
 
 import { createEvent, deleteEvent, getEvent } from "../../features/integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import { fmt, useTranslation } from "../../i18n";
+import { Toast } from "../ui/feedback/Toast";
 
 export type QuickMeetClipboardHandle = {
     trigger: () => void;
@@ -153,34 +154,30 @@ export const QuickMeetClipboardHost = forwardRef<QuickMeetClipboardHandle, Props
         useImperativeHandle(ref, () => ({ trigger }), [trigger]);
 
         return (
-            <Snackbar
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                autoHideDuration={snackbar?.kind === "info" ? null : 5000}
+            <Toast
+                action={
+                    snackbar?.needsGrant || snackbar?.needsReconnect
+                        ? {
+                              label: snackbar.needsReconnect
+                                  ? t.app.meetClipboard.reconnectButton
+                                  : t.app.meetClipboard.grantButton,
+                              onClick: handleGrant,
+                          }
+                        : undefined
+                }
+                duration={snackbar?.kind === "info" ? null : 5000}
                 open={snackbar !== null}
-                variant="soft"
-                color={
+                tone={
                     snackbar?.kind === "error"
                         ? "danger"
                         : snackbar?.kind === "success"
                           ? "success"
                           : "neutral"
                 }
-                endDecorator={
-                    snackbar?.needsGrant || snackbar?.needsReconnect ? (
-                        <Button size="sm" variant="solid" onClick={handleGrant}>
-                            {snackbar?.needsReconnect
-                                ? t.app.meetClipboard.reconnectButton
-                                : t.app.meetClipboard.grantButton}
-                        </Button>
-                    ) : null
-                }
-                onClose={(_e, reason) => {
-                    if (reason === "clickaway") return;
-                    setSnackbar(null);
-                }}
+                onClose={() => setSnackbar(null)}
             >
                 {snackbar?.text}
-            </Snackbar>
+            </Toast>
         );
     }
 );

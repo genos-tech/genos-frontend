@@ -25,7 +25,6 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    Snackbar,
     Stack,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -33,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Toast } from "../../../../components/ui/feedback/Toast";
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { useCalendarModal } from "../../../../context/CalendarModalContext";
@@ -573,28 +573,24 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     onShare={handleShareMeetLink}
                     onCancel={() => setShareMeetLink(null)}
                 />
-                <Snackbar
-                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                    autoHideDuration={4000}
-                    color={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
-                    open={quickMeetSnackbar !== null}
-                    variant="soft"
-                    endDecorator={
-                        quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect ? (
-                            <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
-                                {quickMeetSnackbar?.needsReconnect
-                                    ? t.chat.headers.quickMeetReconnect
-                                    : t.chat.headers.quickMeetGrant}
-                            </Button>
-                        ) : null
+                <Toast
+                    action={
+                        quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect
+                            ? {
+                                  label: quickMeetSnackbar.needsReconnect
+                                      ? t.chat.headers.quickMeetReconnect
+                                      : t.chat.headers.quickMeetGrant,
+                                  onClick: handleQuickMeetGrant,
+                              }
+                            : undefined
                     }
-                    onClose={(_e, reason) => {
-                        if (reason === "clickaway") return;
-                        setQuickMeetSnackbar(null);
-                    }}
+                    duration={4000}
+                    open={quickMeetSnackbar !== null}
+                    tone={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
+                    onClose={() => setQuickMeetSnackbar(null)}
                 >
                     {quickMeetSnackbar?.text}
-                </Snackbar>
+                </Toast>
             </Stack>
         );
     }
@@ -850,28 +846,24 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             {/* Quick Meet error snackbar — only renders on failure /
                 missing-scope / not-connected paths. The success path
                 opens the share modal instead. */}
-            <Snackbar
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                autoHideDuration={4000}
-                color={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
-                open={quickMeetSnackbar !== null}
-                variant="soft"
-                endDecorator={
-                    quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect ? (
-                        <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
-                            {quickMeetSnackbar?.needsReconnect
-                                ? t.chat.headers.quickMeetReconnect
-                                : t.chat.headers.quickMeetGrant}
-                        </Button>
-                    ) : null
+            <Toast
+                action={
+                    quickMeetSnackbar?.needsGrant || quickMeetSnackbar?.needsReconnect
+                        ? {
+                              label: quickMeetSnackbar.needsReconnect
+                                  ? t.chat.headers.quickMeetReconnect
+                                  : t.chat.headers.quickMeetGrant,
+                              onClick: handleQuickMeetGrant,
+                          }
+                        : undefined
                 }
-                onClose={(_e, reason) => {
-                    if (reason === "clickaway") return;
-                    setQuickMeetSnackbar(null);
-                }}
+                duration={4000}
+                open={quickMeetSnackbar !== null}
+                tone={quickMeetSnackbar?.kind === "error" ? "danger" : "neutral"}
+                onClose={() => setQuickMeetSnackbar(null)}
             >
                 {quickMeetSnackbar?.text}
-            </Snackbar>
+            </Toast>
         </Stack>
     );
 };

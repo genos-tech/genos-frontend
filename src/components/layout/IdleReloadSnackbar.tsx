@@ -1,7 +1,8 @@
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { Snackbar, Typography } from "@mui/joy";
+import { Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
+import { Toast } from "../ui/feedback/Toast";
 
 interface Props {
     /** True during the brief announcement window before the reload. */
@@ -22,13 +23,7 @@ interface Props {
 export const IdleReloadSnackbar = ({ open }: Props) => {
     const { t } = useTranslation();
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            color="neutral"
-            open={open}
-            sx={{ gap: 1 }}
-            variant="soft"
-        >
+        <Toast dismissible={false} duration={null} icon={null} open={open}>
             <Typography
                 level="body-sm"
                 sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}
@@ -36,6 +31,6 @@ export const IdleReloadSnackbar = ({ open }: Props) => {
                 <RefreshRoundedIcon sx={{ fontSize: 16 }} />
                 {t.app.snackbar.idleReload}
             </Typography>
-        </Snackbar>
+        </Toast>
     );
 };
