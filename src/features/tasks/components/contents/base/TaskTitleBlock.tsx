@@ -15,9 +15,8 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
-import { Box, Button, Chip, FormControl, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Box, Button, FormControl, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { useLocation } from "react-router-dom";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
@@ -47,8 +46,8 @@ import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone"
 import { statusSolid } from "../../../meta/taskTone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
-import { taskMetaLabel } from "../../../utils/taskMeta";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
+import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
@@ -457,28 +456,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             isDark={isDark}
                             task={taskContent}
                         />
-                        <Chip
+                        {/* The same icon + word as the task table (MIP-1157). */}
+                        <StatusLabel
                             key={`task-title-block-status-${taskContent.status.status}`}
-                            size="md"
-                            variant="soft"
-                            sx={{
-                                borderRadius: "8px",
-                                fontWeight: 600,
-                                fontSize: "0.75rem",
-                                px: 1.5,
-                                backgroundColor: taskContent.status.color
-                                    ? alpha(taskContent.status.color, isDark ? 0.25 : 0.65)
-                                    : "transparent",
-                                color: taskContent.status.textColor || "#ffffff",
-                                border: "1px solid",
-                                borderColor: alpha(
-                                    taskContent.status.color || "#666",
-                                    isDark ? 0.3 : 0.25
-                                ),
-                            }}
-                        >
-                            {taskMetaLabel(taskContent.status.status || "Open", t.tasks.filters)}
-                        </Chip>
+                            status={taskContent.status.status || "Open"}
+                        />
                     </Box>
                 ) : (
                     <Box

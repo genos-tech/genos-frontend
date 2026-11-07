@@ -1,17 +1,15 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Autocomplete, AutocompleteOption, Chip, ListItemContent } from "@mui/joy";
+import { Autocomplete, AutocompleteOption, ListItemContent } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
-import { statusSolid } from "../../meta/taskTone";
 import { lookupTaskByDisplayId } from "../../services/lookupTaskByDisplayId";
 import { displayIdEquals, displayIdMatches, fullDisplayIdIn } from "../../utils/taskDisplayId";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { StatusLabel } from "../meta/StatusLabel";
 import { TaskIdentityRow } from "../TaskIdentityRow";
 import type { SidebarSearchTM } from "./useSidebarSlices";
 
@@ -140,32 +138,10 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
                 tags.map((item, index) => {
                     const { key, ...tagProps } = getTagProps({ index });
                     return (
-                        <Chip
+                        <StatusLabel
                             key={`ac-taskhome-search-task-chip-${key}`}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                fontSize: "0.65rem",
-                                fontWeight: 600,
-                                height: 20,
-                                minHeight: 20,
-                                borderRadius: "6px",
-                                backgroundColor: alpha(
-                                    item.status.color || statusSolid("Open").color,
-                                    isDark ? 0.35 : 0.6
-                                ),
-                                color: isDark
-                                    ? item.status.color || "var(--gp-brandalt-400)"
-                                    : item.status.textColor || item.status.color,
-                                border: "1px solid",
-                                borderColor: alpha(
-                                    item.status.color || statusSolid("Open").color,
-                                    isDark ? 0.4 : 0.25
-                                ),
-                            }}
-                        >
-                            {taskMetaLabel(item.status.status, t.tasks.filters)}
-                        </Chip>
+                            status={item.status.status}
+                        />
                     );
                 })
             }
