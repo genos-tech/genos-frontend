@@ -1501,6 +1501,7 @@ export const fr: DeepPartial<Messages> = {
             colors: "Couleurs",
             download: "Télécharger",
             imagePreviewAlt: "aperçu",
+            imagePreviewTitle: "Aperçu de l'image",
         },
         featureError: {
             title: "Un problème s'est produit dans {feature}.",

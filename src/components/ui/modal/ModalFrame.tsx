@@ -60,9 +60,21 @@ const FENCE = {
  * (dependencies). `profile` is the
  * 1000px profile card (project, group, team); it is built to be used with
  * `fullScreenOnMobile` (below `md` the card is the screen, with the close X as
- * the only way out), so pass both.
+ * the only way out), so pass both. `app` is the 1340px page-sized tool (the calendar),
+ * also meant for `fullScreenOnMobile`. `canvas` is 94vw x 90vh, a fixed-height dialog for a
+ * canvas that needs the room (the task graph). `fit` is as wide as its content (an image
+ * lightbox), up to the screen.
  */
-export type ModalFrameSize = "sm" | "md" | "lg" | "xl" | "wide" | "profile";
+export type ModalFrameSize =
+    | "sm"
+    | "md"
+    | "lg"
+    | "xl"
+    | "wide"
+    | "profile"
+    | "app"
+    | "canvas"
+    | "fit";
 
 const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = {
     sm: 400,
@@ -71,6 +83,9 @@ const WIDTH: Record<ModalFrameSize, number | Record<string, number | string>> = 
     xl: { sm: 550, md: 700, lg: 920 },
     wide: { sm: 550, md: 806 },
     profile: { md: 1000 },
+    app: { md: 1340 },
+    canvas: { xs: "94vw" },
+    fit: { xs: "fit-content" },
 };
 
 /** Where page-level dialogs have always sat. */
@@ -103,6 +118,12 @@ export type ModalFrameProps = {
     headerAccessory?: ReactNode;
     /** The body brings its own padding (tabs, a scrolling card). Default: 20px. */
     flush?: boolean;
+    /**
+     * The body does not scroll: it is a flex column that hands its children the room, so a
+     * canvas or a grid with its own scroller can `flex: 1; minHeight: 0` (the task graph, the
+     * calendar). Default: the body scrolls.
+     */
+    fillBody?: boolean;
     /** On a phone the frame fills the screen with square corners, not an inset card. */
     fullScreenOnMobile?: boolean;
     /** Keep the frame clear of the mobile bottom tab bar (a dialog that paints over it).
@@ -147,6 +168,7 @@ export const ModalFrame = ({
     headerDivider = false,
     headerAccessory,
     flush = false,
+    fillBody = false,
     fullScreenOnMobile = false,
     clearBottomBar = false,
     zIndex,
@@ -227,6 +249,7 @@ export const ModalFrame = ({
                     p: 0,
                     gap: 0,
                     ...sizing,
+                    ...(size === "canvas" && { height: "90vh" }),
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -329,8 +352,9 @@ export const ModalFrame = ({
                             py: flush ? 0 : 1,
                             flex: "1 1 auto",
                             minHeight: 0,
-                            overflowY: "auto",
-                            overscrollBehavior: "contain",
+                            ...(fillBody
+                                ? { display: "flex", flexDirection: "column", overflow: "hidden" }
+                                : { overflowY: "auto", overscrollBehavior: "contain" }),
                         }}
                     >
                         {children}

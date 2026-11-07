@@ -6,8 +6,7 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
-import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -21,9 +20,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { downloadFile } from "../../utils/downloadUtils";
-import { AppTooltip } from "../ui/AppTooltip";
+import { ImageZoomModal } from "../messageBody/ImageZoomModal";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -291,13 +288,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setOpened(true);
     };
 
-    const handleDownload = async (
-        url: string,
-        filename = `task-preview-image-${getLocalCurrentTimestamp()}.png`
-    ) => {
-        await downloadFile(url, filename);
-    };
-
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
@@ -334,7 +324,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    slashMenu={false}
+                    sideMenu={false}
                     formattingToolbar={false}
                     // `false` so the custom `<SideMenuController>` below
                     // is the only side-menu controller attached. When
@@ -344,7 +334,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     // hovering a line shows nothing. Mirrors the
                     // bnMyNoteEditor / bnTaskNoteEditor / bnChatNoteEditor
                     // setup.
-                    sideMenu={false}
+                    slashMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onBlur={() => syncBodyToParent.flush()}
@@ -429,13 +419,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
                     <GenosSuggestionMenus
                         editor={editor}
+                        slash={{ preset: "document", setShowGifPicker }}
                         getMentionSources={() => ({
                             teamMemberProfiles: useTEM.teamMemberProfiles,
                             teamMembers: useTEM.teamMembers,
                             myselfUserId: myself.userId,
                             mentionGroups,
                         })}
-                        slash={{ preset: "document", setShowGifPicker }}
                     />
 
                     {threadStore && (
@@ -447,37 +437,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     )}
                 </BlockNoteView>
 
-                <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
-                    <ModalDialog>
-                        {selectedImage ? (
-                            <Box>
-                                <img
-                                    alt={t.common.editor.imagePreviewAlt}
-                                    src={selectedImage}
-                                    style={{
-                                        maxWidth: "80vw",
-                                        maxHeight: "80vh",
-                                        display: "block",
-                                    }}
-                                />
-                                <AppTooltip
-                                    placement="top"
-                                    size="sm"
-                                    title={t.common.editor.download}
-                                >
-                                    <IconButton
-                                        color="neutral"
-                                        sx={{ position: "absolute", top: "10px", right: "10px" }}
-                                        variant="solid"
-                                        onClick={() => handleDownload(selectedImage)}
-                                    >
-                                        <DownloadIcon />
-                                    </IconButton>
-                                </AppTooltip>
-                            </Box>
-                        ) : null}
-                    </ModalDialog>
-                </Modal>
+                <ImageZoomModal
+                    filenameStem="task-preview-image"
+                    src={opened ? selectedImage : null}
+                    onClose={() => setOpened(false)}
+                />
             </Box>
         </>
     );
