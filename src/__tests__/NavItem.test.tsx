@@ -233,7 +233,94 @@ describe("NavItem", () => {
 
         it("the row keeps its own end padding, since the actions no longer provide it", () => {
             mountInPlace();
-            expect(cssOf(button())).toMatch(/padding-inline-end:\s*8px/);
+            expect(cssOf(button())).toMatch(/padding-inline-end:\s*var\(--nav-pad-end, 8px\)/);
+        });
+    });
+
+    describe("actionsOverlay (milestone and folder rows: the actions cover the row's end)", () => {
+        const mountOverlay = (extra: Partial<NavItemProps> = {}) =>
+            mount({
+                actionsOverlay: { top: "17px", reserve: "64px" },
+                actions: (
+                    <>
+                        <button aria-label="Star" type="button">
+                            s
+                        </button>
+                        <button aria-expanded="false" aria-label="More" type="button">
+                            m
+                        </button>
+                    </>
+                ),
+                ...extra,
+            });
+        const slot = () => screen.getByRole("button", { name: "More" }).parentElement as Element;
+        const rules = (el: Element) => cssOf(el).replace(/\s+/g, " ").replace(/ ?> ?/g, ">");
+
+        it("the slot is out of flow, at the given height, and never takes a click itself", () => {
+            mountOverlay();
+            const css = rules(slot());
+            expect(css).toContain("position: absolute");
+            expect(css).toContain("top: 17px");
+            expect(css).toContain("pointer-events: none");
+            // Out of flow: nothing of the row's width is spent on it.
+            expect(rules(button())).toMatch(
+                /padding-inline-end: calc\(var\(--nav-pad-end, 8px\) \+ var\(--nav-actions-reserve, 0px\)\)/
+            );
+        });
+
+        it("a hidden action is invisible and not clickable, but still focusable (never display: none)", () => {
+            mountOverlay();
+            const more = screen.getByRole("button", { name: "More" });
+            const css = rules(slot());
+            expect(css).toMatch(/ button \{[^}]*opacity: 0;[^}]*pointer-events: none/);
+            expect(css).not.toMatch(/display:\s*none|visibility:\s*hidden/);
+            more.focus();
+            expect(document.activeElement).toBe(more);
+        });
+
+        it("hover, the keyboard ring and an open menu reveal them; a mouse click (focus-within) does not", () => {
+            mountOverlay();
+            const css = rules(row());
+            expect(css).toMatch(
+                /:hover \.NavItem-actions button \{[^}]*opacity: 1[^}]*pointer-events: auto/
+            );
+            expect(css).toContain(".Mui-focusVisible~.NavItem-actions button");
+            expect(css).toContain(".NavItem-actions button:focus-visible");
+            expect(css).toContain('.NavItem-actions button[aria-expanded="true"]');
+            expect(css).not.toContain(":focus-within");
+            expect(css).not.toContain(":has(");
+        });
+
+        it("touch shows them always and keeps the reserve free for them", () => {
+            mountOverlay();
+            const row_ = rules(row());
+            // `cssOf` lists a rule inside `@media` without its prelude: the 64px is the touch value.
+            expect(row_).toContain("--nav-actions-reserve: 64px");
+            expect(row_).toContain("--nav-actions-bg: transparent");
+            expect(row_).toContain("--nav-actions-fade: none");
+            expect(rules(slot())).toMatch(
+                /opacity: 1; pointer-events: auto; --IconButton-size: 32px/
+            );
+        });
+
+        it("the buttons wear an opaque hover-coloured background and a fade, from variables a list can reset", () => {
+            mountOverlay();
+            const css = rules(slot());
+            expect(css).toMatch(
+                /background-color: var\(--nav-actions-bg, color-mix\(in srgb, var\(--g-bg-subtle\)/
+            );
+            expect(css).toMatch(/box-shadow: var\(--nav-actions-fade, -10px 0 8px 0 color-mix/);
+        });
+
+        it("actionsVisible (a menu is open) shows them", () => {
+            mountOverlay({ actionsVisible: true });
+            expect(rules(slot())).toMatch(/ button \{[^}]*opacity: 1;[^}]*pointer-events: auto/);
+        });
+
+        it("a row without actions reserves nothing even if asked for the mode", () => {
+            mountOverlay({ actions: undefined });
+            expect(rules(button())).not.toContain("--nav-actions-reserve");
+            expect(rules(row())).not.toContain("--nav-actions-reserve");
         });
     });
 
