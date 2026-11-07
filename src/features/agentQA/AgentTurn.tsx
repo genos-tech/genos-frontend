@@ -23,6 +23,13 @@
 //   providers. (`ToolProgressList` and the approval previews read the i18n
 //   context, which is mounted at the very root.)
 //
+// FRAME
+//   The turn is a shared `Bubble` (MIP-1165), in the user's bubble-style
+//   look (`layout`), so an answer has the radius, padding, accent bar and hover
+//   of every message and comment. Its actions stay at the BOTTOM of the turn
+//   (`actionsPosition="bottom"`), not on Bubble's floating top toolbar: an
+//   answer is read to its end. The reveal is Bubble's, in CSS.
+//
 // RENDER BUDGET
 //   App-root writes re-render the whole app (the render storm), so a turn must
 //   cost nothing when nothing about it changed. Wrapped in `memo`. A host must
@@ -66,7 +73,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
-import { BubbleMeta } from "../../components/ui/bubble";
+import { Bubble, BubbleMeta, type BubbleLayout } from "../../components/ui/bubble";
 import { fmt } from "../../i18n";
 import type { PendingApprovalPayload } from "../../services/agentApi";
 import { g, type } from "../../theme/tokens";
@@ -146,6 +153,10 @@ export interface AgentTurnProps {
     // Pass the turn's own array, never one built inline (identity matters to the memo).
     undoSteps?: readonly UndoStepRef[];
     isDark: boolean;
+    // The user's bubble-style preference, as a plain prop: the turn reads no
+    // context (see PROPS-ONLY). Hosts read `useBubbleStylePreference()`, which
+    // changes only when the preference does, never while typing.
+    layout?: BubbleLayout;
     labels: AgentTurnLabels;
     // Total server-side response time from `done`. Null / absent for error
     // and cancelled turns and against older backends: the line is omitted.
@@ -234,6 +245,7 @@ const AgentTurnInner = ({
     approvalEdits,
     undoSteps,
     isDark,
+    layout = "compact",
     labels,
     elapsedMs,
     mentions,
@@ -350,232 +362,240 @@ const AgentTurnInner = ({
     const answerStatus = renderAnswerStatus ? renderAnswerStatus(actionContext()) : null;
     const showActions = showCopy || showRetry || showFeedback || Boolean(extraActions);
 
+    // The frame is the shared `Bubble` (radius, padding, accent bar, hover, the
+    // same look as every message and comment). Its actions sit at the BOTTOM, not
+    // on the floating toolbar: an answer is read to its end, and a toolbar on the
+    // top edge would be scrolled away by then. The reveal (hover / focus / touch)
+    // is Bubble's, in CSS, so the turn still holds no hover state (MIP-904).
+    // The hosts already pad their column; on a phone the compact row's own 16px
+    // each side would take a fifth of the reading width. The balloon clips its
+    // content by default (for the pointed corner); a turn holds an approval card
+    // and wide previews that must not be cut, and its corner is not pointed.
+    const frameSx = layout === "compact" ? { px: { xs: 1, md: 2 } } : { overflow: "visible" };
+
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 0.5,
-                // Reveal action buttons on hover; always visible on touch devices.
-                "& .turn-actions": { opacity: 0, transition: `opacity ${g.motion.fast}` },
-                "&:hover .turn-actions": { opacity: 1 },
-                "&:focus-within .turn-actions": { opacity: 1 },
-                "@media (hover: none)": { "& .turn-actions": { opacity: 1 } },
-            }}
+        <Bubble
+            actionsPosition="bottom"
+            layout={layout}
+            sx={frameSx}
+            tail={false}
+            actions={
+                showActions ? (
+                    <Box className="turn-actions" sx={{ display: "flex", gap: 0.25 }}>
+                        {extraActions}
+                        {showFeedback && (
+                            <FeedbackThumbs
+                                runId={runId}
+                                labels={{
+                                    up: labels.actions.feedbackUp,
+                                    down: labels.actions.feedbackDown,
+                                }}
+                                onFeedback={onFeedback}
+                            />
+                        )}
+                        {showCopy && (
+                            <AppTooltip
+                                title={copied ? labels.actions.copied : labels.actions.copyAnswer}
+                            >
+                                <IconButton
+                                    color={copied ? "success" : "neutral"}
+                                    size="sm"
+                                    sx={{ minWidth: 0, p: "3px" }}
+                                    variant="plain"
+                                    onClick={handleCopy}
+                                >
+                                    {copied ? (
+                                        <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                                    ) : (
+                                        <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                                    )}
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                        {showRetry && (
+                            <AppTooltip title={labels.actions.retry}>
+                                <IconButton
+                                    color="neutral"
+                                    disabled={askDisabled}
+                                    size="sm"
+                                    sx={{ minWidth: 0, p: "3px" }}
+                                    variant="plain"
+                                    onClick={handleRetry}
+                                >
+                                    <ReplayRoundedIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                    </Box>
+                ) : undefined
+            }
         >
-            {askedQuery && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 0.75,
-                    }}
-                >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                {askedQuery && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 0.75,
+                        }}
+                    >
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                ...type("title-sm"),
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                                color: g.text.tertiary,
+                                minWidth: 18,
+                                mt: "2px",
+                            }}
+                        >
+                            {labels.turnLabelQ}
+                        </Typography>
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                fontWeight: 500,
+                                whiteSpace: "pre-wrap",
+                                color: g.text.primary,
+                            }}
+                        >
+                            {askedQuery}
+                        </Typography>
+                    </Box>
+                )}
+
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
                     <Typography
                         level="body-sm"
                         sx={{
                             ...type("title-sm"),
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            color: g.text.tertiary,
                             minWidth: 18,
                             mt: "2px",
+                            color: g.accent.text,
                         }}
                     >
-                        {labels.turnLabelQ}
+                        {labels.turnLabelA}
                     </Typography>
-                    <Typography
-                        level="body-md"
-                        sx={{
-                            fontWeight: 500,
-                            whiteSpace: "pre-wrap",
-                            color: g.text.primary,
-                        }}
-                    >
-                        {askedQuery}
-                    </Typography>
-                </Box>
-            )}
-
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        ...type("title-sm"),
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        minWidth: 18,
-                        mt: "2px",
-                        color: g.accent.text,
-                    }}
-                >
-                    {labels.turnLabelA}
-                </Typography>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {isCurrent && isStreaming && !pendingApproval && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-                            <CircularProgress
-                                size="sm"
-                                sx={{ "--CircularProgress-size": "12px" }}
-                            />
-                            <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                                {labels.states.streaming}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {isCurrent && isStreaming && !pendingApproval && (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+                                <CircularProgress
+                                    size="sm"
+                                    sx={{ "--CircularProgress-size": "12px" }}
+                                />
+                                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                                    {labels.states.streaming}
+                                </Typography>
+                            </Box>
+                        )}
+                        {isCurrent && pendingApproval && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    color: g.warning.text,
+                                    fontWeight: 600,
+                                    mb: 0.5,
+                                }}
+                            >
+                                {labels.states.awaitingApproval}
                             </Typography>
-                        </Box>
-                    )}
-                    {isCurrent && pendingApproval && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: g.warning.text,
-                                fontWeight: 600,
-                                mb: 0.5,
-                            }}
-                        >
-                            {labels.states.awaitingApproval}
-                        </Typography>
-                    )}
+                        )}
 
-                    {toolEvents.length > 0 && (
-                        <ToolProgressList events={toolEvents} isDark={isDark} />
-                    )}
+                        {toolEvents.length > 0 && (
+                            <ToolProgressList events={toolEvents} isDark={isDark} />
+                        )}
 
-                    {/* Undo: always on screen (not in the hover-revealed action
+                        {/* Undo: always on screen (not in the hover-revealed action
                         bar), one control per approved write, newest first. */}
-                    {onUndo && undoList.length > 0 && (
-                        <UndoSlot
-                            isDark={isDark}
-                            labels={labels}
-                            steps={undoList}
-                            onUndo={onUndo}
-                        />
-                    )}
-
-                    {isCurrent && pendingApproval && onApprove && onReject && (
-                        <ApprovalCard
-                            // A new pause is a new card: its edits are its own.
-                            key={pendingApproval.approval_token}
-                            approveLabel={labels.actions.approve}
-                            fieldErrors={approvalFieldErrors}
-                            isDark={isDark}
-                            pending={pendingApproval}
-                            rejectLabel={labels.actions.reject}
-                            restoredEdits={approvalEdits}
-                            titleText={fmt(labels.approval.titleWithTool, {
-                                toolName: labels.approval.toolLabel(pendingApproval.tool_name),
-                            })}
-                            onApprove={onApprove}
-                            onReject={onReject}
-                        />
-                    )}
-
-                    {askError && (
-                        <Typography level="body-md" sx={{ color: g.danger.text, mb: 0.5 }}>
-                            {askError}
-                        </Typography>
-                    )}
-
-                    {answer && (
-                        <Box
-                            sx={{
-                                ...markdownAnswerSx(),
-                                mb: chipSources.length > 0 ? 0.75 : 0,
-                            }}
-                        >
-                            <AnswerMarkdown
+                        {onUndo && undoList.length > 0 && (
+                            <UndoSlot
                                 isDark={isDark}
-                                sourcesById={sourcesById}
-                                text={answerForRender}
-                                onPreview={onPreview}
+                                labels={labels}
+                                steps={undoList}
+                                onUndo={onUndo}
                             />
-                        </Box>
-                    )}
+                        )}
 
-                    {(showThinking || showNoAnswer) && (
-                        <Typography level="body-md" sx={{ color: g.text.secondary }}>
-                            {showThinking ? labels.states.thinking : labels.states.noAnswer}
-                        </Typography>
-                    )}
+                        {isCurrent && pendingApproval && onApprove && onReject && (
+                            <ApprovalCard
+                                // A new pause is a new card: its edits are its own.
+                                key={pendingApproval.approval_token}
+                                approveLabel={labels.actions.approve}
+                                fieldErrors={approvalFieldErrors}
+                                isDark={isDark}
+                                pending={pendingApproval}
+                                rejectLabel={labels.actions.reject}
+                                restoredEdits={approvalEdits}
+                                titleText={fmt(labels.approval.titleWithTool, {
+                                    toolName: labels.approval.toolLabel(pendingApproval.tool_name),
+                                })}
+                                onApprove={onApprove}
+                                onReject={onReject}
+                            />
+                        )}
 
-                    <SourceChipRow
-                        labels={labels}
-                        noteScopes={noteScopes}
-                        query={askedQuery}
-                        sources={chipSources}
-                        onOpen={onPreview}
-                    />
+                        {askError && (
+                            <Typography level="body-md" sx={{ color: g.danger.text, mb: 0.5 }}>
+                                {askError}
+                            </Typography>
+                        )}
 
-                    {answerStatus}
+                        {answer && (
+                            <Box
+                                sx={{
+                                    ...markdownAnswerSx(),
+                                    mb: chipSources.length > 0 ? 0.75 : 0,
+                                }}
+                            >
+                                <AnswerMarkdown
+                                    isDark={isDark}
+                                    sourcesById={sourcesById}
+                                    text={answerForRender}
+                                    onPreview={onPreview}
+                                />
+                            </Box>
+                        )}
 
-                    {/* Total response time (server-measured, from the
+                        {(showThinking || showNoAnswer) && (
+                            <Typography level="body-md" sx={{ color: g.text.secondary }}>
+                                {showThinking ? labels.states.thinking : labels.states.noAnswer}
+                            </Typography>
+                        )}
+
+                        <SourceChipRow
+                            labels={labels}
+                            noteScopes={noteScopes}
+                            query={askedQuery}
+                            sources={chipSources}
+                            onOpen={onPreview}
+                        />
+
+                        {answerStatus}
+
+                        {/* Total response time (server-measured, from the
                         `done` event). Only for finished, non-error turns —
                         while streaming the spinner is the signal, and an
                         errored turn's timing is noise. */}
-                    {typeof elapsedMs === "number" && !isStreaming && !askError && (
-                        <BubbleMeta
-                            sx={{ display: "block", fontVariantNumeric: "tabular-nums", mt: 0.5 }}
-                        >
-                            {fmt(labels.states.answeredIn, {
-                                duration: formatDurationMs(elapsedMs),
-                            })}
-                        </BubbleMeta>
-                    )}
+                        {typeof elapsedMs === "number" && !isStreaming && !askError && (
+                            <BubbleMeta
+                                sx={{
+                                    display: "block",
+                                    fontVariantNumeric: "tabular-nums",
+                                    mt: 0.5,
+                                }}
+                            >
+                                {fmt(labels.states.answeredIn, {
+                                    duration: formatDurationMs(elapsedMs),
+                                })}
+                            </BubbleMeta>
+                        )}
+                    </Box>
                 </Box>
             </Box>
-
-            {/* Per-turn action bar: extras, 👍/👎, Copy, Retry. Fades in on hover. */}
-            {showActions && (
-                <Box
-                    className="turn-actions"
-                    sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25, mt: 0.25 }}
-                >
-                    {extraActions}
-                    {showFeedback && (
-                        <FeedbackThumbs
-                            runId={runId}
-                            labels={{
-                                up: labels.actions.feedbackUp,
-                                down: labels.actions.feedbackDown,
-                            }}
-                            onFeedback={onFeedback}
-                        />
-                    )}
-                    {showCopy && (
-                        <AppTooltip
-                            title={copied ? labels.actions.copied : labels.actions.copyAnswer}
-                        >
-                            <IconButton
-                                color={copied ? "success" : "neutral"}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                variant="plain"
-                                onClick={handleCopy}
-                            >
-                                {copied ? (
-                                    <CheckRoundedIcon sx={{ fontSize: 14 }} />
-                                ) : (
-                                    <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
-                                )}
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                    {showRetry && (
-                        <AppTooltip title={labels.actions.retry}>
-                            <IconButton
-                                color="neutral"
-                                disabled={askDisabled}
-                                size="sm"
-                                sx={{ minWidth: 0, p: "3px" }}
-                                variant="plain"
-                                onClick={handleRetry}
-                            >
-                                <ReplayRoundedIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                </Box>
-            )}
-        </Box>
+        </Bubble>
     );
 };
 

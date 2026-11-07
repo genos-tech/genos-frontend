@@ -48,6 +48,7 @@ import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { SkeletonLines, SkeletonRows } from "../../components/ui/feedback/Skeleton";
+import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { fmt, useTranslation, type Messages } from "../../i18n";
 import type {
     AgentSessionDetail,
@@ -1514,6 +1515,8 @@ const ConversationPanel = memo(
         variant = "overlay",
     }: ConversationPanelProps) => {
         const scrollRef = useRef<HTMLDivElement | null>(null);
+        // The answer turns take the same look as every message and comment.
+        const { style: turnLayout } = useBubbleStylePreference();
         // Retry composed from a ref to `onAsk`, so the finished turns see ONE
         // identity for it. The hook's `onAsk` is re-minted whenever the draft
         // query is written (it reads the draft), and handing that straight to
@@ -1785,6 +1788,7 @@ const ConversationPanel = memo(
                                 isCurrent={false}
                                 isDark={isDark}
                                 labels={turnLabels}
+                                layout={turnLayout}
                                 mentions={turn.mentions}
                                 noteScopes={noteScopes}
                                 runId={turn.runId}
@@ -1812,6 +1816,7 @@ const ConversationPanel = memo(
                                 isDark={isDark}
                                 isStreaming={ask.isStreaming}
                                 labels={turnLabels}
+                                layout={turnLayout}
                                 mentions={ask.askedMentions}
                                 noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}

@@ -19,7 +19,9 @@ import { BUBBLE_AVATAR_SIZE, BUBBLE_TOOLBAR_OFFSET } from "./bubbleMetrics";
  *    (a full-width row on the page, the default) and "bubble" (a balloon that
  *    is tinted when it is yours);
  *  - the deep-link / open-thread emphasis, the selected state and the hover fill;
- *  - the floating actions toolbar: one place (top-right), one look;
+ *  - the floating actions toolbar: one place (top-right), one look, or, for a
+ *    long answer that is read to the end (`actionsPosition="bottom"`), the same
+ *    actions as a quiet row under the body;
  *  - the avatar gutter, and `BubbleAuthor` / `BubbleMeta`, the one author line
  *    and meta text.
  *
@@ -66,6 +68,12 @@ export type BubbleProps = {
     footer?: ReactNode;
     /** The toolbar's content (quick emoji, edit, more menu). */
     actions?: ReactNode;
+    /** Where `actions` sit. `"toolbar"` (default): the floating toolbar on the
+     *  top edge. `"bottom"`: a row under the body, aligned to the end, for a
+     *  turn long enough that a top toolbar would be off screen by the time the
+     *  reader wants it (the Genos answer: copy, retry, feedback). Same reveal
+     *  rules: CSS hover / focus / touch when `actionsOpen` is left undefined. */
+    actionsPosition?: "toolbar" | "bottom";
     /** Controlled: mounted only while true (chat rows: mounting the emoji row
      *  and the menu on every row at rest would cost). Left `undefined`, the
      *  toolbar is always mounted and shown by CSS on hover / focus / touch. */
@@ -155,12 +163,18 @@ const toolbarPlace = {
 } as const;
 
 /** Always mounted, shown by CSS (`:hover`, `:focus-within`, and always on touch):
- *  for a host that must not hold hover state, such as a streamed, memoised turn. */
-const cssRevealed = {
-    "& > .bubble-toolbar": { opacity: 0, transition: `opacity ${g.motion.fast} ${g.ease}` },
-    "&:hover > .bubble-toolbar, &:focus-within > .bubble-toolbar": { opacity: 1 },
-    "@media (hover: none)": { "& > .bubble-toolbar": { opacity: 1 } },
-} as const;
+ *  for a host that must not hold hover state, such as a streamed, memoised turn.
+ *  `child` is the revealed element's selector. The toolbar sits beside the
+ *  surface, so it is a direct child (`> .bubble-toolbar`); the `"bottom"` row may
+ *  be inside the balloon's surface, so it is a descendant. */
+const revealRules = (child: string) =>
+    ({
+        [`& ${child}`]: { opacity: 0, transition: `opacity ${g.motion.fast} ${g.ease}` },
+        [`&:hover ${child}, &:focus-within ${child}`]: { opacity: 1 },
+        "@media (hover: none)": { [`& ${child}`]: { opacity: 1 } },
+    }) as const;
+const cssRevealed = revealRules("> .bubble-toolbar");
+const cssRevealedBottom = revealRules(".bubble-actions-bottom");
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
@@ -229,6 +243,7 @@ export const Bubble = (props: BubbleProps) => {
         footer,
         actions,
         actionsOpen,
+        actionsPosition = "toolbar",
         grouped = false,
         interactive = false,
         tail = true,
@@ -247,8 +262,9 @@ export const Bubble = (props: BubbleProps) => {
         ...handlers
     } = props;
 
+    const showActions = actions != null && actionsOpen !== false;
     const toolbar =
-        actions != null && actionsOpen !== false ? (
+        showActions && actionsPosition === "toolbar" ? (
             <BubbleToolbar
                 ref={toolbarRef}
                 place={
@@ -271,7 +287,23 @@ export const Bubble = (props: BubbleProps) => {
                 {overlay}
             </Box>
         ) : null;
-    const reveal = actions != null && actionsOpen === undefined ? cssRevealed : null;
+    const bottomActions =
+        showActions && actionsPosition === "bottom" ? (
+            <Box
+                className="bubble-actions-bottom"
+                sx={{ display: "flex", justifyContent: "flex-end", mt: 0.25 }}
+                onClick={stop}
+                onDoubleClick={stop}
+            >
+                {actions}
+            </Box>
+        ) : null;
+    const reveal =
+        actions != null && actionsOpen === undefined
+            ? actionsPosition === "bottom"
+                ? cssRevealedBottom
+                : cssRevealed
+            : null;
 
     const align = alignProp ?? (layout === "compact" ? "gutter" : "stacked");
     const hasGutter = avatar !== undefined && avatar !== null && avatar !== false;
@@ -413,6 +445,7 @@ export const Bubble = (props: BubbleProps) => {
                 {fencedOverlay}
                 {toolbar}
                 {content}
+                {bottomActions}
             </Box>
         );
     }
@@ -466,6 +499,7 @@ export const Bubble = (props: BubbleProps) => {
                     {...handlers}
                 >
                     {content}
+                    {bottomActions}
                 </Box>
             </Box>
         </Box>

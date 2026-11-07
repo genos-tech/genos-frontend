@@ -452,8 +452,12 @@ describe("citation sources: Spotlight resolves per turn, the Ask modals across t
 describe("one turn, one rendering", () => {
     // The turn is a single component now, so the same finished turn must read
     // identically wherever it is hosted: same words, same buttons, same order.
+    // The turn is a Bubble (MIP-1165): its frame holds the question, the answer
+    // and the bottom action row.
     const turnOf = (): HTMLElement =>
-        screen.getByText(/What shipped last week\?/).parentElement!.parentElement!;
+        screen
+            .getByText(/What shipped last week\?/)
+            .closest("[data-bubble-layout]") as HTMLElement;
 
     const snapshot = () => {
         const root = turnOf();
