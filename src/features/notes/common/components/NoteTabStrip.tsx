@@ -13,7 +13,17 @@ type NoteTabStripProps = {
     onCloseTab: (index: number, noteId: number) => void | Promise<void>;
 };
 
-const tabId = (tab: NoteTabLike) => `${tab.noteType}-${tab.noteId}`;
+/** One id per tab, even if the same note shows up twice in the list (a race
+ *  while opening): the second gets a suffix, so keys and lookups stay unique. */
+const tabIds = (tabs: NoteTabLike[]): string[] => {
+    const seen = new Map<string, number>();
+    return tabs.map((tab) => {
+        const base = `${tab.noteType}-${tab.noteId}`;
+        const n = (seen.get(base) ?? 0) + 1;
+        seen.set(base, n);
+        return n === 1 ? base : `${base}#${n}`;
+    });
+};
 
 /**
  * The open-notes tab strip (MIP-1132). `NoteTabList`, `ChatNoteTabList` and
@@ -23,18 +33,18 @@ const tabId = (tab: NoteTabLike) => `${tab.noteType}-${tab.noteId}`;
  */
 export const NoteTabStrip = ({ tabs, selectedIndex, onSelect, onCloseTab }: NoteTabStripProps) => {
     const { t } = useTranslation();
+    const ids = useMemo(() => tabIds(tabs), [tabs]);
     const items = useMemo<TabItem[]>(
         () =>
-            tabs.map((tab) => ({
-                id: tabId(tab),
+            tabs.map((tab, i) => ({
+                id: ids[i],
                 label: tab.title,
                 title: tab.title,
                 icon: <DescriptionOutlinedIcon />,
                 closable: true,
             })),
-        [tabs]
+        [tabs, ids]
     );
-    const selected = tabs[selectedIndex];
 
     return (
         <TabStrip
@@ -42,13 +52,13 @@ export const NoteTabStrip = ({ tabs, selectedIndex, onSelect, onCloseTab }: Note
             closeLabel={t.notes.tabs.closeTab}
             maxLabelWidth={140}
             tabs={items}
-            value={selected ? tabId(selected) : ""}
+            value={ids[selectedIndex] ?? ""}
             onChange={(id) => {
-                const index = tabs.findIndex((tab) => tabId(tab) === id);
+                const index = ids.indexOf(id);
                 if (index >= 0) onSelect(index);
             }}
             onClose={(id) => {
-                const index = tabs.findIndex((tab) => tabId(tab) === id);
+                const index = ids.indexOf(id);
                 if (index >= 0) void onCloseTab(index, Number(tabs[index].noteId));
             }}
         />

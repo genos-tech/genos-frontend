@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { keyframes } from "@emotion/react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -25,9 +25,11 @@ import {
  * with five colors and three ways to dismiss. Now every toast lands in ONE
  * region, bottom-center, in one flat card.
  *
- * Announced: the region is `aria-live="polite"`, and a warning or error
- * toast is `role="alert"`, so a screen reader hears a failure at once and
- * a confirmation without being interrupted. Hover or focus pauses the
+ * Announced: the region has two empty live lanes from the first render, a
+ * polite one and an assertive one, and a toast is portaled into the lane for
+ * its tone, so a screen reader hears a failure at once and a confirmation
+ * without being interrupted (and nothing sits in a live region inside
+ * another). Hover or focus pauses the
  * auto-hide, so a person reading or reaching for Undo is never raced.
  *
  * Mount `<ToastHost />` once (App). A `<Toast>` still works without it: the
@@ -41,6 +43,13 @@ const REGION_ID = "genos-toast-region";
  *  thing that must never be hidden by the surface that caused it. */
 const REGION_Z_INDEX = 13500;
 
+/** The region holds two lanes, so a live region is never nested in another:
+ *  warnings and errors go in the assertive lane, everything else in the polite
+ *  one. Both exist from the first render, empty, which is what makes screen
+ *  readers announce what is later added to them. */
+const LANES = { alert: "assertive", status: "polite" } as const;
+type Lane = keyof typeof LANES;
+
 const getToastRegion = (): HTMLElement | null => {
     if (typeof document === "undefined") return null;
     let el = document.getElementById(REGION_ID);
@@ -48,8 +57,6 @@ const getToastRegion = (): HTMLElement | null => {
         el = document.createElement("div");
         el.id = REGION_ID;
         el.setAttribute("role", "region");
-        el.setAttribute("aria-live", "polite");
-        el.setAttribute("aria-relevant", "additions text");
         // Centered with translateX(-50%), which is direction-neutral, so the
         // same block works in `ar`. `pointer-events: none` on the region and
         // `auto` on each card keeps the gaps clickable.
@@ -58,21 +65,52 @@ const getToastRegion = (): HTMLElement | null => {
             `z-index:${REGION_Z_INDEX}`,
             "left:50%",
             "transform:translateX(-50%)",
-            "bottom:calc(16px + env(safe-area-inset-bottom, 0px))",
+            // On a phone, clear the tab bar (or the keyboard): the inset var
+            // already includes the home-indicator, so it is not added twice.
+            "bottom:calc(16px + var(--mobile-bottom-inset, env(safe-area-inset-bottom, 0px)))",
             "display:flex",
             "flex-direction:column",
             "gap:8px",
             "width:min(440px, calc(100vw - 32px))",
             "pointer-events:none",
         ].join(";");
+        for (const lane of Object.keys(LANES) as Lane[]) {
+            const laneEl = document.createElement("div");
+            laneEl.dataset.toastLane = lane;
+            laneEl.setAttribute("aria-live", LANES[lane]);
+            laneEl.setAttribute("aria-atomic", "false");
+            laneEl.setAttribute("aria-relevant", "additions text");
+            laneEl.style.cssText = "display:flex;flex-direction:column;gap:8px";
+            el.appendChild(laneEl);
+        }
         document.body.appendChild(el);
+        // A Joy/MUI Modal marks every other child of <body> `aria-hidden`
+        // while it is open, which would silence this region exactly when a
+        // save fails inside a dialog. The region is a live region that must
+        // stay announceable, so put it back whenever it is hidden.
+        const keepAnnounceable = () => {
+            if (el!.getAttribute("aria-hidden") === "true") el!.removeAttribute("aria-hidden");
+        };
+        keepAnnounceable();
+        new MutationObserver(keepAnnounceable).observe(el, {
+            attributes: true,
+            attributeFilter: ["aria-hidden"],
+        });
     }
     return el;
 };
 
+const laneFor = (region: HTMLElement, tone: ToastTone): HTMLElement =>
+    region.querySelector<HTMLElement>(
+        `[data-toast-lane="${tone === "danger" || tone === "warning" ? "alert" : "status"}"]`
+    ) ?? region;
+
+/** Resolved on every render rather than memoized: if something clears
+ *  <body>, the next render re-creates the region instead of portaling into
+ *  a detached node. */
 const useToastRegion = (): HTMLElement | null => {
     const { t } = useTranslation();
-    const region = useMemo(() => getToastRegion(), []);
+    const region = getToastRegion();
     const label = t.common.feedback.toast.region;
     useEffect(() => {
         region?.setAttribute("aria-label", label);
@@ -141,9 +179,9 @@ const ToastCard = ({
     return (
         <Box
             data-toast-tone={tone}
-            // `alert` is assertive, `status` polite; the region around it is
-            // polite too, so a plain confirmation never interrupts.
-            role={urgent ? "alert" : "status"}
+            // No role of its own: the lane it is portaled into (assertive for
+            // warnings and errors, polite otherwise) announces it, and a role
+            // inside a live region can be read twice.
             sx={{
                 pointerEvents: "auto",
                 display: "flex",
@@ -281,7 +319,7 @@ export const Toast = ({
         >
             {children}
         </ToastCard>,
-        region
+        laneFor(region, tone)
     );
 };
 
@@ -290,7 +328,7 @@ const HostedToast = ({ item }: { item: ToastItem }) => {
     const action = item.action
         ? {
               onClick: item.action.onClick,
-              label: item.action.label ?? (item.undo ? t.common.feedback.toast.undo : ""),
+              label: item.action.label || (item.undo ? t.common.feedback.toast.undo : ""),
           }
         : undefined;
     return (
@@ -310,8 +348,17 @@ export const ToastHost = () => {
     const region = useToastRegion();
     const items = useToasts();
     if (!region) return null;
-    return createPortal(
-        items.map((item) => <HostedToast key={item.id} item={item} />),
-        region
+    return (
+        <>
+            {items.map((item) =>
+                // Keyed on `seq`, not `id`: a toast re-shown under the same id
+                // is a new card with a fresh timer, not the old one kept alive.
+                createPortal(
+                    <HostedToast item={item} />,
+                    laneFor(region, item.tone),
+                    String(item.seq)
+                )
+            )}
+        </>
     );
 };

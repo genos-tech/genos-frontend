@@ -4,8 +4,9 @@
  * is announced, hovering it pauses its timer, Undo runs once, a tab strip is
  * a real tablist that follows the arrow keys (mirrored in RTL).
  */
+import { Modal, ModalDialog } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EmptyState } from "../components/ui/feedback/EmptyState";
@@ -81,12 +82,19 @@ describe("Skeleton", () => {
 });
 
 describe("toast host", () => {
-    it("is a polite live region, named, created once", () => {
+    it("is a named region with an empty polite lane and an empty assertive lane, created once", () => {
         render(wrap(<ToastHost />));
         render(wrap(<Toast open>hello</Toast>));
         const regions = document.querySelectorAll("#genos-toast-region");
         expect(regions).toHaveLength(1);
-        expect(regions[0].getAttribute("aria-live")).toBe("polite");
+        // Never a live region inside a live region: the lanes are the live ones.
+        expect(regions[0].hasAttribute("aria-live")).toBe(false);
+        expect(
+            regions[0].querySelector('[data-toast-lane="status"]')?.getAttribute("aria-live")
+        ).toBe("polite");
+        expect(
+            regions[0].querySelector('[data-toast-lane="alert"]')?.getAttribute("aria-live")
+        ).toBe("assertive");
         expect(regions[0].getAttribute("role")).toBe("region");
         expect(regions[0].getAttribute("aria-label")).toBe(
             getMessages().common.feedback.toast.region
@@ -94,12 +102,14 @@ describe("toast host", () => {
         expect(regions[0].textContent).toContain("hello");
     });
 
-    it("sits in one place: bottom-center, above the Spotlight layer", () => {
+    it("sits in one place: bottom-center, above the Spotlight layer and the phone tab bar", () => {
         render(wrap(<ToastHost />));
         const style = document.getElementById("genos-toast-region")!.style;
         expect(style.position).toBe("fixed");
         expect(style.left).toBe("50%");
         expect(style.bottom).toContain("16px");
+        // On a phone the tab bar (or the keyboard) is reserved, not covered.
+        expect(style.bottom).toContain("--mobile-bottom-inset");
         expect(Number(style.zIndex)).toBeGreaterThan(13300);
     });
 
@@ -109,8 +119,33 @@ describe("toast host", () => {
             toast.error("Could not save");
             toast.success("Saved");
         });
-        expect(screen.getByRole("alert").textContent).toContain("Could not save");
-        expect(screen.getByRole("status").textContent).toContain("Saved");
+        const failure = screen.getByText("Could not save").closest("[data-toast-tone]")!;
+        const saved = screen.getByText("Saved").closest("[data-toast-tone]")!;
+        expect(failure.closest("[aria-live]")?.getAttribute("aria-live")).toBe("assertive");
+        expect(saved.closest("[aria-live]")?.getAttribute("aria-live")).toBe("polite");
+        // The lane announces; a role on the card inside it would nest live regions.
+        expect(failure.hasAttribute("role")).toBe(false);
+        expect(saved.hasAttribute("role")).toBe(false);
+    });
+
+    it("stays announceable while a Joy modal is open (the modal hides body siblings)", async () => {
+        render(
+            wrap(
+                <>
+                    <ToastHost />
+                    <Modal open>
+                        <ModalDialog>dialog</ModalDialog>
+                    </Modal>
+                </>
+            )
+        );
+        act(() => void toast.error("Could not save"));
+        const region = document.getElementById("genos-toast-region")!;
+        await waitFor(() => expect(region.getAttribute("aria-hidden")).not.toBe("true"));
+        // And its lanes are still the live regions a screen reader watches.
+        expect(region.querySelector('[data-toast-lane="alert"]')?.getAttribute("aria-live")).toBe(
+            "assertive"
+        );
     });
 
     it("hides itself after its duration and calls onClose with the reason", () => {
@@ -139,7 +174,7 @@ describe("toast host", () => {
                 </Toast>
             )
         );
-        const card = screen.getByRole("status");
+        const card = document.querySelector("[data-toast-tone]")!;
         fireEvent.mouseEnter(card);
         act(() => void vi.advanceTimersByTime(5000));
         expect(onClose).not.toHaveBeenCalled();
@@ -196,6 +231,28 @@ describe("toast host", () => {
         expect(screen.getByText("with undo")).toBeTruthy();
         act(() => void vi.advanceTimersByTime(3000));
         expect(screen.queryByText("with undo")).toBeNull();
+    });
+
+    it("a re-shown id replaces the card and restarts its timer", () => {
+        vi.useFakeTimers();
+        render(wrap(<ToastHost />));
+        act(() => void toast.show("first", { id: "k", duration: 3000 }));
+        act(() => void vi.advanceTimersByTime(2500));
+        act(() => void toast.show("second", { id: "k", duration: 3000 }));
+        act(() => void vi.advanceTimersByTime(2500));
+        // 5 s after the first show, but only 2.5 s after the second.
+        expect(screen.getByText("second")).toBeTruthy();
+        act(() => void vi.advanceTimersByTime(600));
+        expect(screen.queryByText("second")).toBeNull();
+    });
+
+    it("under the cap, an Undo toast outlives plain ones", () => {
+        render(wrap(<ToastHost />));
+        act(() => {
+            toast.undoable("deleted", () => {});
+            for (let i = 0; i < MAX_VISIBLE + 2; i++) toast.neutral(`n${i}`);
+        });
+        expect(screen.getByText("deleted")).toBeTruthy();
     });
 
     it("the same id replaces instead of stacking; the stack is capped", () => {
@@ -284,6 +341,23 @@ describe("TabStrip", () => {
         expect((screen.getByRole("tab", { name: "Gamma" }) as HTMLButtonElement).disabled).toBe(
             true
         );
+    });
+
+    it("when the selected tab is gone, the first enabled tab is the tab stop and arrows still work", () => {
+        const { onChange } = mount("zzz");
+        expect(screen.getByRole("tab", { name: "Alpha" }).tabIndex).toBe(0);
+        fireEvent.keyDown(screen.getByRole("tablist"), { key: "ArrowRight" });
+        expect(onChange).toHaveBeenLastCalledWith("b");
+    });
+
+    it("Delete on a tab moves focus to its neighbour", () => {
+        const { onClose } = mount("a");
+        const delta = screen.getByRole("tab", { name: "Delta" });
+        delta.focus();
+        fireEvent.keyDown(delta, { key: "Delete" });
+        expect(onClose).toHaveBeenCalledWith("d");
+        // Delta is last: focus goes to the previous enabled tab, Beta.
+        expect(document.activeElement).toBe(screen.getByRole("tab", { name: /Beta/ }));
     });
 
     it("click selects, a disabled tab does not", () => {

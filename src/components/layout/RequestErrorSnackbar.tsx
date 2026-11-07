@@ -32,9 +32,19 @@ const AUTO_HIDE_MS = 5000;
  */
 export const RequestErrorSnackbar = () => {
     const { t } = useTranslation();
-    const [active, setActive] = useState<{ kind: RequestErrorKind; text?: string } | null>(null);
+    const [active, setActive] = useState<{
+        kind: RequestErrorKind;
+        text?: string;
+        n: number;
+    } | null>(null);
 
-    useEffect(() => subscribeRequestErrors((kind, text) => setActive({ kind, text })), []);
+    useEffect(
+        () =>
+            subscribeRequestErrors((kind, text) =>
+                setActive((prev) => ({ kind, text, n: (prev?.n ?? 0) + 1 }))
+            ),
+        []
+    );
 
     const message = !active
         ? ""
@@ -44,6 +54,8 @@ export const RequestErrorSnackbar = () => {
 
     return (
         <Toast
+            // A newer failure replaces the current one AND restarts the timer.
+            key={active?.n ?? 0}
             duration={AUTO_HIDE_MS}
             open={active !== null}
             tone="danger"

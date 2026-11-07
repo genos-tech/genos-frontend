@@ -19,8 +19,7 @@ import { ReactNode, useSyncExternalStore } from "react";
 export type ToastTone = "neutral" | "success" | "warning" | "danger";
 
 export type ToastAction = {
-    /** Defaults to the localized "Undo" for `undoable`. */
-    label?: string;
+    label: string;
     onClick: () => void;
 };
 
@@ -35,9 +34,12 @@ export type ToastOptions = {
 
 export type ToastItem = {
     id: string;
+    /** Bumped on every show, so a re-shown id is a fresh card and timer. */
+    seq: number;
     message: ReactNode;
     tone: ToastTone;
     duration: number | null;
+    /** `label: ""` on an undo toast means "the localized Undo". */
     action?: ToastAction;
     /** Marks the Undo flavour so the host can supply the localized label. */
     undo?: boolean;
@@ -52,6 +54,7 @@ export const MAX_VISIBLE = 4;
 
 let items: ToastItem[] = [];
 let counter = 0;
+let seq = 0;
 const listeners = new Set<() => void>();
 
 const emit = () => listeners.forEach((l) => l());
@@ -67,6 +70,7 @@ const show = (message: ReactNode, opts: ToastOptions & { undo?: boolean } = {}):
     const id = opts.id ?? `toast-${++counter}`;
     const item: ToastItem = {
         id,
+        seq: ++seq,
         message,
         tone: opts.tone ?? "neutral",
         // `undefined` means "the default for this kind"; `null` is "stay".
@@ -79,8 +83,14 @@ const show = (message: ReactNode, opts: ToastOptions & { undo?: boolean } = {}):
         action: opts.action,
         undo: opts.undo,
     };
-    const without = items.filter((i) => i.id !== id);
-    items = [...without, item].slice(-MAX_VISIBLE);
+    const next = [...items.filter((i) => i.id !== id), item];
+    // Over the cap, drop the oldest toast that offers nothing to click: an
+    // Undo that vanishes early makes the action permanent.
+    while (next.length > MAX_VISIBLE) {
+        const drop = next.findIndex((i) => !i.action);
+        next.splice(drop === -1 ? 0 : drop, 1);
+    }
+    items = next;
     emit();
     return id;
 };
@@ -111,7 +121,7 @@ export const toast = {
         show(message, {
             ...opts,
             undo: true,
-            action: { label: opts?.undoLabel, onClick: onUndo },
+            action: { label: opts?.undoLabel ?? "", onClick: onUndo },
         }),
 };
 
@@ -126,5 +136,6 @@ export const useToasts = (): ToastItem[] =>
 export const __resetToasts = () => {
     items = [];
     counter = 0;
+    seq = 0;
     emit();
 };

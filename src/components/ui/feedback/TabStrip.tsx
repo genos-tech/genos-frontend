@@ -95,6 +95,17 @@ export const TabStrip = ({
     }, []);
 
     const enabled = tabs.filter((t) => !t.disabled);
+    // The one tab stop is the selected tab. If `value` matches none (a tab
+    // just closed, a transient index) the first enabled tab takes it, so the
+    // strip is never unreachable by keyboard.
+    const stopId = tabs.some((t) => t.id === value) ? value : enabled[0]?.id;
+
+    const focusTab = (id: string) =>
+        requestAnimationFrame(() => {
+            listRef.current
+                ?.querySelector<HTMLElement>(`[role="tab"][data-tab-id="${CSS.escape(id)}"]`)
+                ?.focus();
+        });
 
     const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === "Delete" && onClose) {
@@ -103,11 +114,21 @@ export const TabStrip = ({
             if (tab?.closable) {
                 e.preventDefault();
                 onClose(tab.id);
+                // The closed tab's node is about to go; hand focus to its
+                // neighbour instead of letting it fall to <body>.
+                const at = tabs.findIndex((t) => t.id === tab.id);
+                const neighbour = [...tabs.slice(at + 1), ...tabs.slice(0, at).reverse()].find(
+                    (t) => !t.disabled
+                );
+                if (neighbour) focusTab(neighbour.id);
             }
             return;
         }
-        const idx = enabled.findIndex((t) => t.id === value);
-        if (idx < 0 || enabled.length === 0) return;
+        if (enabled.length === 0) return;
+        const idx = Math.max(
+            0,
+            enabled.findIndex((t) => t.id === stopId)
+        );
         const rtl = getComputedStyle(e.currentTarget).direction === "rtl";
         let next = -1;
         if (e.key === "ArrowRight") next = idx + (rtl ? -1 : 1);
@@ -153,6 +174,7 @@ export const TabStrip = ({
                 return (
                     <Box
                         key={tab.id}
+                        role="presentation"
                         sx={{
                             position: "relative",
                             display: "flex",
@@ -179,7 +201,7 @@ export const TabStrip = ({
                             data-tab-id={tab.id}
                             disabled={tab.disabled}
                             role="tab"
-                            tabIndex={selected ? 0 : -1}
+                            tabIndex={tab.id === stopId ? 0 : -1}
                             title={tab.title}
                             type="button"
                             sx={{

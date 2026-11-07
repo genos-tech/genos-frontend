@@ -50,6 +50,25 @@ describe("NoteTabStrip", () => {
         expect(onSelect).toHaveBeenCalledWith(2);
     });
 
+    it("keeps two entries for the same note apart (race while opening)", () => {
+        const onSelect = vi.fn();
+        render(
+            <CssVarsProvider>
+                <NoteTabStrip
+                    selectedIndex={0}
+                    tabs={[
+                        { noteType: 1, noteId: 5, title: "Dup" },
+                        { noteType: 1, noteId: 5, title: "Dup" },
+                    ]}
+                    onCloseTab={() => {}}
+                    onSelect={onSelect}
+                />
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getAllByRole("tab")[1]);
+        expect(onSelect).toHaveBeenCalledWith(1);
+    });
+
     it("closes with the index and the note id, and does not select", () => {
         const { onSelect, onCloseTab } = mount(0);
         fireEvent.click(
