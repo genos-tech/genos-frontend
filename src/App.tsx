@@ -145,6 +145,9 @@ const IntegrationsHome = lazy(() =>
 const PlansHome = lazy(() =>
     import("./features/billing/PlansHome").then((m) => ({ default: m.PlansHome }))
 );
+// Design-system review page (MIP-1106, P1). Its own chunk, so the token
+// preview and its two fonts never touch the main bundle.
+const DesignSystemPage = lazy(() => import("./features/designSystem/DesignSystemPage"));
 // The Genos main page — the app's landing surface. A plain lazy route
 // (all conversation state lives in the App-root useSpotlight instance,
 // so unmounting on navigation loses nothing).
@@ -1856,6 +1859,22 @@ const AppBody = () => {
                                                                                                                         }
                                                                                                                     >
                                                                                                                         <PlansHome />
+                                                                                                                    </Suspense>
+                                                                                                                </FeatureErrorBoundary>
+                                                                                                            }
+                                                                                                        />
+                                                                                                        {/* Design-system review page (MIP-1106).
+                                                                                        URL only, no nav entry; English only. */}
+                                                                                                        <Route
+                                                                                                            path="design"
+                                                                                                            element={
+                                                                                                                <FeatureErrorBoundary feature="Design system">
+                                                                                                                    <Suspense
+                                                                                                                        fallback={
+                                                                                                                            <RouteLoadingFallback />
+                                                                                                                        }
+                                                                                                                    >
+                                                                                                                        <DesignSystemPage />
                                                                                                                     </Suspense>
                                                                                                                 </FeatureErrorBoundary>
                                                                                                             }
