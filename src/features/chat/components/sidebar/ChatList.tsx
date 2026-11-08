@@ -302,6 +302,9 @@ export const SyncAwareEmpty = ({
     return (
         <DataState
             error={sync.failed && !hasAny}
+            hasData={false}
+            loading={sync.retrying && !hasAny}
+            skeleton={<SkeletonRows count={5} avatar twoLines />}
             errorState={{
                 "data-error": "chat-list",
                 onRetry: sync.retry,
@@ -310,9 +313,6 @@ export const SyncAwareEmpty = ({
                         ? t.common.feedback.sync.chatsFailed
                         : t.common.feedback.sync.activityFailed,
             }}
-            hasData={false}
-            loading={sync.retrying && !hasAny}
-            skeleton={<SkeletonRows avatar count={5} twoLines />}
             fill
         >
             {children}
