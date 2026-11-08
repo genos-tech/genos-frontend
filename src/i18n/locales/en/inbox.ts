@@ -15,6 +15,14 @@ export const inbox = {
         title: "Inbox",
         subtitle: "Stay on top of notifications",
     },
+    // The Sync button in the header: fetch what arrived without a socket event to announce it
+    // (a report a schedule filed, a reminder).
+    sync: {
+        label: "Sync inbox",
+        upToDate: "Inbox is up to date",
+        added: "{count, plural, one {# new item} other {# new items}}",
+        failed: "Couldn't sync the inbox. Try again.",
+    },
     tabs: {
         ariaLabel: "Inbox sections",
         requests: "Requests",

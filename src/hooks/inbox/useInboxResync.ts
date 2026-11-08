@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { inboxChannel } from "../../db/workers/channels";
-import { INBOX_RESYNC_EVENT, InboxResyncDetail } from "../../features/inbox/inboxResyncEvent";
+import {
+    INBOX_FOCUS_RESYNC_MS,
+    INBOX_RESYNC_EVENT,
+    InboxResyncDetail,
+    InboxResyncResult,
+    inboxSyncAgeMs,
+    markInboxSyncing,
+    requestInboxResync,
+} from "../../features/inbox/inboxResyncEvent";
 import { popInboxItems } from "../../features/inbox/services/popInboxItems";
 import type { NotificationManager } from "../../services/notifications/notificationManager";
 import {
@@ -85,9 +93,20 @@ export const useInboxResync = (
     // still get synced and repainted; they just don't get a second card.
     const delivered = useRef<Set<string>>(new Set());
 
+    // What the cycle in flight owes the callers that asked for it (the Sync
+    // button, "Run now"): who to tell, which rows were new across every pass,
+    // and whether any pass failed. All reset when the cycle ends.
+    const waiters = useRef<Array<(result: InboxResyncResult) => void>>([]);
+    const addedIds = useRef<Set<number>>(new Set());
+    const failed = useRef(false);
+
     const resync = useCallback(async (): Promise<void> => {
         const { myself, accessToken, manager, setInboxItems } = latest.current;
-        if (!accessToken || !myself?.userId) return;
+        if (!accessToken || !myself?.userId) {
+            failed.current = true;
+            return;
+        }
+        markInboxSyncing();
 
         // Snapshot from IndexedDB, NOT from React state: the state may not
         // have had its first read yet (`useInboxManagement` hydrates in an
@@ -102,12 +121,16 @@ export const useInboxResync = (
         await inboxChannel.request("loadInbox", { myself, accessToken });
 
         const after = await popInboxItems();
-        if (!after) return;
+        if (!after) {
+            failed.current = true;
+            return;
+        }
         setInboxItems(after);
 
         const now = Date.now();
         for (const item of after) {
             if (before.has(item.itemId)) continue;
+            addedIds.current.add(item.itemId);
             if (!isReminderItem(item)) continue;
             if (now - dueAt(item) > NOTIFY_WITHIN_MS) continue;
             // The ONLY reason to stay quiet is a card this device has
@@ -136,10 +159,17 @@ export const useInboxResync = (
             // reminder, not correctness — the row is on the server and the
             // next sync of any kind (wake refresh, reload) will show it.
             console.warn("[inbox] resync failed", err);
+            failed.current = true;
         } finally {
             running.current = false;
             requeued.current = false;
             delivered.current.clear();
+            const result = { ok: !failed.current, added: addedIds.current.size };
+            const asked = waiters.current;
+            waiters.current = [];
+            addedIds.current = new Set();
+            failed.current = false;
+            for (const done of asked) done(result);
         }
     }, [resync]);
 
@@ -149,9 +179,44 @@ export const useInboxResync = (
             const detail = (event as CustomEvent<InboxResyncDetail>).detail;
             if (!detail) return;
             if (detail.deliveredTag) delivered.current.add(detail.deliveredTag);
+            // Taking the request is what tells `requestInboxResync` someone is
+            // listening; `done` is called when the cycle ends, however many
+            // requests it absorbed.
+            detail.accepted = true;
+            if (detail.done) waiters.current.push(detail.done);
             void request();
         };
         window.addEventListener(INBOX_RESYNC_EVENT, onRequest);
         return () => window.removeEventListener(INBOX_RESYNC_EVENT, onRequest);
     }, [request]);
+
+    // The tab or window coming back. Not a polling timer: it runs only on the
+    // event, and only when the last sync is at least a minute old, so a
+    // Cmd-Tab back and forth costs nothing. `useWakeRefresh` already covers a
+    // long absence (10 minutes hidden: it runs `refreshAllData`, which syncs
+    // the inbox and stamps the clock), but it listens to `visibilitychange`
+    // only and has that threshold; a window that merely lost focus, or a tab
+    // hidden for three minutes, fell in the gap. The check waits one task so
+    // a wake refresh started by the same event has stamped the clock first,
+    // whichever listener ran first, and one return = one sync (`focus` and
+    // `visibilitychange` usually arrive together).
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        let timer: number | undefined;
+        const onBack = () => {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => {
+                if (document.visibilityState !== "visible") return;
+                if (inboxSyncAgeMs() < INBOX_FOCUS_RESYNC_MS) return;
+                void requestInboxResync("focus");
+            }, 0);
+        };
+        window.addEventListener("focus", onBack);
+        document.addEventListener("visibilitychange", onBack);
+        return () => {
+            window.clearTimeout(timer);
+            window.removeEventListener("focus", onBack);
+            document.removeEventListener("visibilitychange", onBack);
+        };
+    }, []);
 };

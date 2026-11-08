@@ -16,15 +16,7 @@
 // Cost on a long Inbox: no request until a button is pressed, one `useSyncExternalStore` per
 // footer, and the component is memoized on the item's own objects.
 
-import {
-    memo,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    useSyncExternalStore,
-    type MouseEvent,
-} from "react";
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import { Box, Button, Link, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
@@ -77,8 +69,6 @@ type Props = Pick<InboxItemProps, "itemId" | "itemType" | "itemOptionals" | "aiS
     userId: string;
 };
 
-const stop = (event: MouseEvent) => event.stopPropagation();
-
 export const AiUsageFooter = memo(
     ({ itemId, itemType, itemOptionals, aiSource, userId }: Props) => {
         const usage = useMemo(
@@ -106,6 +96,9 @@ const Footer = ({
         <Box
             data-ai-usage=""
             // The row around a card opens the item on click: the switch is not part of that.
+            // An event boundary in the shape the clickable-element guard (MIP-1129) accepts: the
+            // whole handler is `stopPropagation()`, written inline (a named `stop` is not seen as
+            // one). The footer is not itself a control; the buttons inside it are.
             sx={{
                 borderTop: "1px solid",
                 borderColor: g.border.subtle,
@@ -117,7 +110,7 @@ const Footer = ({
                 rowGap: 0.5,
                 minWidth: 0,
             }}
-            onClick={stop}
+            onClick={(event) => event.stopPropagation()}
         >
             <Typography
                 data-ai-usage-cost=""

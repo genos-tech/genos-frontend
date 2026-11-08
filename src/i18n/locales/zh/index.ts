@@ -2174,6 +2174,12 @@ export const zh: DeepPartial<Messages> = {
             title: "收件箱",
             subtitle: "随时关注通知动态",
         },
+        sync: {
+            label: "同步收件箱",
+            upToDate: "收件箱已是最新",
+            added: "{count, plural, one {#条新内容} other {#条新内容}}",
+            failed: "无法同步收件箱,请重试。",
+        },
         tabs: {
             ariaLabel: "收件箱分区",
             requests: "申请",
@@ -3622,6 +3628,10 @@ export const zh: DeepPartial<Messages> = {
             running: "运行中…",
             ranOk: "已运行:{title},{count, plural, one {#项} other {#项}}。报告已送到你的收件箱。",
             ranFailed: "运行失败:{error}",
+            reportReady: "报告已就绪",
+            reportReadyTitled: "报告已就绪:{title}",
+            openInbox: "打开收件箱",
+            planRefused: "你的套餐不包含定时报告。",
             edit: "编辑",
             delete: "删除",
             deleteConfirm: "删除 {name}?它将不再运行,且无法恢复。",

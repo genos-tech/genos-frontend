@@ -1,4 +1,5 @@
 import { activityChannel, inboxChannel, usersChannel } from "../db/workers/channels";
+import { markInboxSyncing } from "../features/inbox/inboxResyncEvent";
 import { loadProjectTasks } from "../features/tasks/services/loadProjectTasks";
 import { UserProps } from "../types/admin";
 import { channelService } from "./channel/channelService";
@@ -70,6 +71,8 @@ export const refreshAllData = async ({
     // and swallows its own errors, so it doesn't need the `withTimeout`
     // wrapper the worker-channel calls use.
     void channelService.refreshChannels();
+    // Stamp the inbox sync clock so the focus resync does not repeat this one.
+    markInboxSyncing();
     const tasks: Array<Promise<unknown>> = [
         withTimeout(inboxChannel.request("loadInbox", { myself, accessToken }), "loadInbox"),
         withTimeout(
