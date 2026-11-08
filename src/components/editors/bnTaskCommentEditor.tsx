@@ -2,41 +2,37 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+import { withTrailingBlank } from "./utils/messageBlocks";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
-import { channelService } from "../../services/channel/channelService";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
-import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
-import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
+import { useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { useGenosEditor } from "./genos/useGenosEditor";
 import { EditorSendButton } from "./sub/EditorSendButton";
 
 type BnTaskCommentEditorProps = {
@@ -120,149 +116,95 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
 
-    // Upload pipeline — mirrors BnChatEditor: the counter drives the
-    // "Uploading n files…" pill for BlockNote-initiated uploads
-    // (slash-menu / drag straight into the editor), the size guard
-    // rejects oversize files before any fetch and feeds the snackbar.
-    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
-    const { rejection, dismissRejection, filterFiles, guardUploadFile } = useFileSizeGuard();
+    const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
-    // Inline uploads are channel-scoped in v3; task comments ride the
-    // task's project PM channel. Without a resolvable channel there is
-    // no `uploadFile`, so BlockNote's own file insert paths stay inert.
-    const uploadFile = uploadChannelId
-        ? guardUploadFile(
-              trackUpload(async (file: File) =>
-                  channelService.uploadInlineFile(String(uploadChannelId), file)
-              )
-          )
-        : undefined;
+    // Upload pipeline, drop queue, draft, canSend and the send flow are the shared composer
+    // hook's (see `composer/useChatComposer`).
+    //
+    // Send a new comment.
+    //
+    // Old behaviour deferred BOTH the optimistic list-append AND the
+    // editor-clear to a side effect that listened for
+    // `useTM.isTaskCommentUpdated.isUpdate === true`. That flag flips
+    // when the server broadcasts the `wsType === "task"` round-trip;
+    // unfortunately, the round-trip races with React render passes and
+    // — in some host configurations — never reaches this component
+    // before the user clicks again. The visible symptom was: comment
+    // is persisted in DB, but the editor stays full and the list stays
+    // stale until the page is refreshed.
+    //
+    // The fix is to make this path purely user-driven:
+    //   1. The hook snapshots the editor content while it's still valid and
+    //      clears the editor *now*.
+    //   2. `submit` optimistically appends to `taskComments` so the list
+    //      updates *now*.
+    //   3. Emit the socket events.
+    //   4. Bump `useTM.isTaskCommentUpdated` so other consumers
+    //      (TaskPreview's load effect, ThreadCommentsView's load
+    //      effect) refetch and replace the optimistic row with server
+    //      truth — covering reconciled timestamps / commentId /
+    //      mentions etc.
+    const composer = useChatComposer({
+        schema,
+        dictionary,
+        // Inline uploads are channel-scoped in v3; task comments ride the
+        // task's project PM channel. Without a resolvable channel there is
+        // no `uploadFile`, so BlockNote's own file insert paths stay inert.
+        uploads: { channelId: uploadChannelId ? String(uploadChannelId) : undefined },
+        // Files dropped on the comment tab (outside the editor itself). The queue is claimed
+        // first and the loop skips the counter and the size guard's wrapper, as it always did.
+        dropQueue: { files: pendingFiles, clear: clearPendingFiles, mode: "claim" },
+        // Per-task draft cache. The hook tracks the previously-loaded key internally and won't
+        // clobber the editor on re-renders where `task` is recreated but `task.id` is unchanged.
+        draftKey: task?.id != null ? `task-comment:${task.id}` : null,
+        onLinesChange: setNumEditorLines,
+        canSubmit: () => !!socket && !!task.id,
+        submit: (blocks) => {
+            // Stored with the trailing blank line every reader expects (MIP-1039).
+            const commentBodySnapshot = withTrailingBlank(blocks);
 
-    const editor = useGenosEditor({ surface: "composer", schema, dictionary, uploadFile });
+            const optimistic = {
+                projectId: task.project?.projectId || null,
+                taskId: task.id as number, // `canSubmit` guarantees an id
+                senderId: myself.userId,
+                senderName: myself.userName,
+                commentId: taskComments.length + 1,
+                commentBody: commentBodySnapshot,
+                tsSent: getLocalCurrentTimestamp(),
+                tsUpdated: getLocalCurrentTimestamp(),
+                isEdited: false,
+            };
 
-    // Per-task draft cache: see `useEditorDraft` for the
-    // load/save/clear lifecycle. Replaces the old `prevTaskIdRef`
-    // bookkeeping — the hook tracks the previously-loaded key
-    // internally and won't clobber the editor on re-renders where
-    // `task` is recreated but `task.id` is unchanged.
-    const draftCacheKey = task?.id != null ? `task-comment:${task.id}` : null;
-    const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
+            setTaskComments([...taskComments, optimistic]);
+            setNumEditorLines(0);
 
-    // Tracks the comment-tab drop upload loop (separate from BlockNote's
-    // own `uploadFile` placeholder) so the editor surface can show a dim
-    // overlay with "Uploading 2 / 5 — large.pdf" while files POST in
-    // series. Same UX as BnChatEditor's chat-pane drop.
-    const [pendingUpload, setPendingUpload] = useState<{
-        index: number;
-        total: number;
-        name: string;
-    } | null>(null);
-
-    // Process files dropped on the comment tab (outside the editor).
-    useEffect(() => {
-        if (!pendingFiles || pendingFiles.length === 0 || !clearPendingFiles) return;
-        // Capture + clear the queue SYNCHRONOUSLY, before any await.
-        // Clearing in a `finally` (the chat editor's shape) leaves the
-        // parent's queue populated for the whole upload; if this editor
-        // remounts meanwhile (tab switch, edit-mode toggle), the fresh
-        // mount would re-run this effect against the same array and
-        // insert every file a second time.
-        const queued = pendingFiles;
-        clearPendingFiles();
-        if (!uploadChannelId) {
-            // No upload channel — the caller shouldn't have forwarded the
-            // drop here (its fallback attaches to the Attachments tab).
-            return;
-        }
-        // Drop oversize files up-front so the dim overlay only counts
-        // files we'll actually try to upload.
-        const acceptedFiles = filterFiles(queued);
-        if (acceptedFiles.length === 0) {
-            return;
-        }
-        const insertFiles = async () => {
-            try {
-                for (let i = 0; i < acceptedFiles.length; i += 1) {
-                    const file = acceptedFiles[i];
-                    setPendingUpload({
-                        index: i + 1,
-                        total: acceptedFiles.length,
-                        name: file.name,
-                    });
-                    try {
-                        const url = await channelService.uploadInlineFile(
-                            String(uploadChannelId),
-                            file
-                        );
-                        const isImage = file.type.startsWith("image/");
-                        editor.insertBlocks(
-                            [
-                                isImage
-                                    ? { type: "image", props: { url, name: file.name } }
-                                    : { type: "file", props: { url, name: file.name } },
-                            ],
-                            editor.document[editor.document.length - 1],
-                            "after"
-                        );
-                    } catch (err) {
-                        console.error("Failed to insert dropped file:", err);
-                    }
+            socket!.emit(
+                "task_comment",
+                {
+                    method_type: "POST",
+                    project_id: task.project?.projectId,
+                    project_name: task.project?.projectName,
+                    task_id: task.id,
+                    display_id: task.displayId,
+                    comment_body: commentBodySnapshot,
+                    is_private: task.project?.isPrivate || false,
+                },
+                () => {
+                    // Round-trip done: ask the rest of the app to refetch
+                    // so the optimistic row is replaced with the canonical
+                    // server payload (correct commentId, ts, mentions…).
+                    useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                    emitTaskTouched(Number(task.id), "comment");
+                    // (Removed a dead `thread_message` emit that used to bump the
+                    // PM bubble's comment-count chip: its Flask handler was
+                    // dropped in the v3 migration, so it posted nowhere. The chip
+                    // now reads the server-computed `taskCommentCount`, refreshed
+                    // by the `task_comment` broadcast + this `task-touched` event.)
                 }
-            } finally {
-                // Queue was already cleared synchronously above — only
-                // the overlay needs tearing down here.
-                setPendingUpload(null);
-            }
-        };
-        void insertFiles();
-    }, [pendingFiles]);
-
-    // Hidden native picker behind the mobile "attach" toolbar button. On
-    // a phone BlockNote's drag-drop / side-menu insert paths aren't
-    // reachable, so this is the only way to send an image/file. Gated the
-    // same way as inline uploads: with no `uploadChannelId` there's no
-    // `uploadFile`, so the button isn't rendered.
-    const attachInputRef = useRef<HTMLInputElement>(null);
-    const onAttachInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files ? Array.from(event.target.files) : [];
-        // Reset so picking the same file twice in a row re-fires change.
-        event.target.value = "";
-        if (files.length === 0 || !uploadFile) return;
-        // Drop oversize files up-front so the dim overlay only counts
-        // files we'll actually try to upload.
-        const acceptedFiles = filterFiles(files);
-        if (acceptedFiles.length === 0) return;
-        const insertFiles = async () => {
-            try {
-                for (let i = 0; i < acceptedFiles.length; i += 1) {
-                    const file = acceptedFiles[i];
-                    setPendingUpload({
-                        index: i + 1,
-                        total: acceptedFiles.length,
-                        name: file.name,
-                    });
-                    try {
-                        const url = await uploadFile(file);
-                        const isImage = file.type.startsWith("image/");
-                        editor.insertBlocks(
-                            [
-                                isImage
-                                    ? { type: "image", props: { url, name: file.name } }
-                                    : { type: "file", props: { url, name: file.name } },
-                            ],
-                            editor.document[editor.document.length - 1],
-                            "after"
-                        );
-                    } catch (err) {
-                        console.error("Failed to insert file:", err);
-                    }
-                }
-            } finally {
-                setPendingUpload(null);
-            }
-        };
-        void insertFiles();
-    };
+            );
+        },
+    });
+    const { editor } = composer;
 
     const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -285,32 +227,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setShowGifPicker(false);
     };
 
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            // Guarded: image/file blocks carry no `content` array.
-            if (node.content && node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-            // Add lines for each image to avoid scroll issues (same
-            // heuristic as BnChatEditor).
-            if (node.type === "image") {
-                count += 10;
-            }
-        }
-        return count;
-    };
-
-    // Whether there is anything to send (MIP-1039; see bnChatEditor).
-    const [canSend, setCanSend] = useState<boolean>(false);
-    const [numEditorLines, setNumEditorLines] = useState<number>(0);
-
     // Mirror the local line count back up to the task page so the
     // parent's sticky-comment chip can react. Height is no longer
     // computed here — the editor auto-sizes inside its CSS min/max
@@ -326,89 +242,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
-
-    // Send a new comment.
-    //
-    // Old behaviour deferred BOTH the optimistic list-append AND the
-    // editor-clear to a side effect that listened for
-    // `useTM.isTaskCommentUpdated.isUpdate === true`. That flag flips
-    // when the server broadcasts the `wsType === "task"` round-trip;
-    // unfortunately, the round-trip races with React render passes and
-    // — in some host configurations — never reaches this component
-    // before the user clicks again. The visible symptom was: comment
-    // is persisted in DB, but the editor stays full and the list stays
-    // stale until the page is refreshed.
-    //
-    // The fix is to make this path purely user-driven:
-    //   1. Snapshot the editor content while it's still valid.
-    //   2. Optimistically append to `taskComments` so the list updates
-    //      *now*.
-    //   3. Clear the editor *now*.
-    //   4. Emit the socket events.
-    //   5. Bump `useTM.isTaskCommentUpdated` so other consumers
-    //      (TaskPreview's load effect, ThreadCommentsView's load
-    //      effect) refetch and replace the optimistic row with server
-    //      truth — covering reconciled timestamps / commentId /
-    //      mentions etc.
-    // Hold send while a dropped/pasted image or file is still uploading —
-    // BlockNote inserts the block before its `url` resolves, so sending now
-    // would persist a comment with an empty attachment. `editorUploadCount`
-    // covers BlockNote's own drop/paste/slash inserts; `pendingUpload`
-    // covers the comment-tab drop loop.
-    const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
-
-    const sendComment = async () => {
-        if (!socket) return;
-        if (!hasSendableContent(editor.document)) return;
-        if (!task.id) return;
-        if (uploadInProgress) return;
-
-        // Stored with the trailing blank line every reader expects (MIP-1039).
-        const commentBodySnapshot = withTrailingBlank(editor.document);
-
-        const optimistic = {
-            projectId: task.project?.projectId || null,
-            taskId: task.id,
-            senderId: myself.userId,
-            senderName: myself.userName,
-            commentId: taskComments.length + 1,
-            commentBody: commentBodySnapshot,
-            tsSent: getLocalCurrentTimestamp(),
-            tsUpdated: getLocalCurrentTimestamp(),
-            isEdited: false,
-        };
-
-        setTaskComments([...taskComments, optimistic]);
-        editor.replaceBlocks(editor.document, []);
-        clearDraft();
-        setCanSend(false);
-        setNumEditorLines(0);
-
-        socket.emit(
-            "task_comment",
-            {
-                method_type: "POST",
-                project_id: task.project?.projectId,
-                project_name: task.project?.projectName,
-                task_id: task.id,
-                display_id: task.displayId,
-                comment_body: commentBodySnapshot,
-                is_private: task.project?.isPrivate || false,
-            },
-            (_ack: any) => {
-                // Round-trip done: ask the rest of the app to refetch
-                // so the optimistic row is replaced with the canonical
-                // server payload (correct commentId, ts, mentions…).
-                useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
-                emitTaskTouched(Number(task.id), "comment");
-                // (Removed a dead `thread_message` emit that used to bump the
-                // PM bubble's comment-count chip: its Flask handler was
-                // dropped in the v3 migration, so it posted nowhere. The chip
-                // now reads the server-computed `taskCommentCount`, refreshed
-                // by the `task_comment` broadcast + this `task-touched` event.)
-            }
-        );
-    };
 
     // Picker is rendered via portal into document.body with position:fixed so it
     // can never be clipped by an overflow:hidden ancestor and always stacks on top.
@@ -444,17 +277,20 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     return (
         <Box ref={boxRef}>
-            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            <FileSizeRejectionSnackbar
+                rejection={composer.rejection}
+                onDismiss={composer.dismissRejection}
+            />
             {/* Hidden native picker for the mobile "attach image/file"
                 toolbar button. Rendered unconditionally; only the button
                 that clicks it is mobile-gated (and requires an upload
                 channel). */}
             <input
-                ref={attachInputRef}
+                ref={composer.attachInputRef}
                 type="file"
                 multiple
                 style={{ display: "none" }}
-                onChange={onAttachInputChange}
+                onChange={composer.onAttachInputChange}
             />
             <EmojiPicker
                 pickerBottomPosition="auto"
@@ -477,15 +313,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 onSelect={insertGif}
             />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
-                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadStatusBadge count={composer.editorUploadCount} />
                 <FileUploadOverlay
                     label={t.common.ui.fileUpload.uploadingDroppedFiles}
-                    open={pendingUpload !== null}
-                    detail={
-                        pendingUpload
-                            ? `${pendingUpload.name} (${pendingUpload.index} / ${pendingUpload.total})`
-                            : undefined
-                    }
+                    open={composer.overlay.open}
+                    detail={composer.overlay.detail}
                 />
                 <BlockNoteView
                     className="bn-box"
@@ -504,22 +336,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             setTaskUpdated(true);
                         }
                     }}
-                    onChange={() => {
-                        const comments: any[] = editor.document;
-                        setNumEditorLines(countLines(comments));
-                        setCanSend(hasSendableContent(editor.document));
-                        saveDraft(editor.document);
-                    }}
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            sendComment();
-                        }
-                    }}
+                    onChange={composer.viewProps.onChange}
+                    onKeyDown={composer.viewProps.onKeyDown}
                 >
-                    <EditorSendButton
-                        disabled={!canSend || uploadInProgress}
-                        onSend={sendComment}
-                    />
+                    <EditorSendButton disabled={composer.sendDisabled} onSend={composer.send} />
 
                     <Box
                         className="bn-editor-toolbar"
@@ -543,9 +363,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             isMobile={isMobile}
                             setShowEmojiPicker={setShowEmojiPicker}
                             setShowGifPicker={setShowGifPicker}
-                            onAttach={
-                                uploadChannelId ? () => attachInputRef.current?.click() : undefined
-                            }
+                            onAttach={composer.openAttach}
                             wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
                         />
                     </Box>
