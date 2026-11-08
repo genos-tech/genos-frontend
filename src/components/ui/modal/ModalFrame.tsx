@@ -21,8 +21,7 @@ import { focusRing, g, type } from "../../../theme/tokens";
  *
  * Stacking (genos-ui rule 1): never hardcode a layer in a caller. A dialog
  * opened from a modal-hosted surface passes that host's layer as
- * `hostZIndex` (the frame lifts itself above it, the same +2 as
- * `noteModalChildStackSx`) or an exact `zIndex`. With neither it sits at
+ * `hostZIndex` (the frame lifts itself 2 above it) or an exact `zIndex`. With neither it sits at
  * 10010, where the page-level dialogs have always been.
  *
  * Events: the dialog portals to <body>, but React events still bubble

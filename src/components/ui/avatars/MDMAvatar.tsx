@@ -7,6 +7,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
 import { initialOf } from "../../../utils/initials";
+import { PRESENCE_COLOR } from "../misc/presenceColor";
 import { PulseDot } from "../misc/PulseDot";
 import { BaseAvatar } from "./BaseAvatar";
 
@@ -136,7 +137,9 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                                 }}
                             >
                                 <PulseDot
-                                    color={isOnline ? "#4caf50" : "#999"}
+                                    color={
+                                        isOnline ? PRESENCE_COLOR.online : PRESENCE_COLOR.offline
+                                    }
                                     sx={{
                                         width: dotSize,
                                         height: dotSize,

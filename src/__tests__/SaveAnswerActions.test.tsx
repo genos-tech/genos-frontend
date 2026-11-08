@@ -534,19 +534,16 @@ describe("the task dialog cannot be heard by what rendered it", () => {
         onKeyDown,
         onClick,
         onMouseDown,
-        isolate,
     }: {
         onKeyDown: (e: React.KeyboardEvent) => void;
         onClick: () => void;
         onMouseDown: () => void;
-        isolate: boolean;
     }) => {
         const [open, setOpen] = useState(true);
         return (
             // A stand-in for the overlay: it listens to keys, clicks and mousedowns.
             <div onClick={onClick} onKeyDown={onKeyDown} onMouseDown={onMouseDown}>
                 <ModalCreateTaskFromTodo
-                    isolateEvents={isolate}
                     myself={{ teamId: "t1", userId: "u1" }}
                     open={open}
                     todoNotes={null}
@@ -557,26 +554,21 @@ describe("the task dialog cannot be heard by what rendered it", () => {
         );
     };
 
-    const mount = (isolate: boolean) => {
+    const mount = () => {
         const spies = { key: vi.fn(), click: vi.fn(), down: vi.fn() };
         const docKeys: string[] = [];
         const docListener = (e: KeyboardEvent) => docKeys.push(e.key);
         document.addEventListener("keydown", docListener);
         render(
             <CssVarsProvider>
-                <Host
-                    isolate={isolate}
-                    onClick={spies.click}
-                    onKeyDown={spies.key}
-                    onMouseDown={spies.down}
-                />
+                <Host onClick={spies.click} onKeyDown={spies.key} onMouseDown={spies.down} />
             </CssVarsProvider>
         );
         return { spies, docKeys, off: () => document.removeEventListener("keydown", docListener) };
     };
 
     it("hears nothing from typing, Enter, clicks or mousedown inside it", async () => {
-        const { spies, docKeys, off } = mount(true);
+        const { spies, docKeys, off } = mount();
         const title = (await screen.findByPlaceholderText(
             "What needs doing?"
         )) as HTMLInputElement;
@@ -598,23 +590,11 @@ describe("the task dialog cannot be heard by what rendered it", () => {
     });
 
     it("closes on Escape by itself, and the host hears no Escape", async () => {
-        const { spies, off } = mount(true);
+        const { spies, off } = mount();
         const title = await screen.findByPlaceholderText("What needs doing?");
         fireEvent.keyDown(title, { key: "Escape" });
         await waitFor(() => expect(screen.queryByPlaceholderText("What needs doing?")).toBeNull());
         expect(spies.key).not.toHaveBeenCalled();
-        off();
-    });
-
-    it("is isolated by the frame even without the flag (ModalFrame fences every dialog)", async () => {
-        const { spies, off } = mount(false);
-        const title = await screen.findByPlaceholderText("What needs doing?");
-        fireEvent.keyDown(title, { key: "a" });
-        fireEvent.click(title);
-        fireEvent.mouseDown(title);
-        expect(spies.key).not.toHaveBeenCalled();
-        expect(spies.click).not.toHaveBeenCalled();
-        expect(spies.down).not.toHaveBeenCalled();
         off();
     });
 });
