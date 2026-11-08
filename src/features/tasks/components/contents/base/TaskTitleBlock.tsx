@@ -798,7 +798,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 open={showCloseDiscardConfirm}
                 role="alertdialog"
                 size="sm"
-                title="Close this draft?"
+                title={t.tasks.createForm.closeDraftTitle}
                 actions={
                     <>
                         <Button
@@ -806,7 +806,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             variant="outlined"
                             onClick={() => setShowCloseDiscardConfirm(false)}
                         >
-                            Keep editing
+                            {t.tasks.createForm.discardKeepEditing}
                         </Button>
                         <Button
                             color="primary"
@@ -817,7 +817,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 performHide();
                             }}
                         >
-                            Hide (save draft)
+                            {t.tasks.createForm.closeDraftHide}
                         </Button>
                         <Button
                             startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
@@ -835,14 +835,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 performClose();
                             }}
                         >
-                            Discard draft
+                            {t.tasks.createForm.discardConfirm}
                         </Button>
                     </>
                 }
                 onClose={() => setShowCloseDiscardConfirm(false)}
             >
-                You can discard your changes, hide the form (your draft is saved so you can resume
-                later), or keep editing.
+                {t.tasks.createForm.closeDraftBody}
             </ModalFrame>
 
             {/* Title: the shared inline editor, always an input here. Live text goes to
