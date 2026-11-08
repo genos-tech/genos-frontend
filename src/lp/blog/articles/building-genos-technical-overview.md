@@ -3,7 +3,7 @@
 I built Genos, a web workspace that keeps chat, tasks, and collaborative notes
 together and stores links between them.
 
-Constraints first: it is a solo-built MVP, web-only, and adopting it means moving
+Constraints first: it is solo-built, web-only, and adopting it means moving
 work into another system. It does not reconstruct a complete project graph from
 Slack, Notion, and Jira. The demo is useful for testing the interaction model,
 not evidence that it has been validated across large organizations.

@@ -9,7 +9,7 @@
  * privacyProcessors.ts AND `EXPECTED_PROCESSORS` here (that duplication is the
  * point: it makes a silent edit to the table show up in review).
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
@@ -54,7 +54,10 @@ describe("PrivacyPage", () => {
         // Hide-not-delete honesty.
         expect(screen.getByText(/データの削除ではありません/)).toBeTruthy();
         // The contact address is a link in the Japanese and the English requests sections.
-        expect(screen.getAllByText("genos.support@genosai.dev").length).toBe(2);
+        // Counted inside the page's <main>: the shared footer (LpShell) repeats it too.
+        expect(
+            within(screen.getByRole("main")).getAllByText("genos.support@genosai.dev").length
+        ).toBe(2);
     });
 
     it("lists exactly the expected processors, in both languages", () => {

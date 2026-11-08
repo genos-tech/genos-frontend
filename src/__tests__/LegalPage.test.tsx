@@ -5,7 +5,7 @@
  * vanish: the operative Japanese heading, the cancellation/refund
  * policy rows, the live prices, and the contact address.
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
@@ -26,8 +26,11 @@ describe("LegalPage", () => {
         // Live prices as charged by Stripe — once per language section.
         expect(screen.getAllByText(/1,200/).length).toBe(2);
         expect(screen.getAllByText(/2,500/).length).toBe(2);
-        // Contact address (both language sections carry it).
-        expect(screen.getAllByText("genos.support@genosai.dev").length).toBe(2);
+        // Contact address (both language sections carry it). Counted inside the
+        // page's <main>: the shared footer (LpShell) repeats the address too.
+        expect(
+            within(screen.getByRole("main")).getAllByText("genos.support@genosai.dev").length
+        ).toBe(2);
         // English summary present.
         expect(screen.getByText(/English summary/)).toBeTruthy();
     });

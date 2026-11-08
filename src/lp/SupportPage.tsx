@@ -1,7 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { useLpLang, type Lang } from "./lpLang";
+import { LpShell } from "./kit/LpShell";
+import type { Lang } from "./lpLang";
 import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "./supportLabels";
 
 /**
@@ -9,8 +9,10 @@ import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "./supportLabels";
  *
  * Public and auth-free, same shell as `/legal` and `/privacy`: someone who
  * cannot sign in is exactly who needs this page. Like those pages it holds its
- * own copy (ja + en, `useLpLang` picks the starting language) instead of
- * mounting the app's I18nProvider.
+ * own copy (ja + en) instead of mounting the app's I18nProvider. The language
+ * comes from `LpShell`, which owns the toggle (and `useLpLang`, which picks the
+ * starting language), so there is one switch for the header, the footer and
+ * this page.
  *
  * Deliberately short and bare. The only support channel that exists is the
  * email address below, so that is all the page offers: no response-time
@@ -24,15 +26,11 @@ import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "./supportLabels";
  * so a rename fails the test instead of leaving the page pointing at nothing.
  */
 
-const linkClass = "underline hover:text-violet-700 dark:hover:text-white";
-
 /** A label from the app's UI, set apart in bold; ja wraps it in 「」 as /privacy does. */
 const makeLabel =
     (lang: Lang) =>
     ({ children }: { children: React.ReactNode }) => (
-        <b className="font-semibold text-slate-800 dark:text-slate-100">
-            {lang === "ja" ? <>「{children}」</> : children}
-        </b>
+        <b>{lang === "ja" ? <>「{children}」</> : children}</b>
     );
 const LABELS = { en: makeLabel("en"), ja: makeLabel("ja") };
 
@@ -139,121 +137,68 @@ const COPY: Record<
     },
 };
 
-const LangToggle = ({ lang, setLang }: { lang: Lang; setLang: (next: Lang) => void }) => (
-    <div aria-label="Language / 言語" className="flex gap-1 text-xs font-semibold" role="group">
-        {(["en", "ja"] as const).map((l) => (
-            <button
-                key={l}
-                aria-pressed={lang === l}
-                type="button"
-                className={
-                    "rounded-full px-3 py-1 transition " +
-                    (lang === l
-                        ? "bg-violet-600 text-white"
-                        : "text-slate-500 hover:text-violet-700 dark:text-slate-400 dark:hover:text-white")
-                }
-                onClick={() => setLang(l)}
-            >
-                {l === "en" ? "English" : "日本語"}
-            </button>
-        ))}
-    </div>
-);
-
-export default function SupportPage() {
-    const { lang, setLang } = useLpLang();
+function SupportBody({ lang }: { lang: Lang }) {
     const c = COPY[lang];
 
     return (
-        <main
-            className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#faf7ff_44%,#ffffff_100%)] px-4 py-10 text-slate-950 sm:px-6 lg:px-8 dark:bg-[linear-gradient(180deg,#020617_0%,#111827_48%,#020617_100%)] dark:text-white"
-            lang={lang}
-        >
-            <div className="mx-auto max-w-3xl">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Link
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-violet-700 dark:text-slate-400 dark:hover:text-white"
-                        to="/home"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Genos
-                    </Link>
-                    <LangToggle lang={lang} setLang={setLang} />
+        <>
+            <header className="lp-pagehead">
+                <div className="lp-container lp-container--narrow lp-stack-s">
+                    <h1 className="lp-title">{c.title}</h1>
+                    <p className="lp-body">{c.lead}</p>
                 </div>
+            </header>
 
-                <h1 className="mt-6 text-2xl font-black sm:text-3xl">{c.title}</h1>
-                <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                    {c.lead}
-                </p>
-
-                <div className="mt-8 space-y-7">
+            <div className="lp-container lp-container--narrow lp-pagebody">
+                <article className="lp-prose">
                     <section>
-                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                            {c.contactHeading}
-                        </h2>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            {c.contactBody}{" "}
-                            <a className={linkClass} href={`mailto:${SUPPORT_EMAIL}`}>
-                                {SUPPORT_EMAIL}
-                            </a>
+                        <h2>{c.contactHeading}</h2>
+                        <p>
+                            {c.contactBody} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
                         </p>
-                        <p className="mt-1 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <p className="lp-small">
                             {c.contactCopy}{" "}
-                            <span data-testid="support-email-text">{SUPPORT_EMAIL}</span>
+                            <span data-testid="support-email-text" translate="no">
+                                {SUPPORT_EMAIL}
+                            </span>
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                            {c.includeHeading}
-                        </h2>
-                        <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <h2>{c.includeHeading}</h2>
+                        <ul>
                             {c.includeItems.map((item) => (
                                 <li key={item}>{item}</li>
                             ))}
                         </ul>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            {c.includeNote}
-                        </p>
+                        <p>{c.includeNote}</p>
                     </section>
 
                     <section>
-                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                            {c.appsHeading}
-                        </h2>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            {c.appsIntro}
-                        </p>
-                        <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <h2>{c.appsHeading}</h2>
+                        <p>{c.appsIntro}</p>
+                        <ol>
                             {c.appsSteps(SUPPORT_UI_LABELS[lang], LABELS[lang]).map((step, i) => (
                                 <li key={i}>{step}</li>
                             ))}
                         </ol>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            {c.appsOutro}
-                        </p>
+                        <p>{c.appsOutro}</p>
                     </section>
 
                     <section>
-                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                            {c.moreHeading}
-                        </h2>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                            <Link className={linkClass} to="/privacy">
-                                {c.privacy}
-                            </Link>
+                        <h2>{c.moreHeading}</h2>
+                        <p>
+                            <Link to="/privacy">{c.privacy}</Link>
                             {" · "}
-                            <Link className={linkClass} to="/legal">
-                                {c.legal}
-                            </Link>
+                            <Link to="/legal">{c.legal}</Link>
                         </p>
                     </section>
-                </div>
-
-                <p className="mt-10 text-xs text-slate-400 dark:text-slate-500">
-                    © {new Date().getFullYear()} Genos
-                </p>
+                </article>
             </div>
-        </main>
+        </>
     );
+}
+
+export default function SupportPage() {
+    return <LpShell active={null}>{({ lang }) => <SupportBody lang={lang} />}</LpShell>;
 }

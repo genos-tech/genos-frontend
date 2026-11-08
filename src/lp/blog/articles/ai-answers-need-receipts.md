@@ -132,7 +132,7 @@ The durable hierarchy is simple: source material first, derived answer second.
 
 ### What I built
 
-Full disclosure: I built **Genos**, a browser-based MVP for chat, tasks,
+Full disclosure: I built **Genos**, a browser-based product for chat, tasks,
 collaborative notes, and AI-assisted work.
 
 Genos AI streams answers with clickable inline citations and source chips. The
@@ -148,7 +148,7 @@ None of this guarantees that an answer is correct. It makes a specific answer
 cheaper to challenge, confirm, and reuse. That is a smaller promise than
 infallibility and a more useful one.
 
-Genos is solo-built, web-only, and still an MVP. The demo works without an
+Genos is solo-built, web-only, and still early. The demo works without an
 account at **[genosai.dev](https://genosai.dev)**; there is a free plan and no
 credit card.
 

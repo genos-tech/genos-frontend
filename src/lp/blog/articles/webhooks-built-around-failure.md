@@ -45,7 +45,7 @@ delivery semantics.
 
 My question for people operating webhook systems:
 
-**Would you accept this best-effort post-commit outbox for an MVP, or require the
+**Would you accept this best-effort post-commit outbox for a first version, or require the
 outbox row in the same database transaction before exposing webhooks at all?**
 
 I am also interested in what you test beyond signatures and happy-path retries:

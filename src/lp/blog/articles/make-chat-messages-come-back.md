@@ -16,7 +16,7 @@ I treated the reminder as part of the message flag:
    message.
 4. If the flag is completed or removed first, cancel the pending reminder.
 
-That behavior is shipped. The broader product is still a web-only MVP.
+That behavior is shipped. The broader product is still early and web-only.
 
 The trade-off I want criticism on: should "remind me about this message" stay a
 message-level action, or should every reminder create a real task with ownership,
@@ -33,5 +33,5 @@ open, or should presence suppress it?
 Use only if links are allowed:
 
 > I built the workflow in Genos. There is a no-login demo at
-> <https://genosai.dev>. It is a web-only MVP. The relevant behavior is the
+> <https://genosai.dev>. It is early and web-only. The relevant behavior is the
 > message flag/reminder flow; no signup is needed to inspect the product.

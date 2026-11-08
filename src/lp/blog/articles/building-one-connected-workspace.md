@@ -13,7 +13,7 @@ links to the sources it used. It can also summarize a thread or note. That is
 the current scope; it is not claiming to reconstruct every relationship
 automatically.
 
-Honest status: it is an MVP, web-only, and the AI still has limitations. There
+Honest status: it is early, web-only, and the AI still has limitations. There
 is a no-login demo and a free plan without a card:
 <https://genosai.dev>
 

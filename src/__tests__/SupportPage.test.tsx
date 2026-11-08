@@ -10,7 +10,7 @@
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -26,6 +26,9 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
+/** The page's own content: LpShell's header and footer are outside it. */
+const pageMain = () => screen.getByRole("main");
+
 beforeEach(() => {
     // The starting language follows the app's stored/browser locale.
     localStorage.clear();
@@ -40,16 +43,17 @@ describe("SupportPage", () => {
     });
 
     it("gives the support address as a mailto link and as plain text", () => {
-        const { container } = renderPage();
+        renderPage();
         expect(SUPPORT_EMAIL).toBe("genos.support@genosai.dev");
-        const link = screen.getByRole("link", { name: SUPPORT_EMAIL });
+        const link = within(pageMain()).getByRole("link", { name: SUPPORT_EMAIL });
         expect(link.getAttribute("href")).toBe(`mailto:${SUPPORT_EMAIL}`);
         // The address also appears as plain text OUTSIDE the link, to copy if the link does nothing.
         const plain = screen.getByTestId("support-email-text");
         expect(plain.textContent).toBe(SUPPORT_EMAIL);
         expect(plain.closest("a")).toBeNull();
-        // It is the only mailto on the page.
-        expect(container.querySelectorAll('a[href^="mailto:"]').length).toBe(1);
+        // It is the only mailto in the page's content (the shared footer has its own
+        // "Contact" link to the same address).
+        expect(pageMain().querySelectorAll('a[href^="mailto:"]').length).toBe(1);
     });
 
     it("says what to include when writing", () => {

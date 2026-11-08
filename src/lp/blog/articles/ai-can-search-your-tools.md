@@ -113,7 +113,7 @@ next to each other while the reason one produced the other remains absent.
 
 ### The product disclosure
 
-Full disclosure: I built **Genos** around this idea. It is a browser-based MVP
+Full disclosure: I built **Genos** around this idea. It is a browser-based product
 that puts chat, tasks, and collaborative notes in one workspace and lets those
 objects link to one another. Its AI can answer across all three and returns
 clickable links to its sources.
@@ -128,7 +128,7 @@ That boundary is useful. The thesis does not require pretending that a graph
 automatically creates understanding. It requires being precise about which
 relationships exist as facts and which ones an AI still has to infer.
 
-Genos is solo-built and still an MVP. The demo works without an account at
+Genos is solo-built and still early. The demo works without an account at
 **[genosai.dev](https://genosai.dev)**, and there is a free plan with no credit
 card.
 

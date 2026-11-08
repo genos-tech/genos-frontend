@@ -1,6 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { CONTACT_EMAIL } from "./kit/links";
+import { LpShell } from "./kit/LpShell";
 import { PROCESSORS } from "./privacyProcessors";
 
 /**
@@ -46,30 +47,33 @@ import { PROCESSORS } from "./privacyProcessors";
  *   #573). Merge #573 before this page ships, so the PostHog entry is true.
  */
 
-const CONTACT_EMAIL = "genos.support@genosai.dev";
-
 type Section = { heading: string; body: React.ReactNode };
 
-const SectionList = ({ sections }: { sections: Section[] }) => (
-    <div className="space-y-7">
-        {sections.map((s) => (
-            <section key={s.heading}>
-                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                    {s.heading}
-                </h3>
-                <div className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                    {s.body}
-                </div>
-            </section>
-        ))}
-    </div>
-);
+const SectionList = ({
+    sections,
+    headingLevel,
+}: {
+    sections: Section[];
+    headingLevel: "h2" | "h3";
+}) => {
+    const Heading = headingLevel;
+    return (
+        <div className="lp-sections">
+            {sections.map((s) => (
+                <section key={s.heading}>
+                    <Heading>{s.heading}</Heading>
+                    <div className="lp-sec-body">{s.body}</div>
+                </section>
+            ))}
+        </div>
+    );
+};
 
 const JA_SECTIONS: Section[] = [
     {
         heading: "1. 収集する情報",
         body: (
-            <ul className="list-disc space-y-1.5 pl-5">
+            <ul>
                 <li>
                     <b>アカウント情報</b>：メールアドレス、ユーザー名、チーム情報。Google または
                     GitHub
@@ -110,17 +114,17 @@ const JA_SECTIONS: Section[] = [
                     個人情報を販売したり、広告目的で第三者に提供したりすることはありません。
                     サービスの提供に必要な範囲で、以下の事業者に処理を委託しています。各事業者に送信される情報は次のとおりです：
                 </p>
-                <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                <ul>
                     {PROCESSORS.map((p) => (
                         <li key={p.name}>
                             <b>{p.name}</b>：{p.ja}
                         </li>
                     ))}
                 </ul>
-                <p className="mt-2">
+                <p>
                     利用する事業者は、設定や提供状況により変更されることがあります。変更する場合は、本ページを更新します。
                 </p>
-                <p className="mt-2">
+                <p>
                     また、チームの管理者が Webhook
                     を設定した場合、管理者が選択したイベント（チャット、タスクなどの内容）が、管理者の指定した送信先に送信されます。この送信先は当サービスの委託先ではなく、管理者の責任で設定されます。
                 </p>
@@ -134,18 +138,18 @@ const JA_SECTIONS: Section[] = [
                 <p>
                     データはアカウントが有効な間保存されます。プランによるメッセージ履歴の表示期間は「非表示」であり、データの削除ではありません（アップグレードすると再び表示されます）。
                 </p>
-                <p className="mt-2">
+                <p>
                     <b>アカウントの削除</b>
                     ：アプリ内の「設定 → アカウント →
                     アカウントを削除」から、ご自身で実行できます。実行すると、氏名・メールアドレス・プロフィールが匿名化され、すべての端末で直ちにサインアウトされます。非公開のノート・To-Do・AI
                     の利用履歴は削除され、API キーは無効化され、Google・GitHub
                     等の連携は削除されます。チームのメンバーと共同で作成した内容はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖されます。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
                 </p>
-                <p className="mt-2">
+                <p>
                     この操作の対象は当サービス内のデータです。第 3
                     項の事業者にすでに送信された情報や、セキュリティ上の監査記録は、この操作では自動的には削除されません。
                 </p>
-                <p className="mt-2">
+                <p>
                     サインインできない場合など、アプリ内で削除できない場合は、下記メールアドレスまでご連絡ください。合理的な期間内に対応いたします。
                 </p>
             </>
@@ -162,9 +166,7 @@ const JA_SECTIONS: Section[] = [
                 ご自身が作成したデータは、アプリ内の「設定 → アカウント →
                 データをエクスポート」から JSON
                 ファイルでダウンロードできます。保有個人データの開示・訂正・利用停止等のご請求は、
-                <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
-                    {CONTACT_EMAIL}
-                </a>
+                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
                 まで。
             </>
         ),
@@ -178,9 +180,7 @@ const JA_SECTIONS: Section[] = [
         body: (
             <>
                 事業者情報は
-                <Link className="underline hover:text-violet-700" to="/legal">
-                    特定商取引法に基づく表記
-                </Link>
+                <Link to="/legal">特定商取引法に基づく表記</Link>
                 をご覧ください。
             </>
         ),
@@ -204,18 +204,18 @@ const EN_SECTIONS: Section[] = [
                     We never sell personal data or share it for advertising. We use the following
                     processors to run the service, and send each of them only what is listed:
                 </p>
-                <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                <ul>
                     {PROCESSORS.map((p) => (
                         <li key={p.name}>
                             <b>{p.name}</b>: {p.en}
                         </li>
                     ))}
                 </ul>
-                <p className="mt-2">
+                <p>
                     The providers we use can change with configuration and availability; we will
                     update this page when they do.
                 </p>
-                <p className="mt-2">
+                <p>
                     If a team administrator configures a webhook, the events they choose (chat,
                     task and similar content) are sent to the destination they specify. That
                     destination is not our processor; the administrator is responsible for it.
@@ -231,7 +231,7 @@ const EN_SECTIONS: Section[] = [
                     Data is kept while your account is active. Plan-based history windows hide
                     messages, they don't delete them (upgrading restores visibility).
                 </p>
-                <p className="mt-2">
+                <p>
                     <b>Deleting your account:</b> you can do it yourself in the app under Settings
                     → Account → Delete account. Your name, email and profile are anonymized and you
                     are signed out on every device immediately. Your private notes, to-dos and AI
@@ -241,12 +241,12 @@ const EN_SECTIONS: Section[] = [
                     If you own a team that still has other members, you must transfer ownership
                     first.
                 </p>
-                <p className="mt-2">
+                <p>
                     This applies to data within the service. Information already sent to the
                     processors above, and security audit records, are not deleted automatically by
                     it.
                 </p>
-                <p className="mt-2">
+                <p>
                     If you cannot sign in, or cannot delete in the app, email us at the address
                     below — we will act within a reasonable period.
                 </p>
@@ -259,14 +259,8 @@ const EN_SECTIONS: Section[] = [
             <>
                 You can download the data you created in the app under Settings → Account → Export
                 your data. Disclosure, correction, or deletion requests:{" "}
-                <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
-                    {CONTACT_EMAIL}
-                </a>
-                . Seller information is on the{" "}
-                <Link className="underline hover:text-violet-700" to="/legal">
-                    Legal Notice
-                </Link>
-                .
+                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Seller information is on
+                the <Link to="/legal">Legal Notice</Link>.
             </>
         ),
     },
@@ -274,34 +268,35 @@ const EN_SECTIONS: Section[] = [
 
 export default function PrivacyPage() {
     return (
-        <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#faf7ff_44%,#ffffff_100%)] px-4 py-10 text-slate-950 sm:px-6 lg:px-8 dark:bg-[linear-gradient(180deg,#020617_0%,#111827_48%,#020617_100%)] dark:text-white">
-            <div className="mx-auto max-w-3xl">
-                <Link
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-violet-700 dark:text-slate-400 dark:hover:text-white"
-                    to="/home"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Genos
-                </Link>
+        <LpShell active={null}>
+            {() => (
+                <>
+                    <header className="lp-pagehead">
+                        <div className="lp-container lp-container--narrow lp-stack-s">
+                            <h1 className="lp-title" lang="ja">
+                                プライバシーポリシー
+                            </h1>
+                            <p className="lp-body" lang="en">
+                                Privacy policy — the Japanese text is operative; an English summary
+                                follows.
+                            </p>
+                        </div>
+                    </header>
 
-                <h1 className="mt-6 text-2xl font-black sm:text-3xl">プライバシーポリシー</h1>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Privacy policy — the Japanese text is operative; an English summary follows.
-                </p>
+                    <div className="lp-container lp-container--narrow lp-pagebody">
+                        <article className="lp-prose">
+                            <div className="lp-pagesection" lang="ja">
+                                <SectionList headingLevel="h2" sections={JA_SECTIONS} />
+                            </div>
 
-                <div className="mt-8">
-                    <SectionList sections={JA_SECTIONS} />
-                </div>
-
-                <h2 className="mt-12 text-xl font-black">Privacy Policy (English summary)</h2>
-                <div className="mt-4">
-                    <SectionList sections={EN_SECTIONS} />
-                </div>
-
-                <p className="mt-10 text-xs text-slate-400 dark:text-slate-500">
-                    © {new Date().getFullYear()} Genos
-                </p>
-            </div>
-        </main>
+                            <section className="lp-pagesection" lang="en">
+                                <h2>Privacy Policy (English summary)</h2>
+                                <SectionList headingLevel="h3" sections={EN_SECTIONS} />
+                            </section>
+                        </article>
+                    </div>
+                </>
+            )}
+        </LpShell>
     );
 }

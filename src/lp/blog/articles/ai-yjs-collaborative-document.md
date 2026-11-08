@@ -1,6 +1,6 @@
 <!-- Generated from genos-docs/marketing/REDDIT_WEBDEV_AI_YJS_APPROVAL.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-Disclosure: this comes from Genos, the web-only MVP I am building. The editor uses
+Disclosure: this comes from Genos, the web-only product I am building. The editor uses
 BlockNote with Yjs/Hocuspocus; Django stores the application-side note data.
 
 I added an AI action that proposes a replacement note body and waits for explicit
