@@ -29,6 +29,7 @@ import { useCallback } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 
 export interface MessageRowHoverToolbarProps {
     messageId: string;
@@ -60,9 +61,11 @@ const IS_COARSE_POINTER =
 const BTN_STYLE: React.CSSProperties = {
     fontSize: IS_COARSE_POINTER ? 14 : 11,
     padding: IS_COARSE_POINTER ? "6px 10px" : "2px 6px",
-    border: "1px solid #ddd",
+    // Tokens, not `#ddd` / `#fff`: those drew white buttons on the dark surface (MIP-1202).
+    border: `1px solid ${g.border.default}`,
     borderRadius: 4,
-    background: "#fff",
+    background: g.surface.raised,
+    color: g.text.primary,
     cursor: "pointer",
 };
 
