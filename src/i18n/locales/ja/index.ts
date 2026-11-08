@@ -2283,6 +2283,7 @@ export const ja: DeepPartial<Messages> = {
             usedAtLeast: "使用した AI クレジット: {credits} 以上",
             usedTiny: "使用した AI クレジット: 0.01 未満",
             unmeasured: "Genos がこれに AI を使用しました。使用量は計測されていません。",
+            noAiUsed: "AI は使用していません",
             deductedNone: "残高からの差し引きなし",
             deducted: "残高から {credits} を差し引き",
             scheduleFallback: "このスケジュール",
@@ -2296,6 +2297,7 @@ export const ja: DeepPartial<Messages> = {
                 "{name} をオフにしました。オンに戻すまで、新しく作成されず、AI クレジットも使われません。",
             offSchedule:
                 "{name} をオフにしました。オンに戻すまで、実行されず AI クレジットも使われません。",
+            offScheduleNoAi: "{name} はオフです。再びオンにするまで実行されません。",
             alreadyOff: "{name} はすでにオフです。",
             restingOff: "{name} はオフになっています。",
             onAgain: "{name} を再びオンにしました。",

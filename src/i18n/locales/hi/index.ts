@@ -3379,6 +3379,7 @@ export const hi: DeepPartial<Messages> = {
             usedAtLeast: "उपयोग किए गए AI क्रेडिट: कम से कम {credits}",
             usedTiny: "उपयोग किए गए AI क्रेडिट: 0.01 से कम",
             unmeasured: "Genos ने इसके लिए AI का उपयोग किया। मात्रा नापी नहीं गई।",
+            noAiUsed: "AI का उपयोग नहीं हुआ",
             deductedNone: "आपके बैलेंस से कुछ नहीं काटा गया",
             deducted: "आपके बैलेंस से {credits} काटे गए",
             scheduleFallback: "यह शेड्यूल",
@@ -3392,6 +3393,7 @@ export const hi: DeepPartial<Messages> = {
                 "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, न नया लिखा जाएगा और न इस पर AI क्रेडिट खर्च होंगे।",
             offSchedule:
                 "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा और AI क्रेडिट खर्च नहीं करेगा।",
+            offScheduleNoAi: "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा।",
             alreadyOff: "{name} पहले से बंद है।",
             restingOff: "{name} बंद है।",
             onAgain: "{name} फिर से चालू है।",

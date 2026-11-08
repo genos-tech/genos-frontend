@@ -52,6 +52,7 @@ export const inbox = {
         usedAtLeast: "AI credits used: at least {credits}",
         usedTiny: "AI credits used: less than 0.01",
         unmeasured: "Genos used AI for this. The amount wasn't measured.",
+        noAiUsed: "No AI used",
         deductedNone: "None deducted from your balance",
         deducted: "{credits} deducted from your balance",
         scheduleFallback: "This schedule",
@@ -64,6 +65,7 @@ export const inbox = {
         offDigest:
             "{name} is off. No more will be written, and no more AI credits spent on it, until you turn it back on.",
         offSchedule: "{name} is off. It won't run or use AI credits until you turn it back on.",
+        offScheduleNoAi: "{name} is off. It won't run until you turn it back on.",
         alreadyOff: "{name} is already off.",
         restingOff: "{name} is turned off.",
         onAgain: "{name} is on again.",

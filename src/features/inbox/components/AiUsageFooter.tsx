@@ -1,11 +1,12 @@
-// The foot of an AI-made Inbox card: what the item cost, and "Turn this off" (MIP-1227; the card
-// half of genos-api MIP-1209). Ken: "Must not spend a user's AI usage silently."
+// The foot of a digest or report card: what the item cost, and "Turn this off" (MIP-1227; the
+// card half of genos-api MIP-1209). Ken: "Must not spend a user's AI usage silently."
 //
-// Drawn only for a digest or a report that carries a valid `itemOptionals.ai` (see
-// `readAiUsage`, which refuses a forged blob on any other item type); everything else draws
-// nothing, not even a "0 credits" line. The cost is in AI credits, formatted by the same
-// `formatCredits` as Plan & usage. The digest is not billed, so its line says what it used and
-// that none was deducted; a charge is never claimed that did not happen.
+// Drawn for every digest and report the server gives a valid `aiSource` (MIP-1234: AI or not;
+// the built-in jobs use no AI and still get the switch). A report that used none says "No AI
+// used" instead of a figure. `readAiUsage` refuses a forged blob or source on any other item
+// type; everything else draws nothing, not even a "0 credits" line. The cost is in AI credits,
+// formatted by the same `formatCredits` as Plan & usage. The digest is not billed, so its line
+// says what it used and that none was deducted; a charge is never claimed that did not happen.
 //
 // The switch acts on the item's SOURCE (the digest, or that schedule), which the server reads
 // from the item itself. Turning off says what was turned off and offers Undo only when the
@@ -18,6 +19,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { Box, Button, Link, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
@@ -44,7 +46,9 @@ type Copy = Messages["inbox"]["aiUsage"];
 const credits = (milli: number): string => formatCredits(Math.round(milli / 10) / 100);
 
 /** The cost line: what it used, and (when it is known) what was taken from the balance. */
-export const costText = (cost: AiCost, c: Copy): string => {
+export const costText = (cost: AiCost | null, c: Copy): string => {
+    // A digest or report that used no AI says so, plainly: no figure, no balance line.
+    if (cost === null) return c.noAiUsed;
     if (!cost.metered) return c.unmeasured;
     // Under a hundredth of a credit a figure would print as "0", which is not true of a cost.
     // With unpriced calls the true cost may be more, so "less than 0.01" would be wrong too.
@@ -115,7 +119,13 @@ const Footer = ({
             <Typography
                 data-ai-usage-cost=""
                 level="body-xs"
-                startDecorator={<BoltRoundedIcon sx={{ fontSize: 14 }} />}
+                startDecorator={
+                    usage.cost === null ? (
+                        <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                    ) : (
+                        <BoltRoundedIcon sx={{ fontSize: 14 }} />
+                    )
+                }
                 sx={{
                     ...type("body-xs"),
                     color: g.text.secondary,
@@ -126,7 +136,14 @@ const Footer = ({
             >
                 {costText(usage.cost, c)}
             </Typography>
-            {usage.source && <Switch itemId={itemId} source={usage.source} userId={userId} />}
+            {usage.source && (
+                <Switch
+                    itemId={itemId}
+                    source={usage.source}
+                    usedAi={usage.cost !== null}
+                    userId={userId}
+                />
+            )}
         </Box>
     );
 };
@@ -138,10 +155,13 @@ const useStore = <T,>(read: () => T): T => useSyncExternalStore(subscribeInboxAi
 const Switch = ({
     itemId,
     source,
+    usedAi,
     userId,
 }: {
     itemId: number;
     source: AiSourceView;
+    /** False for a report whose job uses no AI: its "off" sentence must not talk about credits. */
+    usedAi: boolean;
     userId: string;
 }) => {
     const { t } = useTranslation();
@@ -206,7 +226,9 @@ const Switch = ({
 
     let message: string | null = null;
     if (notice?.kind === "off") {
-        message = fmt(source.kind === "digest" ? c.offDigest : c.offSchedule, { name });
+        const sentence =
+            source.kind === "digest" ? c.offDigest : usedAi ? c.offSchedule : c.offScheduleNoAi;
+        message = fmt(sentence, { name });
     } else if (notice?.kind === "already-off") message = fmt(c.alreadyOff, { name });
     else if (notice?.kind === "on") message = fmt(c.onAgain, { name });
     else if (!enabled) message = fmt(c.restingOff, { name });

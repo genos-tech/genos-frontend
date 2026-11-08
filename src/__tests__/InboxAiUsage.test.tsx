@@ -52,7 +52,7 @@ const digest = (over: Partial<InboxItemProps> = {}, ai: Record<string, unknown> 
     itemId: 812,
     itemType: 6,
     itemOptionals: { cadence: "weekly", ai: { ...AI, ...ai } },
-    aiSource: { kind: "digest", enabled: true, label: "Genos digest" },
+    aiSource: { kind: "digest", enabled: true, label: "Genos digest", used_ai: true },
     ...over,
 });
 
@@ -68,6 +68,24 @@ const report = (over: Partial<InboxItemProps> = {}, ai: Record<string, unknown> 
         enabled: true,
         label: "Morning plan",
         schedule_id: "11111111-1111-4111-8111-111111111111",
+        used_ai: true,
+    },
+    ...over,
+});
+
+const SID = "11111111-1111-4111-8111-111111111111";
+
+/** A built-in job's report (Morning plan): no cost block, and the server says `used_ai: false`. */
+const plainReport = (over: Partial<InboxItemProps> = {}) => ({
+    itemId: 91,
+    itemType: 10,
+    itemOptionals: { kind: "schedule_report", schedule_id: SID, job: "what_to_do_today" },
+    aiSource: {
+        kind: "schedule",
+        enabled: true,
+        label: "Morning plan",
+        schedule_id: SID,
+        used_ai: false,
     },
     ...over,
 });
@@ -98,7 +116,7 @@ describe("readAiUsage: the gate", () => {
     it("gives no switch when the source disagrees with the item or is missing", () => {
         const noSource = readAiUsage(digest({ aiSource: undefined }) as never);
         expect(noSource?.source).toBeNull();
-        expect(noSource?.cost.metered).toBe(true); // the cost is still the server's
+        expect(noSource?.cost?.metered).toBe(true); // the cost is still the server's
         expect(
             readAiUsage(
                 digest({
@@ -130,12 +148,130 @@ describe("readAiUsage: the gate", () => {
         expect(readAiUsage(digest({}, { deducted_credits_milli: "0" }) as never)).toBeNull();
         expect(readAiUsage(digest({}, { metered: "yes" }) as never)).toBeNull();
         expect(readAiUsage(digest({ itemOptionals: { ai: "oops" } }) as never)).toBeNull();
-        expect(readAiUsage(digest({ itemOptionals: null }) as never)).toBeNull();
+        expect(
+            readAiUsage(digest({ itemOptionals: null, aiSource: undefined }) as never)
+        ).toBeNull();
         expect(readAiUsage({ itemType: 6 } as never)).toBeNull();
     });
 
-    it("an item with no ai key draws nothing", () => {
-        expect(readAiUsage(digest({ itemOptionals: { cadence: "weekly" } }) as never)).toBeNull();
+    it("an item with no ai key and no source draws nothing", () => {
+        expect(
+            readAiUsage(
+                digest({ itemOptionals: { cadence: "weekly" }, aiSource: undefined }) as never
+            )
+        ).toBeNull();
+        expect(readAiUsage(plainReport({ aiSource: undefined }) as never)).toBeNull();
+        expect(readAiUsage(plainReport({ aiSource: null }) as never)).toBeNull();
+    });
+});
+
+describe("readAiUsage: a report that used no AI (MIP-1234)", () => {
+    it("reads a block-less report whose source says used_ai false: no cost, and the switch", () => {
+        const usage = readAiUsage(plainReport() as never);
+        expect(usage?.cost).toBeNull();
+        expect(usage?.source?.key).toBe(`schedule:${SID}`);
+        expect(usage?.source?.enabled).toBe(true);
+    });
+
+    it("a block-less digest or report the server says used AI has no number, only the switch", () => {
+        const d = readAiUsage(digest({ itemOptionals: { cadence: "weekly" } }) as never);
+        expect(d?.cost).toEqual({ metered: false });
+        expect(d?.source?.key).toBe("digest");
+        const r = readAiUsage(
+            plainReport({
+                aiSource: {
+                    kind: "schedule",
+                    enabled: true,
+                    label: "x",
+                    schedule_id: SID,
+                    used_ai: true,
+                },
+            } as never) as never
+        );
+        expect(r?.cost).toEqual({ metered: false });
+    });
+
+    it("used_ai false wins over a cost block: a charge the server does not stand behind is not shown", () => {
+        const usage = readAiUsage(report({ aiSource: plainReport().aiSource as never }) as never);
+        expect(usage?.cost).toBeNull();
+        expect(usage?.source?.key).toBe(`schedule:${SID}`);
+    });
+
+    it("a row stored before used_ai existed keeps the old rule", () => {
+        const { used_ai: _gone, ...old } = report().aiSource as Record<string, unknown>;
+        void _gone;
+        // With a valid block: AI, as it always was.
+        expect(readAiUsage(report({ aiSource: old as never }) as never)?.cost?.metered).toBe(true);
+        // Without one it says nothing: there is no flag to say "No AI used" on.
+        expect(readAiUsage(plainReport({ aiSource: old as never } as never) as never)).toBeNull();
+    });
+
+    it("draws nothing when the source is not the item's own kind, or used_ai is not a boolean", () => {
+        for (const bad of ["false", 0, 1, null, "no", []]) {
+            const aiSource = { ...(plainReport().aiSource as object), used_ai: bad } as never;
+            expect(readAiUsage(plainReport({ aiSource }) as never)).toBeNull();
+            // A malformed flag spoils the source, but a valid block still draws its cost, no switch.
+            const withBlock = readAiUsage(report({ aiSource }) as never);
+            expect(withBlock?.source).toBeNull();
+        }
+        // A digest source on a report, or a report source on a digest.
+        expect(
+            readAiUsage(
+                plainReport({
+                    aiSource: { kind: "digest", enabled: true, label: "x", used_ai: false },
+                } as never) as never
+            )
+        ).toBeNull();
+        expect(
+            readAiUsage(
+                digest({
+                    itemOptionals: {},
+                    aiSource: {
+                        kind: "schedule",
+                        enabled: true,
+                        label: "x",
+                        schedule_id: SID,
+                        used_ai: true,
+                    },
+                } as never) as never
+            )
+        ).toBeNull();
+        // A schedule source with no id cannot be keyed.
+        expect(
+            readAiUsage(
+                plainReport({
+                    aiSource: { kind: "schedule", enabled: true, label: "x", used_ai: false },
+                } as never) as never
+            )
+        ).toBeNull();
+    });
+
+    it("an ordinary item with a forged source and no block draws nothing", () => {
+        for (const itemType of [0, 1, 2, 3, 4, 5, 7, 8, 9]) {
+            expect(readAiUsage(plainReport({ itemType }) as never)).toBeNull();
+            expect(
+                readAiUsage(
+                    digest({
+                        itemType,
+                        itemOptionals: {},
+                        aiSource: { kind: "digest", enabled: true, label: "x", used_ai: false },
+                    } as never) as never
+                )
+            ).toBeNull();
+        }
+    });
+
+    it("a malformed block is untrusted even beside a source that says used_ai false", () => {
+        expect(
+            readAiUsage(
+                plainReport({
+                    itemOptionals: {
+                        schedule_id: SID,
+                        ai: { producer: "schedule", metered: "yes" },
+                    },
+                } as never) as never
+            )
+        ).toBeNull();
     });
 });
 
@@ -171,6 +307,12 @@ describe("costText", () => {
         expect(costText(metered(3, { lowerBound: true }), c)).toBe(c.unmeasured);
         // A rounding that lands on a whole number is not "1.0".
         expect(costText(metered(1004), c)).toContain("AI credits used: 1 ·");
+    });
+
+    it("an item that used no AI says so, with no figure and no balance line", () => {
+        const text = costText(null, c);
+        expect(text).toBe("No AI used");
+        expect(text).not.toMatch(/\d|deduct|credit/i);
     });
 
     it("an unmetered item names no number and claims no deduction", () => {
@@ -210,6 +352,55 @@ describe("AiUsageFooter", () => {
             "AI credits used: 1.83"
         );
         expect(screen.getByRole("button", { name: /turn this off/i })).toBeTruthy();
+    });
+
+    it("a report that used no AI says so and still has Turn this off", () => {
+        const { container } = render(tree(footer(plainReport())));
+        expect(container.querySelector("[data-ai-usage-cost]")?.textContent).toBe("No AI used");
+        expect(container.textContent).not.toMatch(/credits|deduct/i);
+        expect(screen.getByRole("button", { name: /turn this off: morning plan/i })).toBeTruthy();
+    });
+
+    it("turning off a report that used no AI undoes cleanly and never talks about AI credits", async () => {
+        calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
+        const { container } = render(tree(footer(plainReport())));
+        fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
+        await waitFor(() =>
+            expect(screen.getByRole("status").textContent).toBe(
+                "Morning plan is off. It won't run until you turn it back on."
+            )
+        );
+        expect(calls.switch).toHaveBeenCalledWith("tok", 91, false);
+        expect(calls.patch).toHaveBeenCalledWith({
+            kind: "schedule",
+            scheduleId: SID,
+            enabled: false,
+        });
+        // The cost line still says nothing was used.
+        expect(container.querySelector("[data-ai-usage-cost]")?.textContent).toBe("No AI used");
+        const undo = screen.getByRole("button", { name: /undo/i });
+        calls.switch.mockResolvedValue({ ok: true, enabled: true, wasEnabled: false });
+        fireEvent.click(undo);
+        await waitFor(() => expect(screen.getByRole("status").textContent).toContain("on again"));
+        expect(calls.switch).toHaveBeenLastCalledWith("tok", 91, true);
+    });
+
+    it("a report that used AI still says so in its off sentence", async () => {
+        calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
+        render(tree(footer(report())));
+        fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
+        await waitFor(() =>
+            expect(screen.getByRole("status").textContent).toContain("or use AI credits")
+        );
+    });
+
+    it("a digest the server says used AI but kept no cost says so, with no number", () => {
+        const { container } = render(
+            tree(footer(digest({ itemOptionals: { cadence: "weekly" } })))
+        );
+        const line = container.querySelector("[data-ai-usage-cost]")?.textContent ?? "";
+        expect(line).toBe(en.inbox.aiUsage.unmeasured);
+        expect(line).not.toMatch(/\d|No AI used/);
     });
 
     it("renders nothing for an item with no usable ai", () => {
@@ -470,6 +661,36 @@ describe("InboxBubble: where the footer appears", () => {
             bubble({ ...report(), itemBody: { title: "T", text: "s", sections: [] } } as never)
         );
         expect(b.container.querySelector("[data-ai-usage]")).not.toBeNull();
+    });
+
+    it("a report that used no AI draws its footer: No AI used and Turn this off", () => {
+        const typed = { version: 2, title: "T", text: "s", sections: [] };
+        const a = render(bubble({ ...plainReport(), itemBody: typed } as never));
+        expect(a.container.querySelector("[data-ai-usage-cost]")?.textContent).toBe("No AI used");
+        expect(screen.getByRole("button", { name: /turn this off/i })).toBeTruthy();
+        a.unmount();
+        // The plain (untyped) body of an older report too.
+        const b = render(
+            bubble({
+                ...plainReport(),
+                itemBody: { title: "T", text: "s", sections: [] },
+            } as never)
+        );
+        expect(b.container.querySelector("[data-ai-usage]")).not.toBeNull();
+    });
+
+    it("an ordinary item with a forged source that says used_ai false draws NOTHING", () => {
+        const forged = {
+            itemId: 6,
+            itemType: 0,
+            itemBody: [{ type: "paragraph", content: [{ type: "text", text: "hi" }] }],
+            itemOptionals: { schedule_id: SID },
+            aiSource: plainReport().aiSource,
+        };
+        const { container } = render(bubble(forged as never));
+        expect(container.querySelector("[data-ai-usage]")).toBeNull();
+        expect(container.textContent).not.toMatch(/No AI used/);
+        expect(screen.queryByRole("button", { name: /turn this off/i })).toBeNull();
     });
 
     it("an ordinary item with a forged ai blob and aiSource draws NOTHING", () => {
