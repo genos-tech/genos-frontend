@@ -1,5 +1,6 @@
-import { useId } from "react";
+import { useEffect, useId } from "react";
 import { ExternalLink } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 import { Code } from "./Code";
 import { LpShell } from "./kit/LpShell";
@@ -158,6 +159,14 @@ const TOC = [
 ];
 
 export default function DevelopersPage() {
+    // A link straight to a section (/developers#webhooks) has to scroll once this lazy
+    // route has rendered: the browser tried before the section existed and gave up.
+    const { hash } = useLocation();
+    useEffect(() => {
+        if (!hash) return;
+        document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView?.();
+    }, [hash]);
+
     return (
         <LpShell active="developers">
             {() => (
