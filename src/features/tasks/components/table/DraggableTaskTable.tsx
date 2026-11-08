@@ -26,6 +26,7 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { focusRing } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
@@ -61,6 +62,13 @@ import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 import { TaskTableRows } from "./TaskTableRows";
+import {
+    GRID_COL_ATTR,
+    GRID_HEADER_ROW,
+    GRID_ROW_ATTR,
+    GridNavContext,
+    useGridNavController,
+} from "./useGridNav";
 
 // Shared empty fallback so a project without tags doesn't mint a new array
 // identity on every render (see `quickAddProjectTags`).
@@ -420,6 +428,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isDark = colorMode === "dark";
+    // The table's one tab stop (MIP-1230): see useGridNav.
+    const { nav: gridNav, gridRef } = useGridNavController();
     // Normalize mode to only "light" | "dark" | undefined (treat "system" as undefined)
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
@@ -1632,7 +1642,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
                 <Box
+                    ref={gridRef}
+                    // A treegrid (`role` below): rows expand to show subtasks. One tab
+                    // stop for the whole table, arrows between cells (useGridNav).
+                    aria-label={t.tasks.table.gridLabel}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    role="treegrid"
                     style={{
                         ...getTableContainerStyles(mode),
                         flex: 1,
@@ -1659,16 +1674,43 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         "& .MuiTypography-root.MuiTypography-body-xs": {
                             fontSize: "var(--g-type-body-xs-size)",
                         },
+                        // The cell the keyboard is on. A cell that holds a button shows
+                        // the button's own ring; a cell that only shows a value (weight,
+                        // dates) and the drag handle get this one. Inset: a cell fills
+                        // its row, an outside ring would be cut by the row below.
+                        "& [data-grid-col]:focus-visible": {
+                            ...focusRing,
+                            outlineOffset: "-2px",
+                            borderRadius: "4px",
+                        },
+                        // Scrolling a cell into view must not park it under the sticky header.
+                        "& [data-grid-row] [data-grid-col]": { scrollMarginTop: "48px" },
                     }}
                 >
                     {/* Table Header */}
-                    <div style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}>
+                    <div
+                        role="row"
+                        style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}
+                        {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}
+                    >
                         {/* Drag handle placeholder */}
-                        <div style={headerDragHandlePlaceholderStyles} />
+                        <div style={headerDragHandlePlaceholderStyles} aria-hidden />
 
                         {visibleColumns.map((column, index) => (
                             <div
                                 key={column.field}
+                                role="columnheader"
+                                aria-sort={
+                                    sortTiers[0]?.field === column.field
+                                        ? sortTiers[0].direction === "asc"
+                                            ? "ascending"
+                                            : "descending"
+                                        : undefined
+                                }
+                                // The expand column has no name and nothing to sort by.
+                                {...(column.field === "__expand"
+                                    ? {}
+                                    : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getHeaderCellStyles(
                                         getColumnWidth(column.field),
@@ -1696,6 +1738,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             >
                                 {/* Header content - clickable for sorting */}
                                 <PlainButton
+                                    tabIndex={column.field === "__expand" ? -1 : undefined}
                                     style={{
                                         display: "flex",
                                         alignItems: "center",
@@ -1775,89 +1818,92 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <DragDropContext
-                        onDragEnd={handleDragEnd}
-                        onDragStart={() => {
-                            // A pristine quick-add row is dismissed before dnd
-                            // measures the list (a non-Draggable row between
-                            // Draggables makes the gap animation read wrong);
-                            // a dirty one is preserved — typed input is never
-                            // destroyed by starting a drag.
-                            if (!quickAddDirtyRef.current) closeQuickAdd();
-                            setIsDragActive(true);
-                        }}
-                    >
-                        <Droppable
-                            direction="vertical"
-                            droppableId="task-table"
-                            ignoreContainerClipping={false}
-                            isCombineEnabled={true}
-                            isDropDisabled={false}
+                    <GridNavContext.Provider value={gridNav}>
+                        <DragDropContext
+                            onDragEnd={handleDragEnd}
+                            onDragStart={() => {
+                                // A pristine quick-add row is dismissed before dnd
+                                // measures the list (a non-Draggable row between
+                                // Draggables makes the gap animation read wrong);
+                                // a dirty one is preserved — typed input is never
+                                // destroyed by starting a drag.
+                                if (!quickAddDirtyRef.current) closeQuickAdd();
+                                setIsDragActive(true);
+                            }}
                         >
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    // Scope for the hover family-focus rules and the
-                                    // element their pointer handlers read rows
-                                    // from, so the class must sit on the rows'
-                                    // common parent. The drag attribute disables
-                                    // the rules wholesale while a row is in flight.
-                                    className={TASK_BODY_CLASS}
-                                    {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
-                                    style={{
-                                        minHeight: 100,
-                                        minWidth: totalTableWidth,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        backgroundColor: snapshot.isDraggingOver
-                                            ? mode === "dark"
-                                                ? "rgba(59, 130, 246, 0.08)"
-                                                : "rgba(59, 130, 246, 0.04)"
-                                            : "transparent",
-                                        transition: "background-color 0.25s ease",
-                                    }}
-                                    onPointerLeave={onFamilyFocusPointerLeave}
-                                    onPointerOver={onFamilyFocusPointerOver}
-                                >
-                                    <TaskTableRows
-                                        childrenByParent={childrenByParentEffective}
-                                        columns={columnsWithWidths}
-                                        customFieldDefs={customFieldDefs}
-                                        depthMap={depthMap}
-                                        displayRows={displayRows}
-                                        expandedRows={expandedRows}
-                                        familyKeyByRow={familyKeyByRow}
-                                        ghostIds={ghostInfo.ghostIds}
-                                        mode={mode}
-                                        myself={myself}
-                                        projectTags={quickAddProjectTags}
-                                        quickAddFieldRules={quickAddFieldRules}
-                                        quickAddParentId={quickAddParentId}
-                                        quickAddProjectTags={quickAddProjectTags}
-                                        resolveIsSelected={resolveIsSelected}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        sprintNamesById={sprintNamesById}
-                                        teamMembers={teamMembers}
-                                        toggleExpand={toggleExpand}
-                                        useCM={useCM}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useUISM={useUISM}
-                                        onOpenDiagram={openDiagram}
-                                        onQuickAddChild={openQuickAdd}
-                                        onQuickAddClose={closeQuickAdd}
-                                        onQuickAddDirtyChange={handleQuickAddDirtyChange}
-                                        onQuickAddSubmit={handleQuickAddSubmit}
-                                        onRequestPreview={requestPreview}
-                                        onRowUpdate={handleRowUpdate}
-                                    />
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
+                            <Droppable
+                                direction="vertical"
+                                droppableId="task-table"
+                                ignoreContainerClipping={false}
+                                isCombineEnabled={true}
+                                isDropDisabled={false}
+                            >
+                                {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        // Scope for the hover family-focus rules and the
+                                        // element their pointer handlers read rows
+                                        // from, so the class must sit on the rows'
+                                        // common parent. The drag attribute disables
+                                        // the rules wholesale while a row is in flight.
+                                        className={TASK_BODY_CLASS}
+                                        role="rowgroup"
+                                        {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
+                                        style={{
+                                            minHeight: 100,
+                                            minWidth: totalTableWidth,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            backgroundColor: snapshot.isDraggingOver
+                                                ? mode === "dark"
+                                                    ? "rgba(59, 130, 246, 0.08)"
+                                                    : "rgba(59, 130, 246, 0.04)"
+                                                : "transparent",
+                                            transition: "background-color 0.25s ease",
+                                        }}
+                                        onPointerLeave={onFamilyFocusPointerLeave}
+                                        onPointerOver={onFamilyFocusPointerOver}
+                                    >
+                                        <TaskTableRows
+                                            childrenByParent={childrenByParentEffective}
+                                            columns={columnsWithWidths}
+                                            customFieldDefs={customFieldDefs}
+                                            depthMap={depthMap}
+                                            displayRows={displayRows}
+                                            expandedRows={expandedRows}
+                                            familyKeyByRow={familyKeyByRow}
+                                            ghostIds={ghostInfo.ghostIds}
+                                            mode={mode}
+                                            myself={myself}
+                                            projectTags={quickAddProjectTags}
+                                            quickAddFieldRules={quickAddFieldRules}
+                                            quickAddParentId={quickAddParentId}
+                                            quickAddProjectTags={quickAddProjectTags}
+                                            resolveIsSelected={resolveIsSelected}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            sprintNamesById={sprintNamesById}
+                                            teamMembers={teamMembers}
+                                            toggleExpand={toggleExpand}
+                                            useCM={useCM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
+                                            onOpenDiagram={openDiagram}
+                                            onQuickAddChild={openQuickAdd}
+                                            onQuickAddClose={closeQuickAdd}
+                                            onQuickAddDirtyChange={handleQuickAddDirtyChange}
+                                            onQuickAddSubmit={handleQuickAddSubmit}
+                                            onRequestPreview={requestPreview}
+                                            onRowUpdate={handleRowUpdate}
+                                        />
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </GridNavContext.Provider>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load

@@ -2417,6 +2417,7 @@ export const ar: DeepPartial<Messages> = {
                 critical: "شديد الأهمية",
             },
             loadingTasks: "في انتظار تحميل المهام…",
+            gridLabel: "جدول المهام",
             emptyTitle: "لا توجد مهام لعرضها",
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",

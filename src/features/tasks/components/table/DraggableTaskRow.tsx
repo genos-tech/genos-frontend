@@ -64,6 +64,7 @@ import {
 } from "./cellEditors";
 import { depthRowBackground, depthRowLeftBorder } from "./depthTone";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
+import { GRID_COL_ATTR, GRID_ROW_ATTR, useGridNav } from "./useGridNav";
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
@@ -306,6 +307,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     // commit the (discarded) selection.
     const revertTagsRef = useRef(false);
 
+    // The keyboard comes back to the cell when its editor closes (Escape, Enter, a
+    // pick): the editor unmounts with focus in it, so focus would drop to <body>
+    // and the user would lose their place in the grid (MIP-1230). The editor's
+    // key is the column's key for every built-in and `cf_<id>` cell. Only the
+    // close counts, not a switch to another editor, and the grid only moves focus
+    // when it was left on <body> by a keyboard interaction.
+    const grid = useGridNav();
+    const lastEditingRef = useRef<string | null>(null);
+    useEffect(() => {
+        const previous = lastEditingRef.current;
+        lastEditingRef.current = editingField;
+        if (previous && !editingField) grid?.restoreFocus({ rowId: taskIdStr, col: previous });
+    }, [editingField, grid, taskIdStr]);
+
     const handleStartEdit = (field: string, value: string) => {
         setEditingField(field);
         setEditValue(value);
@@ -517,7 +532,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 >
                     <Box sx={{ position: "relative", display: "inline-flex" }}>
                         {storedString !== "" ? (
-                            <UserAvatar showPulseDot={false} size={24} userId={storedString} />
+                            <UserAvatar
+                                clickable={false}
+                                showPulseDot={false}
+                                size={24}
+                                userId={storedString}
+                            />
                         ) : (
                             <BaseAvatar size={24} sx={{ color: g.text.tertiary }}>
                                 ?
@@ -663,6 +683,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     <IconButton
                         size="sm"
                         variant="plain"
+                        aria-label={
+                            isExpanded
+                                ? t.tasks.diagram.tooltips.collapse
+                                : t.tasks.diagram.tooltips.expand
+                        }
                         sx={{
                             color: mode === "dark" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)",
                             p: 0,
@@ -737,6 +762,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 value: opt.value,
                                 node: statusSelectNode(opt.value),
                             }))}
+                            autoFocus
                             open
                             onClose={handleCancelEdit}
                             onChange={(next) => {
@@ -962,6 +988,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
                             {task.assigneeId ? (
                                 <UserAvatar
+                                    clickable={false}
                                     showPulseDot={false}
                                     size={24}
                                     userId={task.assigneeId}
@@ -1021,6 +1048,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 value: opt.priority || "",
                                 node: prioritySelectNode(opt.priority ?? ""),
                             }))}
+                            autoFocus
                             open
                             onClose={handleCancelEdit}
                             onChange={(next) => {
@@ -1048,6 +1076,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 value: opt.level || "",
                                 node: effortSelectNode(opt.level ?? ""),
                             }))}
+                            autoFocus
                             open
                             onClose={handleCancelEdit}
                             onChange={(next) => {
@@ -1334,6 +1363,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             rowRef.current = el;
                         }}
                         {...provided.draggableProps}
+                        // Treegrid row (MIP-1230): the roving-tabindex model finds its
+                        // rows and cells by these attributes (`role="row"` below). A
+                        // ghost row is inert context: out of the Tab order and out of
+                        // the keyboard model.
+                        aria-expanded={hasChildren ? isExpanded : undefined}
+                        aria-level={depth + 1}
                         // Hooks for the family-focus handler and rules
                         // (see `familyFocusCss.ts`). The class makes this row
                         // both the hover probe and a dim target; the family
@@ -1343,6 +1378,8 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         className={TASK_ROW_CLASS}
                         data-task-family={familyKey}
                         data-task-selected={isSelected ? "true" : undefined}
+                        role="row"
+                        {...(isGhost ? { inert: true } : { [GRID_ROW_ATTR]: taskIdStr })}
                         // Base layout/colors come from the helper.
                         // `provided.draggableProps.style` carries dnd's
                         // transform / transition during drag and must
@@ -1416,6 +1453,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             "&:hover .task-row-open-diagram": {
                                 opacity: snapshot.isDragging ? 0 : 0.8,
                             },
+                            // A button that only shows on hover must show when the keyboard
+                            // is on it (MIP-1230), or the ring is on nothing. `!important`:
+                            // the handle's own opacity is an inline style.
+                            "& .task-row-drag-handle:focus-visible, & .task-row-open-diagram:focus-visible, & .task-row-quick-add:focus-visible":
+                                { opacity: "1 !important" },
                         }}
                         onDoubleClick={() => {
                             // Single debounced path for both task and
@@ -1478,6 +1520,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             Fixed LEADING_GUTTER_WIDTH keeps cells aligned with
                             the header and the QuickAddTaskRow draft row. */}
                         <div
+                            role="gridcell"
                             style={{
                                 display: "flex",
                                 alignItems: "center",
@@ -1488,8 +1531,13 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             <AppTooltip title={t.tasks.table.dragToReorder}>
                                 <div
                                     {...provided.dragHandleProps}
+                                    // The library gives the handle tabIndex 0: in the
+                                    // grid it is one cell among the others (Space still
+                                    // lifts the row from it).
+                                    {...{ [GRID_COL_ATTR]: "__drag" }}
                                     className="task-row-drag-handle"
                                     style={getDragHandleStyles(snapshot.isDragging)}
+                                    tabIndex={-1}
                                 >
                                     <DragIndicatorIcon sx={{ fontSize: 20 }} />
                                 </div>
@@ -1505,6 +1553,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             {(!isChild || hasChildren) && (
                                 <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
                                     <IconButton
+                                        {...{ [GRID_COL_ATTR]: "__graph" }}
                                         className="task-row-open-diagram"
                                         size="sm"
                                         variant="plain"
@@ -1530,6 +1579,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             )}
                             <AppTooltip title={t.tasks.table.quickAddTooltip}>
                                 <IconButton
+                                    {...{ [GRID_COL_ATTR]: "__add" }}
                                     className="task-row-quick-add"
                                     size="sm"
                                     variant="plain"
@@ -1570,6 +1620,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {columns.map((column, idx) => (
                             <div
                                 key={column.field}
+                                role="gridcell"
+                                // An expand cell with nothing in it is not a place to stop.
+                                {...(column.field === "__expand" && !hasChildren
+                                    ? {}
+                                    : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getTableCellStyles(column.width, column.align),
                                     borderRight:

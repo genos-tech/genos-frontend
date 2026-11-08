@@ -5146,6 +5146,7 @@ export const fr: DeepPartial<Messages> = {
                 critical: "Critique",
             },
             loadingTasks: "En attente du chargement des tâches…",
+            gridLabel: "Tableau des tâches",
             emptyTitle: "Aucune tâche à afficher",
             emptyHint: "Essayez d'ajuster vos filtres",
             addTagsPlaceholder: "Ajouter des tags…",

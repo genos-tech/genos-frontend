@@ -4916,6 +4916,7 @@ export const zh: DeepPartial<Messages> = {
                 critical: "批判的",
             },
             loadingTasks: "正在等待加载任务…",
+            gridLabel: "任务表格",
             emptyTitle: "没有可显示的任务",
             emptyHint: "试试调整筛选条件",
             addTagsPlaceholder: "添加标签…",
