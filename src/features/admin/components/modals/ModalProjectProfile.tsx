@@ -8,12 +8,10 @@
 /* eslint-disable react/jsx-sort-props */
 import { useEffect, useMemo, useRef, useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Box,
@@ -34,6 +32,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
@@ -965,60 +964,16 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         </Button>
                                                     )}
                                                 </Stack>
-                                                <Input
+                                                <SearchField
                                                     placeholder={
                                                         t.admin.projectProfile.searchMembers
-                                                    }
-                                                    value={memberSearchQuery}
-                                                    onChange={(e) =>
-                                                        setMemberSearchQuery(e.target.value)
-                                                    }
-                                                    startDecorator={
-                                                        <SearchIcon
-                                                            sx={{
-                                                                color: g.accent.text,
-                                                                fontSize: "18px",
-                                                            }}
-                                                        />
-                                                    }
-                                                    endDecorator={
-                                                        memberSearchQuery && (
-                                                            <IconButton
-                                                                size="sm"
-                                                                variant="plain"
-                                                                onClick={() =>
-                                                                    setMemberSearchQuery("")
-                                                                }
-                                                                sx={{
-                                                                    minWidth: "24px",
-                                                                    minHeight: "24px",
-                                                                    borderRadius: "50%",
-                                                                }}
-                                                            >
-                                                                <CloseIcon
-                                                                    sx={{
-                                                                        fontSize: "16px",
-                                                                    }}
-                                                                />
-                                                            </IconButton>
-                                                        )
                                                     }
                                                     sx={{
                                                         width: { xs: "100%", sm: "220px" },
                                                         maxWidth: "100%",
-                                                        "--Input-focusedThickness": "1px",
-                                                        "--Input-radius": g.radius.md,
-                                                        background: g.bg.subtle,
-                                                        border: `1px solid ${g.border.default}`,
-                                                        fontSize: "14px",
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            borderColor: g.accent.text,
-                                                        },
-                                                        "&:focus-within": {
-                                                            borderColor: g.accent.text,
-                                                        },
                                                     }}
+                                                    value={memberSearchQuery}
+                                                    onChange={setMemberSearchQuery}
                                                 />
                                             </Stack>
                                         </FormControl>

@@ -3,11 +3,11 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -329,12 +329,11 @@ export const ModalCreateGM: React.FC<Props> = ({
             )}
 
             {/* Member Search */}
-            <Input
+            <SearchField
                 placeholder={t.chat.modals.createGM.searchPlaceholder}
-                startDecorator={<SearchRoundedIcon sx={{ color: g.text.tertiary }} />}
                 sx={{ mb: 1 }}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={setSearchQuery}
             />
 
             {/* Member List */}

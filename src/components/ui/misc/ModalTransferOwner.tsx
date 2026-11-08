@@ -1,22 +1,12 @@
 import { useMemo, useState } from "react";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import {
-    Alert,
-    Box,
-    Button,
-    IconButton,
-    Input,
-    ListItemButton,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, ListItemButton, Stack, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { BaseAvatar } from "../avatars/BaseAvatar";
+import { SearchField } from "../fields/SearchField";
 import { ModalFrame } from "../modal/ModalFrame";
 
 export type TransferOwnerCandidate = {
@@ -121,26 +111,11 @@ export const ModalTransferOwner = ({
                 <Alert color="neutral">{t.common.profileEdit.noOtherMembers}</Alert>
             ) : (
                 <>
-                    <Input
+                    <SearchField
                         placeholder={t.common.profileEdit.transferPickMember}
                         sx={{ mb: 1.5 }}
                         value={query}
-                        endDecorator={
-                            query && (
-                                <IconButton
-                                    size="sm"
-                                    sx={{ minWidth: 24, minHeight: 24, borderRadius: "50%" }}
-                                    variant="plain"
-                                    onClick={() => setQuery("")}
-                                >
-                                    <CloseIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
-                            )
-                        }
-                        startDecorator={
-                            <SearchIcon sx={{ fontSize: 18, color: g.text.tertiary }} />
-                        }
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={setQuery}
                     />
                     <Box
                         sx={{

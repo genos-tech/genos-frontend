@@ -1,11 +1,9 @@
 import { useMemo, useRef, useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import SearchIcon from "@mui/icons-material/Search";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
@@ -28,6 +26,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
@@ -818,63 +817,16 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             total: visibleMembers.length,
                                                         })}
                                                     </FormLabel>
-                                                    <Input
+                                                    <SearchField
                                                         value={memberSearchQuery}
-                                                        endDecorator={
-                                                            memberSearchQuery && (
-                                                                <IconButton
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    sx={{
-                                                                        minWidth: "24px",
-                                                                        minHeight: "24px",
-                                                                        borderRadius: "50%",
-                                                                    }}
-                                                                    onClick={() =>
-                                                                        setMemberSearchQuery("")
-                                                                    }
-                                                                >
-                                                                    <CloseIcon
-                                                                        sx={{
-                                                                            fontSize: "16px",
-                                                                        }}
-                                                                    />
-                                                                </IconButton>
-                                                            )
-                                                        }
                                                         placeholder={
                                                             t.admin.teamProfile.searchMembers
                                                         }
-                                                        startDecorator={
-                                                            <SearchIcon
-                                                                sx={{
-                                                                    color: g.accent.text,
-                                                                    fontSize: "18px",
-                                                                }}
-                                                            />
-                                                        }
                                                         sx={{
-                                                            width: {
-                                                                xs: "100%",
-                                                                sm: "220px",
-                                                            },
+                                                            width: { xs: "100%", sm: "220px" },
                                                             maxWidth: "100%",
-                                                            "--Input-focusedThickness": "1px",
-                                                            "--Input-radius": g.radius.md,
-                                                            background: g.bg.subtle,
-                                                            border: `1px solid ${g.border.default}`,
-                                                            fontSize: "14px",
-                                                            transition: "all 0.2s ease",
-                                                            "&:hover": {
-                                                                borderColor: g.accent.text,
-                                                            },
-                                                            "&:focus-within": {
-                                                                borderColor: g.accent.text,
-                                                            },
                                                         }}
-                                                        onChange={(e) =>
-                                                            setMemberSearchQuery(e.target.value)
-                                                        }
+                                                        onChange={setMemberSearchQuery}
                                                     />
                                                 </Stack>
                                             </FormControl>
