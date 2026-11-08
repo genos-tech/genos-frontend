@@ -1798,7 +1798,7 @@ export const fr: DeepPartial<Messages> = {
             hashProject: "Projet",
             hashNoteFallback: "remarque",
             hashChatFallback: "discuter\nprojet",
-            hashProjectFallback: "",
+            hashProjectFallback: "projet",
             delete: "Supprimer",
             colors: "Couleurs",
             download: "Télécharger",
