@@ -161,10 +161,11 @@ const TOC = [
 export default function DevelopersPage() {
     // A link straight to a section (/developers#webhooks) has to scroll once this lazy
     // route has rendered: the browser tried before the section existed and gave up.
+    // The ids are plain ASCII, so the hash is used as is (a malformed %-escape must not throw).
     const { hash } = useLocation();
     useEffect(() => {
         if (!hash) return;
-        document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView?.();
+        document.getElementById(hash.slice(1))?.scrollIntoView?.();
     }, [hash]);
 
     return (
