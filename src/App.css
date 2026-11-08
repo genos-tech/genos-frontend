@@ -274,7 +274,7 @@ input[type="checkbox"] {
    and its stylesheet arrives with a lazily-imported editor chunk, i.e.
    after App.css. */
 .bn-message-bubble-box-light [data-content-type="quote"] blockquote {
-    border-left-color: var(--g-accent-text);
+    border-left-color: var(--gp-brand-700);
     color: #4b5563; /* Muted gray against the body's near-black */
 }
 
@@ -285,16 +285,13 @@ input[type="checkbox"] {
     color: var(--g-text);
 }
 
-/* The sent bubble is the accent wash, so its code chip is the same wash and its
-   code text the accent as text: both follow the color theme (the chip used to be
-   a fixed indigo and the text the brand ramp's 700 stop, 3.5:1 on it in amber). */
 .bn-message-bubble-box-light-me code {
-    background-color: var(--g-accent-subtle) !important;
-    color: var(--g-accent-text);
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: var(--gp-brand-700); /* Purple for code */
 }
 
 .bn-message-bubble-box-light-me [data-content-type="quote"] blockquote {
-    border-left-color: var(--g-accent-text);
+    border-left-color: var(--gp-brand-700);
     color: #4338ca; /* Lighter indigo against the body's deep indigo */
 }
 
@@ -874,7 +871,7 @@ div[data-floating-ui-focusable] {
    the selector carries `[data-content-type="quote"]`. Same two colours as
    the received bubble, whose background this shares. */
 .task-comment-preview-light [data-content-type="quote"] blockquote {
-    border-left-color: var(--g-accent-text);
+    border-left-color: var(--gp-brand-700);
     color: #4b5563;
 }
 

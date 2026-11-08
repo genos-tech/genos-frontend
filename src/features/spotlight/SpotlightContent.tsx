@@ -1235,6 +1235,7 @@ export const SpotlightContent = ({
                     conversation" in the conversation header returns
                     them to search. */}
             <Box
+                data-testid="spotlight-results"
                 sx={{
                     // Overlay: the results region greedily fills the
                     // sheet. Page: it sizes to content (bounded) — a
