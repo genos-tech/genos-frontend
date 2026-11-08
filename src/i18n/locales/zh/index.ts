@@ -3413,7 +3413,7 @@ export const zh: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} 个席位 / 月",
             plansHero: "用 Genos 做更多出色的工作",
             plansHeroSub:
-                "免费开始，随时升级。所有套餐都包含全部功能——付费套餐解锁更多 AI、无限历史记录和更大的创建空间。",
+                "免费开始，随时升级。付费套餐解锁更多 AI、无限历史记录、网页搜索、MCP 连接，以及更大的创建空间。",
             currencyLabel: "显示价格",
             startForFree: "免费开始",
             taglineFree: "聊天、任务和笔记，尽在一处",

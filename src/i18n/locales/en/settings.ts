@@ -476,7 +476,7 @@ export const settings = {
         perSeatMonth: "{price} × {n} seats / month",
         plansHero: "Do more of your best work with Genos",
         plansHeroSub:
-            "Start free and upgrade anytime. Every plan includes every feature — paid plans unlock more AI, unlimited history, and more room to create.",
+            "Start free and upgrade anytime. Paid plans unlock more AI, unlimited history, web search, MCP connections, and more room to create.",
         // Accessible name for the currency switcher. The switcher only
         // renders when more than one currency has prices configured.
         currencyLabel: "Display prices in",

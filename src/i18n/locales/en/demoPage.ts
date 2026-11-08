@@ -55,7 +55,7 @@ export const demoPage = {
         cards: [
             {
                 title: "Projects & tasks",
-                body: "Two projects — Website Redesign and Q2 Roadmap — with milestones, sprints, and around two dozen tasks and sub-tasks. Some are deliberately messy, so Genos has something real to organize.",
+                body: "Two projects, a website redesign and a quarterly roadmap, with milestones, sprints, and around two dozen tasks and sub-tasks. Some are deliberately messy, so Genos has something real to organize.",
             },
             {
                 title: "Chats & threads",
