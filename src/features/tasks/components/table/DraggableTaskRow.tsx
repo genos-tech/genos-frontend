@@ -17,6 +17,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -24,7 +25,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
     CustomFieldOption,
@@ -437,9 +438,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 );
             }
             return (
-                <Box
+                <Clickable
                     sx={customReadCellSx}
-                    onClick={(e) => {
+                    onActivate={(e) => {
                         e.stopPropagation();
                         setEditCustomOptions(selected);
                         setEditingField(editKey);
@@ -455,7 +456,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                   tagColor={option.color}
                               />
                           ))}
-                </Box>
+                </Clickable>
             );
         }
 
@@ -495,7 +496,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             const memberName =
                 teamMembers.find((m) => String(m.userId) === storedString)?.userName ?? "";
             return (
-                <Box
+                <Clickable
                     sx={{
                         display: "flex",
                         gap: 1,
@@ -509,7 +510,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         transition: "background-color 0.15s ease",
                         "&:hover": { backgroundColor: g.hover },
                     }}
-                    onClick={(e) => {
+                    onActivate={(e) => {
                         e.stopPropagation();
                         setEditingField(editKey);
                     }}
@@ -550,7 +551,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             )}
                         </Typography>
                     </Box>
-                </Box>
+                </Clickable>
             );
         }
 
@@ -576,19 +577,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 );
             }
             return (
-                <Typography
-                    level="body-sm"
+                <Clickable
                     sx={{
+                        ...type("body-sm"),
                         cursor: "pointer",
                         fontWeight: 500,
                         "&:hover": {
                             color: accent,
                         },
                     }}
-                    onClick={() => handleStartEdit(editKey, storedString)}
+                    onActivate={() => handleStartEdit(editKey, storedString)}
                 >
                     {storedString !== "" ? storedString : "-"}
-                </Typography>
+                </Clickable>
             );
         }
 
@@ -613,9 +614,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             );
         }
         return (
-            <Box
+            <Clickable
                 sx={customReadCellSx}
-                onClick={(e) => {
+                onActivate={(e) => {
                     e.stopPropagation();
                     handleStartEdit(editKey, storedString);
                 }}
@@ -637,7 +638,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         </Typography>
                     </AppTooltip>
                 )}
-            </Box>
+            </Clickable>
         );
     };
 
@@ -803,7 +804,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 }
                 // Read view: chips, click anywhere in the cell to edit.
                 return (
-                    <Box
+                    <Clickable
                         sx={{
                             display: "flex",
                             gap: 0.5,
@@ -822,7 +823,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                         : "rgba(0,0,0,0.04)",
                             },
                         }}
-                        onClick={(e) => {
+                        onActivate={(e) => {
                             e.stopPropagation();
                             handleStartEditTags();
                         }}
@@ -848,7 +849,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     />
                                 ))
                         )}
-                    </Box>
+                    </Clickable>
                 );
             }
 
@@ -870,7 +871,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return (
-                    <Box
+                    <Clickable
                         sx={{
                             cursor: "pointer",
                             display: "flex",
@@ -882,7 +883,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 color: isMilestoneRow ? "#f97316" : g.accent.text,
                             },
                         }}
-                        onClick={() => handleStartEdit("title", task.title || "")}
+                        onActivate={() => handleStartEdit("title", task.title || "")}
                     >
                         {isMilestoneRow && (
                             <FlagRoundedIcon
@@ -904,7 +905,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         >
                             {task.title}
                         </Typography>
-                    </Box>
+                    </Clickable>
                 );
 
             case "assigneeId":
@@ -941,7 +942,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return (
-                    <Box
+                    <Clickable
                         sx={{
                             display: "flex",
                             gap: 1,
@@ -956,7 +957,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             transition: "background-color 0.15s ease",
                             "&:hover": { backgroundColor: g.hover },
                         }}
-                        onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
+                        onActivate={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
                             {task.assigneeId ? (
@@ -1005,7 +1006,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                 )}
                             </Typography>
                         </Box>
-                    </Box>
+                    </Clickable>
                 );
 
             case "priority":
@@ -1177,16 +1178,16 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return (
-                    <Typography
-                        level="body-sm"
+                    <Clickable
                         sx={{
+                            ...type("body-sm"),
                             cursor: "pointer",
                             fontWeight: 500,
                             "&:hover": {
                                 color: g.accent.text,
                             },
                         }}
-                        onClick={() =>
+                        onActivate={() =>
                             handleStartEdit(
                                 "dueDate",
                                 task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : ""
@@ -1194,7 +1195,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         }
                     >
                         {task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "-"}
-                    </Typography>
+                    </Clickable>
                 );
 
             case "sprint": {

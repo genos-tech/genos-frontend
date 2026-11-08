@@ -7,6 +7,7 @@ import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/j
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
@@ -178,16 +179,16 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                 {visibleChips.map((tag) => {
                     const isActive = selectedTagIds.has(tag.tagId);
                     return (
-                        <Box
+                        <Clickable
                             key={tag.tagId}
                             sx={tagChipSx(tag, isActive)}
-                            onClick={() => toggleTag(tag.tagId)}
+                            onActivate={() => toggleTag(tag.tagId)}
                         >
                             {colorDot(tag)}
                             <Typography level="body-xs" sx={chipLabelSx(isActive)}>
                                 {tag.name}
                             </Typography>
-                        </Box>
+                        </Clickable>
                     );
                 })}
 

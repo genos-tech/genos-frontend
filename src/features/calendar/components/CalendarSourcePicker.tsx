@@ -14,6 +14,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { useTranslation } from "../../../i18n";
 import { CalendarSummary, sourceKey } from "../../integrations/services/calendar";
 
@@ -234,7 +235,7 @@ export const CalendarSourcePicker = ({
                                     : t.calendar.sources.showAllFrom
                             }
                         >
-                            <Box
+                            <Clickable
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -249,7 +250,7 @@ export const CalendarSourcePicker = ({
                                             : "rgba(0,0,0,0.04)",
                                     },
                                 }}
-                                onClick={() => onToggleAccount(group.accountId, !allSelected)}
+                                onActivate={() => onToggleAccount(group.accountId, !allSelected)}
                             >
                                 <Checkbox
                                     checked={allSelected}
@@ -269,7 +270,7 @@ export const CalendarSourcePicker = ({
                                 >
                                     {group.accountEmail}
                                 </Typography>
-                            </Box>
+                            </Clickable>
                         </AppTooltip>
 
                         <Stack spacing={0} sx={{ pl: 0.5 }}>
@@ -281,7 +282,7 @@ export const CalendarSourcePicker = ({
                                     !!c.access_role &&
                                     !["owner", "writer"].includes(c.access_role);
                                 return (
-                                    <Box
+                                    <Clickable
                                         key={key}
                                         sx={{
                                             display: "flex",
@@ -297,7 +298,7 @@ export const CalendarSourcePicker = ({
                                                     : "rgba(0,0,0,0.04)",
                                             },
                                         }}
-                                        onClick={() => onToggle(key)}
+                                        onActivate={() => onToggle(key)}
                                     >
                                         <Checkbox
                                             checked={checked}
@@ -337,7 +338,7 @@ export const CalendarSourcePicker = ({
                                                 {t.calendar.sources.sharedBadge}
                                             </Chip>
                                         )}
-                                    </Box>
+                                    </Clickable>
                                 );
                             })}
                         </Stack>

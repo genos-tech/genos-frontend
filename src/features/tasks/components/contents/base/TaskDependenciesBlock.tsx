@@ -6,6 +6,7 @@ import { Box, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../../components/ui/Clickable";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
@@ -153,7 +154,7 @@ export const TaskDependenciesBlock = ({
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>{depsT.sectionLabel}</FieldLabel>
                     <AppTooltip title={depsT.addCtaTooltip}>
-                        <Box
+                        <Clickable
                             sx={{
                                 cursor: "pointer",
                                 display: "flex",
@@ -171,13 +172,13 @@ export const TaskDependenciesBlock = ({
                                     color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
                                 },
                             }}
-                            onClick={() => openModal("blockedBy")}
+                            onActivate={() => openModal("blockedBy")}
                         >
                             <AddRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm" sx={{ fontWeight: 500 }}>
                                 {depsT.addCta}
                             </Typography>
-                        </Box>
+                        </Clickable>
                     </AppTooltip>
                 </ListItem>
             ) : (
@@ -329,7 +330,7 @@ const DependencyChip = ({
         : statusLabel || "";
     return (
         <AppTooltip title={tip}>
-            <Box
+            <Clickable
                 sx={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -348,7 +349,7 @@ const DependencyChip = ({
                     },
                     maxWidth: 280,
                 }}
-                onClick={onClick}
+                onActivate={onClick}
             >
                 <TaskIdText copyable={false} text={ref_.displayId ?? `#${ref_.otherTaskId}`} />
                 <StatusChip isDark={isDark} meta={ref_.status} />
@@ -393,7 +394,7 @@ const DependencyChip = ({
                         <LinkOffRoundedIcon sx={{ fontSize: 13 }} />
                     </IconButton>
                 </AppTooltip>
-            </Box>
+            </Clickable>
         </AppTooltip>
     );
 };

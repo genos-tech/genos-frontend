@@ -7,6 +7,7 @@ import { Box, Dropdown, MenuButton } from "@mui/joy";
 import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -299,8 +300,8 @@ export const TaskNodeView = ({
                     enterDelay={500}
                     title={dateEditable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
                 >
-                    <Box
-                        component="span"
+                    <Clickable
+                        as="span"
                         data-testid="node-dates"
                         sx={{
                             ...type("body-xs"),
@@ -315,10 +316,10 @@ export const TaskNodeView = ({
                                 ? { background: g.hover, color: g.accent.text }
                                 : undefined,
                         }}
-                        onClick={dateEditable ? () => setDateEditorOpen(true) : undefined}
+                        onActivate={dateEditable ? () => setDateEditorOpen(true) : undefined}
                     >
                         {dateEmpty ? t.tasks.diagram.setDates : dateText}
-                    </Box>
+                    </Clickable>
                 </AppTooltip>
                 {schedule.durationDays != null && (
                     <DurationText>

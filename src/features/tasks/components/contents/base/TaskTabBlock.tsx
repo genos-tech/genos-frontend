@@ -31,6 +31,7 @@ import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
+import { PlainButton } from "../../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -913,14 +914,13 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 name,
                                             })}
                                         >
-                                            <div
-                                                style={{
-                                                    cursor: isUploading ? "default" : "pointer",
-                                                }}
-                                                onClick={() => {
-                                                    if (isUploading) return;
-                                                    downloadFile(preview.url, name);
-                                                }}
+                                            <PlainButton
+                                                disabled={isUploading}
+                                                sx={{ display: "block" }}
+                                                aria-label={fmt(t.tasks.tabs.downloadFileTooltip, {
+                                                    name,
+                                                })}
+                                                onClick={() => downloadFile(preview.url, name)}
                                             >
                                                 <InsertDriveFileRoundedIcon
                                                     sx={{
@@ -930,7 +930,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                             : "rgba(0,0,0,0.4)",
                                                     }}
                                                 />
-                                            </div>
+                                            </PlainButton>
                                         </AppTooltip>
                                         <Typography
                                             level="body-xs"
@@ -1022,22 +1022,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 sx={{ fontSize: 14, color: "white" }}
                                             />
                                         </IconButton>
-                                        <img
-                                            alt={name}
-                                            src={preview.url}
-                                            style={{
-                                                maxWidth: 300,
-                                                maxHeight: 300,
-                                                width: "auto",
-                                                height: "auto",
-                                                display: "block",
-                                                cursor: isUploading ? "default" : "pointer",
-                                            }}
-                                            onClick={() => {
-                                                if (isUploading) return;
-                                                handleImageClick(preview.url);
-                                            }}
-                                        />
+                                        <PlainButton
+                                            aria-label={name}
+                                            disabled={isUploading}
+                                            sx={{ display: "block" }}
+                                            onClick={() => handleImageClick(preview.url)}
+                                        >
+                                            <img
+                                                alt=""
+                                                src={preview.url}
+                                                style={{
+                                                    maxWidth: 300,
+                                                    maxHeight: 300,
+                                                    width: "auto",
+                                                    height: "auto",
+                                                    display: "block",
+                                                }}
+                                            />
+                                        </PlainButton>
                                         <UploadingTileBadge open={isUploading} />
                                     </Box>
                                 );

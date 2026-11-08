@@ -10,6 +10,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -387,7 +388,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                         }}
                     />
                 ) : (
-                    <Box
+                    <Clickable
                         sx={{
                             flex: 1,
                             fontSize: "0.9rem",
@@ -402,7 +403,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                                   ? "rgba(255,255,255,0.4)"
                                   : "rgba(0,0,0,0.4)",
                         }}
-                        onClick={() => setIsEditingTitle(true)}
+                        onActivate={() => setIsEditingTitle(true)}
                     >
                         {title
                             ? renderTitleWithLinks(
@@ -413,7 +414,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                                   isDark
                               )
                             : t.chat.todoPane.untitled}
-                    </Box>
+                    </Clickable>
                 )}
                 {/* A reminder is a promise made about this row, and the only
                     thing that said so lived inside a ⋮ menu that is closed

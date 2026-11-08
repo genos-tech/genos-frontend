@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Box, Stack, Typography } from "@mui/joy";
+import { Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../../components/ui/Clickable";
 import { useTranslation } from "../../../../../i18n";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { formatTaskDisplayId } from "../../../../tasks/utils/taskDisplayId";
@@ -99,7 +100,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
 
     const styles = getStyles();
     const [copied, setCopied] = useState(false);
-    const handleClick = (event: React.MouseEvent) => {
+    const handleClick = (event: React.SyntheticEvent) => {
         if (!copyText) return;
         // Activity rows wrap a click handler that opens the source
         // chat/task — stop propagation so the chip "Copy" gesture
@@ -115,7 +116,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
     };
 
     const chip = (
-        <Box
+        <Clickable
             sx={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -132,10 +133,10 @@ const ModernChip: React.FC<ModernChipProps> = ({
                 cursor: copyText ? "pointer" : "default",
                 ...styles,
             }}
-            onClick={copyText ? handleClick : undefined}
+            onActivate={copyText ? handleClick : undefined}
         >
             {label}
-        </Box>
+        </Clickable>
     );
 
     if (!copyText) return chip;

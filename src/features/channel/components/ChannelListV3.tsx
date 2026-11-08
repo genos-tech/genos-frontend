@@ -257,6 +257,8 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                         <li
                                             key={c.id}
                                             data-testid={`channel-list-v3-item-${c.id}`}
+                                            role="button"
+                                            tabIndex={0}
                                             style={{
                                                 padding: "8px 12px",
                                                 borderBottom: "1px solid #eee",
@@ -268,6 +270,17 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                                 gap: 8,
                                             }}
                                             onClick={() => onSelect(c.id)}
+                                            onKeyDown={(event) => {
+                                                // The row holds the pin button: only a key pressed on
+                                                // the row itself opens the channel.
+                                                if (
+                                                    event.target === event.currentTarget &&
+                                                    (event.key === "Enter" || event.key === " ")
+                                                ) {
+                                                    event.preventDefault();
+                                                    onSelect(c.id);
+                                                }
+                                            }}
                                         >
                                             <span
                                                 style={{

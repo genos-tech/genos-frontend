@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { Clickable } from "../../../../../components/ui/Clickable";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -1161,11 +1162,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {parentTask !== undefined && (
                     <ListItem sx={{ display: "flex", alignItems: "center", mt: 1 }}>
                         <FieldLabel isDark={isDark}>{t.tasks.fields.parentTask}</FieldLabel>
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            spacing={1}
+                        <Clickable
                             sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                flexDirection: "row",
+                                gap: 1,
                                 ...softCardSx(isDark),
                                 cursor: "pointer",
                                 px: 1.25,
@@ -1173,7 +1175,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 flex: 1,
                                 minWidth: 0,
                             }}
-                            onClick={() => {
+                            onActivate={() => {
                                 if (
                                     !parentTask.project ||
                                     !parentTask.project.projectId ||
@@ -1251,7 +1253,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             >
                                 {parentTask.title}
                             </Typography>
-                        </Stack>
+                        </Clickable>
                     </ListItem>
                 )}
             </List>

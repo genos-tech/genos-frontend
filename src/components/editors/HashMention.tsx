@@ -4,7 +4,6 @@ import {
     DefaultReactSuggestionItem,
     SuggestionMenuController,
 } from "@blocknote/react";
-import { Box } from "@mui/joy";
 
 import { useOptionalAccessToken } from "../../context/AuthContext";
 import {
@@ -28,6 +27,7 @@ import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../typ
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
+import { Clickable } from "../ui/Clickable";
 import { MentionSuggestionMenu } from "./Mention";
 import { MENTION_ICONS, MentionIconDisc, MentionMenuRow } from "./mentionMenuRow";
 import {
@@ -97,15 +97,15 @@ const HashChip = ({
     palette: MentionPalette;
 }) => {
     const urlLinkModal = useUrlLinkModal();
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = (e: React.SyntheticEvent) => {
         e.preventDefault();
         e.stopPropagation();
         urlLinkModal?.openModalByHref(href);
     };
     return (
-        <Box sx={hashMentionTextSx(palette)} onClick={handleClick}>
+        <Clickable sx={hashMentionTextSx(palette)} onActivate={handleClick}>
             #{label}
-        </Box>
+        </Clickable>
     );
 };
 

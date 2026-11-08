@@ -10,6 +10,7 @@ import { Box, Sheet, Typography } from "@mui/joy";
 import { useTranslation } from "../../i18n";
 import { g, type } from "../../theme/tokens";
 import { isMac } from "../../utils/platform";
+import { Clickable } from "../ui/Clickable";
 
 // Visual metadata for the Cmd+Tab–style service switcher overlay. Indexed
 // by the same `id` used in `SERVICES_BY_ID` (hooks/common/useGlobalServiceShortcut.ts)
@@ -112,20 +113,8 @@ export const ServiceSwitcherOverlay = ({
                         const Icon = service.icon;
                         const isActive = position === previewIndex;
                         return (
-                            <Box
+                            <Clickable
                                 key={serviceId}
-                                data-service-tile
-                                onClick={() => onSelect?.(position)}
-                                // `mousemove`, not `mouseenter`: the overlay appears under a
-                                // pointer that is not moving, and the browser then reports
-                                // that pointer as entering a tile, which must not steal the
-                                // highlight from the tap that raised it. Only real movement
-                                // counts.
-                                onMouseMove={(e) => {
-                                    if ((e.movementX !== 0 || e.movementY !== 0) && !isActive) {
-                                        onHighlight?.(position);
-                                    }
-                                }}
                                 sx={{
                                     cursor: "pointer",
                                     width: 88,
@@ -149,6 +138,18 @@ export const ServiceSwitcherOverlay = ({
                                         transition: "none",
                                     },
                                 }}
+                                onActivate={() => onSelect?.(position)}
+                                // `mousemove`, not `mouseenter`: the overlay appears under a
+                                // pointer that is not moving, and the browser then reports
+                                // that pointer as entering a tile, which must not steal the
+                                // highlight from the tap that raised it. Only real movement
+                                // counts.
+                                data-service-tile
+                                onMouseMove={(e) => {
+                                    if ((e.movementX !== 0 || e.movementY !== 0) && !isActive) {
+                                        onHighlight?.(position);
+                                    }
+                                }}
                             >
                                 <Icon sx={{ fontSize: 28 }} />
                                 <Typography
@@ -161,7 +162,7 @@ export const ServiceSwitcherOverlay = ({
                                 >
                                     {t.layout.serviceSwitcher[service.labelKey]}
                                 </Typography>
-                            </Box>
+                            </Clickable>
                         );
                     })}
                 </Box>

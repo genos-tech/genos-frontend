@@ -20,6 +20,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     GithubAccessibleReposResponse,
@@ -118,18 +119,19 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                             const ownerRepos = data.repos.filter((r) => r.owner === owner.login);
                             return (
                                 <Box key={owner.login}>
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        spacing={1}
+                                    <Clickable
                                         sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            flexDirection: "row",
+                                            gap: 1,
                                             py: 0.75,
                                             px: 1,
                                             borderRadius: "sm",
                                             cursor: "pointer",
                                             "&:hover": { bgcolor: "background.level1" },
                                         }}
-                                        onClick={() =>
+                                        onActivate={() =>
                                             setExpandedOwner(isOpen ? null : owner.login)
                                         }
                                     >
@@ -156,7 +158,7 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                         ) : (
                                             <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
                                         )}
-                                    </Stack>
+                                    </Clickable>
                                     {isOpen && (
                                         <Stack spacing={0.25} sx={{ pl: 4, pb: 0.75 }}>
                                             {ownerRepos.map((repo) => (

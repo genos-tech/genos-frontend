@@ -27,8 +27,10 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
+import { InlineTitleEdit } from "../ui/fields/InlineTitleEdit";
 import { SearchField } from "../ui/fields/SearchField";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
+import { plainButtonSx } from "../ui/plainButtonStyles";
 
 type Props = {
     groupId: number;
@@ -66,7 +68,6 @@ export const MentionGroupEditor = ({
     const { mentionGroups, updateGroup, deleteGroup, addMembers, removeMember } =
         useMentionGroupsContext();
 
-    const [editingName, setEditingName] = useState<string | null>(null);
     const [editingDescription, setEditingDescription] = useState<string | null>(null);
     const [memberPickerQuery, setMemberPickerQuery] = useState("");
     const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -115,17 +116,6 @@ export const MentionGroupEditor = ({
         );
     }
 
-    const handleRename = async () => {
-        if (editingName == null) return;
-        const trimmed = editingName.trim();
-        if (!trimmed || trimmed === group.groupName) {
-            setEditingName(null);
-            return;
-        }
-        await updateGroup(group.groupId, { groupName: trimmed });
-        setEditingName(null);
-    };
-
     const handleDescriptionSave = async () => {
         if (editingDescription == null) return;
         if (editingDescription === group.description) {
@@ -156,28 +146,14 @@ export const MentionGroupEditor = ({
             />
             {/* Name + delete */}
             <Stack alignItems="center" direction="row" spacing={1}>
-                {editingName != null ? (
-                    <Input
-                        size="md"
-                        sx={{ flex: 1 }}
-                        value={editingName}
-                        autoFocus
-                        onBlur={() => void handleRename()}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") void handleRename();
-                            if (e.key === "Escape") setEditingName(null);
-                        }}
-                    />
-                ) : (
-                    <Typography
-                        level="title-lg"
-                        sx={{ flex: 1, cursor: "pointer" }}
-                        onClick={() => setEditingName(group.groupName)}
-                    >
-                        @{group.groupName}
-                    </Typography>
-                )}
+                <InlineTitleEdit
+                    ariaLabel={t.settings.mentionGroups.namePlaceholder}
+                    level="title-lg"
+                    renderValue={(name) => <>@{name}</>}
+                    sx={{ flex: 1 }}
+                    value={group.groupName}
+                    onCommit={(next) => void updateGroup(group.groupId, { groupName: next })}
+                />
                 <AppTooltip size="sm" title={t.settings.mentionGroups.deleteGroup}>
                     <IconButton
                         color="danger"
@@ -206,12 +182,18 @@ export const MentionGroupEditor = ({
                 />
             ) : (
                 <Typography
+                    component="button"
                     level="body-md"
-                    sx={{
-                        opacity: 0.75,
-                        cursor: "pointer",
-                        fontStyle: group.description ? "normal" : "italic",
-                    }}
+                    sx={[
+                        plainButtonSx,
+                        {
+                            opacity: 0.75,
+                            cursor: "text",
+                            display: "block",
+                            textAlign: "start",
+                            fontStyle: group.description ? "normal" : "italic",
+                        },
+                    ]}
                     onClick={() => setEditingDescription(group.description || "")}
                 >
                     {group.description || t.settings.mentionGroups.addDescription}

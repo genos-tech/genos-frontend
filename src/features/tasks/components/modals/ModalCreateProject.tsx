@@ -6,6 +6,7 @@ import PublicIcon from "@mui/icons-material/Public";
 import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
@@ -311,7 +312,8 @@ export const ModalCreateProject: React.FC<Props> = ({
             />
 
             {/* Checkbox */}
-            <Box
+            <Clickable
+                aria-pressed={isPrivate}
                 sx={{
                     display: "flex",
                     alignItems: "center",
@@ -323,7 +325,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                     border: `1px solid ${isPrivate ? g.accent.border : g.success.border}`,
                     cursor: "pointer",
                 }}
-                onClick={() => setIsPrivate(!isPrivate)}
+                onActivate={() => setIsPrivate(!isPrivate)}
             >
                 <Checkbox
                     checked={isPrivate}
@@ -345,7 +347,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                         ? t.tasks.modals.createProject.privateProject
                         : t.tasks.modals.createProject.publicProject}
                 </Typography>
-            </Box>
+            </Clickable>
 
             {/* Add members (optional) — same picker UX as GM creation */}
             <Typography level="body-xs" sx={{ mb: 1, color: g.text.secondary, fontWeight: 600 }}>
@@ -418,8 +420,10 @@ export const ModalCreateProject: React.FC<Props> = ({
                     filteredMembers.map((member) => {
                         const isSelected = selectedMembers.some((m) => m.userId === member.userId);
                         return (
-                            <Box
+                            <Clickable
                                 key={member.userId}
+                                aria-checked={isSelected}
+                                role="checkbox"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -433,7 +437,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     },
                                     "&:last-child": { borderBottom: "none" },
                                 }}
-                                onClick={() => handleToggleMember(member)}
+                                onActivate={() => handleToggleMember(member)}
                             >
                                 <Checkbox
                                     checked={isSelected}
@@ -471,7 +475,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                         {member.userEmail}
                                     </Typography>
                                 </Box>
-                            </Box>
+                            </Clickable>
                         );
                     })
                 )}

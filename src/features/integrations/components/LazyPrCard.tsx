@@ -52,16 +52,23 @@ export const LazyPrCard = ({ url, accessToken, hideOnNotConnected }: Props) => {
         <Card
             aria-label={label}
             role="button"
+            tabIndex={0}
+            variant="outlined"
             sx={{
                 p: 1.5,
                 cursor: "pointer",
                 "&:hover": { borderColor: "primary.500" },
             }}
-            tabIndex={0}
-            variant="outlined"
             onClick={reveal}
             onFocus={reveal}
             onMouseEnter={reveal}
+            onKeyDown={(event) => {
+                // The card also reveals on focus; Enter / Space are the explicit ask.
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    reveal();
+                }
+            }}
         >
             <Stack alignItems="center" direction="row" spacing={1.25} sx={{ py: 0.5 }}>
                 <GitHubIcon sx={{ color: "neutral.500" }} />

@@ -40,7 +40,6 @@ import {
     type ReactNode,
     type RefObject,
 } from "react";
-import { Box } from "@mui/joy";
 
 import { mentionChipSx } from "../../../../components/editors/Mention";
 import {
@@ -56,6 +55,7 @@ import {
     type MentionPalette,
 } from "../../../../components/editors/mentionPalettes";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { useHashMentionData } from "../../../../context/HashMentionDataContext";
 import { useTranslation } from "../../../../i18n";
 import { MentionHighlightOverlay } from "../../../agentQA/mentions/MentionHighlightOverlay";
@@ -471,8 +471,8 @@ export const TitleMentionChip = ({
     const href = mention.href;
 
     const chip = (
-        <Box
-            component="span"
+        <Clickable
+            as="span"
             sx={{
                 ...mentionChipSx(palette),
                 // Compact variant: a to-do row is one dense line of text,
@@ -488,7 +488,7 @@ export const TitleMentionChip = ({
                 cursor: href ? "pointer" : "default",
                 ...(href ? null : { "&:hover": { backgroundColor: palette.bg } }),
             }}
-            onClick={
+            onActivate={
                 href
                     ? (e) => {
                           // Don't also flip the row into edit mode.
@@ -499,7 +499,7 @@ export const TitleMentionChip = ({
             }
         >
             {text}
-        </Box>
+        </Clickable>
     );
 
     // A `#task` chip previews the task on hover, with the same card and

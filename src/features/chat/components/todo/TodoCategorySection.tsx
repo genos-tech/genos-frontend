@@ -9,6 +9,7 @@ import { Socket } from "socket.io-client";
 
 import { UpdateTodoItemPatch } from "./services/todoItems";
 
+import { Clickable } from "../../../../components/ui/Clickable";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -137,11 +138,12 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
 
     return (
         <Box sx={{ mb: 1.5 }}>
-            <Stack
-                alignItems="center"
-                direction="row"
-                spacing={1}
+            <Clickable
                 sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 1,
                     cursor: "pointer",
                     px: 1,
                     py: 0.5,
@@ -150,7 +152,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                         background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
                     },
                 }}
-                onClick={() => setCollapsed((v) => !v)}
+                onActivate={() => setCollapsed((v) => !v)}
             >
                 {collapsed ? (
                     <ExpandMoreRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />
@@ -181,7 +183,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                 >
                     {completed}/{items.length}
                 </Typography>
-            </Stack>
+            </Clickable>
 
             {!collapsed && (
                 <Box sx={{ pl: 1 }}>

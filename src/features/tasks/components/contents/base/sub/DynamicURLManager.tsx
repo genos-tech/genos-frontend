@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import SvgIcon from "@mui/joy/SvgIcon";
 
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../../../components/ui/Clickable";
 import { Toast } from "../../../../../../components/ui/feedback/Toast";
 import { useOptionalAccessToken } from "../../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../../i18n";
@@ -232,7 +233,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                 // metadata-panel call-to-actions read as a single
                 // visual system rather than competing button styles.
                 <AppTooltip title={t.tasks.dynamicUrl.addLinkTooltip}>
-                    <Box
+                    <Clickable
                         sx={{
                             cursor: "pointer",
                             display: "inline-flex",
@@ -248,13 +249,13 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                                 color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
                             },
                         }}
-                        onClick={() => setIsAddingNew(true)}
+                        onActivate={() => setIsAddingNew(true)}
                     >
                         <AddRoundedIcon sx={{ fontSize: 18 }} />
                         <Typography level="body-sm" sx={{ fontWeight: 500 }}>
                             {t.tasks.dynamicUrl.addLinkButton}
                         </Typography>
-                    </Box>
+                    </Clickable>
                 </AppTooltip>
             )}
 

@@ -7,8 +7,10 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
+import { focusRing } from "../../../theme/tokens";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
@@ -150,7 +152,7 @@ export const MonthView = ({
                         : label
                 }
             >
-                <Box
+                <Clickable
                     sx={{
                         // 1-based grid lines, and the end line is
                         // exclusive — hence +1 / +2. Spanning several
@@ -198,7 +200,7 @@ export const MonthView = ({
                             : `3px solid ${palette.base}`,
                         "&:hover": { backgroundColor: palette.fillHover },
                     }}
-                    onClick={(ev) => {
+                    onActivate={(ev) => {
                         ev.stopPropagation();
                         onEventClick(segment.event);
                     }}
@@ -223,7 +225,7 @@ export const MonthView = ({
                     {segment.continuesAfter && (
                         <ArrowRightRoundedIcon sx={{ fontSize: 14, flexShrink: 0, mr: -0.5 }} />
                     )}
-                </Box>
+                </Clickable>
             </AppTooltip>
         );
     };
@@ -316,6 +318,8 @@ export const MonthView = ({
                                     return (
                                         <Sheet
                                             key={key}
+                                            role="button"
+                                            tabIndex={0}
                                             variant="outlined"
                                             sx={{
                                                 display: "flex",
@@ -335,6 +339,7 @@ export const MonthView = ({
                                                         : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                     : undefined,
                                                 cursor: "pointer",
+                                                "&:focus-visible": focusRing,
                                                 opacity: inMonth ? 1 : 0.55,
                                                 transition: "background-color 0.12s ease",
                                                 "&:hover": {
@@ -348,6 +353,17 @@ export const MonthView = ({
                                                 // "create"; chips and the +N
                                                 // affordance stop propagation.
                                                 if (ev.target === ev.currentTarget) {
+                                                    onCellClick(day);
+                                                }
+                                            }}
+                                            onKeyDown={(ev) => {
+                                                // Enter / Space on the cell itself (not on a chip
+                                                // inside it) opens "create" for the day.
+                                                if (
+                                                    ev.target === ev.currentTarget &&
+                                                    (ev.key === "Enter" || ev.key === " ")
+                                                ) {
+                                                    ev.preventDefault();
                                                     onCellClick(day);
                                                 }
                                             }}

@@ -35,6 +35,7 @@ import { useAvatarContext } from "../ui/avatars/AvatarContext";
 import { BaseAvatar } from "../ui/avatars/BaseAvatar";
 import { MDMAvatar } from "../ui/avatars/MDMAvatar";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import { Clickable } from "../ui/Clickable";
 import { EmojiText } from "../ui/emoji/EmojiText";
 import { ModalFrame } from "../ui/modal/ModalFrame";
 
@@ -289,7 +290,7 @@ const HistoryRow = ({
     isDark,
     relativeMessages,
 }: RowProps) => (
-    <Box
+    <Clickable
         sx={{
             display: "flex",
             alignItems: "center",
@@ -303,7 +304,7 @@ const HistoryRow = ({
                 backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
             },
         }}
-        onClick={onClick}
+        onActivate={onClick}
     >
         {/* `minWidth` rather than a fixed `width`: the MDM avatar is a
             stack of up to three overlapping circles and is ~60px wide, so
@@ -369,7 +370,7 @@ const HistoryRow = ({
         >
             {formatRelative(timestamp, relativeMessages)}
         </Typography>
-    </Box>
+    </Clickable>
 );
 
 const EmptyState = ({ message }: { message: string }) => (
@@ -488,8 +489,8 @@ export const HistoryModal = ({
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
-                        relativeMessages={t.history.relative}
                         label={entry.label}
+                        relativeMessages={t.history.relative}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenChat(entry)}
@@ -512,8 +513,8 @@ export const HistoryModal = ({
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
                         isDark={isDark}
-                        relativeMessages={t.history.relative}
                         label={entry.label}
+                        relativeMessages={t.history.relative}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
                         chips={
@@ -538,8 +539,8 @@ export const HistoryModal = ({
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
                         chips={status ? <StatusLabel status={status} /> : null}
                         isDark={isDark}
-                        relativeMessages={t.history.relative}
                         label={entry.label}
+                        relativeMessages={t.history.relative}
                         subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
                         chipsBeforeLabel
@@ -553,8 +554,8 @@ export const HistoryModal = ({
                         key={`milestone-${entry.milestoneId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
                         isDark={isDark}
-                        relativeMessages={t.history.relative}
                         label={entry.label}
+                        relativeMessages={t.history.relative}
                         subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
                         chips={
@@ -592,11 +593,11 @@ export const HistoryModal = ({
                     // owner avatar would be misleading here.
                     noteAvatar = (
                         <GroupOrProjectAvatar
+                            isDark={isDark}
+                            src={undefined}
                             fallback={
                                 <GroupsRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
                             }
-                            isDark={isDark}
-                            src={undefined}
                         />
                     );
                 } else if (entry.noteType === 1 || entry.noteType === 4) {
@@ -633,8 +634,8 @@ export const HistoryModal = ({
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
                         avatar={noteAvatar}
                         isDark={isDark}
-                        relativeMessages={t.history.relative}
                         label={entry.label}
+                        relativeMessages={t.history.relative}
                         subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
                         chips={
@@ -658,19 +659,19 @@ export const HistoryModal = ({
     return (
         <ModalFrame
             closeLabel={t.history.close}
-            headerDivider
             icon={<HistoryRoundedIcon />}
             open={open}
             size="lg"
-            title={t.history.title}
-            // Where Joy's own modals sit (this dialog never set a layer).
-            zIndex={theme.zIndex.modal}
             actions={
                 <Button color="neutral" size="sm" variant="plain" onClick={clear}>
                     {t.history.clear}
                 </Button>
             }
+            headerDivider
             onClose={onClose}
+            title={t.history.title}
+            // Where Joy's own modals sit (this dialog never set a layer).
+            zIndex={theme.zIndex.modal}
         >
             <Tabs
                 sx={{ bgcolor: "transparent" }}

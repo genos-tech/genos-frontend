@@ -1694,8 +1694,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 }}
                             >
                                 {/* Header content - clickable for sorting */}
-                                <div
+                                <button
+                                    type="button"
                                     style={{
+                                        appearance: "none",
+                                        background: "none",
+                                        border: 0,
+                                        padding: 0,
+                                        font: "inherit",
+                                        color: "inherit",
+                                        cursor: "pointer",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -1742,7 +1750,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             {sortTiers[0].direction === "asc" ? "▲" : "▼"}
                                         </span>
                                     )}
-                                </div>
+                                </button>
 
                                 {/* Resize handle */}
                                 {column.resizable !== false && (

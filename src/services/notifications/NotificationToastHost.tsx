@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Box, Stack, Typography } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 
 import { BaseAvatar } from "../../components/ui/avatars/BaseAvatar";
+import { Clickable } from "../../components/ui/Clickable";
 import { Toast } from "../../components/ui/feedback/Toast";
 import { NotificationIntent } from "./types";
 
@@ -68,9 +69,9 @@ export const NotificationToastHost = ({
                         <BaseAvatar name={active.title} size="lg" />
                     )}
 
-                    <Box
+                    <Clickable
                         sx={{ minWidth: 0, flex: 1, cursor: onOpenIntent ? "pointer" : "default" }}
-                        onClick={handleOpen}
+                        onActivate={handleOpen}
                     >
                         <Typography level="title-sm" sx={{ mb: 0.25 }}>
                             {active.title}
@@ -86,7 +87,7 @@ export const NotificationToastHost = ({
                         >
                             {active.body}
                         </Typography>
-                    </Box>
+                    </Clickable>
                 </Stack>
             ) : null}
         </Toast>

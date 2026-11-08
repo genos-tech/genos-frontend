@@ -687,6 +687,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     <AppTooltip placement="bottom-start" title={depthTooltip}>
                         <Stack
                             alignItems="center"
+                            component="label"
                             direction="row"
                             spacing={1}
                             sx={{
@@ -702,6 +703,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                 onChange={(event) => setExpandExtraDepth(event.target.checked)}
                             />
                             <Typography
+                                component="span"
                                 level="body-sm"
                                 sx={{
                                     cursor: "pointer",
@@ -710,7 +712,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                             ? "rgba(255,255,255,0.7)"
                                             : "rgba(0,0,0,0.65)",
                                 }}
-                                onClick={() => setExpandExtraDepth((prev) => !prev)}
                             >
                                 {scoped ? t.tasks.board.showSubtasks : t.tasks.board.showTasks}
                             </Typography>

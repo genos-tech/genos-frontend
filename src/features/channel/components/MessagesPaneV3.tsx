@@ -180,9 +180,23 @@ export function MessagesPaneV3({
                         padding: "4px 12px",
                         fontSize: 12,
                     }}
-                    onClick={() => setError(null)}
                 >
-                    {error} ({t.chat.channel.pane.dismissError})
+                    {error}{" "}
+                    <button
+                        type="button"
+                        style={{
+                            background: "none",
+                            border: 0,
+                            padding: 0,
+                            font: "inherit",
+                            color: "inherit",
+                            textDecoration: "underline",
+                            cursor: "pointer",
+                        }}
+                        onClick={() => setError(null)}
+                    >
+                        ({t.chat.channel.pane.dismissError})
+                    </button>
                 </div>
             )}
 

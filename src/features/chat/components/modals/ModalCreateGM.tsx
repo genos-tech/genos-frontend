@@ -7,6 +7,7 @@ import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy"
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -198,7 +199,9 @@ export const ModalCreateGM: React.FC<Props> = ({
             {/* Private/Public Toggle. Locked on for an external chat:
                     a public one would be self-joinable by the whole host
                     team, which no guest team agreed to. */}
-            <Box
+            <Clickable
+                aria-pressed={isPrivate || isExternal}
+                disabled={isExternal}
                 sx={{
                     display: "flex",
                     alignItems: "center",
@@ -211,9 +214,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                     cursor: isExternal ? "not-allowed" : "pointer",
                     opacity: isExternal ? 0.75 : 1,
                 }}
-                onClick={() => {
-                    if (!isExternal) setIsPrivate(!isPrivate);
-                }}
+                onActivate={() => setIsPrivate(!isPrivate)}
             >
                 <Checkbox
                     checked={isPrivate || isExternal}
@@ -236,7 +237,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                         ? t.chat.modals.createGM.privateGroup
                         : t.chat.modals.createGM.publicGroup}
                 </Typography>
-            </Box>
+            </Clickable>
 
             {connectedTeams.length > 0 && (
                 <Box
@@ -248,9 +249,11 @@ export const ModalCreateGM: React.FC<Props> = ({
                         border: `1px solid ${isExternal ? g.accent.border : g.border.default}`,
                     }}
                 >
-                    <Box
+                    <Clickable
+                        aria-checked={isExternal}
+                        role="checkbox"
                         sx={{ display: "flex", alignItems: "center", gap: 1.5, cursor: "pointer" }}
-                        onClick={() => setIsExternal(!isExternal)}
+                        onActivate={() => setIsExternal(!isExternal)}
                     >
                         <Checkbox
                             checked={isExternal}
@@ -265,7 +268,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                         >
                             {t.chat.modals.createGM.externalChat}
                         </Typography>
-                    </Box>
+                    </Clickable>
                     <Typography
                         level="body-xs"
                         sx={{ mt: 0.75, ml: 0.5, color: g.text.secondary }}
@@ -360,8 +363,10 @@ export const ModalCreateGM: React.FC<Props> = ({
                     filteredMembers.map((member) => {
                         const isSelected = selectedMembers.some((m) => m.userId === member.userId);
                         return (
-                            <Box
+                            <Clickable
                                 key={member.userId}
+                                aria-checked={isSelected}
+                                role="checkbox"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -375,7 +380,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                     },
                                     "&:last-child": { borderBottom: "none" },
                                 }}
-                                onClick={() => handleToggleMember(member)}
+                                onActivate={() => handleToggleMember(member)}
                             >
                                 <Checkbox
                                     checked={isSelected}
@@ -418,7 +423,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                         {member.userEmail}
                                     </Typography>
                                 </Box>
-                            </Box>
+                            </Clickable>
                         );
                     })
                 )}

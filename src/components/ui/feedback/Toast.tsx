@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 
 import { useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
+import { Clickable } from "../Clickable";
 import {
     ACTION_DURATION,
     DEFAULT_DURATION,
@@ -238,17 +239,17 @@ const ToastCard = ({
                     {leading}
                 </Box>
             )}
-            <Box
+            <Clickable
                 sx={{
                     flex: 1,
                     minWidth: 0,
                     overflowWrap: "anywhere",
                     cursor: onClick ? "pointer" : "default",
                 }}
-                onClick={onClick}
+                onActivate={onClick}
             >
                 {children}
-            </Box>
+            </Clickable>
             {actions ??
                 (action && (
                     <Button

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../../features/admin/components/modals/ModalProjectProfile";
@@ -11,6 +10,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
+import { Clickable } from "../Clickable";
 import { BaseAvatar } from "./BaseAvatar";
 
 type ProjectAvatarProps = {
@@ -31,16 +31,16 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const _avatarSize = avatarSize || 32;
     return (
         <div>
-            <Box
+            <Clickable
                 height={_avatarSize}
                 position="relative"
                 width={_avatarSize}
-                onClick={() => setOpenModalProjectProfile(true)}
+                onActivate={() => setOpenModalProjectProfile(true)}
             >
                 <BaseAvatar size={_avatarSize} src={buildAvatarSrc(pmChat.profileImagePath)}>
                     <AssignmentIcon />
                 </BaseAvatar>
-            </Box>
+            </Clickable>
 
             <ModalProjectProfile
                 myself={myself}

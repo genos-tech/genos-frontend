@@ -1,9 +1,10 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
-import { Box, IconButton } from "@mui/joy";
+import { IconButton } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { useTranslation } from "../../../../i18n";
 import { focusRing, g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -88,17 +89,19 @@ const SprintBoardCardImpl = ({
                 // The wrapper owns drag, click and keyboard (the drag handle is
                 // the focusable element); the card inside is only a surface.
                 // Hover is CSS, so a card re-renders for nothing but its data.
-                <Box
+                // Space is the drag handle's (it lifts the card), so only Enter opens.
+                <Clickable
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
+                    keys={["Enter"]}
                     sx={{
                         mb: 0.75,
                         borderRadius: g.radius.md,
                         cursor: "pointer",
                         "&:focus-visible": focusRing,
                     }}
-                    onClick={() => onTaskClick?.(task)}
+                    onActivate={() => onTaskClick?.(task)}
                 >
                     {showMilestoneBody ? (
                         <TaskCardFrame dragging={snapshot.isDragging} selected={isSelected}>
@@ -117,7 +120,7 @@ const SprintBoardCardImpl = ({
                             task={task}
                         />
                     )}
-                </Box>
+                </Clickable>
             )}
         </Draggable>
     );

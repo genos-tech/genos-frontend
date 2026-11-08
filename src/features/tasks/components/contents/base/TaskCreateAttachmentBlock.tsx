@@ -13,6 +13,7 @@ import {
     UploadingTileBadge,
 } from "../../../../../components/ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
+import { PlainButton } from "../../../../../components/ui/PlainButton";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { AttachmentFileProps, TaskProps } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
@@ -238,12 +239,11 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 <CloseRoundedIcon sx={{ fontSize: 12, color: "#ef4444" }} />
                             </IconButton>
                             <AppTooltip title={fmt(t.tasks.tabs.downloadFileTooltip, { name })}>
-                                <div
-                                    style={{ cursor: isUploading ? "default" : "pointer" }}
-                                    onClick={() => {
-                                        if (isUploading) return;
-                                        downloadFile(preview.url, name);
-                                    }}
+                                <PlainButton
+                                    aria-label={fmt(t.tasks.tabs.downloadFileTooltip, { name })}
+                                    disabled={isUploading}
+                                    sx={{ display: "block" }}
+                                    onClick={() => downloadFile(preview.url, name)}
                                 >
                                     <InsertDriveFileRoundedIcon
                                         sx={{
@@ -253,7 +253,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                                 : "rgba(0,0,0,0.4)",
                                         }}
                                     />
-                                </div>
+                                </PlainButton>
                             </AppTooltip>
                             <Typography
                                 level="body-xs"
@@ -316,22 +316,24 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             >
                                 <CloseRoundedIcon sx={{ fontSize: 14, color: "white" }} />
                             </IconButton>
-                            <img
-                                alt={name}
-                                src={preview.url}
-                                style={{
-                                    maxWidth: 300,
-                                    maxHeight: 300,
-                                    width: "auto",
-                                    height: "auto",
-                                    display: "block",
-                                    cursor: isUploading ? "default" : "pointer",
-                                }}
-                                onClick={() => {
-                                    if (isUploading) return;
-                                    setSelectedImage({ src: preview.url, name });
-                                }}
-                            />
+                            <PlainButton
+                                aria-label={name}
+                                disabled={isUploading}
+                                sx={{ display: "block" }}
+                                onClick={() => setSelectedImage({ src: preview.url, name })}
+                            >
+                                <img
+                                    alt=""
+                                    src={preview.url}
+                                    style={{
+                                        maxWidth: 300,
+                                        maxHeight: 300,
+                                        width: "auto",
+                                        height: "auto",
+                                        display: "block",
+                                    }}
+                                />
+                            </PlainButton>
                             <UploadingTileBadge open={isUploading} />
                         </Box>
                     );

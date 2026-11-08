@@ -67,6 +67,7 @@ import {
 import { withoutTrailingBlank } from "../editors/utils/messageBlocks";
 import { AppTooltip } from "../ui/AppTooltip";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
+import { Clickable } from "../ui/Clickable";
 import { isJumboEmojiBody } from "./emojiOnlyBody";
 import { ImageZoomModal } from "./ImageZoomModal";
 
@@ -126,10 +127,10 @@ const MentionChip = ({
 
     return (
         <>
-            <Box
-                component="span"
+            <Clickable
+                as="span"
                 sx={mentionChipSx(palette)}
-                onClick={() => setOpenUserProfile(true)}
+                onActivate={() => setOpenUserProfile(true)}
             >
                 <Typography
                     component="span"
@@ -139,7 +140,7 @@ const MentionChip = ({
                 >
                     @{displayName}
                 </Typography>
-            </Box>
+            </Clickable>
             {/* Mounted only once opened. The BlockNote spec renders this
                 unconditionally, which means one whole modal component tree
                 per mention in the viewport — pure waste for a dialog that
@@ -180,15 +181,15 @@ const LightHashChip = ({
     palette: MentionPalette;
 }) => {
     const urlLinkModal = useUrlLinkModal();
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = (e: React.SyntheticEvent) => {
         e.preventDefault();
         e.stopPropagation();
         urlLinkModal?.openModalByHref(href);
     };
     return (
-        <Box component="span" sx={hashMentionTextSx(palette)} onClick={handleClick}>
+        <Clickable as="span" sx={hashMentionTextSx(palette)} onActivate={handleClick}>
             #{label}
-        </Box>
+        </Clickable>
     );
 };
 
@@ -203,14 +204,14 @@ const MentionGroupChip = ({
     memberCount: string;
 }) => {
     const { openGroupModal } = useMentionGroupModal();
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = (e: React.SyntheticEvent) => {
         e.preventDefault();
         e.stopPropagation();
         const parsed = Number(groupId);
         if (Number.isFinite(parsed) && parsed > 0) openGroupModal(parsed);
     };
     return (
-        <Box component="span" sx={mentionChipSx(GROUP_PALETTE)} onClick={handleClick}>
+        <Clickable as="span" sx={mentionChipSx(GROUP_PALETTE)} onActivate={handleClick}>
             <GroupRoundedIcon sx={{ fontSize: 14, color: GROUP_PALETTE.text, mr: 0.25 }} />
             <Typography
                 component="span"
@@ -221,7 +222,7 @@ const MentionGroupChip = ({
                 @{groupName}
                 {Number(memberCount) > 0 ? ` (${memberCount})` : ""}
             </Typography>
-        </Box>
+        </Clickable>
     );
 };
 
@@ -302,11 +303,11 @@ const InlineContent = ({
                     <MentionGroupChip
                         key={i}
                         groupId={item.props?.groupId ?? "0"}
+                        memberCount={item.props?.memberCount ?? "0"}
                         groupName={
                             item.props?.groupName ??
                             getMessages().common.editor.mentionGroupFallback
                         }
-                        memberCount={item.props?.memberCount ?? "0"}
                     />
                 );
             }
@@ -446,16 +447,16 @@ const FILE_ICON_SVG =
  * does — but wired directly here since the light path emits no `data-id`.
  */
 const FileNameWithIcon = ({ url, name }: { url?: string; name?: string }) => (
-    <div
+    <Clickable
         className="bn-file-name-with-icon"
         style={{ cursor: "pointer" }}
-        onClick={() => {
+        onActivate={() => {
             if (url) downloadFile(url, name || undefined);
         }}
     >
         <div className="bn-file-icon" dangerouslySetInnerHTML={{ __html: FILE_ICON_SVG }} />
         <p className="bn-file-name">{name}</p>
-    </div>
+    </Clickable>
 );
 
 /**
@@ -526,9 +527,17 @@ const LightImageBlock = ({
                         decoding="async"
                         draggable={false}
                         loading="lazy"
+                        role="button"
                         src={src}
+                        tabIndex={0}
                         onClick={() => onImageZoom(src)}
                         onLoad={() => setLoaded(true)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                onImageZoom(src);
+                            }
+                        }}
                     />
                 )}
             </div>

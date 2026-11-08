@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
-import { Alert, Box, Button, Checkbox, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Checkbox, Typography } from "@mui/joy";
 
+import { Clickable } from "../../../../components/ui/Clickable";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -99,19 +100,22 @@ export const ModalAssignGMTags = ({ chat, open, setOpen }: ModalAssignGMTagsProp
                     </Typography>
                 )}
                 {tags.map((tag) => (
-                    <Stack
+                    <Clickable
                         key={tag.tagId}
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
+                        aria-checked={draftIds.includes(tag.tagId)}
+                        role="checkbox"
                         sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexDirection: "row",
+                            gap: 1,
                             "&:hover": { background: g.hover },
                             borderRadius: g.radius.md,
                             cursor: "pointer",
                             px: 0.75,
                             py: 0.6,
                         }}
-                        onClick={() => toggle(tag.tagId)}
+                        onActivate={() => toggle(tag.tagId)}
                     >
                         <Checkbox
                             checked={draftIds.includes(tag.tagId)}
@@ -130,7 +134,7 @@ export const ModalAssignGMTags = ({ chat, open, setOpen }: ModalAssignGMTagsProp
                         <Typography level="body-sm" sx={{ flex: 1 }} noWrap>
                             {tag.name}
                         </Typography>
-                    </Stack>
+                    </Clickable>
                 ))}
             </Box>
 
