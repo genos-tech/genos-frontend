@@ -213,13 +213,6 @@ export const prioritySolid = (priority: PriorityName): { color: string; textColo
     return { color: s.bg, textColor: s.fg };
 };
 
-/** The solid fill of each status, as hex, for chips drawn with `alpha()`.
- *  Replaces four hand-copied `STATUS_COLOR` maps (TaskPreview, the two sprint
- *  files, HistoryModal). A name not in here is the caller's fallback. */
-export const STATUS_FILL: Record<string, string> = Object.fromEntries(
-    STATUS_NAMES.map((s) => [s, toneSolid(STATUS_TONE[s]).bg])
-);
-
 /** A sprint's lifecycle is not a task status, but it speaks the same tones. */
 export const SPRINT_TONE: Record<string, Tone> = {
     upcoming: "neutral",
