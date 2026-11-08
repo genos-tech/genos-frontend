@@ -7,8 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { Clickable } from "../../../components/ui/Clickable";
-import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
+import { useSyncFailure } from "../../../services/syncStatus";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
@@ -42,6 +44,8 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
         const { t } = useTranslation();
         const isDark = mode === "dark";
         const navigate = useNavigate();
+        // A failed inbox load with nothing cached must not read as "all caught up" (MIP-1298).
+        const sync = useSyncFailure("inbox");
         const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
         const resolvedEmptyTitle = emptyTitle ?? t.inbox.section.defaultEmptyTitle;
         const resolvedEmptySubtitle = emptySubtitle ?? t.inbox.section.defaultEmptySubtitle;
@@ -137,11 +141,26 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                         }}
                     />
                 ) : (
-                    <EmptyState
-                        body={resolvedEmptySubtitle}
-                        data-empty="inbox"
-                        icon={isRequest ? <CheckCircleOutlineRoundedIcon /> : <InboxRoundedIcon />}
-                        title={resolvedEmptyTitle}
+                    <DataState
+                        error={sync.failed}
+                        hasData={false}
+                        loading={sync.retrying}
+                        skeleton={<SkeletonRows count={5} twoLines />}
+                        empty={{
+                            body: resolvedEmptySubtitle,
+                            "data-empty": "inbox",
+                            icon: isRequest ? (
+                                <CheckCircleOutlineRoundedIcon />
+                            ) : (
+                                <InboxRoundedIcon />
+                            ),
+                            title: resolvedEmptyTitle,
+                        }}
+                        errorState={{
+                            "data-error": "inbox",
+                            onRetry: sync.retry,
+                            title: t.common.feedback.sync.inboxFailed,
+                        }}
                         fill
                     />
                 )}

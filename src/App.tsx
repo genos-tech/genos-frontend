@@ -41,6 +41,7 @@ import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverl
 import { ServiceSwitchLoader } from "./components/layout/ServiceSwitchLoader";
 import { ServiceSwitchReady } from "./components/layout/ServiceSwitchReady";
 import { Sidebar } from "./components/layout/sidebar";
+import { SyncStatusBanner } from "./components/layout/SyncStatusBanner";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { useAvatarContextValue } from "./components/ui/avatars/useAvatarContextValue";
@@ -103,7 +104,9 @@ import {
     unregisterApiHealthListener,
     type ApiDownReason,
 } from "./services/api";
+import { channelService } from "./services/channel/channelService";
 import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
+import { markTeamHydrated } from "./services/hydrationState";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
@@ -112,6 +115,7 @@ import { startPerfRecorder, type PerfRecorder } from "./services/perf/startPerfR
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { switchService } from "./services/serviceSwitch/serviceSwitchStore";
+import { syncStatus } from "./services/syncStatus";
 import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { keepIfEqual } from "./utils/keepIfEqual";
@@ -551,6 +555,45 @@ const AppBody = () => {
             onIDBRefreshed,
         });
     });
+
+    // The "Couldn't sync, Retry" banner and the empty-state Retry buttons
+    // (MIP-1298) re-run the same refresh, plus the project list when that
+    // is what failed (it is loaded by `useProjectManagement`, not by
+    // `refreshAllData`). Held in a ref: the store keeps one stable callback.
+    const retrySyncRef = useRef<() => Promise<void>>(async () => {});
+    retrySyncRef.current = async () => {
+        const lastProjectId = Number(localStorage.getItem("lastProjectId")) || null;
+        // `begin`/`end` here, not only inside `refreshAllData`: the project-list and
+        // channel retries run outside it, and the empty surfaces show a skeleton
+        // (not a stale error) for as long as the retry runs.
+        syncStatus.begin();
+        try {
+            await Promise.all([
+                refreshAllData({
+                    accessToken: accessToken || null,
+                    currentProjectId: usePM.currentProject?.projectId ?? lastProjectId,
+                    myself,
+                    onIDBRefreshed,
+                }),
+                syncStatus.getSnapshot().failed.includes("projects")
+                    ? usePM.loadProjectsAndTasks(lastProjectId ?? -1)
+                    : Promise.resolve(),
+                // `refreshAllData` fires the channel list without awaiting it.
+                syncStatus.getSnapshot().failed.includes("channels")
+                    ? channelService.refreshChannels()
+                    : Promise.resolve(),
+            ]);
+        } finally {
+            syncStatus.end();
+        }
+        // A boot that failed cold never marked the team hydrated (see
+        // `loadInitialData`); a retry that put everything right does.
+        if (syncStatus.getSnapshot().failed.length === 0) markTeamHydrated(useTEM.currentTeamId);
+    };
+    useEffect(() => {
+        syncStatus.setRetry(() => retrySyncRef.current());
+        return () => syncStatus.setRetry(null);
+    }, []);
 
     // URL-link modal: opens an in-place preview of internal chat / task /
     // note URLs clicked inside a BlockNote-rendered message. Mounted
@@ -1517,6 +1560,7 @@ const AppBody = () => {
                                                             open={idleReloadPending}
                                                         />
                                                         <RequestErrorSnackbar />
+                                                        <SyncStatusBanner hidden={showApiDown} />
                                                         <NonMemberMentionSnackbar
                                                             myself={myself}
                                                             socket={socketInstance}

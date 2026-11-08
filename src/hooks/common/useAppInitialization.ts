@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initDB } from "../../db/config/schema";
 import { DatabaseUtils } from "../../db/utils/database";
 import { clearTeamHydrated } from "../../services/hydrationState";
+import { syncStatus } from "../../services/syncStatus";
 import { useMyself } from "./useAuth";
 import { useMentionGroups } from "./useMentionGroups";
 import { useTeamEmoji } from "./useTeamEmoji";
@@ -61,6 +62,8 @@ export const useAppInitialization = () => {
                     // (waits for the first refresh) instead of flashing an
                     // empty shell from the wiped cache.
                     clearTeamHydrated();
+                    // ...and so is what the previous team's sync said failed.
+                    syncStatus.reset();
                     useTEM.setCurrentTeamId(myself.teamId);
                     useUISM.setIsLoading(true);
                     lastInitializedTeamIdRef.current = myself.teamId;

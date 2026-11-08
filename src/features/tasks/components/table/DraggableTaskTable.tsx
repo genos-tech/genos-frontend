@@ -10,7 +10,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -27,6 +27,7 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { useSyncFailure } from "../../../../services/syncStatus";
 import { focusRing } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
@@ -429,6 +430,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const syncFailure = useSyncFailure("tasks");
     const isDark = colorMode === "dark";
     // The table's one tab stop (MIP-1230): see useGridNav.
     const { nav: gridNav, gridRef } = useGridNavController();
@@ -1610,7 +1612,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
     // The skeleton replaces the rows while the first read of a project is in flight.
-    const showTaskSkeleton = displayRows.length === 0 && useTM.isLoadingTasks;
+    const showTaskSkeleton =
+        displayRows.length === 0 && (useTM.isLoadingTasks || syncFailure.retrying);
 
     return (
         <>
@@ -1917,21 +1920,34 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load
                         completes and there is genuinely nothing to show, fall back to
-                        the static "No tasks to display" message. */}
-                    {displayRows.length === 0 &&
-                        (showTaskSkeleton ? (
-                            <TaskTableSkeleton
-                                columns={columnsWithWidths}
-                                gutterWidth={LEADING_GUTTER_WIDTH}
-                                label={t.tasks.table.loadingTasks}
-                            />
-                        ) : (
-                            <EmptyState
-                                body={t.tasks.table.emptyHint}
-                                data-empty="task-table"
-                                title={t.tasks.table.emptyTitle}
-                            />
-                        ))}
+                        the static "No tasks to display" message, unless the refresh
+                        FAILED: then it is the error with Retry, because "No tasks to
+                        display" would be a claim nothing checked (MIP-1298). Rows that are
+                        cached but all filtered out stay an empty FILTER, not a failure. */}
+                    {displayRows.length === 0 && (
+                        <DataState
+                            error={syncFailure.failed && useTM.allTasks.length === 0}
+                            hasData={false}
+                            loading={useTM.isLoadingTasks || syncFailure.retrying}
+                            empty={{
+                                body: t.tasks.table.emptyHint,
+                                "data-empty": "task-table",
+                                title: t.tasks.table.emptyTitle,
+                            }}
+                            errorState={{
+                                "data-error": "task-table",
+                                onRetry: syncFailure.retry,
+                                title: t.common.feedback.sync.tasksFailed,
+                            }}
+                            skeleton={
+                                <TaskTableSkeleton
+                                    columns={columnsWithWidths}
+                                    gutterWidth={LEADING_GUTTER_WIDTH}
+                                    label={t.tasks.table.loadingTasks}
+                                />
+                            }
+                        />
+                    )}
                 </Box>
             </div>
 

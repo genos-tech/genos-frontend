@@ -49,7 +49,9 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PageHeader } from "../../../../components/ui/page/PageHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -59,6 +61,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { useSyncFailure } from "../../../../services/syncStatus";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -344,6 +347,7 @@ export const TaskHomeContent = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const projectsSync = useSyncFailure("projects");
     const { accessToken } = useAuth();
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
@@ -1545,11 +1549,24 @@ export const TaskHomeContent = ({
                         </Card>
                     ) : (
                         /* No Project selected */
-                        <EmptyState
-                            body={t.tasks.dashboard.selectProjectForAnalytics}
-                            data-empty="home-no-project"
-                            icon={<WorkRoundedIcon />}
-                            title={t.tasks.dashboard.noProjectSelected}
+                        // A project list that failed to load is not "no project selected"
+                        // (MIP-1298): say so, with Retry.
+                        <DataState
+                            error={projectsSync.failed}
+                            hasData={false}
+                            loading={projectsSync.retrying}
+                            skeleton={<SkeletonRows count={4} />}
+                            empty={{
+                                body: t.tasks.dashboard.selectProjectForAnalytics,
+                                "data-empty": "home-no-project",
+                                icon: <WorkRoundedIcon />,
+                                title: t.tasks.dashboard.noProjectSelected,
+                            }}
+                            errorState={{
+                                "data-error": "home-no-project",
+                                onRetry: projectsSync.retry,
+                                title: t.common.feedback.sync.projectsFailed,
+                            }}
                         />
                     )}
 

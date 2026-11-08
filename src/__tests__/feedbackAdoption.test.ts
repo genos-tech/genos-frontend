@@ -64,7 +64,12 @@ describe("feedback adoption", () => {
         // The ones people actually meet: no note open, no chat open, empty inbox.
         expect(shared("features/notes/common/components/NoteContentRenderer.tsx")).toBe(true);
         expect(shared("features/chat/components/panels/SelectChatPanel.tsx")).toBe(true);
-        expect(shared("features/inbox/components/InboxSection.tsx")).toBe(true);
+        // The inbox draws it through DataState (MIP-1298: "could not load" vs "all caught up").
+        expect(
+            files
+                .find(({ f }) => f === "features/inbox/components/InboxSection.tsx")
+                ?.text.includes("ui/feedback/DataState")
+        ).toBe(true);
         expect(
             files.some(({ f }) => f === "features/notes/common/components/EmptyState.tsx")
         ).toBe(false);
@@ -77,6 +82,8 @@ describe("feedback adoption", () => {
         const ALLOWED: Record<string, string> = {
             "components/ui/feedback/ErrorState.tsx": "the ErrorState itself",
             "features/agentQA/AgentTurn.tsx": "re-asks a finished turn: not a failed load",
+            "components/layout/SyncStatusBanner.tsx":
+                "the toast ACTION of the app-wide sync banner (MIP-1298); the empty surfaces use ErrorState",
         };
         const offenders = files
             .filter(({ f, text }) => f.endsWith(".tsx") && /actions\.retry\b/.test(text))

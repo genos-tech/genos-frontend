@@ -9,6 +9,7 @@ import { ChatProps } from "../types/chat";
 import { isV3Uuid } from "../utils/legacyId";
 import { channelService } from "./channel/channelService";
 import { isTeamHydrated, markTeamHydrated } from "./hydrationState";
+import { syncStatus } from "./syncStatus";
 
 // Hard ceiling on the boot spinner. Cache reads resolve in milliseconds, so
 // this only ever fires as a safety net on a cold start whose first network
@@ -262,7 +263,12 @@ export const loadInitialData = (
         const warm = isTeamHydrated(myself.teamId);
         if (warm || firstRefreshDone) {
             setIsLoading(false);
-            if (!warm) markTeamHydrated(myself.teamId);
+            // A cold boot whose first refresh FAILED fetched nothing: marking the
+            // team hydrated would make the next boot "warm" (an instant, empty
+            // shell) instead of waiting for a refresh that can work (MIP-1298).
+            if (!warm && syncStatus.getSnapshot().failed.length === 0) {
+                markTeamHydrated(myself.teamId);
+            }
         }
     }, [
         isInboxLoaded,

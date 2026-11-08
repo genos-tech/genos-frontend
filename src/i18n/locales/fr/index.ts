@@ -1508,6 +1508,15 @@ export const fr: DeepPartial<Messages> = {
         feedback: {
             loading: "Chargement…",
             loadFailedBody: "Vérifiez votre connexion, puis réessayez.",
+            sync: {
+                banner: "Impossible de synchroniser votre espace de travail.",
+                bannerRetrying: "Synchronisation de votre espace de travail…",
+                chatsFailed: "Impossible de charger vos discussions",
+                activityFailed: "Impossible de charger votre activité",
+                inboxFailed: "Impossible de charger votre boîte de réception",
+                tasksFailed: "Impossible de charger vos tâches",
+                projectsFailed: "Impossible de charger vos projets",
+            },
             toast: {
                 region: "Notifications",
                 undo: "Annuler",

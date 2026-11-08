@@ -1,4 +1,5 @@
 import { tasksChannel } from "../../../db/workers/channels";
+import { syncStatus } from "../../../services/syncStatus";
 import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
 
@@ -30,7 +31,19 @@ export const loadProjectTasks = (
     // completion signal — keep the shape `[]` to preserve API surface.
     const promise = tasksChannel
         .request("loadProjectTasks", { myself, projectId, accessToken })
-        .then(() => [] as ThreadMessageProps[])
+        .then(
+            () => {
+                syncStatus.report("tasks", true);
+                return [] as ThreadMessageProps[];
+            },
+            (err: unknown) => {
+                // Every caller (boot, wake, project switch) lands here, so the
+                // sync status learns of a failed load whichever one asked
+                // (MIP-1298). Rethrown: the callers' own handling is unchanged.
+                syncStatus.report("tasks", false);
+                throw err;
+            }
+        )
         .finally(() => {
             inFlight.delete(key);
         });
