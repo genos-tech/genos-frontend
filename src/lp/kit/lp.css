@@ -1331,6 +1331,22 @@ a.lp-row:hover .lp-row__arrow {
     letter-spacing: 0;
 }
 
+/* English-only pages (blog, developers) keep their English rhythm when the shell
+   is Japanese: the page-language rules at the top of this file would otherwise
+   loosen their line height and drop their heading tracking. */
+.lp-root[lang="ja"] [lang="en"] .lp-lead {
+    max-width: 60ch;
+    line-height: 1.65;
+}
+
+.lp-root[lang="ja"] [lang="en"] .lp-title {
+    letter-spacing: -0.03em;
+}
+
+.lp-root[lang="ja"] [lang="en"] .lp-h3 {
+    letter-spacing: -0.01em;
+}
+
 /* Head of a content page: a title and one line under it, no hero. */
 .lp-pagehead {
     padding-block: 72px 36px;
@@ -1400,8 +1416,22 @@ a.lp-row:hover .lp-row__arrow {
     max-width: var(--lp-measure);
 }
 
+.lp-prose :is(p, li) {
+    text-wrap: pretty;
+}
+
+/* Long Japanese text breaks between phrases, not mid-word ("保存されま|す"). */
+.lp-prose:lang(ja),
+.lp-prose :lang(ja) {
+    word-break: auto-phrase;
+}
+
 .lp-prose > :first-child {
     margin-top: 0;
+}
+
+.lp-prose a:hover {
+    color: var(--lp-text);
 }
 
 .lp-prose > section:first-child > :is(h2, h3):first-child {
@@ -1426,12 +1456,29 @@ a.lp-row:hover .lp-row__arrow {
     scroll-margin-top: 80px;
 }
 
+/* The app's CSS reset removes list markers; prose puts them back. */
 .lp-prose :is(ul, ol) {
     padding-left: 1.5em;
 }
 
+.lp-prose ul {
+    list-style: disc;
+}
+
+.lp-prose ul ul {
+    list-style: circle;
+}
+
+.lp-prose ol {
+    list-style: decimal;
+}
+
+.lp-prose li::marker {
+    color: var(--lp-text-tertiary);
+}
+
 .lp-prose li + li {
-    margin-top: 0.4em;
+    margin-top: 0.3em;
 }
 
 .lp-prose li > :is(ul, ol) {
@@ -1563,7 +1610,7 @@ a.lp-row:hover .lp-row__arrow {
 .lp-post__meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 14px;
+    gap: 2px 8px;
     font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--lp-text-secondary);
@@ -1571,7 +1618,7 @@ a.lp-row:hover .lp-row__arrow {
 
 .lp-post__meta > * + *::before {
     content: "·";
-    margin-right: 14px;
+    margin-right: 8px;
 }
 
 .lp-post__title {
@@ -1600,7 +1647,7 @@ a.lp-row:hover .lp-row__arrow {
 }
 
 .lp-featured .lp-post {
-    align-content: start;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: 10px;
     padding-block: 24px 28px;
     border-top: 1px solid var(--lp-border);
@@ -1762,6 +1809,13 @@ a.lp-row:hover .lp-row__arrow {
     margin-top: 0;
 }
 
+/* The table of contents above already ends in a rule. */
+.lp-prose--doc > .lp-doc-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
 .lp-endpoint {
     margin-top: 40px;
     padding-top: 24px;
@@ -1824,4 +1878,41 @@ a.lp-row:hover .lp-row__arrow {
 .lp-params td:last-child {
     padding-right: 0;
     color: var(--lp-text-secondary);
+}
+
+/* On a phone the three columns do not fit side by side, and scrolling hides the
+   column that matters (the meaning). Each row stacks instead: name and type on
+   the first line, the meaning under them. `Params` gives the table explicit ARIA
+   roles so the stacked rows still read as a table. */
+@media (max-width: 720px) {
+    .lp-params table,
+    .lp-params tbody {
+        display: block;
+        min-width: 0;
+    }
+
+    .lp-params tr {
+        display: grid;
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+        gap: 2px 14px;
+        align-items: baseline;
+        padding-block: 12px;
+        border-bottom: 1px solid var(--lp-border-subtle);
+    }
+
+    .lp-params td {
+        display: block;
+        padding: 0;
+        border: 0;
+    }
+
+    .lp-params td:first-child,
+    .lp-params td:nth-child(2) {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .lp-params td:last-child {
+        grid-column: 1 / -1;
+    }
 }

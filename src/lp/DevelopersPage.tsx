@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { Code } from "./Code";
@@ -80,7 +81,9 @@ const Endpoint = ({
     <div className="lp-endpoint">
         <div className="lp-endpoint__head">
             <span className="lp-badge lp-badge--accent lp-method">{method}</span>
-            <span className="lp-endpoint__path">{path}</span>
+            <span className="lp-endpoint__path" translate="no">
+                {path}
+            </span>
         </div>
         {children}
     </div>
@@ -89,30 +92,35 @@ const Endpoint = ({
 const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
-        <pre>{children}</pre>
+        <pre translate="no">{children}</pre>
     </div>
 );
 
-const Params = ({ rows, title }: { rows: Row[]; title: string }) => (
-    <div className="lp-params">
-        <div className="lp-label">{title}</div>
-        <div className="lp-params__scroll">
-            <table>
-                <tbody>
-                    {rows.map((r) => (
-                        <tr key={r.name}>
-                            <td>
-                                <Code>{r.name}</Code>
-                            </td>
-                            <td>{r.type}</td>
-                            <td>{r.meaning}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+const Params = ({ rows, title }: { rows: Row[]; title: string }) => {
+    const labelId = useId();
+    return (
+        <div className="lp-params">
+            <div className="lp-label" id={labelId}>
+                {title}
+            </div>
+            <div className="lp-params__scroll">
+                <table aria-labelledby={labelId} role="table">
+                    <tbody role="rowgroup">
+                        {rows.map((r) => (
+                            <tr key={r.name} role="row">
+                                <td role="cell">
+                                    <Code>{r.name}</Code>
+                                </td>
+                                <td role="cell">{r.type}</td>
+                                <td role="cell">{r.meaning}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // "a, b and c", each in <Code>.
 const codeList = (tools: McpTool[]) =>
