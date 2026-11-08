@@ -481,7 +481,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 // In a preview modal the dialog's own buttons float over this corner.
-                ...modalChromeEndPadding("24px"),
+                ...modalChromeEndPadding({ xs: "16px", md: "24px" }),
             }}
         >
             {/* Left section: Thread badge + Avatar + Name */}

@@ -40,7 +40,7 @@ export const cssWithMediaOf = (el: Element): string => {
     const visit = (rules: CSSRuleList, media: string) => {
         for (const rule of Array.from(rules)) {
             const selector = (rule as CSSStyleRule).selectorText;
-            if (selector && classes.some((c) => selector.includes(`.${c}`))) {
+            if (selector && classes.some((c) => new RegExp(`\\.${c}(?![\\w-])`).test(selector))) {
                 out.push(media ? `@media ${media} { ${rule.cssText} }` : rule.cssText);
             }
             const nested = (rule as CSSGroupingRule).cssRules;

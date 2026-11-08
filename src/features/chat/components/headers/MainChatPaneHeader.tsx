@@ -552,7 +552,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 // In a preview modal the dialog's own buttons float over this corner.
-                ...modalChromeEndPadding("24px"),
+                ...modalChromeEndPadding({ xs: "16px", md: "24px" }),
             }}
         >
             <Stack direction="row" spacing={{ xs: 1, md: 1.5 }} sx={{ alignItems: "center" }}>
