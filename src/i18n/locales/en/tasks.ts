@@ -175,6 +175,12 @@ export const tasks = {
             confirmButton: "Delete Task",
             cancelButton: "Cancel",
         },
+        confirmDeletedStatus: {
+            title: "Delete this task?",
+            titleMilestone: "Delete this milestone?",
+            body: "It disappears from every list, board and dashboard. To bring it back, switch the table to the Deleted view and give it another status.",
+            bodyMilestone: "It disappears from every list and board.",
+        },
         deleteComment: {
             title: "Delete Comment?",
             body: "This action cannot be undone",

@@ -1278,6 +1278,13 @@ export const es: DeepPartial<Messages> = {
                 allowDestructive:
                     "Permitir también acciones que no se pueden deshacer o que cambian quién tiene acceso (eliminar eventos de calendario, hitos, sprints, notas y carpetas de notas; añadir personas a proyectos o aprobar sus solicitudes de unión; compartir notas)",
                 destructiveChip: "Puede eliminar",
+                revokeDialog: {
+                    title: "¿Revocar esta clave de API?",
+                    body: "Todo lo que la use dejará de funcionar de inmediato, y una clave revocada no se puede volver a activar. Crea una clave nueva si aún necesitas acceso.",
+                    bodyTeam:
+                        "Todo lo que use esta clave de equipo dejará de funcionar de inmediato, y una clave revocada no se puede volver a activar. Quien la creó tendrá que crear una nueva.",
+                    confirm: "Revocar clave",
+                },
             },
             teamKeys: {
                 title: "Claves de API del equipo",
@@ -1339,6 +1346,12 @@ export const es: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Agregar webhook",
                 delete: "Borrar",
+                deleteNamed: "Eliminar {name}",
+                deleteDialog: {
+                    title: "¿Eliminar este webhook?",
+                    body: "Genos dejará de enviar eventos a esta URL. Su secreto de firma se elimina con él, así que volver a añadir la URL crea un secreto nuevo.",
+                    confirm: "Eliminar webhook",
+                },
                 empty: "Aún no hay webhooks.",
                 disabled: "Deshabilitado después de repetidos fallos",
                 managerOnly: "Solo el propietario o editor del equipo puede agregar un webhook.",
@@ -2153,6 +2166,12 @@ export const es: DeepPartial<Messages> = {
                 body: "Esta acción no se puede deshacer",
                 confirmButton: "Eliminar tarea",
                 cancelButton: "Cancelar",
+            },
+            confirmDeletedStatus: {
+                title: "¿Eliminar esta tarea?",
+                titleMilestone: "¿Eliminar este hito?",
+                body: "Desaparece de todas las listas, tableros y paneles. Para recuperarla, cambia la tabla a la vista Eliminadas y dale otro estado.",
+                bodyMilestone: "Desaparece de todas las listas y tableros.",
             },
             createProject: {
                 heading: "Crear nuevo proyecto",
@@ -4506,6 +4525,13 @@ export const es: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "¿Desconectar {provider}?",
+                bodyGoogle:
+                    "Genos elimina el acceso guardado a esta cuenta de Google. Las funciones de calendario que la usan dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con Google otra vez.",
+                bodyGithub:
+                    "Genos elimina el acceso guardado a esta cuenta de GitHub. Las funciones que la usan, como los enlaces a pull requests, dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con GitHub otra vez.",
+            },
             primaryLogin: "Inicio de sesión principal",
             noEmailShared: "(correo no compartido)",
             notConnected: "No conectado",

@@ -27,6 +27,13 @@ export const integrations = {
         github: "GitHub",
     },
     connections: {
+        disconnectDialog: {
+            title: "Disconnect {provider}?",
+            bodyGoogle:
+                "Genos deletes its saved access to this Google account. Calendar features that use it stop working until you connect again, which means signing in with Google once more.",
+            bodyGithub:
+                "Genos deletes its saved access to this GitHub account. Features that use it, such as pull request links, stop working until you connect again, which means signing in with GitHub once more.",
+        },
         primaryLogin: "Primary login",
         noEmailShared: "(no email shared)",
         notConnected: "Not connected",

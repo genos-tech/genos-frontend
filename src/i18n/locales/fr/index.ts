@@ -2441,6 +2441,13 @@ export const fr: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "Déconnecter {provider} ?",
+                bodyGoogle:
+                    "Genos supprime l'accès enregistré à ce compte Google. Les fonctions d'agenda qui l'utilisent cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à Google.",
+                bodyGithub:
+                    "Genos supprime l'accès enregistré à ce compte GitHub. Les fonctions qui l'utilisent, comme les liens vers les pull requests, cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à GitHub.",
+            },
             primaryLogin: "Connexion principale",
             noEmailShared: "(aucun e-mail partagé)",
             notConnected: "Non connecté",
@@ -3394,6 +3401,13 @@ export const fr: DeepPartial<Messages> = {
                 allowDestructive:
                     "Autoriser aussi les actions irréversibles ou qui modifient les accès (supprimer des événements d'agenda, des jalons, des sprints, des notes et des dossiers de notes ; ajouter des personnes à des projets ou approuver leurs demandes d'adhésion ; partager des notes)",
                 destructiveChip: "Peut supprimer",
+                revokeDialog: {
+                    title: "Révoquer cette clé API ?",
+                    body: "Tout ce qui l'utilise cesse de fonctionner immédiatement, et une clé révoquée ne peut pas être réactivée. Créez une nouvelle clé si vous avez encore besoin d'un accès.",
+                    bodyTeam:
+                        "Tout ce qui utilise cette clé d'équipe cesse de fonctionner immédiatement, et une clé révoquée ne peut pas être réactivée. Son créateur devra en créer une nouvelle.",
+                    confirm: "Révoquer la clé",
+                },
             },
             teamKeys: {
                 title: "Clés API de l'équipe",
@@ -3455,6 +3469,12 @@ export const fr: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Ajouter un webhook",
                 delete: "Supprimer",
+                deleteNamed: "Supprimer {name}",
+                deleteDialog: {
+                    title: "Supprimer ce webhook ?",
+                    body: "Genos cesse d'envoyer des événements à cette URL. Son secret de signature est supprimé avec lui : ajouter de nouveau l'URL crée un nouveau secret.",
+                    confirm: "Supprimer le webhook",
+                },
                 empty: "Aucun webhook pour l'instant.",
                 disabled: "Désactivé après des échecs répétés",
                 managerOnly:
@@ -4658,6 +4678,12 @@ export const fr: DeepPartial<Messages> = {
                 body: "Cette action est irréversible",
                 confirmButton: "Supprimer la tâche",
                 cancelButton: "Annuler",
+            },
+            confirmDeletedStatus: {
+                title: "Supprimer cette tâche ?",
+                titleMilestone: "Supprimer ce jalon ?",
+                body: "Elle disparaît de toutes les listes, de tous les tableaux et du tableau de bord. Pour la récupérer, passez le tableau sur la vue Supprimée et donnez-lui un autre statut.",
+                bodyMilestone: "Il disparaît de toutes les listes et de tous les tableaux.",
             },
             deleteComment: {
                 title: "Supprimer le commentaire ?",

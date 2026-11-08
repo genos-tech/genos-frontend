@@ -7,7 +7,8 @@ import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
-import { useTranslation } from "../../../i18n";
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
+import { fmt, useTranslation } from "../../../i18n";
 import {
     Connection,
     ConnectionsResponse,
@@ -40,6 +41,9 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
     // pending state.
     const [disconnecting, setDisconnecting] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    // The account waiting on a yes. Disconnecting deletes the stored tokens and
+    // coming back is a full OAuth round trip, so it asks first (MIP-1301).
+    const [pendingDisconnect, setPendingDisconnect] = useState<Connection | null>(null);
 
     const reload = useCallback(async () => {
         if (!accessToken) return;
@@ -138,7 +142,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                     color="danger"
                                     disabled={isPrimary || disconnecting === connection.id}
                                     variant="outlined"
-                                    onClick={() => handleDisconnect(connection.id)}
+                                    onClick={() => setPendingDisconnect(connection)}
                                 >
                                     {disconnecting === connection.id
                                         ? t.integrations.connections.disconnecting
@@ -160,9 +164,36 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         return <SkeletonRows count={3} twoLines />;
     }
 
+    const dc = t.integrations.connections.disconnectDialog;
+    const pendingIsGithub = pendingDisconnect?.provider === "github";
+    const pendingTitle = fmt(dc.title, {
+        provider: pendingIsGithub
+            ? t.integrations.providers.github
+            : t.integrations.providers.google,
+    });
+    const pendingBody = pendingIsGithub ? dc.bodyGithub : dc.bodyGoogle;
+    const pendingAccount =
+        pendingDisconnect?.provider_email || t.integrations.connections.noEmailShared;
+
     return (
         <Stack spacing={2}>
             {error && <Alert color="danger">{error}</Alert>}
+            {pendingDisconnect && (
+                <ConfirmDialog
+                    cancelLabel={t.common.actions.cancel}
+                    confirmLabel={t.integrations.connections.disconnect}
+                    description={pendingBody}
+                    entityName={pendingAccount}
+                    title={pendingTitle}
+                    closeOnConfirm
+                    destructive
+                    open
+                    onClose={() => setPendingDisconnect(null)}
+                    onConfirm={async () => {
+                        await handleDisconnect(pendingDisconnect.id);
+                    }}
+                />
+            )}
 
             {/* User-facing notice: while our OAuth app is still in
                 Google's verification queue, only whitelisted Gmail

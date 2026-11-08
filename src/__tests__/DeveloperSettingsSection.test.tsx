@@ -1,5 +1,5 @@
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render as rtlRender, screen, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -351,10 +351,100 @@ describe("DeveloperSettingsSection", () => {
         expect(screen.getByText("Made by Editor Ed")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "Revoke Deploy bot" }));
+        // Revoking takes effect at once and has no undo, so it asks first (MIP-1301).
+        const dialog = await screen.findByRole("alertdialog");
+        expect(within(dialog).getByText("Revoke this API key?")).toBeInTheDocument();
+        expect(within(dialog).getByText("Deploy bot")).toBeInTheDocument();
+        expect(revokeTeamApiKey).not.toHaveBeenCalled();
+        await user.click(within(dialog).getByRole("button", { name: "Revoke key" }));
 
         await waitFor(() => expect(revokeTeamApiKey).toHaveBeenCalledWith("tok", "t1", "tk1"));
         expect(revokeApiKey).not.toHaveBeenCalled();
         expect(await screen.findByText(/No team keys right now/i)).toBeInTheDocument();
+    });
+
+    /**
+     * MIP-1301: revoke and delete were one click on an icon. A revoked key and a
+     * deleted webhook (its signing secret goes with it) cannot be brought back,
+     * so each asks first, and Cancel must send nothing.
+     */
+    describe("asks before an irreversible removal", () => {
+        const HOOK = {
+            id: "w1",
+            url: "https://x.example/hook",
+            description: "",
+            events: ["task.created"],
+            isActive: true,
+            consecutiveFailures: 0,
+            disabledAt: null,
+            createdAt: "2026-08-02T00:00:00Z",
+        };
+
+        it("a personal key: Cancel revokes nothing, Revoke key revokes it", async () => {
+            const user = userEvent.setup();
+            listApiKeys.mockResolvedValueOnce([KEY]).mockResolvedValue([]);
+            revokeApiKey.mockResolvedValue(true);
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await user.click(await screen.findByRole("button", { name: "Revoke CI bot" }));
+            let dialog = await screen.findByRole("alertdialog");
+            expect(within(dialog).getByText("CI bot")).toBeInTheDocument();
+            expect(dialog.textContent).not.toMatch(/team key/i);
+            await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+            await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+            expect(revokeApiKey).not.toHaveBeenCalled();
+
+            await user.click(screen.getByRole("button", { name: "Revoke CI bot" }));
+            dialog = await screen.findByRole("alertdialog");
+            await user.click(within(dialog).getByRole("button", { name: "Revoke key" }));
+            await waitFor(() => expect(revokeApiKey).toHaveBeenCalledWith("tok", "k1"));
+            await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+        });
+
+        it("a team key's dialog says it is a team key", async () => {
+            const user = userEvent.setup();
+            listTeamApiKeys.mockResolvedValue([TEAM_KEY]);
+            render(<DeveloperSettingsSection teamId="t1" />);
+            await user.click(await screen.findByRole("button", { name: "Revoke Deploy bot" }));
+            expect((await screen.findByRole("alertdialog")).textContent).toMatch(/team key/i);
+            await user.click(screen.getByRole("button", { name: "Cancel" }));
+            expect(revokeTeamApiKey).not.toHaveBeenCalled();
+        });
+
+        it("a webhook: Cancel deletes nothing, Delete webhook deletes it", async () => {
+            const user = userEvent.setup();
+            listWebhooks.mockResolvedValueOnce([HOOK]).mockResolvedValue([]);
+            deleteWebhook.mockResolvedValue(true);
+            render(<DeveloperSettingsSection teamId="t1" />);
+
+            await user.click(
+                await screen.findByRole("button", { name: "Delete https://x.example/hook" })
+            );
+            let dialog = await screen.findByRole("alertdialog");
+            expect(within(dialog).getByText("Delete this webhook?")).toBeInTheDocument();
+            expect(within(dialog).getByText("https://x.example/hook")).toBeInTheDocument();
+            await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+            await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+            expect(deleteWebhook).not.toHaveBeenCalled();
+
+            await user.click(
+                screen.getByRole("button", { name: "Delete https://x.example/hook" })
+            );
+            dialog = await screen.findByRole("alertdialog");
+            await user.click(within(dialog).getByRole("button", { name: "Delete webhook" }));
+            await waitFor(() => expect(deleteWebhook).toHaveBeenCalledWith("tok", "w1"));
+        });
+
+        it("a refused revoke stays open and says so", async () => {
+            const user = userEvent.setup();
+            listApiKeys.mockResolvedValue([KEY]);
+            revokeApiKey.mockResolvedValue(false);
+            render(<DeveloperSettingsSection teamId="t1" />);
+            await user.click(await screen.findByRole("button", { name: "Revoke CI bot" }));
+            const dialog = await screen.findByRole("alertdialog");
+            await user.click(within(dialog).getByRole("button", { name: "Revoke key" }));
+            expect(await within(dialog).findByText(/Something went wrong/i)).toBeInTheDocument();
+        });
     });
 
     // The log's own behaviour is in SecurityLogSection.test; this is that

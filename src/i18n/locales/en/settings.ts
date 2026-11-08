@@ -253,6 +253,13 @@ export const settings = {
             allowDestructive:
                 "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones, sprints, notes and note folders; adding people to projects or approving their requests to join; sharing notes)",
             destructiveChip: "Can delete",
+            revokeDialog: {
+                title: "Revoke this API key?",
+                body: "Anything using it stops working right away, and a revoked key can't be turned back on. Create a new key if you still need access.",
+                bodyTeam:
+                    "Anything using this team key stops working right away, and a revoked key can't be turned back on. Its creator will need to make a new one.",
+                confirm: "Revoke key",
+            },
         },
         // Owner-only. Lists every live key bound to the team, including
         // the ones editors made, which the list above never shows.
@@ -320,6 +327,12 @@ export const settings = {
             urlPlaceholder: "https://your-app.example.com/genos",
             create: "Add webhook",
             delete: "Delete",
+            deleteNamed: "Delete {name}",
+            deleteDialog: {
+                title: "Delete this webhook?",
+                body: "Genos stops sending events to this URL. Its signing secret is deleted with it, so adding the URL again creates a new secret.",
+                confirm: "Delete webhook",
+            },
             empty: "No webhooks yet.",
             // The server disables an endpoint after 10 consecutive
             // failures; without saying so, "our webhooks stopped" is a
