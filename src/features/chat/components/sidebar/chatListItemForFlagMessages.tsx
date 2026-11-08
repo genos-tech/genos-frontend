@@ -12,24 +12,27 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import { Avatar, Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
+import { Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
 import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -477,7 +480,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 />
             );
         }
-        return <Avatar size="sm">{(resolvedChatName || "?")[0].toUpperCase()}</Avatar>;
+        return <BaseAvatar name={resolvedChatName || ""} size="md" />;
     };
 
     const renderGMAvatar = () => {
@@ -502,9 +505,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             );
         }
         return (
-            <Avatar size="sm">
+            <BaseAvatar size="md">
                 <GroupsIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     };
 
@@ -523,9 +526,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             );
         }
         return (
-            <Avatar size="sm">
+            <BaseAvatar size="md">
                 <AssignmentIcon />
-            </Avatar>
+            </BaseAvatar>
         );
     };
 
@@ -539,9 +542,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     // Fallback for any chat that has been removed entirely — we still need
     // *something* in the avatar slot so the row layout stays consistent.
     const renderRemovedAvatar = () => (
-        <Avatar size="sm" sx={{ opacity: 0.55, filter: "grayscale(0.6)" }}>
+        <BaseAvatar size="md" sx={{ opacity: 0.55, filter: "grayscale(0.6)" }}>
             <PeopleRoundedIcon />
-        </Avatar>
+        </BaseAvatar>
     );
 
     const renderAvatar = () => {
@@ -696,8 +699,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     fontWeight: 600,
                     height: "20px",
                     px: 0.75,
-                    background: isDark ? "rgba(196,181,253,0.16)" : "rgba(124,58,237,0.10)",
-                    color: isDark ? "#c4b5fd" : "#7c3aed",
+                    background: g.accent.subtle,
+                    color: g.accent.text,
                     "& .MuiChip-startDecorator": { color: "inherit" },
                 }}
             >
@@ -742,6 +745,81 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 // Active-flag indicator bar: not shown in the past view (those
                 // flags are completed, not outstanding).
                 unread={Boolean(tmpIsFlagged) && viewMode === "active"}
+                // Complete / Reopen / Unflag live in the row's actions slot, beside the card and
+                // not inside the row's own button. They are always shown (the keep class): a flag's
+                // actions are its main controls, not a hover extra.
+                actions={
+                    <>
+                        {viewMode === "active" ? (
+                            <AppTooltip size="sm" title={t.chat.listItem.completeFlag}>
+                                <IconButton
+                                    className={NAV_KEEP_CLASS}
+                                    color="success"
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        transition: "all 0.2s ease",
+                                        "&:hover": { transform: "scale(1.1)" },
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        completeFlagStatus();
+                                    }}
+                                >
+                                    <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        ) : (
+                            <AppTooltip size="sm" title={t.chat.listItem.reopenFlag}>
+                                <IconButton
+                                    className={NAV_KEEP_CLASS}
+                                    color="primary"
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        transition: "all 0.2s ease",
+                                        "&:hover": { transform: "scale(1.1)" },
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        reopenFlagStatus();
+                                    }}
+                                >
+                                    <ReplayRoundedIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                        {/* Hard remove — deletes the flag entirely
+                                (for an accidental flag). Available in both
+                                the active and past views. */}
+                        <AppTooltip size="sm" title={t.chat.listItem.unflag}>
+                            <IconButton
+                                className={NAV_KEEP_CLASS}
+                                size="sm"
+                                variant="plain"
+                                color={
+                                    viewMode === "active" && tmpIsFlagged ? "danger" : "neutral"
+                                }
+                                sx={{
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        transform: "scale(1.1)",
+                                    },
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateFlagStatus();
+                                }}
+                            >
+                                {viewMode === "active" ? (
+                                    <FlagIcon sx={{ fontSize: 16 }} />
+                                ) : (
+                                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                )}
+                            </IconButton>
+                        </AppTooltip>
+                    </>
+                }
                 sx={{
                     mx: 1,
                     height: "auto",
@@ -750,6 +828,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     ...(navigationDisabled && {
                         "& .MuiListItemButton-root": { cursor: "default" },
                     }),
+                    // The three actions stack beside the card: a row of them would take
+                    // the card's width, and the card is two lines tall anyway.
+                    "& .NavItem-actions": { flexDirection: "column", gap: 0, py: 0.25 },
                 }}
                 onClick={onClickHandler}
             >
@@ -796,73 +877,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             >
                                 {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                             </Typography>
-                            {viewMode === "active" ? (
-                                <AppTooltip size="sm" title={t.chat.listItem.completeFlag}>
-                                    <IconButton
-                                        color="success"
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            transition: "all 0.2s ease",
-                                            "&:hover": { transform: "scale(1.1)" },
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            completeFlagStatus();
-                                        }}
-                                    >
-                                        <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            ) : (
-                                <AppTooltip size="sm" title={t.chat.listItem.reopenFlag}>
-                                    <IconButton
-                                        color="primary"
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            transition: "all 0.2s ease",
-                                            "&:hover": { transform: "scale(1.1)" },
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            reopenFlagStatus();
-                                        }}
-                                    >
-                                        <ReplayRoundedIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            )}
-                            {/* Hard remove — deletes the flag entirely
-                                    (for an accidental flag). Available in both
-                                    the active and past views. */}
-                            <AppTooltip size="sm" title={t.chat.listItem.unflag}>
-                                <IconButton
-                                    size="sm"
-                                    variant="plain"
-                                    color={
-                                        viewMode === "active" && tmpIsFlagged
-                                            ? "danger"
-                                            : "neutral"
-                                    }
-                                    sx={{
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            transform: "scale(1.1)",
-                                        },
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        updateFlagStatus();
-                                    }}
-                                >
-                                    {viewMode === "active" ? (
-                                        <FlagIcon sx={{ fontSize: 16 }} />
-                                    ) : (
-                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    )}
-                                </IconButton>
-                            </AppTooltip>
                         </Stack>
                     </Stack>
 

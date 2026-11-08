@@ -421,9 +421,14 @@ export const MemberAutocomplete = ({
         options={members}
         placeholder={placeholder}
         size="sm"
-        slotProps={{ listbox: { sx: { ...popupSx, maxHeight: 280 } } }}
         sx={[fieldSx, { width: "100%", minWidth }]}
         value={value}
+        slotProps={{
+            // `dir="auto"`: a name like "(DY) Ken Kamiya" or an Arabic one keeps its reading
+            // order and its start in the input (MIP-1180).
+            input: { dir: "auto" },
+            listbox: { sx: { ...popupSx, maxHeight: 280 } },
+        }}
         {...(open !== undefined ? { open } : {})}
         filterOptions={(options, { inputValue }) => {
             const term = inputValue.toLowerCase();

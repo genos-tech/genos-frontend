@@ -6,8 +6,8 @@
  * before this the old service stayed highlighted for the whole switch, next to
  * the new "Loading data…" page. The click now records a local "pending" path.
  *
- * The highlight is read off the label's font weight (600 active, 500 not): it
- * is set from the same flag as the colours and the background.
+ * The highlight is read off the label: its font weight on the tab bar (600 active,
+ * 500 not), `aria-current` on a rail button. Both come from the same flag as the colours.
  *
  * `requestAnimationFrame` is a hand-flushed queue and fake timers cover only
  * `setTimeout`, as in `ServiceSwitchLoader.test.tsx`.
@@ -80,8 +80,18 @@ const cssOf = (el: HTMLElement) => {
         .filter((line) => cls && line.includes(`.${cls}`))
         .join("\n");
 };
-/** The label whose text is exactly `text` is lit when its weight is 600. */
-const lit = (text: string) => /font-weight:600/.test(cssOf(screen.getByText(text)));
+/**
+ * The label whose text is exactly `text` is lit. The tab bar says so with a 600
+ * weight; a rail button says so the way every sidebar row does (MIP-1164): the
+ * button is `aria-current`.
+ */
+const lit = (text: string) => {
+    const label = screen.getByText(text);
+    return (
+        label.closest('[role="button"][aria-current]') !== null ||
+        /font-weight:600/.test(cssOf(label))
+    );
+};
 
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });

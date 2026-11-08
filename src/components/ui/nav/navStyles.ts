@@ -38,6 +38,15 @@ export const NAV_KEEP_CLASS = "NavItem-keep";
  *  while they show, in a row with `actionsInPlace`. */
 export const NAV_HIDE_ON_ACTIONS_CLASS = "NavItem-hide-on-actions";
 
+/** The row's hover colour, OPAQUE: an overlaid action (`actionsOverlay`) has to hide
+ *  what is under it. Joy's `neutral.plainHoverBg` is translucent since the theme moved to
+ *  the tokens, so a button over a title showed the title through it (MIP-1156). The hover
+ *  tint (`--g-hover`, ink at 4.5%) laid over the sidebar surface. */
+export const NAV_OVERLAY_BG = "color-mix(in srgb, var(--g-bg-subtle) 95.5%, var(--g-text))";
+/** The same colour as a shadow fading out to the left of an overlaid action, so a chip
+ *  under the button's edge fades instead of being cut off. */
+export const NAV_OVERLAY_FADE = `-10px 0 8px 0 ${NAV_OVERLAY_BG}`;
+
 /** The list that holds a folder's children: one tree level in, with a hairline
  *  guide. Joy's own nested inset is switched off, the row owns its indent. */
 export const navNestedListSx = {
@@ -78,6 +87,58 @@ export const navFocusSx = {
 } as const;
 
 /**
+ * What makes a row read as a row: text colour, the icon colour that goes
+ * with it, hover and selected. No size, so a surface with its own geometry
+ * (the 68px global rail, MIP-1164) wears the same states as a sidebar row.
+ */
+export const navToneSx = {
+    color: g.text.secondary,
+    // Joy SvgIcon colours itself from --Icon-color, a wrapper's `color`
+    // alone leaves icons grey.
+    "--Icon-color": g.text.secondary,
+    transition: `background-color ${g.motion.fast} ${g.ease}, color ${g.motion.fast} ${g.ease}`,
+    [NAV_HOVER_MEDIA]: {
+        "&:hover": {
+            background: g.hover,
+            color: g.text.primary,
+            "--Icon-color": g.text.primary,
+        },
+    },
+    // After hover, same specificity: selected wins and stays quiet.
+    [NAV_SELECTED]: {
+        background: g.accent.subtle,
+        color: g.accent.text,
+        "--Icon-color": g.accent.text,
+        fontWeight: 500,
+        [NAV_HOVER_MEDIA]: {
+            "&:hover": {
+                background: g.accent.subtle,
+                color: g.accent.text,
+                "--Icon-color": g.accent.text,
+            },
+        },
+    },
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+} as const;
+
+/**
+ * The button INSIDE a row box is transparent: the row box carries the look
+ * (hover, selected), so Joy's own hover/active plate on the button must go.
+ * Its variables are read first, which beats its out-ranking selector.
+ */
+export const navButtonPlateOffSx = {
+    background: "transparent",
+    color: "inherit",
+    "--variant-plainHoverBg": "transparent",
+    "--variant-plainActiveBg": "transparent",
+    // `currentColor`, not `inherit`: as a custom property `inherit` means "my parent's
+    // value of this variable", which is unset, so Joy fell back to its own hover text
+    // colour and a row box that turned red on hover kept a neutral label.
+    "--variant-plainHoverColor": "currentColor",
+    "&:hover, &:active": { background: "transparent", color: "inherit" },
+} as const;
+
+/**
  * Look of the row box: height, radius, text, hover and selected.
  * `lines: 2` is for rows with a second line (chat, sessions, favorites).
  */
@@ -90,31 +151,5 @@ export const navRowSx = ({ lines = 1 }: { lines?: 1 | 2 } = {}) =>
         borderRadius: g.radius.sm,
         ...type("body-sm"),
         fontWeight: 400,
-        color: g.text.secondary,
-        // Joy SvgIcon colours itself from --Icon-color, a wrapper's `color`
-        // alone leaves icons grey.
-        "--Icon-color": g.text.secondary,
-        transition: `background-color ${g.motion.fast} ${g.ease}, color ${g.motion.fast} ${g.ease}`,
-        [NAV_HOVER_MEDIA]: {
-            "&:hover": {
-                background: g.hover,
-                color: g.text.primary,
-                "--Icon-color": g.text.primary,
-            },
-        },
-        // After hover, same specificity: selected wins and stays quiet.
-        [NAV_SELECTED]: {
-            background: g.accent.subtle,
-            color: g.accent.text,
-            "--Icon-color": g.accent.text,
-            fontWeight: 500,
-            [NAV_HOVER_MEDIA]: {
-                "&:hover": {
-                    background: g.accent.subtle,
-                    color: g.accent.text,
-                    "--Icon-color": g.accent.text,
-                },
-            },
-        },
-        "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+        ...navToneSx,
     }) as const;

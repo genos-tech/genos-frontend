@@ -63,7 +63,6 @@ export const TaskHomeModals = ({
                 openJoinProject={openJoinProject}
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}
-                useCM={useCM}
                 usePM={usePM}
             />
             <ModalDeleteProject

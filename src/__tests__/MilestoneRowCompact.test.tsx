@@ -162,14 +162,20 @@ describe("MilestonesListItem: narrow-sidebar rows (MIP-1012)", () => {
         fireEvent.click(screen.getByText("2026"));
         fireEvent.click(screen.getByText("Old sprint"));
 
-        // The row button carrying `text` as its label (a sprint name is also
-        // a chip label on the rows under it, so skip chips).
+        // The row (`li`) carrying `text` as its label (a sprint name is also a chip
+        // label on the rows under it, so skip chips). The indent is the row's own
+        // margin (MIP-1163); jsdom does not resolve `var()` in `margin`, so read the
+        // rule Emotion generated for the row's class.
         const indentOf = (text: string) => {
             const label = screen
                 .getAllByText(text)
                 .find((el) => !el.closest(".MuiChip-root")) as HTMLElement;
-            return getComputedStyle(label.closest(".MuiListItemButton-root") as HTMLElement)
-                .marginLeft;
+            const li = label.closest("li") as HTMLElement;
+            const cls = [...li.classList].filter((c) => c.startsWith("css-"));
+            const rule = allRules()
+                .filter((r) => cls.some((c) => r.startsWith(`.${c} `)))
+                .join(" ");
+            return /margin-left: (calc\(var\(--ms-indent-base\)[^;]*\));/.exec(rule)?.[1];
         };
         const at = (depth: number) =>
             `calc(var(--ms-indent-base) + ${depth} * var(--ms-indent-step))`;
