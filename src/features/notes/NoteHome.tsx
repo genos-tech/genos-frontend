@@ -70,7 +70,7 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     const noteContentBox = {
         px: 1,
-        height: "100dvh",
+        height: "var(--app-vh)",
         borderRight: "1px solid",
         borderColor: ls.sidebarPanel.borderColor,
     };

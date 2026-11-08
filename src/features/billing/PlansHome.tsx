@@ -401,7 +401,7 @@ export const PlansHome = () => {
                 // sidebar where it belongs.
                 flex: 1,
                 minWidth: 0,
-                height: "100dvh",
+                height: "var(--app-vh)",
                 overflowY: "auto",
             }}
         >

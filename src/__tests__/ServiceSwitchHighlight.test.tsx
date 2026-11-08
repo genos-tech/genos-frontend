@@ -70,28 +70,12 @@ const Probe = () => {
 };
 const path = () => screen.getByTestId("path").textContent;
 
-const cssOf = (el: HTMLElement) => {
-    const cls = Array.from(el.classList).find((c) => c.startsWith("css-"));
-    const all = Array.from(document.querySelectorAll("style"))
-        .map((st) => st.textContent ?? "")
-        .join("\n");
-    return all
-        .split("\n")
-        .filter((line) => cls && line.includes(`.${cls}`))
-        .join("\n");
-};
 /**
- * The label whose text is exactly `text` is lit. The tab bar says so with a 600
- * weight; a rail button says so the way every sidebar row does (MIP-1164): the
- * button is `aria-current`.
+ * The label whose text is exactly `text` is lit: it sits inside a control that is
+ * `aria-current="page"`. The rail's buttons and the tab bar's tabs (real buttons
+ * since MIP-1134) both say so that way, and it is the only thing that does.
  */
-const lit = (text: string) => {
-    const label = screen.getByText(text);
-    return (
-        label.closest('[role="button"][aria-current]') !== null ||
-        /font-weight:600/.test(cssOf(label))
-    );
-};
+const lit = (text: string) => screen.getByText(text).closest('[aria-current="page"]') !== null;
 
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });

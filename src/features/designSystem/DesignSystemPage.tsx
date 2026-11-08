@@ -1216,7 +1216,7 @@ const DesignSystemPage = () => {
                 // The page owns its scroll, like PlansHome: the shell is
                 // `overflow: hidden`, so a taller page would scroll the
                 // document and carry the sidebar away with it.
-                height: "100dvh",
+                height: "var(--app-vh)",
                 // The workspace content slot is a flex row; without these
                 // the page shrinks to its content's width.
                 flex: 1,

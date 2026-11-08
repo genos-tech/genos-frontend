@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
-import { Box, Button, IconButton, Sheet, Stack, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Typography } from "@mui/joy";
 
 import { WebNotificationPermission } from "../../hooks/common/useNotifications";
 import { useTranslation } from "../../i18n";
+import { focusRing, g, type } from "../../theme/tokens";
 
 interface PermissionBannerProps {
     permission: WebNotificationPermission;
@@ -24,8 +25,23 @@ const markDismissed = () => {
     sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
 };
 
+/** Height of the bar in px. Fixed, so the shell can reserve exactly this much
+ *  (`--app-banner-h`, read by `--app-vh` in index.css) without measuring. */
+export const PERMISSION_BANNER_HEIGHT = 44;
+const BANNER_HEIGHT_VAR = "--app-banner-h";
+
 /**
- * Top-of-app banner asking the user to grant notification permission.
+ * Banner asking the user to grant notification permission. It is a row IN the
+ * layout, above the rail and the page, not a card floating over them: it used
+ * to be `position: fixed` at the top centre, which sat on the page's own
+ * toolbar (the chat header, the Tasks search, the Inbox title) until it was
+ * dismissed (MIP-1134). While it shows it publishes its height as
+ * `--app-banner-h`, which the shell's `--app-vh` subtracts, so the page below
+ * is exactly as much shorter as the bar is tall and the document does not
+ * scroll.
+ *
+ * One line everywhere; on a phone the explanation is dropped and only the
+ * title, Enable and the close button remain.
  *
  * Only renders when:
  *   - Notifications API is supported
@@ -41,13 +57,24 @@ export const PermissionBanner = ({
     const [dismissed, setDismissed] = useState<boolean>(isDismissedThisSession());
     const { t } = useTranslation();
 
-    if (dismissed) return null;
-    if (permission !== "default") return null;
-    if (!masterEnabled) return null;
+    const visible = !dismissed && permission === "default" && masterEnabled;
+
+    // Reserve the bar's height while it is on screen, give it back when it is not
+    // (dismissed, permission decided, or the component goes away).
+    useLayoutEffect(() => {
+        if (!visible) return undefined;
+        const root = document.documentElement;
+        root.style.setProperty(BANNER_HEIGHT_VAR, `${PERMISSION_BANNER_HEIGHT}px`);
+        return () => {
+            root.style.removeProperty(BANNER_HEIGHT_VAR);
+        };
+    }, [visible]);
+
+    if (!visible) return null;
 
     const handleEnable = async () => {
         await requestPermission();
-        // No matter the result, hide the banner — re-prompting from the
+        // No matter the result, hide the banner: re-prompting from the
         // settings panel is the path forward if the user denied.
         markDismissed();
         setDismissed(true);
@@ -59,59 +86,50 @@ export const PermissionBanner = ({
     };
 
     return (
-        <Sheet
-            color="primary"
-            variant="soft"
+        <Box
+            aria-label={t.services.notifications.banner.title}
+            data-testid="permission-banner"
+            role="region"
             sx={{
-                position: "fixed",
-                top: 8,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 10000,
-                px: 2,
-                py: 1,
-                borderRadius: "lg",
-                boxShadow: "md",
-                minWidth: 360,
-                maxWidth: 560,
-                // The banner floats over page content, so it must be opaque.
-                // The `soft` primary `softBg` is a translucent rgba (0.18 alpha
-                // in dark mode), which lets content behind show through. Layer
-                // that tint over an opaque surface so the banner stays fully
-                // opaque in both light and dark themes while keeping its look.
-                backgroundColor: "background.surface",
-                backgroundImage:
-                    "linear-gradient(var(--joy-palette-primary-softBg), var(--joy-palette-primary-softBg))",
+                boxSizing: "border-box",
+                height: PERMISSION_BANNER_HEIGHT,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                px: { xs: 1.5, md: 2 },
+                background: g.accent.subtle,
+                borderBottom: `1px solid ${g.accent.border}`,
+                color: g.text.primary,
             }}
         >
-            <Stack alignItems="center" direction="row" spacing={1.5}>
-                <Box
-                    sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        bgcolor: "primary.softHoverBg",
-                        color: "primary.solidColor",
-                        flexShrink: 0,
-                    }}
-                >
-                    <NotificationsActiveRounded />
+            <NotificationsActiveRounded
+                sx={{ fontSize: 18, color: g.accent.text, flexShrink: 0 }}
+            />
+            <Typography
+                sx={{ ...type("body-sm"), minWidth: 0, flex: 1, color: g.text.secondary }}
+                noWrap
+            >
+                <Box component="span" sx={{ ...type("title-sm"), color: g.text.primary }}>
+                    {t.services.notifications.banner.title}
                 </Box>
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">
-                        {t.services.notifications.banner.title}
-                    </Typography>
-                    <Typography level="body-xs">{t.services.notifications.banner.body}</Typography>
+                <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                    {" · "}
+                    {t.services.notifications.banner.body}
                 </Box>
-                <Button size="sm" onClick={handleEnable}>
-                    {t.services.notifications.banner.enable}
-                </Button>
-                <IconButton color="neutral" size="sm" variant="plain" onClick={handleDismiss}>
-                    <CloseRounded />
-                </IconButton>
-            </Stack>
-        </Sheet>
+            </Typography>
+            <Button size="sm" sx={{ flexShrink: 0 }} onClick={handleEnable}>
+                {t.services.notifications.banner.enable}
+            </Button>
+            <IconButton
+                aria-label={t.common.actions.close}
+                color="neutral"
+                size="sm"
+                sx={{ flexShrink: 0, "&:focus-visible": focusRing }}
+                variant="plain"
+                onClick={handleDismiss}
+            >
+                <CloseRounded />
+            </IconButton>
+        </Box>
     );
 };

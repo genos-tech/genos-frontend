@@ -1746,7 +1746,7 @@ const AppBody = () => {
                                                                                                         display:
                                                                                                             "flex",
                                                                                                         minHeight:
-                                                                                                            "100dvh",
+                                                                                                            "var(--app-vh)",
                                                                                                         width: "100vw",
                                                                                                     }}
                                                                                                 >

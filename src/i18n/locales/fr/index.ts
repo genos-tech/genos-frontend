@@ -2334,9 +2334,6 @@ export const fr: DeepPartial<Messages> = {
             requestsTitle: "Aucune demande en attente",
             requestsSubtitle: "Les demandes d'équipe et de projet s'afficheront ici",
         },
-        footer: {
-            tagline: "Gardez votre boîte de réception en ordre",
-        },
         notification: {
             approvalBody: "La demande a été approuvée pour rejoindre {target} : ",
         },
@@ -2733,7 +2730,6 @@ export const fr: DeepPartial<Messages> = {
                 "Aucun favori pour le moment. Mettez des notes en favori pour les ajouter ici.",
             noRecents: "Aucune note récente pour le moment.",
             soonBadge: "Bientôt",
-            footerTagline: "Organisez vos idées",
             milestoneLabel: "Jalon",
             addSubNote: "Ajouter une sous-note",
             unknownOwner: "Inconnu",
@@ -4335,7 +4331,6 @@ export const fr: DeepPartial<Messages> = {
             projectsHeader: "Projets",
             board: "Tableau",
             table: "Tableau",
-            footerTagline: "Restez productif",
             noProjectsAvailable: "Aucun projet disponible",
             filterByLabel: "Filtrer par étiquette",
             clearLabelFilter: "Effacer le filtre",

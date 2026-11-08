@@ -1894,7 +1894,6 @@ export const es: DeepPartial<Messages> = {
             projectsHeader: "Proyectos",
             board: "Tablero",
             table: "Tabla",
-            footerTagline: "Mantente productivo",
             noProjectsAvailable: "No hay proyectos disponibles",
             addMilestone: "Añadir hito",
             moveToNoSprint: "Mover a: Sin sprint",
@@ -3028,7 +3027,6 @@ export const es: DeepPartial<Messages> = {
             noFavorites: "Aún no hay favoritos. Marca notas con estrella para añadirlas aquí.",
             noRecents: "Aún no hay notas recientes.",
             soonBadge: "Pronto",
-            footerTagline: "Organiza tus ideas",
             milestoneLabel: "Hito",
             addSubNote: "Añadir subnota",
             unknownOwner: "Desconocido",
@@ -3392,9 +3390,6 @@ export const es: DeepPartial<Messages> = {
             activitiesSubtitle: "Las nuevas actualizaciones y notificaciones aparecerán aquí",
             requestsTitle: "No hay solicitudes pendientes",
             requestsSubtitle: "Las solicitudes de equipo y proyecto se mostrarán aquí",
-        },
-        footer: {
-            tagline: "Mantén tu bandeja en orden",
         },
         notification: {
             approvalBody: "Se ha aprobado la solicitud para unirse a {target}: ",

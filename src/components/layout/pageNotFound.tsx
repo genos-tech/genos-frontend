@@ -27,7 +27,7 @@ const PageNotFoundContent: React.FC = () => {
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100dvh",
+                height: "var(--app-vh)",
                 width: "100vw",
                 textAlign: "center",
                 background: isDark

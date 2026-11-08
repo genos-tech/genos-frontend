@@ -71,7 +71,7 @@ export const TaskPreviewPanel = ({
                     display: "flex",
                     flexDirection: "column",
                     minWidth: 0,
-                    height: "100dvh",
+                    height: "var(--app-vh)",
                     gap: 1,
                     boxShadow: "0 0 0 1px grey",
                     borderColor: mode === "dark" ? "black" : "white",
