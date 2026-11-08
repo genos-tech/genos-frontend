@@ -5,6 +5,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { DataState } from "../../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ResizeHandle } from "../../../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -15,6 +17,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { useSyncFailure } from "../../../../services/syncStatus";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../../../notes/my-notes/components/MyNoteMain";
@@ -83,6 +86,7 @@ export const TaskHomeLayout = ({
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    const projectsSync = useSyncFailure("projects");
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
     // The table and the board sit under the page header, which runs edge to edge
@@ -272,6 +276,28 @@ export const TaskHomeLayout = ({
     );
 
     const renderNoProjectPanel = () => {
+        // The project list never loaded: that is not "No project selected" (MIP-1298).
+        if (projectsSync.failed) {
+            return (
+                <>
+                    <ResizeHandle className="task-resize-handle" />
+                    <Panel id={"6"} maxSize={100} minSize={70} order={6}>
+                        <DataState
+                            hasData={false}
+                            loading={projectsSync.retrying}
+                            skeleton={<SkeletonRows count={4} />}
+                            errorState={{
+                                "data-error": "no-project",
+                                onRetry: projectsSync.retry,
+                                title: t.common.feedback.sync.projectsFailed,
+                            }}
+                            error
+                            fill
+                        />
+                    </Panel>
+                </>
+            );
+        }
         const isDark = mode === "dark";
         // Sidebar nav items use this purple palette (var(--gp-brandalt-400) dark / var(--gp-brand-700)
         // light); reuse it so the empty state feels native to the Tasks

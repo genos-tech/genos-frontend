@@ -13,7 +13,9 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { EmptyState as FeedbackEmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -21,6 +23,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
+import { useSyncFailure, type SyncScope } from "../../../../services/syncStatus";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
@@ -277,6 +280,43 @@ export const EmptyState = ({
             }
             fill
         />
+    );
+};
+
+// The empty state of a list that was never loaded must not read as "nothing
+// here" (MIP-1298): when the background sync of `scope` failed and there is no
+// row of this kind at all (`hasAny` false: an emptied FILTER is still an empty
+// state), say it could not load, with Retry, instead of "No direct messages".
+// Exported for its unit test only.
+export const SyncAwareEmpty = ({
+    scope,
+    hasAny,
+    children,
+}: {
+    scope: SyncScope;
+    hasAny: boolean;
+    children: React.ReactNode;
+}) => {
+    const { t } = useTranslation();
+    const sync = useSyncFailure(scope);
+    return (
+        <DataState
+            error={sync.failed && !hasAny}
+            errorState={{
+                "data-error": "chat-list",
+                onRetry: sync.retry,
+                title:
+                    scope === "channels"
+                        ? t.common.feedback.sync.chatsFailed
+                        : t.common.feedback.sync.activityFailed,
+            }}
+            hasData={false}
+            loading={sync.retrying && !hasAny}
+            skeleton={<SkeletonRows avatar count={5} twoLines />}
+            fill
+        >
+            {children}
+        </DataState>
     );
 };
 
@@ -825,13 +865,15 @@ export const ChatList = (props: ChatListProps) => {
         if (targetChatType < CHAT_TYPES.ACTIVITY) {
             if (targetChats.length === 0) {
                 return (
-                    <EmptyState
-                        actionLabelKey={emptyActionLabelKey}
-                        chatType={targetChatType}
-                        subtitleKey={emptySubtitleKey}
-                        titleKey={emptyTitleKey}
-                        onAction={onEmptyAction}
-                    />
+                    <SyncAwareEmpty hasAny={useCM.allChats.length > 0} scope="channels">
+                        <EmptyState
+                            actionLabelKey={emptyActionLabelKey}
+                            chatType={targetChatType}
+                            subtitleKey={emptySubtitleKey}
+                            titleKey={emptyTitleKey}
+                            onAction={onEmptyAction}
+                        />
+                    </SyncAwareEmpty>
                 );
             }
             const virtuosoRef = chatTypeLookup[targetChatType];
@@ -857,7 +899,11 @@ export const ChatList = (props: ChatListProps) => {
     const renderActivityList = () => {
         if (targetChatType === CHAT_TYPES.ACTIVITY) {
             if (tmpActivityMessages.length === 0) {
-                return <EmptyState chatType={CHAT_TYPES.ACTIVITY} />;
+                return (
+                    <SyncAwareEmpty hasAny={useCM.activityMessages.length > 0} scope="activity">
+                        <EmptyState chatType={CHAT_TYPES.ACTIVITY} />
+                    </SyncAwareEmpty>
+                );
             }
             return (
                 <ActivityListRenderer

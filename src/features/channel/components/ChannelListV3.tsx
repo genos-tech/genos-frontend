@@ -26,10 +26,13 @@ import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import { DataState } from "../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { SearchField } from "../../../components/ui/fields/SearchField";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
+import { useSyncFailure } from "../../../services/syncStatus";
 import { ChannelKind, type Channel } from "../../../types/channel";
 import { useChannelList } from "../hooks/useChannelList";
 
@@ -70,6 +73,8 @@ function channelMatchesQuery(c: Channel, q: string): boolean {
 export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: ChannelListV3Props) {
     const { t } = useTranslation();
     const { channels, unreadByKind, totalUnread, isLoading } = useChannelList();
+    // A failed list load with nothing cached must not read as "No chats yet" (MIP-1298).
+    const sync = useSyncFailure("channels");
     const snapshot = useSyncExternalStore(
         channelService.subscribe,
         channelService.getSnapshot,
@@ -182,10 +187,21 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                 )}
                 {!isLoading && channels.length === 0 && (
                     <li>
-                        <EmptyState
-                            body={t.chat.channel.list.empty}
-                            data-empty="channel-list"
+                        <DataState
+                            error={sync.failed}
+                            hasData={false}
+                            loading={sync.retrying}
                             size="sm"
+                            skeleton={<SkeletonRows count={4} avatar />}
+                            empty={{
+                                body: t.chat.channel.list.empty,
+                                "data-empty": "channel-list",
+                            }}
+                            errorState={{
+                                "data-error": "channel-list",
+                                onRetry: sync.retry,
+                                title: t.common.feedback.sync.chatsFailed,
+                            }}
                         />
                     </li>
                 )}
