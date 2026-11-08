@@ -168,6 +168,16 @@ export const SavedFiltersMenu = ({
         void refresh();
     }, [refresh]);
 
+    // The delete outlives this component (the Undo window can end after a
+    // project switch unmounted it), so its follow-up must check.
+    const aliveRef = useRef(true);
+    useEffect(() => {
+        aliveRef.current = true;
+        return () => {
+            aliveRef.current = false;
+        };
+    }, []);
+
     const nameWaitingToBeDeleted = (name: string) =>
         fetched.some(
             (f) =>
@@ -303,7 +313,9 @@ export const SavedFiltersMenu = ({
                 }
             },
             onExit: () => deleteProjectSavedFilterOnExit(projectId, row.id, accessToken),
-            onCommitted: () => void refresh(),
+            onCommitted: () => {
+                if (aliveRef.current) void refresh();
+            },
         });
     };
 
