@@ -21,8 +21,6 @@ const RAW = new Set(["Menu", "MenuItem", "MenuList"]);
 /** Where the raw components are allowed, each with the reason. */
 const ALLOWED: Record<string, string> = {
     "components/ui/menu/MenuParts.tsx": "the base itself",
-    // Moves onto the base in the next PR of the stack (filter bar).
-    "features/tasks/components/table/filterBarParts.tsx": "FilterMenu / FilterMenuItem, PR 3/3",
 };
 
 const collect = (dir: string, out: string[] = []): string[] => {

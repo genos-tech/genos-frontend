@@ -1,6 +1,6 @@
 // The three small parts every dropdown in the task filter bar is built from
-// (MIP-1121). They are Joy `Dropdown` / `Menu` / `MenuItem` with the bar's own
-// look, so the filter menus no longer need a Material `Menu` + `Fade` slot
+// (MIP-1121). They are Joy `Dropdown` / `MenuButton` around the shared
+// `MenuSurface` / `MenuRow` (MIP-1128), so the filter menus no longer need a Material `Menu` + `Fade` slot
 // (which crashed under the Joy theme alone, see `SavedFiltersMenu`'s history)
 // nor the Material `ThemeProvider` around the table.
 //
@@ -24,15 +24,13 @@ import {
     ChipDelete,
     Dropdown,
     IconButton,
-    Menu,
     MenuButton,
-    MenuItem,
     type IconButtonProps,
     type MenuButtonProps,
-    type MenuItemProps,
 } from "@mui/joy";
 import type { SxProps } from "@mui/joy/styles/types";
 
+import { MenuRow, MenuSurface, type MenuRowProps } from "../../../../components/ui/MoreMenu";
 import type { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { fmt } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
@@ -54,59 +52,38 @@ export const FilterDropdown = ({
     </Dropdown>
 );
 
-/** The bar's dropdown surface: its own background, border, radius and scrollbar. */
+/**
+ * The bar's dropdown surface: the shared menu surface (MIP-1128). `isDark` and `styles`
+ * stay in the props so the callers do not change, but the look now comes from the
+ * tokens, not from `TaskFilterMenuStyles`.
+ */
 export const FilterMenu = ({
-    isDark,
-    styles,
     minWidth,
     // Material's Menu defaulted to the viewport minus a margin.
     maxHeight = "calc(100vh - 96px)",
     placement = "bottom-start",
     children,
 }: {
-    isDark: boolean;
-    styles: FilterBarStyles;
+    /** @deprecated unused: the surface follows the theme through tokens. */
+    isDark?: boolean;
+    /** @deprecated unused: the surface follows the theme through tokens. */
+    styles?: FilterBarStyles;
     minWidth: number | string;
     maxHeight?: number | string;
     placement?: "bottom-start" | "bottom-end";
     children: ReactNode;
 }) => (
-    <Menu
-        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-        placement={placement}
-        size="sm"
-        sx={{
-            background: styles.menuBg,
-            border: `1px solid ${styles.menuBorder}`,
-            borderRadius: "12px",
-            boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.15)",
-            minWidth,
-            maxHeight,
-            overflowY: "auto",
-            "--List-padding": "4px",
-        }}
-    >
+    <MenuSurface placement={placement} sx={{ minWidth, maxHeight }}>
         {children}
-    </Menu>
+    </MenuSurface>
 );
 
-/** A `MenuItem` that never closes its menu by itself (see the file header). */
-export const FilterMenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function FilterMenuItem(
-    { onClick, ...props },
-    ref
-) {
-    return (
-        <MenuItem
-            {...props}
-            ref={ref}
-            onClick={(event) => {
-                // `useMenuItem` checks this flag before dispatching its close.
-                (event as unknown as { defaultMuiPrevented?: boolean }).defaultMuiPrevented = true;
-                onClick?.(event);
-            }}
-        />
-    );
-});
+/** A menu row that never closes its menu by itself (see the file header). */
+export const FilterMenuItem = forwardRef<HTMLDivElement, MenuRowProps>(
+    function FilterMenuItem(props, ref) {
+        return <MenuRow {...props} ref={ref} keepOpen />;
+    }
+);
 
 /**
  * The bar's small chip (a "+2" count on a button, a sprint's status in its row, the
