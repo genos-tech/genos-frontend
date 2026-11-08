@@ -5,6 +5,9 @@
  * ModalFrame dialog with the right name, the right layer and a flat surface. Layers are read
  * from the modal root (`role="presentation"`), the element that carries the z-index.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -14,6 +17,7 @@ import { cssOf } from "./utils/cssOf";
 
 import { InstallBanner } from "../components/layout/InstallBanner";
 import { ImageZoomModal } from "../components/messageBody/ImageZoomModal";
+import { NoteModalHostZIndexProvider } from "../components/modals/noteModalHostZIndex";
 import { useAuth } from "../context/AuthContext";
 import { SignInForm } from "../features/admin/components/SignInForm";
 import { requestPasswordReset } from "../features/admin/services/passwordReset";
@@ -98,6 +102,38 @@ describe("ImageZoomModal (the one lightbox)", () => {
         view.unmount();
         wrap(<ImageZoomModal src="blob:x" zIndex={12000} onClose={vi.fn()} />);
         expect(facts().layer).toBe("12000");
+    });
+
+    // MIP-1193: a picture zoomed from a task / chat preview shown in UrlLinkModal (which
+    // provides its own layer) opened at the page layer, 10010: behind the 10020 preview.
+    it("opens above a modal-hosted preview that provides its layer, without a prop", () => {
+        const view = wrap(
+            <NoteModalHostZIndexProvider value={10020}>
+                <ImageZoomModal src="blob:x" onClose={vi.fn()} />
+            </NoteModalHostZIndexProvider>
+        );
+        expect(facts().layer).toBe("10022");
+        view.unmount();
+        wrap(
+            <NoteModalHostZIndexProvider value={13200}>
+                <ImageZoomModal src="blob:x" onClose={vi.fn()} />
+            </NoteModalHostZIndexProvider>
+        );
+        expect(facts().layer).toBe("13202");
+    });
+
+    it("on a page surface (no host) keeps the page layer", () => {
+        wrap(<ImageZoomModal src="blob:x" onClose={vi.fn()} />);
+        expect(facts().layer).toBe("10010");
+    });
+
+    it("an explicit host prop wins over the context", () => {
+        wrap(
+            <NoteModalHostZIndexProvider value={10020}>
+                <ImageZoomModal hostZIndex={13200} src="blob:x" onClose={vi.fn()} />
+            </NoteModalHostZIndexProvider>
+        );
+        expect(facts().layer).toBe("13202");
     });
 
     it("downloads under the host's filename stem, as each inlined copy did", async () => {
@@ -293,6 +329,57 @@ describe("sign-in: forgot password", () => {
         expect(screen.queryByRole("button", { name: "Send reset link" })).toBeNull();
     });
 
+    // MIP-1193: the answer to a request still in flight when the dialog was closed used to
+    // land on the NEXT open and leave "Check your inbox" with no form.
+    it("an answer that arrives after Close does not show up on the next open", async () => {
+        let answer!: (ok: boolean) => void;
+        (requestPasswordReset as ReturnType<typeof vi.fn>).mockImplementationOnce(
+            () => new Promise<boolean>((resolve) => (answer = resolve))
+        );
+        open();
+        fireEvent.change(
+            within(screen.getByRole("dialog")).getByPlaceholderText("Enter your email"),
+            { target: { value: "me@example.com" } }
+        );
+        await act(async () => {
+            fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
+        });
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+        fireEvent.click(screen.getByRole("button", { name: /forgot/i }));
+
+        await act(async () => answer(true));
+
+        expect(facts().title).toBe("Forgot Password?");
+        expect(screen.getByRole("button", { name: "Send reset link" })).toBeTruthy();
+    });
+
+    it("an error that arrives after Close is not shown on the next open", async () => {
+        let fail!: () => void;
+        (requestPasswordReset as ReturnType<typeof vi.fn>).mockImplementationOnce(
+            (_email: string, onError: (message: string) => void) =>
+                new Promise<boolean>((resolve) => {
+                    fail = () => {
+                        onError("Too many requests");
+                        resolve(false);
+                    };
+                })
+        );
+        open();
+        fireEvent.change(
+            within(screen.getByRole("dialog")).getByPlaceholderText("Enter your email"),
+            { target: { value: "me@example.com" } }
+        );
+        await act(async () => {
+            fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
+        });
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+        fireEvent.click(screen.getByRole("button", { name: /forgot/i }));
+        await act(async () => fail());
+        expect(screen.queryByText("Too many requests")).toBeNull();
+    });
+
     it("the X, the Close button and Escape all close it; the next open starts on the form", async () => {
         open();
         for (const closer of [
@@ -305,5 +392,23 @@ describe("sign-in: forgot password", () => {
             await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
             fireEvent.click(screen.getByRole("button", { name: /forgot/i }));
         }
+    });
+});
+
+describe("UrlLinkModal hands its layer to what opens from inside it (MIP-1193)", () => {
+    it("wraps every view in the host-layer provider at its own effective layer", () => {
+        const source = readFileSync(
+            join(
+                dirname(fileURLToPath(import.meta.url)),
+                "..",
+                "components",
+                "modals",
+                "UrlLinkModal.tsx"
+            ),
+            "utf8"
+        );
+        expect(source).toMatch(
+            /<NoteModalHostZIndexProvider value=\{effectiveZIndex\}>\s*<Suspense fallback=\{<ViewLoadingFallback \/>\}>\{renderBody\(\)\}<\/Suspense>\s*<\/NoteModalHostZIndexProvider>/
+        );
     });
 });
