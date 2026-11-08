@@ -107,6 +107,36 @@ const _CITATION_STRIP_PATTERN = new RegExp(
     "g"
 );
 
+// A GROUP of bare tokens in one bracket: `[task:12, task:13]` (or `;`, or the
+// CJK `、` / `，`). Models write this to cite several things at once. The single
+// token pattern above can't take it (the token run stops at whitespace), so
+// pass 3 used to eat the ids one by one and leave `[,]` in the sentence. The
+// separator class is the same one `_CITATION_DEBRIS_PATTERN` treats as
+// debris. Each member is a typed token exactly like the bare form's.
+const _GROUP_SEP = "[,;\\u3001\\uFF0C]";
+const _GROUP_MEMBER = `(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s,;\\u3001\\uFF0C]+|${_CHAT_LABEL_TOKEN}[^\\]\\s,;\\u3001\\uFF0C]*)`;
+const _GROUP_BODY = `${_GROUP_MEMBER}(?:\\s*${_GROUP_SEP}\\s*${_GROUP_MEMBER})+`;
+const _CITATION_GROUP_PATTERN = new RegExp(`\\[\\s*(${_GROUP_BODY})\\s*\\](?!\\()`, "g");
+const _CITATION_GROUP_STRIP_PATTERN = new RegExp(`[ \\t]?${_CITATION_GROUP_PATTERN.source}`, "g");
+
+// What a stripped marker leaves behind. Every pass below swaps the text it
+// removes for this private-use character instead of nothing, so the cleanup at
+// the end knows WHICH empty brackets are the model's citation debris — and
+// leaves every other `()` / `[]` / `[ ]` alone (a checkbox, `f()` in prose or
+// code, a real `[1]` link). The character never reaches the renderer.
+const _STRIPPED = "\uE000";
+const _STRIPPED_ALL = new RegExp(_STRIPPED, "g");
+
+// A bracket pair holding nothing but separators and at least one stripped
+// marker: `[,]`, `( )`, `（）`, `［、］`. Went with its opening bracket's
+// preceding space/tab so the sentence closes up ("API [,]." -> "API.").
+const _OPENERS = "([\\uFF08\\uFF3B";
+const _CLOSERS = ")\\]\\uFF09\\uFF3D";
+const _CITATION_DEBRIS_PATTERN = new RegExp(
+    `[ \\t]?[${_OPENERS}](?=[^${_CLOSERS}]*${_STRIPPED})[\\s,;\\u3001\\uFF0C${_STRIPPED}]*[${_CLOSERS}]`,
+    "g"
+);
+
 // Safety net for raw citation ids the model dumped into the prose WITHOUT
 // the `[type:id]` / `[prose](type:id)` syntax the two passes handle — the
 // user-reported "response body includes raw gm chat id / task id" leak.
@@ -264,39 +294,53 @@ export const rewriteCitations = (
 ): string => {
     if (!answer) return answer;
     // Pass 1: natural-prose links → sentinel links (resolved) or plain prose.
-    const withLinks = answer.replace(
-        new RegExp(CITATION_LINK_PATTERN.source, "g"),
-        (_full, label: string, token: string) => {
-            const hit = resolveCitationToken(token, sourcesById);
-            const rawTokenLabel = _isRawTokenLabel(label);
-            if (!hit) {
-                // Unresolved: prose labels survive as prose; raw-token
-                // labels are dropped entirely.
-                return rawTokenLabel ? "" : label;
+    const withLinks = answer
+        .replace(_STRIPPED_ALL, "")
+        .replace(
+            new RegExp(CITATION_LINK_PATTERN.source, "g"),
+            (_full, label: string, token: string) => {
+                const hit = resolveCitationToken(token, sourcesById);
+                const rawTokenLabel = _isRawTokenLabel(label);
+                if (!hit) {
+                    // Unresolved: prose labels survive as prose; raw-token
+                    // labels are dropped entirely.
+                    return rawTokenLabel ? _STRIPPED : label;
+                }
+                const displayLabel = rawTokenLabel
+                    ? // Strip brackets from injected titles so they can't
+                      // break the markdown link we're building.
+                      (hit.source.title || "").replace(/[[\]]/g, "").trim() ||
+                      labelFor?.(hit.source) ||
+                      entitySubtitle(hit.source)
+                    : label;
+                // Canonical key in the href so the anchor components'
+                // exact-match lookup resolves suffix-trimmed tokens too.
+                return `[${displayLabel}](${CITATION_HREF_PREFIX}${hit.key})`;
             }
-            const displayLabel = rawTokenLabel
-                ? // Strip brackets from injected titles so they can't
-                  // break the markdown link we're building.
-                  (hit.source.title || "").replace(/[[\]]/g, "").trim() ||
-                  labelFor?.(hit.source) ||
-                  entitySubtitle(hit.source)
-                : label;
-            // Canonical key in the href so the anchor components'
-            // exact-match lookup resolves suffix-trimmed tokens too.
-            return `[${displayLabel}](${CITATION_HREF_PREFIX}${hit.key})`;
-        }
-    );
+        );
     // Pass 2: strip any remaining bare `[type:id]` tokens (chips fallback).
     // The sentinel links from pass 1 aren't touched — their id lives in
     // parens, and the `(?!\()` lookahead protects raw-token labels.
-    const withoutBareTokens = withLinks.replace(_CITATION_STRIP_PATTERN, "");
+    // A GROUP `[task:1, task:2]` goes first: it is one bracket, and the single
+    // token pattern below cannot see inside it.
+    const withoutBareTokens = withLinks
+        .replace(_CITATION_GROUP_STRIP_PATTERN, _STRIPPED)
+        .replace(_CITATION_STRIP_PATTERN, _STRIPPED);
     // Pass 3: safety net for UNbracketed raw ids the model dumped straight
     // into prose (passes 1 & 2 both require the brackets). This is the
     // "response body includes raw gm chat id / task id" leak. The
     // `spotlight-citation:` links from pass 1 are safe: their token is
     // always preceded by a colon, which the pattern's leading boundary
     // (`(?<![\w:/.-])`) rejects — so a valid citation link is never bitten.
-    return withoutBareTokens.replace(_RAW_LEAK_STRIP_PATTERN, "");
+    //
+    // Pass 4: what the stripping left. `Web Animations API [,].` and
+    // `Task A（）` are a bracket with nothing in it; close them up, then drop
+    // the markers. Only a bracket that held a stripped marker goes (see
+    // `_CITATION_DEBRIS_PATTERN`), so `f(x)`, `[1]`, `[ ]` and `()` in code stay.
+    return withoutBareTokens
+        .replace(_RAW_LEAK_STRIP_PATTERN, _STRIPPED)
+        .replace(_CITATION_DEBRIS_PATTERN, "")
+        .replace(_STRIPPED_ALL, "");
 };
 
 // Extract the set of entity ids the answer renders INLINE as a
@@ -346,6 +390,27 @@ export const extractBareCitedIds = (answer: string): Set<string> => {
     while ((m = re.exec(answer)) !== null) {
         ids.add(m[1]);
     }
+    // A group `[task:1, task:2]` cites each of its members.
+    const groups = new RegExp(_CITATION_GROUP_PATTERN.source, "g");
+    while ((m = groups.exec(answer)) !== null) {
+        for (const member of m[1].split(new RegExp(`\\s*${_GROUP_SEP}\\s*`))) ids.add(member);
+    }
+    return ids;
+};
+
+// Raw ids the model wrote in the prose with no brackets at all (`Task A
+// (task:12)`, `（task:12）`). `rewriteCitations` strips them; one that names a
+// source we retrieved is a citation like any other, so it chips too.
+const extractRawCitedIds = (answer: string): Set<string> => {
+    const ids = new Set<string>();
+    if (!answer) return ids;
+    // What the other passes strip first must not be read twice: a link's URL
+    // (`[x](task:12)`) is not a raw leak, it is the link form.
+    const bare = answer
+        .replace(new RegExp(CITATION_LINK_PATTERN.source, "g"), "")
+        .replace(_CITATION_GROUP_STRIP_PATTERN, "")
+        .replace(_CITATION_STRIP_PATTERN, "");
+    for (const m of bare.matchAll(_RAW_LEAK_STRIP_PATTERN)) ids.add(m[0].trim());
     return ids;
 };
 
@@ -391,6 +456,10 @@ export const citedChipSources = (
         if (hit) cited.add(hit.key);
     }
     for (const token of extractBareCitedIds(answer)) {
+        const hit = resolveCitationToken(token, byId);
+        if (hit) cited.add(hit.key);
+    }
+    for (const token of extractRawCitedIds(answer)) {
         const hit = resolveCitationToken(token, byId);
         if (hit) cited.add(hit.key);
     }

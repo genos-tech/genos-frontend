@@ -154,7 +154,9 @@ describe("rewriteCitations — weak-model malformed citations", () => {
             "…redesign ([chat:dm:0738dbef:msg:63b3b58c](chat:dm:0738dbef:msg:63b3b58c)).",
             sources
         );
-        expect(out).toBe("…redesign ().");
+        // The parentheses the model wrapped it in go with it (MIP-1243: this used to
+        // pin the leftover "()" in the sentence).
+        expect(out).toBe("…redesign.");
     });
 
     it("keeps a PROSE label when its token is unresolvable (existing degrade)", () => {
@@ -240,7 +242,7 @@ describe("rewriteCitations — un-prefixed dm:/gm: chat tokens", () => {
             "Check ([gm:8f5e4733:msg:9c17635a](gm:8f5e4733:msg:9c17635a)).",
             noSources
         );
-        expect(out).toBe("Check ().");
+        expect(out).toBe("Check.");
     });
 
     it("leaves bracketed prose starting with a chat label untouched", () => {
