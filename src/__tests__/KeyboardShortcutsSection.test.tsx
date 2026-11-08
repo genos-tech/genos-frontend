@@ -91,4 +91,17 @@ describe("KeyboardShortcutsSection", () => {
         expect(caps("global.cycle")).toBeNull();
         expect(caps("chat.openThread")).toBeNull();
     });
+
+    it("every row prints at least one key cap, on both platforms (a new gesture entry needs a branch)", () => {
+        for (const isMacPlatform of [true, false]) {
+            mac = isMacPlatform;
+            const { container, unmount } = view();
+            for (const id of SHORTCUT_IDS) {
+                expect(keys(container, id).length, `${id} mac=${isMacPlatform}`).toBeGreaterThan(
+                    0
+                );
+            }
+            unmount();
+        }
+    });
 });

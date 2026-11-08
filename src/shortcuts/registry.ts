@@ -6,7 +6,7 @@
  *
  * What is NOT here: widget keys (Enter submits a field, Escape closes a popup,
  * arrows move inside a list) and the editor's own chords. Those are not
- * shortcuts a person looks up; `docs/design/evidence/MIP-1275.md` lists them.
+ * shortcuts a person looks up; genos-docs `design/evidence/MIP-1275.md` lists them.
  *
  * Matching is deliberately the same as the `if`s it replaced: a chord names the
  * modifiers that MUST be held and the ones that must NOT be, and ignores the
