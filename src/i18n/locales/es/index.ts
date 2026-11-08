@@ -58,7 +58,6 @@ export const es: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "Sin resultados",
-            noItems: "Aún no hay nada aquí",
         },
         errors: {
             generic: "Algo salió mal. Inténtalo de nuevo.",
@@ -1375,7 +1374,7 @@ export const es: DeepPartial<Messages> = {
             },
             delete: "Borrar",
             completedTodayEmptyTitle: "Nada terminado todavía hoy",
-            completedTodayEmptySubtitle: "Los elementos que completes hoy aparecerán aquí.",
+            completedTodayEmptySubtitle: "Marca un elemento como hecho para verlo aquí.",
             incompleteEmptySubtitle: "No hay elementos incompletos en tus grupos visibles.",
             emptySubtitle: "Crea el grupo de hoy para comenzar.",
             sourceDmThread: "Del hilo DM",
@@ -1487,9 +1486,10 @@ export const es: DeepPartial<Messages> = {
             emptyGMTitle: "No hay mensajes de grupo",
             emptyGMSubtitle: "Crea o únete a un grupo para empezar",
             emptyPMTitle: "No hay actualizaciones de proyecto",
-            emptyPMSubtitle: "Las conversaciones de proyecto aparecerán aquí",
+            emptyPMSubtitle: "Crea un proyecto o únete a uno para ver su chat aquí.",
             emptyActivityTitle: "Aún no hay actividad",
-            emptyActivitySubtitle: "Las menciones y respuestas se mostrarán aquí",
+            emptyActivitySubtitle:
+                "Inicia un hilo o menciona a alguien con @ para recibir respuestas y menciones aquí.",
             emptyFlaggedTitle: "No hay mensajes destacados",
             emptyFlaggedSubtitle: "Destaca los mensajes importantes para encontrarlos luego",
             previewGif: "GIF",
@@ -1530,7 +1530,7 @@ export const es: DeepPartial<Messages> = {
             gmTagPinDefault: "Muestra siempre este chip.",
             gmTagUnpinDefault: "Deja de mostrar siempre este chip",
             emptyPastFlaggedTitle: "No hay banderas completadas",
-            emptyPastFlaggedSubtitle: "Las banderas que marcas como terminadas aparecen aquí",
+            emptyPastFlaggedSubtitle: "Marca una bandera como terminada para moverla aquí.",
             viewPastFlaggedMenu: "Ver banderas completadas",
             viewActiveFlaggedMenu: "Ver banderas activas",
             backToActiveFlaggedButton: "Volver a banderas activas",
@@ -2500,7 +2500,7 @@ export const es: DeepPartial<Messages> = {
             },
             untitledTask: "Tarea sin título",
             nothingAssignedTitle: "Aún no tienes nada asignado",
-            nothingAssignedBody: "Las tareas que se te asignen en este proyecto aparecerán aquí.",
+            nothingAssignedBody: "Asígnate una tarea de este proyecto para verla aquí.",
             kpiActive: "Activas",
             kpiClosed: "Cerradas",
             kpiOverdue: "Atrasadas",
@@ -2539,7 +2539,7 @@ export const es: DeepPartial<Messages> = {
                 promptBody: "Elige un miembro arriba para ver las estadísticas de sus tareas.",
                 nothingAssignedTitle: "No hay nada asignado a este miembro.",
                 nothingAssignedBody:
-                    "Las tareas asignadas a este miembro en este proyecto se mostrarán aquí.",
+                    "Asigna una tarea de este proyecto a este miembro para verla aquí.",
                 milestonesEmpty:
                     "No se han asignado hitos en curso en este proyecto a este miembro.",
                 milestonesHelp:
@@ -2702,6 +2702,7 @@ export const es: DeepPartial<Messages> = {
         },
         activity: {
             empty: "Aún no hay actividad",
+            emptyBody: "Cambia un campo o añade un comentario para iniciar el historial.",
             someone: "Alguien",
             githubUser: "Usuario GitHub",
             commentedOn: "comentado en",
@@ -2783,7 +2784,7 @@ export const es: DeepPartial<Messages> = {
                     "Estas tareas no pueden avanzar hasta que ésta esté terminada.",
                 blockedByDescription:
                     "Estas tareas deben terminar antes de que ésta pueda moverse.",
-                emptySection: "Nada aquí todavía.",
+                emptySection: "Aún no hay ninguna. Busca una tarea abajo para añadirla.",
                 doneButton: "Hecho",
                 removeTooltip: "Eliminar dependencia",
                 closeTooltip: "Cerca",
@@ -3164,8 +3165,7 @@ export const es: DeepPartial<Messages> = {
                 "Elige una versión para previsualizarla. Restaurar crea una nueva versión, así se preserva el historial.",
             viewerDescription:
                 "Vista solo de lectura — solo el propietario o los editores pueden restaurar una versión anterior.",
-            emptyList:
-                "Aún no hay historial. Las versiones aparecerán aquí tras el siguiente guardado.",
+            emptyList: "Aún no hay historial. Guarda la nota para registrar su primera versión.",
             currentChip: "actual",
             restoredFrom: "restaurado desde la v{version}",
             selectVersionPrompt: "Selecciona una versión a la izquierda para previsualizarla.",
@@ -3455,13 +3455,15 @@ export const es: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "¡Todo al día!",
-            defaultEmptySubtitle: "No hay nada nuevo por revisar",
+            defaultEmptySubtitle: "Elige una tarea para trabajar o descansa un poco.",
         },
         emptyStates: {
             activitiesTitle: "Aún no hay actividad",
-            activitiesSubtitle: "Las nuevas actualizaciones y notificaciones aparecerán aquí",
+            activitiesSubtitle:
+                "Cuando te asignen una tarea o te mencionen con @, verás las novedades aquí.",
             requestsTitle: "No hay solicitudes pendientes",
-            requestsSubtitle: "Las solicitudes de equipo y proyecto se mostrarán aquí",
+            requestsSubtitle:
+                "Cuando alguien pida unirse a tu equipo o proyecto, aprueba o rechaza aquí.",
         },
         notification: {
             approvalBody: "Se ha aprobado la solicitud para unirse a {target}: ",
@@ -5173,7 +5175,10 @@ export const es: DeepPartial<Messages> = {
             years: "Hace {count}y",
         },
         messageNumber: "Mensaje #{id}",
-        empty: "Nada aquí todavía.",
+        emptyTitle: "Aún no hay historial",
+        emptyChats: "Abre un chat o un hilo y aparecerá en la lista.",
+        emptyTasks: "Abre una tarea y aparecerá en la lista.",
+        emptyNotes: "Abre una nota y aparecerá en la lista.",
         clear: "Borrar historial",
     },
     featuresPage: {

@@ -25,6 +25,7 @@ import { useTranslation } from "../../i18n";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
+import { EmptyState } from "../ui/feedback/EmptyState";
 import { MentionGroupEditor } from "./MentionGroupEditor";
 
 type Props = {
@@ -181,9 +182,11 @@ export const MentionGroupsPanel = ({
                     >
                         {mentionGroups.length === 0 && !creating && (
                             <ListItem>
-                                <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                    {t.settings.mentionGroups.empty}
-                                </Typography>
+                                <EmptyState
+                                    body={t.settings.mentionGroups.empty}
+                                    data-empty="mention-groups"
+                                    size="xs"
+                                />
                             </ListItem>
                         )}
                         {mentionGroups.map((g) => (

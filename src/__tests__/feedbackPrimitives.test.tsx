@@ -52,6 +52,36 @@ describe("EmptyState", () => {
         expect(onClick).toHaveBeenCalledTimes(1);
     });
 
+    it("a body-only hint (no title) shows the sentence, not an empty heading", () => {
+        render(wrap(<EmptyState body="No tags yet. Add one below." size="sm" />));
+        expect(screen.getByText("No tags yet. Add one below.")).toBeTruthy();
+        // No heading element is rendered for a missing title.
+        expect(
+            document.querySelectorAll(".MuiTypography-title-sm, .MuiTypography-title-md").length
+        ).toBe(0);
+    });
+
+    it("xs is one start-aligned line, with its action when given", () => {
+        const onClick = vi.fn();
+        const { container } = render(
+            wrap(
+                <EmptyState
+                    action={{ label: "Create", onClick }}
+                    body="No schedules yet."
+                    data-empty="xs-case"
+                    icon={<span data-testid="ic" />}
+                    size="xs"
+                />
+            )
+        );
+        expect(screen.getByText("No schedules yet.")).toBeTruthy();
+        // xs never draws the icon disc.
+        expect(screen.queryByTestId("ic")).toBeNull();
+        expect(container.querySelector('[data-empty="xs-case"]')).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: "Create" }));
+        expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
     it("renders no button and no icon disc when none are given", () => {
         render(wrap(<EmptyState title="No tasks" />));
         expect(screen.queryByRole("button")).toBeNull();

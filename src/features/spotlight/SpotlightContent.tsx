@@ -47,6 +47,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { fmt, useTranslation, type Messages } from "../../i18n";
@@ -1887,18 +1888,7 @@ const HistoryListView = ({
     }
 
     if (sessions.length === 0) {
-        return (
-            <Typography
-                level="body-md"
-                sx={{
-                    color: g.text.secondary,
-                    px: 0.5,
-                    py: 1,
-                }}
-            >
-                {ts.history.empty}
-            </Typography>
-        );
+        return <EmptyState body={ts.history.empty} data-empty="spotlight-history" size="xs" />;
     }
 
     return (

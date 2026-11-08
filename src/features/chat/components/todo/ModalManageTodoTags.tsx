@@ -1,9 +1,10 @@
 import { useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
-import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, IconButton, Input, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../../i18n";
@@ -145,12 +146,11 @@ export const ModalManageTodoTags = ({
         >
             <Box sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}>
                 {categories.length === 0 && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
-                    >
-                        {t.chat.todoPane.tags.emptyList}
-                    </Typography>
+                    <EmptyState
+                        body={t.chat.todoPane.tags.emptyList}
+                        data-empty="todo-tags"
+                        size="sm"
+                    />
                 )}
                 {categories.map((category) => {
                     const isArmed = armedDeleteId === category.categoryId;

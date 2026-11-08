@@ -18,6 +18,7 @@ import {
     revokeMcpConnection,
     updateMcpConnection,
 } from "../../services/mcpConnections";
+import { EmptyState } from "../ui/feedback/EmptyState";
 
 /**
  * Settings → Developer → Connected apps (MIP-1079): the AI apps this member has
@@ -118,9 +119,7 @@ export const ConnectedAppsSection = () => {
                 </Alert>
             )}
             {connections?.length === 0 && (
-                <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                    {a.empty}
-                </Typography>
+                <EmptyState body={a.empty} data-empty="connected-apps" size="xs" />
             )}
 
             {(connections ?? []).map((c) => {

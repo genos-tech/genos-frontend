@@ -37,6 +37,7 @@ import { MDMAvatar } from "../ui/avatars/MDMAvatar";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { Clickable } from "../ui/Clickable";
 import { EmojiText } from "../ui/emoji/EmojiText";
+import { EmptyState } from "../ui/feedback/EmptyState";
 import { ModalFrame } from "../ui/modal/ModalFrame";
 
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -373,25 +374,6 @@ const HistoryRow = ({
     </Clickable>
 );
 
-const EmptyState = ({ message }: { message: string }) => (
-    <Box
-        sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            py: 6,
-            gap: 1,
-            color: "text.tertiary",
-        }}
-    >
-        <HistoryRoundedIcon sx={{ fontSize: 36, opacity: 0.5 }} />
-        <Typography level="body-sm" sx={{ color: "inherit" }}>
-            {message}
-        </Typography>
-    </Box>
-);
-
 // Small colored chip used by Thread / Milestone / Note-type indicators.
 const SmallChip = ({
     icon,
@@ -698,7 +680,12 @@ export const HistoryModal = ({
                 <TabPanel sx={{ px: 0, py: 0.5 }} value="chats">
                     <Stack spacing={0.25}>
                         {chatsEntries.length === 0 ? (
-                            <EmptyState message={t.history.empty} />
+                            <EmptyState
+                                body={t.history.emptyChats}
+                                data-empty="history-chats"
+                                icon={<HistoryRoundedIcon />}
+                                title={t.history.emptyTitle}
+                            />
                         ) : (
                             chatsEntries.map(renderEntry)
                         )}
@@ -707,7 +694,12 @@ export const HistoryModal = ({
                 <TabPanel sx={{ px: 0, py: 0.5 }} value="tasks">
                     <Stack spacing={0.25}>
                         {tasksEntries.length === 0 ? (
-                            <EmptyState message={t.history.empty} />
+                            <EmptyState
+                                body={t.history.emptyTasks}
+                                data-empty="history-tasks"
+                                icon={<HistoryRoundedIcon />}
+                                title={t.history.emptyTitle}
+                            />
                         ) : (
                             tasksEntries.map(renderEntry)
                         )}
@@ -716,7 +708,12 @@ export const HistoryModal = ({
                 <TabPanel sx={{ px: 0, py: 0.5 }} value="notes">
                     <Stack spacing={0.25}>
                         {notesEntries.length === 0 ? (
-                            <EmptyState message={t.history.empty} />
+                            <EmptyState
+                                body={t.history.emptyNotes}
+                                data-empty="history-notes"
+                                icon={<HistoryRoundedIcon />}
+                                title={t.history.emptyTitle}
+                            />
                         ) : (
                             notesEntries.map(renderEntry)
                         )}

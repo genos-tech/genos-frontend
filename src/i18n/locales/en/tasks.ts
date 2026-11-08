@@ -647,6 +647,7 @@ export const tasks = {
     },
     activity: {
         empty: "No activity yet",
+        emptyBody: "Change a field or add a comment to start the history.",
         someone: "Someone",
         githubUser: "GitHub user",
         commentedOn: "commented on",
@@ -748,7 +749,7 @@ export const tasks = {
             intro: "Link this task to others that must finish first (Blocked by) or that depend on it finishing (Blocking). Cross-project links are allowed within the same team.",
             blockingDescription: "These tasks can't move forward until this one is done.",
             blockedByDescription: "These tasks must finish before this one can move.",
-            emptySection: "Nothing here yet.",
+            emptySection: "None yet. Search for a task below to add one.",
             doneButton: "Done",
             removeTooltip: "Remove dependency",
             closeTooltip: "Close",
@@ -1015,8 +1016,7 @@ export const tasks = {
             promptTitle: "Pick a member",
             promptBody: "Choose a member above to see their task stats.",
             nothingAssignedTitle: "Nothing assigned to this member",
-            nothingAssignedBody:
-                "Tasks assigned to this member in this project will show up here.",
+            nothingAssignedBody: "Assign this member a task in this project to see it here.",
             milestonesEmpty: "No ongoing milestones in this project are assigned to this member.",
             milestonesHelp:
                 "Ongoing milestones in this project this member is assigned to, or that have a task assigned to them. Click a card to open its task graph — this member's tasks and subtasks are highlighted.",
@@ -1095,7 +1095,7 @@ export const tasks = {
         },
         untitledTask: "Untitled Task",
         nothingAssignedTitle: "Nothing assigned to you yet",
-        nothingAssignedBody: "Tasks assigned to you in this project will show up here.",
+        nothingAssignedBody: "Assign yourself a task in this project to see it here.",
         kpiActive: "Active",
         kpiClosed: "Closed",
         kpiOverdue: "Overdue",

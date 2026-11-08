@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { AvatarGroup, BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -84,9 +85,11 @@ export const SprintMilestonesSection = ({
                 </Box>
             </Stack>
             {milestones.length === 0 ? (
-                <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
-                    {t.tasks.milestones.noMilestones}
-                </Typography>
+                <EmptyState
+                    data-empty="sprint-milestones"
+                    size="xs"
+                    title={t.tasks.milestones.noMilestones}
+                />
             ) : (
                 <Stack spacing={1.25}>
                     {milestones.map((m) => {

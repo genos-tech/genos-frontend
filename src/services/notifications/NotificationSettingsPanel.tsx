@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { chatDisplayName } from "../../features/chat/utils/chatDisplayName";
 import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
@@ -407,7 +408,11 @@ export const NotificationSettingsPanel = ({
                 })}
             </Typography>
             {preferences.mutedChats.length === 0 ? (
-                <Typography level="body-xs">{settingsMessages.noMutedChats}</Typography>
+                <EmptyState
+                    body={settingsMessages.noMutedChats}
+                    data-empty="muted-chats"
+                    size="xs"
+                />
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedChats.map((m) => {
@@ -471,7 +476,11 @@ export const NotificationSettingsPanel = ({
                 })}
             </Typography>
             {preferences.mutedTargets.length === 0 ? (
-                <Typography level="body-xs">{settingsMessages.noMutedTargets}</Typography>
+                <EmptyState
+                    body={settingsMessages.noMutedTargets}
+                    data-empty="muted-targets"
+                    size="xs"
+                />
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedTargets.map((target) => {

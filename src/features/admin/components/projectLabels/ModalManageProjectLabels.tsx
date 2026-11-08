@@ -16,6 +16,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
@@ -316,12 +317,11 @@ export const ModalManageProjectLabels = ({
                 {loading && <SkeletonRows count={3} />}
 
                 {!loading && catalog.length === 0 && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.secondary, textAlign: "center", py: 3 }}
-                    >
-                        {t.admin.projectLabels.empty}
-                    </Typography>
+                    <EmptyState
+                        body={t.admin.projectLabels.empty}
+                        data-empty="project-labels"
+                        size="sm"
+                    />
                 )}
 
                 {!loading &&

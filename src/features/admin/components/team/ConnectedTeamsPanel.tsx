@@ -36,6 +36,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { fmt, useTranslation } from "../../../../i18n";
 import type { TeamConnection } from "../../services/teamConnections";
@@ -273,9 +274,7 @@ export const ConnectedTeamsPanel = ({
                     active.length === 0 &&
                     incoming.length === 0 &&
                     outgoing.length === 0 && (
-                        <Typography level="body-xs" sx={{ color: labelColor, py: 1 }}>
-                            {strings.empty}
-                        </Typography>
+                        <EmptyState body={strings.empty} data-empty="connected-teams" size="xs" />
                     )}
             </Stack>
 

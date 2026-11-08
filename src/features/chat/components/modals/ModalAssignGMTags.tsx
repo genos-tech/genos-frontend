@@ -3,6 +3,7 @@ import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import { Alert, Box, Button, Checkbox, Typography } from "@mui/joy";
 
 import { Clickable } from "../../../../components/ui/Clickable";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -92,12 +93,11 @@ export const ModalAssignGMTags = ({ chat, open, setOpen }: ModalAssignGMTagsProp
         >
             <Box sx={{ maxHeight: 260, my: 1, overflowY: "auto" }}>
                 {tags.length === 0 && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
-                    >
-                        {t.chat.gmTags.emptyAssign}
-                    </Typography>
+                    <EmptyState
+                        body={t.chat.gmTags.emptyAssign}
+                        data-empty="gm-tags-assign"
+                        size="sm"
+                    />
                 )}
                 {tags.map((tag) => (
                     <Clickable

@@ -48,6 +48,7 @@ import { GithubPullSummary, listMyPulls } from "./services/github";
 import { redirectToOAuthConnect } from "./services/oauth";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../context/AuthContext";
@@ -280,11 +281,11 @@ const CalendarTab = ({
             {loading ? (
                 <SkeletonRows count={3} twoLines />
             ) : events.length === 0 ? (
-                <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
-                    <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                        {t.integrations.calendar.empty}
-                    </Typography>
-                </Sheet>
+                <EmptyState
+                    body={t.integrations.calendar.empty}
+                    data-empty="calendar-events"
+                    size="sm"
+                />
             ) : (
                 <Stack spacing={1}>
                     {events.map((e) => (
@@ -611,11 +612,11 @@ const GithubTab = ({
             {loading ? (
                 <SkeletonRows count={3} twoLines />
             ) : pulls.length === 0 ? (
-                <Sheet sx={{ p: 3, borderRadius: "md", textAlign: "center" }} variant="outlined">
-                    <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                        {t.integrations.github.noOpenPulls}
-                    </Typography>
-                </Sheet>
+                <EmptyState
+                    body={t.integrations.github.noOpenPulls}
+                    data-empty="github-pulls"
+                    size="sm"
+                />
             ) : (
                 <Stack spacing={1}>
                     {pulls.map((pr) => (

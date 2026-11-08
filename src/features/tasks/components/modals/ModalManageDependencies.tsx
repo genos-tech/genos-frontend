@@ -8,6 +8,7 @@ import { Alert, Box, Button, Chip, IconButton, Stack, Typography } from "@mui/jo
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import {
     MODAL_FRAME_DEFAULT_Z_INDEX,
     MODAL_FRAME_HOST_OFFSET,
@@ -397,21 +398,7 @@ const DependencySection = ({
                     ))}
                 </Stack>
             ) : (
-                <Box
-                    sx={{
-                        mb: 1.25,
-                        py: 1.75,
-                        px: 1,
-                        borderRadius: g.radius.md,
-                        border: "1px dashed",
-                        borderColor: g.border.default,
-                        textAlign: "center",
-                    }}
-                >
-                    <Typography level="body-sm" sx={{ opacity: 0.6 }}>
-                        {emptyLabel}
-                    </Typography>
-                </Box>
+                <EmptyState body={emptyLabel} data-empty="task-dependencies" size="sm" />
             )}
 
             <Box sx={{ opacity: busy ? 0.55 : 1, pointerEvents: busy ? "none" : "auto" }}>

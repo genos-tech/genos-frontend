@@ -11,6 +11,7 @@ import { Alert, Box, Button, Card, Chip, Divider, Stack, Typography } from "@mui
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../i18n";
 import {
@@ -100,7 +101,11 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                 {loading ? (
                     <SkeletonRows count={3} />
                 ) : !data || data.owners.length === 0 ? (
-                    <Alert color="neutral">{t.integrations.github.repoAccess.empty}</Alert>
+                    <EmptyState
+                        body={t.integrations.github.repoAccess.empty}
+                        data-empty="github-repo-access"
+                        size="sm"
+                    />
                 ) : (
                     <Stack spacing={0.5}>
                         {data.owners.map((owner) => {

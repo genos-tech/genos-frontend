@@ -59,7 +59,6 @@ export const ar: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "لا توجد نتائج",
-            noItems: "لا يوجد شيء هنا بعد",
         },
         errors: {
             generic: "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
@@ -1351,7 +1350,7 @@ export const ar: DeepPartial<Messages> = {
             },
             delete: "يمسح",
             completedTodayEmptyTitle: "لا شيء انتهى بعد اليوم",
-            completedTodayEmptySubtitle: "العناصر التي أكملتها اليوم ستظهر هنا.",
+            completedTodayEmptySubtitle: "أكمل عنصرًا لتراه هنا.",
             incompleteEmptySubtitle: "لا توجد عناصر غير مكتملة في مجموعاتك المرئية.",
             emptySubtitle: "قم بإنشاء مجموعة اليوم للبدء.",
             sourceDmThread: "من DM الموضوع",
@@ -1461,9 +1460,10 @@ export const ar: DeepPartial<Messages> = {
             emptyGMTitle: "لا توجد رسائل مجموعات",
             emptyGMSubtitle: "أنشئ مجموعة أو انضم إليها للبدء",
             emptyPMTitle: "لا توجد تحديثات للمشاريع",
-            emptyPMSubtitle: "ستظهر هنا محادثات المشاريع",
+            emptyPMSubtitle: "أنشئ مشروعًا أو انضم إلى مشروع ليظهر لك محادثته هنا.",
             emptyActivityTitle: "لا يوجد نشاط بعد",
-            emptyActivitySubtitle: "ستظهر الإشارات والردود هنا",
+            emptyActivitySubtitle:
+                "ابدأ موضوعًا أو أشِر إلى زميل بـ @ لتصلك الردود والإشارات هنا.",
             emptyFlaggedTitle: "لا توجد رسائل مُعلّمة",
             emptyFlaggedSubtitle: "علّم الرسائل المهمة لتجدها لاحقًا",
             previewGif: "GIF",
@@ -1504,7 +1504,7 @@ export const ar: DeepPartial<Messages> = {
             gmTagPinDefault: "أظهر هذه الشريحة دائمًا",
             gmTagUnpinDefault: "توقف عن إظهار هذه الشريحة دائمًا",
             emptyPastFlaggedTitle: "لا توجد أعلام مكتملة",
-            emptyPastFlaggedSubtitle: 'تظهر العلامات التي وضعت عليها علامة "تم" هنا',
+            emptyPastFlaggedSubtitle: 'ضع علامة "تم" على علامة لتنتقل إلى هنا.',
             viewPastFlaggedMenu: "عرض الأعلام المكتملة",
             viewActiveFlaggedMenu: "عرض الأعلام النشطة",
             backToActiveFlaggedButton: "العودة إلى الأعلام النشطة",
@@ -2467,7 +2467,7 @@ export const ar: DeepPartial<Messages> = {
             },
             untitledTask: "مهمة بدون عنوان",
             nothingAssignedTitle: "لم يتم إسناد أي شيء إليك بعد",
-            nothingAssignedBody: "ستظهر هنا المهام المُسنَدة إليك في هذا المشروع.",
+            nothingAssignedBody: "أسنِد إلى نفسك مهمة في هذا المشروع لتراها هنا.",
             kpiActive: "نشطة",
             kpiClosed: "مغلقة",
             kpiOverdue: "متأخرة",
@@ -2504,7 +2504,7 @@ export const ar: DeepPartial<Messages> = {
                 promptTitle: "اختر عضوا",
                 promptBody: "اختر عضوًا أعلاه لرؤية إحصائيات مهمته.",
                 nothingAssignedTitle: "لم يتم تعيين أي شيء لهذا العضو",
-                nothingAssignedBody: "ستظهر هنا المهام المخصصة لهذا العضو في هذا المشروع.",
+                nothingAssignedBody: "أسنِد إلى هذا العضو مهمة في هذا المشروع لتراها هنا.",
                 milestonesEmpty: "لم يتم تعيين أي معالم مستمرة في هذا المشروع لهذا العضو.",
                 milestonesHelp:
                     "المعالم المستمرة في هذا المشروع التي تم تعيين هذا العضو لها، أو التي تم تعيين مهمة لها. انقر فوق البطاقة لفتح الرسم البياني للمهام الخاصة بها - يتم تمييز مهام هذا العضو ومهامه الفرعية.",
@@ -2662,6 +2662,7 @@ export const ar: DeepPartial<Messages> = {
         },
         activity: {
             empty: "لا يوجد نشاط بعد",
+            emptyBody: "غيّر حقلًا أو أضف تعليقًا لتبدأ السجل.",
             someone: "شخص ما",
             githubUser: "GitHub المستخدم",
             commentedOn: "علق على",
@@ -2740,7 +2741,7 @@ export const ar: DeepPartial<Messages> = {
                 intro: "اربط هذه المهمة بالآخرين الذين يجب أن ينتهيوا أولاً (محظور بواسطة) أو الذين يعتمدون على إنهاءها (حظر). يُسمح بالروابط المشتركة بين المشاريع داخل نفس الفريق.",
                 blockingDescription: "لا يمكن المضي قدمًا في هذه المهام حتى تنتهي هذه المهمة.",
                 blockedByDescription: "يجب أن تنتهي هذه المهام قبل أن تتمكن هذه المهمة من التحرك.",
-                emptySection: "لا شيء هنا بعد.",
+                emptySection: "لا توجد بعد. ابحث عن مهمة أدناه لإضافتها.",
                 doneButton: "منتهي",
                 removeTooltip: "إزالة التبعية",
                 closeTooltip: "إغلاق",
@@ -3120,7 +3121,7 @@ export const ar: DeepPartial<Messages> = {
                 "اختر إصدارًا لمعاينته. تُكتب الاستعادة في إصدار جديد للحفاظ على السجل.",
             viewerDescription:
                 "عرض للقراءة فقط — لا يمكن استعادة إصدار سابق إلا لمالك الملاحظة أو محرريها.",
-            emptyList: "لا يوجد سجل بعد. ستظهر الإصدارات هنا بعد الحفظ التالي.",
+            emptyList: "لا يوجد سجل بعد. احفظ الملاحظة لتسجيل أول إصدار.",
             currentChip: "الحالي",
             restoredFrom: "تمت الاستعادة من v{version}",
             selectVersionPrompt: "اختر إصدارًا من اليسار لمعاينته.",
@@ -3405,13 +3406,14 @@ export const ar: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "أنجزت كل شيء!",
-            defaultEmptySubtitle: "لا توجد عناصر جديدة لمراجعتها",
+            defaultEmptySubtitle: "اختر مهمة للعمل عليها أو خذ استراحة.",
         },
         emptyStates: {
             activitiesTitle: "لا توجد أنشطة بعد",
-            activitiesSubtitle: "ستظهر هنا التحديثات والإشعارات الجديدة",
+            activitiesSubtitle: "عند إسناد مهمة إليك أو الإشارة إليك بـ @ ستصلك التحديثات هنا.",
             requestsTitle: "لا توجد طلبات معلّقة",
-            requestsSubtitle: "ستظهر هنا طلبات الفرق والمشاريع",
+            requestsSubtitle:
+                "عندما يطلب أحد الانضمام إلى فريقك أو مشروعك، اقبل الطلب أو ارفضه هنا.",
         },
         notification: {
             approvalBody: "تمت الموافقة على طلب الانضمام إلى {target}: ",
@@ -5093,7 +5095,10 @@ export const ar: DeepPartial<Messages> = {
             years: "{count}y مضت",
         },
         messageNumber: "الرسالة رقم {id}",
-        empty: "لا شيء هنا بعد.",
+        emptyTitle: "لا يوجد سجل بعد",
+        emptyChats: "افتح محادثة أو موضوعًا وسيُدرج هنا.",
+        emptyTasks: "افتح مهمة وستُدرج هنا.",
+        emptyNotes: "افتح ملاحظة وستُدرج هنا.",
         clear: "مسح التاريخ",
     },
     integrations: {

@@ -1017,7 +1017,7 @@ export const ja: DeepPartial<Messages> = {
             },
             delete: "消去",
             completedTodayEmptyTitle: "今日はまだ何も終わっていない",
-            completedTodayEmptySubtitle: "今日完了したアイテムがここに表示されます。",
+            completedTodayEmptySubtitle: "アイテムにチェックを入れると、ここに記録されます。",
             incompleteEmptySubtitle: "表示されているグループに不完全な項目はありません。",
             emptySubtitle: "まずは今日のグループを作成してください。",
             sourceDmThread: "DMスレッドより",
@@ -1175,13 +1175,14 @@ export const ja: DeepPartial<Messages> = {
             gmTagPinDefault: "このチップを常に表示する",
             gmTagUnpinDefault: "このチップの常時表示をやめる",
             emptyPMTitle: "プロジェクト更新はありません",
-            emptyPMSubtitle: "プロジェクトの会話がここに表示されます",
+            emptyPMSubtitle: "プロジェクトを作成するか参加すると、そのチャットがここに並びます。",
             emptyActivityTitle: "アクティビティはまだありません",
-            emptyActivitySubtitle: "メンションや返信がここに表示されます",
+            emptyActivitySubtitle:
+                "スレッドを始めるか誰かにメンションすると、返信やメンションがここに届きます。",
             emptyFlaggedTitle: "フラグ付きメッセージはありません",
             emptyFlaggedSubtitle: "重要なメッセージにフラグを付けると、後から見つけやすくなります",
             emptyPastFlaggedTitle: "完了したフラグはありません",
-            emptyPastFlaggedSubtitle: "完了にしたフラグはここに表示されます",
+            emptyPastFlaggedSubtitle: "フラグを完了にすると、ここに移動します。",
             viewPastFlaggedMenu: "完了したフラグを表示",
             viewActiveFlaggedMenu: "アクティブなフラグを表示",
             backToActiveFlaggedButton: "アクティブなフラグに戻る",
@@ -1621,7 +1622,6 @@ export const ja: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "該当する結果はありません",
-            noItems: "まだ何もありません",
         },
         errors: {
             generic: "問題が発生しました。もう一度お試しください。",
@@ -2231,7 +2231,10 @@ export const ja: DeepPartial<Messages> = {
             years: "{count}y 前",
         },
         messageNumber: "メッセージ #{id}",
-        empty: "まだ何もありません。",
+        emptyTitle: "履歴はまだありません",
+        emptyChats: "チャットやスレッドを開くと、ここに一覧表示されます。",
+        emptyTasks: "タスクを開くと、ここに一覧表示されます。",
+        emptyNotes: "ノートを開くと、ここに一覧表示されます。",
         clear: "履歴をクリア",
     },
     inbox: {
@@ -2350,13 +2353,15 @@ export const ja: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "すべて確認済みです！",
-            defaultEmptySubtitle: "確認が必要な新しい項目はありません",
+            defaultEmptySubtitle: "取り組むタスクを選ぶか、少し休みましょう。",
         },
         emptyStates: {
             activitiesTitle: "アクティビティはまだありません",
-            activitiesSubtitle: "新しい更新や通知がここに表示されます",
+            activitiesSubtitle:
+                "タスクが割り当てられたりメンションされたりすると、更新がここに届きます。",
             requestsTitle: "保留中のリクエストはありません",
-            requestsSubtitle: "チームやプロジェクトのリクエストがここに表示されます",
+            requestsSubtitle:
+                "チームやプロジェクトへの参加リクエストが届いたら、ここで承認または拒否します。",
         },
         notification: {
             approvalBody: "{target}への参加リクエストが承認されました：",
@@ -2962,7 +2967,7 @@ export const ja: DeepPartial<Messages> = {
                 "バージョンを選んでプレビューします。復元すると新しいバージョンとして書き込まれ、履歴は保持されます。",
             viewerDescription:
                 "読み取り専用ビュー — 過去のバージョンに復元できるのはノートのオーナーまたは編集者のみです。",
-            emptyList: "まだ履歴はありません。次回の保存後に表示されます。",
+            emptyList: "まだ履歴はありません。ノートを保存すると最初のバージョンが記録されます。",
             currentChip: "現在",
             restoredFrom: "v{version} から復元",
             selectVersionPrompt: "左側のバージョンを選択するとプレビューが表示されます。",
@@ -4823,6 +4828,7 @@ export const ja: DeepPartial<Messages> = {
         },
         activity: {
             empty: "まだ活動はありません",
+            emptyBody: "項目を変更するかコメントを追加すると、履歴が始まります。",
             restore: {
                 button: "以前の説明に戻す",
                 viaAgent: "Genos AI が書き換えました",
@@ -4917,7 +4923,7 @@ export const ja: DeepPartial<Messages> = {
                     "このタスクが完了するまで、これらのタスクを進めることはできません。",
                 blockedByDescription:
                     "これらのタスクは、このタスクが移動する前に完了する必要があります。",
-                emptySection: "ここにはまだ何もありません。",
+                emptySection: "まだありません。下でタスクを検索して追加してください。",
                 doneButton: "終わり",
                 removeTooltip: "依存関係を削除する",
                 closeTooltip: "近い",
@@ -5143,7 +5149,7 @@ export const ja: DeepPartial<Messages> = {
                 promptBody: "上でメンバーを選択すると、タスクの統計情報が表示されます。",
                 nothingAssignedTitle: "このメンバーには何も割り当てられていません",
                 nothingAssignedBody:
-                    "このプロジェクトでこのメンバーに割り当てられたタスクがここに表示されます。",
+                    "このプロジェクトのタスクをこのメンバーに割り当てると、ここに表示されます。",
                 milestonesEmpty:
                     "このプロジェクトの進行中のマイルストーンはこのメンバーに割り当てられていません。",
                 milestonesHelp:
@@ -5218,7 +5224,7 @@ export const ja: DeepPartial<Messages> = {
             untitledTask: "無題のタスク",
             nothingAssignedTitle: "まだ割り当てられたタスクはありません",
             nothingAssignedBody:
-                "このプロジェクトで自分に割り当てられたタスクがここに表示されます。",
+                "このプロジェクトのタスクを自分に割り当てると、ここに表示されます。",
             kpiActive: "進行中",
             kpiClosed: "Closed",
             kpiOverdue: "締切超過",

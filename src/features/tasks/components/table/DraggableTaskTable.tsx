@@ -5,11 +5,12 @@ import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
-import { Box, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
@@ -1917,30 +1918,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 <SkeletonRows count={6} label={t.tasks.table.loadingTasks} />
                             </Box>
                         ) : (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    height: "200px",
-                                    color: mode === "dark" ? "#666" : "#999",
-                                    gap: 1,
-                                }}
-                            >
-                                <Typography
-                                    level="body-lg"
-                                    sx={{ fontWeight: 500, color: "inherit" }}
-                                >
-                                    {t.tasks.table.emptyTitle}
-                                </Typography>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
-                                >
-                                    {t.tasks.table.emptyHint}
-                                </Typography>
-                            </Box>
+                            <EmptyState
+                                body={t.tasks.table.emptyHint}
+                                data-empty="task-table"
+                                title={t.tasks.table.emptyTitle}
+                            />
                         ))}
                 </Box>
             </div>

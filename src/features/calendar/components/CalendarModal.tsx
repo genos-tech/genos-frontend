@@ -6,6 +6,7 @@ import { Alert, Box, Button, ButtonGroup, Chip, IconButton, Stack, Typography } 
 import { useTheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../context/AuthContext";
@@ -691,15 +692,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             }}
                         >
                             {selectedSources.length === 0 && sources.loaded ? (
-                                <Stack
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    sx={{ flex: 1, opacity: 0.65 }}
-                                >
-                                    <Typography level="body-sm">
-                                        {t.calendar.sources.emptySelection}
-                                    </Typography>
-                                </Stack>
+                                <EmptyState
+                                    body={t.calendar.sources.emptySelection}
+                                    data-empty="calendar-sources"
+                                    fill
+                                />
                             ) : view === "month" ? (
                                 <MonthView
                                     busyLabel={t.calendar.busy}

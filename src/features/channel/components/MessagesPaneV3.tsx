@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useLongPress } from "../../../hooks/common/useLongPress";
 import { useTranslation } from "../../../i18n";
@@ -168,7 +169,13 @@ export function MessagesPaneV3({
                     />
                 ))}
                 {messages.length === 0 && (
-                    <li style={{ opacity: 0.5 }}>{t.chat.channel.pane.noMessages}</li>
+                    <li>
+                        <EmptyState
+                            body={t.chat.channel.pane.noMessages}
+                            data-empty="channel-messages"
+                            size="sm"
+                        />
+                    </li>
                 )}
             </ul>
 
