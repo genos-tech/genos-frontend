@@ -718,9 +718,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             const rows = await loadTaskActivities(myself, previewTaskId, accessToken);
             ticket.land(() => {
                 if (cancelled) return;
-                // A failed refresh keeps the rows already shown; the feed only
-                // surfaces the failure when it has nothing to show.
-                if (rows !== null) setTaskActivities(rows);
+                // A failure empties the list: the rows on screen may belong to the
+                // task opened before this one, and the feed shows Retry for empty.
+                setTaskActivities(rows ?? []);
                 setTaskActivitiesFailed(rows === null);
                 setIsLoadingTaskActivities(false);
             });
@@ -1662,7 +1662,7 @@ const MilestonePreviewInner = ({
             setIsLoadingTaskActivities(true);
             const rows = await loadTaskActivities(myself, taskId, accessToken);
             if (cancelled) return;
-            if (rows !== null) setTaskActivities(rows);
+            setTaskActivities(rows ?? []);
             setTaskActivitiesFailed(rows === null);
             setIsLoadingTaskActivities(false);
         })();

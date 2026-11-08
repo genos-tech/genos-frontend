@@ -31,7 +31,7 @@ export const useTaskActivities = (
 ): {
     activities: TaskActivityProps[];
     isLoading: boolean;
-    /** The last load failed (MIP-1276); `activities` keeps what was already loaded. */
+    /** The last load failed (MIP-1276); `activities` is then empty. */
     loadFailed: boolean;
     /** Ask again, e.g. from the feed's Retry. */
     reload: () => void;
@@ -69,7 +69,8 @@ export const useTaskActivities = (
             setIsLoading(true);
             const rows = await loadTaskActivities(myself, resolvedId, accessToken);
             if (cancelled) return;
-            if (rows !== null) setActivities(rows);
+            // A failure empties the list: the old rows may belong to another task.
+            setActivities(rows ?? []);
             setLoadFailed(rows === null);
             setIsLoading(false);
         })();

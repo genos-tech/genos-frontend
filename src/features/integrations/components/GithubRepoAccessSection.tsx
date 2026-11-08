@@ -66,7 +66,10 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
             setLoadFailed(true);
             return;
         }
-        if (res === "github_not_connected") return;
+        if (res === "github_not_connected") {
+            setData(null);
+            return;
+        }
         setData(res);
     }, [accessToken]);
 

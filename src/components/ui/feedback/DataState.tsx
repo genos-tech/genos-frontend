@@ -19,6 +19,10 @@ import { ErrorState, ErrorStateProps } from "./ErrorState";
  *   4. `empty` supplied  -> `EmptyState` (the request worked, there is nothing).
  *   5. otherwise         -> the content (a surface that draws its own empty).
  *
+ * `hasData` is the caller's call: fold `!loading` into it to show the skeleton
+ * during a user-asked refresh (GitHub repo access does), leave it out to keep
+ * the old rows on screen meanwhile (the default for a background refresh).
+ *
  * Retry sets `loading` again on the caller's side; because `loading` outranks
  * `error`, the skeleton shows during the retry and no stale error lingers.
  */

@@ -154,6 +154,22 @@ describe("Task Activity tab (useTaskActivities)", () => {
     });
 });
 
+describe("Task Activity tab across tasks", () => {
+    const me = { teamId: "team-1", userId: "u1" } as UserProps;
+    it("task B's failed load does not show task A's rows", async () => {
+        ok("/task/activity/", [{ activityId: 1, actionType: "created" }]);
+        const { result, rerender } = renderHook(({ id }) => useTaskActivities(me, id), {
+            initialProps: { id: 7001 },
+        });
+        await waitFor(() => expect(result.current.activities).toHaveLength(1));
+
+        fail("/task/activity/");
+        rerender({ id: 7002 });
+        await waitFor(() => expect(result.current.loadFailed).toBe(true));
+        expect(result.current.activities).toEqual([]);
+    });
+});
+
 describe("Velocity chart", () => {
     const props = {
         taskIds: [1, 2],
