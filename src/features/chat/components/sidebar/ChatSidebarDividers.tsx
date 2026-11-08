@@ -1,8 +1,8 @@
+import { Fragment } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AlternateEmailRoundedIcon from "@mui/icons-material/AlternateEmailRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CommentOutlinedIcon from "@mui/icons-material/CommentOutlined";
 import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
@@ -16,19 +16,15 @@ import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import ViewListRoundedIcon from "@mui/icons-material/ViewListRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    ListDivider,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    MenuDivider,
+    MenuGroupLabel,
+    MenuRow,
+    MenuSurface,
+} from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
@@ -447,100 +443,34 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                             </Box>
                         )}
                     </MenuButton>
-                    <Menu
+                    <MenuSurface
                         placement="bottom-start"
-                        size="sm"
-                        sx={{
-                            background: isDark
-                                ? "rgba(30, 30, 40, 0.98)"
-                                : "rgba(255, 255, 255, 0.98)",
-                            border: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                            borderRadius: "10px",
-                            boxShadow: isDark
-                                ? "0 8px 24px rgba(0,0,0,0.5)"
-                                : "0 8px 24px rgba(0,0,0,0.12)",
-                            maxHeight: 400,
-                            minWidth: 200,
-                            overflowY: "auto",
-                            zIndex: 10010,
-                        }}
+                        sx={{ maxHeight: 400, minWidth: 200 }}
+                        zIndex={10010}
                     >
                         {CHIP_ORDER.map((id) => {
                             const meta = CHIP_META[id];
                             const Icon = meta.icon;
-                            const isChecked = selectedChipIds.has(id);
                             return (
-                                <MenuItem
+                                // Stays open so users can toggle several chips in one go.
+                                <MenuRow
                                     key={id}
-                                    selected={isChecked}
-                                    sx={{
-                                        borderRadius: "6px",
-                                        fontSize: "0.8rem",
-                                        gap: 1,
-                                        mx: 0.5,
-                                        py: 0.75,
-                                    }}
-                                    onClick={(e) => {
-                                        // Keep the menu open so users
-                                        // can toggle multiple chips in
-                                        // one session.
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleChip(id);
-                                    }}
+                                    icon={<Icon />}
+                                    selected={selectedChipIds.has(id)}
+                                    keepOpen
+                                    onClick={() => toggleChip(id)}
                                 >
-                                    <Box
-                                        sx={{
-                                            alignItems: "center",
-                                            color: isChecked
-                                                ? isDark
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)"
-                                                : "transparent",
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            width: 16,
-                                        }}
-                                    >
-                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                    </Box>
-                                    <Icon
-                                        sx={{
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.65)"
-                                                : "rgba(0,0,0,0.6)",
-                                            fontSize: 16,
-                                        }}
-                                    />
                                     {t.chat.sidebar[meta.labelKey]}
-                                </MenuItem>
+                                </MenuRow>
                             );
                         })}
+                        {hasSelection && <MenuDivider />}
                         {hasSelection && (
-                            <MenuItem
-                                sx={{
-                                    borderRadius: "6px",
-                                    borderTop: "1px solid",
-                                    borderTopColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.06)",
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                    fontSize: "0.8rem",
-                                    fontWeight: 600,
-                                    gap: 1,
-                                    mt: 0.5,
-                                    mx: 0.5,
-                                    py: 0.75,
-                                }}
-                                onClick={() => setSelectedChipIds(new Set())}
-                            >
+                            <MenuRow accent onClick={() => setSelectedChipIds(new Set())}>
                                 {t.chat.sidebar.chipFilterClear}
-                            </MenuItem>
+                            </MenuRow>
                         )}
-                    </Menu>
+                    </MenuSurface>
                 </Dropdown>
 
                 {/* "By name" refinement — visible only while at least
@@ -588,42 +518,13 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                 </Box>
                             )}
                         </MenuButton>
-                        <Menu
+                        <MenuSurface
                             placement="bottom-start"
-                            size="sm"
-                            sx={{
-                                background: isDark
-                                    ? "rgba(30, 30, 40, 0.98)"
-                                    : "rgba(255, 255, 255, 0.98)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.06)",
-                                borderRadius: "10px",
-                                boxShadow: isDark
-                                    ? "0 8px 24px rgba(0,0,0,0.5)"
-                                    : "0 8px 24px rgba(0,0,0,0.12)",
-                                maxHeight: 400,
-                                minWidth: 220,
-                                overflowY: "auto",
-                                zIndex: 10010,
-                            }}
+                            sx={{ maxHeight: 400, minWidth: 220 }}
+                            zIndex={10010}
                         >
                             {gatedChats.length === 0 && (
-                                <MenuItem
-                                    sx={{
-                                        borderRadius: "6px",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.45)",
-                                        fontSize: "0.8rem",
-                                        mx: 0.5,
-                                        py: 0.75,
-                                    }}
-                                    disabled
-                                >
-                                    {t.chat.sidebar.chipFilterByNameEmpty}
-                                </MenuItem>
+                                <MenuRow disabled>{t.chat.sidebar.chipFilterByNameEmpty}</MenuRow>
                             )}
                             {orderedGroups.map((chatType, idx) => {
                                 const headerChipId = CHATTYPE_HEADER_CHIP[chatType];
@@ -633,30 +534,22 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                 const HeaderIcon = headerMeta?.icon;
                                 const chats = chatsByType.get(chatType) ?? [];
                                 return (
-                                    <Box key={chatType}>
+                                    <Fragment key={chatType}>
                                         {showGroupHeaders && headerMeta && (
-                                            <Box
-                                                sx={{
-                                                    alignItems: "center",
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.45)"
-                                                        : "rgba(0,0,0,0.45)",
-                                                    display: "flex",
-                                                    fontSize: 10,
-                                                    fontWeight: 600,
-                                                    gap: 0.5,
-                                                    letterSpacing: "0.05em",
-                                                    pb: 0.25,
-                                                    pt: idx === 0 ? 0.25 : 0.75,
-                                                    px: 1.5,
-                                                    textTransform: "uppercase",
-                                                }}
-                                            >
-                                                {HeaderIcon && (
-                                                    <HeaderIcon sx={{ fontSize: 12 }} />
-                                                )}
-                                                {t.chat.sidebar[headerMeta.labelKey]}
-                                            </Box>
+                                            <MenuGroupLabel>
+                                                <Box
+                                                    sx={{
+                                                        alignItems: "center",
+                                                        display: "flex",
+                                                        gap: 0.5,
+                                                    }}
+                                                >
+                                                    {HeaderIcon && (
+                                                        <HeaderIcon sx={{ fontSize: 12 }} />
+                                                    )}
+                                                    {t.chat.sidebar[headerMeta.labelKey]}
+                                                </Box>
+                                            </MenuGroupLabel>
                                         )}
                                         {chats.map((chat) => {
                                             // PUNCH LIST (v3 chatId migration):
@@ -668,51 +561,16 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                                 chat.chatType,
                                                 chat.chatId as unknown as number
                                             );
-                                            const isChecked = selectedInstanceIds.has(key);
                                             const RowIcon = headerMeta?.icon;
                                             return (
-                                                <MenuItem
+                                                // Keeps the menu open across multi-toggles.
+                                                <MenuRow
                                                     key={key}
-                                                    selected={isChecked}
-                                                    sx={{
-                                                        borderRadius: "6px",
-                                                        fontSize: "0.8rem",
-                                                        gap: 1,
-                                                        mx: 0.5,
-                                                        py: 0.5,
-                                                    }}
-                                                    onClick={(e) => {
-                                                        // Keep open across multi-toggles.
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        toggleInstance(key);
-                                                    }}
+                                                    icon={RowIcon ? <RowIcon /> : undefined}
+                                                    selected={selectedInstanceIds.has(key)}
+                                                    keepOpen
+                                                    onClick={() => toggleInstance(key)}
                                                 >
-                                                    <Box
-                                                        sx={{
-                                                            alignItems: "center",
-                                                            color: isChecked
-                                                                ? isDark
-                                                                    ? "var(--gp-brandalt-400)"
-                                                                    : "var(--gp-brand-700)"
-                                                                : "transparent",
-                                                            display: "flex",
-                                                            justifyContent: "center",
-                                                            width: 16,
-                                                        }}
-                                                    >
-                                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                                    </Box>
-                                                    {RowIcon && (
-                                                        <RowIcon
-                                                            sx={{
-                                                                color: isDark
-                                                                    ? "rgba(255,255,255,0.65)"
-                                                                    : "rgba(0,0,0,0.6)",
-                                                                fontSize: 16,
-                                                            }}
-                                                        />
-                                                    )}
                                                     <Box
                                                         sx={{
                                                             overflow: "hidden",
@@ -723,39 +581,22 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                                         {resolveChatDisplayName(chat) ||
                                                             `#${chat.chatId}`}
                                                     </Box>
-                                                </MenuItem>
+                                                </MenuRow>
                                             );
                                         })}
                                         {showGroupHeaders && idx < orderedGroups.length - 1 && (
-                                            <ListDivider sx={{ my: 0.25 }} />
+                                            <MenuDivider />
                                         )}
-                                    </Box>
+                                    </Fragment>
                                 );
                             })}
+                            {hasInstanceSelection && <MenuDivider />}
                             {hasInstanceSelection && (
-                                <MenuItem
-                                    sx={{
-                                        borderRadius: "6px",
-                                        borderTop: "1px solid",
-                                        borderTopColor: isDark
-                                            ? "rgba(255,255,255,0.06)"
-                                            : "rgba(0,0,0,0.06)",
-                                        color: isDark
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                        fontSize: "0.8rem",
-                                        fontWeight: 600,
-                                        gap: 1,
-                                        mt: 0.5,
-                                        mx: 0.5,
-                                        py: 0.75,
-                                    }}
-                                    onClick={() => setSelectedInstanceIds(new Set())}
-                                >
+                                <MenuRow accent onClick={() => setSelectedInstanceIds(new Set())}>
                                     {t.chat.sidebar.chipFilterClear}
-                                </MenuItem>
+                                </MenuRow>
                             )}
-                        </Menu>
+                        </MenuSurface>
                     </Dropdown>
                 )}
 
@@ -803,122 +644,44 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                 </Box>
                             )}
                         </MenuButton>
-                        <Menu
+                        <MenuSurface
                             placement="bottom-start"
-                            size="sm"
-                            sx={{
-                                background: isDark
-                                    ? "rgba(30, 30, 40, 0.98)"
-                                    : "rgba(255, 255, 255, 0.98)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.06)",
-                                borderRadius: "10px",
-                                boxShadow: isDark
-                                    ? "0 8px 24px rgba(0,0,0,0.5)"
-                                    : "0 8px 24px rgba(0,0,0,0.12)",
-                                maxHeight: 400,
-                                minWidth: 220,
-                                overflowY: "auto",
-                                zIndex: 10010,
-                            }}
+                            sx={{ maxHeight: 400, minWidth: 220 }}
+                            zIndex={10010}
                         >
                             {sortedMentionGroups.length === 0 && (
-                                <MenuItem
-                                    sx={{
-                                        borderRadius: "6px",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.45)",
-                                        fontSize: "0.8rem",
-                                        mx: 0.5,
-                                        py: 0.75,
-                                    }}
-                                    disabled
-                                >
-                                    {t.chat.sidebar.chipFilterByGroupEmpty}
-                                </MenuItem>
+                                <MenuRow disabled>{t.chat.sidebar.chipFilterByGroupEmpty}</MenuRow>
                             )}
-                            {sortedMentionGroups.map((group) => {
-                                const isChecked = selectedMentionGroupIds.has(group.groupId);
-                                return (
-                                    <MenuItem
-                                        key={group.groupId}
-                                        selected={isChecked}
+                            {sortedMentionGroups.map((group) => (
+                                // Keeps the menu open across multi-toggles.
+                                <MenuRow
+                                    key={group.groupId}
+                                    icon={<AlternateEmailRoundedIcon />}
+                                    selected={selectedMentionGroupIds.has(group.groupId)}
+                                    keepOpen
+                                    onClick={() => toggleMentionGroup(group.groupId)}
+                                >
+                                    <Box
                                         sx={{
-                                            borderRadius: "6px",
-                                            fontSize: "0.8rem",
-                                            gap: 1,
-                                            mx: 0.5,
-                                            py: 0.5,
-                                        }}
-                                        onClick={(e) => {
-                                            // Keep menu open across multi-toggles.
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            toggleMentionGroup(group.groupId);
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
                                         }}
                                     >
-                                        <Box
-                                            sx={{
-                                                alignItems: "center",
-                                                color: isChecked
-                                                    ? isDark
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)"
-                                                    : "transparent",
-                                                display: "flex",
-                                                justifyContent: "center",
-                                                width: 16,
-                                            }}
-                                        >
-                                            <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                        </Box>
-                                        <AlternateEmailRoundedIcon
-                                            sx={{
-                                                color: isDark
-                                                    ? "rgba(255,255,255,0.65)"
-                                                    : "rgba(0,0,0,0.6)",
-                                                fontSize: 16,
-                                            }}
-                                        />
-                                        <Box
-                                            sx={{
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {group.groupName}
-                                        </Box>
-                                    </MenuItem>
-                                );
-                            })}
+                                        {group.groupName}
+                                    </Box>
+                                </MenuRow>
+                            ))}
+                            {hasMentionGroupSelection && <MenuDivider />}
                             {hasMentionGroupSelection && (
-                                <MenuItem
-                                    sx={{
-                                        borderRadius: "6px",
-                                        borderTop: "1px solid",
-                                        borderTopColor: isDark
-                                            ? "rgba(255,255,255,0.06)"
-                                            : "rgba(0,0,0,0.06)",
-                                        color: isDark
-                                            ? "var(--gp-brandalt-400)"
-                                            : "var(--gp-brand-700)",
-                                        fontSize: "0.8rem",
-                                        fontWeight: 600,
-                                        gap: 1,
-                                        mt: 0.5,
-                                        mx: 0.5,
-                                        py: 0.75,
-                                    }}
+                                <MenuRow
+                                    accent
                                     onClick={() => setSelectedMentionGroupIds(new Set())}
                                 >
                                     {t.chat.sidebar.chipFilterClear}
-                                </MenuItem>
+                                </MenuRow>
                             )}
-                        </Menu>
+                        </MenuSurface>
                     </Dropdown>
                 )}
             </Stack>

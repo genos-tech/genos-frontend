@@ -22,9 +22,7 @@ import {
     CircularProgress,
     Dropdown,
     IconButton,
-    Menu,
     MenuButton,
-    MenuItem,
     Stack,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -33,6 +31,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Toast } from "../../../../components/ui/feedback/Toast";
+import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { useCalendarModal } from "../../../../context/CalendarModalContext";
@@ -463,36 +462,38 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         >
                             <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                         </MenuButton>
-                        <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                        <MenuSurface placement="bottom-end" sx={{ minWidth: 200 }}>
                             {unreadActivityCount > 0 && (
-                                <MenuItem
+                                <MenuRow
+                                    icon={<DoneAllRoundedIcon />}
                                     onClick={() => markAllAsRead(chat.chatType, chatIdLegacy)}
                                 >
-                                    <DoneAllRoundedIcon
-                                        sx={{ fontSize: 18, color: styles.accentColor }}
-                                    />
                                     {t.chat.headers.markAllReadAria}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {showQuickMeet && (
-                                <MenuItem disabled={quickMeetLoading} onClick={handleQuickMeet}>
-                                    {quickMeetLoading ? (
-                                        <CircularProgress
-                                            size="sm"
-                                            sx={{ "--CircularProgress-size": "18px" }}
-                                        />
-                                    ) : (
-                                        <VideoCameraFrontRoundedIcon
-                                            sx={{ fontSize: 18, color: styles.accentColor }}
-                                        />
-                                    )}
+                                <MenuRow
+                                    disabled={quickMeetLoading}
+                                    icon={
+                                        quickMeetLoading ? (
+                                            <CircularProgress
+                                                size="sm"
+                                                sx={{ "--CircularProgress-size": "16px" }}
+                                            />
+                                        ) : (
+                                            <VideoCameraFrontRoundedIcon />
+                                        )
+                                    }
+                                    onClick={handleQuickMeet}
+                                >
                                     {t.chat.headers.quickMeetTooltip}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {chat.chatType === 3 && (
-                                <MenuItem
+                                <MenuRow
+                                    icon={<AddTaskRoundedIcon />}
                                     onClick={() => {
                                         useCM.setIsMainChatVisible(true);
                                         useCM.setIsThreadVisible(false);
@@ -506,36 +507,32 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                         });
                                     }}
                                 >
-                                    <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
                                     {t.chat.headers.createNewTaskTooltip}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {isYou === true && calendarModal && (
-                                <MenuItem onClick={calendarModal.open}>
-                                    <CalendarMonthRoundedIcon
-                                        sx={{ fontSize: 18, color: styles.accentColor }}
-                                    />
+                                <MenuRow
+                                    onClick={calendarModal.open}
+                                    icon={<CalendarMonthRoundedIcon />}
+                                >
                                     {t.calendar.openTooltip}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {useCM.isSubChatVisible && (
-                                <MenuItem onClick={() => swapChat()}>
-                                    <SwapVertRoundedIcon
-                                        sx={{ fontSize: 18, color: styles.accentColor }}
-                                    />
+                                <MenuRow onClick={() => swapChat()} icon={<SwapVertRoundedIcon />}>
                                     {t.chat.headers.swapChats}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {(chat.chatType === 4 || chat.chatType === 1) && (
-                                <MenuItem onClick={() => setOpenAddMembers(true)}>
-                                    <PersonAddRoundedIcon
-                                        sx={{ fontSize: 18, color: styles.accentColor }}
-                                    />
+                                <MenuRow
+                                    onClick={() => setOpenAddMembers(true)}
+                                    icon={<PersonAddRoundedIcon />}
+                                >
                                     {t.chat.headers.addMembers}
-                                </MenuItem>
+                                </MenuRow>
                             )}
 
                             {/* Self-DM only: ToDo lives in the visible icon
@@ -549,7 +546,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     chatName={muteLabel}
                                 />
                             )}
-                        </Menu>
+                        </MenuSurface>
                     </Dropdown>
                 </Stack>
 
