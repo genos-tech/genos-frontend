@@ -4267,6 +4267,7 @@ export const ar: DeepPartial<Messages> = {
             setAlwaysOffline: "تعيين كغير متصل دائمًا",
             updateStatus: "تحديث الحالة",
             setStatusPlaceholder: "اضبط حالتك…",
+            statusPresetsLabel: "حالات جاهزة",
             cancel: "إلغاء",
             reset: "إعادة تعيين",
             set: "تعيين",

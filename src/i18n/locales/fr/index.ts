@@ -429,6 +429,7 @@ export const fr: DeepPartial<Messages> = {
             setAlwaysOffline: "Toujours hors ligne",
             updateStatus: "Mettre à jour le statut",
             setStatusPlaceholder: "Définir votre statut…",
+            statusPresetsLabel: "Statuts prédéfinis",
             cancel: "ANNULER",
             reset: "RÉINITIALISER",
             set: "DÉFINIR",

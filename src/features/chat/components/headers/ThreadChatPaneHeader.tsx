@@ -422,6 +422,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 <Dropdown>
                     <MenuButton
+                        aria-label={t.common.ui.moreMenu.ariaLabel}
                         slots={{ root: IconButton }}
                         slotProps={{ root: { size: "sm", variant: "plain" } }}
                     >

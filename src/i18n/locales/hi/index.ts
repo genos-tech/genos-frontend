@@ -4829,6 +4829,7 @@ export const hi: DeepPartial<Messages> = {
             setAlwaysOffline: "हमेशा ऑफलाइन सेट करें",
             updateStatus: "स्थिति अपडेट करें",
             setStatusPlaceholder: "अपनी स्थिति सेट करें…",
+            statusPresetsLabel: "स्थिति प्रीसेट",
             cancel: "रद्द करें",
             reset: "रीसेट",
             set: "सेट",
