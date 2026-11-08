@@ -6,6 +6,15 @@ export const common = {
     feedback: {
         loading: "Loading…",
         loadFailedBody: "Check your connection, then try again.",
+        sync: {
+            banner: "Couldn't sync your workspace.",
+            bannerRetrying: "Syncing your workspace…",
+            chatsFailed: "Couldn't load your chats",
+            activityFailed: "Couldn't load your activity",
+            inboxFailed: "Couldn't load your inbox",
+            tasksFailed: "Couldn't load your tasks",
+            projectsFailed: "Couldn't load your projects",
+        },
         toast: {
             region: "Notifications",
             undo: "Undo",

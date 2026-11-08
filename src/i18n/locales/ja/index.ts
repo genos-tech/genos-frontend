@@ -1493,6 +1493,15 @@ export const ja: DeepPartial<Messages> = {
         feedback: {
             loading: "読み込み中…",
             loadFailedBody: "接続を確認して、もう一度お試しください。",
+            sync: {
+                banner: "ワークスペースを同期できませんでした。",
+                bannerRetrying: "ワークスペースを同期しています…",
+                chatsFailed: "チャットを読み込めませんでした",
+                activityFailed: "アクティビティを読み込めませんでした",
+                inboxFailed: "受信箱を読み込めませんでした",
+                tasksFailed: "タスクを読み込めませんでした",
+                projectsFailed: "プロジェクトを読み込めませんでした",
+            },
             toast: {
                 region: "通知",
                 undo: "元に戻す",

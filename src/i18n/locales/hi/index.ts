@@ -12,6 +12,15 @@ export const hi: DeepPartial<Messages> = {
         feedback: {
             loading: "लोड हो रहा है…",
             loadFailedBody: "अपना कनेक्शन जाँचें, फिर दोबारा कोशिश करें।",
+            sync: {
+                banner: "आपका वर्कस्पेस सिंक नहीं हो सका।",
+                bannerRetrying: "आपका वर्कस्पेस सिंक हो रहा है…",
+                chatsFailed: "आपकी चैट लोड नहीं हो सकीं",
+                activityFailed: "आपकी गतिविधि लोड नहीं हो सकी",
+                inboxFailed: "आपका इनबॉक्स लोड नहीं हो सका",
+                tasksFailed: "आपके टास्क लोड नहीं हो सके",
+                projectsFailed: "आपके प्रोजेक्ट लोड नहीं हो सके",
+            },
             toast: {
                 region: "सूचनाएँ",
                 undo: "पूर्ववत करें",

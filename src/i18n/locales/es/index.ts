@@ -12,6 +12,15 @@ export const es: DeepPartial<Messages> = {
         feedback: {
             loading: "Cargando…",
             loadFailedBody: "Comprueba tu conexión e inténtalo de nuevo.",
+            sync: {
+                banner: "No se pudo sincronizar tu espacio de trabajo.",
+                bannerRetrying: "Sincronizando tu espacio de trabajo…",
+                chatsFailed: "No se pudieron cargar tus chats",
+                activityFailed: "No se pudo cargar tu actividad",
+                inboxFailed: "No se pudo cargar tu bandeja de entrada",
+                tasksFailed: "No se pudieron cargar tus tareas",
+                projectsFailed: "No se pudieron cargar tus proyectos",
+            },
             toast: {
                 region: "Notificaciones",
                 undo: "Deshacer",

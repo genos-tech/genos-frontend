@@ -13,6 +13,15 @@ export const ar: DeepPartial<Messages> = {
         feedback: {
             loading: "جارٍ التحميل…",
             loadFailedBody: "تحقّق من اتصالك ثم حاول مرة أخرى.",
+            sync: {
+                banner: "تعذّرت مزامنة مساحة العمل.",
+                bannerRetrying: "جارٍ مزامنة مساحة العمل…",
+                chatsFailed: "تعذّر تحميل محادثاتك",
+                activityFailed: "تعذّر تحميل نشاطك",
+                inboxFailed: "تعذّر تحميل صندوق الوارد",
+                tasksFailed: "تعذّر تحميل مهامك",
+                projectsFailed: "تعذّر تحميل مشاريعك",
+            },
             toast: {
                 region: "الإشعارات",
                 undo: "تراجع",

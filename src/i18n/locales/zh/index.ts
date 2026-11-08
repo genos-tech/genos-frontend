@@ -1439,6 +1439,15 @@ export const zh: DeepPartial<Messages> = {
         feedback: {
             loading: "加载中…",
             loadFailedBody: "请检查网络连接后重试。",
+            sync: {
+                banner: "无法同步你的工作区。",
+                bannerRetrying: "正在同步你的工作区…",
+                chatsFailed: "无法加载你的聊天",
+                activityFailed: "无法加载你的动态",
+                inboxFailed: "无法加载你的收件箱",
+                tasksFailed: "无法加载你的任务",
+                projectsFailed: "无法加载你的项目",
+            },
             toast: {
                 region: "通知",
                 undo: "撤销",
