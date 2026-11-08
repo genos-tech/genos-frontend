@@ -2251,6 +2251,12 @@ export const ja: DeepPartial<Messages> = {
             title: "受信箱",
             subtitle: "通知を見逃さないようにしましょう",
         },
+        sync: {
+            label: "受信箱を同期",
+            upToDate: "受信箱は最新です",
+            added: "{count, plural, one {新着#件} other {新着#件}}",
+            failed: "受信箱を同期できませんでした。もう一度お試しください。",
+        },
         tabs: {
             ariaLabel: "受信箱のセクション",
             requests: "リクエスト",
@@ -3747,6 +3753,10 @@ export const ja: DeepPartial<Messages> = {
             running: "実行中…",
             ranOk: "実行しました: {title}、{count, plural, one {#件} other {#件}}。レポートは受信箱にあります。",
             ranFailed: "実行に失敗しました: {error}",
+            reportReady: "レポートの準備ができました",
+            reportReadyTitled: "レポートの準備ができました: {title}",
+            openInbox: "受信箱を開く",
+            planRefused: "お使いのプランでは定期レポートを利用できません。",
             edit: "編集",
             delete: "削除",
             deleteConfirm: "{name} を削除しますか? 実行されなくなり、元に戻せません。",

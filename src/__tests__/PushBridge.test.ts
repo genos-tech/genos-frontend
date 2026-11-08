@@ -87,9 +87,12 @@ const setVisibility = (state: "visible" | "hidden") => {
 
 /** Collect resync requests the bridge causes. */
 const watchResyncs = () => {
-    const seen: InboxResyncDetail[] = [];
+    // Only what the push path decides: `done` / `accepted` are the reply channel
+    // `requestInboxResync` adds for callers that await the result.
+    const seen: Pick<InboxResyncDetail, "reason" | "deliveredTag">[] = [];
     const onEvent = (event: Event) => {
-        seen.push((event as CustomEvent<InboxResyncDetail>).detail);
+        const { reason, deliveredTag } = (event as CustomEvent<InboxResyncDetail>).detail;
+        seen.push({ reason, deliveredTag });
     };
     window.addEventListener(INBOX_RESYNC_EVENT, onEvent);
     return { seen, stop: () => window.removeEventListener(INBOX_RESYNC_EVENT, onEvent) };

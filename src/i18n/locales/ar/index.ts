@@ -769,6 +769,10 @@ export const ar: DeepPartial<Messages> = {
             running: "جارٍ التشغيل…",
             ranOk: "تم التشغيل: {title}، {count, plural, one {# عنصر} other {# عناصر}}. التقرير في صندوق الوارد لديك.",
             ranFailed: "فشل التشغيل: {error}",
+            reportReady: "التقرير جاهز",
+            reportReadyTitled: "التقرير جاهز: {title}",
+            openInbox: "فتح صندوق الوارد",
+            planRefused: "خطتك لا تشمل التقارير المجدولة.",
             edit: "تعديل",
             delete: "حذف",
             deleteConfirm: "هل تريد حذف {name}؟ سيتوقف عن العمل ولا يمكن استرجاعه.",
@@ -3316,6 +3320,12 @@ export const ar: DeepPartial<Messages> = {
         header: {
             title: "صندوق الوارد",
             subtitle: "تابع الإشعارات أولًا بأول",
+        },
+        sync: {
+            label: "مزامنة صندوق الوارد",
+            upToDate: "صندوق الوارد محدّث",
+            added: "{count, plural, one {# عنصر جديد} other {# عناصر جديدة}}",
+            failed: "تعذّرت مزامنة صندوق الوارد. حاول مرة أخرى.",
         },
         tabs: {
             ariaLabel: "أقسام صندوق الوارد",

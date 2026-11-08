@@ -984,6 +984,10 @@ export const hi: DeepPartial<Messages> = {
             running: "चल रहा है…",
             ranOk: "चला: {title}, {count, plural, one {# आइटम} other {# आइटम}}। रिपोर्ट आपके इनबॉक्स में है।",
             ranFailed: "रन विफल रहा: {error}",
+            reportReady: "रिपोर्ट तैयार है",
+            reportReadyTitled: "रिपोर्ट तैयार है: {title}",
+            openInbox: "इनबॉक्स खोलें",
+            planRefused: "आपके प्लान में शेड्यूल की गई रिपोर्ट शामिल नहीं हैं।",
             edit: "बदलें",
             delete: "हटाएँ",
             deleteConfirm: "{name} हटाएँ? यह चलना बंद कर देगा और वापस नहीं लाया जा सकता।",
@@ -3348,6 +3352,12 @@ export const hi: DeepPartial<Messages> = {
         header: {
             title: "इनबॉक्स",
             subtitle: "नोटिफिकेशन से अपडेट रहें",
+        },
+        sync: {
+            label: "इनबॉक्स सिंक करें",
+            upToDate: "इनबॉक्स अप टू डेट है",
+            added: "{count, plural, one {# नया आइटम} other {# नए आइटम}}",
+            failed: "इनबॉक्स सिंक नहीं हो सका। फिर कोशिश करें।",
         },
         tabs: {
             ariaLabel: "इनबॉक्स के खंड",

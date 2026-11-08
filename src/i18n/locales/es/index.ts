@@ -785,6 +785,10 @@ export const es: DeepPartial<Messages> = {
             running: "Ejecutando…",
             ranOk: "Ejecutada: {title}, {count, plural, one {# elemento} other {# elementos}}. El informe está en tu bandeja de entrada.",
             ranFailed: "La ejecución falló: {error}",
+            reportReady: "Informe listo",
+            reportReadyTitled: "Informe listo: {title}",
+            openInbox: "Abrir bandeja",
+            planRefused: "Tu plan no incluye informes programados.",
             edit: "Editar",
             delete: "Eliminar",
             deleteConfirm: "¿Eliminar {name}? Dejará de ejecutarse y no se puede recuperar.",
@@ -3366,6 +3370,12 @@ export const es: DeepPartial<Messages> = {
         header: {
             title: "Bandeja",
             subtitle: "No te pierdas ninguna notificación",
+        },
+        sync: {
+            label: "Sincronizar bandeja",
+            upToDate: "La bandeja está al día",
+            added: "{count, plural, one {# elemento nuevo} other {# elementos nuevos}}",
+            failed: "No se pudo sincronizar la bandeja. Inténtalo de nuevo.",
         },
         tabs: {
             ariaLabel: "Secciones de la bandeja",
