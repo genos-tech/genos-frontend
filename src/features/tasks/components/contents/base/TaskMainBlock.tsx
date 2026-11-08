@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
+import { Box, Chip, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -57,6 +57,10 @@ import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlo
 // column flush across rows, the muted color reads as "metadata key"
 // without competing with the value next to it.
 const FIELD_LABEL_MIN_WIDTH = 96;
+
+/** Two fields share a row only when their pane is at least this wide (a container query, not the
+ *  viewport: a task preview docked beside the table is narrow on a wide screen). */
+const TWO_COLUMN_MIN_PX = 520;
 
 const FieldLabel = ({
     children,
@@ -236,6 +240,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setExplicitlyShowStartDate(false);
     }, [taskContent.id]);
     const showStartDate = !!taskContent.startDate || explicitlyShowStartDate;
+    // Create mounts only: a sub-task takes its parent from `isCreatingTask`, not the picker.
+    const resetProjectMilestone = !isPreviewMode && !isSubTask;
     const [linkedBranches, setLinkedBranches] = useState<LinkedBranch[]>([]);
     // Stored delivery links (branch / PR / state). Preview only: a task
     // being created has none, and the create form shouldn't fetch.
@@ -568,111 +574,122 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     keeps its avatar + picker; `minWidth: 0` lets the picker
                     shrink inside the half-column instead of pushing the row
                     past a narrowed preview pane. */}
-                <Grid spacing={1} container>
-                    <Grid sm={6} xs={12}>
-                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark} required={isRequired("assignee")}>
-                                {t.tasks.fields.assignee}
-                            </FieldLabel>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    flex: 1,
-                                    minWidth: 0,
-                                }}
-                            >
-                                <AvatarWithStatus
-                                    showPulseDot={false}
-                                    // `assignee` is now nullable (a task can
-                                    // be unassigned). When null, render the
-                                    // empty placeholder avatar —
-                                    // `AvatarWithStatus` already handles
-                                    // `avatarUser=undefined`.
-                                    isYou={!!assignee && myself.userId === assignee.userId}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useCM={useCM}
-                                    useUISM={useUISM}
-                                    avatarUser={
-                                        assignee
-                                            ? useTEM.teamMemberProfiles[assignee.userId]
-                                            : undefined
-                                    }
-                                />
-                                <ACTeamUsers
-                                    initialUser={taskContent.assignee}
-                                    isAssignee={true}
-                                    isOpenTeamMembersList={isOpenTeamMembersList}
-                                    myself={myself}
-                                    setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                                    setMyself={setMyself}
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    setUser={setAssignee}
-                                    socket={socket}
-                                    taskContent={taskContent}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                />
-                            </Box>
-                        </ListItem>
-                    </Grid>
-                    <Grid sm={6} xs={12}>
-                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark} required={isRequired("reporter")}>
-                                {t.tasks.fields.reporter}
-                            </FieldLabel>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    flex: 1,
-                                    minWidth: 0,
-                                }}
-                            >
-                                <AvatarWithStatus
-                                    avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
-                                    isYou={myself.userId === reporter.userId}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    showPulseDot={false}
-                                    socket={socket}
-                                    useCM={useCM}
-                                    useUISM={useUISM}
-                                />
-                                <ACTeamUsers
-                                    initialUser={taskContent.reporter}
-                                    isAssignee={false}
-                                    isOpenTeamMembersList={isOpenTeamMembersList}
-                                    myself={myself}
-                                    setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                                    setMyself={setMyself}
-                                    setTaskContent={setTaskContent}
-                                    socket={socket}
-                                    setTaskUpdated={setTaskUpdated}
-                                    // Adapt the non-nullable reporter setter
-                                    // to the wider `setUser: UserProps | null`
-                                    // signature ACTeamUsers needs. The picker
-                                    // only emits null for the assignee branch
-                                    // (isAssignee=true), so this null is
-                                    // unreachable in practice.
-                                    taskContent={taskContent}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                    setUser={(value) => {
-                                        if (value) setReporter(value);
+                <Box sx={{ containerType: "inline-size", width: "100%" }}>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gap: 1,
+                            gridTemplateColumns: "minmax(0, 1fr)",
+                            [`@container (min-width: ${TWO_COLUMN_MIN_PX}px)`]: {
+                                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                            },
+                        }}
+                    >
+                        <Box sx={{ minWidth: 0 }}>
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark} required={isRequired("assignee")}>
+                                    {t.tasks.fields.assignee}
+                                </FieldLabel>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        flex: 1,
+                                        minWidth: 0,
                                     }}
-                                />
-                            </Box>
-                        </ListItem>
-                    </Grid>
-                </Grid>
+                                >
+                                    <AvatarWithStatus
+                                        showPulseDot={false}
+                                        // `assignee` is now nullable (a task can
+                                        // be unassigned). When null, render the
+                                        // empty placeholder avatar —
+                                        // `AvatarWithStatus` already handles
+                                        // `avatarUser=undefined`.
+                                        isYou={!!assignee && myself.userId === assignee.userId}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
+                                        avatarUser={
+                                            assignee
+                                                ? useTEM.teamMemberProfiles[assignee.userId]
+                                                : undefined
+                                        }
+                                    />
+                                    <ACTeamUsers
+                                        initialUser={taskContent.assignee}
+                                        isAssignee={true}
+                                        isOpenTeamMembersList={isOpenTeamMembersList}
+                                        myself={myself}
+                                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                        setMyself={setMyself}
+                                        setTaskContent={setTaskContent}
+                                        setTaskUpdated={setTaskUpdated}
+                                        setUser={setAssignee}
+                                        socket={socket}
+                                        taskContent={taskContent}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                    />
+                                </Box>
+                            </ListItem>
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark} required={isRequired("reporter")}>
+                                    {t.tasks.fields.reporter}
+                                </FieldLabel>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        flex: 1,
+                                        minWidth: 0,
+                                    }}
+                                >
+                                    <AvatarWithStatus
+                                        avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
+                                        isYou={myself.userId === reporter.userId}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        showPulseDot={false}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
+                                    />
+                                    <ACTeamUsers
+                                        initialUser={taskContent.reporter}
+                                        isAssignee={false}
+                                        isOpenTeamMembersList={isOpenTeamMembersList}
+                                        myself={myself}
+                                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                        setMyself={setMyself}
+                                        setTaskContent={setTaskContent}
+                                        socket={socket}
+                                        setTaskUpdated={setTaskUpdated}
+                                        // Adapt the non-nullable reporter setter
+                                        // to the wider `setUser: UserProps | null`
+                                        // signature ACTeamUsers needs. The picker
+                                        // only emits null for the assignee branch
+                                        // (isAssignee=true), so this null is
+                                        // unreachable in practice.
+                                        taskContent={taskContent}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                        setUser={(value) => {
+                                            if (value) setReporter(value);
+                                        }}
+                                    />
+                                </Box>
+                            </ListItem>
+                        </Box>
+                    </Box>
+                </Box>
 
                 {/* Collaborators — additional members beside the assignee.
                     Shown for both tasks and milestones (a milestone stores
@@ -695,13 +712,23 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 </ListItem>
 
                 {/* Project and Tags Row */}
-                <Grid spacing={1} sx={{ mt: 0.5 }} container>
-                    <Grid sm={6} xs={12}>
-                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark} required={isRequired("project")}>
-                                {t.tasks.fields.project}
-                            </FieldLabel>
-                            {/* Only a milestone or a root task picks a
+                <Box sx={{ containerType: "inline-size", width: "100%", mt: 0.5 }}>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gap: 1,
+                            gridTemplateColumns: "minmax(0, 1fr)",
+                            [`@container (min-width: ${TWO_COLUMN_MIN_PX}px)`]: {
+                                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                            },
+                        }}
+                    >
+                        <Box sx={{ minWidth: 0 }}>
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark} required={isRequired("project")}>
+                                    {t.tasks.fields.project}
+                                </FieldLabel>
+                                {/* Only a milestone or a root task picks a
                                 project. Anything with a parent — a sub-task,
                                 or a task inside a milestone — belongs to the
                                 project of what it sits under: letting one
@@ -717,61 +744,62 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 exist to the user yet, and a child being
                                 created inherits the project it's created
                                 under anyway. */}
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <AppTooltip
-                                    disableHoverListener={!projectLocked}
-                                    maxWidth={280}
-                                    title={projectLocked ? projectLockHint : ""}
-                                >
-                                    {/* The disabled input swallows its own
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <AppTooltip
+                                        disableHoverListener={!projectLocked}
+                                        maxWidth={280}
+                                        title={projectLocked ? projectLockHint : ""}
+                                    >
+                                        {/* The disabled input swallows its own
                                         pointer events, so the tooltip needs a
                                         wrapper that still receives them. */}
-                                    <Box sx={{ minWidth: 0 }}>
-                                        <ACTeamProjects
-                                            disabled={projectLocked}
-                                            isOpenProjectList={isOpenProjectList}
-                                            // Create mounts only (see the prop doc). Sub-task
-                                            // creation is excluded: its parentTaskId comes from
-                                            // `isCreatingTask`, not the milestone picker, and
-                                            // must survive a project switch.
-                                            resetMilestoneOnChange={!isPreviewMode && !isSubTask}
-                                            setIsOpenProjectList={setIsOpenProjectList}
-                                            setTaskContent={setTaskContent}
-                                            setTaskUpdated={setTaskUpdated}
-                                            taskContent={taskContent}
-                                            // Resolves each option's avatar from
-                                            // its PM chat.
-                                            useCM={useCM}
-                                            usePM={usePM}
-                                        />
-                                    </Box>
-                                </AppTooltip>
-                            </Box>
-                        </ListItem>
-                    </Grid>
-                    <Grid sm={6} xs={12}>
-                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark} required={isRequired("tags")}>
-                                {t.tasks.fields.tags}
-                            </FieldLabel>
-                            {/* minWidth: 0 lets the autocomplete actually
+                                        <Box sx={{ minWidth: 0 }}>
+                                            <ACTeamProjects
+                                                disabled={projectLocked}
+                                                isOpenProjectList={isOpenProjectList}
+                                                // Create mounts only (see the prop doc). Sub-task
+                                                // creation is excluded: its parentTaskId comes from
+                                                // `isCreatingTask`, not the milestone picker, and
+                                                // must survive a project switch.
+                                                resetMilestoneOnChange={resetProjectMilestone}
+                                                setIsOpenProjectList={setIsOpenProjectList}
+                                                setTaskContent={setTaskContent}
+                                                setTaskUpdated={setTaskUpdated}
+                                                taskContent={taskContent}
+                                                useCM={useCM}
+                                                // Resolves each option's avatar from
+                                                // its PM chat.
+                                                usePM={usePM}
+                                            />
+                                        </Box>
+                                    </AppTooltip>
+                                </Box>
+                            </ListItem>
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark} required={isRequired("tags")}>
+                                    {t.tasks.fields.tags}
+                                </FieldLabel>
+                                {/* minWidth: 0 lets the autocomplete actually
                                 shrink inside the flex row — its own
                                 width:100% otherwise pins the row wider
                                 than a narrowed preview pane and pushes
                                 everything out of the block frame. */}
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <ACProjectTags
-                                    isOpenTagList={isOpenTagList}
-                                    projectTags={projectTags}
-                                    setIsOpenTagList={setIsOpenTagList}
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                />
-                            </Box>
-                        </ListItem>
-                    </Grid>
-                </Grid>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <ACProjectTags
+                                        isOpenTagList={isOpenTagList}
+                                        projectTags={projectTags}
+                                        setIsOpenTagList={setIsOpenTagList}
+                                        setTaskContent={setTaskContent}
+                                        setTaskUpdated={setTaskUpdated}
+                                        taskContent={taskContent}
+                                    />
+                                </Box>
+                            </ListItem>
+                        </Box>
+                    </Box>
+                </Box>
 
                 {/* Sprint / Milestone Row.
                     - Milestones pick a Sprint (and inherit the sprint
