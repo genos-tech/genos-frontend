@@ -78,6 +78,58 @@ export const navFocusSx = {
 } as const;
 
 /**
+ * What makes a row read as a row: text colour, the icon colour that goes
+ * with it, hover and selected. No size, so a surface with its own geometry
+ * (the 68px global rail, MIP-1164) wears the same states as a sidebar row.
+ */
+export const navToneSx = {
+    color: g.text.secondary,
+    // Joy SvgIcon colours itself from --Icon-color, a wrapper's `color`
+    // alone leaves icons grey.
+    "--Icon-color": g.text.secondary,
+    transition: `background-color ${g.motion.fast} ${g.ease}, color ${g.motion.fast} ${g.ease}`,
+    [NAV_HOVER_MEDIA]: {
+        "&:hover": {
+            background: g.hover,
+            color: g.text.primary,
+            "--Icon-color": g.text.primary,
+        },
+    },
+    // After hover, same specificity: selected wins and stays quiet.
+    [NAV_SELECTED]: {
+        background: g.accent.subtle,
+        color: g.accent.text,
+        "--Icon-color": g.accent.text,
+        fontWeight: 500,
+        [NAV_HOVER_MEDIA]: {
+            "&:hover": {
+                background: g.accent.subtle,
+                color: g.accent.text,
+                "--Icon-color": g.accent.text,
+            },
+        },
+    },
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+} as const;
+
+/**
+ * The button INSIDE a row box is transparent: the row box carries the look
+ * (hover, selected), so Joy's own hover/active plate on the button must go.
+ * Its variables are read first, which beats its out-ranking selector.
+ */
+export const navButtonPlateOffSx = {
+    background: "transparent",
+    color: "inherit",
+    "--variant-plainHoverBg": "transparent",
+    "--variant-plainActiveBg": "transparent",
+    // `currentColor`, not `inherit`: as a custom property `inherit` means "my parent's
+    // value of this variable", which is unset, so Joy fell back to its own hover text
+    // colour and a row box that turned red on hover kept a neutral label.
+    "--variant-plainHoverColor": "currentColor",
+    "&:hover, &:active": { background: "transparent", color: "inherit" },
+} as const;
+
+/**
  * Look of the row box: height, radius, text, hover and selected.
  * `lines: 2` is for rows with a second line (chat, sessions, favorites).
  */
@@ -90,31 +142,5 @@ export const navRowSx = ({ lines = 1 }: { lines?: 1 | 2 } = {}) =>
         borderRadius: g.radius.sm,
         ...type("body-sm"),
         fontWeight: 400,
-        color: g.text.secondary,
-        // Joy SvgIcon colours itself from --Icon-color, a wrapper's `color`
-        // alone leaves icons grey.
-        "--Icon-color": g.text.secondary,
-        transition: `background-color ${g.motion.fast} ${g.ease}, color ${g.motion.fast} ${g.ease}`,
-        [NAV_HOVER_MEDIA]: {
-            "&:hover": {
-                background: g.hover,
-                color: g.text.primary,
-                "--Icon-color": g.text.primary,
-            },
-        },
-        // After hover, same specificity: selected wins and stays quiet.
-        [NAV_SELECTED]: {
-            background: g.accent.subtle,
-            color: g.accent.text,
-            "--Icon-color": g.accent.text,
-            fontWeight: 500,
-            [NAV_HOVER_MEDIA]: {
-                "&:hover": {
-                    background: g.accent.subtle,
-                    color: g.accent.text,
-                    "--Icon-color": g.accent.text,
-                },
-            },
-        },
-        "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+        ...navToneSx,
     }) as const;

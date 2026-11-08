@@ -8,9 +8,12 @@ export {
     NAV_ROW_GAP,
     NAV_PAD_X,
     NAV_TWO_LINE_FACTOR,
+    NAV_SELECTED,
+    navButtonPlateOffSx,
     navFocusSx,
     navIndentLength,
     navRowSx,
+    navToneSx,
 } from "./navStyles";
 export { SectionHeader } from "./SectionHeader";
 export type { SectionHeaderProps } from "./SectionHeader";

@@ -400,7 +400,7 @@ export const es: DeepPartial<Messages> = {
             todo: "Hacer",
             history: "Historia",
             settings: "Ajustes",
-            signOut: "desconectar",
+            signOut: "Salir",
         },
         signOutConfirm: {
             title: "¿Cerrar sesión en este espacio de trabajo?",

@@ -3800,7 +3800,7 @@ export const ja: DeepPartial<Messages> = {
             todo: "To-Do",
             history: "履歴",
             settings: "設定",
-            signOut: "サインアウト",
+            signOut: "ログアウト",
         },
         tooltips: {
             settings: "設定",
