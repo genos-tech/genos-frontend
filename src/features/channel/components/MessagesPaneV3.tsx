@@ -18,7 +18,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmojiGlyph } from "../../../components/ui/emoji/EmojiGlyph";
-import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useLongPress } from "../../../hooks/common/useLongPress";
 import { useTranslation } from "../../../i18n";
@@ -60,7 +61,8 @@ export function MessagesPaneV3({
     onImportAsNote,
 }: MessagesPaneV3Props) {
     const { t } = useTranslation();
-    const { channel, messages, readCursor, isLoading } = useChannel(channelId);
+    const { channel, messages, readCursor, isLoading, loadFailed, reload, reloading } =
+        useChannel(channelId);
     // Separate subscription for the flag index so each row knows
     // whether it's flagged without a prop dance from useChannel.
     const snapshot = useSyncExternalStore(
@@ -170,10 +172,22 @@ export function MessagesPaneV3({
                 ))}
                 {messages.length === 0 && (
                     <li>
-                        <EmptyState
-                            body={t.chat.channel.pane.noMessages}
-                            data-empty="channel-messages"
+                        {/* A failed history load is not "no messages" (MIP-1299). */}
+                        <DataState
+                            error={loadFailed}
+                            hasData={false}
+                            loading={reloading}
                             size="sm"
+                            skeleton={<SkeletonRows count={4} avatar twoLines />}
+                            empty={{
+                                body: t.chat.channel.pane.noMessages,
+                                "data-empty": "channel-messages",
+                            }}
+                            errorState={{
+                                "data-error": "channel-messages",
+                                onRetry: reload,
+                                title: t.chat.channel.pane.loadFailed,
+                            }}
                         />
                     </li>
                 )}

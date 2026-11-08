@@ -170,7 +170,8 @@ describe("ThreadPanelV3", () => {
     it("renders 'Loading thread…' before the root lands", () => {
         channelService.handleChannelCreated(fakeChannel("c-1"));
         render(<ThreadPanelV3 channelId="c-1" rootMessageId="missing" onClose={() => {}} />);
-        expect(screen.getByText("Loading thread…")).toBeInTheDocument();
+        // The shared skeleton (MIP-1299), announced as "Loading thread…" instead of a bare div.
+        expect(screen.getByRole("status", { name: "Loading thread…" })).toBeInTheDocument();
     });
 
     it("renders root + replies once hydrated", () => {
