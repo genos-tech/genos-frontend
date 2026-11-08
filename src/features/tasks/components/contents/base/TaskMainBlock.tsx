@@ -869,9 +869,36 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </ListItem>
                 )}
 
-                {/* Priority and Effort Level Row */}
-                <Grid spacing={1} container>
-                    <Grid sm={6} xs={12}>
+                {/* Status, Priority and Effort Level: ONE row (MIP-1217), in that order.
+                    Status only exists on a saved task, so the create form keeps its two.
+                    The width that decides is the PANEL's, not the window's (this preview
+                    lives in a side pane, a modal and a full page): a container query. Below
+                    the threshold every field has its own row, as on a phone. */}
+                <Box sx={{ containerType: "inline-size", width: "100%" }}>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: "minmax(0, 1fr)",
+                            gap: 1,
+                            [`@container (min-width: ${isPreviewMode ? 680 : 440}px)`]: {
+                                gridTemplateColumns: `repeat(${isPreviewMode ? 3 : 2}, minmax(0, 1fr))`,
+                            },
+                        }}
+                    >
+                        {isPreviewMode && (
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <ACTaskStatus
+                                        setTaskContent={setTaskContent}
+                                        setTaskStatusUpdated={setTaskStatusUpdated}
+                                        setTaskUpdated={setTaskUpdated}
+                                        socket={socket}
+                                        taskContent={taskContent}
+                                    />
+                                </Box>
+                            </ListItem>
+                        )}
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark} required={isRequired("priority")}>
                                 {t.tasks.fields.priority}
@@ -884,8 +911,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                             </Box>
                         </ListItem>
-                    </Grid>
-                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark} required={isRequired("effortLevel")}>
                                 {t.tasks.fields.effortLevel}
@@ -898,30 +923,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                             </Box>
                         </ListItem>
-                    </Grid>
-                </Grid>
-
-                {/* Status (only in preview mode) */}
-                {isPreviewMode && (
-                    <ListItem
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            width: { xs: "100%", sm: "49%" },
-                        }}
-                    >
-                        <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <ACTaskStatus
-                                setTaskContent={setTaskContent}
-                                setTaskStatusUpdated={setTaskStatusUpdated}
-                                setTaskUpdated={setTaskUpdated}
-                                socket={socket}
-                                taskContent={taskContent}
-                            />
-                        </Box>
-                    </ListItem>
-                )}
+                    </Box>
+                </Box>
 
                 {/* Due Date — the only date field shown by default.
                     Start Date is a secondary, opt-in attribute: a small
