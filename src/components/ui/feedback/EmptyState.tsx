@@ -73,8 +73,8 @@ export const EmptyState = ({
                             color="neutral"
                             size="sm"
                             startDecorator={action.icon}
-                            variant="outlined"
                             sx={{ "&:focus-visible": focusRing }}
+                            variant="outlined"
                             onClick={action.onClick}
                         >
                             {action.label}

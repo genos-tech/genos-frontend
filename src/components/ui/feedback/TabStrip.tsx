@@ -282,7 +282,6 @@ export const TabStrip = ({
                             </Box>
                             {tab.closable && onClose && (
                                 <Box
-                                    aria-hidden
                                     component="span"
                                     data-tab-close={tab.id}
                                     title={closeLabel}
@@ -300,6 +299,7 @@ export const TabStrip = ({
                                         "--Icon-color": "currentColor",
                                         "&:hover": { background: g.active, color: g.text.primary },
                                     }}
+                                    aria-hidden
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onClose(tab.id);
@@ -328,13 +328,13 @@ export const TabStrip = ({
                     {closables.map((tab) => (
                         <button
                             key={tab.id}
+                            tabIndex={-1}
+                            type="button"
                             aria-label={
                                 typeof tab.title === "string" && tab.title
                                     ? `${closeLabel}: ${tab.title}`
                                     : closeLabel
                             }
-                            tabIndex={-1}
-                            type="button"
                             onClick={() => onClose?.(tab.id)}
                         />
                     ))}
