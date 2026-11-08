@@ -160,8 +160,8 @@ export const GenosHome = ({
                 display: "flex",
                 // Clear the BottomTabBar on mobile; full height on desktop.
                 height: {
-                    xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
-                    md: "100dvh",
+                    xs: "calc(var(--app-vh) - var(--BottomTabBar-height, 60px))",
+                    md: "var(--app-vh)",
                 },
                 position: "relative",
                 overflow: "hidden",

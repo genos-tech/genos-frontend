@@ -534,11 +534,11 @@ export const LayoutStyles = {
     outerWrapper: {
         display: "flex",
         minHeight: {
-            xs: "calc(100dvh - var(--mobile-bottom-inset, 60px))",
-            md: "100dvh",
+            xs: "calc(var(--app-vh) - var(--mobile-bottom-inset, 60px))",
+            md: "var(--app-vh)",
         },
         height: {
-            xs: "calc(100dvh - var(--mobile-bottom-inset, 60px))",
+            xs: "calc(var(--app-vh) - var(--mobile-bottom-inset, 60px))",
             md: "auto",
         },
         flex: 1,
@@ -577,7 +577,7 @@ export const LayoutStyles = {
             display: "flex",
             flexDirection: "column" as const,
             minWidth: 0,
-            height: "100dvh",
+            height: "var(--app-vh)",
             overflow: "hidden" as const,
             gap: 1,
             borderRight: "1px solid",
@@ -614,7 +614,7 @@ export const LayoutStyles = {
             display: "flex",
             flexDirection: "column" as const,
             minWidth: 0,
-            height: "100dvh",
+            height: "var(--app-vh)",
             overflow: "hidden" as const,
             gap: 1,
             borderRight: "1px solid",

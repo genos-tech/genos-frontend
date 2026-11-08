@@ -1887,7 +1887,6 @@ export const hi: DeepPartial<Messages> = {
             projectsHeader: "प्रोजेक्ट",
             board: "बोर्ड",
             table: "टेबल",
-            footerTagline: "उत्पादक बने रहें",
             noProjectsAvailable: "कोई प्रोजेक्ट उपलब्ध नहीं",
             filterByLabel: "लेबल द्वारा फ़िल्टर करें",
             clearLabelFilter: "फ़िल्टर साफ़ करें",
@@ -3048,7 +3047,6 @@ export const hi: DeepPartial<Messages> = {
             noFavorites: "अभी कोई पसंदीदा नहीं। नोट को स्टार करके यहाँ जोड़ें।",
             noRecents: "अभी कोई हालिया नोट नहीं।",
             soonBadge: "जल्द",
-            footerTagline: "अपने विचार व्यवस्थित करें",
             milestoneLabel: "माइलस्टोन",
             addSubNote: "सब-नोट जोड़ें",
             unknownOwner: "अज्ञात",
@@ -3389,9 +3387,6 @@ export const hi: DeepPartial<Messages> = {
             activitiesSubtitle: "नए अपडेट और नोटिफिकेशन यहाँ दिखेंगे",
             requestsTitle: "कोई लंबित अनुरोध नहीं",
             requestsSubtitle: "टीम और प्रोजेक्ट अनुरोध यहाँ दिखेंगे",
-        },
-        footer: {
-            tagline: "अपना इनबॉक्स व्यवस्थित रखें",
         },
         notification: {
             approvalBody: "{target} में शामिल होने का अनुरोध स्वीकार कर लिया गया है: ",

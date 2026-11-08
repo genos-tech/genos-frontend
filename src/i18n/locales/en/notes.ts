@@ -76,7 +76,6 @@ export const notes = {
         noFavorites: "No favorites yet. Star notes to add them here.",
         noRecents: "No recent notes yet.",
         soonBadge: "Soon",
-        footerTagline: "Organize your thoughts",
         milestoneLabel: "Milestone",
         addSubNote: "Add sub-note",
         unknownOwner: "Unknown",

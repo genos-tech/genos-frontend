@@ -1,4 +1,4 @@
-import { Box, Sheet, Typography } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
@@ -11,7 +11,6 @@ import { InboxHomeProps } from "./types/inboxTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useTranslation } from "../../i18n";
-import { purplePalette } from "../../theme/purplePalette";
 
 // Wrapper component for Activities section with item routing
 const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
@@ -74,7 +73,6 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
 export const InboxHome = (props: InboxHomeProps) => {
     const { useIM } = props;
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const { activityInboxItems, requestInboxItems } = useInboxItems(useIM.inboxItems);
@@ -82,7 +80,6 @@ export const InboxHome = (props: InboxHomeProps) => {
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
     const ls = isDark ? LayoutStyles.dark : LayoutStyles.light;
-    const p = isDark ? purplePalette.dark : purplePalette.light;
 
     return (
         <Box sx={LayoutStyles.outerWrapper}>
@@ -212,25 +209,6 @@ export const InboxHome = (props: InboxHomeProps) => {
                             attention when something needs a decision. */}
                         <Route element={<Navigate to="activities" replace />} path="" />
                     </Routes>
-                </Box>
-
-                {/* Footer — decorative tagline, hidden on mobile: it sits
-                    directly above the BottomTabBar and costs a row of list
-                    height for nothing actionable. */}
-                <Box
-                    sx={{
-                        px: 3,
-                        py: 1.5,
-                        borderTop: "1px solid",
-                        borderColor: p.borderMuted,
-                        display: { xs: "none", md: "flex" },
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Typography level="body-xs" sx={{ color: p.textSubtle, fontSize: 10 }}>
-                        {t.inbox.footer.tagline}
-                    </Typography>
                 </Box>
             </Sheet>
         </Box>

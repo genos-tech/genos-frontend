@@ -349,10 +349,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             sx={{
                 display: "flex",
                 // On desktop the sticky Sheet parent has no explicit
-                // height, so use 100dvh to size against the viewport.
+                // height, so use the app viewport height (--app-vh) to size against the viewport.
                 // On mobile the parent (MobileChatHome) is a constrained
                 // flex column, so 100% fills it correctly.
-                height: { xs: "100%", md: "100dvh" },
+                height: { xs: "100%", md: "var(--app-vh)" },
                 minHeight: 0,
             }}
         >

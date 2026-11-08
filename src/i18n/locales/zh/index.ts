@@ -2237,9 +2237,6 @@ export const zh: DeepPartial<Messages> = {
             requestsTitle: "暂无待处理申请",
             requestsSubtitle: "团队与项目申请将出现在这里",
         },
-        footer: {
-            tagline: "保持收件箱整洁",
-        },
         notification: {
             approvalBody: "加入{target}的申请已通过：",
         },
@@ -2615,7 +2612,6 @@ export const zh: DeepPartial<Messages> = {
             noFavorites: "暂无收藏。点击星标可加入这里。",
             noRecents: "暂无最近笔记。",
             soonBadge: "敬请期待",
-            footerTagline: "整理你的灵感",
             milestoneLabel: "里程碑",
             addSubNote: "添加子笔记",
             unknownOwner: "未知",
@@ -4133,7 +4129,6 @@ export const zh: DeepPartial<Messages> = {
             projectsHeader: "项目",
             board: "看板",
             table: "表格",
-            footerTagline: "保持高效",
             noProjectsAvailable: "暂无可用项目",
             filterByLabel: "按标签过滤",
             clearLabelFilter: "清除过滤器",

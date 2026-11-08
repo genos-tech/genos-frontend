@@ -147,6 +147,14 @@
            push the composer a tab bar's height above the keyboard. */
         --mobile-bottom-inset: max(var(--BottomTabBar-height), var(--keyboard-inset));
 
+        /* The height the app shell may fill: the viewport, less the in-flow
+           notification banner while it shows (PermissionBanner sets
+           --app-banner-h, and removes it when dismissed). Every full-height
+           surface of the shell uses this instead of a bare `100dvh`, so a
+           banner above the shell pushes the page down by its own height
+           instead of making the document scroll. */
+        --app-vh: calc(100dvh - var(--app-banner-h, 0px));
+
         /* Responsive breakpoints */
         --breakpoint-mobile: 480px;
         --breakpoint-tablet: 768px;

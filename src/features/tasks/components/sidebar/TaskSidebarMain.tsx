@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import { Box, Divider, List, Sheet, Typography } from "@mui/joy";
+import { Box, List, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
@@ -226,7 +226,7 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                 // clamped to viewport - tab bar). Desktop: viewport
                 // height since the sticky Sheet has no explicit parent
                 // height.
-                height: { xs: "100%", md: "100dvh" },
+                height: { xs: "100%", md: "var(--app-vh)" },
                 width: "100%",
                 top: 0,
                 flexShrink: 0,
@@ -332,28 +332,6 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                         useTM={slices.tree.tm}
                     />
                 </List>
-            </Box>
-
-            {/* Footer */}
-            <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
-            <Box
-                sx={{
-                    px: 2,
-                    py: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-                        fontSize: 10,
-                    }}
-                >
-                    {t.tasks.sidebar.footerTagline}
-                </Typography>
             </Box>
         </Sheet>
     );

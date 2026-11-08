@@ -2315,9 +2315,6 @@ export const ja: DeepPartial<Messages> = {
             requestsTitle: "保留中のリクエストはありません",
             requestsSubtitle: "チームやプロジェクトのリクエストがここに表示されます",
         },
-        footer: {
-            tagline: "受信箱をすっきり保ちましょう",
-        },
         notification: {
             approvalBody: "{target}への参加リクエストが承認されました：",
         },
@@ -2705,7 +2702,6 @@ export const ja: DeepPartial<Messages> = {
                 "お気に入りはまだありません。ノートにスターを付けてここに追加しましょう。",
             noRecents: "最近開いたノートはまだありません。",
             soonBadge: "近日公開",
-            footerTagline: "考えを整理しましょう",
             milestoneLabel: "マイルストーン",
             addSubNote: "サブノートを追加",
             unknownOwner: "不明",
@@ -4276,7 +4272,6 @@ export const ja: DeepPartial<Messages> = {
             projectsHeader: "プロジェクト",
             board: "ボード",
             table: "テーブル",
-            footerTagline: "生産性を保ちましょう",
             noProjectsAvailable: "利用できるプロジェクトはありません",
             filterByLabel: "ラベルでフィルターする",
             clearLabelFilter: "クリアフィルター",

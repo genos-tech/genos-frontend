@@ -3,8 +3,7 @@ import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import { Badge, Box, Sheet } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Badge, Box } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -18,7 +17,8 @@ import {
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { useTranslation } from "../../i18n";
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
-import { purplePalette } from "../../theme/purplePalette";
+import { g, type } from "../../theme/tokens";
+import { NAV_HOVER_MEDIA, NAV_SELECTED, navFocusSx, navToneSx } from "../ui/nav/navStyles";
 
 type BottomTabBarProps = {
     useIM: InboxManagementState;
@@ -69,7 +69,6 @@ const TAB_ITEMS = [
 export const BottomTabBar = (props: BottomTabBarProps) => {
     const { useIM, useCM, onOpenAccount } = props;
     const isMobile = useIsMobile();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
     const navigate = useNavigate();
     // What the bar lights up: the route, except between a tap and the switch
@@ -86,13 +85,6 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
         (item) => !hideable.has(item.labelKey) || isVisible(item.labelKey as SidebarItemKey)
     );
 
-    const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
-    const accent = isDark ? purplePalette.dark.accentSoft : purplePalette.light.accent;
-    // Triplet companion — the palette is CSS variables, so alpha has to be
-    // composed via rgba() rather than appended as hex.
-    const accentRgb = isDark ? purplePalette.dark.accentSoftRgb : purplePalette.light.accentRgb;
-
     const getBadgeCount = (id: number): number => {
         if (id === 0) return useIM.unReadInboxItemCount;
         if (id === 1) return useCM.unReadChatAndActivityCounts;
@@ -100,7 +92,8 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
     };
 
     return (
-        <Sheet
+        <Box
+            component="nav"
             sx={{
                 position: "fixed",
                 left: 0,
@@ -112,16 +105,15 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 // the padding below comes out of this height, leaving the
                 // tabs their full 60px — before, the inset was subtracted
                 // from 60 and the icons had ~26px on a notched iPhone.
+                boxSizing: "border-box",
                 height: "var(--BottomTabBar-height, 60px)",
                 display: "flex",
                 alignItems: "stretch",
                 justifyContent: "space-around",
-                borderTop: "1px solid",
-                borderColor: palette.divider,
-                background: isDark
-                    ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 0.96) 0%, rgba(11,10,22,0.98) 100%)"
-                    : "linear-gradient(180deg, rgba(252,250,255,0.96) 0%, rgba(248,245,255,0.98) 100%)",
-                backdropFilter: "blur(12px)",
+                borderTop: `1px solid ${g.border.subtle}`,
+                // A tab bar is page chrome, not an overlay: the page background,
+                // opaque, no blur.
+                background: g.bg.default,
                 paddingBottom: "env(safe-area-inset-bottom, 0)",
             }}
         >
@@ -135,22 +127,46 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 return (
                     <Box
                         key={item.id}
-                        sx={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 0.25,
-                            cursor: "pointer",
-                            color: isActive
-                                ? accent
-                                : isDark
-                                  ? "rgba(255,255,255,0.55)"
-                                  : "rgba(0,0,0,0.5)",
-                            transition: "color 0.2s ease",
-                            "&:active": { opacity: 0.7 },
-                        }}
+                        aria-current={isActive ? "page" : undefined}
+                        component="button"
+                        data-selected={isActive ? "true" : undefined}
+                        type="button"
+                        // A real button: focusable and announced, where it used to be a
+                        // clickable div. The look is the rail's (`navToneSx`: text colour,
+                        // the icon colour that goes with it, selected = accent text and
+                        // medium weight); a full-width tint on a 78px tab would be heavy,
+                        // so the selected tab changes colour only.
+                        sx={[
+                            navToneSx,
+                            {
+                                flex: 1,
+                                minWidth: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 0.25,
+                                p: 0,
+                                m: 0,
+                                border: 0,
+                                borderRadius: 0,
+                                background: "transparent",
+                                font: "inherit",
+                                cursor: "pointer",
+                                WebkitTapHighlightColor: "transparent",
+                                // Colour only, at rest, selected and under a mouse (a narrow desktop
+                                // window shows this bar too): a full-cell tint is for rail tiles.
+                                [NAV_HOVER_MEDIA]: { "&:hover": { background: "transparent" } },
+                                [NAV_SELECTED]: {
+                                    background: "transparent",
+                                    [NAV_HOVER_MEDIA]: {
+                                        "&:hover": { background: "transparent" },
+                                    },
+                                },
+                                "&:active": { opacity: 0.7 },
+                            },
+                            navFocusSx,
+                        ]}
                         onClick={() => {
                             if (item.path === "") {
                                 onOpenAccount();
@@ -166,9 +182,9 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             size="sm"
                             sx={{
                                 "& .MuiBadge-badge": {
-                                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
-                                    color: "#fff",
-                                    fontWeight: 700,
+                                    background: g.accent.solid,
+                                    color: g.accent.fg,
+                                    fontWeight: 600,
                                     fontSize: "0.6rem",
                                     minWidth: 18,
                                     height: 18,
@@ -177,18 +193,12 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                         >
                             <Icon sx={{ fontSize: 22 }} />
                         </Badge>
-                        <Box
-                            sx={{
-                                fontSize: "0.62rem",
-                                fontWeight: isActive ? 600 : 500,
-                                letterSpacing: "0.02em",
-                            }}
-                        >
+                        <Box component="span" sx={{ ...type("caption"), fontWeight: "inherit" }}>
                             {t.sidebar.nav[item.labelKey]}
                         </Box>
                     </Box>
                 );
             })}
-        </Sheet>
+        </Box>
     );
 };

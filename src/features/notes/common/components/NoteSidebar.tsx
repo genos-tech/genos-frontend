@@ -15,7 +15,7 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
-import { Box, Button, Chip, Divider, List, ListItem, Sheet, Typography } from "@mui/joy";
+import { Box, Button, Chip, List, ListItem, Sheet, Typography } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -1903,7 +1903,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 // clamped to viewport - tab bar by LayoutStyles.outerWrapper).
                 // Desktop: viewport height since the sticky Sheet has no
                 // explicit parent height.
-                height: { xs: "100%", md: "100dvh" },
+                height: { xs: "100%", md: "var(--app-vh)" },
                 width: "100%",
                 top: 0,
                 flexShrink: 0,
@@ -2229,28 +2229,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     })}
                 </Typography>
             </ModalFrame>
-
-            {/* Footer */}
-            <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
-            <Box
-                sx={{
-                    px: 2,
-                    py: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-                        fontSize: 10,
-                    }}
-                >
-                    {t.notes.sidebar.footerTagline}
-                </Typography>
-            </Box>
         </Sheet>
     );
 };

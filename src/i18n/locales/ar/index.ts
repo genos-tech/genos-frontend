@@ -1867,7 +1867,6 @@ export const ar: DeepPartial<Messages> = {
             projectsHeader: "المشاريع",
             board: "اللوحة",
             table: "الجدول",
-            footerTagline: "حافظ على إنتاجيتك",
             noProjectsAvailable: "لا توجد مشاريع متاحة",
             addMilestone: "إضافة معلم",
             moveToNoSprint: "نقل إلى: بدون سبرنت",
@@ -2986,7 +2985,6 @@ export const ar: DeepPartial<Messages> = {
             noFavorites: "لا توجد مفضلة بعد. ضع نجمة على الملاحظات لإضافتها هنا.",
             noRecents: "لا توجد ملاحظات حديثة بعد.",
             soonBadge: "قريبًا",
-            footerTagline: "نظّم أفكارك",
             milestoneLabel: "معلم",
             addSubNote: "إضافة ملاحظة فرعية",
             unknownOwner: "غير معروف",
@@ -3344,9 +3342,6 @@ export const ar: DeepPartial<Messages> = {
             activitiesSubtitle: "ستظهر هنا التحديثات والإشعارات الجديدة",
             requestsTitle: "لا توجد طلبات معلّقة",
             requestsSubtitle: "ستظهر هنا طلبات الفرق والمشاريع",
-        },
-        footer: {
-            tagline: "حافظ على ترتيب صندوق الوارد",
         },
         notification: {
             approvalBody: "تمت الموافقة على طلب الانضمام إلى {target}: ",

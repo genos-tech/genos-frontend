@@ -303,7 +303,7 @@ export const Sidebar = (props: SidebarProps) => {
                     md: "none",
                 },
                 transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                height: "100dvh",
+                height: "var(--app-vh)",
                 width: "var(--Sidebar-width)",
                 display: "flex",
                 flexDirection: "column",

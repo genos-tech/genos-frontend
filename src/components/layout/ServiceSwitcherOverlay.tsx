@@ -6,10 +6,9 @@ import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Box, Sheet, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../i18n";
-import { purplePalette } from "../../theme/purplePalette";
+import { g, type } from "../../theme/tokens";
 import { isMac } from "../../utils/platform";
 
 // Visual metadata for the Cmd+Tab–style service switcher overlay. Indexed
@@ -63,10 +62,7 @@ export const ServiceSwitcherOverlay = ({
     onHighlight,
     onSelect,
 }: ServiceSwitcherOverlayProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     // Hint matches the cycle gesture in `useGlobalServiceShortcut`: hold the
     // platform "switcher" modifier (Cmd on mac, Alt elsewhere) and tap Ctrl
@@ -76,9 +72,6 @@ export const ServiceSwitcherOverlay = ({
     }, [t.layout.serviceSwitcher.hintMac, t.layout.serviceSwitcher.hintOther]);
 
     if (previewIndex === null) return null;
-
-    const accent = isDark ? purplePalette.dark.accentSoft : purplePalette.light.accent;
-    const accentRgb = isDark ? purplePalette.dark.accentSoftRgb : purplePalette.light.accentRgb;
 
     return (
         <Box
@@ -93,27 +86,23 @@ export const ServiceSwitcherOverlay = ({
             }}
             aria-hidden
         >
+            {/* An opaque raised card, like every other overlay surface: it floats
+                over the page, so it carries the overlay shadow and nothing else
+                (no blur, no brand glow). */}
             <Sheet
-                variant="soft"
+                variant="plain"
                 sx={{
                     pointerEvents: "auto",
                     px: 3,
                     py: 2.5,
-                    borderRadius: "20px",
+                    borderRadius: g.radius.lg,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     gap: 1.5,
-                    backdropFilter: "blur(20px) saturate(180%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark
-                        ? "rgba(var(--gp-dark-surface-a-rgb), 0.82)"
-                        : "rgba(250,248,255,0.85)",
-                    border: "1px solid",
-                    borderColor: palette.border,
-                    boxShadow: isDark
-                        ? "0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.18)"
-                        : "0 24px 60px rgba(var(--gp-brand-700-rgb), 0.18)",
+                    background: g.surface.raised,
+                    border: `1px solid ${g.border.default}`,
+                    boxShadow: g.shadow.lg,
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -146,59 +135,28 @@ export const ServiceSwitcherOverlay = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: 0.75,
-                                    borderRadius: "16px",
+                                    borderRadius: g.radius.lg,
                                     px: 1,
-                                    transition: "background 0.15s ease, border-color 0.15s ease",
-                                    border: "1.5px solid",
-                                    borderColor: isActive
-                                        ? isDark
-                                            ? `rgba(${accentRgb}, 0.502)`
-                                            : `rgba(${accentRgb}, 0.439)`
-                                        : "transparent",
-                                    background: isActive
-                                        ? isDark
-                                            ? `linear-gradient(135deg, rgba(${accentRgb}, 0.188) 0%, rgba(${accentRgb}, 0.094) 100%)`
-                                            : `linear-gradient(135deg, rgba(${accentRgb}, 0.133) 0%, rgba(${accentRgb}, 0.071) 100%)`
-                                        : "transparent",
+                                    // The highlight is the shared selected look: the accent's quiet
+                                    // tint and hairline, the icon and label in the accent text.
+                                    transition: `background-color ${g.motion.fast} ${g.ease}, border-color ${g.motion.fast} ${g.ease}`,
+                                    border: "1px solid",
+                                    borderColor: isActive ? g.accent.border : "transparent",
+                                    background: isActive ? g.accent.subtle : "transparent",
+                                    color: isActive ? g.accent.text : g.text.secondary,
+                                    "--Icon-color": "currentColor",
+                                    "@media (prefers-reduced-motion: reduce)": {
+                                        transition: "none",
+                                    },
                                 }}
                             >
-                                <Box
-                                    sx={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: "14px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        background: isActive
-                                            ? isDark
-                                                ? `linear-gradient(135deg, rgba(${accentRgb}, 0.208) 0%, rgba(${accentRgb}, 0.125) 100%)`
-                                                : `linear-gradient(135deg, rgba(${accentRgb}, 0.157) 0%, rgba(${accentRgb}, 0.082) 100%)`
-                                            : isDark
-                                              ? "rgba(255,255,255,0.06)"
-                                              : "rgba(0,0,0,0.04)",
-                                    }}
-                                >
-                                    <Icon
-                                        sx={{
-                                            fontSize: 28,
-                                            color: isActive
-                                                ? accent
-                                                : isDark
-                                                  ? "rgba(255,255,255,0.55)"
-                                                  : "rgba(0,0,0,0.5)",
-                                        }}
-                                    />
-                                </Box>
+                                <Icon sx={{ fontSize: 28 }} />
                                 <Typography
                                     level="body-xs"
                                     sx={{
-                                        fontWeight: isActive ? 700 : 500,
-                                        color: isActive
-                                            ? accent
-                                            : isDark
-                                              ? "rgba(255,255,255,0.65)"
-                                              : "rgba(0,0,0,0.6)",
+                                        ...type("body-xs"),
+                                        fontWeight: isActive ? 600 : 500,
+                                        color: "inherit",
                                     }}
                                 >
                                     {t.layout.serviceSwitcher[service.labelKey]}
@@ -209,11 +167,7 @@ export const ServiceSwitcherOverlay = ({
                 </Box>
                 <Typography
                     level="body-xs"
-                    sx={{
-                        fontFamily: "monospace",
-                        opacity: 0.65,
-                        color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-                    }}
+                    sx={{ ...type("body-xs"), fontFamily: g.font.mono, color: g.text.tertiary }}
                 >
                     {shortcutHint}
                 </Typography>

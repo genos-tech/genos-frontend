@@ -97,9 +97,6 @@ export const inbox = {
         requestsTitle: "No pending requests",
         requestsSubtitle: "Team and project requests will show up here",
     },
-    footer: {
-        tagline: "Keep your inbox tidy",
-    },
     notification: {
         approvalBody: "Your request to join the {target} was approved: ",
     },

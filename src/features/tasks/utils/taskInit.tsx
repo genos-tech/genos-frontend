@@ -71,7 +71,7 @@ export default function TaskInit(props: TaskInitProps) {
     return (
         <Box
             sx={{
-                height: "100vh",
+                height: "var(--app-vh)",
                 width: "100vw",
                 display: "flex",
                 justifyContent: "center",

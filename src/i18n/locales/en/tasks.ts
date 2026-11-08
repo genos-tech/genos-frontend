@@ -100,7 +100,6 @@ export const tasks = {
         projectsHeader: "Projects",
         board: "Board",
         table: "Table",
-        footerTagline: "Stay productive",
         noProjectsAvailable: "No projects available",
         filterByLabel: "Filter by label",
         clearLabelFilter: "Clear filter",
