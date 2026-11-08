@@ -18,6 +18,7 @@
 
 import { Autocomplete, Box, Chip, Typography } from "@mui/joy";
 
+import { g } from "../../theme/tokens";
 import { ProjectProps } from "../../types/tasks";
 import {
     isSameProject,
@@ -42,7 +43,6 @@ type SpotlightProjectFilterProps = {
      *  fall back to the generic project icon. */
     projectAvatars?: Map<number, string>;
     onChange: (projectIds: number[]) => void;
-    isDark: boolean;
     placeholder: string;
     ariaLabel: string;
 };
@@ -52,7 +52,6 @@ export const SpotlightProjectFilter = ({
     selectedIds,
     projectAvatars,
     onChange,
-    isDark,
     placeholder,
     ariaLabel,
 }: SpotlightProjectFilterProps) => {
@@ -116,17 +115,6 @@ export const SpotlightProjectFilter = ({
                 flexShrink: 1,
                 "--Chip-minHeight": "20px",
                 fontSize: "0.8125rem",
-                // Soft/outlined surfaces disappear against the
-                // translucent purple sheet — same explicit treatment the
-                // inactive service chips carry, for the same reason.
-                ...(isDark
-                    ? {
-                          backgroundColor: "rgba(255,255,255,0.07)",
-                          borderColor: "rgba(255,255,255,0.16)",
-                          color: "#f1e8ff",
-                          "&:hover": { backgroundColor: "rgba(255,255,255,0.11)" },
-                      }
-                    : {}),
             }}
             // Joy types the multi-select handler's value as readonly;
             // map straight to ids so the hook never holds project objects.
@@ -142,13 +130,11 @@ export const SpotlightProjectFilter = ({
 // several scoped projects means popping tags one at a time.
 export const SpotlightProjectFilterSummary = ({
     count,
-    isDark,
     label,
     clearLabel,
     onClear,
 }: {
     count: number;
-    isDark: boolean;
     label: string;
     clearLabel: string;
     onClear: () => void;
@@ -156,14 +142,7 @@ export const SpotlightProjectFilterSummary = ({
     if (count === 0) return null;
     return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
-            <Typography
-                level="body-xs"
-                sx={{
-                    whiteSpace: "nowrap",
-                    color: isDark ? "#cebfeb" : undefined,
-                    opacity: isDark ? 1 : 0.6,
-                }}
-            >
+            <Typography level="body-xs" sx={{ whiteSpace: "nowrap", color: g.text.tertiary }}>
                 {label}
             </Typography>
             <Chip
@@ -174,9 +153,6 @@ export const SpotlightProjectFilterSummary = ({
                     "--Chip-minHeight": "22px",
                     fontWeight: 600,
                     fontSize: "0.7rem",
-                    ...(isDark
-                        ? { color: "#cebfeb", backgroundColor: "rgba(255,255,255,0.07)" }
-                        : {}),
                 }}
                 onClick={onClear}
             >

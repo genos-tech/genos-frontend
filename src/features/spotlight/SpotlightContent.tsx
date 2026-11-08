@@ -42,11 +42,11 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Button, Chip, IconButton, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { Bubble, type BubbleLayout } from "../../components/ui/bubble";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
@@ -57,8 +57,7 @@ import type {
     AgentSessionTurn,
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
-import { purplePalette } from "../../theme/purplePalette";
-import { g } from "../../theme/tokens";
+import { focusRing, g, type } from "../../theme/tokens";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import {
@@ -74,6 +73,7 @@ import {
     renderSaveAnswerActions,
     renderSaveAnswerStatus,
     rewriteCitations,
+    turnFrameSx,
     useAgentMentionDraft,
     useAgentMentionSources,
     type AgentMentionCandidate,
@@ -227,6 +227,15 @@ const QUERY_WRITE_DEBOUNCE_MS = 150;
 
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 
+// Where a compact answer row's text starts: its 3px accent bar plus the row's
+// own horizontal padding (`AgentTurn`'s frame: 8px on a phone, 16px from `md`).
+// The rows carry their own inset, so in the compact look the panel adds none
+// (it used to add 16px on top, which doubled the left margin) and what is NOT
+// a row (the header, the history list, the archive hint) takes this instead,
+// so everything starts on one line.
+const COMPACT_ROW_INSET = { xs: "11px", md: "19px" } as const;
+type ConversationInset = typeof COMPACT_ROW_INSET | 0;
+
 // Stable empty defaults for the optional project props. Inline `[]`
 // literals would be a fresh identity every render and re-run the
 // `projectById` memo (and re-render every memoised result row) on each
@@ -288,16 +297,10 @@ export const SpotlightContent = ({
     variant = "overlay",
     registerInputFocus,
 }: SpotlightContentProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
     // What an answer turn says, built once per locale: a new object per render
     // would defeat the memoised turns.
     const turnLabels = useMemo(() => buildAgentTurnLabels(t, "spotlight"), [t]);
-    const isDark = mode === "dark";
-    // Theme-reactive tokens (CSS variables — repaint with the active
-    // color theme). Used by the page variant's card treatments; the
-    // overlay keeps its original hard-coded sheet styling.
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const inputRef = useRef<HTMLTextAreaElement | null>(null);
     // Positioned anchor for the mention dropdown + highlight overlay.
     const inputRowRef = useRef<HTMLDivElement | null>(null);
@@ -655,9 +658,7 @@ export const SpotlightContent = ({
                         ...(inAgentMode
                             ? {
                                   borderTop: "1px solid",
-                                  borderColor: isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
+                                  borderColor: g.border.subtle,
                               }
                             : variant === "page"
                               ? {
@@ -666,29 +667,23 @@ export const SpotlightContent = ({
                                     // overlay's row-with-separator — the
                                     // sheet chrome that made a bare border
                                     // read as "one row of a panel" isn't
-                                    // there on the page. Accent-tinted
-                                    // border + focus ring follow the active
-                                    // color theme (purplePalette CSS vars).
+                                    // there on the page. The accent-tinted
+                                    // border + focus ring are roles, so they
+                                    // follow the color theme and the mode.
                                     border: "1px solid",
-                                    borderColor: `rgba(${palette.accentRgb}, ${isDark ? 0.28 : 0.22})`,
+                                    borderColor: g.accent.border,
                                     borderRadius: "16px",
-                                    background: palette.surfaceSolid,
-                                    boxShadow: isDark
-                                        ? `0 4px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(${palette.accentRgb}, 0.06)`
-                                        : `0 4px 24px rgba(${palette.accentRgb}, 0.10)`,
-                                    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                                    background: g.surface.raised,
+                                    boxShadow: g.shadow.md,
+                                    transition: `border-color ${g.motion.fast} ${g.ease}, box-shadow ${g.motion.fast} ${g.ease}`,
                                     "&:focus-within": {
-                                        borderColor: `rgba(${palette.accentRgb}, ${isDark ? 0.55 : 0.45})`,
-                                        boxShadow: isDark
-                                            ? `0 4px 28px rgba(0,0,0,0.3), 0 0 0 3px rgba(${palette.accentRgb}, 0.18)`
-                                            : `0 4px 28px rgba(${palette.accentRgb}, 0.14), 0 0 0 3px rgba(${palette.accentRgb}, 0.12)`,
+                                        borderColor: g.accent.solid,
+                                        boxShadow: `${g.shadow.md}, 0 0 0 3px ${g.accent.subtle}`,
                                     },
                                 }
                               : {
                                     borderBottom: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.06)",
+                                    borderColor: g.border.subtle,
                                 }),
                     }}
                 >
@@ -713,7 +708,6 @@ export const SpotlightContent = ({
                             anchorRef={inputRowRef}
                             ariaLabel={t.spotlight.mentions.ariaLabel}
                             highlightIndex={mention.highlightIndex}
-                            isDark={isDark}
                             placement={inAgentMode ? "above" : "below"}
                             suggestions={mention.suggestions}
                             onSelect={handleMentionSelect}
@@ -724,7 +718,6 @@ export const SpotlightContent = ({
                             same words merely typed. */}
                     <MentionHighlightOverlay
                         containerRef={inputRowRef}
-                        isDark={isDark}
                         ranges={mention.highlightRanges}
                         elementRef={inputRef}
                         value={localInput}
@@ -1045,7 +1038,7 @@ export const SpotlightContent = ({
                         <Typography
                             level="body-xs"
                             sx={{
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 mr: 0.25,
                                 whiteSpace: "nowrap",
                                 color: g.text.tertiary,
@@ -1070,12 +1063,6 @@ export const SpotlightContent = ({
                                     // click still asks the whole question, and
                                     // the title attribute shows it in full.
                                     maxWidth: { xs: "100%", sm: 340 },
-                                    ...(isDark
-                                        ? {
-                                              color: g.text.secondary,
-                                              backgroundColor: g.hover,
-                                          }
-                                        : {}),
                                 }}
                                 title={item}
                                 onClick={() => onAsk(item, undefined, "starter")}
@@ -1111,16 +1098,14 @@ export const SpotlightContent = ({
                             ? { pt: 1.25 }
                             : {
                                   borderBottom: "1px solid",
-                                  borderColor: isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
+                                  borderColor: g.border.subtle,
                               }),
                     }}
                 >
                     <Typography
                         level="body-xs"
                         sx={{
-                            fontWeight: 700,
+                            fontWeight: 600,
                             mr: 0.25,
                             whiteSpace: "nowrap",
                             color: g.text.tertiary,
@@ -1169,15 +1154,6 @@ export const SpotlightContent = ({
                                     sx={{
                                         "--Chip-minHeight": "26px",
                                         fontWeight: 600,
-                                        // Soft neutral chips vanish against the
-                                        // translucent dark sheet — give inactive
-                                        // ones an explicit bg + readable text.
-                                        ...(isDark && !active
-                                            ? {
-                                                  color: g.text.secondary,
-                                                  backgroundColor: g.hover,
-                                              }
-                                            : {}),
                                         ...(scopeDisabled ? { opacity: 0.45 } : {}),
                                     }}
                                     onClick={() => {
@@ -1203,7 +1179,6 @@ export const SpotlightContent = ({
                         <>
                             <SpotlightProjectFilter
                                 ariaLabel={t.spotlight.filter.projectAriaLabel}
-                                isDark={isDark}
                                 placeholder={t.spotlight.filter.projectPlaceholder}
                                 projectAvatars={projectAvatars}
                                 projects={projects ?? EMPTY_PROJECTS}
@@ -1213,7 +1188,6 @@ export const SpotlightContent = ({
                             <SpotlightProjectFilterSummary
                                 clearLabel={projectClearLabel}
                                 count={selectedProjectIds.length}
-                                isDark={isDark}
                                 label={t.spotlight.filter.projectScopeLabel}
                                 onClear={() => onChangeFilterProjects([])}
                             />
@@ -1235,7 +1209,6 @@ export const SpotlightContent = ({
                 historyLoadFailed={historyLoadFailed}
                 historyMode={historyMode}
                 historySessions={historySessions}
-                isDark={isDark}
                 noteScopes={noteScopes}
                 ts={t.spotlight}
                 turnLabels={turnLabels}
@@ -1261,7 +1234,6 @@ export const SpotlightContent = ({
                     conversation" in the conversation header returns
                     them to search. */}
             <Box
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     // Overlay: the results region greedily fills the
                     // sheet. Page: it sizes to content (bounded) — a
@@ -1296,12 +1268,10 @@ export const SpotlightContent = ({
                               // (including a query that finds nothing).
                               mb: "auto",
                               border: "1px solid",
-                              borderColor: palette.divider,
+                              borderColor: g.border.default,
                               borderRadius: "16px",
-                              background: palette.surfaceElevated,
-                              boxShadow: isDark
-                                  ? "0 12px 32px rgba(0,0,0,0.35)"
-                                  : "0 12px 32px rgba(15,15,30,0.08)",
+                              background: g.surface.raised,
+                              boxShadow: g.shadow.md,
                           }
                         : {}),
                     overflowY: "auto",
@@ -1415,7 +1385,6 @@ const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
 interface ConversationPanelProps {
     ask: AskState;
     turns: CompletedTurn[];
-    isDark: boolean;
     onPreview: (r: SpotlightResult) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: () => void;
@@ -1469,13 +1438,12 @@ export const hasAskContent = (ask: AskState): boolean =>
 
 // memo: prevents re-renders when only localInput (the typing state) changes.
 // ConversationPanel has no dependency on the query — it only re-renders when
-// ask/turns/isDark/callbacks change, which happens on streaming events,
+// ask/turns/callbacks change, which happens on streaming events,
 // not on every keystroke.
 const ConversationPanel = memo(
     ({
         ask,
         turns,
-        isDark,
         onPreview,
         onApprove,
         onReject,
@@ -1501,6 +1469,9 @@ const ConversationPanel = memo(
         const scrollRef = useRef<HTMLDivElement | null>(null);
         // The answer turns take the same look as every message and comment.
         const { style: turnLayout } = useBubbleStylePreference();
+        const compactRows = turnLayout === "compact";
+        // Horizontal padding of whatever is not a turn (see COMPACT_ROW_INSET).
+        const inset = compactRows ? COMPACT_ROW_INSET : 0;
         // Retry composed from a ref to `onAsk`, so the finished turns see ONE
         // identity for it. The hook's `onAsk` is re-minted whenever the draft
         // query is written (it reads the draft), and handing that straight to
@@ -1576,7 +1547,6 @@ const ConversationPanel = memo(
         return (
             <Box
                 ref={scrollRef}
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     // Flex to fill the sheet's available height now that
                     // the input row moves to the bottom in agent mode.
@@ -1585,27 +1555,28 @@ const ConversationPanel = memo(
                     flex: 1,
                     minHeight: 0,
                     overflowY: "auto",
-                    px: 2,
+                    px: compactRows ? 0 : 2,
                     py: 1.25,
-                    background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
                     display: "flex",
                     flexDirection: "column",
                     gap: 1.25,
+                    // The first turn sits right under the sticky header, which
+                    // already separates it: its top divider would be a second
+                    // line one gap below the header.
+                    "& > [data-conversation-header] + [data-bubble-layout='compact']": {
+                        borderTopColor: "transparent",
+                    },
                     // Page: the panel is a free-standing card (the
                     // overlay's sheet already frames it). Theme-reactive
                     // tokens so the card follows the active color theme.
                     ...(variant === "page"
                         ? {
                               border: "1px solid",
-                              borderColor: (isDark ? purplePalette.dark : purplePalette.light)
-                                  .divider,
+                              borderColor: g.border.default,
                               borderRadius: "16px",
-                              background: (isDark ? purplePalette.dark : purplePalette.light)
-                                  .surfaceElevated,
-                              boxShadow: isDark
-                                  ? "0 12px 32px rgba(0,0,0,0.30)"
-                                  : "0 12px 32px rgba(15,15,30,0.07)",
-                              px: 2.5,
+                              background: g.surface.raised,
+                              boxShadow: g.shadow.md,
+                              px: compactRows ? 0 : 2.5,
                               py: 2,
                               mb: 1,
                           }
@@ -1615,6 +1586,7 @@ const ConversationPanel = memo(
             >
                 {showHeader && (
                     <Box
+                        data-conversation-header=""
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -1622,18 +1594,12 @@ const ConversationPanel = memo(
                             position: "sticky",
                             top: 0,
                             py: 0.25,
-                            px: 0.5,
-                            borderRadius: 10,
-                            // Page: match the card surface so the sticky
-                            // header doesn't paint a foreign rectangle as
-                            // turns scroll beneath it.
-                            background:
-                                variant === "page"
-                                    ? (isDark ? purplePalette.dark : purplePalette.light)
-                                          .surfaceSolid
-                                    : isDark
-                                      ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
-                                      : "rgba(250,248,255,0.96)",
+                            px: compactRows ? inset : 0.5,
+                            borderRadius: compactRows ? 0 : 10,
+                            // The same raised surface as the sheet (overlay) and
+                            // the card (page), so the header paints no foreign
+                            // rectangle as turns scroll beneath it.
+                            background: g.surface.raised,
                             zIndex: 1,
                         }}
                     >
@@ -1735,22 +1701,24 @@ const ConversationPanel = memo(
                 )}
 
                 {historyMode === "list" && (
-                    <HistoryListView
-                        isDark={isDark}
-                        isLoading={historyIsLoading}
-                        loadFailed={historyLoadFailed}
-                        sessions={historySessions}
-                        ts={ts}
-                        onRetry={onRetryHistory}
-                        onSelect={onViewHistorySession}
-                    />
+                    <Box sx={{ px: inset }}>
+                        <HistoryListView
+                            isLoading={historyIsLoading}
+                            loadFailed={historyLoadFailed}
+                            sessions={historySessions}
+                            ts={ts}
+                            onRetry={onRetryHistory}
+                            onSelect={onViewHistorySession}
+                        />
+                    </Box>
                 )}
 
                 {historyMode === "detail" && (
                     <HistorySessionDetailView
                         detail={historyDetail}
-                        isDark={isDark}
+                        inset={inset}
                         isLoading={historyIsLoading}
+                        layout={turnLayout}
                         ts={ts}
                         onFeedback={onFeedback}
                         onPreview={onPreview}
@@ -1845,7 +1813,6 @@ interface HistoryListViewProps {
     // The last load failed. Rows already showing are left alone; with none,
     // the view says it couldn't load instead of "no past conversations".
     loadFailed: boolean;
-    isDark: boolean;
     ts: SpotlightMessages;
     onRetry: () => void;
     onSelect: (sessionId: string) => void;
@@ -1855,7 +1822,6 @@ const HistoryListView = ({
     sessions,
     isLoading,
     loadFailed,
-    isDark,
     ts,
     onRetry,
     onSelect,
@@ -1902,7 +1868,7 @@ const HistoryListView = ({
                         textAlign: "left",
                         background: "transparent",
                         border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        borderColor: g.border.subtle,
                         borderRadius: "8px",
                         px: 1.25,
                         py: 0.875,
@@ -1914,18 +1880,10 @@ const HistoryListView = ({
                         gap: 0.25,
                         transition: "background 100ms ease, border-color 100ms ease",
                         "&:hover": {
-                            background: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.10)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                            borderColor: isDark
-                                ? "rgba(var(--gp-brandalt-400-rgb), 0.30)"
-                                : "rgba(var(--gp-brand-700-rgb), 0.25)",
+                            background: g.accent.subtle,
+                            borderColor: g.accent.border,
                         },
-                        "&:focus-visible": {
-                            outline: "2px solid",
-                            outlineColor: "primary.400",
-                            outlineOffset: "1px",
-                        },
+                        "&:focus-visible": { ...focusRing, outlineOffset: "1px" },
                     }}
                     onClick={() => onSelect(s.session_id)}
                 >
@@ -1970,7 +1928,10 @@ const HistoryListView = ({
 interface HistorySessionDetailViewProps {
     detail: AgentSessionDetail | null;
     isLoading: boolean;
-    isDark: boolean;
+    // The user's bubble-style look, so an archived turn is framed like a live one.
+    layout: BubbleLayout;
+    // Horizontal padding for what is not a turn (the hint); the turns frame themselves.
+    inset: ConversationInset;
     ts: SpotlightMessages;
     // Inline citations in the archived answer open the same
     // UrlLinkModal preview that the live conversation uses, so the
@@ -1985,7 +1946,8 @@ interface HistorySessionDetailViewProps {
 const HistorySessionDetailView = ({
     detail,
     isLoading,
-    isDark,
+    layout,
+    inset,
     ts,
     onPreview,
     onFeedback,
@@ -1999,9 +1961,8 @@ const HistorySessionDetailView = ({
             <Typography
                 level="body-md"
                 sx={{
-                    color: "danger.500",
-                    opacity: 0.95,
-                    px: 0.5,
+                    color: g.danger.text,
+                    px: inset || 0.5,
                     py: 1,
                 }}
             >
@@ -2017,6 +1978,7 @@ const HistorySessionDetailView = ({
                 sx={{
                     color: g.text.tertiary,
                     fontStyle: "italic",
+                    px: inset,
                 }}
             >
                 {ts.history.readOnlyHint}
@@ -2024,7 +1986,7 @@ const HistorySessionDetailView = ({
             {detail.turns.map((turn) => (
                 <HistoryArchiveTurn
                     key={turn.run_id}
-                    isDark={isDark}
+                    layout={layout}
                     ts={ts}
                     turn={turn}
                     onFeedback={onFeedback}
@@ -2041,7 +2003,7 @@ const HistorySessionDetailView = ({
 // the same markdown + clickable-citation treatment the live view uses.
 interface HistoryArchiveTurnProps {
     turn: AgentSessionTurn;
-    isDark: boolean;
+    layout: BubbleLayout;
     ts: SpotlightMessages;
     onPreview: (s: SpotlightResult) => void;
     onFeedback?: (runId: string, rating: number) => void;
@@ -2049,7 +2011,7 @@ interface HistoryArchiveTurnProps {
 
 const HistoryArchiveTurn = ({
     turn,
-    isDark,
+    layout,
     ts,
     onPreview,
     onFeedback,
@@ -2073,114 +2035,103 @@ const HistoryArchiveTurn = ({
         [turn.answer, sourcesById]
     );
 
+    const showFeedback = !turn.error && Boolean(onFeedback);
+
+    // The live turn's frame, label type and colors (`AgentTurn`); only the
+    // content differs: no steps, sources or copy / retry, because an archived
+    // turn is read-only. The thumbs are the one action it keeps.
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 0.5,
-                opacity: isDark ? 1 : 0.92,
-            }}
+        <Bubble
+            actionsPosition="bottom"
+            layout={layout}
+            sx={turnFrameSx(layout)}
+            tail={false}
+            actions={
+                showFeedback ? (
+                    <Box className="turn-actions" sx={{ display: "flex", gap: 0.25 }}>
+                        {/* F1 — rate an archived answer, once. The archive payload
+                            still has no rating field, but FeedbackThumbs persists the
+                            vote per run_id in localStorage, so a run this device
+                            already rated opens pre-selected + locked instead of
+                            inviting a re-vote. Hidden for error turns, which have no
+                            answer worth rating. */}
+                        <FeedbackThumbs
+                            runId={turn.run_id}
+                            labels={{
+                                up: ts.actions.feedbackUp,
+                                down: ts.actions.feedbackDown,
+                            }}
+                            onFeedback={onFeedback}
+                        />
+                    </Box>
+                ) : undefined
+            }
         >
-            {turn.query && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 0.75,
-                        opacity: isDark ? 1 : 0.88,
-                    }}
-                >
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.04em",
-                            color: g.text.secondary,
-                            minWidth: 18,
-                            mt: "2px",
-                        }}
-                    >
-                        {ts.conversation.turnLabelQ}
-                    </Typography>
-                    <Typography
-                        level="body-md"
-                        sx={{
-                            fontWeight: 500,
-                            whiteSpace: "pre-wrap",
-                            color: g.text.primary,
-                        }}
-                    >
-                        {turn.query}
-                    </Typography>
-                </Box>
-            )}
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        opacity: isDark ? 1 : 0.75,
-                        minWidth: 18,
-                        mt: "2px",
-                        color: "primary.500",
-                    }}
-                >
-                    {ts.conversation.turnLabelA}
-                </Typography>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {turn.error ? (
-                        <Typography level="body-md" sx={{ color: "danger.500" }}>
-                            {turn.error}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                {turn.query && (
+                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
+                        <Typography level="body-sm" sx={turnLabelSx(g.text.tertiary)}>
+                            {ts.conversation.turnLabelQ}
                         </Typography>
-                    ) : (
-                        <Box sx={markdownAnswerSx()}>
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                    ...agentMarkdownComponents,
-                                    a: ({ href, children }) => (
-                                        <CitationLink
-                                            href={href}
-                                            sourcesById={sourcesById}
-                                            onPreview={onPreview}
-                                        >
-                                            {children}
-                                        </CitationLink>
-                                    ),
-                                }}
-                                urlTransform={agentQAUrlTransform}
-                            >
-                                {answerForRender}
-                            </ReactMarkdown>
-                        </Box>
-                    )}
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                fontWeight: 500,
+                                whiteSpace: "pre-wrap",
+                                color: g.text.primary,
+                            }}
+                        >
+                            {turn.query}
+                        </Typography>
+                    </Box>
+                )}
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
+                    <Typography level="body-sm" sx={turnLabelSx(g.accent.text)}>
+                        {ts.conversation.turnLabelA}
+                    </Typography>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {turn.error ? (
+                            <Typography level="body-md" sx={{ color: g.danger.text }}>
+                                {turn.error}
+                            </Typography>
+                        ) : (
+                            <Box sx={markdownAnswerSx()}>
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        ...agentMarkdownComponents,
+                                        a: ({ href, children }) => (
+                                            <CitationLink
+                                                href={href}
+                                                sourcesById={sourcesById}
+                                                onPreview={onPreview}
+                                            >
+                                                {children}
+                                            </CitationLink>
+                                        ),
+                                    }}
+                                    urlTransform={agentQAUrlTransform}
+                                >
+                                    {answerForRender}
+                                </ReactMarkdown>
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
             </Box>
-            {/* F1 — rate an archived answer, once. The archive payload
-                still has no rating field, but FeedbackThumbs persists the
-                vote per run_id in localStorage, so a run this device
-                already rated opens pre-selected + locked instead of
-                inviting a re-vote. Hidden for error turns, which have no
-                answer worth rating. */}
-            {!turn.error && Boolean(onFeedback) && (
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25 }}>
-                    <FeedbackThumbs
-                        runId={turn.run_id}
-                        labels={{
-                            up: ts.actions.feedbackUp,
-                            down: ts.actions.feedbackDown,
-                        }}
-                        onFeedback={onFeedback}
-                    />
-                </Box>
-            )}
-        </Box>
+        </Bubble>
     );
 };
+
+// The "Q" / "A" gutter label, as `AgentTurn` sets it.
+const turnLabelSx = (color: string) => ({
+    ...type("title-sm"),
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    color,
+    minWidth: 18,
+    mt: "2px",
+});
 
 // Relative-time helper for History list rows. Keeps the dependency
 // surface zero (no date-fns / dayjs) — just the buckets the i18n
