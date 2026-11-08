@@ -376,7 +376,7 @@ export const ar: DeepPartial<Messages> = {
             chats: "المحادثات",
             tasks: "المهام",
             notes: "الملاحظات",
-            account: "الحساب",
+            more: "المزيد",
             search: "Genos",
             integrations: "التكامل",
         },

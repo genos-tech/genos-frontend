@@ -107,7 +107,7 @@ const mountBar = (start: string) => {
                 <BottomTabBar
                     useCM={{ unReadChatAndActivityCounts: 0 } as never}
                     useIM={{ unReadInboxItemCount: 0 } as never}
-                    onOpenAccount={() => {}}
+                    onOpenMore={() => {}}
                 />
             </BrowserRouter>
         </CssVarsProvider>
@@ -250,11 +250,11 @@ describe("rail: the Genos button", () => {
     });
 });
 
-describe("tab bar: the Account tab", () => {
+describe("tab bar: the More tab", () => {
     it("opens the sheet and moves no highlight", () => {
         mountBar("/workspace/chat");
-        fireEvent.click(screen.getByText("Account"));
+        fireEvent.click(screen.getByText("More"));
         expect(lit("Chats")).toBe(true);
-        expect(lit("Account")).toBe(false);
+        expect(lit("More")).toBe(false);
     });
 });

@@ -4,7 +4,7 @@
  * The sidebar's team dropdown — where "Show Team Profile" lives on
  * desktop — renders `null` below 900px, so the team's roster, owner,
  * invite button and connected teams had no entry point at all on mobile.
- * The Account sheet in the bottom tab bar is where the rest of that
+ * The More sheet in the bottom tab bar is where the rest of that
  * sidebar was rehomed, so the row belongs there too.
  *
  * `getMyTeams` already answers with full team profiles and the sheet
@@ -80,6 +80,8 @@ const renderSheet = () =>
                 useTEM={{ teamMemberProfiles: {} } as never}
                 useUISM={{} as never}
                 onClose={vi.fn()}
+                onOpenHistory={vi.fn()}
+                onOpenTodo={vi.fn()}
             />
         </CssVarsProvider>
     );
@@ -91,7 +93,7 @@ beforeEach(() => {
     loadMyTeams.mockResolvedValue([profile("t-mine"), profile("t-other")]);
 });
 
-describe("the Account sheet's team profile row", () => {
+describe("the More sheet's team profile row", () => {
     it("opens the profile of the team you are in", async () => {
         const user = userEvent.setup();
         renderSheet();
