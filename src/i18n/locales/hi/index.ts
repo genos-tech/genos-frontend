@@ -11,6 +11,7 @@ export const hi: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "लोड हो रहा है…",
+            loadFailedBody: "अपना कनेक्शन जाँचें, फिर दोबारा कोशिश करें।",
             toast: {
                 region: "सूचनाएँ",
                 undo: "पूर्ववत करें",
@@ -2586,6 +2587,7 @@ export const hi: DeepPartial<Messages> = {
             effort: "प्रयास: {value}",
         },
         activity: {
+            loadFailed: "गतिविधि लोड नहीं हो सकी",
             empty: "अभी तक कोई गतिविधि नहीं",
             emptyBody: "इतिहास शुरू करने के लिए कोई फ़ील्ड बदलें या टिप्पणी जोड़ें।",
             someone: "कोई",
@@ -2938,6 +2940,7 @@ export const hi: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "वेलोसिटी चार्ट लोड नहीं हो सका",
                 title: "वेग",
                 subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
                 day: "दिन",
@@ -3224,6 +3227,7 @@ export const hi: DeepPartial<Messages> = {
             source: "स्रोत",
         },
         editor: {
+            loadFailed: "यह नोट नहीं खुल सका",
             deleteTooltip: "हटाएँ",
             colorsTooltip: "रंग",
             resetTypeTooltip: "टाइप रीसेट करें",
@@ -3714,6 +3718,7 @@ export const hi: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "आपके कनेक्शन लोड नहीं हो सके",
             disconnectDialog: {
                 title: "{provider} को डिस्कनेक्ट करें?",
                 bodyGoogle:
@@ -3831,6 +3836,7 @@ export const hi: DeepPartial<Messages> = {
                 needsAdmin: "रेपो पर एडमिन होना ज़रूरी है",
             },
             repoAccess: {
+                loadFailed: "आपकी रिपॉज़िटरी लोड नहीं हो सकीं",
                 title: "रिपॉज़िटरी एक्सेस",
                 description:
                     "Genos आपके खाते की अनुमतियों के साथ GitHub तक पहुंचता है, इसलिए आपके द्वारा अपने खाते में बनाया गया रेपो तुरंत काम करता है। किसी संगठन को एक बार पहुंच प्रदान करनी होती है - यदि नीचे कोई नहीं है, तो उसे नीचे दिए गए बटनों से जोड़ें।",

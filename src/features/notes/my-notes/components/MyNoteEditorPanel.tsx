@@ -13,6 +13,7 @@ import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteEditor } from "../../common/components/NoteEditor";
+import { NoteLoadState } from "../../common/components/NoteLoadState";
 
 interface MyNoteEditorPanelProps {
     tab: NoteTab & { kind: "my" };
@@ -48,7 +49,10 @@ export const MyNoteEditorPanel = ({
     useCM,
     useNM,
 }: MyNoteEditorPanelProps) => {
-    const { note, accessDenied } = useNoteData<MyNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied, isLoading, error, reload } = useNoteData<MyNoteProps>(tab, {
+        myself,
+        accessToken,
+    });
 
     const noteEditor = useNoteEditor({
         currentMyNote: note,
@@ -105,7 +109,15 @@ export const MyNoteEditorPanel = ({
         // Don't render the visibility wrapper until the note has been
         // resolved — avoids a flash of empty space while the cache /
         // IDB / fetch chain is still settling.
-        return null;
+        return (
+            <NoteLoadState
+                error={error !== null}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                isLoading={isLoading}
+                onRetry={reload}
+            />
+        );
     }
 
     return (

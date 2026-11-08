@@ -23,21 +23,23 @@ onTaskTouched(({ taskId, kind }) => {
  * Fetch the audit log for a single task in reverse chronological
  * order (newest first). Backs the new "Activity" tab in TaskTabBlock.
  *
- * Resolves to `[]` on any failure so the calling component can render
- * an empty state without an extra try/catch — failures are logged for
- * observability.
+ * Resolves to `null` when the request FAILED (MIP-1276). It used to resolve
+ * `[]`, which the feed rendered as "No activity yet": a dropped connection
+ * read as an empty history. A task with no activity resolves `[]`. A failure
+ * is never cached (`createRequestCache` drops a rejected fetch), so Retry
+ * really asks again. Failures are logged for observability.
  */
 export const loadTaskActivities = async (
     myself: UserProps,
     taskId: number,
     accessToken: string | null,
     options?: { limit?: number; offset?: number }
-): Promise<TaskActivityProps[]> => {
+): Promise<TaskActivityProps[] | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) {
             console.error("loadTaskActivities: no auth token");
-            return [];
+            return null;
         }
         const params = new URLSearchParams({
             team_id: String(myself.teamId ?? ""),
@@ -60,6 +62,6 @@ export const loadTaskActivities = async (
         } else {
             console.error("loadTaskActivities unexpected error:", error);
         }
-        return [];
+        return null;
     }
 };

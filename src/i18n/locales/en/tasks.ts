@@ -656,6 +656,7 @@ export const tasks = {
         effort: "Effort: {value}",
     },
     activity: {
+        loadFailed: "Couldn't load the activity",
         empty: "No activity yet",
         emptyBody: "Change a field or add a comment to start the history.",
         someone: "Someone",
@@ -1063,6 +1064,7 @@ export const tasks = {
             },
         },
         velocity: {
+            loadFailed: "Couldn't load the velocity chart",
             title: "Velocity",
             subtitle: "Tasks created, started, closed & updated over time",
             day: "Day",

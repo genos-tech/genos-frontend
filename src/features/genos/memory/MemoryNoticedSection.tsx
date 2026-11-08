@@ -5,6 +5,7 @@ import LightbulbRoundedIcon from "@mui/icons-material/LightbulbRounded";
 import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
@@ -179,14 +180,12 @@ export const MemoryNoticedSection = ({
                     {top.status === "loading" || top.status === "idle" ? (
                         <SkeletonRows count={3} label={m.loading} twoLines />
                     ) : top.status === "error" ? (
-                        <Stack alignItems="flex-start" spacing={1}>
-                            <Typography level="body-sm" role="alert" sx={{ color: g.danger.text }}>
-                                {m.loadFailed}
-                            </Typography>
-                            <Button size="sm" variant="outlined" color="neutral" onClick={refresh}>
-                                {t.common.actions.retry}
-                            </Button>
-                        </Stack>
+                        <ErrorState
+                            data-error="genos-noticed"
+                            size="xs"
+                            title={m.loadFailed}
+                            onRetry={refresh}
+                        />
                     ) : view && !view.enabled ? (
                         <Typography level="body-sm" role="status" sx={{ fontWeight: 500 }}>
                             {m.recordingOff}

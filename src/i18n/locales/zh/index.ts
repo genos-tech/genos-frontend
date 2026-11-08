@@ -1435,6 +1435,7 @@ export const zh: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "加载中…",
+            loadFailedBody: "请检查网络连接后重试。",
             toast: {
                 region: "通知",
                 undo: "撤销",
@@ -2334,6 +2335,7 @@ export const zh: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "无法加载你的连接",
             disconnectDialog: {
                 title: "断开 {provider}？",
                 bodyGoogle:
@@ -2443,6 +2445,7 @@ export const zh: DeepPartial<Messages> = {
                 needsAdmin: "需要该仓库的管理员权限",
             },
             repoAccess: {
+                loadFailed: "无法加载你的仓库",
                 title: "仓库访问权限",
                 description:
                     "Genos 通过你的账号权限访问 GitHub，因此个人账号下的仓库可直接使用。组织只需授权一次；若下方缺少某个组织，请使用底部按钮添加。",
@@ -2631,6 +2634,7 @@ export const zh: DeepPartial<Messages> = {
             source: "来源",
         },
         editor: {
+            loadFailed: "无法打开此笔记",
             deleteTooltip: "删除",
             colorsTooltip: "颜色",
             resetTypeTooltip: "重置类型",
@@ -4874,6 +4878,7 @@ export const zh: DeepPartial<Messages> = {
             effort: "努力：{value}",
         },
         activity: {
+            loadFailed: "无法加载动态",
             empty: "还没有活动",
             emptyBody: "修改字段或添加评论，即可开始记录。",
             someone: "有人",
@@ -5218,6 +5223,7 @@ export const zh: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "无法加载速度图表",
                 title: "速度",
                 subtitle: "随着时间的推移创建、启动、关闭和更新的任务",
                 day: "天",

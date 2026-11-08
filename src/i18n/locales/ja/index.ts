@@ -1489,6 +1489,7 @@ export const ja: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "読み込み中…",
+            loadFailedBody: "接続を確認して、もう一度お試しください。",
             toast: {
                 region: "通知",
                 undo: "元に戻す",
@@ -2419,6 +2420,7 @@ export const ja: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "接続情報を読み込めませんでした",
             disconnectDialog: {
                 title: "{provider} を切断しますか？",
                 bodyGoogle:
@@ -2534,6 +2536,7 @@ export const ja: DeepPartial<Messages> = {
                 needsAdmin: "リポジトリの管理者権限が必要です",
             },
             repoAccess: {
+                loadFailed: "リポジトリを読み込めませんでした",
                 title: "リポジトリへのアクセス",
                 description:
                     "Genos はアカウントの権限を使用して GitHub にアクセスするため、自分のアカウントで作成したリポジトリはすぐに機能します。組織はアクセスを 1 回許可する必要があります。以下にアクセス権がない場合は、下部のボタンから追加します。",
@@ -2724,6 +2727,7 @@ export const ja: DeepPartial<Messages> = {
             source: "ソース",
         },
         editor: {
+            loadFailed: "このノートを開けませんでした",
             deleteTooltip: "削除",
             colorsTooltip: "カラー",
             resetTypeTooltip: "種類をリセット",
@@ -5046,6 +5050,7 @@ export const ja: DeepPartial<Messages> = {
             effort: "Effortレベル: {value}",
         },
         activity: {
+            loadFailed: "アクティビティを読み込めませんでした",
             empty: "まだ活動はありません",
             emptyBody: "項目を変更するかコメントを追加すると、履歴が始まります。",
             restore: {
@@ -5402,6 +5407,7 @@ export const ja: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "ベロシティのグラフを読み込めませんでした",
                 title: "タスクの推移",
                 subtitle: "作成・着手・完了・更新されたタスク数の推移",
                 day: "日",

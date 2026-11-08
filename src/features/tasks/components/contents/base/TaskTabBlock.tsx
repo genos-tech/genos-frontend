@@ -86,6 +86,9 @@ type TaskTabBlockProps = {
     taskActivities: TaskActivityProps[];
     /** True while the parent is fetching `taskActivities`. */
     isLoadingTaskActivities: boolean;
+    /** The last `taskActivities` load failed: the feed shows Retry, not "No activity". */
+    taskActivitiesFailed: boolean;
+    onRetryTaskActivities: () => void;
     editTargetComment: TaskCommentProps | undefined;
     isInEdit: boolean;
     setTaskCommentLines: (value: number) => void;
@@ -131,6 +134,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         taskNotes,
         taskActivities,
         isLoadingTaskActivities,
+        taskActivitiesFailed,
+        onRetryTaskActivities,
         editTargetComment,
         isInEdit,
         setTaskCommentLines,
@@ -1099,6 +1104,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             activities={taskActivities}
                             allTasks={useTM.allTasks}
                             isLoading={isLoadingTaskActivities}
+                            loadFailed={taskActivitiesFailed}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -1106,6 +1112,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            onRetry={onRetryTaskActivities}
                         />
                     </TabPanel>
                 </Box>

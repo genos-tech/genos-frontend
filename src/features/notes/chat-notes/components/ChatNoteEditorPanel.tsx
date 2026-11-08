@@ -12,6 +12,7 @@ import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
+import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 
 interface ChatNoteEditorPanelProps {
@@ -47,7 +48,10 @@ export const ChatNoteEditorPanel = ({
     useCM,
     useNM,
 }: ChatNoteEditorPanelProps) => {
-    const { note, accessDenied } = useNoteData<ChatNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied, isLoading, error, reload } = useNoteData<ChatNoteProps>(tab, {
+        myself,
+        accessToken,
+    });
 
     const chatNoteEditor = useChatNoteEditor({
         currentChatNote: note,
@@ -108,7 +112,15 @@ export const ChatNoteEditorPanel = ({
     }
 
     if (!note || !chatNoteEditor.body) {
-        return null;
+        return (
+            <NoteLoadState
+                error={error !== null}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                isLoading={isLoading}
+                onRetry={reload}
+            />
+        );
     }
 
     return (

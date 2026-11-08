@@ -1507,6 +1507,7 @@ export const fr: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "Chargement…",
+            loadFailedBody: "Vérifiez votre connexion, puis réessayez.",
             toast: {
                 region: "Notifications",
                 undo: "Annuler",
@@ -2438,6 +2439,7 @@ export const fr: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "Impossible de charger vos connexions",
             disconnectDialog: {
                 title: "Déconnecter {provider} ?",
                 bodyGoogle:
@@ -2557,6 +2559,7 @@ export const fr: DeepPartial<Messages> = {
                 needsAdmin: "Nécessite d'être administrateur du dépôt",
             },
             repoAccess: {
+                loadFailed: "Impossible de charger vos dépôts",
                 title: "Accès aux dépôts",
                 description:
                     "Genos accède à GitHub avec les autorisations de votre compte. Vos propres dépôts sont disponibles immédiatement, tandis qu'une organisation doit accorder l'accès une fois. Si un dépôt manque ci-dessous, ajoutez-le avec les boutons en bas.",
@@ -2752,6 +2755,7 @@ export const fr: DeepPartial<Messages> = {
             source: "Source",
         },
         editor: {
+            loadFailed: "Impossible d'ouvrir cette note",
             deleteTooltip: "Supprimer",
             colorsTooltip: "Couleurs",
             resetTypeTooltip: "Réinitialiser le type",
@@ -5112,6 +5116,7 @@ export const fr: DeepPartial<Messages> = {
             effort: "Effort : {value}",
         },
         activity: {
+            loadFailed: "Impossible de charger l'activité",
             empty: "Aucune activité pour l'instant",
             emptyBody: "Modifiez un champ ou ajoutez un commentaire pour démarrer l'historique.",
             someone: "Quelqu'un",
@@ -5467,6 +5472,7 @@ export const fr: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "Impossible de charger le graphique de vélocité",
                 title: "Vitesse",
                 subtitle: "Tâches créées, démarrées, fermées et mises à jour au fil du temps",
                 day: "Jour",

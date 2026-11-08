@@ -33,6 +33,12 @@ export interface UseNoteDataResult<T extends ResolvedNote = ResolvedNote> {
     // "request access" panel instead of a blank editor. Never cached, so
     // a granted request takes effect on the next open without a reload.
     accessDenied: boolean;
+    /**
+     * Run the load again after `error` (the Retry of the panel's error state,
+     * MIP-1276). A no-op while a load is in flight is not needed: the effect
+     * below cancels the older one.
+     */
+    reload: () => void;
     update: (next: T) => void;
 }
 
@@ -174,6 +180,9 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
     const [accessDenied, setAccessDenied] = useState<boolean>(false);
+    // Bumped by `reload` so a failed open can be tried again without the tab changing.
+    const [reloadKey, setReloadKey] = useState(0);
+    const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
     const lastFetchedKeyRef = useRef<string | null>(null);
     const onFirstResolveRef = useRef(onFirstResolve);
@@ -233,7 +242,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tab?.id, accessToken, myself.teamId, myself.userId]);
+    }, [tab?.id, accessToken, myself.teamId, myself.userId, reloadKey]);
 
     // Adopt cross-surface writes to THIS tab's note. When another mounted
     // panel (or the chat-page panel) saves a rename, `writeCache` fires
@@ -259,7 +268,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         [tab]
     );
 
-    return { note, isLoading, error, accessDenied, update };
+    return { note, isLoading, error, accessDenied, reload, update };
 }
 
 export const noteCacheKind = (noteType: number): "my" | "task" | "chat" =>

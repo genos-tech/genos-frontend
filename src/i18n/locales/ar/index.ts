@@ -12,6 +12,7 @@ export const ar: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "جارٍ التحميل…",
+            loadFailedBody: "تحقّق من اتصالك ثم حاول مرة أخرى.",
             toast: {
                 region: "الإشعارات",
                 undo: "تراجع",
@@ -2730,6 +2731,7 @@ export const ar: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "تعذّر تحميل مخطط السرعة",
                 title: "سرعة",
                 subtitle: "المهام التي تم إنشاؤها وبدأت وإغلاقها وتحديثها بمرور الوقت",
                 day: "يوم",
@@ -2854,6 +2856,7 @@ export const ar: DeepPartial<Messages> = {
             effort: "الجهد : {value}",
         },
         activity: {
+            loadFailed: "تعذّر تحميل النشاط",
             empty: "لا يوجد نشاط بعد",
             emptyBody: "غيّر حقلًا أو أضف تعليقًا لتبدأ السجل.",
             someone: "شخص ما",
@@ -3186,6 +3189,7 @@ export const ar: DeepPartial<Messages> = {
             newNote: "ملاحظة جديدة",
         },
         editor: {
+            loadFailed: "تعذّر فتح هذه الملاحظة",
             deleteTooltip: "حذف",
             colorsTooltip: "الألوان",
             resetTypeTooltip: "إعادة تعيين النوع",
@@ -5340,6 +5344,7 @@ export const ar: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "تعذّر تحميل اتصالاتك",
             disconnectDialog: {
                 title: "قطع الاتصال بـ {provider}؟",
                 bodyGoogle:
@@ -5452,6 +5457,7 @@ export const ar: DeepPartial<Messages> = {
                 needsAdmin: "يتطلب صلاحية المسؤول على المستودع",
             },
             repoAccess: {
+                loadFailed: "تعذّر تحميل مستودعاتك",
                 title: "الوصول إلى المستودعات",
                 description:
                     "يصل Genos إلى GitHub بصلاحيات حسابك، لذلك تعمل مستودعات حسابك الشخصي فورًا. أما المؤسسات فعليها منح الوصول مرة واحدة؛ إذا كانت مؤسسة مفقودة أدناه، فأضفها من الأزرار في الأسفل.",

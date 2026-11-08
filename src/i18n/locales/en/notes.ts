@@ -26,6 +26,7 @@ export const notes = {
         source: "Source",
     },
     editor: {
+        loadFailed: "Couldn't open this note",
         deleteTooltip: "Delete",
         colorsTooltip: "Colors",
         resetTypeTooltip: "Reset Type",

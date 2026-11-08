@@ -5,6 +5,7 @@ export const common = {
     },
     feedback: {
         loading: "Loading…",
+        loadFailedBody: "Check your connection, then try again.",
         toast: {
             region: "Notifications",
             undo: "Undo",

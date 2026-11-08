@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { toast } from "../../components/ui/feedback/toastStore";
 import { NoteService } from "../../db/services/note.service";
 import { DatabaseUtils } from "../../db/utils/database";
 import type { NoteChangedDetail } from "../../features/agentQA/noteWriteTools";
@@ -2193,6 +2194,22 @@ export const useNoteManagement = (
     // tab (no project/task/chat ids), e.g. when called from URL routing.
     const loadNote = async (noteType: number, noteId: number, _nextTabIndex: number) => {
         if (!accessToken) return;
+        // A click on a note whose body is not cached and whose request FAILED used
+        // to do nothing at all (MIP-1276): no tab, no message. `loadSpecificNote`
+        // resolves undefined on a failed request (403 is `{ error: "forbidden" }`
+        // and is not a failure: the access-request panel handles it).
+        const requestedType = noteType;
+        const reportOpenFailed = (fetched: { error?: string } | undefined) => {
+            if (fetched) return;
+            const msgs = getMessages();
+            toast.error(msgs.notes.editor.loadFailed, {
+                id: `note-open-failed-${requestedType}-${noteId}`,
+                action: {
+                    label: msgs.common.actions.retry,
+                    onClick: () => void loadNote(requestedType, noteId, _nextTabIndex),
+                },
+            });
+        };
         try {
             // Shared (4) and team (8) notes live in note_type=1 on the
             // backend; those codes exist only to drive the sidebar bucket
@@ -2230,6 +2247,8 @@ export const useNoteManagement = (
                     // rename landed while this fetch was in flight, `fetched`
                     // is already stale and would put the old title on the tab.
                     tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId, bucket));
+                } else {
+                    reportOpenFailed(fetched);
                 }
                 return;
             }
@@ -2248,6 +2267,8 @@ export const useNoteManagement = (
                 );
                 if (fetched && !fetched.error && fetched.noteType === 2) {
                     tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId));
+                } else {
+                    reportOpenFailed(fetched);
                 }
                 return;
             }
@@ -2260,6 +2281,8 @@ export const useNoteManagement = (
             const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
             if (fetched && !fetched.error && fetched.noteType === 3) {
                 tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId));
+            } else {
+                reportOpenFailed(fetched);
             }
         } catch (error) {
             console.error("Error loading note:", error);

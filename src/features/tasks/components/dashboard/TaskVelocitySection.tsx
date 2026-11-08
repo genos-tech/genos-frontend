@@ -3,6 +3,7 @@ import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import { Box, Card, Chip, Option, Select, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -90,6 +91,11 @@ export const TaskVelocitySection = ({
     const [selectedMemberId, setSelectedMemberId] = useState<string>("");
     const [data, setData] = useState<VelocityPoint[] | null>(null);
     const [loading, setLoading] = useState(false);
+    // The last request failed (`loadTaskVelocity` resolves `null`). It is NOT a
+    // quiet week: an empty series would draw as "nothing happened".
+    const [failed, setFailed] = useState(false);
+    // Bumped by Retry to ask again with the same inputs.
+    const [retryKey, setRetryKey] = useState(0);
 
     // Reset the picker to "All" when the member set changes out from under
     // it (e.g. switching sprints), so it can't point at a stale member.
@@ -131,14 +137,23 @@ export const TaskVelocitySection = ({
     useEffect(() => {
         if (loadIds.length === 0) {
             setData([]);
+            setFailed(false);
             return;
         }
         let cancelled = false;
         setLoading(true);
+        setFailed(false);
         void loadTaskVelocity(loadIds, start, end, granularity, teamId, accessToken).then(
             (res) => {
                 if (cancelled) return;
-                setData(res ?? []);
+                if (res === null) {
+                    // Drop the old series too: it is for other inputs (another
+                    // member, window or granularity) and would be a wrong chart.
+                    setData(null);
+                    setFailed(true);
+                } else {
+                    setData(res);
+                }
                 setLoading(false);
             }
         );
@@ -148,7 +163,7 @@ export const TaskVelocitySection = ({
         // `idsKey` stands in for `loadIds` (stable across identity-only
         // changes); start/end already fold in granularity + window.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idsKey, start, end, granularity, teamId, accessToken]);
+    }, [idsKey, start, end, granularity, teamId, accessToken, retryKey]);
 
     const totals = useMemo(() => {
         const acc = { created: 0, started: 0, closed: 0, updated: 0 };
@@ -258,31 +273,40 @@ export const TaskVelocitySection = ({
                     </Stack>
                 )}
 
-                {loading && data === null ? (
-                    <Stack alignItems="center" sx={{ py: 4 }}>
-                        <Spinner />
-                    </Stack>
-                ) : (
-                    <>
-                        <TaskVelocityChart
-                            data={data ?? []}
-                            granularity={granularity}
-                            isDark={isDark}
-                            textMuted={textMuted}
-                            textSecondary={textSecondary}
-                        />
-                        {(data ?? []).length > 0 && (
-                            <Typography level="body-xs" sx={{ color: textSecondary }}>
-                                {fmt(v.totals, {
-                                    created: totals.created,
-                                    started: totals.started,
-                                    closed: totals.closed,
-                                    updated: totals.updated,
-                                })}
-                            </Typography>
-                        )}
-                    </>
-                )}
+                <DataState
+                    error={failed}
+                    hasData={data !== null}
+                    loading={loading}
+                    size="sm"
+                    errorState={{
+                        title: v.loadFailed,
+                        onRetry: () => setRetryKey((k) => k + 1),
+                        "data-error": "task-velocity",
+                    }}
+                    skeleton={
+                        <Stack alignItems="center" sx={{ py: 4 }}>
+                            <Spinner />
+                        </Stack>
+                    }
+                >
+                    <TaskVelocityChart
+                        data={data ?? []}
+                        granularity={granularity}
+                        isDark={isDark}
+                        textMuted={textMuted}
+                        textSecondary={textSecondary}
+                    />
+                    {(data ?? []).length > 0 && (
+                        <Typography level="body-xs" sx={{ color: textSecondary }}>
+                            {fmt(v.totals, {
+                                created: totals.created,
+                                started: totals.started,
+                                closed: totals.closed,
+                                updated: totals.updated,
+                            })}
+                        </Typography>
+                    )}
+                </DataState>
             </Stack>
         </Card>
     );

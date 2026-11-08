@@ -48,6 +48,7 @@ import remarkGfm from "remark-gfm";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { Bubble, type BubbleLayout } from "../../components/ui/bubble";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { fmt, useTranslation, type Messages } from "../../i18n";
@@ -1828,30 +1829,18 @@ const HistoryListView = ({
     onRetry,
     onSelect,
 }: HistoryListViewProps) => {
-    const { t } = useTranslation();
     if (isLoading && sessions.length === 0) {
         return <SkeletonRows count={4} label={ts.history.loading} />;
     }
 
     if (sessions.length === 0 && loadFailed) {
         return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    gap: 1,
-                    px: 0.5,
-                    py: 1,
-                }}
-            >
-                <Typography level="body-md" sx={{ color: "danger.500", opacity: 0.95 }}>
-                    {ts.history.listLoadFailed}
-                </Typography>
-                <Button color="neutral" size="sm" variant="outlined" onClick={onRetry}>
-                    {t.common.actions.retry}
-                </Button>
-            </Box>
+            <ErrorState
+                data-error="spotlight-history"
+                size="xs"
+                title={ts.history.listLoadFailed}
+                onRetry={onRetry}
+            />
         );
     }
 

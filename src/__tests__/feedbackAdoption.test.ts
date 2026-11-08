@@ -70,6 +70,56 @@ describe("feedback adoption", () => {
         ).toBe(false);
     });
 
+    it("MIP-1276: a failed load is the shared ErrorState, not a hand-built red line + Retry", () => {
+        // The eight surfaces that each drew their own now render ErrorState. A file may
+        // render the localized Retry itself only for a reason listed here; the list may
+        // only shrink.
+        const ALLOWED: Record<string, string> = {
+            "components/ui/feedback/ErrorState.tsx": "the ErrorState itself",
+            "features/agentQA/AgentTurn.tsx": "re-asks a finished turn: not a failed load",
+        };
+        const offenders = files
+            .filter(({ f, text }) => f.endsWith(".tsx") && /actions\.retry\b/.test(text))
+            .map(({ f }) => f)
+            .filter((f) => !(f in ALLOWED));
+        expect(offenders).toEqual([]);
+        const uses = (path: string) =>
+            files.find(({ f }) => f === path)?.text.includes("ui/feedback/ErrorState") ?? false;
+        for (const f of [
+            "features/spotlight/SpotlightContent.tsx",
+            "features/genos/GenosSessionSidebar.tsx",
+            "features/genos/memory/ConversationsSection.tsx",
+            "features/genos/memory/MemoryNoticedSection.tsx",
+            "features/genos/memory/SharedAnswersSection.tsx",
+            "features/genos/memory/MemoryControlSections.tsx",
+        ]) {
+            expect(uses(f), f).toBe(true);
+        }
+    });
+
+    it("MIP-1276: the surfaces that used to go blank or read 'empty' on failure use DataState", () => {
+        const uses = (path: string, what: string) =>
+            files.find(({ f }) => f === path)?.text.includes(what) ?? false;
+        for (const f of [
+            "features/tasks/components/contents/base/sub/TaskActivityFeed.tsx",
+            "features/tasks/components/dashboard/TaskVelocitySection.tsx",
+            "features/integrations/components/ConnectionsSection.tsx",
+            "features/integrations/components/GithubRepoAccessSection.tsx",
+            "features/notes/common/components/NoteLoadState.tsx",
+        ]) {
+            expect(uses(f, "ui/feedback/DataState"), f).toBe(true);
+        }
+        // A note panel that has not resolved must hand off to NoteLoadState, never
+        // `return null` (which is what left a failed open blank for good).
+        for (const f of [
+            "features/notes/my-notes/components/MyNoteEditorPanel.tsx",
+            "features/notes/task-notes/components/TaskNoteEditorPanel.tsx",
+            "features/notes/chat-notes/components/ChatNoteEditorPanel.tsx",
+        ]) {
+            expect(uses(f, "<NoteLoadState"), f).toBe(true);
+        }
+    });
+
     it("MIP-1173: no raw CircularProgress outside the Spinner and the determinate upload rings", () => {
         // Rule: in a button -> the Button's `loading`; a list -> SkeletonRows; a block of
         // text -> SkeletonLines; anything else -> Spinner (with a `caption` for a page).

@@ -27,6 +27,7 @@ export const integrations = {
         github: "GitHub",
     },
     connections: {
+        loadFailed: "Couldn't load your connections",
         disconnectDialog: {
             title: "Disconnect {provider}?",
             bodyGoogle:
@@ -139,6 +140,7 @@ export const integrations = {
             needsAdmin: "Needs admin on the repo",
         },
         repoAccess: {
+            loadFailed: "Couldn't load your repositories",
             title: "Repository access",
             description:
                 "Genos reaches GitHub with your account's permissions, so a repo you create in your own account works straight away. An organization has to grant access once — if one is missing below, add it from the buttons at the bottom.",

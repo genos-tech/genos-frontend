@@ -11,7 +11,7 @@ import { Alert, Box, Button, Card, Chip, Divider, Stack, Typography } from "@mui
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
-import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../i18n";
 import {
@@ -48,14 +48,28 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
     const [data, setData] = useState<GithubAccessibleReposResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    // The repo list request FAILED (MIP-1276); "GitHub isn't connected" is an
+    // answer, not a failure, and an empty `owners` list is a real empty state.
+    const [loadFailed, setLoadFailed] = useState(false);
     const [expandedOwner, setExpandedOwner] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
         setError(null);
-        const res = await listAccessibleRepos(accessToken, setError);
+        setLoadFailed(false);
+        const res = await listAccessibleRepos(accessToken);
         setLoading(false);
-        if (!res || res === "github_not_connected") return;
+        if (res === null) {
+            // A refresh the user asked for that failed: say so instead of
+            // leaving a list that may be out of date looking current.
+            setData(null);
+            setLoadFailed(true);
+            return;
+        }
+        if (res === "github_not_connected") {
+            setData(null);
+            return;
+        }
         setData(res);
     }, [accessToken]);
 
@@ -98,111 +112,122 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
 
                 {error && <Alert color="danger">{error}</Alert>}
 
-                {loading ? (
-                    <SkeletonRows count={3} />
-                ) : !data || data.owners.length === 0 ? (
-                    <EmptyState
-                        body={t.integrations.github.repoAccess.empty}
-                        data-empty="github-repo-access"
-                        size="sm"
-                    />
-                ) : (
-                    <Stack spacing={0.5}>
-                        {data.owners.map((owner) => {
-                            const isOpen = expandedOwner === owner.login;
-                            const ownerRepos = data.repos.filter((r) => r.owner === owner.login);
-                            return (
-                                <Box key={owner.login}>
-                                    <Clickable
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            flexDirection: "row",
-                                            gap: 1,
-                                            py: 0.75,
-                                            px: 1,
-                                            borderRadius: "sm",
-                                            cursor: "pointer",
-                                            "&:hover": { bgcolor: "background.level1" },
-                                        }}
-                                        onActivate={() =>
-                                            setExpandedOwner(isOpen ? null : owner.login)
-                                        }
-                                    >
-                                        {ownerIcon(owner)}
-                                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                            {owner.login}
-                                        </Typography>
-                                        {owner.type === "Organization" && (
-                                            <Chip color="primary" size="sm" variant="soft">
-                                                {t.integrations.github.repoAccess.org}
-                                            </Chip>
-                                        )}
-                                        <Box sx={{ flex: 1 }} />
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: "text.tertiary" }}
+                <DataState
+                    error={loadFailed}
+                    hasData={!loading && !!data && data.owners.length > 0}
+                    loading={loading}
+                    size="sm"
+                    skeleton={<SkeletonRows count={3} />}
+                    empty={{
+                        body: t.integrations.github.repoAccess.empty,
+                        "data-empty": "github-repo-access",
+                    }}
+                    errorState={{
+                        title: t.integrations.github.repoAccess.loadFailed,
+                        onRetry: () => void load(),
+                        "data-error": "github-repo-access",
+                    }}
+                >
+                    {data && data.owners.length > 0 && (
+                        <Stack spacing={0.5}>
+                            {data.owners.map((owner) => {
+                                const isOpen = expandedOwner === owner.login;
+                                const ownerRepos = data.repos.filter(
+                                    (r) => r.owner === owner.login
+                                );
+                                return (
+                                    <Box key={owner.login}>
+                                        <Clickable
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                flexDirection: "row",
+                                                gap: 1,
+                                                py: 0.75,
+                                                px: 1,
+                                                borderRadius: "sm",
+                                                cursor: "pointer",
+                                                "&:hover": { bgcolor: "background.level1" },
+                                            }}
+                                            onActivate={() =>
+                                                setExpandedOwner(isOpen ? null : owner.login)
+                                            }
                                         >
-                                            {fmt(t.integrations.github.repoAccess.repoCount, {
-                                                count: owner.repo_count,
-                                            })}
-                                        </Typography>
-                                        {isOpen ? (
-                                            <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
-                                        ) : (
-                                            <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
-                                        )}
-                                    </Clickable>
-                                    {isOpen && (
-                                        <Stack spacing={0.25} sx={{ pl: 4, pb: 0.75 }}>
-                                            {ownerRepos.map((repo) => (
-                                                <Stack
-                                                    key={repo.full_name}
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={0.75}
-                                                >
-                                                    <Typography
-                                                        component="a"
-                                                        href={repo.html_url}
-                                                        level="body-xs"
-                                                        rel="noreferrer"
-                                                        target="_blank"
-                                                        sx={{
-                                                            color: "text.secondary",
-                                                            textDecoration: "none",
-                                                            "&:hover": {
-                                                                textDecoration: "underline",
-                                                            },
-                                                        }}
+                                            {ownerIcon(owner)}
+                                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                                {owner.login}
+                                            </Typography>
+                                            {owner.type === "Organization" && (
+                                                <Chip color="primary" size="sm" variant="soft">
+                                                    {t.integrations.github.repoAccess.org}
+                                                </Chip>
+                                            )}
+                                            <Box sx={{ flex: 1 }} />
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "text.tertiary" }}
+                                            >
+                                                {fmt(t.integrations.github.repoAccess.repoCount, {
+                                                    count: owner.repo_count,
+                                                })}
+                                            </Typography>
+                                            {isOpen ? (
+                                                <ExpandLessRoundedIcon sx={{ fontSize: 18 }} />
+                                            ) : (
+                                                <ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />
+                                            )}
+                                        </Clickable>
+                                        {isOpen && (
+                                            <Stack spacing={0.25} sx={{ pl: 4, pb: 0.75 }}>
+                                                {ownerRepos.map((repo) => (
+                                                    <Stack
+                                                        key={repo.full_name}
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={0.75}
                                                     >
-                                                        {repo.name}
-                                                    </Typography>
-                                                    {repo.private && (
-                                                        <LockRoundedIcon
+                                                        <Typography
+                                                            component="a"
+                                                            href={repo.html_url}
+                                                            level="body-xs"
+                                                            rel="noreferrer"
+                                                            target="_blank"
                                                             sx={{
-                                                                fontSize: 12,
-                                                                color: "text.tertiary",
+                                                                color: "text.secondary",
+                                                                textDecoration: "none",
+                                                                "&:hover": {
+                                                                    textDecoration: "underline",
+                                                                },
                                                             }}
-                                                        />
-                                                    )}
-                                                </Stack>
-                                            ))}
-                                        </Stack>
-                                    )}
-                                </Box>
-                            );
-                        })}
-                        {data.truncated && (
-                            <Typography
-                                level="body-xs"
-                                sx={{ color: "text.tertiary", pt: 0.5, px: 1 }}
-                            >
-                                {t.integrations.github.repoAccess.truncated}
-                            </Typography>
-                        )}
-                    </Stack>
-                )}
+                                                        >
+                                                            {repo.name}
+                                                        </Typography>
+                                                        {repo.private && (
+                                                            <LockRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 12,
+                                                                    color: "text.tertiary",
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Stack>
+                                                ))}
+                                            </Stack>
+                                        )}
+                                    </Box>
+                                );
+                            })}
+                            {data.truncated && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: "text.tertiary", pt: 0.5, px: 1 }}
+                                >
+                                    {t.integrations.github.repoAccess.truncated}
+                                </Typography>
+                            )}
+                        </Stack>
+                    )}
+                </DataState>
 
                 <Divider />
 

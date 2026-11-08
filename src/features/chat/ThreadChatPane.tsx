@@ -118,8 +118,12 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     // the Comments tab writes a `comment_added` row, so hopping back to
     // Activities shows it). Passing a null id while the strip is hidden
     // keeps this a no-op for non-PM / task-less threads.
-    const { activities: threadTaskActivities, isLoading: isLoadingThreadTaskActivities } =
-        useTaskActivities(myself, showThreadTabStrip ? threadTaskId : null);
+    const {
+        activities: threadTaskActivities,
+        isLoading: isLoadingThreadTaskActivities,
+        loadFailed: threadTaskActivitiesFailed,
+        reload: reloadThreadTaskActivities,
+    } = useTaskActivities(myself, showThreadTabStrip ? threadTaskId : null);
 
     // Update currentThreadTaskId when thread panel mounts or thread changes
     useEffect(() => {
@@ -231,14 +235,16 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         <TaskActivityFeed
                             activities={threadTaskActivities}
                             allTasks={useTM.allTasks}
-                            taskId={threadTaskId}
                             isLoading={isLoadingThreadTaskActivities}
+                            loadFailed={threadTaskActivitiesFailed}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
+                            taskId={threadTaskId}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
+                            onRetry={reloadThreadTaskActivities}
                         />
                     </Box>
                 ) : isPmThread ? (

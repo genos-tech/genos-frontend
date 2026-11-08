@@ -21,6 +21,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { SearchField } from "../../components/ui/fields/SearchField";
 import { NavItem } from "../../components/ui/nav/NavItem";
@@ -231,23 +232,12 @@ export const GenosSessionSidebar = ({
                     folds a resume-in-progress into it, and a retry shows the
                     spinner above while it runs. */}
                 {!isLoading && sessions.length === 0 && loadFailed && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                            gap: 1,
-                            px: 0.5,
-                            py: 1,
-                        }}
-                    >
-                        <Typography level="body-sm" sx={{ color: "danger.500" }}>
-                            {t.genos.sidebar.loadFailed}
-                        </Typography>
-                        <Button color="neutral" size="sm" variant="outlined" onClick={onRetry}>
-                            {t.common.actions.retry}
-                        </Button>
-                    </Box>
+                    <ErrorState
+                        data-error="genos-sessions"
+                        size="xs"
+                        title={t.genos.sidebar.loadFailed}
+                        onRetry={onRetry}
+                    />
                 )}
 
                 {!isLoading && sessions.length === 0 && !loadFailed && (
