@@ -2381,6 +2381,17 @@ export const ar: DeepPartial<Messages> = {
             bootstrapFailed: "تعذّر تجهيز مهمة جديدة. تحقّق من اتصالك وحاول مرة أخرى.",
             bootstrapRetry: "إعادة المحاولة",
             bootstrapCancel: "إلغاء",
+            discardTaskTitle: "تجاهل هذه المسودة؟",
+            discardTaskBody: "سيتم فقدان العنوان والنص والمرفقات. لا يمكن التراجع عن هذا الإجراء.",
+            discardMilestoneTitle: "تجاهل مسودة هذا المعلم؟",
+            discardMilestoneBody:
+                "سيتم فقدان العنوان والوصف وأي تغييرات أخرى. لا يمكن التراجع عن هذا الإجراء.",
+            discardConfirm: "تجاهل المسودة",
+            discardKeepEditing: "متابعة التحرير",
+            closeDraftTitle: "إغلاق هذه المسودة؟",
+            closeDraftBody:
+                "يمكنك تجاهل تغييراتك أو إخفاء النموذج (تُحفظ المسودة لتتمكن من المتابعة لاحقًا) أو متابعة التحرير.",
+            closeDraftHide: "إخفاء (حفظ المسودة)",
             taskDetails: "تفاصيل المهمة",
             description: "الوصف",
             attachments: "المرفقات",
@@ -3010,7 +3021,9 @@ export const ar: DeepPartial<Messages> = {
             overdueCount: "{count} تأخرت",
             dueSoonCount: "{count} مستحق قريبا",
             blockedCount: "{count} محظور",
-            confirmDelete: "هل تريد حذف هذه المهمة وجميع مهامها الفرعية؟",
+            confirmDelete: "حذف هذه المهمة؟",
+            confirmDeleteBody:
+                "ستُوسَم المهمة كمحذوفة. تبقى مهامها الفرعية لكنها لن تُحتسب في الإحصاءات.",
             errors: {
                 load: "تعذر تحميل الرسم البياني للمهمة.",
                 update: "فشل التحديث.",

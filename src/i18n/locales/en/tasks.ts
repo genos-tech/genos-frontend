@@ -472,6 +472,17 @@ export const tasks = {
         bootstrapFailed: "Couldn't prepare a new task. Check your connection and try again.",
         bootstrapRetry: "Try again",
         bootstrapCancel: "Cancel",
+        discardTaskTitle: "Discard this draft?",
+        discardTaskBody: "Your title, body, and attachments will be lost. This can't be undone.",
+        discardMilestoneTitle: "Discard this milestone draft?",
+        discardMilestoneBody:
+            "Your title, description, and any other changes will be lost. This can't be undone.",
+        discardConfirm: "Discard draft",
+        discardKeepEditing: "Keep editing",
+        closeDraftTitle: "Close this draft?",
+        closeDraftBody:
+            "You can discard your changes, hide the form (your draft is saved so you can resume later), or keep editing.",
+        closeDraftHide: "Hide (save draft)",
         description: "Description",
         attachments: "Attachments",
         templates: {
@@ -1174,7 +1185,9 @@ export const tasks = {
         overdueCount: "{count} overdue",
         dueSoonCount: "{count} due soon",
         blockedCount: "{count} blocked",
-        confirmDelete: "Delete this task and all its sub-tasks?",
+        confirmDelete: "Delete this task?",
+        confirmDeleteBody:
+            "It is marked Deleted. Its sub-tasks are kept, but they stop counting in the stats.",
         errors: {
             load: "Couldn't load the task graph.",
             update: "Update failed.",
