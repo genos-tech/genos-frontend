@@ -78,8 +78,16 @@ const ALLOWED: Record<string, { count: number; reason: string }> = {
         reason: "aria-hidden chevron, a mouse shortcut: the row's own keydown handler expands with ArrowRight / ArrowLeft",
     },
     "components/editors/Mention.tsx": {
+        count: 3,
+        reason: "the suggestion listbox option (focus stays in the editor, its key handler picks) and two mention chips that are inline content of the rich-text editor: a focusable chip would take the caret out of the document (the same chip in a sent message is a Clickable)",
+    },
+    "components/editors/HashMention.tsx": {
         count: 1,
-        reason: "listbox option: focus stays in the editor and the editor's key handler picks (aria-activedescendant pattern)",
+        reason: "a #task chip inline in the rich-text editor: a focusable chip would take the caret out of the document (the same chip in a sent message is a Clickable)",
+    },
+    "features/calendar/components/MonthView.tsx": {
+        count: 1,
+        reason: "the day cell creates an event on click; it holds the event chips, so making it a button would nest buttons and add a tab stop per day (the chips are Clickables)",
     },
     "components/editors/genos/GenosNoteEditor.tsx": {
         count: 1,

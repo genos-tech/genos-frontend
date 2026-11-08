@@ -10,7 +10,6 @@ import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
-import { focusRing } from "../../../theme/tokens";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
@@ -318,10 +317,6 @@ export const MonthView = ({
                                     return (
                                         <Sheet
                                             key={key}
-                                            // Named by its date, not by the events inside it.
-                                            aria-label={day.format("LL")}
-                                            role="button"
-                                            tabIndex={0}
                                             variant="outlined"
                                             sx={{
                                                 display: "flex",
@@ -341,7 +336,6 @@ export const MonthView = ({
                                                         : "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                     : undefined,
                                                 cursor: "pointer",
-                                                "&:focus-visible": focusRing,
                                                 opacity: inMonth ? 1 : 0.55,
                                                 transition: "background-color 0.12s ease",
                                                 "&:hover": {
@@ -355,17 +349,6 @@ export const MonthView = ({
                                                 // "create"; chips and the +N
                                                 // affordance stop propagation.
                                                 if (ev.target === ev.currentTarget) {
-                                                    onCellClick(day);
-                                                }
-                                            }}
-                                            onKeyDown={(ev) => {
-                                                // Enter / Space on the cell itself (not on a chip
-                                                // inside it) opens "create" for the day.
-                                                if (
-                                                    ev.target === ev.currentTarget &&
-                                                    (ev.key === "Enter" || ev.key === " ")
-                                                ) {
-                                                    ev.preventDefault();
                                                     onCellClick(day);
                                                 }
                                             }}

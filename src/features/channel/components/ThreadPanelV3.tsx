@@ -292,21 +292,22 @@ export function ThreadPanelV3({
                         fontSize: 12,
                     }}
                 >
-                    {error}{" "}
                     <button
                         type="button"
                         style={{
+                            appearance: "none",
                             background: "none",
                             border: 0,
                             padding: 0,
                             font: "inherit",
                             color: "inherit",
-                            textDecoration: "underline",
+                            textAlign: "start",
                             cursor: "pointer",
+                            width: "100%",
                         }}
                         onClick={() => setError(null)}
                     >
-                        ({t.chat.channel.thread.dismissError})
+                        {error} ({t.chat.channel.thread.dismissError})
                     </button>
                 </div>
             )}

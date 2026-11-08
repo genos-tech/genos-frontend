@@ -25,6 +25,7 @@
 import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { SearchField } from "../../../components/ui/fields/SearchField";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
@@ -254,11 +255,10 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                     const selected = c.id === selectedChannelId;
                                     const isPinned = snapshot.pinByChannelId.has(c.id);
                                     return (
-                                        <li
+                                        <Clickable
                                             key={c.id}
+                                            as="li"
                                             data-testid={`channel-list-v3-item-${c.id}`}
-                                            role="button"
-                                            tabIndex={0}
                                             style={{
                                                 padding: "8px 12px",
                                                 borderBottom: "1px solid #eee",
@@ -269,18 +269,7 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                                 alignItems: "center",
                                                 gap: 8,
                                             }}
-                                            onClick={() => onSelect(c.id)}
-                                            onKeyDown={(event) => {
-                                                // The row holds the pin button: only a key pressed on
-                                                // the row itself opens the channel.
-                                                if (
-                                                    event.target === event.currentTarget &&
-                                                    (event.key === "Enter" || event.key === " ")
-                                                ) {
-                                                    event.preventDefault();
-                                                    onSelect(c.id);
-                                                }
-                                            }}
+                                            onActivate={() => onSelect(c.id)}
                                         >
                                             <span
                                                 style={{
@@ -357,7 +346,7 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                                                     📌
                                                 </button>
                                             </AppTooltip>
-                                        </li>
+                                        </Clickable>
                                     );
                                 })}
                         </Fragment>

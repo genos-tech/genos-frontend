@@ -278,8 +278,8 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                                 <Sheet
                                     key={team.teamId}
                                     aria-current={isCurrent ? "true" : undefined}
+                                    aria-disabled={isCurrent || undefined}
                                     component="button"
-                                    disabled={isCurrent}
                                     type="button"
                                     variant={isCurrent ? "soft" : "plain"}
                                     sx={[
@@ -296,7 +296,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                                             "&:active": { opacity: 0.7 },
                                         },
                                     ]}
-                                    onClick={() => handleSwitchTeam(team)}
+                                    onClick={() => !isCurrent && handleSwitchTeam(team)}
                                 >
                                     <Typography level="body-md" sx={{ flex: 1, minWidth: 0 }}>
                                         {team.teamName}

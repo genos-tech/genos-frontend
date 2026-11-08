@@ -64,7 +64,10 @@ export const LazyPrCard = ({ url, accessToken, hideOnNotConnected }: Props) => {
             onMouseEnter={reveal}
             onKeyDown={(event) => {
                 // The card also reveals on focus; Enter / Space are the explicit ask.
-                if (event.key === "Enter" || event.key === " ") {
+                if (
+                    event.target === event.currentTarget &&
+                    (event.key === "Enter" || event.key === " ")
+                ) {
                     event.preventDefault();
                     reveal();
                 }

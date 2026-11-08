@@ -39,6 +39,16 @@ describe("Clickable", () => {
         expect(onActivate).toHaveBeenCalledTimes(2);
     });
 
+    it("holding a key does not re-fire (a checkbox row would flicker)", () => {
+        const onActivate = vi.fn();
+        render(<Clickable onActivate={onActivate}>row</Clickable>);
+        const el = screen.getByRole("button");
+        fireEvent.keyDown(el, { key: "Enter" });
+        fireEvent.keyDown(el, { key: "Enter", repeat: true });
+        fireEvent.keyDown(el, { key: "Enter", repeat: true });
+        expect(onActivate).toHaveBeenCalledTimes(1);
+    });
+
     it("keys={['Enter']} leaves Space to a drag handle", () => {
         const onActivate = vi.fn();
         render(

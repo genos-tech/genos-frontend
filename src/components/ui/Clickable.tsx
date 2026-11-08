@@ -21,9 +21,9 @@ import { focusRing } from "../../theme/tokens";
  */
 type ClickableProps = Omit<BoxProps, "onClick" | "component" | "role" | "onKeyDown"> & {
     onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void;
-    /** Without it the element is inert (no role, not in the tab order): a region that
+    /** Runs for a click and for Enter / Space; the event is a click or a key event.
+     *  Without it the element is inert (no role, not in the tab order): a region that
      *  is only sometimes clickable passes `onActivate={maybe ? fn : undefined}`. */
-    /** Runs for a click and for Enter / Space; the event is a click or a key event. */
     onActivate?: (event: SyntheticEvent<HTMLElement>) => void;
     /** Accessible name when the content is not text (an avatar, an icon). */
     label?: string;
@@ -73,7 +73,12 @@ export const Clickable = forwardRef<HTMLElement, ClickableProps>(function Clicka
             onClick={active ? onActivate : undefined}
             onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
                 onKeyDown?.(event);
-                if (!active || event.defaultPrevented || event.target !== event.currentTarget) {
+                if (
+                    !active ||
+                    event.defaultPrevented ||
+                    event.repeat ||
+                    event.target !== event.currentTarget
+                ) {
                     return;
                 }
                 if ((keys as readonly string[]).includes(event.key)) {

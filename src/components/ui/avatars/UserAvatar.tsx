@@ -181,10 +181,11 @@ const UserAvatarInner = (props: UserAvatarProps) => {
             <Stack direction="row" spacing={1}>
                 <Clickable
                     height={_size}
+                    label={clickable ? displayName || undefined : undefined}
                     position="relative"
-                    sx={clickable ? { cursor: "pointer" } : undefined}
                     width={_size}
-                    onActivate={handleOpen}
+                    // Not clickable: an inert box, not a button that does nothing.
+                    onActivate={clickable ? handleOpen : undefined}
                 >
                     <BaseAvatar size={_size} src={src}>
                         {initial}

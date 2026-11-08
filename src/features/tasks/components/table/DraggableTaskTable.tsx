@@ -10,6 +10,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
@@ -1694,18 +1695,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 }}
                             >
                                 {/* Header content - clickable for sorting */}
-                                <button
-                                    type="button"
+                                <PlainButton
                                     style={{
-                                        appearance: "none",
-                                        background: "none",
-                                        border: 0,
-                                        padding: 0,
-                                        font: "inherit",
-                                        textTransform: "inherit",
-                                        letterSpacing: "inherit",
-                                        color: "inherit",
-                                        cursor: "pointer",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -1752,7 +1743,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             {sortTiers[0].direction === "asc" ? "▲" : "▼"}
                                         </span>
                                     )}
-                                </button>
+                                </PlainButton>
 
                                 {/* Resize handle */}
                                 {column.resizable !== false && (

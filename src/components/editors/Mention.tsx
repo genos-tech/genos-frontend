@@ -18,7 +18,6 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
-import { Clickable } from "../ui/Clickable";
 import {
     MENTION_ICONS,
     MentionCountChip,
@@ -90,9 +89,9 @@ export const CreateMentionSpec = (
             const palette = myself.userId === userId ? USER_SELF_PALETTE : USER_OTHER_PALETTE;
             return (
                 <>
-                    <Clickable
+                    <Box
                         sx={mentionChipSx(palette)}
-                        onActivate={() => {
+                        onClick={() => {
                             setOpenUserProfile(true);
                         }}
                     >
@@ -103,7 +102,7 @@ export const CreateMentionSpec = (
                         >
                             @{displayName}
                         </Typography>
-                    </Clickable>
+                    </Box>
 
                     <UserProfile
                         isYou={myself.userId === userId ? true : false}
@@ -138,14 +137,14 @@ export const CreateMentionGroupSpec = () =>
                 // root via `MentionGroupModalContext`. Same UX as the
                 // user-mention chip, which opens `UserProfile`.
                 const { openGroupModal } = useMentionGroupModal();
-                const handleClick = (e: React.SyntheticEvent) => {
+                const handleClick = (e: React.MouseEvent) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const parsed = Number(groupId);
                     if (Number.isFinite(parsed) && parsed > 0) openGroupModal(parsed);
                 };
                 return (
-                    <Clickable sx={mentionChipSx(GROUP_PALETTE)} onActivate={handleClick}>
+                    <Box sx={mentionChipSx(GROUP_PALETTE)} onClick={handleClick}>
                         <GroupRoundedIcon
                             sx={{ fontSize: 14, color: GROUP_PALETTE.text, mr: 0.25 }}
                         />
@@ -164,7 +163,7 @@ export const CreateMentionGroupSpec = () =>
                                 ({memberCount})
                             </Typography>
                         )}
-                    </Clickable>
+                    </Box>
                 );
             },
         }
