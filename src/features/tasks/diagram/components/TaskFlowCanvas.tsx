@@ -46,7 +46,6 @@ import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
-import { deleteDiagramTask } from "../services/deleteDiagramTask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
 import { loadTaskGraph } from "../services/loadTaskGraph";
 import { patchTaskFields } from "../services/patchTaskFields";
@@ -137,6 +136,9 @@ const addDaysIso = (iso: string, days: number): string => {
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
 };
+
+// What the status picker's "Deleted" entry sends (utils/taskMeta): the status and its code.
+const DELETED_STATUS = { status: "Deleted", code: 0 } as const;
 
 // Soft-deleted rows the rest of the app never exposes (table, sidebar,
 // search) and which the canvas always hides. Shared by every stats
@@ -323,7 +325,7 @@ export const buildNodesAndEdges = (
     openBlockerCountByTask: Map<number, number>,
     diagramProjectName: string | null,
     handlers: {
-        onChange: (taskId: number, patch: EditableFields) => void | Promise<void>;
+        onChange: (taskId: number, patch: EditableFields) => void | Promise<void | boolean>;
         onAddSubtask: (parentTaskId: number) => void | Promise<void>;
         onDelete: (taskId: number) => void | Promise<void>;
         onOpenPreview: (taskId: number) => void;
@@ -400,7 +402,9 @@ export const buildNodesAndEdges = (
             totalDescendantCount: counts.total,
             sprint: isMilestone ? (sprintByTaskId.get(taskId) ?? null) : null,
             projectName,
-            onChange: (patch) => handlers.onChange(taskId, patch),
+            onChange: async (patch) => {
+                await handlers.onChange(taskId, patch);
+            },
             onAddSubtask: () => handlers.onAddSubtask(taskId),
             onDelete: () => handlers.onDelete(taskId),
             onOpenPreview: () => handlers.onOpenPreview(taskId),
@@ -666,8 +670,15 @@ const CanvasInner = ({
 
     // CRUD handlers — defined before `assemble` so the assembly can
     // capture them in node data.
+    // Resolves true once the change is saved and mirrored into the caches, false when the
+    // server refused it (the error is already on screen). `failureText` is what the banner
+    // says when the server gave no reason of its own.
     const handleChange = useCallback(
-        async (taskId: number, patch: EditableFields) => {
+        async (
+            taskId: number,
+            patch: EditableFields,
+            failureText: string = t.tasks.diagram.errors.update
+        ): Promise<boolean> => {
             const res = await patchTaskFields(
                 taskId,
                 {
@@ -680,8 +691,8 @@ const CanvasInner = ({
                 accessToken
             );
             if (!res.ok) {
-                setError(res.error ?? t.tasks.diagram.errors.update);
-                return;
+                setError(res.error ?? failureText);
+                return false;
             }
             // Build the merged row once and broadcast it to every cache
             // layer the rest of the app reads from. Previously the
@@ -773,6 +784,7 @@ const CanvasInner = ({
             if (useTM.currentPreviewTaskId === taskId) {
                 void useTM.loadUpdatedTask(projectId);
             }
+            return true;
         },
         [accessToken, projectId, useTM, t.tasks.diagram.errors.update]
     );
@@ -878,18 +890,24 @@ const CanvasInner = ({
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const handleDelete = useCallback((taskId: number) => setPendingDeleteId(taskId), []);
 
+    // The same delete the preview does: the status becomes Deleted (a soft delete, so the
+    // task, its comments and its sub-tasks stay in the database and nothing is orphaned),
+    // saved and mirrored through the one path every status change in the graph takes. It
+    // used to call `DELETE /task/`, a hard delete that removed the row with its comments and
+    // left its sub-tasks pointing at a parent that no longer existed (MIP-1302).
     const deleteTask = useCallback(
         async (taskId: number) => {
-            const res = await deleteDiagramTask(myself, taskId, accessToken);
-            if (!res.ok) {
-                setError(res.error ?? t.tasks.diagram.errors.delete);
-                return;
-            }
+            const saved = await handleChange(
+                taskId,
+                { status: DELETED_STATUS.status, statusCode: DELETED_STATUS.code },
+                t.tasks.diagram.errors.delete
+            );
+            if (!saved) return;
             const graph = await refresh();
             if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },
-        [myself, accessToken, useTM, projectId, refresh] // eslint-disable-line react-hooks/exhaustive-deps
+        [handleChange, t.tasks.diagram.errors.delete, useTM, projectId, refresh] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const handleOpenPreview = useCallback(
@@ -1267,6 +1285,7 @@ const CanvasInner = ({
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={t.common.actions.delete}
+                description={t.tasks.diagram.confirmDeleteBody}
                 hostZIndex={diagramZIndex}
                 open={pendingDeleteId != null}
                 title={t.tasks.diagram.confirmDelete}
