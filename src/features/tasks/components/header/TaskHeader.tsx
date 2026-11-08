@@ -7,14 +7,13 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Box, IconButton, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Button, IconButton, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
-import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { PageHeader } from "../../../../components/ui/page/PageHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -22,6 +21,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
@@ -63,9 +63,6 @@ export const TaskHeader = ({
     socket,
 }: TaskHeaderProps) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-    const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const { t } = useTranslation();
 
     // Owner-only "Customize task fields" entry. Owner-ness comes from the
@@ -140,115 +137,67 @@ export const TaskHeader = ({
             chat.project?.projectId === usePM.currentProject.projectId
     );
 
+    // The "..." menu: the project's own actions.
+    const menuItems: MoreMenuItem[] = [
+        {
+            // Mirrors the sidebar's "Add milestone" row in `MilestonesListItem` — same
+            // payload (`creationKind: "milestone"`, null parent / root / milestone fk)
+            // and the same teardown of the task table view.
+            id: "newMilestone",
+            kind: "newMilestone",
+            label: t.tasks.header.newMilestoneMenuItem,
+            icon: <FlagRoundedIcon sx={{ fontSize: 18, color: g.warning.text }} />,
+            onClick: () => {
+                useTM.setIsCreatingTask({
+                    flag: true,
+                    parentTaskId: null,
+                    rootTaskId: null,
+                    creationKind: "milestone",
+                    milestoneId: null,
+                });
+                useTM.setIsTaskTableVisible(false);
+            },
+        },
+        {
+            id: "manageTags",
+            kind: "tags",
+            label: t.tasks.header.manageTagsMenuItem,
+            icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
+            onClick: onManageTags,
+        },
+        {
+            id: "customizeFields",
+            kind: "customizeFields",
+            label: t.tasks.header.customizeFieldsMenuItem,
+            icon: <TuneRoundedIcon sx={{ fontSize: 18 }} />,
+            visible: isProjectOwner,
+            onClick: () => setOpenCustomizeFields(true),
+        },
+        {
+            id: "newProject",
+            kind: "newProject",
+            label: t.tasks.header.newProjectMenuItem,
+            icon: <AddIcon sx={{ fontSize: 18 }} />,
+            onClick: onCreateProject,
+        },
+        {
+            id: "deleteProject",
+            kind: "delete",
+            label: t.tasks.header.deleteProjectMenuItem,
+            icon: <DeleteIcon sx={{ fontSize: 18 }} />,
+            danger: true,
+            onClick: onDeleteProject,
+        },
+    ];
+
     return (
         <>
-            <Box
-                sx={{
-                    display: "flex",
-                    gap: 2,
-                    flexDirection: { xs: "column", sm: "row" },
-                    alignItems: { xs: "stretch", sm: "center" },
-                    flexWrap: "wrap",
-                    justifyContent: "space-between",
-                    background: styles.containerBg,
-                    border: `1px solid ${styles.containerBorder}`,
-                    borderRadius: "16px",
-                    px: 3,
-                    py: 2,
-                    boxShadow: isDark
-                        ? "0 4px 20px rgba(0,0,0,0.3)"
-                        : "0 4px 20px rgba(var(--gp-brand-700-rgb), 0.08)",
-                }}
-            >
-                {/* Project Title Section */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    {pmChat && (
-                        <Box
-                            sx={{
-                                position: "relative",
-                                display: "flex",
-                                alignItems: "center",
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    borderRadius: "12px",
-                                    p: 0.5,
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <ProjectAvatar
-                                    avatarSize={36}
-                                    myself={myself}
-                                    pmChat={pmChat}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                />
-                            </Box>
-                        </Box>
-                    )}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <Typography
-                            component="h1"
-                            level="h3"
-                            sx={{
-                                background: styles.titleGradient,
-                                backgroundClip: "text",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                                fontWeight: 700,
-                                letterSpacing: "-0.02em",
-                            }}
-                        >
-                            {usePM.currentProject?.projectName}
-                        </Typography>
-                        {usePM.currentProject?.isPrivate === true && (
-                            <AppTooltip title={t.tasks.header.privateProject}>
-                                <LockOutlineIcon
-                                    sx={{
-                                        fontSize: "18px",
-                                        color: styles.lockColor,
-                                        filter: `drop-shadow(0 0 4px ${styles.lockColor})`,
-                                    }}
-                                />
-                            </AppTooltip>
-                        )}
-                    </Box>
-                </Box>
-
-                {/* Search Box */}
-                <Box sx={{ flex: 1, minWidth: "200px", maxWidth: "600px" }}>
-                    <TaskSidebarSearchBox
-                        loading={loading}
-                        openSearch={openSearch}
-                        setOpenSearch={setOpenSearch}
-                        setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                        accessToken={accessToken}
-                        myself={myself}
-                        teamTaskSearchOptions={teamTaskSearchOptions}
-                        useTM={useTM}
-                    />
-                </Box>
-
-                {/* Action Buttons */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {/* Create Task Button */}
-                    <AppTooltip
-                        title={
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                }}
-                            >
+            <PageHeader
+                data-testid="task-header"
+                actions={
+                    <>
+                        <AppTooltip
+                            title={
                                 <Typography
                                     level="body-xs"
                                     sx={{
@@ -259,170 +208,105 @@ export const TaskHeader = ({
                                 >
                                     {isMac() ? "⌘ + Ctrl + T" : "Alt + Ctrl + T"}
                                 </Typography>
-                            </Box>
-                        }
-                    >
-                        <IconButton
-                            size="sm"
-                            sx={{
-                                background: styles.createButtonBg,
-                                color: "#fff",
-                                borderRadius: "10px",
-                                px: 1.5,
-                                py: 0.75,
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                gap: 0.5,
-                                boxShadow: isDark
-                                    ? "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.4)"
-                                    : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.createButtonHover,
-                                    transform: "translateY(-1px)",
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.5)"
-                                        : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
-                                },
-                            }}
-                            onClick={useTM.handleCreateTask}
+                            }
                         >
-                            <AddIcon sx={{ fontSize: "18px" }} />
-                            {t.tasks.header.taskButton}
-                        </IconButton>
-                    </AppTooltip>
-
-                    {/* Refresh Button to re-load task list */}
-                    {usePM.currentProject?.projectId && (
-                        <AppTooltip title={t.tasks.header.refreshTasks}>
-                            <IconButton
+                            <Button
                                 size="sm"
-                                sx={{
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                    borderRadius: "10px",
-                                    width: "36px",
-                                    height: "36px",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.buttonHover,
-                                        transform: "translateY(-1px)",
-                                    },
-                                }}
-                                onClick={async () => {
-                                    if (usePM.currentProject?.projectId) {
-                                        await usePM.refreshProjectTasks(
-                                            usePM.currentProject.projectId
-                                        );
-                                    }
-                                }}
+                                startDecorator={<AddIcon />}
+                                onClick={useTM.handleCreateTask}
                             >
-                                <RefreshRoundedIcon sx={{ fontSize: "18px" }} />
-                            </IconButton>
+                                {t.tasks.header.taskButton}
+                            </Button>
                         </AppTooltip>
-                    )}
 
-                    {/* More Options Dropdown */}
-                    {(() => {
-                        const items: MoreMenuItem[] = [
-                            {
-                                // Mirrors the sidebar's "Add milestone" row
-                                // in `MilestonesListItem` — same payload
-                                // (`creationKind: "milestone"`, null parent
-                                // / root / milestone fk) and the same
-                                // teardown of the task table view.
-                                id: "newMilestone",
-                                kind: "newMilestone",
-                                label: t.tasks.header.newMilestoneMenuItem,
-                                icon: <FlagRoundedIcon sx={{ fontSize: 18, color: "#f97316" }} />,
-                                onClick: () => {
-                                    useTM.setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: null,
-                                        rootTaskId: null,
-                                        creationKind: "milestone",
-                                        milestoneId: null,
-                                    });
-                                    useTM.setIsTaskTableVisible(false);
-                                },
-                            },
-                            {
-                                id: "manageTags",
-                                kind: "tags",
-                                label: t.tasks.header.manageTagsMenuItem,
-                                icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
-                                onClick: onManageTags,
-                            },
-                            {
-                                id: "customizeFields",
-                                kind: "customizeFields",
-                                label: t.tasks.header.customizeFieldsMenuItem,
-                                icon: <TuneRoundedIcon sx={{ fontSize: 18 }} />,
-                                visible: isProjectOwner,
-                                onClick: () => setOpenCustomizeFields(true),
-                            },
-                            {
-                                id: "newProject",
-                                kind: "newProject",
-                                label: t.tasks.header.newProjectMenuItem,
-                                icon: <AddIcon sx={{ fontSize: 18 }} />,
-                                onClick: onCreateProject,
-                            },
-                            {
-                                id: "deleteProject",
-                                kind: "delete",
-                                label: t.tasks.header.deleteProjectMenuItem,
-                                icon: <DeleteIcon sx={{ fontSize: 18 }} />,
-                                danger: true,
-                                onClick: onDeleteProject,
-                            },
-                        ];
-                        return (
-                            <MoreMenu
-                                iconFontSize={20}
-                                items={items}
-                                placement="bottom-end"
-                                triggerSize={36}
-                                triggerSx={{
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                    borderRadius: "10px",
-                                }}
-                            />
-                        );
-                    })()}
+                        {/* Refresh Button to re-load task list */}
+                        {usePM.currentProject?.projectId && (
+                            <AppTooltip title={t.tasks.header.refreshTasks}>
+                                <IconButton
+                                    aria-label={t.tasks.header.refreshTasks}
+                                    color="neutral"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={async () => {
+                                        if (usePM.currentProject?.projectId) {
+                                            await usePM.refreshProjectTasks(
+                                                usePM.currentProject.projectId
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <RefreshRoundedIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
 
-                    {/* Close Button */}
-                    {(useTM.isTaskPreviewVisible === true ||
-                        useTM.isCreatingTask.flag === true) && (
-                        <AppTooltip title={t.tasks.header.closePanel}>
-                            <IconButton
-                                size="sm"
-                                sx={{
-                                    background: styles.dangerBg,
-                                    border: `1px solid ${styles.dangerBorder}`,
-                                    borderRadius: "10px",
-                                    width: "36px",
-                                    height: "36px",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.dangerHover,
-                                        transform: "translateY(-1px)",
-                                    },
-                                }}
-                                onClick={onCloseTaskHome}
-                            >
-                                <CancelIcon
+                        <MoreMenu
+                            iconFontSize={20}
+                            items={menuItems}
+                            placement="bottom-end"
+                            triggerSize={32}
+                        />
+
+                        {/* Close Button */}
+                        {(useTM.isTaskPreviewVisible === true ||
+                            useTM.isCreatingTask.flag === true) && (
+                            <AppTooltip title={t.tasks.header.closePanel}>
+                                <IconButton
+                                    aria-label={t.tasks.header.closePanel}
+                                    color="danger"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={onCloseTaskHome}
+                                >
+                                    <CancelIcon sx={{ fontSize: 20 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                    </>
+                }
+                leading={
+                    pmChat ? (
+                        <ProjectAvatar
+                            avatarSize={32}
+                            myself={myself}
+                            pmChat={pmChat}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    ) : undefined
+                }
+                title={
+                    <>
+                        {usePM.currentProject?.projectName}
+                        {usePM.currentProject?.isPrivate === true && (
+                            <AppTooltip title={t.tasks.header.privateProject}>
+                                <LockOutlineIcon
                                     sx={{
-                                        fontSize: "20px",
-                                        color: isDark ? "#f87171" : "#dc2626",
+                                        fontSize: 16,
+                                        color: g.text.tertiary,
+                                        marginInlineStart: 0.75,
+                                        verticalAlign: "text-bottom",
                                     }}
                                 />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                </Box>
-            </Box>
+                            </AppTooltip>
+                        )}
+                    </>
+                }
+            >
+                <TaskSidebarSearchBox
+                    accessToken={accessToken}
+                    loading={loading}
+                    myself={myself}
+                    openSearch={openSearch}
+                    setOpenSearch={setOpenSearch}
+                    setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                    teamTaskSearchOptions={teamTaskSearchOptions}
+                    useTM={useTM}
+                />
+            </PageHeader>
             <ModalCustomizeTaskFields
                 myself={myself}
                 open={openCustomizeFields}

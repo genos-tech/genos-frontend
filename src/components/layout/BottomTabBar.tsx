@@ -154,6 +154,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                                 font: "inherit",
                                 cursor: "pointer",
                                 WebkitTapHighlightColor: "transparent",
+                                touchAction: "manipulation",
                                 // Colour only, at rest, selected and under a mouse (a narrow desktop
                                 // window shows this bar too): a full-cell tint is for rail tiles.
                                 [NAV_HOVER_MEDIA]: { "&:hover": { background: "transparent" } },
