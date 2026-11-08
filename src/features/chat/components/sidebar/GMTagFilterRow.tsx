@@ -266,6 +266,10 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                                         variant="plain"
                                         sx={{
                                             "--IconButton-size": "22px",
+                                            // The pin sits in a 44px row on a phone; 22px is hard to hit.
+                                            "@media (pointer: coarse)": {
+                                                "--IconButton-size": "36px",
+                                            },
                                             color: tag.isDefaultVisible
                                                 ? g.accent.text
                                                 : g.text.tertiary,
