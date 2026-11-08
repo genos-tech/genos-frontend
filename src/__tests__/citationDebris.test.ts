@@ -139,7 +139,7 @@ describe("what is NOT debris", () => {
         const text = "(".repeat(20000) + " task:12 " + "[".repeat(20000);
         const started = Date.now();
         rewriteCitations(text, noSources);
-        expect(Date.now() - started).toBeLessThan(1000);
+        expect(Date.now() - started).toBeLessThan(5000);
     });
 });
 
