@@ -714,7 +714,7 @@ export const GenosReportCard = memo(({ report, avatars = NO_AVATARS, footer }: C
     return (
         <Box
             data-genos-report="v2"
-            sx={{ minWidth: 0, maxWidth: 900, display: "flex", flexDirection: "column", gap: 1.5 }}
+            sx={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 1.5 }}
         >
             <Box>
                 {report.title !== "" && (
