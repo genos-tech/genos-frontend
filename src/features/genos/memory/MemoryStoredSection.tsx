@@ -1,6 +1,7 @@
 import StorageRoundedIcon from "@mui/icons-material/StorageRounded";
 import { Box, Sheet, Stack, Typography } from "@mui/joy";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { Overview } from "./memoryApi";
@@ -101,18 +102,22 @@ export const MemoryStoredSection = ({ overview }: Props) => {
                         <Typography component="dt" level="title-sm">
                             {row.label}
                         </Typography>
-                        <Typography
+                        <Box
                             component="dd"
                             data-memory-stored-row={row.key}
-                            level="body-sm"
-                            sx={{
-                                m: 0,
-                                overflowWrap: "anywhere",
-                                color: row.value === null ? g.text.tertiary : g.text.secondary,
-                            }}
+                            sx={{ m: 0, minWidth: 0 }}
                         >
-                            {row.value ?? m.empty}
-                        </Typography>
+                            {row.value === null ? (
+                                <EmptyState size="xs" title={m.empty} />
+                            ) : (
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ overflowWrap: "anywhere", color: g.text.secondary }}
+                                >
+                                    {row.value}
+                                </Typography>
+                            )}
+                        </Box>
                     </Box>
                 ))}
             </Box>

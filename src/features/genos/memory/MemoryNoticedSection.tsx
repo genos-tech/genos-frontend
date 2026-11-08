@@ -4,6 +4,7 @@ import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LightbulbRoundedIcon from "@mui/icons-material/LightbulbRounded";
 import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
@@ -230,9 +231,7 @@ export const MemoryNoticedSection = ({
                                 </Typography>
                             )}
                             {view.top.length === 0 ? (
-                                <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
-                                    {m.empty}
-                                </Typography>
+                                <EmptyState size="xs" title={m.empty} />
                             ) : (
                                 <Box
                                     component="ul"
