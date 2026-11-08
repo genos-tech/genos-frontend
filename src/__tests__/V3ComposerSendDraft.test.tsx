@@ -132,12 +132,23 @@ describe("MessageComposerV3 send", () => {
         expect(send).not.toHaveBeenCalled();
     });
 
-    it("counts a lone space as content (its own hasContent, unlike hasSendableContent)", async () => {
+    // MIP-1224: a lone space used to count (the v3 composer had its own `hasContent`).
+    it("a lone space is not a message", async () => {
         mount();
         typeInto(" ");
         chord();
         await flush();
-        expect(send).toHaveBeenCalledTimes(1);
+        expect(send).not.toHaveBeenCalled();
+        expect(sendButton().disabled).toBe(true);
+    });
+
+    it("typing alone enables Send (its state follows the editor, not just the next render)", async () => {
+        mount();
+        expect(sendButton().disabled).toBe(true);
+        typeInto("hello");
+        expect(sendButton().disabled).toBe(false);
+        typeInto("");
+        expect(sendButton().disabled).toBe(true);
     });
 
     it("keeps the text while the request is in flight, then clears composer and draft and reports the id", async () => {
@@ -155,7 +166,8 @@ describe("MessageComposerV3 send", () => {
         expect(onError).not.toHaveBeenCalled();
     });
 
-    it("a second chord while the first is in flight SENDS AGAIN: the busy lock only disables the buttons (documented quirk, the text stays until the ack)", async () => {
+    // MIP-1224: this used to pin the quirk ("a second chord SENDS AGAIN").
+    it("a second chord while the first is in flight is ignored (one request at a time)", async () => {
         const pending = deferred<any>();
         send.mockReturnValue(pending.promise);
         mount();
@@ -163,7 +175,7 @@ describe("MessageComposerV3 send", () => {
         chord();
         chord();
         await flush();
-        expect(send).toHaveBeenCalledTimes(2);
+        expect(send).toHaveBeenCalledTimes(1);
         await act(async () => pending.resolve({ id: "m" }));
     });
 
@@ -281,15 +293,5 @@ describe("MessageComposerV3 drafts", () => {
         expect(lastEditor().document[0].content).toEqual([]);
         view.rerender(<MessageComposerV3 channelId="c-1" currentUserId="u1" onError={onError} />);
         expect(lastEditor().document[0].content[0].text).toBe("in c-1");
-    });
-});
-
-describe("MessageComposerV3 Send button", () => {
-    it("is read from the document at render time, so typing alone does not enable it (documented quirk)", () => {
-        mount();
-        expect(sendButton().disabled).toBe(true);
-        typeInto("hello");
-        // no state in the typing path: nothing re-rendered, the button is stale until something else renders
-        expect(sendButton().disabled).toBe(true);
     });
 });

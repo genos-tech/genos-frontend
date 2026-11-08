@@ -77,7 +77,7 @@ export type ComposerClearMode =
      *  (chat, thread, task comment). */
     | "before"
     /** Keep the text while the request is in flight (a `busy` flag is raised), empty it only
-     *  after a clean send (v3). The flag does not stop a second send, it is for the buttons. */
+     *  after a clean send (v3). A second send while one is in flight is ignored. */
     | "after"
     /** Never touch the composer: edit-in-place editors are torn down by their host. */
     | "never";
@@ -94,18 +94,14 @@ export interface UseChatComposerOptions<R> {
      *  inserts stay inert (a task without a project channel). */
     uploads?: { channelId: string | undefined };
     /** Files dropped on the pane around the composer, uploaded in series and inserted as blocks.
-     *  `mode "after"`: the queue is cleared when the loop ends, through the guarded + counted
-     *  uploader (chat, thread). `mode "claim"`: the queue is cleared synchronously, before any
-     *  await, so a remount mid-upload cannot insert every file twice; ignored without a
-     *  channel; raw uploader, so no badge (task comment). */
-    dropQueue?: { files?: File[]; clear?: () => void; mode: "after" | "claim" };
+     *  The queue is cleared synchronously, before any await, so a remount mid-upload cannot
+     *  insert every file twice; the upload is guarded and counted. Ignored without a channel. */
+    dropQueue?: { files?: File[]; clear?: () => void };
 
     /** `null`/omitted: no draft (edit-in-place). */
     draftKey?: string | null;
     /** Edit-in-place starts with Send already enabled. */
     initialCanSend?: boolean;
-    /** Default true. `false` keeps a composer that reads emptiness at render (v3). */
-    trackCanSend?: boolean;
     /** Called with the line count on every change (hosts that size around the editor). */
     onLinesChange?: (lines: number) => void;
 
@@ -113,8 +109,6 @@ export interface UseChatComposerOptions<R> {
     isSendable?: (blocks: any[]) => boolean;
     /** An extra guard before anything is touched (no socket, no task id). */
     canSubmit?: () => boolean;
-    /** Default true: Send and the chord wait for in-flight uploads. Edit-in-place has no gate. */
-    holdWhileUploading?: boolean;
     clear?: ComposerClearMode;
     /** The transport. Receives the document read synchronously at the moment of the send (an
      *  edit-in-place host unmounts the editor right after firing it, so there must be no await
@@ -143,11 +137,9 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         dropQueue,
         draftKey = null,
         initialCanSend = false,
-        trackCanSend = true,
         onLinesChange,
         isSendable = hasSendableContent,
         canSubmit,
-        holdWhileUploading = true,
         clear = "before",
         submit,
         onSent,
@@ -250,24 +242,16 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
     const dropFiles = dropQueue?.files;
     useEffect(() => {
         if (!dropQueue || !dropFiles || dropFiles.length === 0 || !dropQueue.clear) return;
-        const clearQueue = dropQueue.clear;
-        if (dropQueue.mode === "after") {
-            void uploadAndInsertFiles(dropFiles).finally(() => clearQueue());
-            return;
-        }
-        // Capture + clear the queue SYNCHRONOUSLY, before any await. Clearing in a `finally`
-        // leaves the parent's queue populated for the whole upload; if this editor remounts
-        // meanwhile (tab switch, edit-mode toggle), the fresh mount would re-run this effect
-        // against the same array and insert every file a second time.
+        // Capture + clear the queue SYNCHRONOUSLY, before any await, in every composer. Clearing
+        // in a `finally` leaves the parent's queue populated for the whole upload; if this editor
+        // remounts meanwhile (tab switch, edit-mode toggle), the fresh mount would re-run this
+        // effect against the same array and insert every file a second time (MIP-1224: chat and
+        // thread cleared late, only the task comment cleared first). The upload then goes
+        // through the guarded, counted uploader, so every composer shows the "Uploading n files"
+        // pill and refuses oversize files while a drop runs.
         const queued = dropFiles;
-        clearQueue();
-        // No upload channel: the caller should not have forwarded the drop here.
-        if (!uploadChannelId) return;
-        const accepted = filterFiles(queued);
-        if (accepted.length === 0) return;
-        void insertFiles(accepted, (file) =>
-            channelService.uploadInlineFile(uploadChannelId, file)
-        );
+        dropQueue.clear();
+        void uploadAndInsertFiles(queued);
         // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run per queue, as before
     }, [dropFiles]);
 
@@ -282,11 +266,13 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
     const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
 
     const [busy, setBusy] = useState(false);
+    // The ref answers at once (a second chord lands before the re-render that sets `busy`).
+    const sendingRef = useRef(false);
 
     const clearComposer = () => {
         editor.replaceBlocks(editor.document, []);
         clearDraft();
-        if (trackCanSend) setCanSend(false);
+        setCanSend(false);
     };
 
     const send = async (): Promise<void> => {
@@ -294,7 +280,7 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         const blocks: any[] = editor.document;
         if (!isSendable(blocks)) return;
         if (canSubmit && !canSubmit()) return;
-        if (holdWhileUploading && uploadInProgress) return;
+        if (uploadInProgress) return;
 
         if (clear === "never") {
             await submit(blocks);
@@ -302,6 +288,10 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         }
 
         if (clear === "after") {
+            // One request at a time: a second Cmd+Enter while the first is in flight used to
+            // send the same text again (MIP-1224).
+            if (sendingRef.current) return;
+            sendingRef.current = true;
             setBusy(true);
             try {
                 const result = await submit(blocks);
@@ -310,6 +300,7 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
                     onSent?.(result as R);
                 }
             } finally {
+                sendingRef.current = false;
                 setBusy(false);
             }
             return;
@@ -335,6 +326,10 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
 
     /** What the chord and an edit-in-place Save button do: start the send, then `onSendAttempt`. */
     const trigger = () => {
+        // An image or file still uploading has an empty url: saving now would store a broken
+        // attachment. Do nothing, and do not let an edit-in-place host close the editor over the
+        // upload either (MIP-1224: only the new-message composers held back before).
+        if (uploadInProgress) return;
         void send();
         onSendAttempt?.();
     };
@@ -344,7 +339,7 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         onChange: () => {
             const doc = editor.document;
             onLinesChange?.(countEditorLines(doc));
-            if (trackCanSend) setCanSend(isSendable(doc));
+            setCanSend(isSendable(doc));
             saveDraft(doc);
         },
         onKeyDown: (event: ReactKeyboardEvent) => {
@@ -362,7 +357,7 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         busy,
         uploadInProgress,
         /** For the Send button: nothing to send, or an upload still running. */
-        sendDisabled: !canSend || (holdWhileUploading && uploadInProgress),
+        sendDisabled: !canSend || uploadInProgress,
         /** The "Uploading n files" pill. */
         editorUploadCount,
         /** The drop / picker overlay. */

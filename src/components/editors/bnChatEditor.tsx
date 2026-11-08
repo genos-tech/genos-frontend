@@ -130,7 +130,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         // BlockNote embeds directly (no `django_url` host prepend).
         uploads: { channelId: String(chat.chatId) },
         // Files dropped on the chat pane (outside the editor).
-        dropQueue: { files: pendingFiles, clear: clearPendingFiles, mode: "after" },
+        dropQueue: { files: pendingFiles, clear: clearPendingFiles },
         // Restore (or clear) the editor when the user navigates between
         // chats, and persist unsent typing as a per-chat draft.
         draftKey:

@@ -339,12 +339,14 @@ describe("BnTaskCommentEditor", () => {
             expect(clearPendingFiles).toHaveBeenCalledTimes(1);
         });
 
-        it("does not tick the upload badge for dropped files (raw uploader)", async () => {
+        // MIP-1224: this used to pin "does not tick the upload badge for dropped files (raw
+        // uploader)". A drop now goes through the guarded, counted uploader like every composer.
+        it("ticks the upload badge for dropped files (guarded, counted uploader)", async () => {
             const first = deferred<string>();
             uploadInline.mockReturnValueOnce(first.promise);
             const view = mount();
             await act(async () => remount(view, { pendingFiles: [file("a.png", "image/png")] }));
-            expect(badge().getAttribute("data-count")).toBe("0");
+            expect(overlay().getAttribute("data-open")).toBe("true");
             await act(async () => first.resolve("u"));
             await flush();
         });

@@ -101,8 +101,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     // extra empty line at the end (MIP-1039).
     const initialContent: any[] = withoutTrailingBlank(message.content);
 
-    // Edit in place: the shared composer pipeline with no draft and no send gate on uploads
-    // (`holdWhileUploading: false`, as before), and the host closes the editor itself.
+    // Edit in place: the shared composer pipeline with no draft; Save waits for uploads in
+    // flight (an empty url would be stored), and the host closes the editor itself.
     const composer = useChatComposer({
         schema,
         dictionary,
@@ -110,7 +110,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         uploads: { channelId: String(message.chatId) },
         initialCanSend: hasSendableContent(message.content),
         onLinesChange: setNumEditorLines,
-        holdWhileUploading: false,
         clear: "never",
         // Save and Cmd/Ctrl+Enter both close the editor right after firing the save.
         onSendAttempt: () => setIsInEdit(false),

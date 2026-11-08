@@ -88,13 +88,6 @@ describe("useChatComposer typing render budget", () => {
         expect(view.result.current.sendDisabled).toBe(false);
     });
 
-    it("a composer without Send tracking (v3) never re-renders while typing", async () => {
-        const view = await setup({ trackCanSend: false, uploads: undefined });
-        const before = view.renders();
-        typeChars(40);
-        expect(view.renders() - before).toBe(0);
-    });
-
     it("reads the document once per keystroke (BlockNote rebuilds it from the editor state on every read)", async () => {
         const view = await setup();
         const editor = lastEditor();

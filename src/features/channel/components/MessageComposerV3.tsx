@@ -50,6 +50,7 @@ import {
 } from "../../../components/editors/composer/useChatComposer";
 import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
 import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
+import { hasSendableContent } from "../../../components/editors/utils/messageBlocks";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
@@ -125,17 +126,6 @@ export function deriveBodyText(blocks: any[]): string {
     return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
-/** True if a BlockNote document has anything more than a single empty
- *  paragraph. BlockNote represents "empty" as `[{type: paragraph,
- *  content: []}]` (length 1, empty content). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasContent(blocks: any[]): boolean {
-    if (blocks.length > 1) return true;
-    const first = blocks[0];
-    if (!first || !Array.isArray(first.content)) return false;
-    return first.content.length > 0;
-}
-
 export function MessageComposerV3({
     channelId,
     parentId,
@@ -177,8 +167,9 @@ export function MessageComposerV3({
     // rules as every composer (Tab indents, the ``` fence rule that keeps an unknown typed
     // language from wedging the highlighted code block, the link-host caption) come with its
     // `composer` surface. What differs on purpose here: the text stays in the editor until the
-    // request is acked (`clear: "after"`), staged attachments count as content, emptiness is
-    // this file's own `hasContent`, and there is no inline upload (the strip stages files).
+    // request is acked (`clear: "after"`), staged attachments count as content, and there is
+    // no inline upload (the strip stages files). Emptiness is the shared `hasSendableContent`
+    // (a lone space is not a message), tracked on change like every composer (MIP-1224).
     const composer = useChatComposer<Message | null>({
         schema,
         dictionary: {
@@ -191,8 +182,7 @@ export function MessageComposerV3({
         } as any,
         draftKey: draftKeyFor(channelId, parentId),
         // The Send button reads `editor.document` at render time (it never had state).
-        trackCanSend: false,
-        isSendable: (blocks) => hasContent(blocks) || hasAttachments,
+        isSendable: (blocks) => hasSendableContent(blocks) || hasAttachments,
         clear: "after",
         // Send the current document. `busy` disables the Send and attach buttons while this
         // runs; it does NOT stop a second Cmd+Enter (the text stays until the ack), so a fast
@@ -336,9 +326,7 @@ export function MessageComposerV3({
                     style={{ alignSelf: "flex-end", marginBottom: 4 }}
                     type="button"
                     disabled={
-                        busy ||
-                        attachments.isUploading ||
-                        (!hasContent(editor.document) && !hasAttachments)
+                        busy || attachments.isUploading || (!composer.canSend && !hasAttachments)
                     }
                     onClick={() => void composer.send()}
                 >
