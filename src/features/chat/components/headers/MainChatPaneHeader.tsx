@@ -624,6 +624,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     chatType={chat.chatType}
                     chatId={chat.chatId}
                     chatName={muteLabel}
+                    sx={actionButtonStyle}
                 />
 
                 {/* Mark all activity in this chat as read */}

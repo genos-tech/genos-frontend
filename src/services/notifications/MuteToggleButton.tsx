@@ -1,6 +1,7 @@
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
 import { IconButton } from "@mui/joy";
+import type { SxProps } from "@mui/joy/styles/types";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { MenuRow } from "../../components/ui/MoreMenu";
@@ -18,6 +19,8 @@ interface MuteToggleButtonProps {
     color?: "neutral" | "primary" | "danger" | "success" | "warning";
     /** Optional size override; defaults to "sm". */
     size?: "sm" | "md" | "lg";
+    /** Extra styling, e.g. the desktop header's boxed action-button look. */
+    sx?: SxProps;
 }
 
 /**
@@ -31,6 +34,7 @@ export const MuteToggleButton = ({
     chatName,
     color = "neutral",
     size = "sm",
+    sx,
 }: MuteToggleButtonProps) => {
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
@@ -58,6 +62,7 @@ export const MuteToggleButton = ({
                 aria-label={label}
                 color={color}
                 size={size}
+                sx={sx}
                 variant="plain"
                 onClick={handleClick}
             >
