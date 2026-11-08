@@ -12,10 +12,11 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => readFileSync(join(SRC, rel), "utf8");
 
 describe("the last hand-built dialogs", () => {
-    it("saved filters: the name form is a ModalFrame, delete is the shared ConfirmDialog", () => {
+    it("saved filters: the name form is a ModalFrame, delete is an Undo toast (MIP-1274), not a dialog", () => {
         const text = read("features/tasks/components/table/SavedFiltersMenu.tsx");
         expect(text).toMatch(/<ModalFrame[\s\S]*dismissible=\{!isSubmitting\}/);
-        expect(text).toMatch(/<ConfirmDialog[\s\S]*destructive/);
+        expect(text).not.toMatch(/<ConfirmDialog/);
+        expect(text).toMatch(/runUndoable\(/);
     });
 
     it("column settings: a ModalFrame at Joy's layer, so the dragged row (1500) out-stacks it", () => {
