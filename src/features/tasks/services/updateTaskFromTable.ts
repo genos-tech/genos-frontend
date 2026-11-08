@@ -28,12 +28,17 @@ export const updateTaskFromTable = async (
     teamMembers: UserProps[]
 ): Promise<TaskTableProps> => {
     try {
-        // Load the full task data
+        // Load the full task data. The row's own `updatedAt` is the freshness
+        // baseline: this full copy is the BASE of a full PUT (it re-sends the
+        // milestone, parent, status, title... of whatever it holds), so a cached
+        // copy older than what the project list has seen would write the old
+        // values back over a move or an edit made elsewhere (MIP-1168).
         const _fullTask: TaskProps[] | undefined = await loadSpecificTask(
             myself,
             Number(updatedRow.projectId),
             Number(updatedRow.id),
-            accessToken
+            accessToken,
+            { expectedMinUpdatedAt: updatedRow.updatedAt ?? null }
         );
 
         let fullTask: TaskProps;

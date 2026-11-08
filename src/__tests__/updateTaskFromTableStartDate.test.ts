@@ -112,4 +112,22 @@ describe("updateTaskFromTable start_date", () => {
         expect(cacheFullTask).toHaveBeenCalledTimes(1);
         expect(cacheFullTask.mock.calls[0][0].startDate).toBe("2026-11-02");
     });
+
+    // MIP-1168: this full copy is the base of a full PUT. Without the row's own
+    // stamp as the freshness baseline, a cached copy older than a move or an edit
+    // made elsewhere is accepted, and its old values are written back.
+    it("asks for a copy at least as new as the row it is saving", async () => {
+        loadSpecificTask.mockResolvedValue([cachedTask()]);
+        await updateTaskFromTable(
+            { ...row, updatedAt: "2026-11-07 06:12:00.000000+00:00" } as TaskTableProps,
+            myself,
+            null,
+            "tok",
+            [user]
+        );
+        expect(loadSpecificTask).toHaveBeenCalledTimes(1);
+        expect(loadSpecificTask.mock.calls[0][4]).toEqual({
+            expectedMinUpdatedAt: "2026-11-07 06:12:00.000000+00:00",
+        });
+    });
 });
