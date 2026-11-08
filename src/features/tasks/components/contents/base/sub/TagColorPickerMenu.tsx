@@ -78,6 +78,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
     return (
         <Dropdown>
             <MenuButton
+                aria-label={t.common.editor.colors}
                 slots={{ root: IconButton }}
                 slotProps={{
                     root: {

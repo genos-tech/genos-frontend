@@ -11,7 +11,6 @@ import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
-import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -65,6 +64,7 @@ import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 import { TaskTableRows } from "./TaskTableRows";
+import { TaskTableSkeleton } from "./TaskTableSkeleton";
 import {
     GRID_COL_ATTR,
     GRID_HEADER_ROW,
@@ -1611,6 +1611,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         LEADING_GUTTER_WIDTH +
         visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
+    // The skeleton replaces the rows while the first read of a project is in flight.
+    const showTaskSkeleton =
+        displayRows.length === 0 && (useTM.isLoadingTasks || syncFailure.retrying);
+
     return (
         <>
             <div
@@ -1855,7 +1859,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     role="rowgroup"
                                     {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
                                     style={{
-                                        minHeight: 100,
+                                        // The empty drop zone is 100px so a row can be dropped in;
+                                        // while the skeleton stands in for the rows it is 0, or the
+                                        // skeleton would start 100px below the header.
+                                        minHeight: showTaskSkeleton ? 0 : 100,
                                         minWidth: totalTableWidth,
                                         display: "flex",
                                         flexDirection: "column",
@@ -1933,9 +1940,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 title: t.common.feedback.sync.tasksFailed,
                             }}
                             skeleton={
-                                <Box sx={{ minHeight: "200px", pt: 1 }}>
-                                    <SkeletonRows count={6} label={t.tasks.table.loadingTasks} />
-                                </Box>
+                                <TaskTableSkeleton
+                                    columns={columnsWithWidths}
+                                    gutterWidth={LEADING_GUTTER_WIDTH}
+                                    label={t.tasks.table.loadingTasks}
+                                />
                             }
                         />
                     )}
