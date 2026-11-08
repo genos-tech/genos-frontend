@@ -127,7 +127,7 @@ describe("feedback adoption", () => {
             "features/tasks/components/dashboard/TaskHomeContent.tsx":
                 "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
             "features/tasks/components/layout/TaskHomeLayout.tsx":
-                "the first-run hero (brand gradient, large create-project button)",
+                "the first-run hero (brand gradient, large create-project button): kept until the look is decided (MIP-1329)",
             "features/tasks/components/modals/ModalCreateProject.tsx":
                 "no match in a member picker",
             "features/tasks/components/sidebar/ProjectsListItem.tsx": "one dense sidebar row",

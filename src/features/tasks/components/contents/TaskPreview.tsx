@@ -28,6 +28,7 @@ import { usePreviewEditMirror } from "./utils/usePreviewEditMirror";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
+import { MODAL_CHROME_CLEARANCE } from "../../../../components/ui/modal/modalChrome";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -97,7 +98,6 @@ import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { LinkedPrSection } from "./LinkedPrSection";
-import { MODAL_CHROME_CLEARANCE } from "./modalChrome";
 import { SectionDivider, SectionHeader } from "./PreviewSection";
 
 type TaskPreviewProps = {

@@ -1662,11 +1662,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     {/* Milestone-path discard confirmation. TaskCreateFooter
                         renders its own equivalent for the task path. */}
                     <ConfirmDialog
-                        cancelLabel="Keep editing"
-                        confirmLabel="Discard draft"
-                        description="Your title, description, and any other changes will be lost. This can't be undone."
+                        cancelLabel={t.tasks.createForm.discardKeepEditing}
+                        confirmLabel={t.tasks.createForm.discardConfirm}
+                        description={t.tasks.createForm.discardMilestoneBody}
                         open={showMilestoneDiscardConfirm}
-                        title="Discard this milestone draft?"
+                        title={t.tasks.createForm.discardMilestoneTitle}
                         destructive
                         onClose={() => setShowMilestoneDiscardConfirm(false)}
                         onConfirm={() => {

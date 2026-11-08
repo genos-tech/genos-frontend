@@ -56,6 +56,7 @@ import {
 } from "../../../components/editors/mentionPalettes";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
@@ -121,7 +122,7 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
 // Every other kind shows its colored icon disc — circular for a group,
 // rounded square for entities, the BlockNote menus' "some people" vs "a
 // thing" cue.
-const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
+const renderIdentity = (c: AgentMentionCandidate) => {
     if (c.ref.kind === "user") {
         // 36 on purpose: it must match `MentionIconDisc`, the sibling rows.
         return <BaseAvatar name={c.ref.label} size={36} src={buildAvatarSrc(c.avatarImgPath)} />;
@@ -129,7 +130,6 @@ const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
     return (
         <MentionIconDisc
             icon={kindIcon(c.ref)}
-            isDark={isDark}
             palette={kindPalette(c.ref)}
             shape={c.ref.kind === "group" ? "circle" : "rounded"}
         />
@@ -139,7 +139,7 @@ const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
 // The right-aligned slot, matching the editor rows: a task's status chip,
 // a group's member count, a person's custom status. Absent when the
 // candidate carries no such detail.
-const renderTrailing = (c: AgentMentionCandidate, isDark: boolean) => {
+const renderTrailing = (c: AgentMentionCandidate) => {
     if (c.ref.kind === "task") {
         // The table's StatusLabel, so a status reads
         // identically here, in the editor menu, and in the task surfaces.
@@ -151,7 +151,7 @@ const renderTrailing = (c: AgentMentionCandidate, isDark: boolean) => {
         return c.memberCount == null ? undefined : <MentionCountChip count={c.memberCount} />;
     }
     if (c.ref.kind === "user" && c.customStatus) {
-        return <MentionCustomStatus isDark={isDark} text={c.customStatus} />;
+        return <MentionCustomStatus text={c.customStatus} />;
     }
     return undefined;
 };
@@ -228,9 +228,6 @@ interface Props {
     // "above" for bottom-anchored inputs (chat-style agent mode),
     // "below" for top-anchored ones (Spotlight search mode).
     placement: "above" | "below";
-    // Spotlight renders on a translucent dark sheet where Joy's default
-    // surface tokens are illegible; the flag switches to its palette.
-    isDark?: boolean;
     // The listbox's accessible name. Required: it used to fall back to the
     // English "Mention suggestions", which every host that forgot it showed
     // in every language.
@@ -243,7 +240,6 @@ export const MentionSuggestionDropdown = ({
     onSelect,
     anchorRef,
     placement,
-    isDark = false,
     ariaLabel,
 }: Props) => {
     const { t } = useTranslation();
@@ -306,12 +302,13 @@ export const MentionSuggestionDropdown = ({
         return null;
     }
 
-    // Keyboard-selected / hover row backgrounds. Light mode mirrors the
-    // BlockNote menu exactly (brand-violet at 0.12 selected, 0.08 hover);
-    // dark mode uses a white overlay because a brand-violet wash is
-    // invisible on the dark Spotlight sheet.
-    const selectedBg = isDark ? "rgba(255,255,255,0.12)" : "rgba(var(--gp-brand-700-rgb), 0.12)";
-    const hoverBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(var(--gp-brand-700-rgb), 0.08)";
+    // Keyboard-selected / hover row backgrounds: the selected-row accent wash
+    // and the neutral hover fill, which are roles, so the same two rows read in
+    // every color theme and in both modes (the menu used to be switched by an
+    // `isDark` flag that only Spotlight passed, so the Ask modals' menu was
+    // always the light one).
+    const selectedBg = g.accent.subtle;
+    const hoverBg = g.hover;
 
     return createPortal(
         <Sheet
@@ -330,9 +327,9 @@ export const MentionSuggestionDropdown = ({
                 zIndex: DROPDOWN_Z_INDEX,
                 borderRadius: "8px",
                 border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.12)" : "divider",
-                background: isDark ? "#241a38" : undefined,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                borderColor: g.border.default,
+                background: g.surface.raised,
+                boxShadow: g.shadow.lg,
                 py: 0.5,
             }}
         >
@@ -365,11 +362,10 @@ export const MentionSuggestionDropdown = ({
                         }}
                     >
                         <MentionMenuRow
-                            identity={renderIdentity(c, isDark)}
-                            isDark={isDark}
+                            identity={renderIdentity(c)}
                             label={c.ref.label}
                             subtitle={kindSubtitle(t, c)}
-                            trailing={renderTrailing(c, isDark)}
+                            trailing={renderTrailing(c)}
                             trigger={c.trigger}
                             variant={c.ref.kind === "user" ? "person" : "entity"}
                             badge={

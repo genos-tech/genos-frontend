@@ -16,14 +16,15 @@ describe("task header in a modal host", () => {
     const modal = read("components/modals/UrlLinkModal.tsx");
     const header = read("features/tasks/components/contents/base/TaskTitleBlock.tsx");
     const milestone = read("features/tasks/components/contents/TaskPreview.tsx");
-    const chrome = read("features/tasks/components/contents/modalChrome.ts");
+    const chrome = read("components/ui/modal/modalChrome.ts");
 
     it("reserves at least the width of the dialog's two floating buttons", () => {
-        // Move to page sits at `right: 56`, 36px wide: its outer edge is 92px from the corner.
-        expect(modal).toMatch(/right: 56,/);
+        // The dialog publishes the room (MIP-1296: `--modal-chrome-clearance`, 112px with a
+        // mouse, 128px with the 44px touch buttons) and the header asks the cascade for it.
+        // The numbers behind it are pinned in ModalChromeMIP1296.test.tsx.
+        expect(chrome).toMatch(/MODAL_CHROME_CLEARANCE = "var\(--modal-chrome-clearance, 0px\)"/);
+        expect(modal).toMatch(/\.\.\.modalChromeVarsSx,/);
         expect(modal).toMatch(/size="md"/);
-        const clearance = Number(chrome.match(/MODAL_CHROME_CLEARANCE = "(\d+)px"/)![1]);
-        expect(clearance).toBeGreaterThanOrEqual(56 + 36);
         expect(header).toMatch(/isModalHosted && \{ pr: MODAL_CHROME_CLEARANCE \}/);
     });
 

@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
     Alert,
     Box,
@@ -8,6 +8,8 @@ import {
     FormLabel,
     Input,
     Option,
+    Radio,
+    RadioGroup,
     Select,
     Sheet,
     Stack,
@@ -16,6 +18,13 @@ import {
 } from "@mui/joy";
 
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
+import {
+    asEffortLevel,
+    chosenEffort,
+    costText,
+    EFFORT_LEVELS,
+    showsEffort,
+} from "../../../features/schedules/scheduleEffort";
 import {
     buildCreate,
     buildPatch,
@@ -39,6 +48,7 @@ import {
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
 import type {
+    EffortLevel,
     Schedule,
     ScheduleChange,
     ScheduleFields,
@@ -89,6 +99,12 @@ export const ScheduleFormPanel = ({
 }: Props) => {
     const { t, locale } = useTranslation();
     const s = t.settings.schedules;
+    const effortWords: Record<EffortLevel, string> = {
+        low: t.settings.llmModel.effortLow,
+        medium: t.settings.llmModel.effortMedium,
+        high: t.settings.llmModel.effortHigh,
+    };
+    const effortLabelId = useId();
 
     const [form, setForm] = useState<ScheduleForm>(() => {
         if (schedule) return formFromSchedule(schedule, jobs);
@@ -159,6 +175,8 @@ export const ScheduleFormPanel = ({
                 ...cur,
                 job: next,
                 params: {},
+                // A level chosen for the old report says nothing about the new one.
+                aiEffort: "",
                 name: follows ? (nextJob?.title ?? cur.name) : cur.name,
             };
         });
@@ -197,6 +215,27 @@ export const ScheduleFormPanel = ({
         setBusy(false);
         if (!res.ok) setFailure(res.error ?? (res.gone ? s.gone : s.saveFailed));
     };
+
+    // AI effort (MIP-1212). `chosen` is what the radio shows; the estimate is for the level a run
+    // would use, which differs from it only when the plan holds a saved choice lower.
+    const defaultLevel = asEffortLevel(job?.effortDefault);
+    const chosen = chosenEffort(job, form.aiEffort);
+    const held =
+        schedule &&
+        chosen &&
+        chosen === chosenEffort(job, schedule.aiEffort ?? "") &&
+        asEffortLevel(schedule.aiEffortEffective) &&
+        schedule.aiEffortEffective !== chosen
+            ? schedule.aiEffortEffective
+            : null;
+    const estimate = chosen ? costText(job?.effortCost, held ?? chosen) : null;
+    const costNote = !estimate
+        ? null
+        : estimate.kind === "tiny"
+          ? s.effortCostTiny
+          : estimate.kind === "about"
+            ? fmt(s.effortCostAbout, { credits: estimate.credits })
+            : fmt(s.effortCostRange, { from: estimate.from, to: estimate.to });
 
     return (
         <Sheet
@@ -283,7 +322,7 @@ export const ScheduleFormPanel = ({
                             const label =
                                 spec.title || (known ? s[known.label] : humanizeKey(key));
                             const hint =
-                                spec.description ||
+                                (known?.preferOwnHint ? null : spec.description) ||
                                 (known
                                     ? fmt(s[known.hint], { range })
                                     : kind === "integer" && range
@@ -294,6 +333,36 @@ export const ScheduleFormPanel = ({
                                       : null);
                             const setParam = (v: string) =>
                                 set("params", { ...form.params, [key]: v });
+                            if (kind === "boolean") {
+                                // Not set means the job's own default, which the catalog does not
+                                // state: the form knows it for the parameters it has words for.
+                                const raw = form.params[key] ?? "";
+                                const on =
+                                    raw === ""
+                                        ? (known?.boolean?.defaultOn ?? false)
+                                        : raw === "true";
+                                return (
+                                    <FormControl key={key} sx={{ minWidth: 0 }}>
+                                        <Box
+                                            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                                        >
+                                            <Switch
+                                                checked={on}
+                                                size="sm"
+                                                onChange={(e) =>
+                                                    setParam(e.target.checked ? "true" : "false")
+                                                }
+                                            />
+                                            <FormLabel sx={{ m: 0 }}>{label}</FormLabel>
+                                        </Box>
+                                        {hint && (
+                                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                                {hint}
+                                            </FormHelperText>
+                                        )}
+                                    </FormControl>
+                                );
+                            }
                             return (
                                 <FormControl
                                     key={key}
@@ -375,6 +444,54 @@ export const ScheduleFormPanel = ({
                             );
                         })}
                     </Stack>
+                )}
+
+                {showsEffort(job, form.params) && (
+                    <FormControl data-testid="schedule-effort" sx={{ minWidth: 0 }}>
+                        <FormLabel id={effortLabelId}>{s.effortLabel}</FormLabel>
+                        <RadioGroup
+                            aria-labelledby={effortLabelId}
+                            orientation="horizontal"
+                            sx={{ flexWrap: "wrap", gap: 1.5 }}
+                            value={chosen ?? ""}
+                            onChange={(e) => {
+                                const level = asEffortLevel(e.target.value);
+                                // The job's own level is "no choice", so the schedule keeps
+                                // following the job's default if that changes.
+                                if (level) set("aiEffort", level === defaultLevel ? "" : level);
+                            }}
+                        >
+                            {EFFORT_LEVELS.map((level) => (
+                                <Radio
+                                    key={level}
+                                    size="sm"
+                                    // A finger needs 44 px; the label is the hit area.
+                                    sx={{ alignItems: "center", minHeight: { xs: 44, md: 28 } }}
+                                    value={level}
+                                    label={
+                                        level === defaultLevel
+                                            ? fmt(s.effortDefaultMark, {
+                                                  level: effortWords[level],
+                                              })
+                                            : effortWords[level]
+                                    }
+                                />
+                            ))}
+                        </RadioGroup>
+                        {costNote && (
+                            <FormHelperText aria-live="polite" sx={{ color: g.text.secondary }}>
+                                {costNote}
+                            </FormHelperText>
+                        )}
+                        <FormHelperText sx={{ color: g.text.secondary }}>
+                            {s.effortHint}
+                        </FormHelperText>
+                        {held && (
+                            <FormHelperText data-testid="schedule-effort-held">
+                                {fmt(s.effortHeld, { level: effortWords[held] })}
+                            </FormHelperText>
+                        )}
+                    </FormControl>
                 )}
 
                 <Typography level="title-sm">{s.when}</Typography>

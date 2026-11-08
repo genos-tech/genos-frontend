@@ -429,6 +429,7 @@ export const fr: DeepPartial<Messages> = {
             setAlwaysOffline: "Toujours hors ligne",
             updateStatus: "Mettre à jour le statut",
             setStatusPlaceholder: "Définir votre statut…",
+            statusPresetsLabel: "Statuts prédéfinis",
             cancel: "ANNULER",
             reset: "RÉINITIALISER",
             set: "DÉFINIR",
@@ -2437,6 +2438,13 @@ export const fr: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "Déconnecter {provider} ?",
+                bodyGoogle:
+                    "Genos supprime l'accès enregistré à ce compte Google. Les fonctions d'agenda qui l'utilisent cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à Google.",
+                bodyGithub:
+                    "Genos supprime l'accès enregistré à ce compte GitHub. Les fonctions qui l'utilisent, comme les liens vers les pull requests, cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à GitHub.",
+            },
             primaryLogin: "Connexion principale",
             noEmailShared: "(aucun e-mail partagé)",
             notConnected: "Non connecté",
@@ -3390,6 +3398,13 @@ export const fr: DeepPartial<Messages> = {
                 allowDestructive:
                     "Autoriser aussi les actions irréversibles ou qui modifient les accès (supprimer des événements d'agenda, des jalons, des sprints, des notes et des dossiers de notes ; ajouter des personnes à des projets ou approuver leurs demandes d'adhésion ; partager des notes)",
                 destructiveChip: "Peut supprimer",
+                revokeDialog: {
+                    title: "Révoquer cette clé API ?",
+                    body: "Tout ce qui l'utilise cesse de fonctionner immédiatement, et une clé révoquée ne peut pas être réactivée. Créez une nouvelle clé si vous avez encore besoin d'un accès.",
+                    bodyTeam:
+                        "Tout ce qui utilise cette clé d'équipe cesse de fonctionner immédiatement, et une clé révoquée ne peut pas être réactivée. Son créateur devra en créer une nouvelle.",
+                    confirm: "Révoquer la clé",
+                },
             },
             teamKeys: {
                 title: "Clés API de l'équipe",
@@ -3451,6 +3466,12 @@ export const fr: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Ajouter un webhook",
                 delete: "Supprimer",
+                deleteNamed: "Supprimer {name}",
+                deleteDialog: {
+                    title: "Supprimer ce webhook ?",
+                    body: "Genos cesse d'envoyer des événements à cette URL. Son secret de signature est supprimé avec lui : ajouter de nouveau l'URL crée un nouveau secret.",
+                    confirm: "Supprimer le webhook",
+                },
                 empty: "Aucun webhook pour l'instant.",
                 disabled: "Désactivé après des échecs répétés",
                 managerOnly:
@@ -3899,6 +3920,18 @@ export const fr: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
             errorMilestone: "Choisissez un jalon.",
+            paramAiSentences: "Phrases de l'IA",
+            paramAiSentencesHint:
+                "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA. Désactivez-la pour un rapport simple.",
+            effortLabel: "Effort de l'IA",
+            effortDefaultMark: "{level} (par défaut)",
+            effortCostAbout: "Environ {credits} crédits par exécution. C'est une estimation.",
+            effortCostRange: "Environ {from} à {to} crédits par exécution. C'est une estimation.",
+            effortCostTiny: "Moins de 0.01 crédit par exécution. C'est une estimation.",
+            effortHint:
+                "Le degré d'effort de l'IA sur ce rapport. L'estimation vaut pour un rapport d'environ 10 tâches ; le chiffre réel est affiché sur chaque rapport.",
+            effortHeld: "Votre offre exécute cette planification au niveau « {level} ».",
+            rowEffort: "Effort de l'IA : {level}",
             duplicateSame:
                 "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",
             duplicateName:
@@ -4333,7 +4366,7 @@ export const fr: DeepPartial<Messages> = {
             chats: "Chats",
             tasks: "Tâches",
             notes: "Notes",
-            account: "Compte",
+            more: "Plus",
             integrations: "Intégrations",
             search: "Genos",
         },
@@ -4648,6 +4681,12 @@ export const fr: DeepPartial<Messages> = {
                 confirmButton: "Supprimer la tâche",
                 cancelButton: "Annuler",
             },
+            confirmDeletedStatus: {
+                title: "Supprimer cette tâche ?",
+                titleMilestone: "Supprimer ce jalon ?",
+                body: "Elle disparaît de toutes les listes, de tous les tableaux et du tableau de bord. Pour la récupérer, passez le tableau sur la vue Supprimée et donnez-lui un autre statut.",
+                bodyMilestone: "Il disparaît de toutes les listes et de tous les tableaux.",
+            },
             deleteComment: {
                 title: "Supprimer le commentaire ?",
                 body: "Cette action est irréversible",
@@ -4906,6 +4945,18 @@ export const fr: DeepPartial<Messages> = {
                 "Impossible de préparer une nouvelle tâche. Vérifiez votre connexion et réessayez.",
             bootstrapRetry: "Réessayer",
             bootstrapCancel: "Annuler",
+            discardTaskTitle: "Abandonner ce brouillon ?",
+            discardTaskBody:
+                "Le titre, le contenu et les pièces jointes seront perdus. Cette action est irréversible.",
+            discardMilestoneTitle: "Abandonner ce brouillon de jalon ?",
+            discardMilestoneBody:
+                "Le titre, la description et toutes les autres modifications seront perdus. Cette action est irréversible.",
+            discardConfirm: "Abandonner le brouillon",
+            discardKeepEditing: "Continuer la modification",
+            closeDraftTitle: "Fermer ce brouillon ?",
+            closeDraftBody:
+                "Vous pouvez abandonner vos modifications, masquer le formulaire (le brouillon est enregistré pour reprendre plus tard) ou continuer à modifier.",
+            closeDraftHide: "Masquer (enregistrer le brouillon)",
             description: "Description",
             attachments: "Pièces jointes",
             templates: {
@@ -5540,7 +5591,9 @@ export const fr: DeepPartial<Messages> = {
             overdueCount: "{count} en retard",
             dueSoonCount: "{count} bientôt disponible",
             blockedCount: "{count} bloqué",
-            confirmDelete: "Supprimer cette tâche et toutes ses sous-tâches ?",
+            confirmDelete: "Supprimer cette tâche ?",
+            confirmDeleteBody:
+                "Elle sera marquée comme supprimée. Ses sous-tâches sont conservées, mais ne comptent plus dans les statistiques.",
             errors: {
                 load: "Impossible de charger le graphique des tâches.",
                 update: "La mise à jour a échoué.",

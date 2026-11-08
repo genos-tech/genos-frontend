@@ -113,6 +113,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* More Options Menu */}
             <Dropdown>
                 <MenuButton
+                    aria-label={t.common.ui.moreMenu.ariaLabel}
                     slots={{ root: IconButton }}
                     slotProps={{
                         root: {

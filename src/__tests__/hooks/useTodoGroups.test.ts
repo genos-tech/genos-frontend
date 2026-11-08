@@ -326,6 +326,52 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
         expect(result.current.reminderByItemId.has(2)).toBe(false);
     });
 
+    it("drops a deleted parent's children and their reminders with it (MIP-1304)", async () => {
+        deleteTodoItemMock.mockResolvedValue(true);
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        loadTodoRemindersMock.mockResolvedValue([reminder, { ...reminder, id: "r-3", itemId: 3 }]);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        expect(result.current.reminderByItemId.size).toBe(2);
+
+        await act(async () => {
+            await result.current.removeItem(1);
+        });
+
+        // Parent 1 and its sub-items 2 and 3 are gone; the unrelated item 4 stays.
+        expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([4]);
+        expect(result.current.reminderByItemId.size).toBe(0);
+        expect(deleteTodoItemMock).toHaveBeenCalledTimes(1);
+        expect(deleteTodoItemMock.mock.calls[0][1]).toBe(1);
+    });
+
+    it("a refused delete brings back the rows and every reminder it dropped (MIP-1304)", async () => {
+        deleteTodoItemMock.mockResolvedValue(false);
+        const reminders = [reminder, { ...reminder, id: "r-3", itemId: 3 }];
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        loadTodoRemindersMock.mockResolvedValue(reminders);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+
+        await act(async () => {
+            await result.current.removeItem(1);
+        });
+
+        expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([1, 2, 3, 4]);
+        expect([...result.current.reminderByItemId.keys()].sort()).toEqual([2, 3]);
+    });
+
+    it("deleting one sub-item leaves its parent and siblings (MIP-1304)", async () => {
+        deleteTodoItemMock.mockResolvedValue(true);
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        await act(async () => {
+            await result.current.removeItem(2);
+        });
+        expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([1, 3, 4]);
+    });
+
     it("restores the row's reminder when a cancel is refused", async () => {
         cancelTodoReminderMock.mockRejectedValue(new Error("500"));
         const { result } = await bootWithReminder();

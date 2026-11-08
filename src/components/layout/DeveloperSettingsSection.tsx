@@ -45,7 +45,14 @@ import {
 } from "../../services/developerApi";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
+import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { SecurityLogSection } from "./SecurityLogSection";
+
+/** What a revoke / delete is waiting on a yes for (MIP-1301). One dialog serves all three. */
+type PendingRemoval =
+    | { kind: "key"; id: string; name: string }
+    | { kind: "teamKey"; id: string; name: string }
+    | { kind: "webhook"; id: string; name: string };
 
 type Props = {
     /** Team the webhook half operates on. API keys are per-user, so the
@@ -94,6 +101,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const [keyAllowDestructive, setKeyAllowDestructive] = useState(false);
     const [keyBusy, setKeyBusy] = useState(false);
 
+    const [pendingRemoval, setPendingRemoval] = useState<PendingRemoval | null>(null);
     const [hookUrl, setHookUrl] = useState("");
     const [hookEvents, setHookEvents] = useState<string[]>([WEBHOOK_EVENTS[0]]);
     const [hookError, setHookError] = useState<string | null>(null);
@@ -204,6 +212,20 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
         k.expiresAt
             ? fmt(d.keys.expiresOn, { date: new Date(k.expiresAt).toLocaleDateString(locale) })
             : d.keys.neverExpires;
+
+    // The wording of the open confirm: a key says "revoke", a webhook "delete".
+    const removalCopy =
+        pendingRemoval?.kind === "webhook"
+            ? d.webhooks.deleteDialog
+            : pendingRemoval
+              ? {
+                    ...d.keys.revokeDialog,
+                    body:
+                        pendingRemoval.kind === "teamKey"
+                            ? d.keys.revokeDialog.bodyTeam
+                            : d.keys.revokeDialog.body,
+                }
+              : null;
 
     return (
         <Stack spacing={3}>
@@ -359,12 +381,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                             </Chip>
                             <AppTooltip title={d.keys.revoke}>
                                 <IconButton
+                                    aria-label={fmt(d.teamKeys.revokeNamed, { name: k.name })}
+                                    color="danger"
                                     size="sm"
                                     variant="plain"
-                                    color="danger"
-                                    onClick={async () => {
-                                        if (await revokeApiKey(accessToken, k.id)) void refresh();
-                                    }}
+                                    onClick={() =>
+                                        setPendingRemoval({ kind: "key", id: k.id, name: k.name })
+                                    }
                                 >
                                     <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
@@ -433,10 +456,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                         variant="plain"
                                         color="danger"
                                         aria-label={fmt(d.teamKeys.revokeNamed, { name: k.name })}
-                                        onClick={async () => {
-                                            if (await revokeTeamApiKey(accessToken, teamId, k.id))
-                                                void refresh();
-                                        }}
+                                        onClick={() =>
+                                            setPendingRemoval({
+                                                kind: "teamKey",
+                                                id: k.id,
+                                                name: k.name,
+                                            })
+                                        }
                                     >
                                         <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
@@ -649,12 +675,17 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                             )}
                             <AppTooltip title={d.webhooks.delete}>
                                 <IconButton
+                                    aria-label={fmt(d.webhooks.deleteNamed, { name: h.url })}
+                                    color="danger"
                                     size="sm"
                                     variant="plain"
-                                    color="danger"
-                                    onClick={async () => {
-                                        if (await deleteWebhook(accessToken, h.id)) void refresh();
-                                    }}
+                                    onClick={() =>
+                                        setPendingRemoval({
+                                            kind: "webhook",
+                                            id: h.id,
+                                            name: h.url,
+                                        })
+                                    }
                                 >
                                     <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
@@ -663,6 +694,37 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     </Sheet>
                 ))}
             </Stack>
+
+            {/* Revoke and delete take effect at once and have no undo (the key's
+                token is checked on every request; a webhook's signing secret goes
+                with it), so each asks first (MIP-1301). */}
+            {pendingRemoval && removalCopy && (
+                <ConfirmDialog
+                    cancelLabel={t.common.actions.cancel}
+                    confirmLabel={removalCopy.confirm}
+                    description={removalCopy.body}
+                    entityName={pendingRemoval.name}
+                    title={removalCopy.title}
+                    closeOnConfirm
+                    destructive
+                    open
+                    onClose={() => setPendingRemoval(null)}
+                    onConfirm={async () => {
+                        const target = pendingRemoval;
+                        const done =
+                            target.kind === "key"
+                                ? await revokeApiKey(accessToken, target.id)
+                                : target.kind === "teamKey"
+                                  ? teamId != null &&
+                                    (await revokeTeamApiKey(accessToken, teamId, target.id))
+                                  : await deleteWebhook(accessToken, target.id);
+                        // A refusal stays in the dialog with a message; a plain `false`
+                        // would keep it open and say nothing.
+                        if (!done) throw new Error(t.common.errors.generic);
+                        void refresh();
+                    }}
+                />
+            )}
         </Stack>
     );
 };

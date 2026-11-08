@@ -11,7 +11,7 @@ import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersist
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
-import { getMessages } from "../../../../../i18n";
+import { getMessages, useTranslation } from "../../../../../i18n";
 import { shortcutText } from "../../../../../shortcuts";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
@@ -82,6 +82,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
         } = props;
 
         const { mode } = useColorScheme();
+        const { t } = useTranslation();
         const isDark = mode === "dark";
         const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
@@ -261,11 +262,11 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                 </Button>
 
                 <ConfirmDialog
-                    cancelLabel="Keep editing"
-                    confirmLabel="Discard draft"
-                    description="Your title, body, and attachments will be lost. This can't be undone."
+                    cancelLabel={t.tasks.createForm.discardKeepEditing}
+                    confirmLabel={t.tasks.createForm.discardConfirm}
+                    description={t.tasks.createForm.discardTaskBody}
                     open={showDiscardConfirm}
-                    title="Discard this draft?"
+                    title={t.tasks.createForm.discardTaskTitle}
                     destructive
                     onClose={() => setShowDiscardConfirm(false)}
                     onConfirm={confirmDiscard}

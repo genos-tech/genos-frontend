@@ -6,9 +6,10 @@ export const sidebar = {
         chats: "Chats",
         tasks: "Tasks",
         notes: "Notes",
-        // Mobile-only: the BottomTabBar's Account tab (opens the account
-        // sheet). The desktop sidebar has no equivalent nav entry.
-        account: "Account",
+        // Mobile-only: the BottomTabBar's last tab (opens the "More" sheet:
+        // To-Do, History, team, theme, settings, sign out). The desktop
+        // sidebar has no equivalent nav entry.
+        more: "More",
         integrations: "Integrations",
         // Label for the Genos page entry in the sidebar. The AI-agent
         // surface does far more than search, so it carries the product

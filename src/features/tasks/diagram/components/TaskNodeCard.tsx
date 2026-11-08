@@ -22,6 +22,8 @@ import {
 } from "../../components/card";
 import { PriorityIcon } from "../../components/meta/PriorityIcon";
 import { StatusLabel } from "../../components/meta/StatusLabel";
+import { ConfirmDeletedStatus } from "../../components/modals/ConfirmDeletedStatus";
+import { isDeletingStatus } from "../../utils/deletedStatus";
 import { statuses } from "../../utils/taskMeta";
 import { useDiagramZIndex } from "../diagramZIndex";
 import { TaskNodeData } from "../types";
@@ -90,6 +92,10 @@ export const TaskNodeView = ({
     const [editing, setEditing] = useState(false);
     const [dateEditorOpen, setDateEditorOpen] = useState(false);
     const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+    const [pendingDeleted, setPendingDeleted] = useState<{
+        status: string;
+        code: number | null;
+    } | null>(null);
 
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const scheduleLabel = useScheduleLabel(schedule, task.status);
@@ -187,6 +193,11 @@ export const TaskNodeView = ({
                                     selected={s.status === task.status}
                                     onClick={() => {
                                         if (s.status === task.status || s.status == null) return;
+                                        // "Deleted" asks first (MIP-1301).
+                                        if (isDeletingStatus(s.status, task.status)) {
+                                            setPendingDeleted({ status: s.status, code: s.code });
+                                            return;
+                                        }
                                         void onChange({ status: s.status, statusCode: s.code });
                                     }}
                                 >
@@ -399,6 +410,21 @@ export const TaskNodeView = ({
                         void onChange(patch);
                         setDateEditorOpen(false);
                     }}
+                />
+            )}
+            {pendingDeleted && (
+                <ConfirmDeletedStatus
+                    entityName={task.title ?? undefined}
+                    // The graph is itself a modal; the confirm takes its layer from it.
+                    hostZIndex={popupZIndex - 1}
+                    open
+                    onClose={() => setPendingDeleted(null)}
+                    onConfirm={() =>
+                        void onChange({
+                            status: pendingDeleted.status,
+                            statusCode: pendingDeleted.code,
+                        })
+                    }
                 />
             )}
         </TaskCardFrame>

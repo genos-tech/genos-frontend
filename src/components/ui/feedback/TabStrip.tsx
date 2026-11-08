@@ -22,6 +22,9 @@ import { focusRing, g, type } from "../../../theme/tokens";
  * touch affordance (`aria-hidden`), the keyboard path is Delete on the tab
  * (`aria-keyshortcuts`), and screen-reader browse mode gets real "Close
  * <title>" buttons in a visually hidden group after the strip (MIP-1173).
+ * Touch screen readers (iOS VoiceOver has no Delete key) reach those buttons by
+ * swiping; when one takes focus it is UNCLIPPED and drawn at the strip's end as a
+ * labelled button, so the cursor lands on something that can be seen (MIP-1242).
  *
  * It does not render the panels; the caller shows the content for `value`.
  * Give each tab a `panelId` and the panel `role="tabpanel"` with that id to
@@ -61,6 +64,46 @@ type TabStripProps = {
     /** Draw the baseline under the whole strip. Default true. */
     baseline?: boolean;
 };
+
+// The hidden "Close <title>" button: a pixel until focused, then a visible, labelled
+// button over the strip's end. `:focus`, not `:focus-visible`: a screen reader moves
+// focus programmatically, which the browser does not count as keyboard focus.
+const closeButtonSx = {
+    all: "unset",
+    boxSizing: "border-box",
+    position: "absolute",
+    insetBlockStart: 0,
+    insetInlineEnd: 0,
+    width: "1px",
+    height: "1px",
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0 0 0 0)",
+    whiteSpace: "nowrap",
+    pointerEvents: "none",
+    "&:focus": {
+        width: "auto",
+        maxWidth: "min(280px, 80vw)",
+        height: "100%",
+        margin: 0,
+        px: 1.5,
+        display: "inline-flex",
+        alignItems: "center",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        clip: "auto",
+        pointerEvents: "auto",
+        zIndex: 2,
+        cursor: "pointer",
+        background: g.surface.raised,
+        color: g.text.primary,
+        border: `1px solid ${g.border.strong}`,
+        borderRadius: g.radius.sm,
+        boxShadow: g.shadow.md,
+        ...type("body-sm"),
+        ...focusRing,
+    },
+} as const;
 
 export const TabStrip = ({
     tabs,
@@ -320,28 +363,36 @@ export const TabStrip = ({
                 <Box
                     aria-label={closeLabel}
                     role="group"
+                    // Out of the way, not out of the page: each button below is clipped to a
+                    // pixel until it takes focus (see `closeButtonSx`).
                     sx={{
                         position: "absolute",
-                        width: 1,
-                        height: 1,
-                        overflow: "hidden",
-                        clip: "rect(0 0 0 0)",
-                        whiteSpace: "nowrap",
+                        insetBlock: 0,
+                        insetInlineEnd: 0,
+                        width: 0,
+                        pointerEvents: "none",
                     }}
                 >
-                    {closables.map((tab) => (
-                        <button
-                            key={tab.id}
-                            tabIndex={-1}
-                            type="button"
-                            aria-label={
-                                typeof tab.title === "string" && tab.title
-                                    ? `${closeLabel}: ${tab.title}`
-                                    : closeLabel
-                            }
-                            onClick={() => closeAndHandOff(tab.id)}
-                        />
-                    ))}
+                    {closables.map((tab) => {
+                        const name =
+                            typeof tab.title === "string" && tab.title
+                                ? `${closeLabel}: ${tab.title}`
+                                : closeLabel;
+                        return (
+                            <Box
+                                key={tab.id}
+                                component="button"
+                                data-tab-close-button={tab.id}
+                                sx={closeButtonSx}
+                                tabIndex={-1}
+                                type="button"
+                                onClick={() => closeAndHandOff(tab.id)}
+                            >
+                                {/* The visible text is the accessible name (WCAG 2.5.3). */}
+                                {name}
+                            </Box>
+                        );
+                    })}
                 </Box>
             )}
         </Box>

@@ -1,3 +1,5 @@
+import { g } from "../../theme/tokens";
+
 // Per-entity color palettes for every mention/hash surface — the ONE
 // source of truth for "what color is a task vs a note vs a user".
 //
@@ -5,8 +7,8 @@
 // files value-import `@blocknote/react` (the heavy editor runtime), and
 // the agent-input mention dropdown — which is in Spotlight's initial
 // entry chunk — needs these colors WITHOUT dragging BlockNote into that
-// chunk. This module imports nothing, so any surface can read the
-// palettes for free. Mention.tsx / HashMention.tsx re-export them so
+// chunk. This module imports only the token map (a table of CSS variable
+// names), so any surface can read the palettes for free. Mention.tsx / HashMention.tsx re-export them so
 // their existing consumers (e.g. LightMessageBody) are unchanged.
 //
 // A `MentionPalette` is a translucent background (`bg`), a stronger
@@ -77,16 +79,17 @@ export const TODO_PALETTE: MentionPalette = {
 };
 
 /**
- * A palette's foreground, corrected for a dark ground.
+ * A palette's foreground icon color.
  *
  * The violet palettes (note, todo) resolve `text` to the brand var, which
- * blends into a dark surface — the Spotlight sheet, a dark-mode to-do row —
- * so it swaps up the ramp to the lighter alt stop, the app-wide dark
- * convention (`isDark ? brandalt-400 : brand-700`). Every other palette
- * uses a hardcoded hex that is legible on both grounds and passes through.
+ * blends into a dark surface, so they take the accent AS TEXT instead: the
+ * role the theme guarantees readable on its surfaces in both modes (it used to
+ * be a per-caller `isDark` swap to the lighter alt stop, which the editor menus
+ * never passed). Every other palette uses a hardcoded hex that is legible on
+ * both grounds and passes through.
  *
  * Lives here rather than in each surface because three of them had grown
  * their own copy of the same substring test.
  */
-export const mentionIconColor = (palette: MentionPalette, isDark?: boolean): string =>
-    isDark && palette.text.includes("--gp-brand-700") ? "var(--gp-brandalt-400)" : palette.text;
+export const mentionIconColor = (palette: MentionPalette): string =>
+    palette.text.includes("--gp-brand-700") ? g.accent.text : palette.text;

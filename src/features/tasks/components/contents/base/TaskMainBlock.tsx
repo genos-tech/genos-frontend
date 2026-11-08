@@ -909,6 +909,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <ACTaskStatus
+                                        hostZIndex={hostZIndex}
                                         setTaskContent={setTaskContent}
                                         setTaskStatusUpdated={setTaskStatusUpdated}
                                         setTaskUpdated={setTaskUpdated}

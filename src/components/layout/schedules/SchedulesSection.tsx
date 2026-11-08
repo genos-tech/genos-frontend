@@ -7,6 +7,7 @@ import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui
 import { useAuth } from "../../../context/AuthContext";
 import { runScheduleAndAnnounce } from "../../../features/schedules/runScheduleAndAnnounce";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
+import { rowEffort } from "../../../features/schedules/scheduleEffort";
 import {
     formatMoment,
     STATUS_KEYS,
@@ -83,6 +84,11 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const s = t.settings.schedules;
+    const effortWords = {
+        low: t.settings.llmModel.effortLow,
+        medium: t.settings.llmModel.effortMedium,
+        high: t.settings.llmModel.effortHigh,
+    };
 
     const [data, setData] = useState<ScheduleList | null>(null);
     const [loading, setLoading] = useState(true);
@@ -451,6 +457,10 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                     return <Box key={sch.id}>{form(sch)}</Box>;
                 }
                 const notice = notices[sch.id];
+                const effort = rowEffort(
+                    data?.jobs.find((j) => j.job === sch.job),
+                    sch
+                );
                 const rowBusy = busy === sch.id;
                 return (
                     <Sheet
@@ -486,6 +496,11 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                             <Typography level="body-sm" sx={{ overflowWrap: "anywhere" }}>
                                 {sch.when}
                             </Typography>
+                            {effort && (
+                                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                    {fmt(s.rowEffort, { level: effortWords[effort] })}
+                                </Typography>
+                            )}
                             {!sch.enabled && sch.pausedReason && (
                                 <Typography
                                     level="body-xs"

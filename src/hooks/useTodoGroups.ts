@@ -219,13 +219,16 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         [accessToken, myself, upsertItem]
     );
 
+    // The server deletes a to-do's sub-items with it (a hard delete, nesting is one
+    // level), so the screen must drop them too: removing only the row left its
+    // children on screen until the next reload (MIP-1304).
     const removeItemLocally = useCallback((itemId: number) => {
         setGroups((prev) =>
             prev.map((g) => {
                 if (!g.items.some((i) => i.itemId === itemId)) return g;
                 return recomputeGroupCompletion({
                     ...g,
-                    items: g.items.filter((i) => i.itemId !== itemId),
+                    items: g.items.filter((i) => i.itemId !== itemId && i.parentItemId !== itemId),
                 });
             })
         );
@@ -419,16 +422,27 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
 
     const removeItem = useCallback(
         async (itemId: number): Promise<boolean> => {
+            // Read the children BEFORE they are removed: their reminders go too.
+            const childIds = groupsRef.current
+                .flatMap((g) => g.items)
+                .filter((i) => i.parentItemId === itemId)
+                .map((i) => i.itemId);
             removeItemLocally(itemId);
             // The server cascades the reminder away with the row; without
             // this the map would keep a reminder for a to-do that no longer
             // exists, and its sweep timer would keep re-arming for it.
             dropReminderLocally(itemId);
+            for (const childId of childIds) dropReminderLocally(childId);
             const ok = await deleteTodoItem(accessToken, itemId);
             if (!ok) {
-                // Reload on failure since we have no snapshot for revert.
-                const fresh = await loadTodoGroups(myself, accessToken);
+                // Reload on failure since we have no snapshot for revert. The reminders
+                // dropped above (the row's and its children's) come back with it.
+                const [fresh, reminders] = await Promise.all([
+                    loadTodoGroups(myself, accessToken),
+                    loadTodoReminders(accessToken),
+                ]);
                 if (fresh) setGroups(fresh);
+                if (reminders) setReminderByItemId(new Map(reminders.map((r) => [r.itemId, r])));
             }
             return ok;
         },

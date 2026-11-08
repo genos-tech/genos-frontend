@@ -421,6 +421,7 @@ export const ja: DeepPartial<Messages> = {
             setAlwaysOffline: "常にオフラインにする",
             updateStatus: "ステータスを更新",
             setStatusPlaceholder: "ステータスを設定…",
+            statusPresetsLabel: "ステータスのプリセット",
             cancel: "キャンセル",
             reset: "リセット",
             set: "設定",
@@ -2418,6 +2419,13 @@ export const ja: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "{provider} を切断しますか？",
+                bodyGoogle:
+                    "Genos はこの Google アカウントの保存済みアクセス権を削除します。再び接続するまで、それを使うカレンダー機能は動作しません。再接続には Google でもう一度サインインする必要があります。",
+                bodyGithub:
+                    "Genos はこの GitHub アカウントの保存済みアクセス権を削除します。再び接続するまで、プルリクエストのリンクなど、それを使う機能は動作しません。再接続には GitHub でもう一度サインインする必要があります。",
+            },
             primaryLogin: "プライマリログイン",
             noEmailShared: "(メールは共有されません)",
             notConnected: "連携されていません",
@@ -3348,6 +3356,13 @@ export const ja: DeepPartial<Messages> = {
                 allowDestructive:
                     "取り消せない操作や、アクセス権を変更する操作（カレンダーの予定・マイルストーン・スプリント・ノート・ノートフォルダの削除、プロジェクトへのメンバー追加と参加リクエストの承認、ノートの共有）も許可する",
                 destructiveChip: "削除可",
+                revokeDialog: {
+                    title: "この API キーを取り消しますか？",
+                    body: "このキーを使っているものはすぐに動作しなくなり、取り消したキーを元に戻すことはできません。まだアクセスが必要な場合は、新しいキーを作成してください。",
+                    bodyTeam:
+                        "このチームキーを使っているものはすぐに動作しなくなり、取り消したキーを元に戻すことはできません。作成者は新しいキーを作成する必要があります。",
+                    confirm: "キーを取り消す",
+                },
             },
             teamKeys: {
                 title: "チームの API キー",
@@ -3409,6 +3424,12 @@ export const ja: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Webhook を追加する",
                 delete: "消去",
+                deleteNamed: "{name} を削除",
+                deleteDialog: {
+                    title: "この Webhook を削除しますか？",
+                    body: "Genos はこの URL へのイベント送信を停止します。署名シークレットも一緒に削除されるため、同じ URL をもう一度追加すると新しいシークレットが作られます。",
+                    confirm: "Webhook を削除",
+                },
                 empty: "Webhook はまだありません。",
                 disabled: "失敗を繰り返すと無効化される",
                 managerOnly: "Webhook を追加できるのは、チームのオーナーまたは編集者のみです。",
@@ -3848,6 +3869,18 @@ export const ja: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
             errorMilestone: "マイルストーンを選択してください。",
+            paramAiSentences: "AI による一文",
+            paramAiSentencesHint:
+                "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",
+            effortLabel: "AI の Effort",
+            effortDefaultMark: "{level}（既定）",
+            effortCostAbout: "1 回の実行あたり約 {credits} クレジット。これは見積もりです。",
+            effortCostRange: "1 回の実行あたり約 {from}〜{to} クレジット。これは見積もりです。",
+            effortCostTiny: "1 回の実行あたり 0.01 クレジット未満。これは見積もりです。",
+            effortHint:
+                "このレポートで AI がどれだけ深く考えるかです。見積もりはタスク約 10 件のレポートの場合で、実際の数値は各レポートに表示されます。",
+            effortHeld: "ご利用のプランでは、このスケジュールは「{level}」で実行されます。",
+            rowEffort: "AI の Effort：{level}",
             duplicateSame: "同じ時刻に同じ内容を行うスケジュールがすでにあります：{name}。",
             duplicateName:
                 "「{name}」という名前のスケジュールがすでにあります。別の名前を付けてください。",
@@ -4274,7 +4307,7 @@ export const ja: DeepPartial<Messages> = {
             chats: "チャット",
             tasks: "タスク",
             notes: "ノート",
-            account: "アカウント",
+            more: "その他",
             integrations: "連携",
             search: "Genos",
         },
@@ -4586,6 +4619,12 @@ export const ja: DeepPartial<Messages> = {
                 confirmButton: "タスクを削除",
                 cancelButton: "キャンセル",
             },
+            confirmDeletedStatus: {
+                title: "このタスクを削除しますか？",
+                titleMilestone: "このマイルストーンを削除しますか？",
+                body: "すべてのリスト、ボード、ダッシュボードから消えます。元に戻すには、テーブルを「Deleted」ビューに切り替えて、別のステータスを選んでください。",
+                bodyMilestone: "すべてのリストとボードから消えます。",
+            },
             deleteComment: {
                 title: "コメントを削除しますか？",
                 body: "この操作は取り消せません",
@@ -4842,6 +4881,18 @@ export const ja: DeepPartial<Messages> = {
                 "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
             bootstrapRetry: "再試行",
             bootstrapCancel: "キャンセル",
+            discardTaskTitle: "この下書きを破棄しますか?",
+            discardTaskBody:
+                "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",
+            discardMilestoneTitle: "このマイルストーンの下書きを破棄しますか?",
+            discardMilestoneBody:
+                "タイトル、説明、その他の変更は失われます。この操作は取り消せません。",
+            discardConfirm: "下書きを破棄",
+            discardKeepEditing: "編集を続ける",
+            closeDraftTitle: "この下書きを閉じますか?",
+            closeDraftBody:
+                "変更を破棄するか、フォームを非表示にする(下書きは保存され、後で再開できます)か、編集を続けることができます。",
+            closeDraftHide: "非表示(下書きを保存)",
             description: "説明",
             attachments: "添付ファイル",
             templates: {
@@ -5476,7 +5527,9 @@ export const ja: DeepPartial<Messages> = {
             overdueCount: "{count} 締切切れ",
             dueSoonCount: "{count} まもなく終了予定",
             blockedCount: "{count} がブロックされました",
-            confirmDelete: "このタスクとそのすべてのサブタスクを削除しますか?",
+            confirmDelete: "このタスクを削除しますか?",
+            confirmDeleteBody:
+                "削除済みとして扱われます。サブタスクは残りますが、統計には含まれなくなります。",
             errors: {
                 load: "タスクグラフを読み込めませんでした。",
                 update: "アップデートに失敗しました。",
