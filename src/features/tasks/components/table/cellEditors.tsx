@@ -392,8 +392,8 @@ export const CellTextInput = ({
 
 const dateFieldSx = {
     // A date column is ~110px wide: "yyyy/mm/dd" and the picker icon must both fit.
-    fontSize: "0.8rem",
-    "--Input-paddingInline": "6px",
+    fontSize: "0.7rem",
+    "--Input-paddingInline": "3px",
     "& input": { colorScheme: "light", minWidth: 0 },
     '[data-joy-color-scheme="dark"] & input': { colorScheme: "dark" },
     "& input::-webkit-calendar-picker-indicator": {
@@ -401,6 +401,7 @@ const dateFieldSx = {
         margin: 0,
         marginInlineStart: "2px",
         padding: 0,
+        width: 12,
     },
 } as const;
 
