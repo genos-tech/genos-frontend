@@ -103,4 +103,14 @@ describe("NoteTabStrip", () => {
         expect(onCloseTab).toHaveBeenCalledWith(1, 12);
         expect(onSelect).not.toHaveBeenCalled();
     });
+
+    it("closing from the screen-reader button hands focus to a neighbouring tab", async () => {
+        mount(0);
+        const label = getMessages().notes.tabs.closeTab;
+        const buttons = screen.getAllByRole("button", { name: new RegExp(`^${label}: `) });
+        fireEvent.click(buttons[0]);
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        expect(document.activeElement?.getAttribute("role")).toBe("tab");
+        expect(document.activeElement?.getAttribute("data-tab-id")).not.toBeNull();
+    });
 });

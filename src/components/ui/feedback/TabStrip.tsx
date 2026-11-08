@@ -113,20 +113,24 @@ export const TabStrip = ({
                 ?.focus();
         });
 
+    // The closed tab's node is about to go; hand focus to its neighbour
+    // instead of letting it fall to <body>.
+    const closeAndHandOff = (id: string) => {
+        onClose?.(id);
+        const at = tabs.findIndex((t) => t.id === id);
+        const neighbour = [...tabs.slice(at + 1), ...tabs.slice(0, at).reverse()].find(
+            (t) => !t.disabled
+        );
+        if (neighbour) focusTab(neighbour.id);
+    };
+
     const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === "Delete" && onClose) {
             const focused = (e.target as HTMLElement).closest<HTMLElement>("[data-tab-id]");
             const tab = tabs.find((t) => t.id === focused?.dataset.tabId);
             if (tab?.closable) {
                 e.preventDefault();
-                onClose(tab.id);
-                // The closed tab's node is about to go; hand focus to its
-                // neighbour instead of letting it fall to <body>.
-                const at = tabs.findIndex((t) => t.id === tab.id);
-                const neighbour = [...tabs.slice(at + 1), ...tabs.slice(0, at).reverse()].find(
-                    (t) => !t.disabled
-                );
-                if (neighbour) focusTab(neighbour.id);
+                closeAndHandOff(tab.id);
             }
             return;
         }
@@ -335,7 +339,7 @@ export const TabStrip = ({
                                     ? `${closeLabel}: ${tab.title}`
                                     : closeLabel
                             }
-                            onClick={() => onClose?.(tab.id)}
+                            onClick={() => closeAndHandOff(tab.id)}
                         />
                     ))}
                 </Box>
