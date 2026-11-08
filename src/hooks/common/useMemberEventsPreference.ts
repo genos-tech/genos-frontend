@@ -6,12 +6,13 @@ import { authApi } from "../../services/api";
 const PREF_URL = "/user/preferences/member-events/";
 
 /**
- * "Notice what my AI apps open" — `CustomUser.member_events_enabled`.
+ * "Note my activity" — `CustomUser.member_events_enabled`.
  *
  * Server-backed (GET/PATCH `/user/preferences/member-events/`), account-wide, and
  * ON by default. When on, Genos notes which tasks, notes and projects the
- * person's connected AI apps open or change over MCP: references only, never
- * text, visible only to them, kept 180 days. Turning it OFF makes the server
+ * person's connected AI apps open or change over MCP, and the changes of their own
+ * that nothing else saves (collaborators, dependencies, to-do edits, note shares):
+ * references only, never text, visible only to them, kept 180 days. Turning it OFF makes the server
  * delete everything noted.
  *
  * Not optimistic, for the same reason as `useShareAnswersPreference`: the OFF
