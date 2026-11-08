@@ -192,11 +192,33 @@ describe("generated themes", () => {
         expect(new Set(lights).size).toBe(THEME_IDS.length);
     });
 
+    it("a theme is brand data only: no neutral or status literal is left in the palette file", () => {
+        // They were superseded by the design roles in MIP-1118 and deleted in MIP-1146; reading one
+        // would paint a purple-tinted neutral or a magenta "danger" again.
+        for (const id of THEME_IDS) {
+            const t = THEME_PRIMITIVES[id] as unknown as Record<string, Record<string, unknown>>;
+            for (const mode of ["dark", "light"]) {
+                expect(Object.keys(t[mode]).sort()).toEqual([
+                    "accent",
+                    "accentMuted",
+                    "accentMutedRgb",
+                    "accentRgb",
+                    "accentSoft",
+                    "accentSoftRgb",
+                    "accentStrong",
+                ]);
+            }
+            expect(Object.keys(t)).not.toContain("tintDanger");
+        }
+    });
+
     it("emits only parseable colors — no var() leaks into a theme block", () => {
         // A primitive holding a `var()` would be a definition cycle and,
         // worse, would reach Joy's `extendTheme` where it can't be parsed.
         for (const id of THEME_IDS) {
             const t = THEME_PRIMITIVES[id];
+            // Neutrals are no longer theme data (MIP-1146): they are the resolved overlay's.
+            const resolved = resolvedPrimitives(id);
             const scalars = [
                 t.gradFrom,
                 t.gradTo,
@@ -204,8 +226,8 @@ describe("generated themes", () => {
                 ...Object.values(t.altRamp),
                 t.dark.accent,
                 t.light.accent,
-                t.dark.bg,
-                t.light.bg,
+                resolved.dark.bg,
+                resolved.light.bg,
             ];
             for (const v of scalars) {
                 expect(v, `${id}: ${v}`).toMatch(/^#[0-9a-f]{6}$/i);

@@ -1,12 +1,11 @@
 /**
- * The theme primitives the app actually paints with (MIP-1118).
+ * The theme primitives the app actually paints with (MIP-1118, MIP-1146).
  *
- * `themePalettes.ts` still holds a full set of per-theme primitives, but
- * its NEUTRAL fields (backgrounds, surfaces, text) and STATUS fields
- * (danger / success / warning) are the old purple-tinted ones. The design
- * system replaces them: neutrals come from `buildRoles` and status hues are
- * real red / green / amber. This module overlays the new values onto the
- * static data, so both consumers read ONE answer:
+ * `themePalettes.ts` holds each theme's BRAND data only (the ramps, the accent
+ * family, the gradient stops). The neutrals (backgrounds, surfaces, text) and the
+ * status hues (danger / success / warning, real red / green / amber) come from the
+ * design roles; this module overlays them onto the brand data, so there is ONE
+ * answer, and the only producer of a full `ThemePrimitives`:
  *
  *  - `themeStyles.ts` emits the `--gp-*` CSS variables from it, and
  *  - `useColorTheme().raw` (canvas and React Flow, which cannot resolve a
@@ -15,13 +14,17 @@
  * Brand fields (the ramps, accent family, gradient stops) pass through
  * untouched: the purple theme is still `#7c3aed`.
  *
- * It is a separate module, not an edit to `themePalettes.ts`, because
+ * It is a separate module, not part of `themePalettes.ts`, because
  * `roles.ts` imports `themePalettes.ts`; importing back would be a cycle.
- * The superseded static neutral and status values stay in `themePalettes.ts`
- * only to keep its types whole; nothing paints them.
  */
 
-import { ModePrimitives, THEME_PRIMITIVES, ThemeId, ThemePrimitives } from "../themePalettes";
+import {
+    ModeBrand,
+    ModePrimitives,
+    THEME_PRIMITIVES,
+    ThemeId,
+    ThemePrimitives,
+} from "../themePalettes";
 import { rgbString } from "./color";
 import { buildRoles, Mode, SemanticRoles } from "./roles";
 
@@ -44,7 +47,7 @@ const tintTriple = (s: SemanticRoles) => ({
     tintAltRgb: rgbString(s.solid),
 });
 
-const overlayMode = (id: ThemeId, mode: Mode, base: ModePrimitives): ModePrimitives => {
+const overlayMode = (id: ThemeId, mode: Mode, base: ModeBrand): ModePrimitives => {
     const r = buildRoles(id, mode);
     const danger = tintTriple(r.danger);
     const success = tintTriple(r.success);
