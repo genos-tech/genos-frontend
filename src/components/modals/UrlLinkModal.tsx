@@ -17,6 +17,7 @@ import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { AppTooltip } from "../ui/AppTooltip";
+import { NoteModalHostZIndexProvider } from "./noteModalHostZIndex";
 
 // Lazy on purpose: these views transitively import the chat panes,
 // task preview and note editor — the whole BlockNote stack (~900 kB
@@ -183,6 +184,14 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     return (
         <Modal
             open={target !== null}
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        backdropFilter: "blur(2px)",
+                        backgroundColor: g.scrim,
+                    },
+                },
+            }}
             sx={{
                 zIndex: effectiveZIndex,
                 // Joy pins Select/Autocomplete listbox popups to
@@ -197,14 +206,6 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                 // portaled listboxes so the popups render above the dialog.
                 "--unstable_popup-zIndex": effectiveZIndex + 10,
                 '& ~ [role="listbox"]': { "--unstable_popup-zIndex": effectiveZIndex + 10 },
-            }}
-            slotProps={{
-                backdrop: {
-                    sx: {
-                        backdropFilter: "blur(2px)",
-                        backgroundColor: g.scrim,
-                    },
-                },
             }}
             onClose={onClose}
         >
@@ -278,7 +279,11 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                         }}
                     />
                 </AppTooltip>
-                <Suspense fallback={<ViewLoadingFallback />}>{renderBody()}</Suspense>
+                {/* The layer this preview is at, for the dialogs opened from inside it (the
+                    image lightbox, the note dialogs): they stack above it, not behind it. */}
+                <NoteModalHostZIndexProvider value={effectiveZIndex}>
+                    <Suspense fallback={<ViewLoadingFallback />}>{renderBody()}</Suspense>
+                </NoteModalHostZIndexProvider>
             </ModalDialog>
         </Modal>
     );

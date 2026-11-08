@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useId, useRef, useState } from "react";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
@@ -78,8 +78,14 @@ export const SignInForm = () => {
     const styles = isDark ? SignInFormStyles.dark : SignInFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
+    // Which request the dialog is waiting for. Opening and closing both move it on, so
+    // an answer that arrives after either is dropped: it used to land on the NEXT open
+    // and show "Check your inbox" with no form (MIP-1193).
+    const forgotAttemptRef = useRef(0);
+
     // Closing resets the transient dialog state, so the next open starts fresh.
     const closeForgotPassword = () => {
+        forgotAttemptRef.current += 1;
         setOpenForgotPassword(false);
         setForgotSucceeded(false);
         setForgotError(null);
@@ -496,6 +502,8 @@ export const SignInForm = () => {
                                         // "Remember me" localStorage so
                                         // returning users don't retype.
                                         setForgotEmail(localStorage.getItem("signInEmail") || "");
+                                        forgotAttemptRef.current += 1;
+                                        setForgotSubmitting(false);
                                         setForgotSucceeded(false);
                                         setForgotError(null);
                                         setOpenForgotPassword(true);
@@ -634,7 +642,12 @@ export const SignInForm = () => {
                             if (!forgotEmail) return;
                             setForgotError(null);
                             setForgotSubmitting(true);
-                            const ok = await requestPasswordReset(forgotEmail, setForgotError);
+                            const attempt = ++forgotAttemptRef.current;
+                            const ok = await requestPasswordReset(forgotEmail, (message) => {
+                                if (attempt === forgotAttemptRef.current) setForgotError(message);
+                            });
+                            // The dialog was closed or reopened while this was in flight.
+                            if (attempt !== forgotAttemptRef.current) return;
                             setForgotSubmitting(false);
                             if (ok) setForgotSucceeded(true);
                         }}

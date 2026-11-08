@@ -16,6 +16,7 @@ import { useTranslation } from "../../i18n";
 import { focusRing, g } from "../../theme/tokens";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { useNoteModalHostZIndex } from "../modals/noteModalHostZIndex";
 import { AppTooltip } from "../ui/AppTooltip";
 import { ModalFrame } from "../ui/modal/ModalFrame";
 
@@ -29,7 +30,9 @@ export type ImageZoomModalProps = {
     onDownload?: (src: string) => void | Promise<void>;
     /** Exact layer; the frame's page layer (10010) when omitted. */
     zIndex?: number;
-    /** The layer of the surface that opened the lightbox; the frame sits above it. */
+    /** The layer of the surface that opened the lightbox; the frame sits above it. Read
+     *  from `UrlLinkModal`'s context when the lightbox is opened inside a modal-hosted
+     *  preview (MIP-1193), so a picture zoomed there is not behind it. */
     hostZIndex?: number;
 };
 
@@ -42,6 +45,7 @@ export const ImageZoomModal = ({
     hostZIndex,
 }: ImageZoomModalProps) => {
     const { t } = useTranslation();
+    const contextHost = useNoteModalHostZIndex();
 
     const handleDownload = async (url: string) => {
         if (onDownload) {
@@ -53,7 +57,7 @@ export const ImageZoomModal = ({
 
     return (
         <ModalFrame
-            hostZIndex={hostZIndex}
+            hostZIndex={hostZIndex ?? contextHost}
             open={src !== null}
             size="fit"
             title={t.common.editor.imagePreviewTitle}
