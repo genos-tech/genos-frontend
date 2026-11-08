@@ -1,5 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import { CONTACT_EMAIL } from "./kit/links";
+import { LpShell } from "./kit/LpShell";
 
 /**
  * `/legal` — 特定商取引法に基づく表記 (the disclosure Japanese law
@@ -34,31 +36,17 @@ import { Link } from "react-router-dom";
  * disclose-on-request pattern permitted for individual sellers.
  */
 
-const CONTACT_EMAIL = "genos.support@genosai.dev";
-
 type Row = { label: string; body: React.ReactNode };
 
 const RowTable = ({ rows }: { rows: Row[] }) => (
-    <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white/80 dark:border-white/10 dark:bg-white/5">
-        <dl>
-            {rows.map((row, i) => (
-                <div
-                    key={row.label}
-                    className={
-                        "grid grid-cols-1 gap-1 px-5 py-4 sm:grid-cols-[220px_1fr] sm:gap-6" +
-                        (i > 0 ? " border-t border-violet-100/70 dark:border-white/10" : "")
-                    }
-                >
-                    <dt className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                        {row.label}
-                    </dt>
-                    <dd className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                        {row.body}
-                    </dd>
-                </div>
-            ))}
-        </dl>
-    </div>
+    <dl className="lp-dl">
+        {rows.map((row) => (
+            <div key={row.label} className="lp-dl__row">
+                <dt>{row.label}</dt>
+                <dd>{row.body}</dd>
+            </div>
+        ))}
+    </dl>
 );
 
 const JA_ROWS: Row[] = [
@@ -74,19 +62,11 @@ const JA_ROWS: Row[] = [
     },
     {
         label: "メールアドレス",
-        body: (
-            <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
-                {CONTACT_EMAIL}
-            </a>
-        ),
+        body: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
     },
     {
         label: "販売URL",
-        body: (
-            <a className="underline hover:text-violet-700" href="https://genosai.dev">
-                https://genosai.dev
-            </a>
-        ),
+        body: <a href="https://genosai.dev">https://genosai.dev</a>,
     },
     {
         label: "販売価格",
@@ -150,11 +130,7 @@ const EN_ROWS: Row[] = [
     },
     {
         label: "Contact",
-        body: (
-            <a className="underline hover:text-violet-700" href={`mailto:${CONTACT_EMAIL}`}>
-                {CONTACT_EMAIL}
-            </a>
-        ),
+        body: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
     },
     {
         label: "Pricing",
@@ -180,43 +156,43 @@ const EN_ROWS: Row[] = [
 
 export default function LegalPage() {
     return (
-        <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#faf7ff_44%,#ffffff_100%)] px-4 py-10 text-slate-950 sm:px-6 lg:px-8 dark:bg-[linear-gradient(180deg,#020617_0%,#111827_48%,#020617_100%)] dark:text-white">
-            <div className="mx-auto max-w-3xl">
-                <Link
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-violet-700 dark:text-slate-400 dark:hover:text-white"
-                    to="/home"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Genos
-                </Link>
+        <LpShell active={null}>
+            {() => (
+                <>
+                    <header className="lp-pagehead">
+                        <div className="lp-container lp-container--narrow lp-stack-s">
+                            <h1 className="lp-title" lang="ja">
+                                特定商取引法に基づく表記
+                            </h1>
+                            <p className="lp-body" lang="en">
+                                Legal disclosure under Japan’s Specified Commercial Transactions
+                                Act.
+                            </p>
+                        </div>
+                    </header>
 
-                <h1 className="mt-6 text-2xl font-black sm:text-3xl">特定商取引法に基づく表記</h1>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    Legal disclosure under Japan’s Specified Commercial Transactions Act.
-                </p>
+                    <div className="lp-container lp-container--narrow lp-pagebody">
+                        <article className="lp-prose">
+                            <div className="lp-pagesection" lang="ja">
+                                <RowTable rows={JA_ROWS} />
+                            </div>
 
-                <div className="mt-8">
-                    <RowTable rows={JA_ROWS} />
-                </div>
+                            <section className="lp-pagesection" lang="en">
+                                <h2>Legal Notice (English summary)</h2>
+                                <p className="lp-small">
+                                    The Japanese text above is the operative disclosure; this
+                                    summary is provided for convenience.
+                                </p>
+                                <RowTable rows={EN_ROWS} />
+                            </section>
 
-                <h2 className="mt-12 text-xl font-black">Legal Notice (English summary)</h2>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    The Japanese text above is the operative disclosure; this summary is provided
-                    for convenience.
-                </p>
-                <div className="mt-6">
-                    <RowTable rows={EN_ROWS} />
-                </div>
-
-                <p className="mt-10 text-xs text-slate-400 dark:text-slate-500">
-                    <Link className="underline hover:text-violet-700" to="/privacy">
-                        プライバシーポリシー / Privacy Policy
-                    </Link>
-                </p>
-                <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
-                    © {new Date().getFullYear()} Genos
-                </p>
-            </div>
-        </main>
+                            <p className="lp-small">
+                                <Link to="/privacy">プライバシーポリシー / Privacy Policy</Link>
+                            </p>
+                        </article>
+                    </div>
+                </>
+            )}
+        </LpShell>
     );
 }
