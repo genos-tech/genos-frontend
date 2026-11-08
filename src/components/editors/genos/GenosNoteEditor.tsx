@@ -12,8 +12,7 @@ import {
     SideMenuController,
 } from "@blocknote/react";
 import CheckIcon from "@mui/icons-material/Check";
-import DownloadIcon from "@mui/icons-material/Download";
-import { Box, Chip, IconButton, Modal, ModalDialog } from "@mui/joy";
+import { Box, Chip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -29,9 +28,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { NoteRoleMember } from "../../../types/notes";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { downloadFile } from "../../../utils/downloadUtils";
-import { AppTooltip } from "../../ui/AppTooltip";
+import { ImageZoomModal } from "../../messageBody/ImageZoomModal";
 import { FileSizeRejectionSnackbar } from "../../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../ui/feedback/useFileSizeGuard";
@@ -321,13 +318,6 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         setOpened(true);
     };
 
-    const handleDownload = async (
-        url: string,
-        filename = `${note.imageFilenameStem}-${getLocalCurrentTimestamp()}.png`
-    ) => {
-        await downloadFile(url, filename);
-    };
-
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
@@ -530,37 +520,11 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     </div>
                 </BlockNoteView>
 
-                <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
-                    <ModalDialog>
-                        {selectedImage ? (
-                            <Box>
-                                <img
-                                    alt={t.common.editor.imagePreviewAlt}
-                                    src={selectedImage}
-                                    style={{
-                                        maxWidth: "80vw",
-                                        maxHeight: "80vh",
-                                        display: "block",
-                                    }}
-                                />
-                                <AppTooltip
-                                    placement="top"
-                                    size="sm"
-                                    title={t.common.editor.download}
-                                >
-                                    <IconButton
-                                        color="neutral"
-                                        sx={{ position: "absolute", top: "10px", right: "10px" }}
-                                        variant="solid"
-                                        onClick={() => handleDownload(selectedImage)}
-                                    >
-                                        <DownloadIcon />
-                                    </IconButton>
-                                </AppTooltip>
-                            </Box>
-                        ) : null}
-                    </ModalDialog>
-                </Modal>
+                <ImageZoomModal
+                    filenameStem={note.imageFilenameStem}
+                    src={opened ? selectedImage : null}
+                    onClose={() => setOpened(false)}
+                />
             </Box>
         </>
     );

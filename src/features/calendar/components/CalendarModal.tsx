@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import {
     Alert,
@@ -11,14 +10,13 @@ import {
     Chip,
     CircularProgress,
     IconButton,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
+import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../context/AuthContext";
 import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
@@ -126,8 +124,7 @@ interface ModalInitial {
 export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
+    const theme = useTheme();
     const isMobile = useIsMobile();
 
     // View persisted to localStorage so reopening the modal lands
@@ -483,28 +480,31 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     }, [failedSourceKeys, sources.failedAccounts, googleAccounts, t]);
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
+        // The day popover and the event editor are dialogs of their own, rendered
+        // from inside this one; all three sit on Joy's modal layer, later ones on top.
+        <ModalFrame
+            open={open}
+            size="app"
+            title={t.calendar.title}
+            zIndex={theme.zIndex.modal}
+            fillBody
+            flush
+            fullScreenOnMobile
+            onClose={onClose}
+        >
+            {/* The calendar is dense: tighter side padding than the frame's 20px on a phone. */}
+            <Box
                 sx={{
-                    // Desktop: wide enough for week timeline + source
-                    // rail. Mobile: edge-to-edge so the grid isn't
-                    // squeezed inside a 96vw card with chrome padding.
-                    width: { xs: "100vw", md: 1340 },
-                    maxWidth: { xs: "100vw", md: "96vw" },
-                    height: { xs: "100dvh", md: "auto" },
-                    maxHeight: { xs: "100dvh", md: "92vh" },
-                    p: { xs: 1, md: 2 },
-                    m: { xs: 0, md: undefined },
-                    borderRadius: { xs: 0, md: "md" },
-                    overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
+                    flex: 1,
+                    minHeight: 0,
+                    px: { xs: 1, md: 2.5 },
+                    pb: { xs: 1, md: 2 },
                 }}
             >
                 <Stack spacing={isMobile ? 1 : 0} sx={{ mb: { xs: 1, md: 1.5 }, flexShrink: 0 }}>
-                    {/* Nav row: prev / title / next / today / close.
+                    {/* Nav row: prev / title / next / today / views.
                         On mobile this is its own row so the view
                         buttons below don't fight the title for width. */}
                     <Stack
@@ -562,14 +562,6 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                             </ButtonGroup>
                         )}
                         {loading && <CircularProgress size="sm" />}
-                        <IconButton
-                            aria-label={t.calendar.close}
-                            size="sm"
-                            variant="plain"
-                            onClick={onClose}
-                        >
-                            <CloseRoundedIcon />
-                        </IconButton>
                     </Stack>
                     {/* View tabs on their own row on mobile — four
                         equal segments across the full width so none
@@ -741,71 +733,52 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
 
                 {/* +N more popover — only meaningful in Month view
                     since timeline views show every event already. */}
-                <Modal open={popoverDayKey !== null} onClose={() => setPopoverDayKey(null)}>
-                    <ModalDialog size="md" sx={{ minWidth: 320 }}>
-                        <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                            <Typography level="title-md">
-                                {popoverDayKey ? dayjs(popoverDayKey).format("MMMM D") : ""}
-                            </Typography>
-                            <Box sx={{ flex: 1 }} />
-                            <IconButton
-                                aria-label={t.calendar.close}
-                                size="sm"
-                                variant="plain"
-                                onClick={() => setPopoverDayKey(null)}
-                            >
-                                <CloseRoundedIcon />
-                            </IconButton>
-                        </Stack>
-                        <Stack spacing={0.5}>
-                            {(popoverDayKey ? (allEventsByDay[popoverDayKey] ?? []) : []).map(
-                                (e, idx) => {
-                                    const color = e._source
-                                        ? colorBySource[
-                                              sourceKey(
-                                                  e._source.account_id,
-                                                  e._source.calendar_id
-                                              )
-                                          ]
-                                        : undefined;
-                                    return (
-                                        <Chip
-                                            key={`${e.id}-${idx}`}
-                                            size="md"
-                                            variant="soft"
-                                            startDecorator={
-                                                e.hangoutLink ? (
-                                                    <VideoCameraFrontRoundedIcon
-                                                        sx={{ fontSize: 14 }}
-                                                    />
-                                                ) : undefined
-                                            }
-                                            sx={{
-                                                cursor: "pointer",
-                                                justifyContent: "flex-start",
-                                                // Colored left rule ties the row
-                                                // back to its calendar in the rail.
-                                                borderLeft: color
-                                                    ? `3px solid ${color}`
-                                                    : undefined,
-                                            }}
-                                            onClick={() => {
-                                                setPopoverDayKey(null);
-                                                openEdit(e);
-                                            }}
-                                        >
-                                            {eventLabel(
-                                                e,
-                                                sources.freeBusySources,
-                                                t.calendar.busy
-                                            )}
-                                        </Chip>
-                                    );
-                                }
-                            )}
-                        </Stack>
-                    </ModalDialog>
-                </Modal>
+                <ModalFrame
+                    open={popoverDayKey !== null}
+                    size="sm"
+                    title={popoverDayKey ? dayjs(popoverDayKey).format("MMMM D") : ""}
+                    zIndex={theme.zIndex.modal}
+                    onClose={() => setPopoverDayKey(null)}
+                >
+                    <Stack spacing={0.5}>
+                        {(popoverDayKey ? (allEventsByDay[popoverDayKey] ?? []) : []).map(
+                            (e, idx) => {
+                                const color = e._source
+                                    ? colorBySource[
+                                          sourceKey(e._source.account_id, e._source.calendar_id)
+                                      ]
+                                    : undefined;
+                                return (
+                                    <Chip
+                                        key={`${e.id}-${idx}`}
+                                        size="md"
+                                        variant="soft"
+                                        startDecorator={
+                                            e.hangoutLink ? (
+                                                <VideoCameraFrontRoundedIcon
+                                                    sx={{ fontSize: 14 }}
+                                                />
+                                            ) : undefined
+                                        }
+                                        sx={{
+                                            cursor: "pointer",
+                                            justifyContent: "flex-start",
+                                            // Colored left rule ties the row
+                                            // back to its calendar in the rail.
+                                            borderLeft: color ? `3px solid ${color}` : undefined,
+                                        }}
+                                        onClick={() => {
+                                            setPopoverDayKey(null);
+                                            openEdit(e);
+                                        }}
+                                    >
+                                        {eventLabel(e, sources.freeBusySources, t.calendar.busy)}
+                                    </Chip>
+                                );
+                            }
+                        )}
+                    </Stack>
+                </ModalFrame>
 
                 {accessToken && (
                     <CalendarEventModal
@@ -824,7 +797,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         }}
                     />
                 )}
-            </ModalDialog>
-        </Modal>
+            </Box>
+        </ModalFrame>
     );
 };

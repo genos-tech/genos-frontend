@@ -12,14 +12,12 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    Modal,
-    ModalClose,
-    ModalDialog,
     Stack,
     Switch,
     Typography,
 } from "@mui/joy";
 
+import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
 import { fmt, useTranslation } from "../../i18n";
 import { Messages } from "../../i18n/types";
@@ -309,17 +307,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Stack>
             </Stack>
 
-            <Modal open={customOpen} sx={{ zIndex: 10020 }} onClose={() => setCustomOpen(false)}>
-                <ModalDialog>
-                    <ModalClose />
-                    <Typography level="title-md">{p.customTitle}</Typography>
-                    <Input
-                        type="datetime-local"
-                        value={customValue}
-                        slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
-                        onChange={(e) => setCustomValue(e.target.value)}
-                    />
-                    <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+            <ModalFrame
+                open={customOpen}
+                size="sm"
+                title={p.customTitle}
+                zIndex={10020}
+                actions={
+                    <>
                         <Button
                             color="neutral"
                             variant="plain"
@@ -330,9 +324,17 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         <Button disabled={!customValue} onClick={commitCustom}>
                             {p.customSet}
                         </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+                    </>
+                }
+                onClose={() => setCustomOpen(false)}
+            >
+                <Input
+                    type="datetime-local"
+                    value={customValue}
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                />
+            </ModalFrame>
         </Box>
     );
 };

@@ -333,6 +333,7 @@ export const common = {
         colors: "Colors",
         download: "Download",
         imagePreviewAlt: "preview",
+        imagePreviewTitle: "Image preview",
     },
     featureError: {
         title: "Something went wrong in {feature}.",

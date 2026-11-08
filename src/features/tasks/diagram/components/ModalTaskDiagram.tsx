@@ -3,29 +3,19 @@ import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import {
-    Box,
-    Chip,
-    IconButton,
-    LinearProgress,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Chip, IconButton, LinearProgress, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { purplePalette } from "../../../../theme/purplePalette";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { DIAGRAM_DEFAULT_Z_INDEX, DiagramZIndexProvider } from "../diagramZIndex";
 import { ScheduleOverview, TaskGraphScope } from "../types";
@@ -99,10 +89,7 @@ export const ModalTaskDiagram = ({
     zIndex,
     highlightAssigneeId,
 }: ModalTaskDiagramProps) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const P = isDark ? purplePalette.dark : purplePalette.light;
     const effectiveZIndex = zIndex ?? DIAGRAM_DEFAULT_Z_INDEX;
 
     // Schedule rollup published by the canvas after each graph load.
@@ -152,377 +139,234 @@ export const ModalTaskDiagram = ({
               : t.tasks.diagram.schedule.behind
         : null;
 
-    return (
-        <Modal
-            open={open}
-            sx={{
-                // The task-preview BlockNote editor's floating side-menu
-                // (the row drag-handle / "+" that appear on row hover) is
-                // pinned to z-index 1400 via `!important` in App.css — above
-                // Joy's default modal z-index (1300). So when this diagram
-                // opens over a task preview, that editor's row-option icons
-                // leak ON TOP of the diagram. Lift the diagram above the
-                // BlockNote floating UI, while staying below the surface that
-                // opens a task/milestone preview ON TOP of the diagram (see
-                // `handleOpenPreview` in TaskFlowCanvas). Page-hosted default
-                // is 9999; modal-hosted openers lift via the `zIndex` prop —
-                // see diagramZIndex.ts for the whole stacking story.
-                zIndex: effectiveZIndex,
-                // Joy pins Select/Autocomplete listbox popups to
-                // calc(theme.zIndex.modal + 1) ≈ 1301 and does NOT track the
-                // sx z-index override above — so a default-z popup rendered
-                // inside the diagram would open behind this dialog. Stamping
-                // the var on the modal root covers any popup that renders
-                // INLINE in this subtree (CSS custom properties inherit).
-                //
-                // Deliberately NOT also stamped on sibling portaled listboxes
-                // (`& ~ [role="listbox"]`): the diagram owns no listbox at all
-                // — the node-card status Menu is role="menu" and the date
-                // editor is a Modal, and both pin themselves via
-                // useDiagramZIndex. Such a rule could therefore only ever
-                // match a listbox belonging to a DIFFERENT surface, and the
-                // one it caught was the task preview the canvas opens ON TOP
-                // of the graph (UrlLinkModal, which stamps its own listboxes
-                // at its z + 10). Both rules are specificity (0,2,0), so the
-                // winner was decided by emotion's stylesheet insertion order —
-                // i.e. by which surface happened to render first in the
-                // session. When this one won, the preview's pickers were
-                // pinned below their own modal and opened invisibly: the
-                // intermittent "autocomplete shows nothing" bug.
-                //
-                // If a Select/Autocomplete is ever added INSIDE the diagram,
-                // lift its popup via slotProps on that component (or
-                // disablePortal so it inherits the var below) — never with a
-                // sibling rule, which claims popups this surface doesn't own.
-                "--unstable_popup-zIndex": effectiveZIndex + 1,
-            }}
-            onClose={onClose}
-        >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
-                variant="outlined"
-                sx={{
-                    width: "94vw",
-                    height: "90vh",
-                    maxWidth: "none",
-                    maxHeight: "none",
-                    p: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
-                    background: P.surface,
-                    border: "1px solid",
-                    borderColor: P.border,
-                    borderRadius: "16px",
-                    boxShadow: P.shadow,
-                }}
-            >
-                {/* Everything inside re-derives its own stacking layer
-                    (node-card popups, canvas-node preview opens) from
-                    the dialog's effective z — see diagramZIndex.ts. */}
-                <DiagramZIndexProvider value={effectiveZIndex}>
-                    {/* Accent strip — visual sibling of the
-                    ModalManageDependencies treatment, but purple to
-                    flag the diagram as the design-system's "tree" view */}
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: "3px",
-                            background:
-                                "linear-gradient(90deg, var(--gp-brandalt-400) 0%, var(--gp-brandalt-500) 50%, var(--gp-brand-400) 100%)",
-                            opacity: 0.85,
-                            borderRadius: "16px 16px 0 0",
-                        }}
-                    />
-
-                    {/* Header */}
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1.25}
-                        sx={{
-                            px: 2.5,
-                            pt: 2,
-                            pb: 1.25,
-                            borderBottom: "1px solid",
-                            borderColor: P.border,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: P.hoverBg,
-                                color: P.accentSoft,
-                            }}
-                        >
-                            <AccountTreeRoundedIcon sx={{ fontSize: 20 }} />
-                        </Box>
-                        <Stack spacing={0} sx={{ minWidth: 0, flex: 1 }}>
-                            <Typography level="title-md" sx={{ fontWeight: 700, color: P.text }}>
-                                {t.tasks.diagram.title}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: P.textMuted,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                }}
-                            >
-                                {rootLabel}
-                            </Typography>
-                        </Stack>
-
-                        {/* Schedule-health chip — the headline verdict for
+    // The graph dialog keeps the layer its opener gave it (see diagramZIndex.ts): 9999 on
+    // a page, host + DIAGRAM_LIFT inside a modal-hosted preview. The task-preview
+    // BlockNote floating UI is pinned at 1400, so the dialog has to clear that; it
+    // owns no listbox (the node popups pin themselves from the same context).
+    const accessoryItems = (
+        <>
+            {/* Schedule-health chip — the headline verdict for
                         the whole tree. Tooltip explains the maths so a
                         "Behind" verdict isn't mysterious. Hidden when
                         no window is available. */}
-                        {overview?.health && (
-                            <AppTooltip
-                                placement="bottom"
-                                title={fmt(t.tasks.diagram.tooltips.healthSummary, {
-                                    actualPct: Math.round(overview.health.actualPct),
-                                    expectedPct: Math.round(overview.health.expectedPct),
-                                })}
-                            >
-                                <Chip
-                                    color={HEALTH_JOY_COLOR[overview.health.tone]}
-                                    size="md"
-                                    variant="soft"
-                                    sx={{
-                                        fontWeight: 700,
-                                        borderRadius: "8px",
-                                        "--Chip-paddingInline": "10px",
-                                        "--Chip-minHeight": "28px",
-                                    }}
-                                >
-                                    {healthLabel}
-                                </Chip>
-                            </AppTooltip>
-                        )}
+            {overview?.health && (
+                <AppTooltip
+                    placement="bottom"
+                    title={fmt(t.tasks.diagram.tooltips.healthSummary, {
+                        actualPct: Math.round(overview.health.actualPct),
+                        expectedPct: Math.round(overview.health.expectedPct),
+                    })}
+                >
+                    <Chip
+                        color={HEALTH_JOY_COLOR[overview.health.tone]}
+                        size="md"
+                        variant="soft"
+                        sx={{
+                            fontWeight: 600,
+                            borderRadius: "8px",
+                            "--Chip-paddingInline": "10px",
+                            "--Chip-minHeight": "28px",
+                        }}
+                    >
+                        {healthLabel}
+                    </Chip>
+                </AppTooltip>
+            )}
 
-                        {/* Schedule overview pill — only renders when at
+            {/* Schedule overview pill — only renders when at
                         least one of (span, progress) is computable.
                         Tries to read as a quick at-a-glance summary
                         for the milestone or sub-tree. */}
-                        {showOverview && (
+            {showOverview && (
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                        px: 1.5,
+                        py: 0.75,
+                        borderRadius: "10px",
+                        background: g.bg.subtle,
+                        border: `1px solid ${g.border.default}`,
+                        flexWrap: "wrap",
+                        rowGap: 0.5,
+                    }}
+                >
+                    {overview?.sprint && (
+                        <Stack alignItems="center" direction="row" spacing={0.6}>
+                            <BoltRoundedIcon sx={{ fontSize: 16, color: g.accent.text }} />
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: g.text.primary, fontWeight: 600 }}
+                            >
+                                {overview.sprint.name}
+                            </Typography>
+                            {sprintLabel && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: g.text.secondary, fontWeight: 500 }}
+                                >
+                                    {sprintLabel}
+                                </Typography>
+                            )}
+                        </Stack>
+                    )}
+                    {spanLabel && (
+                        <Stack alignItems="center" direction="row" spacing={0.6}>
+                            <CalendarMonthRoundedIcon
+                                sx={{
+                                    fontSize: 16,
+                                    color: g.text.secondary,
+                                    opacity: 0.85,
+                                }}
+                            />
+                            <Typography
+                                level="body-sm"
+                                sx={{ color: g.text.primary, fontWeight: 600 }}
+                            >
+                                {spanLabel}
+                            </Typography>
+                            {overview?.spanDays != null && (
+                                <Chip
+                                    size="sm"
+                                    variant="outlined"
+                                    sx={{
+                                        fontSize: "0.65rem",
+                                        fontWeight: 600,
+                                        borderRadius: "5px",
+                                        color: g.text.secondary,
+                                    }}
+                                >
+                                    {fmt(t.tasks.diagram.durationDays, {
+                                        count: overview.spanDays,
+                                    })}
+                                </Chip>
+                            )}
+                        </Stack>
+                    )}
+                    {overview &&
+                        (overview.overdueCount > 0 ||
+                            overview.dueSoonCount > 0 ||
+                            overview.blockedCount > 0) && (
                             <Stack
                                 alignItems="center"
                                 direction="row"
-                                spacing={1.5}
-                                sx={{
-                                    px: 1.5,
-                                    py: 0.75,
-                                    borderRadius: "10px",
-                                    background: P.surfaceElevated,
-                                    border: `1px solid ${P.border}`,
-                                    flexWrap: "wrap",
-                                    rowGap: 0.5,
-                                }}
+                                spacing={0.5}
+                                sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                             >
-                                {overview?.sprint && (
-                                    <Stack alignItems="center" direction="row" spacing={0.6}>
-                                        <BoltRoundedIcon
-                                            sx={{ fontSize: 16, color: P.accentSoft }}
-                                        />
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ color: P.text, fontWeight: 600 }}
-                                        >
-                                            {overview.sprint.name}
-                                        </Typography>
-                                        {sprintLabel && (
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: P.textMuted, fontWeight: 500 }}
-                                            >
-                                                {sprintLabel}
-                                            </Typography>
-                                        )}
-                                    </Stack>
-                                )}
-                                {spanLabel && (
-                                    <Stack alignItems="center" direction="row" spacing={0.6}>
-                                        <CalendarMonthRoundedIcon
-                                            sx={{
-                                                fontSize: 16,
-                                                color: P.textMuted,
-                                                opacity: 0.85,
-                                            }}
-                                        />
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{ color: P.text, fontWeight: 600 }}
-                                        >
-                                            {spanLabel}
-                                        </Typography>
-                                        {overview?.spanDays != null && (
-                                            <Chip
-                                                size="sm"
-                                                variant="outlined"
-                                                sx={{
-                                                    fontSize: "0.65rem",
-                                                    fontWeight: 600,
-                                                    borderRadius: "5px",
-                                                    color: P.textMuted,
-                                                }}
-                                            >
-                                                {fmt(t.tasks.diagram.durationDays, {
-                                                    count: overview.spanDays,
-                                                })}
-                                            </Chip>
-                                        )}
-                                    </Stack>
-                                )}
-                                {overview &&
-                                    (overview.overdueCount > 0 ||
-                                        overview.dueSoonCount > 0 ||
-                                        overview.blockedCount > 0) && (
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={0.5}
-                                            sx={{ flexWrap: "wrap", rowGap: 0.5 }}
-                                        >
-                                            {overview.overdueCount > 0 && (
-                                                <Chip
-                                                    color="danger"
-                                                    size="sm"
-                                                    variant="soft"
-                                                    startDecorator={
-                                                        <WarningAmberRoundedIcon
-                                                            sx={{ fontSize: 12 }}
-                                                        />
-                                                    }
-                                                    sx={{
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 700,
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    {fmt(t.tasks.diagram.overdueCount, {
-                                                        count: overview.overdueCount,
-                                                    })}
-                                                </Chip>
-                                            )}
-                                            {overview.dueSoonCount > 0 && (
-                                                <Chip
-                                                    color="warning"
-                                                    size="sm"
-                                                    variant="soft"
-                                                    startDecorator={
-                                                        <ScheduleRoundedIcon
-                                                            sx={{ fontSize: 12 }}
-                                                        />
-                                                    }
-                                                    sx={{
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 700,
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    {fmt(t.tasks.diagram.dueSoonCount, {
-                                                        count: overview.dueSoonCount,
-                                                    })}
-                                                </Chip>
-                                            )}
-                                            {overview.blockedCount > 0 && (
-                                                <Chip
-                                                    color="neutral"
-                                                    size="sm"
-                                                    variant="soft"
-                                                    startDecorator={
-                                                        <BlockRoundedIcon sx={{ fontSize: 12 }} />
-                                                    }
-                                                    sx={{
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: 700,
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    {fmt(t.tasks.diagram.blockedCount, {
-                                                        count: overview.blockedCount,
-                                                    })}
-                                                </Chip>
-                                            )}
-                                        </Stack>
-                                    )}
-                                {progressPct != null && overview && (
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        spacing={0.75}
-                                        sx={{ minWidth: 140 }}
+                                {overview.overdueCount > 0 && (
+                                    <Chip
+                                        color="danger"
+                                        size="sm"
+                                        variant="soft"
+                                        startDecorator={
+                                            <WarningAmberRoundedIcon sx={{ fontSize: 12 }} />
+                                        }
+                                        sx={{
+                                            fontSize: "0.7rem",
+                                            fontWeight: 600,
+                                            borderRadius: "5px",
+                                        }}
                                     >
-                                        {/* Progress bar with an absolutely-positioned
+                                        {fmt(t.tasks.diagram.overdueCount, {
+                                            count: overview.overdueCount,
+                                        })}
+                                    </Chip>
+                                )}
+                                {overview.dueSoonCount > 0 && (
+                                    <Chip
+                                        color="warning"
+                                        size="sm"
+                                        variant="soft"
+                                        startDecorator={
+                                            <ScheduleRoundedIcon sx={{ fontSize: 12 }} />
+                                        }
+                                        sx={{
+                                            fontSize: "0.7rem",
+                                            fontWeight: 600,
+                                            borderRadius: "5px",
+                                        }}
+                                    >
+                                        {fmt(t.tasks.diagram.dueSoonCount, {
+                                            count: overview.dueSoonCount,
+                                        })}
+                                    </Chip>
+                                )}
+                                {overview.blockedCount > 0 && (
+                                    <Chip
+                                        color="neutral"
+                                        size="sm"
+                                        startDecorator={<BlockRoundedIcon sx={{ fontSize: 12 }} />}
+                                        variant="soft"
+                                        sx={{
+                                            fontSize: "0.7rem",
+                                            fontWeight: 600,
+                                            borderRadius: "5px",
+                                        }}
+                                    >
+                                        {fmt(t.tasks.diagram.blockedCount, {
+                                            count: overview.blockedCount,
+                                        })}
+                                    </Chip>
+                                )}
+                            </Stack>
+                        )}
+                    {progressPct != null && overview && (
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.75}
+                            sx={{ minWidth: 140 }}
+                        >
+                            {/* Progress bar with an absolutely-positioned
                                         "expected by now" marker. The marker sits
                                         at `expectedPct%`; visible gap between the
                                         marker and the bar's filled edge IS the
                                         schedule-health story. */}
-                                        <Box sx={{ flex: 1, minWidth: 60, position: "relative" }}>
-                                            <LinearProgress
-                                                color={progressPct === 100 ? "success" : "primary"}
-                                                size="sm"
-                                                sx={{ "--LinearProgress-thickness": "6px" }}
-                                                value={progressPct}
-                                                determinate
-                                            />
-                                            {overview.health && overview.total > 0 && (
-                                                <AppTooltip
-                                                    title={fmt(
-                                                        t.tasks.diagram.tooltips.expectedByToday,
-                                                        {
-                                                            expectedPct: Math.round(
-                                                                overview.health.expectedPct
-                                                            ),
-                                                        }
-                                                    )}
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            position: "absolute",
-                                                            top: -2,
-                                                            bottom: -2,
-                                                            left: `${overview.health.expectedPct}%`,
-                                                            width: "2px",
-                                                            background:
-                                                                HEALTH_TONE_COLOR[
-                                                                    overview.health.tone
-                                                                ],
-                                                            borderRadius: "1px",
-                                                            boxShadow: isDark
-                                                                ? "0 0 0 1px rgba(11,10,22,0.7)"
-                                                                : "0 0 0 1px rgba(255,255,255,0.85)",
-                                                            cursor: "help",
-                                                        }}
-                                                    />
-                                                </AppTooltip>
-                                            )}
-                                        </Box>
-                                        <Typography
-                                            level="body-xs"
+                            <Box sx={{ flex: 1, minWidth: 60, position: "relative" }}>
+                                <LinearProgress
+                                    color={progressPct === 100 ? "success" : "primary"}
+                                    size="sm"
+                                    sx={{ "--LinearProgress-thickness": "6px" }}
+                                    value={progressPct}
+                                    determinate
+                                />
+                                {overview.health && overview.total > 0 && (
+                                    <AppTooltip
+                                        title={fmt(t.tasks.diagram.tooltips.expectedByToday, {
+                                            expectedPct: Math.round(overview.health.expectedPct),
+                                        })}
+                                    >
+                                        <Box
                                             sx={{
-                                                color: P.textMuted,
-                                                fontWeight: 600,
-                                                whiteSpace: "nowrap",
+                                                position: "absolute",
+                                                top: -2,
+                                                bottom: -2,
+                                                left: `${overview.health.expectedPct}%`,
+                                                width: "2px",
+                                                background:
+                                                    HEALTH_TONE_COLOR[overview.health.tone],
+                                                borderRadius: "1px",
+                                                boxShadow: `0 0 0 1px ${g.surface.raised}`,
+                                                cursor: "help",
                                             }}
-                                        >
-                                            {overview.closed}/{overview.total}
-                                        </Typography>
-                                    </Stack>
+                                        />
+                                    </AppTooltip>
                                 )}
-                                {/* {overview?.burndown &&
+                            </Box>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    color: g.text.secondary,
+                                    fontWeight: 600,
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {overview.closed}/{overview.total}
+                            </Typography>
+                        </Stack>
+                    )}
+                    {/* {overview?.burndown &&
                                 overview.burndown.length > 0 &&
                                 overview.health &&
                                 overview.total > 0 && (
@@ -532,74 +376,108 @@ export const ModalTaskDiagram = ({
                                         tone={overview.health.tone}
                                     />
                                 )} */}
-                            </Stack>
-                        )}
+                </Stack>
+            )}
 
-                        {/* Hide / show closed tasks. Gated on having at
+            {/* Hide / show closed tasks. Gated on having at
                         least one closed descendant — toggling on an
                         otherwise-clean tree would be a no-op and the
                         button would be confusing. */}
-                        {(overview?.closed ?? 0) > 0 && (
-                            <AppTooltip
-                                placement="bottom"
-                                title={
-                                    hideClosed
-                                        ? t.tasks.diagram.tooltips.showClosed
-                                        : t.tasks.diagram.tooltips.hideClosed
-                                }
-                            >
-                                <IconButton
-                                    color="neutral"
-                                    size="sm"
-                                    variant="plain"
-                                    sx={{
-                                        color: hideClosed ? P.accent : P.textMuted,
-                                        "&:hover": { color: P.text },
-                                    }}
-                                    onClick={() => setHideClosed((v) => !v)}
-                                >
-                                    {hideClosed ? (
-                                        <VisibilityOffRoundedIcon />
-                                    ) : (
-                                        <VisibilityRoundedIcon />
-                                    )}
-                                </IconButton>
-                            </AppTooltip>
-                        )}
+            {(overview?.closed ?? 0) > 0 && (
+                <AppTooltip
+                    placement="bottom"
+                    title={
+                        hideClosed
+                            ? t.tasks.diagram.tooltips.showClosed
+                            : t.tasks.diagram.tooltips.hideClosed
+                    }
+                >
+                    <IconButton
+                        color="neutral"
+                        size="sm"
+                        variant="plain"
+                        sx={{
+                            color: hideClosed ? g.accent.text : g.text.secondary,
+                            "&:hover": { color: g.text.primary },
+                        }}
+                        onClick={() => setHideClosed((v) => !v)}
+                    >
+                        {hideClosed ? <VisibilityOffRoundedIcon /> : <VisibilityRoundedIcon />}
+                    </IconButton>
+                </AppTooltip>
+            )}
+        </>
+    );
+    // The row of schedule facts sits in the header from `sm` up. On a phone it would squeeze
+    // the title to nothing, so it is a row of its own under the header there.
+    const accessorySx = {
+        alignItems: "center",
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+        gap: 1.25,
+    } as const;
 
-                        <AppTooltip placement="left" title={t.tasks.diagram.tooltips.close}>
-                            <IconButton
-                                color="neutral"
-                                size="sm"
-                                sx={{ color: P.textMuted, "&:hover": { color: P.text } }}
-                                variant="plain"
-                                onClick={onClose}
-                            >
-                                <CloseRoundedIcon />
-                            </IconButton>
-                        </AppTooltip>
-                    </Stack>
-
-                    {/* Canvas fills the rest of the dialog */}
-                    <Box sx={{ flex: 1, display: "flex", minHeight: 0 }}>
-                        {open && (
-                            <TaskFlowCanvas
-                                hideClosed={hideClosed}
-                                highlightAssigneeId={highlightAssigneeId}
-                                myself={myself}
-                                projectId={projectId}
-                                rootTaskId={rootTaskId}
-                                scope={scope}
-                                usePM={usePM}
-                                useSM={useSM}
-                                useTM={useTM}
-                                onCloseModal={onClose}
-                                onOverviewChange={setOverview}
-                            />
-                        )}
-                    </Box>
-                </DiagramZIndexProvider>
-            </ModalDialog>
-        </Modal>
+    return (
+        <ModalFrame
+            closeLabel={t.tasks.diagram.tooltips.close}
+            description={rootLabel}
+            icon={<AccountTreeRoundedIcon sx={{ color: g.accent.text }} />}
+            open={open}
+            size="canvas"
+            title={t.tasks.diagram.title}
+            zIndex={effectiveZIndex}
+            headerAccessory={
+                <Box
+                    sx={{
+                        ...accessorySx,
+                        display: { xs: "none", sm: "flex" },
+                        maxWidth: "min(760px, 62vw)",
+                    }}
+                >
+                    {accessoryItems}
+                </Box>
+            }
+            fillBody
+            flush
+            headerDivider
+            onClose={onClose}
+        >
+            {/* Everything inside re-derives its own stacking layer
+                (node-card popups, canvas-node preview opens) from
+                the dialog's effective z, see diagramZIndex.ts. */}
+            <DiagramZIndexProvider value={effectiveZIndex}>
+                <Box
+                    sx={{
+                        ...accessorySx,
+                        display: { xs: "flex", sm: "none" },
+                        justifyContent: "flex-start",
+                        flexShrink: 0,
+                        px: 2.5,
+                        py: 1,
+                        borderBottom: `1px solid ${g.border.subtle}`,
+                    }}
+                >
+                    {accessoryItems}
+                </Box>
+                {/* Canvas fills the rest of the dialog */}
+                <Box sx={{ flex: 1, display: "flex", minHeight: 0 }}>
+                    {open && (
+                        <TaskFlowCanvas
+                            hideClosed={hideClosed}
+                            highlightAssigneeId={highlightAssigneeId}
+                            myself={myself}
+                            projectId={projectId}
+                            rootTaskId={rootTaskId}
+                            scope={scope}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTM={useTM}
+                            onCloseModal={onClose}
+                            onOverviewChange={setOverview}
+                        />
+                    )}
+                </Box>
+            </DiagramZIndexProvider>
+        </ModalFrame>
     );
 };

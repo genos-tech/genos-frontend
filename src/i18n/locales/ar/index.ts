@@ -155,6 +155,7 @@ export const ar: DeepPartial<Messages> = {
             colors: "الألوان",
             download: "تنزيل",
             imagePreviewAlt: "معاينة",
+            imagePreviewTitle: "معاينة الصورة",
             placeholderEmpty: "ابدأ بالكتابة...",
             placeholderDefault: "اكتب شيئاً...",
             placeholderHeading: "عنصر نائب مخصص للعنوان",

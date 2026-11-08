@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import {
     Button,
     FormControl,
     FormLabel,
     Input,
-    Modal,
-    ModalDialog,
     Stack,
     Tab,
     TabList,
@@ -14,7 +12,9 @@ import {
     Typography,
 } from "@mui/joy";
 import Autocomplete, { createFilterOptions } from "@mui/joy/Autocomplete";
+import { useTheme } from "@mui/joy/styles";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useOptionalAccessToken } from "../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -126,6 +126,7 @@ export const ModalImportMarkdown = ({
     initialFile = null,
 }: Props) => {
     const { t } = useTranslation();
+    const theme = useTheme();
     // Optional rather than `useAuth`: this dialog is rendered from the
     // sidebar and three headers, and losing all of them to a missing
     // provider would be a poor trade for a mode that can simply not be
@@ -408,196 +409,186 @@ export const ModalImportMarkdown = ({
         }
     };
 
+    // The footer: each branch below that owns its buttons has them here (the
+    // folder panel brings its own, inside the body).
+    const cancelButton = (
+        <Button color="neutral" disabled={importing} variant="plain" onClick={onClose}>
+            {t.common.actions.cancel}
+        </Button>
+    );
+    let actions: ReactNode = null;
+    if (attachmentMode && initialFile) {
+        actions =
+            importedTo != null ? (
+                <Button onClick={onClose}>{t.common.actions.close}</Button>
+            ) : (
+                <>
+                    {cancelButton}
+                    <Button
+                        loading={importing}
+                        disabled={
+                            importing ||
+                            fileText == null ||
+                            !title.trim() ||
+                            attachmentPick == null
+                        }
+                        onClick={handleImport}
+                    >
+                        {t.notes.importMd.importButton}
+                    </Button>
+                </>
+            );
+    } else if (!(mode === "folder" && accessToken)) {
+        actions = (
+            <>
+                {cancelButton}
+                <Button
+                    disabled={importing || fileText == null || !title.trim()}
+                    loading={importing}
+                    onClick={handleImport}
+                >
+                    {t.notes.importMd.importButton}
+                </Button>
+            </>
+        );
+    }
+
     return (
-        <Modal
+        // Hosted in the UrlLinkModal note header the dialog sits one above its host
+        // (as it always did); on a page it keeps Joy's modal layer. The destination
+        // dropdown is a portaled listbox, which the frame lifts above the dialog.
+        <ModalFrame
+            actions={actions}
             open={open}
-            sx={
-                hostZIndex != null
-                    ? {
-                          zIndex: hostZIndex + 1,
-                          // Joy pins Select/Autocomplete listbox popups to
-                          // `calc(theme.zIndex.modal + 1)` (≈1301) and does
-                          // NOT track the raised `zIndex` above — so inside
-                          // the UrlLinkModal-hosted note header the
-                          // destination dropdown would open BEHIND this
-                          // dialog and be unclickable. Re-stamp the var on
-                          // the modal root (inline listboxes inherit it) and
-                          // on sibling portaled listboxes. Same fix as
-                          // UrlLinkModal / SpotlightSettingsModal.
-                          "--unstable_popup-zIndex": hostZIndex + 10,
-                          '& ~ [role="listbox"]': {
-                              "--unstable_popup-zIndex": hostZIndex + 10,
-                          },
-                      }
-                    : undefined
-            }
+            size="md"
+            title={t.notes.importMd.heading}
+            zIndex={hostZIndex != null ? hostZIndex + 1 : theme.zIndex.modal}
+            ownsListboxPopups
             onClose={onClose}
         >
-            <ModalDialog sx={{ minWidth: 380, maxWidth: 480 }}>
-                <Typography level="title-lg">{t.notes.importMd.heading}</Typography>
-
-                {/* Folders only exist under my-notes, so a task or chat
+            {/* Folders only exist under my-notes, so a task or chat
                     note gets the single-file dialog it has always had. */}
-                {canImportFolder && (
-                    <Tabs
-                        size="sm"
-                        sx={{ bgcolor: "transparent", mt: 1 }}
-                        value={mode}
-                        onChange={(_e, v) => setMode(v as "file" | "folder")}
-                    >
-                        <TabList sx={{ borderRadius: "sm", p: 0.5 }} disableUnderline>
-                            <Tab value="file" disableIndicator>
-                                {t.notes.importMd.modeFile}
-                            </Tab>
-                            <Tab value="folder" disableIndicator>
-                                {t.notes.importMd.modeFolder}
-                            </Tab>
-                        </TabList>
-                    </Tabs>
-                )}
+            {canImportFolder && (
+                <Tabs
+                    size="sm"
+                    sx={{ bgcolor: "transparent", mt: 1 }}
+                    value={mode}
+                    onChange={(_e, v) => setMode(v as "file" | "folder")}
+                >
+                    <TabList sx={{ borderRadius: "sm", p: 0.5 }} disableUnderline>
+                        <Tab value="file" disableIndicator>
+                            {t.notes.importMd.modeFile}
+                        </Tab>
+                        <Tab value="folder" disableIndicator>
+                            {t.notes.importMd.modeFolder}
+                        </Tab>
+                    </TabList>
+                </Tabs>
+            )}
 
-                {/* Destination, type-to-search. Every option is a real
+            {/* Destination, type-to-search. Every option is a real
                     folder, task or chat — a note can't live on a
                     project or on a "DM" / "GM" bucket, so those rows
                     have no entry here. Clearing the field is ignored
                     (a note always lands somewhere): the previous pick
                     stays selected. Shared by both modes: a folder
                     import needs a destination just as much. */}
-                {destinationOptions.length > 0 && (
-                    <FormControl sx={{ mt: 2 }}>
-                        <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                        <Autocomplete
-                            filterOptions={filterDestinations}
-                            getOptionLabel={(option) => option.label}
-                            isOptionEqualToValue={(option, value) => option.key === value.key}
-                            options={destinationOptions}
-                            value={selectedDestination}
-                            autoHighlight
-                            onChange={(_e, v) => {
-                                if (v) setDestinationKey(v.key);
-                            }}
-                        />
-                    </FormControl>
-                )}
-
-                {attachmentMode && initialFile ? (
-                    importedTo != null ? (
-                        <Stack spacing={2} sx={{ mt: 2 }}>
-                            <Typography level="body-md">
-                                {fmt(t.notes.importMd.importedTo, { where: importedTo })}
-                            </Typography>
-                            <Stack direction="row" justifyContent="flex-end">
-                                <Button onClick={onClose}>{t.common.actions.close}</Button>
-                            </Stack>
-                        </Stack>
-                    ) : (
-                        <Stack spacing={0} sx={{ mt: 1 }}>
-                            <Typography level="body-sm" sx={{ wordBreak: "break-all" }}>
-                                {fileLoading
-                                    ? fmt(t.notes.importMd.readingFile, { name: initialFile.name })
-                                    : initialFile.name}
-                            </Typography>
-                            {error && (
-                                <Typography level="body-sm" sx={{ color: "danger.500", mt: 1 }}>
-                                    {error}
-                                </Typography>
-                            )}
-                            <AttachmentDestinationPicker
-                                accessToken={accessToken}
-                                defaultDestination={initialFile.defaultDestination}
-                                myself={myself}
-                                useNM={useNM}
-                                onChange={setAttachmentPick}
-                            />
-                            <FormControl sx={{ mt: 1.5 }} required>
-                                <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
-                                <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-                            </FormControl>
-                            <Stack
-                                direction="row"
-                                justifyContent="flex-end"
-                                spacing={1}
-                                sx={{ mt: 2 }}
-                            >
-                                <Button disabled={importing} variant="plain" onClick={onClose}>
-                                    {t.common.actions.cancel}
-                                </Button>
-                                <Button
-                                    loading={importing}
-                                    disabled={
-                                        importing ||
-                                        fileText == null ||
-                                        !title.trim() ||
-                                        attachmentPick == null
-                                    }
-                                    onClick={handleImport}
-                                >
-                                    {t.notes.importMd.importButton}
-                                </Button>
-                            </Stack>
-                        </Stack>
-                    )
-                ) : mode === "folder" && accessToken ? (
-                    <FolderImportPanel
-                        accessToken={accessToken}
-                        destination={folderDestination}
-                        myself={myself}
-                        uploadLimitBytes={uploadLimitBytes}
-                        onClose={onClose}
-                        onImported={refreshAfterFolderImport}
+            {destinationOptions.length > 0 && (
+                <FormControl sx={{ mt: 2 }}>
+                    <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
+                    <Autocomplete
+                        filterOptions={filterDestinations}
+                        getOptionLabel={(option) => option.label}
+                        isOptionEqualToValue={(option, value) => option.key === value.key}
+                        options={destinationOptions}
+                        value={selectedDestination}
+                        autoHighlight
+                        onChange={(_e, v) => {
+                            if (v) setDestinationKey(v.key);
+                        }}
                     />
-                ) : (
+                </FormControl>
+            )}
+
+            {attachmentMode && initialFile ? (
+                importedTo != null ? (
                     <Stack spacing={2} sx={{ mt: 2 }}>
+                        <Typography level="body-md">
+                            {fmt(t.notes.importMd.importedTo, { where: importedTo })}
+                        </Typography>
+                    </Stack>
+                ) : (
+                    <Stack spacing={0} sx={{ mt: 1 }}>
+                        <Typography level="body-sm" sx={{ wordBreak: "break-all" }}>
+                            {fileLoading
+                                ? fmt(t.notes.importMd.readingFile, { name: initialFile.name })
+                                : initialFile.name}
+                        </Typography>
                         {error && (
-                            <Typography level="body-sm" sx={{ color: "danger.500" }}>
+                            <Typography level="body-sm" sx={{ color: "danger.500", mt: 1 }}>
                                 {error}
                             </Typography>
                         )}
-
-                        {/* Hidden native input; the button forwards the click.
-                            .txt is accepted on purpose — plain text is valid
-                            markdown and it saves a rename. */}
-                        <input
-                            ref={fileInputRef}
-                            accept=".md,.markdown,.txt"
-                            style={{ display: "none" }}
-                            type="file"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void handleFilePicked(file);
-                                // Allow re-picking the same file.
-                                e.target.value = "";
-                            }}
+                        <AttachmentDestinationPicker
+                            accessToken={accessToken}
+                            defaultDestination={initialFile.defaultDestination}
+                            myself={myself}
+                            useNM={useNM}
+                            onChange={setAttachmentPick}
                         />
-                        <Button
-                            color="neutral"
-                            startDecorator={<UploadFileRoundedIcon />}
-                            variant="outlined"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            {fileName ?? t.notes.importMd.chooseFile}
-                        </Button>
-
-                        <FormControl required>
+                        <FormControl sx={{ mt: 1.5 }} required>
                             <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
                             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                         </FormControl>
-
-                        <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                            <Button disabled={importing} variant="plain" onClick={onClose}>
-                                {t.common.actions.cancel}
-                            </Button>
-                            <Button
-                                disabled={importing || fileText == null || !title.trim()}
-                                loading={importing}
-                                onClick={handleImport}
-                            >
-                                {t.notes.importMd.importButton}
-                            </Button>
-                        </Stack>
                     </Stack>
-                )}
-            </ModalDialog>
-        </Modal>
+                )
+            ) : mode === "folder" && accessToken ? (
+                <FolderImportPanel
+                    accessToken={accessToken}
+                    destination={folderDestination}
+                    myself={myself}
+                    uploadLimitBytes={uploadLimitBytes}
+                    onClose={onClose}
+                    onImported={refreshAfterFolderImport}
+                />
+            ) : (
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                    {error && (
+                        <Typography level="body-sm" sx={{ color: "danger.500" }}>
+                            {error}
+                        </Typography>
+                    )}
+
+                    {/* Hidden native input; the button forwards the click.
+                            .txt is accepted on purpose — plain text is valid
+                            markdown and it saves a rename. */}
+                    <input
+                        ref={fileInputRef}
+                        accept=".md,.markdown,.txt"
+                        style={{ display: "none" }}
+                        type="file"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleFilePicked(file);
+                            // Allow re-picking the same file.
+                            e.target.value = "";
+                        }}
+                    />
+                    <Button
+                        color="neutral"
+                        startDecorator={<UploadFileRoundedIcon />}
+                        variant="outlined"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {fileName ?? t.notes.importMd.chooseFile}
+                    </Button>
+
+                    <FormControl required>
+                        <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>
+                        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                    </FormControl>
+                </Stack>
+            )}
+        </ModalFrame>
     );
 };

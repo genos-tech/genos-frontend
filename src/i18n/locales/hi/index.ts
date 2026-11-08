@@ -287,6 +287,7 @@ export const hi: DeepPartial<Messages> = {
             colors: "रंग",
             download: "डाउनलोड करें",
             imagePreviewAlt: "प्रीव्यू",
+            imagePreviewTitle: "छवि का प्रीव्यू",
         },
         featureError: {
             title: "{feature} में कुछ गलत हो गया।",

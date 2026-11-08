@@ -13,22 +13,12 @@
 import { ReactNode, useState } from "react";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, FormControl, FormLabel, IconButton, Input, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Handle, Position } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { g, type } from "../../../../theme/tokens";
 import { DEPENDENCY_COLOR, HANDLE } from "../types";
 import type { ScheduleHealthTone } from "../utils/scheduleStatus";
@@ -273,63 +263,13 @@ export const NodeDateEditor = ({
     return (
         // Empty inputs flow through as `null`, so a date is cleared by blanking
         // the field.
-        <Modal sx={{ zIndex }} open onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                variant="outlined"
-                sx={{
-                    minWidth: 340,
-                    maxWidth: 380,
-                    p: 0,
-                    borderRadius: g.radius.lg,
-                    background: g.surface.raised,
-                    border: `1px solid ${g.border.default}`,
-                    boxShadow: g.shadow.lg,
-                    overflow: "hidden",
-                }}
-            >
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={1}
-                    sx={{ px: 2, py: 1.25, borderBottom: `1px solid ${g.border.default}` }}
-                >
-                    <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: g.accent.text }} />
-                    <Typography level="title-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
-                        Edit schedule
-                    </Typography>
-                </Stack>
-                <Stack spacing={1.5} sx={{ px: 2, py: 1.75 }}>
-                    <FormControl size="sm">
-                        <FormLabel sx={labelSx}>Start date</FormLabel>
-                        <Input
-                            sx={pickerSx}
-                            type="date"
-                            value={draftStart}
-                            onChange={(e) => setDraftStart(e.target.value)}
-                        />
-                    </FormControl>
-                    <FormControl size="sm">
-                        <FormLabel sx={labelSx}>Due date</FormLabel>
-                        <Input
-                            sx={pickerSx}
-                            type="date"
-                            value={draftDue}
-                            onChange={(e) => setDraftDue(e.target.value)}
-                        />
-                    </FormControl>
-                </Stack>
-                <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    spacing={1}
-                    sx={{
-                        px: 2,
-                        py: 1.25,
-                        borderTop: `1px solid ${g.border.default}`,
-                        background: g.bg.subtle,
-                    }}
-                >
+        <ModalFrame
+            icon={<CalendarMonthRoundedIcon sx={{ fontSize: 18, color: g.accent.text }} />}
+            size="sm"
+            title="Edit schedule"
+            zIndex={zIndex}
+            actions={
+                <>
                     <Button color="neutral" size="sm" variant="plain" onClick={onClose}>
                         Cancel
                     </Button>
@@ -342,8 +282,31 @@ export const NodeDateEditor = ({
                     >
                         Save
                     </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            open
+            onClose={onClose}
+        >
+            <Stack spacing={1.5}>
+                <FormControl size="sm">
+                    <FormLabel sx={labelSx}>Start date</FormLabel>
+                    <Input
+                        sx={pickerSx}
+                        type="date"
+                        value={draftStart}
+                        onChange={(e) => setDraftStart(e.target.value)}
+                    />
+                </FormControl>
+                <FormControl size="sm">
+                    <FormLabel sx={labelSx}>Due date</FormLabel>
+                    <Input
+                        sx={pickerSx}
+                        type="date"
+                        value={draftDue}
+                        onChange={(e) => setDraftDue(e.target.value)}
+                    />
+                </FormControl>
+            </Stack>
+        </ModalFrame>
     );
 };

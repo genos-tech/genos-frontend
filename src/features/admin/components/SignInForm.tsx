@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
@@ -15,14 +15,13 @@ import {
     FormLabel,
     Input,
     Link,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
+import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import {
     AUTH_LOCAL_STORAGE_KEYS,
@@ -38,6 +37,7 @@ import {
     setPrivateProfile,
 } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import { takeReturn } from "../../../utils/pendingReturn";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
@@ -72,9 +72,19 @@ export const SignInForm = () => {
     const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
+    const theme = useTheme();
+    const forgotFormId = useId();
     const isDark = mode === "dark";
     const styles = isDark ? SignInFormStyles.dark : SignInFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+
+    // Closing resets the transient dialog state, so the next open starts fresh.
+    const closeForgotPassword = () => {
+        setOpenForgotPassword(false);
+        setForgotSucceeded(false);
+        setForgotError(null);
+        setForgotSubmitting(false);
+    };
 
     const _signin = async (email: string, password: string) => {
         setUnverifiedEmail(null);
@@ -581,140 +591,75 @@ export const SignInForm = () => {
                 </Box>
             </Box>
 
-            <Modal
+            <ModalFrame
                 open={openForgotPassword}
-                sx={{ backdropFilter: "blur(4px)" }}
-                onClose={() => {
-                    setOpenForgotPassword(false);
-                    // Reset transient modal state when it closes so the
-                    // next open starts fresh.
-                    setForgotSucceeded(false);
-                    setForgotError(null);
-                    setForgotSubmitting(false);
-                }}
-            >
-                <ModalDialog
-                    sx={{
-                        background: styles.cardBg,
-                        border: `1px solid ${styles.cardBorder}`,
-                        borderRadius: "16px",
-                        boxShadow: styles.cardShadow,
-                        p: 3,
-                        maxWidth: 400,
-                    }}
-                >
-                    <Typography
-                        level="title-lg"
-                        sx={{
-                            background: styles.titleGradient,
-                            backgroundClip: "text",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 700,
-                            mb: 1,
-                        }}
-                    >
-                        {forgotSucceeded
-                            ? t.admin.auth.forgotPassword.successTitle
-                            : t.admin.auth.forgotPassword.title}
-                    </Typography>
-                    <Typography level="body-md" sx={{ color: styles.subtitleColor, mb: 2 }}>
-                        {forgotSucceeded
-                            ? t.admin.auth.forgotPassword.successBody
-                            : t.admin.auth.forgotPassword.body}
-                    </Typography>
-
-                    {!forgotSucceeded && (
-                        <form
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                if (!forgotEmail) return;
-                                setForgotError(null);
-                                setForgotSubmitting(true);
-                                const ok = await requestPasswordReset(forgotEmail, setForgotError);
-                                setForgotSubmitting(false);
-                                if (ok) setForgotSucceeded(true);
-                            }}
-                        >
-                            <FormControl sx={{ mb: 1.5 }} required>
-                                <Input
-                                    placeholder={t.admin.auth.forgotPassword.emailPlaceholder}
-                                    type="email"
-                                    value={forgotEmail}
-                                    startDecorator={
-                                        <EmailRoundedIcon
-                                            sx={{ color: styles.accentColor, fontSize: 20 }}
-                                        />
-                                    }
-                                    sx={{
-                                        "--Input-focusedThickness": "2px",
-                                        "--Input-radius": "10px",
-                                        background: styles.inputBg,
-                                        border: `1px solid ${styles.inputBorder}`,
-                                        py: 1,
-                                        "&:focus-within": {
-                                            borderColor: styles.inputFocusBorder,
-                                            boxShadow: styles.inputFocusShadow,
-                                        },
-                                    }}
-                                    onChange={(e) => setForgotEmail(e.target.value)}
-                                />
-                            </FormControl>
-                            {forgotError && (
-                                <Alert
-                                    color="danger"
-                                    sx={{
-                                        borderRadius: "10px",
-                                        border: `1px solid ${palette.dangerTintBorder}`,
-                                        mb: 1.5,
-                                    }}
-                                >
-                                    {forgotError}
-                                </Alert>
-                            )}
+                size="sm"
+                zIndex={theme.zIndex.modal}
+                actions={
+                    <>
+                        <Button color="neutral" variant="plain" onClick={closeForgotPassword}>
+                            {t.admin.auth.forgotPassword.close}
+                        </Button>
+                        {!forgotSucceeded && (
                             <Button
                                 disabled={forgotSubmitting || !forgotEmail}
+                                form={forgotFormId}
                                 type="submit"
                                 startDecorator={
                                     forgotSubmitting ? <CircularProgress size="sm" /> : null
                                 }
-                                sx={{
-                                    py: 1.25,
-                                    borderRadius: "10px",
-                                    fontWeight: 600,
-                                    background: styles.buttonBg,
-                                    "&:hover": { background: styles.buttonHover },
-                                }}
-                                fullWidth
                             >
                                 {t.admin.auth.forgotPassword.submit}
                             </Button>
-                        </form>
-                    )}
-
-                    <Button
-                        variant="outlined"
-                        sx={{
-                            mt: 2,
-                            borderRadius: "10px",
-                            borderColor: styles.cardBorder,
-                            color: styles.linkColor,
-                            "&:hover": {
-                                borderColor: styles.accentColor,
-                                background: `rgba(${styles.accentColorRgb}, 0.082)`,
-                            },
-                        }}
-                        onClick={() => {
-                            setOpenForgotPassword(false);
-                            setForgotSucceeded(false);
+                        )}
+                    </>
+                }
+                description={
+                    forgotSucceeded
+                        ? t.admin.auth.forgotPassword.successBody
+                        : t.admin.auth.forgotPassword.body
+                }
+                title={
+                    forgotSucceeded
+                        ? t.admin.auth.forgotPassword.successTitle
+                        : t.admin.auth.forgotPassword.title
+                }
+                onClose={closeForgotPassword}
+            >
+                {!forgotSucceeded && (
+                    <form
+                        id={forgotFormId}
+                        onSubmit={async (event) => {
+                            event.preventDefault();
+                            if (!forgotEmail) return;
                             setForgotError(null);
+                            setForgotSubmitting(true);
+                            const ok = await requestPasswordReset(forgotEmail, setForgotError);
                             setForgotSubmitting(false);
+                            if (ok) setForgotSucceeded(true);
                         }}
                     >
-                        {t.admin.auth.forgotPassword.close}
-                    </Button>
-                </ModalDialog>
-            </Modal>
+                        <FormControl required>
+                            <Input
+                                placeholder={t.admin.auth.forgotPassword.emailPlaceholder}
+                                type="email"
+                                value={forgotEmail}
+                                startDecorator={
+                                    <EmailRoundedIcon
+                                        sx={{ color: g.accent.text, fontSize: 20 }}
+                                    />
+                                }
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                            />
+                        </FormControl>
+                        {forgotError && (
+                            <Alert color="danger" sx={{ mt: 1.5 }}>
+                                {forgotError}
+                            </Alert>
+                        )}
+                    </form>
+                )}
+            </ModalFrame>
         </>
     );
 };
