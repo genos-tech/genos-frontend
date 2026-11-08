@@ -3361,6 +3361,7 @@ export const ar: DeepPartial<Messages> = {
             usedAtLeast: "رصيد الذكاء الاصطناعي المستخدم: {credits} على الأقل",
             usedTiny: "رصيد الذكاء الاصطناعي المستخدم: أقل من 0.01",
             unmeasured: "استخدم Genos الذكاء الاصطناعي في هذا. لم يتم قياس الكمية.",
+            noAiUsed: "لم يُستخدم الذكاء الاصطناعي",
             deductedNone: "لم يُخصم شيء من رصيدك",
             deducted: "خُصم {credits} من رصيدك",
             scheduleFallback: "هذا الجدول",
@@ -3374,6 +3375,7 @@ export const ar: DeepPartial<Messages> = {
                 "تم إيقاف {name}. لن يُكتب المزيد ولن يُنفق عليه المزيد من رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
             offSchedule:
                 "تم إيقاف {name}. لن يعمل ولن يستخدم رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
+            offScheduleNoAi: "{name} متوقف. لن يعمل حتى تُعيد تشغيله.",
             alreadyOff: "{name} متوقف بالفعل.",
             restingOff: "{name} متوقف.",
             onAgain: "تمت إعادة تشغيل {name}.",

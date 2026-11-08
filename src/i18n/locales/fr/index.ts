@@ -2310,6 +2310,7 @@ export const fr: DeepPartial<Messages> = {
             usedAtLeast: "Crédits IA utilisés : au moins {credits}",
             usedTiny: "Crédits IA utilisés : moins de 0.01",
             unmeasured: "Genos a utilisé l'IA pour cela. La quantité n'a pas été mesurée.",
+            noAiUsed: "Aucune IA utilisée",
             deductedNone: "Rien n'a été déduit de votre solde",
             deducted: "{credits} déduits de votre solde",
             scheduleFallback: "Cette planification",
@@ -2323,6 +2324,8 @@ export const fr: DeepPartial<Messages> = {
                 "{name} est désactivé. Plus rien ne sera rédigé, ni plus de crédits IA dépensés, jusqu'à la réactivation.",
             offSchedule:
                 "{name} : désactivé. Rien ne s'exécutera ni ne consommera de crédits IA jusqu'à la réactivation.",
+            offScheduleNoAi:
+                "{name} est désactivé. Il ne s'exécutera pas tant que vous ne le réactiverez pas.",
             alreadyOff: "{name} est déjà désactivé.",
             restingOff: "{name} est désactivé.",
             onAgain: "{name} est de nouveau activé.",
