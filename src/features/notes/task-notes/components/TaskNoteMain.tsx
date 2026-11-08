@@ -3,6 +3,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -223,6 +224,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         gap: 0.5,
                         flexWrap: "nowrap",
                         minWidth: 0,
+                        // In a preview modal the dialog's own buttons float over this corner.
+                        ...modalChromeEndPadding(isMobile ? "4px" : "0px"),
                     }}
                 >
                     {isMobile && onMobileBack && isInTaskPage === false && (

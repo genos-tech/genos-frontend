@@ -21,9 +21,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { Toast } from "../../../../components/ui/feedback/Toast";
+import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -85,6 +87,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
+    // Set only inside a preview modal, which draws its own Close (MIP-1296).
+    const isModalHosted = useNoteModalHostZIndex() != null;
     const navigate = useNavigate();
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
@@ -327,6 +331,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     alignItems: "center",
                     px: 1,
                     gap: 0.5,
+                    // In a preview modal the dialog's own buttons float over this corner.
+                    ...modalChromeEndPadding("8px"),
                 }}
             >
                 <IconButton
@@ -545,6 +551,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 ...pageHeaderFrameSx,
                 justifyContent: "space-between",
                 alignItems: "center",
+                // In a preview modal the dialog's own buttons float over this corner.
+                ...modalChromeEndPadding("24px"),
             }}
         >
             <Stack direction="row" spacing={{ xs: 1, md: 1.5 }} sx={{ alignItems: "center" }}>
@@ -723,19 +731,22 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </AppTooltip>
                 )}
 
-                {/* Close Button */}
-                <AppTooltip size="sm" title={t.chat.headers.close}>
-                    <IconButton
-                        size="sm"
-                        color="danger"
-                        variant="plain"
-                        onClick={() => switchSubToMain()}
-                    >
-                        <CloseRoundedIcon
-                            sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
-                        />
-                    </IconButton>
-                </AppTooltip>
+                {/* Close Button. A preview modal has its own Close, right where this one
+                    would sit (MIP-1296). */}
+                {!isModalHosted && (
+                    <AppTooltip size="sm" title={t.chat.headers.close}>
+                        <IconButton
+                            size="sm"
+                            color="danger"
+                            variant="plain"
+                            onClick={() => switchSubToMain()}
+                        >
+                            <CloseRoundedIcon
+                                sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
+                            />
+                        </IconButton>
+                    </AppTooltip>
+                )}
             </Stack>
 
             {/* Add Members Modal */}
