@@ -33,6 +33,7 @@ export const ConnectionStatusSnackbar = ({
             duration={null}
             icon={null}
             open={showWsDisconnected || showApiDown}
+            placement="top"
             tone="danger"
         >
             <Stack spacing={0.5}>
