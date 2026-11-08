@@ -5,7 +5,7 @@ import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
+import { Box, Button, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -453,30 +453,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 {/* "New Todo" button — only when today's group is empty/absent. */}
                                 {!todayExists && (
                                     <AppTooltip title={t.chat.todoPane.createTodayTooltip}>
-                                        <IconButton
+                                        <Button
                                             size="sm"
-                                            sx={{
-                                                borderRadius: "10px",
-                                                px: 1.5,
-                                                py: 0.75,
-                                                fontSize: "13px",
-                                                fontWeight: 600,
-                                                gap: 0.5,
-                                                background: isDark
-                                                    ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)"
-                                                    : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brandalt-500) 100%)",
-                                                color: "#fff",
-                                                "&:hover": {
-                                                    background: isDark
-                                                        ? "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)"
-                                                        : "linear-gradient(135deg, var(--gp-brand-800) 0%, var(--gp-brand-700) 100%)",
-                                                },
-                                            }}
+                                            startDecorator={<AddIcon sx={{ fontSize: "18px" }} />}
                                             onClick={handleCreateTodayGroup}
                                         >
-                                            <AddIcon sx={{ fontSize: "18px" }} />
                                             {t.chat.todoPane.startToday}
-                                        </IconButton>
+                                        </Button>
                                     </AppTooltip>
                                 )}
 

@@ -369,24 +369,7 @@ export const TaskHomeLayout = ({
                             <Button
                                 size="lg"
                                 startDecorator={<AddRoundedIcon />}
-                                sx={{
-                                    mt: 0.5,
-                                    px: 2.5,
-                                    py: 1.1,
-                                    borderRadius: "12px",
-                                    fontWeight: 600,
-                                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
-                                    boxShadow: `0 8px 20px rgba(${accentRgb}, 0.271)`,
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.867) 100%)`,
-                                        transform: "translateY(-1px)",
-                                        boxShadow: `0 12px 28px rgba(${accentRgb}, 0.333)`,
-                                    },
-                                    "&:active": {
-                                        transform: "translateY(0)",
-                                    },
-                                }}
+                                sx={{ mt: 0.5 }}
                                 onClick={() => usePM.setOpenCreateProject(true)}
                             >
                                 {t.tasks.layout.createProject}

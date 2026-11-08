@@ -235,36 +235,6 @@ export const ChatNoteHeader = ({
         }
     };
 
-    // Action button style
-    const actionButtonStyle = {
-        background: styles.buttonBg,
-        border: `1px solid ${styles.buttonBorder}`,
-        borderRadius: "10px",
-        color: styles.textColor,
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.buttonHover,
-            transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Danger button style (Close)
-    const dangerButtonStyle = {
-        background: styles.dangerBg,
-        border: `1px solid ${styles.dangerBorder}`,
-        borderRadius: "10px",
-        width: "36px",
-        height: "36px",
-        transition: "all 0.2s ease",
-        "&:hover": {
-            background: styles.dangerHover,
-            transform: "translateY(-1px)",
-        },
-    };
-
     // Avatar container style
     const avatarContainerStyle = {
         p: 0.5,
@@ -426,7 +396,6 @@ export const ChatNoteHeader = ({
                     <AppTooltip size="sm" title={t.notes.header.openRelatedChat}>
                         <IconButton
                             size="sm"
-                            sx={actionButtonStyle}
                             variant="plain"
                             onClick={() => {
                                 // Seed the chat-panel note state with the note
@@ -465,7 +434,6 @@ export const ChatNoteHeader = ({
                         <IconButton
                             aria-label={t.noteAsk.headerButton.tooltip}
                             size="sm"
-                            sx={actionButtonStyle}
                             variant="plain"
                             onClick={openNoteAsk}
                         >
@@ -614,8 +582,7 @@ export const ChatNoteHeader = ({
                             iconFontSize={20}
                             items={items}
                             placement="bottom-end"
-                            triggerSize={36}
-                            triggerSx={actionButtonStyle}
+                            triggerSize={32}
                             // Modal-hosted note preview: lift the dropdown
                             // above the UrlLinkModal (default 9999 is behind).
                             zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
@@ -627,8 +594,8 @@ export const ChatNoteHeader = ({
                 {(isInChatPage === true || isInTaskPage === true) && (
                     <AppTooltip size="sm" title={t.notes.header.close}>
                         <IconButton
+                            color="danger"
                             size="sm"
-                            sx={dangerButtonStyle}
                             variant="plain"
                             onClick={() => {
                                 useCM.setIsChatNoteVisibleInChat(false);

@@ -188,23 +188,7 @@ export const NoteAccessRequestPanel = ({
                 )}
 
                 {!sent && (
-                    <Button
-                        endDecorator={<SendIcon sx={{ fontSize: 16 }} />}
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brand-500) 0%, var(--gp-brandalt-500) 100%)",
-                            borderRadius: "10px",
-                            px: 3,
-                            fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(var(--gp-brand-500-rgb), 0.3)",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(var(--gp-brand-500-rgb), 0.4)",
-                            },
-                        }}
-                        onClick={handleSend}
-                    >
+                    <Button endDecorator={<SendIcon sx={{ fontSize: 16 }} />} onClick={handleSend}>
                         {t.notes.accessRequest.sendButton}
                     </Button>
                 )}

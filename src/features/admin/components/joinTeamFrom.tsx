@@ -31,6 +31,7 @@ import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import { useTranslation } from "../../../i18n";
 import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import { CreateTeamResponse, FindTeamResponse, Team } from "../../../types/admin";
 import { sleepMilliSeconds } from "../../../utils/sleep";
 import { createTeam } from "../services/createTeam";
@@ -508,15 +509,6 @@ export const JoinTeam = () => {
                         </Button>
                         <Button
                             startDecorator={<SendRoundedIcon />}
-                            sx={{
-                                background: palette.primaryButtonBg,
-                                borderRadius: "10px",
-                                boxShadow: palette.primaryButtonShadow,
-                                "&:hover": {
-                                    background: palette.primaryButtonHover,
-                                    transform: "translateY(-1px)",
-                                },
-                            }}
                             onClick={() => getApproveToJoinTeam(foundTeamDetails)}
                         >
                             {t.admin.joinTeam.requestToJoin}
@@ -623,20 +615,8 @@ export const JoinTeam = () => {
                         </FormControl>
                         <Button
                             startDecorator={<SearchRoundedIcon />}
+                            sx={{ mt: 2 }}
                             type="submit"
-                            sx={{
-                                mt: 2,
-                                py: 1.25,
-                                background: styles.buttonBg,
-                                borderRadius: "12px",
-                                fontWeight: 600,
-                                boxShadow: styles.buttonShadow,
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                    transform: "translateY(-2px)",
-                                },
-                            }}
                             fullWidth
                         >
                             {t.admin.joinTeam.searchTeam}
@@ -662,7 +642,7 @@ export const JoinTeam = () => {
                             width: 36,
                             height: 36,
                             borderRadius: "10px",
-                            background: palette.primaryButtonBg,
+                            background: g.accent.solid,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -751,20 +731,8 @@ export const JoinTeam = () => {
                     </Typography>
                     <Button
                         startDecorator={<AddCircleRoundedIcon />}
+                        sx={{ mt: 2 }}
                         type="submit"
-                        sx={{
-                            mt: 2,
-                            py: 1.25,
-                            background: palette.primaryButtonBg,
-                            borderRadius: "12px",
-                            fontWeight: 600,
-                            boxShadow: palette.primaryButtonShadow,
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                                background: palette.primaryButtonHover,
-                                transform: "translateY(-2px)",
-                            },
-                        }}
                         fullWidth
                     >
                         {t.admin.joinTeam.createTeam}

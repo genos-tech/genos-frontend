@@ -2182,31 +2182,10 @@ const MilestonePreviewInner = ({
                         Open/Pending → WIP → Closed flow. */}
                         {(milestone.status === "Open" || milestone.status === "Pending") && (
                             <Button
+                                color="warning"
                                 size="sm"
                                 startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
                                 variant="soft"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "12px",
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                    background:
-                                        "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
-                                    color: "white",
-                                    boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background:
-                                            "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
-                                        boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
-                                        transform: "translateY(-1px)",
-                                    },
-                                    "&:active": {
-                                        transform: "translateY(0)",
-                                        boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
-                                    },
-                                }}
                                 onClick={() => handleMilestoneStatusChange("WIP")}
                             >
                                 Start Milestone
@@ -2214,31 +2193,10 @@ const MilestonePreviewInner = ({
                         )}
                         {milestone.status === "WIP" && (
                             <Button
+                                color="success"
                                 size="sm"
                                 startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
                                 variant="soft"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "12px",
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                    background:
-                                        "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
-                                    color: "white",
-                                    boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background:
-                                            "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
-                                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
-                                        transform: "translateY(-1px)",
-                                    },
-                                    "&:active": {
-                                        transform: "translateY(0)",
-                                        boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
-                                    },
-                                }}
                                 onClick={() => handleMilestoneStatusChange("Closed")}
                             >
                                 Complete Milestone
@@ -2266,18 +2224,6 @@ const MilestonePreviewInner = ({
                                     <IconButton
                                         size="sm"
                                         variant="plain"
-                                        sx={{
-                                            background: styles.buttonBg,
-                                            border: `1px solid ${styles.buttonBorder}`,
-                                            borderRadius: "10px",
-                                            width: "36px",
-                                            height: "36px",
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                background: styles.buttonHover,
-                                                transform: "translateY(-1px)",
-                                            },
-                                        }}
                                         onClick={() => {
                                             const typePath = {
                                                 1: "dm",
@@ -2313,18 +2259,6 @@ const MilestonePreviewInner = ({
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={{
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                        borderRadius: "10px",
-                                        width: "36px",
-                                        height: "36px",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-1px)",
-                                        },
-                                    }}
                                     onClick={() => setOpenTaskDiagram(true)}
                                 >
                                     <AccountTreeRoundedIcon
@@ -2513,12 +2447,7 @@ const MilestonePreviewInner = ({
                                     items={items}
                                     menuMinWidth={220}
                                     placement="bottom-end"
-                                    triggerSize={36}
-                                    triggerSx={{
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                        borderRadius: "10px",
-                                    }}
+                                    triggerSize={32}
                                     // Modal-hosted milestone preview: lift
                                     // the dropdown above the UrlLinkModal
                                     // (same fix as the task header's menu).
@@ -2531,20 +2460,9 @@ const MilestonePreviewInner = ({
                         {hostZIndex == null && (
                             <AppTooltip title={t.tasks.preview.closeTooltip}>
                                 <IconButton
+                                    color="danger"
                                     size="sm"
                                     variant="plain"
-                                    sx={{
-                                        background: styles.dangerBg,
-                                        border: `1px solid ${styles.dangerBorder}`,
-                                        borderRadius: "10px",
-                                        width: "36px",
-                                        height: "36px",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.dangerHover,
-                                            transform: "translateY(-1px)",
-                                        },
-                                    }}
                                     onClick={() => {
                                         useTM.setIsTaskPreviewVisible(false);
                                         useTM.setCurrentPreviewKind("task");

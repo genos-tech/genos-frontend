@@ -111,13 +111,6 @@ export const TaskPaneError = ({
                 size="sm"
                 startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
                 variant="solid"
-                sx={{
-                    fontWeight: 600,
-                    borderRadius: "10px",
-                    px: 2.5,
-                    background:
-                        "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                }}
                 onClick={onRetry}
             >
                 {retryLabel}

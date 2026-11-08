@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
+    Button,
     Chip,
     CircularProgress,
-    IconButton,
     Input,
     List,
     ListItem,
@@ -17,7 +17,6 @@ import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
-import { ActionButtonStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -84,7 +83,6 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const urlLinkModal = useUrlLinkModal();
-    const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
     const openLanding = useTaskOpenLanding();
 
@@ -271,29 +269,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 sx={{ alignItems: "center", justifyContent: "space-between", pb: 0.5 }}
             >
                 <SectionHeader isDark={isDark}>{title}</SectionHeader>
-                <IconButton
+                <Button
                     size="sm"
-                    sx={{
-                        background: styles.createButtonBg,
-                        color: "#fff",
-                        borderRadius: "10px",
-                        px: 1.5,
-                        py: 0.75,
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        gap: 0.5,
-                        boxShadow: isDark
-                            ? "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.4)"
-                            : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                            background: styles.createButtonHover,
-                            transform: "translateY(-1px)",
-                            boxShadow: isDark
-                                ? "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.5)"
-                                : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
-                        },
-                    }}
+                    startDecorator={<AddIcon sx={{ fontSize: "18px" }} />}
                     onClick={() => {
                         if (
                             currentTaskContent.id !== undefined &&
@@ -324,9 +302,8 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         }
                     }}
                 >
-                    <AddIcon sx={{ fontSize: "18px" }} />
                     {buttonLabel}
-                </IconButton>
+                </Button>
             </Stack>
 
             {childTasks.length > 0 && (
