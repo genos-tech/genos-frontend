@@ -391,9 +391,17 @@ export const CellTextInput = ({
 // Joy writes: a dark app on a light OS no longer gets a black icon on a dark field.
 
 const dateFieldSx = {
-    "& input": { colorScheme: "light" },
+    // A date column is ~110px wide: "yyyy/mm/dd" and the picker icon must both fit.
+    fontSize: "0.8rem",
+    "--Input-paddingInline": "6px",
+    "& input": { colorScheme: "light", minWidth: 0 },
     '[data-joy-color-scheme="dark"] & input': { colorScheme: "dark" },
-    "& input::-webkit-calendar-picker-indicator": { cursor: "pointer" },
+    "& input::-webkit-calendar-picker-indicator": {
+        cursor: "pointer",
+        margin: 0,
+        marginInlineStart: "2px",
+        padding: 0,
+    },
 } as const;
 
 export const CellDateInput = ({

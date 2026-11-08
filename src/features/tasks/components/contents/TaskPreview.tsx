@@ -17,7 +17,7 @@ import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Box, Button, Divider, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -26,6 +26,7 @@ import { useInitialTabIndex } from "./utils/useInitialTabIndex";
 import { usePreviewEditMirror } from "./utils/usePreviewEditMirror";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -1996,17 +1997,17 @@ const MilestonePreviewInner = ({
         }
     };
 
-    // Title save on blur / Enter.
-    const saveTitle = async () => {
+    // Title save on blur / Enter (InlineTitleEdit hands over the trimmed text).
+    const saveTitle = async (next: string) => {
         if (!milestone) return;
-        if (titleDraft.trim() === milestone.title) {
+        if (next === milestone.title) {
             // Nothing to persist — and the draft already matches the store,
             // so the input is no longer dirty. Let external renames back in.
             markTitleSaved();
             return;
         }
         const updated = await useSM.updateExistingMilestone(
-            { milestoneId: milestone.milestoneId, title: titleDraft.trim() },
+            { milestoneId: milestone.milestoneId, title: next },
             milestone.projectId
         );
         if (updated) {
@@ -2665,15 +2666,15 @@ const MilestonePreviewInner = ({
                         </Stack>
                     )}
 
-                    <Input
-                        size="lg"
-                        sx={{ fontSize: 18, fontWeight: 600 }}
+                    <InlineTitleEdit
+                        ariaLabel={t.tasks.titleBlock.titlePlaceholder}
+                        level="h3"
+                        placeholder={t.tasks.titleBlock.titlePlaceholder}
                         value={titleDraft}
-                        onBlur={saveTitle}
-                        onChange={(e) => setTitleDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                        }}
+                        variant="field"
+                        onCancel={markTitleSaved}
+                        onCommit={(next) => void saveTitle(next)}
+                        onDraftChange={setTitleDraft}
                     />
                 </>
             }
