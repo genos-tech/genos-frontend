@@ -13,7 +13,8 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
-import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
@@ -38,7 +39,8 @@ export function ThreadPanelV3({
     onImportAsNote,
 }: ThreadPanelV3Props) {
     const { t } = useTranslation();
-    const { root, replies, replyInThread, isLoading } = useChannelThread(channelId, rootMessageId);
+    const { root, replies, replyInThread, isLoading, loadFailed, reload, reloading } =
+        useChannelThread(channelId, rootMessageId);
     const currentUserId = typeof window === "undefined" ? null : localStorage.getItem("userId");
     // Picker candidates come from the people we've already seen in this
     // thread — root + replies. That keeps the mention scope tight to
@@ -137,7 +139,38 @@ export function ThreadPanelV3({
                     padding: "8px 12px",
                 }}
             >
-                {isLoading && <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.loading}</div>}
+                {/* `isLoading` stays true while the root is missing, so a failed load
+                    needs its own branch (MIP-1299): skeleton while loading or retrying,
+                    ErrorState + Retry when the history sync failed, nothing else. */}
+                {!root && (
+                    <DataState
+                        error={loadFailed}
+                        hasData={false}
+                        loading={(isLoading && !loadFailed) || reloading}
+                        size="sm"
+                        errorState={{
+                            "data-error": "channel-thread",
+                            onRetry: reload,
+                            title: t.chat.channel.thread.loadFailed,
+                        }}
+                        skeleton={
+                            <SkeletonRows
+                                count={4}
+                                label={t.chat.channel.thread.loading}
+                                avatar
+                                twoLines
+                            />
+                        }
+                    />
+                )}
+                {isLoading && root && (
+                    <SkeletonRows
+                        count={4}
+                        label={t.chat.channel.thread.loading}
+                        avatar
+                        twoLines
+                    />
+                )}
                 {!isLoading && root && (
                     <>
                         <div
@@ -275,10 +308,21 @@ export function ThreadPanelV3({
                             ))}
                             {replies.length === 0 && (
                                 <li>
-                                    <EmptyState
-                                        body={t.chat.channel.thread.noReplies}
-                                        data-empty="channel-replies"
+                                    <DataState
+                                        error={loadFailed}
+                                        hasData={false}
+                                        loading={reloading}
                                         size="sm"
+                                        skeleton={<SkeletonRows count={3} avatar />}
+                                        empty={{
+                                            body: t.chat.channel.thread.noReplies,
+                                            "data-empty": "channel-replies",
+                                        }}
+                                        errorState={{
+                                            "data-error": "channel-replies",
+                                            onRetry: reload,
+                                            title: t.chat.channel.thread.loadFailed,
+                                        }}
                                     />
                                 </li>
                             )}
