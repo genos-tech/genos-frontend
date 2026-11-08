@@ -32,7 +32,7 @@ import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnack
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { isSendShortcut, useChatComposer } from "./composer/useChatComposer";
+import { useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
@@ -112,6 +112,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         onLinesChange: setNumEditorLines,
         holdWhileUploading: false,
         clear: "never",
+        // Save and Cmd/Ctrl+Enter both close the editor right after firing the save.
+        onSendAttempt: () => setIsInEdit(false),
         submit: async (blocks) => {
             // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
             // plus a sibling `socket.emit("message", PUT, ...)` mirror at
@@ -215,12 +217,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo // custom font
                     onChange={composer.viewProps.onChange}
-                    onKeyDown={(event) => {
-                        if (isSendShortcut(event)) {
-                            void composer.send();
-                            setIsInEdit(false);
-                        }
-                    }}
+                    onKeyDown={composer.viewProps.onKeyDown}
                 >
                     <IconButton
                         color="success"
@@ -234,10 +231,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        onClick={async () => {
-                            composer.send();
-                            setIsInEdit(false);
-                        }}
+                        onClick={composer.trigger}
                     >
                         Save
                     </IconButton>

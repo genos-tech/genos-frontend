@@ -236,6 +236,47 @@ describe("useChatComposer send", () => {
         expect(isSendShortcut({ key: "a", metaKey: true, ctrlKey: false })).toBe(false);
     });
 
+    it("trigger starts the send and calls onSendAttempt synchronously, even when the guards bail", async () => {
+        const onSendAttempt = vi.fn();
+        const view = await setup({ clear: "never", draftKey: null, onSendAttempt });
+        // nothing typed: send() returns early, the host still closes
+        act(() => view.result.current.trigger());
+        expect(onSendAttempt).toHaveBeenCalledTimes(1);
+        expect(view.submit).not.toHaveBeenCalled();
+        act(() => lastEditor().type("hello"));
+        act(() => view.result.current.trigger());
+        expect(onSendAttempt).toHaveBeenCalledTimes(2);
+        expect(view.submit).toHaveBeenCalledTimes(1);
+        await flush();
+    });
+
+    it("the chord goes through trigger", async () => {
+        const onSendAttempt = vi.fn();
+        const view = await setup({ clear: "never", draftKey: null, onSendAttempt });
+        act(() => lastEditor().type("hello"));
+        act(() =>
+            view.result.current.viewProps.onKeyDown({
+                key: "Enter",
+                metaKey: true,
+                ctrlKey: false,
+            } as any)
+        );
+        expect(onSendAttempt).toHaveBeenCalledTimes(1);
+        expect(view.submit).toHaveBeenCalledTimes(1);
+        await flush();
+    });
+
+    it("Send state follows the isSendable override, not only hasSendableContent", async () => {
+        const view = await setup({
+            isSendable: (blocks: any[]) => blocks.length > 1,
+            draftKey: null,
+        });
+        act(() => lastEditor().type("hello"));
+        expect(view.result.current.sendDisabled).toBe(true);
+        act(() => lastEditor().type("hello", 1));
+        expect(view.result.current.sendDisabled).toBe(false);
+    });
+
     it("an isSendable override replaces the default emptiness rule", async () => {
         const view = await setup({ isSendable: () => true, draftKey: null });
         await act(async () => view.result.current.send());

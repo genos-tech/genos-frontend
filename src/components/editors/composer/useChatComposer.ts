@@ -123,6 +123,10 @@ export interface UseChatComposerOptions<R> {
     submit: (blocks: any[]) => Promise<R | false | void> | R | false | void;
     /** After a clean send and the clear (`clear: "after"`): the v3 composer's own cleanup. */
     onSent?: (result: R) => void;
+    /** Called synchronously right after the chord or `trigger()` has started a send, whether or
+     *  not the guards let it through (edit-in-place hosts close their editor here, as they
+     *  always did, even when there was nothing to save). */
+    onSendAttempt?: () => void;
 }
 
 const fileBlock = (file: File, url: string) =>
@@ -147,6 +151,7 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         clear = "before",
         submit,
         onSent,
+        onSendAttempt,
     } = options;
 
     // Counter wraps every `uploadFile` call so the "Uploading n files" pill reflects in-flight
@@ -316,22 +321,29 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         }
     };
 
+    /** What the chord and an edit-in-place Save button do: start the send, then `onSendAttempt`. */
+    const trigger = () => {
+        void send();
+        onSendAttempt?.();
+    };
+
     /** Props for `BlockNoteView`. */
     const viewProps = {
         onChange: () => {
             const doc = editor.document;
             onLinesChange?.(countEditorLines(doc));
-            if (trackCanSend) setCanSend(hasSendableContent(doc));
+            if (trackCanSend) setCanSend(isSendable(doc));
             saveDraft(doc);
         },
         onKeyDown: (event: ReactKeyboardEvent) => {
-            if (isSendShortcut(event)) void send();
+            if (isSendShortcut(event)) trigger();
         },
     };
 
     return {
         editor,
         send,
+        trigger,
         clear: clearComposer,
         viewProps,
         canSend,
