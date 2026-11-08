@@ -380,6 +380,63 @@ describe("a schedule that already exists", () => {
         );
     });
 
+    it("does not flag an untouched new form, but says so when it is submitted as it is", async () => {
+        // The form opens on the first report at 09:00, which is the existing Morning plan's slot.
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await openNew(user);
+        // untouched: nothing yet, and Create is available
+        expect(screen.queryByText(/You already have/)).toBeNull();
+        const create = screen.getByRole("button", { name: "Create schedule" });
+        expect(create).toBeEnabled();
+        await user.click(create);
+        // submitted as it is: the sentence, no call to the API
+        expect(
+            await screen.findByText(
+                "You already have a schedule that does the same thing at the same time: Morning plan."
+            )
+        ).toBeTruthy();
+        expect(createSchedule).not.toHaveBeenCalled();
+        expect(screen.getByRole("button", { name: "Create schedule" })).toBeDisabled();
+    });
+
+    it("keeps two look-alike schedules editable: only a change that makes the copy is blocked", async () => {
+        updateSchedule.mockResolvedValue({ ok: true, schedule: SCHEDULE });
+        listSchedules.mockResolvedValue(
+            LIST([SCHEDULE, { ...SCHEDULE, id: "s9", name: "Morning plan" }])
+        );
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click((await screen.findAllByRole("button", { name: "Edit" }))[0]);
+        // already alike before the edit: not flagged, push can be toggled and saved
+        expect(screen.queryByText(/You already have/)).toBeNull();
+        await user.click(within(screen.getByTestId("schedule-form")).getByRole("switch"));
+        expect(screen.queryByText(/You already have/)).toBeNull();
+        await user.click(screen.getByRole("button", { name: "Save changes" }));
+        await waitFor(() => expect(updateSchedule).toHaveBeenCalledTimes(1));
+    });
+
+    it("blocks an edit that turns a schedule into a copy of another", async () => {
+        listSchedules.mockResolvedValue(
+            LIST([
+                SCHEDULE,
+                { ...SCHEDULE, id: "s2", name: "Evening", timeOfDay: "17:00", when: "17:00" },
+            ])
+        );
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click((await screen.findAllByRole("button", { name: "Edit" }))[1]);
+        const time = screen.getByLabelText("Time (24-hour)");
+        await user.clear(time);
+        await user.type(time, "09:00");
+        expect(
+            await screen.findByText(
+                "You already have a schedule that does the same thing at the same time: Morning plan."
+            )
+        ).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    });
+
     it("does not call the schedule being edited a duplicate of itself", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();

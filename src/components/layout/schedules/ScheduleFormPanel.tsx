@@ -112,16 +112,33 @@ export const ScheduleFormPanel = ({
         [form, job, keepsUnknownJob]
     );
     const show = touched && hasProblems(problems);
+    // The form as it opened, to tell "the member changed something" from "the form is
+    // simply what it opened as" (the default new form is often a copy of Morning plan).
+    const [initialForm] = useState(form);
+    const dirty = JSON.stringify(form) !== JSON.stringify(initialForm);
     // The API refuses a duplicate with a sentence of its own (shown below if it
     // gets that far); this is the same question asked of the list on screen, so the
-    // answer comes while typing. Only for a form that is otherwise valid.
-    const duplicate = useMemo(
-        () =>
-            hasProblems(problems)
-                ? null
-                : findDuplicate(buildCreate(form, job), existing, schedule?.id),
-        [problems, form, job, existing, schedule?.id]
-    );
+    // answer comes while typing. Only for a form that is otherwise valid, and for an
+    // edit only when the change CREATES the duplicate: two schedules that already
+    // look alike must stay editable (pause, push, time) without the first one flagged.
+    const duplicateNow = useMemo(() => {
+        if (hasProblems(problems)) return null;
+        const found = findDuplicate(buildCreate(form, job), existing, schedule?.id);
+        if (!found || !schedule) return found;
+        const before = findDuplicate(
+            buildCreate(
+                formFromSchedule(schedule, jobs),
+                jobs.find((j) => j.job === schedule.job)
+            ),
+            existing,
+            schedule.id
+        );
+        return before?.kind === found.kind && before.schedule.id === found.schedule.id
+            ? null
+            : found;
+    }, [problems, form, job, jobs, existing, schedule]);
+    // Shown (and blocking) once the member has changed the form or tried to save it.
+    const duplicate = dirty || touched ? duplicateNow : null;
 
     // Any edit makes the API's last refusal stale, so it goes: what it said was about the
     // form as it was sent, and left up it would sit beside the instant checks as a second,
@@ -170,7 +187,8 @@ export const ScheduleFormPanel = ({
             setRefused((n) => n + 1);
             return;
         }
-        if (busy) return;
+        // An unchanged form that is a copy: say so here instead of asking the API.
+        if (duplicateNow || busy) return;
         setBusy(true);
         setFailure(null);
         const res = await onSubmit(
