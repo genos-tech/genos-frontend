@@ -44,18 +44,23 @@ const leaves = (node: unknown, prefix = "", out: Record<string, string> = {}) =>
 const PLURAL = /\{(\w+),\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\}\}/g;
 
 /** The arguments of a message: plural counts and plain `{name}`s (a set: a translation may repeat or drop a repeat). */
+/** What is left of a message once its readable plurals are cut out (`split` with the three
+ *  capture groups returns text, key, one, other, text, ...: every fourth piece is text). */
+const outsidePlurals = (s: string): string =>
+    s
+        .split(PLURAL)
+        .filter((_, i) => i % 4 === 0)
+        .join("");
+
 const placeholders = (s: string): string[] => {
     const names = new Set<string>();
-    const rest = s.replace(PLURAL, (_m, key: string) => {
-        names.add(key);
-        return "";
-    });
-    for (const m of rest.matchAll(/\{(\w+)\}/g)) names.add(m[1]);
+    for (const m of s.matchAll(PLURAL)) names.add(m[1]);
+    for (const m of outsidePlurals(s).matchAll(/\{(\w+)\}/g)) names.add(m[1]);
     return [...names].sort();
 };
 
 /** Plurals the formatter cannot read (zero/two/few/many forms, nesting, a stray brace). */
-const unreadablePlural = (s: string): boolean => /plural\s*,/.test(s.replace(PLURAL, ""));
+const unreadablePlural = (s: string): boolean => /plural\s*,/.test(outsidePlurals(s));
 
 /** Plural keys whose branches carry `#` (the number) in English: a translation must keep it in `other` (`one` may spell the singular out, as Arabic does). */
 const hashKeys = (s: string): string[] =>
