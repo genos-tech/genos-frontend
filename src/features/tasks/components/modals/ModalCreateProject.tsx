@@ -3,10 +3,10 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -387,12 +387,11 @@ export const ModalCreateProject: React.FC<Props> = ({
             )}
 
             {/* Member Search */}
-            <Input
+            <SearchField
                 placeholder={t.tasks.modals.createProject.searchMembersPlaceholder}
-                startDecorator={<SearchRoundedIcon sx={{ color: g.text.tertiary }} />}
                 sx={{ mb: 1 }}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={setSearchQuery}
             />
 
             {/* Member List */}

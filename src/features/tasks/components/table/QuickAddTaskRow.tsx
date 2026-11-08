@@ -19,6 +19,7 @@ import {
 } from "../../utils/taskFieldRules";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import {
+    CellDateInput,
     CellTextInput,
     ChipSelect,
     effortSelectNode,
@@ -40,7 +41,8 @@ type QuickAddTaskRowProps = {
     // Same `columnsWithWidths` array the sibling rows receive, so the
     // draft row's cells line up with the table grid exactly.
     columns: ColumnDef[];
-    mode: "light" | "dark" | undefined;
+    /** Unused since the date input follows the theme by token; kept so callers need no change. */
+    mode?: "light" | "dark" | undefined;
     teamMembers: UserProps[];
     // The focused project's tags — options for the tags cell and the
     // "tags-required is inactive with zero tags" liveness check.
@@ -82,7 +84,6 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
         parentTask,
         depth,
         columns,
-        mode,
         teamMembers,
         projectTags,
         fieldRules,
@@ -336,20 +337,11 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
 
             case "dueDate":
                 return (
-                    <input
+                    <CellDateInput
+                        ariaLabel={t.tasks.table.columns.dueDate}
                         disabled={isSubmitting}
-                        type="date"
                         value={dueDate ?? ""}
-                        style={{
-                            width: "100%",
-                            padding: "5px 8px",
-                            fontSize: "0.8rem",
-                            border: `1px solid ${mode === "dark" ? "#555" : "#ccc"}`,
-                            borderRadius: "6px",
-                            backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
-                            color: mode === "dark" ? "#e0e0e0" : "#333",
-                        }}
-                        onChange={(e) => setDueDate(e.target.value || null)}
+                        onChange={(next) => setDueDate(next || null)}
                     />
                 );
 

@@ -7,7 +7,6 @@ import {
     Chip,
     Divider,
     IconButton,
-    Input,
     Option,
     Select,
     Stack,
@@ -18,6 +17,7 @@ import { useTheme } from "@mui/joy/styles";
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -295,12 +295,11 @@ export const ModalNoteSharing = ({
                         {t.notes.sharing.addTeammate}
                     </Typography>
 
-                    <Input
+                    <SearchField
                         placeholder={t.notes.sharing.searchPlaceholder}
-                        size="sm"
                         sx={{ mb: 1 }}
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={setSearch}
                     />
 
                     <Box sx={{ maxHeight: 220, overflow: "auto" }}>

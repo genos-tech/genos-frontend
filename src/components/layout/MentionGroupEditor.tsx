@@ -27,6 +27,7 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
+import { SearchField } from "../ui/fields/SearchField";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 
 type Props = {
@@ -279,11 +280,10 @@ export const MentionGroupEditor = ({
                 <PersonAddAltRoundedIcon sx={{ fontSize: 18, opacity: 0.7 }} />
                 <Typography level="title-md">{t.settings.mentionGroups.addMembers}</Typography>
             </Stack>
-            <Input
+            <SearchField
                 placeholder={t.settings.mentionGroups.searchMembersPlaceholder}
-                size="md"
                 value={memberPickerQuery}
-                onChange={(e) => setMemberPickerQuery(e.target.value)}
+                onChange={setMemberPickerQuery}
             />
             <List
                 sx={{

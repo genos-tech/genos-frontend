@@ -6,6 +6,9 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const es: DeepPartial<Messages> = {
     common: {
+        searchField: {
+            clear: "Borrar búsqueda",
+        },
         feedback: {
             loading: "Cargando…",
             toast: {

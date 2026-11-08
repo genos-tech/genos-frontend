@@ -378,6 +378,65 @@ export const CellTextInput = ({
     </FormControl>
 );
 
+// ── CellDateInput: the date-field editor ──────────────────────────────────────
+//
+// The table row's due date, a custom date field and the quick-add row's due date
+// were three raw `<input type="date">` with hard-coded colors chosen by `mode`
+// (`#1e1e1e` / `#555` / `#ccc`), their own height and radius. This is the same
+// compact field as every other cell editor, from the tokens.
+//
+// The browser draws the date text, the segments and the calendar icon from the
+// element's `color-scheme`, which `index.css` leaves at `light dark` (the OS
+// preference). Mode here is the app's own, so it is set from the root attribute
+// Joy writes: a dark app on a light OS no longer gets a black icon on a dark field.
+
+const dateFieldSx = {
+    // A date column is ~110px wide: "yyyy/mm/dd" and the picker icon must both fit.
+    fontSize: "0.8rem",
+    "--Input-paddingInline": "6px",
+    "& input": { colorScheme: "light", minWidth: 0 },
+    '[data-joy-color-scheme="dark"] & input': { colorScheme: "dark" },
+    "& input::-webkit-calendar-picker-indicator": {
+        cursor: "pointer",
+        margin: 0,
+        marginInlineStart: "2px",
+        padding: 0,
+    },
+} as const;
+
+export const CellDateInput = ({
+    value,
+    onChange,
+    onBlur,
+    onKeyDown,
+    disabled,
+    autoFocus,
+    ariaLabel,
+    sx,
+}: {
+    /** `YYYY-MM-DD`, or "" for no date. */
+    value: string;
+    onChange: (value: string) => void;
+    onBlur?: () => void;
+    onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+    disabled?: boolean;
+    autoFocus?: boolean;
+    ariaLabel?: string;
+    sx?: SxProps;
+}) => (
+    <Input
+        autoFocus={autoFocus}
+        disabled={disabled}
+        size="sm"
+        slotProps={{ input: { type: "date", "aria-label": ariaLabel } }}
+        sx={[fieldSx, titleFieldSx, dateFieldSx, ...asArray(sx)]}
+        value={value}
+        onBlur={onBlur}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={onKeyDown}
+    />
+);
+
 // ── MemberAutocomplete: pick one team member ──────────────────────────────────
 
 const matchesMember = (member: UserProps, term: string) =>

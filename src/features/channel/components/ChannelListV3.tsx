@@ -25,6 +25,7 @@
 import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { SearchField } from "../../../components/ui/fields/SearchField";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { ChannelKind, type Channel } from "../../../types/channel";
@@ -155,18 +156,12 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                     background: "#fff",
                 }}
             >
-                <input
-                    data-testid="channel-list-v3-search"
+                <SearchField
                     placeholder={t.chat.channel.list.searchPlaceholder}
-                    type="search"
+                    size="sm"
+                    testId="channel-list-v3-search"
                     value={query}
-                    style={{
-                        width: "100%",
-                        padding: "4px 8px",
-                        boxSizing: "border-box",
-                        fontSize: 13,
-                    }}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={setQuery}
                 />
             </div>
 

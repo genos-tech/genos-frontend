@@ -4,6 +4,7 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
@@ -70,8 +71,6 @@ export const ModalManageTodoTags = ({
     const { t } = useTranslation();
     const isDark = mode === "dark";
 
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [editingName, setEditingName] = useState("");
     // Two-click delete: first click arms the row, second confirms.
     const [armedDeleteId, setArmedDeleteId] = useState<number | null>(null);
     const [newName, setNewName] = useState("");
@@ -80,16 +79,16 @@ export const ModalManageTodoTags = ({
     const [busy, setBusy] = useState(false);
 
     const reset = () => {
-        setEditingId(null);
         setArmedDeleteId(null);
         setError(null);
     };
 
-    const commitRename = async (category: TodoCategoryProps) => {
-        const valid = validateName(editingName, categories, category.categoryId);
-        setEditingId(null);
+    // The inline rename is the shared InlineTitleEdit: it hands over trimmed, non-empty,
+    // changed text; this refuses a duplicate or an over-long name with the message.
+    const commitRename = async (category: TodoCategoryProps, next: string) => {
+        const valid = validateName(next, categories, category.categoryId);
         if (!valid) {
-            if (editingName.trim() !== category.name) setError(t.chat.todoPane.tags.invalidName);
+            setError(t.chat.todoPane.tags.invalidName);
             return;
         }
         if (valid === category.name) return;
@@ -154,7 +153,6 @@ export const ModalManageTodoTags = ({
                     </Typography>
                 )}
                 {categories.map((category) => {
-                    const isEditing = editingId === category.categoryId;
                     const isArmed = armedDeleteId === category.categoryId;
                     return (
                         <Stack
@@ -173,46 +171,20 @@ export const ModalManageTodoTags = ({
                             <ColorPickerMenu
                                 onSelectColor={(c) => void handleRecolor(category, c)}
                             />
-                            {isEditing ? (
-                                <Input
-                                    size="sm"
-                                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                                    sx={{ flex: 1 }}
-                                    value={editingName}
-                                    autoFocus
-                                    onBlur={() => void commitRename(category)}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            void commitRename(category);
-                                        }
-                                        if (e.key === "Escape") setEditingId(null);
-                                    }}
-                                />
-                            ) : (
-                                <Box
-                                    role="button"
-                                    sx={{ cursor: "text", flex: 1, minWidth: 0 }}
-                                    tabIndex={0}
-                                    onClick={() => {
-                                        setEditingId(category.categoryId);
-                                        setEditingName(category.name);
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            setEditingId(category.categoryId);
-                                            setEditingName(category.name);
-                                        }
-                                    }}
-                                >
+                            <InlineTitleEdit
+                                ariaLabel={t.chat.todoPane.tags.manageTitle}
+                                maxLength={MAX_NAME_LENGTH}
+                                sx={{ flex: 1, minWidth: 0 }}
+                                value={category.name}
+                                renderValue={(name) => (
                                     <ProjectTagChip
                                         isDark={isDark}
-                                        label={category.name}
+                                        label={name}
                                         tagColor={todoTagColor(category)}
                                     />
-                                </Box>
-                            )}
+                                )}
+                                onCommit={(next) => void commitRename(category, next)}
+                            />
                             {isArmed ? (
                                 <Button
                                     color="danger"

@@ -13,16 +13,15 @@
 // rest, mirroring the order the server returns them in.
 
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Box, Button, IconButton, Input, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
+import { SearchField } from "../../components/ui/fields/SearchField";
 import { NavItem } from "../../components/ui/nav/NavItem";
 import { NAV_KEEP_CLASS } from "../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../components/ui/nav/SectionHeader";
@@ -188,25 +187,13 @@ export const GenosSessionSidebar = ({
                 {t.genos.sidebar.newChat}
             </Button>
 
-            <Input
+            <SearchField
+                clearLabel={t.genos.sidebar.searchClear}
                 placeholder={t.genos.sidebar.searchPlaceholder}
-                size="sm"
-                startDecorator={<SearchRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />}
-                sx={{ borderRadius: "10px", flexShrink: 0 }}
+                size="md"
+                sx={{ flexShrink: 0 }}
                 value={search}
-                endDecorator={
-                    isSearching ? (
-                        <IconButton
-                            aria-label={t.genos.sidebar.searchClear}
-                            size="sm"
-                            variant="plain"
-                            onClick={() => onSearchChange("")}
-                        >
-                            <CloseRoundedIcon sx={{ fontSize: 15 }} />
-                        </IconButton>
-                    ) : null
-                }
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={onSearchChange}
             />
 
             <SectionHeader
