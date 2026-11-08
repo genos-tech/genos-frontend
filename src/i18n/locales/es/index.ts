@@ -413,7 +413,7 @@ export const es: DeepPartial<Messages> = {
         },
         actions: {
             todo: "Por hacer",
-            history: "Historia",
+            history: "Historial",
             settings: "Ajustes",
             signOut: "Salir",
         },
@@ -3505,7 +3505,7 @@ export const es: DeepPartial<Messages> = {
             ariaLabel: "Mencionar sugerencias",
         },
         history: {
-            header: "Historia",
+            header: "Historial",
             detailHeader: "Conversación pasada",
             openTooltip: "Ver conversaciones pasadas",
             closeTooltip: "Cerrar historia",
@@ -5049,8 +5049,8 @@ export const es: DeepPartial<Messages> = {
         },
     },
     history: {
-        title: "Historia",
-        close: "Cerrar historia",
+        title: "Historial",
+        close: "Cerrar historial",
         tabs: {
             chats: "Chats",
             tasks: "Tareas",

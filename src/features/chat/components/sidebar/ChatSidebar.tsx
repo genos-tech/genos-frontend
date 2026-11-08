@@ -571,7 +571,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 }}
                                 onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
                             >
-                                Unread
+                                {t.chat.sidebar.unreadFilter}
                             </Chip>
 
                             {/* Menu. The two view actions below the creates show only on

@@ -3729,8 +3729,8 @@ export const zh: DeepPartial<Messages> = {
                 "你的人工智能积分用完了。他们重置 {when}，或升级你的计划以继续进行。",
             creditsUpgradeNote: "每月升级以获得更多 AI 积分。",
             noModelsConfigured: "没有为你的账号配置任何模型。",
-            effortLabel: "努力",
-            effortHelper: "人工智能对每个答案的努力程度。",
+            effortLabel: "推理强度",
+            effortHelper: "人工智能对每个答案的投入程度。",
             effortLow: "低的",
             effortMedium: "中等的",
             effortHigh: "高的",
@@ -3977,7 +3977,7 @@ export const zh: DeepPartial<Messages> = {
         },
         settings: {
             title: "Genos 设置",
-            openTooltip: "Genos 设置 — AI 努力程度与回答",
+            openTooltip: "Genos 设置 — AI 推理强度与回答",
         },
         approval: {
             titleWithTool: "需要确认：{toolName}",
