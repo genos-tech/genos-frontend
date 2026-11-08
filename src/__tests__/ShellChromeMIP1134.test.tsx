@@ -62,9 +62,9 @@ const mountBanner = (over: Partial<Parameters<typeof PermissionBanner>[0]> = {})
     render(
         <CssVarsProvider>
             <PermissionBanner
-                masterEnabled
                 permission="default"
                 requestPermission={async () => "granted"}
+                masterEnabled
                 {...over}
             />
         </CssVarsProvider>
@@ -187,6 +187,11 @@ describe("the mobile tab bar", () => {
         for (const other of ["Inbox", "Chats", "Notes", "Account"]) {
             expect(tab(other), other).not.toHaveAttribute("aria-current");
         }
+    });
+
+    it("a tap is a tap: no double-tap-zoom delay on a tab", () => {
+        mount();
+        expect(cssOf(tab("Tasks"))).toMatch(/touch-action:\s*manipulation/);
     });
 
     it("the Account tab is never current, whatever the route", () => {

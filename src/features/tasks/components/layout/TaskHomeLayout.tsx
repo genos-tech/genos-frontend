@@ -85,8 +85,25 @@ export const TaskHomeLayout = ({
     const { t } = useTranslation();
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
+    // The table and the board sit under the page header, which runs edge to edge
+    // like every other page's: the panel's own padding moves to the box under it.
+    const hasPageHeader = useTM.isTaskTableVisible || useTM.isSprintBoardVisible;
+    const mainPanelSx = hasPageHeader
+        ? { ...ls.mainPanel, px: 0, pt: 0, pb: 0, gap: 0 }
+        : ls.mainPanel;
+    const underHeaderSx = {
+        flex: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column" as const,
+        gap: ls.mainPanel.gap,
+        px: ls.mainPanel.px,
+        pt: 1.5,
+        pb: ls.mainPanel.pb,
+    };
+
     const renderMainContent = () => (
-        <Box className="MainContent" component="main" sx={ls.mainPanel}>
+        <Box className="MainContent" component="main" sx={mainPanelSx}>
             {useTM.isTaskDashboardVisible && (
                 <TaskDashboard
                     myself={myself}
@@ -101,7 +118,7 @@ export const TaskHomeLayout = ({
                     onCloseTaskHome={onCloseTaskHome}
                 />
             )}
-            {(useTM.isTaskTableVisible || useTM.isSprintBoardVisible) && (
+            {hasPageHeader && (
                 <>
                     <TaskHeader
                         myself={myself}
@@ -117,8 +134,8 @@ export const TaskHomeLayout = ({
                         onDeleteProject={onDeleteProject}
                         onManageTags={onManageTags}
                     />
-                    {useTM.isTaskTableVisible && (
-                        <>
+                    <Box sx={underHeaderSx}>
+                        {useTM.isTaskTableVisible && (
                             <DraggableTaskTable
                                 myself={myself}
                                 setMyself={setMyself}
@@ -132,10 +149,8 @@ export const TaskHomeLayout = ({
                                 useTM={useTM}
                                 useUISM={useUISM}
                             />
-                        </>
-                    )}
-                    {useTM.isSprintBoardVisible && (
-                        <>
+                        )}
+                        {useTM.isSprintBoardVisible && (
                             <SprintBoard
                                 myself={myself}
                                 setTeamMembers={useTEM.setTeamMembers}
@@ -146,8 +161,8 @@ export const TaskHomeLayout = ({
                                 useSM={useSM}
                                 useTM={useTM}
                             />
-                        </>
-                    )}
+                        )}
+                    </Box>
                 </>
             )}
         </Box>

@@ -32,6 +32,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Toast } from "../../../../components/ui/feedback/Toast";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
+import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { useCalendarModal } from "../../../../context/CalendarModalContext";
@@ -371,13 +372,12 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             <Stack
                 direction="row"
                 sx={{
+                    // The shared top bar (height, hairline, page background), with the
+                    // back button's tighter side padding.
+                    ...pageHeaderFrameSx,
                     justifyContent: "space-between",
                     alignItems: "center",
                     px: 1,
-                    background: styles.containerBg,
-                    backdropFilter: "blur(12px)",
-                    borderBottom: `1px solid ${styles.containerBorder}`,
-                    minHeight: "56px",
                     gap: 0.5,
                 }}
             >
@@ -596,13 +596,10 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         <Stack
             direction="row"
             sx={{
+                // The channel header is this pane's page header: the shared frame.
+                ...pageHeaderFrameSx,
                 justifyContent: "space-between",
                 alignItems: "center",
-                px: { xs: 1.5, md: 2 },
-                background: styles.containerBg,
-                backdropFilter: "blur(12px)",
-                borderBottom: `1px solid ${styles.containerBorder}`,
-                minHeight: "64px",
             }}
         >
             <Stack direction="row" spacing={{ xs: 1, md: 1.5 }} sx={{ alignItems: "center" }}>
