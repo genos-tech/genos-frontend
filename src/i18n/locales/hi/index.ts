@@ -2819,6 +2819,7 @@ export const hi: DeepPartial<Messages> = {
         },
         diagram: {
             title: "कार्य ग्राफ़",
+            editSchedule: "तारीखें संपादित करें",
             loading: "कार्य ग्राफ़ लोड हो रहा है...",
             untitled: "शीर्षकहीन",
             newTask: "नया कार्य",

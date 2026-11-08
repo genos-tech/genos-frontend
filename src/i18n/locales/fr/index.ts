@@ -5273,6 +5273,7 @@ export const fr: DeepPartial<Messages> = {
         },
         diagram: {
             title: "Graphique des tâches",
+            editSchedule: "Modifier les dates",
             loading: "Chargement du graphique des tâches…",
             untitled: "Sans titre",
             newTask: "Nouvelle tâche",

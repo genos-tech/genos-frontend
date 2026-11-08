@@ -5041,6 +5041,7 @@ export const zh: DeepPartial<Messages> = {
         },
         diagram: {
             title: "任务图",
+            editSchedule: "编辑日期",
             loading: "正在加载任务图…",
             untitled: "无题",
             newTask: "新任务",

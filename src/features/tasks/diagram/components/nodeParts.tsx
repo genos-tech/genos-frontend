@@ -19,6 +19,7 @@ import { Handle, Position } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { DEPENDENCY_COLOR, HANDLE } from "../types";
 import type { ScheduleHealthTone } from "../utils/scheduleStatus";
@@ -249,6 +250,7 @@ export const NodeDateEditor = ({
     onClose: () => void;
     onSave: (patch: { startDate: string | null; dueDate: string | null }) => void;
 }) => {
+    const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [draftStart, setDraftStart] = useState<string>(startDate ?? "");
@@ -266,12 +268,12 @@ export const NodeDateEditor = ({
         <ModalFrame
             icon={<CalendarMonthRoundedIcon sx={{ fontSize: 18, color: g.accent.text }} />}
             size="sm"
-            title="Edit schedule"
+            title={t.tasks.diagram.editSchedule}
             zIndex={zIndex}
             actions={
                 <>
                     <Button color="neutral" size="sm" variant="plain" onClick={onClose}>
-                        Cancel
+                        {t.common.actions.cancel}
                     </Button>
                     <Button
                         size="sm"
@@ -280,7 +282,7 @@ export const NodeDateEditor = ({
                             onSave({ startDate: draftStart || null, dueDate: draftDue || null })
                         }
                     >
-                        Save
+                        {t.common.actions.save}
                     </Button>
                 </>
             }
@@ -289,7 +291,7 @@ export const NodeDateEditor = ({
         >
             <Stack spacing={1.5}>
                 <FormControl size="sm">
-                    <FormLabel sx={labelSx}>Start date</FormLabel>
+                    <FormLabel sx={labelSx}>{t.tasks.fields.startDate}</FormLabel>
                     <Input
                         sx={pickerSx}
                         type="date"
@@ -298,7 +300,7 @@ export const NodeDateEditor = ({
                     />
                 </FormControl>
                 <FormControl size="sm">
-                    <FormLabel sx={labelSx}>Due date</FormLabel>
+                    <FormLabel sx={labelSx}>{t.tasks.fields.dueDate}</FormLabel>
                     <Input
                         sx={pickerSx}
                         type="date"
