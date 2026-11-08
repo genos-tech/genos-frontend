@@ -6,6 +6,7 @@ import {
 } from "../../features/agentQA/approvedProjectWrites";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
+import { syncStatus } from "../../services/syncStatus";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
 import { keepIfEqual } from "../../utils/keepIfEqual";
@@ -76,7 +77,16 @@ export const useProjectManagement = (
         // the next `[myself]` re-fire — which is the one most likely
         // to succeed. The effect's own guard skips empty-myself calls,
         // but this protects every other failure mode too.
-        if (!loadedTeamProjects) return;
+        if (!loadedTeamProjects) {
+            // No answer. With a team and a token that is a failed load, not "no
+            // projects": say so, or the sidebar and the dashboard claim "No
+            // project selected" for a workspace that was never read (MIP-1298).
+            if (accessToken && myself.teamId && myself.userId) {
+                syncStatus.report("projects", false);
+            }
+            return;
+        }
+        syncStatus.report("projects", true);
         tsLastLoadProjectAndTasks.current = Date.now();
 
         // When the user has just switched teams, any caller-supplied

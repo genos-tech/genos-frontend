@@ -15,6 +15,7 @@ import { INBOX_FOCUS_RESYNC_MS, inboxSyncAgeMs } from "../../features/inbox/inbo
 import { channelService } from "../../services/channel/channelService";
 import { loadInitialData } from "../../services/loadInitialData";
 import { refreshAllData } from "../../services/refreshAllData";
+import { syncStatus } from "../../services/syncStatus";
 import type { UserProps } from "../../types/admin";
 
 // ---------------------------------------------------------------------------
@@ -108,6 +109,7 @@ const resetSnapshot = () => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+    syncStatus.__reset();
     localStorage.clear();
     resetSnapshot();
     // Default: every channel request resolves. teamMembers MUST resolve truthy
@@ -556,6 +558,22 @@ describe("loadInitialData", () => {
         const { setIsLoading } = render({ firstRefreshDone: false });
         await waitFor(() => expect(inboxReq).toHaveBeenCalled());
         expect(setIsLoading).not.toHaveBeenCalledWith(false);
+    });
+
+    it("a cold boot reveals the shell once the first refresh is over, and marks the team warm only if it worked (MIP-1298)", async () => {
+        snapshotState.hydrated = true;
+        const ok = render({ firstRefreshDone: true });
+        await waitFor(() => expect(ok.setIsLoading).toHaveBeenCalledWith(false));
+        expect(localStorage.getItem("genos.hydrated.v1")).toBe(myself.teamId);
+        ok.unmount();
+
+        localStorage.clear();
+        syncStatus.report("inbox", false);
+        const failed = render({ firstRefreshDone: true });
+        await waitFor(() => expect(failed.setIsLoading).toHaveBeenCalledWith(false));
+        // Shown (the error states say what happened), but the next boot stays cold.
+        expect(localStorage.getItem("genos.hydrated.v1")).toBeNull();
+        syncStatus.__reset();
     });
 
     it("reveals a warm cache immediately, without waiting for a refresh", async () => {

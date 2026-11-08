@@ -57,6 +57,7 @@ import type {
     UserLite,
 } from "../../types/channel";
 import { isV3Uuid } from "../../utils/legacyId";
+import { syncStatus } from "../syncStatus";
 
 // A page of the chat list. The server pages at the size it is asked for (capped
 // at 500); 50 pages is far past any real user, and a stop for a server that
@@ -763,6 +764,15 @@ export class ChannelService {
 
         const promise = this._doListChannels();
         this._listChannelsInflight = promise;
+        // Tell the app-wide sync status whether the list loaded (MIP-1298), so an
+        // empty chat list can say "couldn't load" instead of "no chats yet". Only
+        // once a token exists: before that the call fails by design (see above).
+        if (this.hasAccessToken()) {
+            promise.then(
+                () => syncStatus.report("channels", true),
+                () => syncStatus.report("channels", false)
+            );
+        }
         // Release the slot once the work settles, regardless of outcome.
         //
         // This MUST live out here rather than in a `finally` inside the

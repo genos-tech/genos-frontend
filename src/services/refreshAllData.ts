@@ -3,6 +3,7 @@ import { markInboxSyncing } from "../features/inbox/inboxResyncEvent";
 import { loadProjectTasks } from "../features/tasks/services/loadProjectTasks";
 import { UserProps } from "../types/admin";
 import { channelService } from "./channel/channelService";
+import { syncStatus, type SyncScope } from "./syncStatus";
 
 // Re-runs the same set of API→IndexedDB loaders that `loadInitialData`
 // performs at boot, then signals the in-React hooks to repull from IDB
@@ -73,6 +74,9 @@ export const refreshAllData = async ({
     void channelService.refreshChannels();
     // Stamp the inbox sync clock so the focus resync does not repeat this one.
     markInboxSyncing();
+    // `scopes[i]` names what `tasks[i]` loads, for `syncStatus` (MIP-1298); the
+    // channel list reports itself from `listChannels`.
+    const scopes: SyncScope[] = ["inbox", "activity", "members"];
     const tasks: Array<Promise<unknown>> = [
         withTimeout(inboxChannel.request("loadInbox", { myself, accessToken }), "loadInbox"),
         withTimeout(
@@ -95,6 +99,7 @@ export const refreshAllData = async ({
         ),
     ];
     if (currentProjectId != null && currentProjectId > 0) {
+        scopes.push("tasks");
         // Go through the `loadProjectTasks` wrapper (not `tasksChannel`
         // directly) so this shares the wrapper's in-flight dedup keyed on
         // `teamId:projectId` — on boot `useProjectManagement` fetches the same
@@ -107,22 +112,29 @@ export const refreshAllData = async ({
         );
     }
 
-    // `allSettled` so one failed channel doesn't block the rest. The
-    // failures are logged but not surfaced — the wake refresh is a
-    // best-effort sync, not a user-initiated action that needs error UI.
-    const results = await Promise.allSettled(tasks);
-    for (const r of results) {
-        if (r.status === "rejected") {
-            console.warn("[refreshAllData] channel call failed", r.reason);
-        }
-    }
-
-    // Step 2: push the freshly-cached IDB data into React state. The
-    // caller owns this because only their hook instances can mutate
-    // their state.
+    // `allSettled` so one failed channel doesn't block the rest. A failure is
+    // logged and recorded in `syncStatus`, which is what the "couldn't sync"
+    // banner and the empty-state `ErrorState`s read; the rows already in IDB
+    // stay on screen.
+    syncStatus.begin();
     try {
-        await onIDBRefreshed();
-    } catch (err) {
-        console.error("[refreshAllData] onIDBRefreshed threw", err);
+        const results = await Promise.allSettled(tasks);
+        results.forEach((r, i) => {
+            if (r.status === "rejected") {
+                console.warn("[refreshAllData] channel call failed", r.reason);
+            }
+            syncStatus.report(scopes[i], r.status === "fulfilled");
+        });
+
+        // Step 2: push the freshly-cached IDB data into React state. The
+        // caller owns this because only their hook instances can mutate
+        // their state.
+        try {
+            await onIDBRefreshed();
+        } catch (err) {
+            console.error("[refreshAllData] onIDBRefreshed threw", err);
+        }
+    } finally {
+        syncStatus.end();
     }
 };
