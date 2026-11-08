@@ -36,7 +36,7 @@ export class FakeEditor {
         this.document = next.length > 0 ? next : [para("")];
         this.view()?.onChange?.();
     });
-    insertBlocks = vi.fn((blocks: any[], _ref: any, _placement: string) => {
+    insertBlocks = vi.fn((blocks: any[]) => {
         this.document = [...this.document, ...blocks];
         this.view()?.onChange?.();
     });
