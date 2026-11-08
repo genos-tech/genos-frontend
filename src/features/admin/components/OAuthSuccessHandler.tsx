@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
@@ -192,10 +193,7 @@ export const OAuthSuccessHandler = () => {
                     </Stack>
                 ) : (
                     <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
-                        <CircularProgress size="lg" />
-                        <Typography level="body-md" sx={{ color: styles.subtitleColor }}>
-                            {oauth.finishing}
-                        </Typography>
+                        <Spinner caption={oauth.finishing} size="lg" stacked />
                     </Stack>
                 )}
             </Box>

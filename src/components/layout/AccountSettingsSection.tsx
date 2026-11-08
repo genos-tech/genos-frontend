@@ -24,7 +24,6 @@ import {
     Box,
     Button,
     Chip,
-    CircularProgress,
     Divider,
     FormControl,
     FormLabel,
@@ -47,6 +46,7 @@ import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { useTranslation } from "../../i18n";
 import { Team, UserProps } from "../../types/admin";
+import { SkeletonRows, Spinner } from "../ui/feedback/Skeleton";
 import { ModalLeaveConfirm } from "../ui/misc/ModalLeaveConfirm";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { MySecurityActivity } from "./MySecurityActivity";
@@ -210,7 +210,7 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                     {m.teamsDescription}
                 </Typography>
                 {teamsLoading ? (
-                    <CircularProgress size="sm" />
+                    <SkeletonRows count={2} />
                 ) : teams.length === 0 ? (
                     <Typography level="body-xs" sx={{ opacity: 0.7 }}>
                         {m.teamsEmpty}
@@ -280,7 +280,7 @@ export const AccountSettingsSection = ({ myself, onNavigateAway }: Props = {}) =
                 </Typography>
 
                 {loading ? (
-                    <CircularProgress size="sm" />
+                    <Spinner />
                 ) : (
                     <>
                         {status && !status.canDelete && (

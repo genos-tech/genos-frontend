@@ -33,9 +33,10 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, CircularProgress, IconButton, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useOptionalAccessToken } from "../../../context/AuthContext";
 import { useTranslation } from "../../../i18n";
 import type { SpotlightResult } from "../../spotlight/types";
@@ -338,9 +339,7 @@ const SaveAnswerStatus = memo((props: SaveProps) => {
         );
     const ok = <CheckRoundedIcon sx={{ fontSize: 16, color: "success.500", flexShrink: 0 }} />;
     const warn = <InfoOutlinedIcon sx={{ fontSize: 16, color: "warning.500", flexShrink: 0 }} />;
-    const busy = (
-        <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px", flexShrink: 0 }} />
-    );
+    const busy = <Spinner />;
     const open = (label: string, target?: SpotlightResult) =>
         target ? (
             <Button

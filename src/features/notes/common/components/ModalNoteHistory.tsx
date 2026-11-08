@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
-import { Box, Button, Chip, CircularProgress, Divider, Stack, Typography } from "@mui/joy";
+import { Box, Button, Chip, Divider, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -363,11 +364,7 @@ export const ModalNoteHistory = ({
                         p: 2.5,
                     }}
                 >
-                    {loadingDetail && (
-                        <Stack alignItems="center" sx={{ pt: 6 }}>
-                            <CircularProgress size="sm" />
-                        </Stack>
-                    )}
+                    {loadingDetail && <SkeletonLines lines={6} />}
                     {!loadingDetail && !detail && (
                         <Typography
                             level="body-sm"

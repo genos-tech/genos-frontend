@@ -17,7 +17,6 @@ import {
     Box,
     Chip,
     ChipDelete,
-    CircularProgress,
     FormControl,
     FormHelperText,
     Input,
@@ -29,6 +28,7 @@ import type { SxProps } from "@mui/joy/styles/types";
 import { alpha } from "@mui/system";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { EffortLabel } from "../meta/EffortLabel";
@@ -358,16 +358,12 @@ export const CellTextInput = ({
         <Input
             autoFocus={autoFocus}
             disabled={disabled}
+            endDecorator={busy ? <Spinner /> : null}
             error={!!error}
             placeholder={placeholder}
             size="sm"
             sx={[fieldSx, titleFieldSx, ...asArray(sx)]}
             value={value}
-            endDecorator={
-                busy ? (
-                    <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
-                ) : null
-            }
             onBlur={onBlur}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={onKeyDown}

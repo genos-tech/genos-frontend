@@ -9,7 +9,6 @@ import {
     Alert,
     Box,
     Button,
-    CircularProgress,
     FormControl,
     FormLabel,
     IconButton,
@@ -22,6 +21,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
@@ -194,7 +194,7 @@ export const ResetPasswordForm = () => {
                     </Stack>
                 ) : succeeded ? (
                     <Stack alignItems="center" sx={{ py: 2 }}>
-                        <CircularProgress size="md" />
+                        <Spinner size="lg" />
                     </Stack>
                 ) : (
                     <form

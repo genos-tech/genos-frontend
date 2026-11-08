@@ -9,7 +9,6 @@ import {
     Button,
     Checkbox,
     Chip,
-    CircularProgress,
     IconButton,
     Input,
     Stack,
@@ -17,6 +16,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -313,11 +313,7 @@ export const ModalManageProjectLabels = ({
             {/* Catalog list — checkbox = assign to this project,
                     pencil/trash = edit the team-wide entry. */}
             <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
-                {loading && (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-                        <CircularProgress size="sm" />
-                    </Box>
-                )}
+                {loading && <SkeletonRows count={3} />}
 
                 {!loading && catalog.length === 0 && (
                     <Typography

@@ -16,12 +16,13 @@
 import { useMemo } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { Alert, Box, Button, CircularProgress, Divider, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Divider, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { useNoteModalHostZIndex } from "../../components/modals/noteModalHostZIndex";
+import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
@@ -154,12 +155,9 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
             </Stack>
 
             {state.summaryLoading && !state.summary ? (
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
-                    <CircularProgress size="sm" />
-                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
-                        {t.noteAsk.summary.loading}
-                    </Typography>
-                </Stack>
+                <Box sx={{ py: 2 }}>
+                    <Spinner caption={t.noteAsk.summary.loading} />
+                </Box>
             ) : null}
 
             {state.summaryError ? (

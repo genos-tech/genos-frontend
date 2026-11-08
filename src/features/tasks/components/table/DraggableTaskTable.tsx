@@ -5,11 +5,12 @@ import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
-import { Box, CircularProgress, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -1865,36 +1866,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         the static "No tasks to display" message. */}
                     {displayRows.length === 0 &&
                         (useTM.isLoadingTasks ? (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    height: "200px",
-                                    gap: 1.5,
-                                    color: mode === "dark" ? "#9aa0c4" : "#6b7280",
-                                }}
-                            >
-                                <CircularProgress
-                                    size="md"
-                                    variant="soft"
-                                    sx={{
-                                        "--CircularProgress-size": "36px",
-                                        "--CircularProgress-trackThickness": "3px",
-                                        "--CircularProgress-progressThickness": "3px",
-                                        color:
-                                            mode === "dark"
-                                                ? "var(--gp-brandalt-400)"
-                                                : "var(--gp-brand-700)",
-                                    }}
-                                />
-                                <Typography
-                                    level="body-md"
-                                    sx={{ fontWeight: 500, color: "inherit" }}
-                                >
-                                    {t.tasks.table.loadingTasks}
-                                </Typography>
+                            <Box sx={{ minHeight: "200px", pt: 1 }}>
+                                <SkeletonRows count={6} label={t.tasks.table.loadingTasks} />
                             </Box>
                         ) : (
                             <Box

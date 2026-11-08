@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
-import { CircularProgress, IconButton, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
+import { IconButton, Modal, ModalClose, ModalDialog, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -17,6 +17,7 @@ import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { AppTooltip } from "../ui/AppTooltip";
+import { Spinner } from "../ui/feedback/Skeleton";
 import { NoteModalHostZIndexProvider } from "./noteModalHostZIndex";
 
 // Lazy on purpose: these views transitively import the chat panes,
@@ -43,7 +44,7 @@ const ModalTodoView = lazy(() =>
 
 const ViewLoadingFallback = () => (
     <Stack sx={{ alignItems: "center", flex: 1, justifyContent: "center" }}>
-        <CircularProgress size="md" />
+        <Spinner size="md" />
     </Stack>
 );
 

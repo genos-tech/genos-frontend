@@ -82,6 +82,31 @@ describe("Skeleton", () => {
         // A spinner is an indeterminate progressbar, named the same way.
         expect(screen.getByRole("progressbar", { name: loading })).toBeTruthy();
     });
+
+    it("a captioned spinner is one 'status' named by its words, the ring is hidden (page / AI waits)", () => {
+        render(wrap(<Spinner caption="Finishing sign-in" size="lg" stacked />));
+        const status = screen.getByRole("status");
+        expect(status.textContent).toBe("Finishing sign-in");
+        // The ring is decoration once a caption says it in words (read once, not three times).
+        expect(screen.queryByRole("progressbar")).toBeNull();
+        expect(document.querySelector('[role="progressbar"]')?.getAttribute("aria-hidden")).toBe(
+            "true"
+        );
+    });
+
+    it("the spinner sizes map to 12 / 16 / 24 / 40 px", () => {
+        for (const [size, want] of [
+            ["xs", "12px"],
+            ["sm", "16px"],
+            ["md", "24px"],
+            ["lg", "40px"],
+        ] as const) {
+            const { container, unmount } = render(wrap(<Spinner size={size} />));
+            const el = container.querySelector('[role="progressbar"]') as HTMLElement;
+            expect(getComputedStyle(el).getPropertyValue("--CircularProgress-size")).toBe(want);
+            unmount();
+        }
+    });
 });
 
 describe("toast host", () => {

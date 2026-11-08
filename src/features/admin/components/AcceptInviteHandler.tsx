@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import { Alert, Box, Button, CircularProgress, Link, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Link, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
@@ -210,7 +211,7 @@ export const AcceptInviteHandler = () => {
 
                 {phase === "loading" && (
                     <Stack alignItems="center" sx={{ py: 2 }}>
-                        <CircularProgress size="md" />
+                        <Spinner size="lg" />
                     </Stack>
                 )}
 
