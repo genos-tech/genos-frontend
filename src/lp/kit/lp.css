@@ -36,7 +36,11 @@
     box-sizing: border-box;
 }
 
-.lp-root a {
+/* `:where()` keeps this at one class of specificity, so `.lp-btn--primary` and
+   the other link-shaped components below can set their own colour. As
+   `.lp-root a` it out-ranked them, and every `<a class="lp-btn--primary">` drew
+   dark text on the purple. */
+.lp-root :where(a) {
     color: inherit;
     text-decoration: none;
 }
