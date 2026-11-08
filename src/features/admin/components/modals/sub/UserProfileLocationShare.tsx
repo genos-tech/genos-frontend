@@ -1,9 +1,8 @@
 import { Stack, Switch, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../i18n";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -25,10 +24,7 @@ type Props = {
  */
 export const UserProfileLocationShare = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const isSelfView = myself.userId === user?.userId;
     if (!isSelfView) return null;
@@ -61,7 +57,7 @@ export const UserProfileLocationShare = ({ myself, setMyself, user }: Props) => 
                 size="sm"
                 onChange={(e) => persistSharing(e.target.checked)}
             />
-            <Typography sx={{ color: styles.labelColor, fontSize: "12px" }}>
+            <Typography sx={{ color: g.text.secondary, fontSize: "12px" }}>
                 {isShared
                     ? t.admin.userProfile.locationShared
                     : t.admin.userProfile.locationHidden}

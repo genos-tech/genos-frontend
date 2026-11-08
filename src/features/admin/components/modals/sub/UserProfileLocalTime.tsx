@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import { Box, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { fmt, useTranslation } from "../../../../../i18n";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import {
     formatTimeInZone,
@@ -47,10 +46,7 @@ type Props = {
  * meeting invites into other people's evenings.
  */
 export const UserProfileLocalTime = ({ user, isSelf = false }: Props) => {
-    const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const zoneId = user ? resolveDisplayZone(user, isSelf) : null;
     const [now, setNow] = useState(() => new Date());
@@ -91,22 +87,20 @@ export const UserProfileLocalTime = ({ user, isSelf = false }: Props) => {
                 px: 1.5,
                 py: 0.5,
                 borderRadius: "6px",
-                background: isDark
-                    ? "rgba(var(--gp-brand-700-rgb), 0.1)"
-                    : "rgba(var(--gp-brand-700-rgb), 0.05)",
-                border: `1px solid ${styles.border}`,
+                background: g.accent.subtle,
+                border: `1px solid ${g.border.default}`,
                 width: "fit-content",
             }}
         >
-            <ScheduleRoundedIcon sx={{ fontSize: 16, color: styles.accentColor }} />
+            <ScheduleRoundedIcon sx={{ fontSize: 16, color: g.accent.text }} />
             <Typography
                 fontWeight={600}
-                sx={{ userSelect: "text", color: styles.valueColor, fontSize: "13px" }}
+                sx={{ userSelect: "text", color: g.text.primary, fontSize: "13px" }}
             >
                 {time}
             </Typography>
             {offsetLabel && (
-                <Typography sx={{ color: styles.labelColor, fontSize: "12px" }}>
+                <Typography sx={{ color: g.text.secondary, fontSize: "12px" }}>
                     {offsetLabel}
                 </Typography>
             )}

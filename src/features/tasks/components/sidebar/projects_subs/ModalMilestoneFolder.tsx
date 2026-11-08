@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-    Alert,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Input,
-    Modal,
-    ModalDialog,
-    Typography,
-} from "@mui/joy";
+import { Alert, Button, Input, Typography } from "@mui/joy";
 
+import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { fmt, useTranslation } from "../../../../../i18n";
 
 export type MilestoneFolderModalState =
@@ -79,39 +70,15 @@ export const ModalMilestoneFolder = ({ state, onClose, onCreate, onRename, onDel
               : t.tasks.folders.deleteTitle;
 
     return (
-        <Modal sx={{ zIndex: 10010 }} open onClose={onClose}>
-            <ModalDialog sx={{ borderRadius: "16px", maxWidth: 380, width: "92%" }}>
-                <DialogTitle>{title}</DialogTitle>
-                <DialogContent>
-                    {state.mode === "delete" ? (
-                        <Typography level="body-sm">
-                            {fmt(t.tasks.folders.deleteBody, { name: state.name })}
-                        </Typography>
-                    ) : (
-                        <Input
-                            placeholder={t.tasks.folders.namePlaceholder}
-                            slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                            value={name}
-                            autoFocus
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                setError(null);
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    void submit();
-                                }
-                            }}
-                        />
-                    )}
-                    {error && (
-                        <Alert color="warning" size="sm" sx={{ mt: 1 }}>
-                            {error}
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions>
+        <ModalFrame
+            size="sm"
+            title={title}
+            zIndex={10010}
+            actions={
+                <>
+                    <Button color="neutral" variant="plain" onClick={onClose}>
+                        {t.tasks.folders.cancel}
+                    </Button>
                     <Button
                         color={state.mode === "delete" ? "danger" : "primary"}
                         disabled={!canSubmit}
@@ -124,11 +91,38 @@ export const ModalMilestoneFolder = ({ state, onClose, onCreate, onRename, onDel
                               ? t.tasks.folders.save
                               : t.tasks.folders.delete}
                     </Button>
-                    <Button color="neutral" variant="plain" onClick={onClose}>
-                        {t.tasks.folders.cancel}
-                    </Button>
-                </DialogActions>
-            </ModalDialog>
-        </Modal>
+                </>
+            }
+            open
+            onClose={onClose}
+        >
+            {state.mode === "delete" ? (
+                <Typography level="body-sm">
+                    {fmt(t.tasks.folders.deleteBody, { name: state.name })}
+                </Typography>
+            ) : (
+                <Input
+                    placeholder={t.tasks.folders.namePlaceholder}
+                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
+                    value={name}
+                    autoFocus
+                    onChange={(e) => {
+                        setName(e.target.value);
+                        setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            void submit();
+                        }
+                    }}
+                />
+            )}
+            {error && (
+                <Alert color="warning" size="sm" sx={{ mt: 1 }}>
+                    {error}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };
