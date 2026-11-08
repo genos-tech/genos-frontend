@@ -23,6 +23,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
@@ -1174,16 +1175,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Box>
             )}
             {ownRootFolders.length === 0 ? (
-                <Box sx={{ px: 2, py: 1 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                            fontStyle: "italic",
-                        }}
-                    >
-                        {t.notes.teamNotes.emptySpace}
-                    </Typography>
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.teamNotes.emptySpace}
+                        data-empty="team-folders"
+                        size="xs"
+                    />
                 </Box>
             ) : (
                 renderTeamFolderTrees(ownRootFolders, visibleTeamFolderIds)
@@ -1631,16 +1628,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             !hasChatNotes
         ) {
             return (
-                <Box sx={{ px: 2, py: 1 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                            fontStyle: "italic",
-                        }}
-                    >
-                        {t.notes.sidebar.noFavorites}
-                    </Typography>
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.sidebar.noFavorites}
+                        data-empty="note-favorites"
+                        size="xs"
+                    />
                 </Box>
             );
         }
@@ -1795,16 +1788,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
         if (rows.length === 0) {
             return (
-                <Box sx={{ px: 2, py: 1 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                            fontStyle: "italic",
-                        }}
-                    >
-                        {t.notes.sidebar.noRecents}
-                    </Typography>
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.sidebar.noRecents}
+                        data-empty="note-recents"
+                        size="xs"
+                    />
                 </Box>
             );
         }

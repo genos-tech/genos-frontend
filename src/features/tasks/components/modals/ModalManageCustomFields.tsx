@@ -23,6 +23,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import {
@@ -238,12 +239,7 @@ export const ModalManageCustomFields: React.FC<Props> = ({
             {/* Field list */}
             <Stack spacing={0.75}>
                 {sorted.length === 0 && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.tertiary, textAlign: "center", py: 2 }}
-                    >
-                        {msgs.noFieldsYet}
-                    </Typography>
+                    <EmptyState data-empty="custom-fields" size="sm" title={msgs.noFieldsYet} />
                 )}
                 {sorted.map((field, index) => (
                     <Box

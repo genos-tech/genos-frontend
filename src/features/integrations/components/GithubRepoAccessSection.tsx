@@ -7,20 +7,12 @@ import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    Chip,
-    CircularProgress,
-    Divider,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, Card, Chip, Divider, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     GithubAccessibleReposResponse,
@@ -107,11 +99,13 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                 {error && <Alert color="danger">{error}</Alert>}
 
                 {loading ? (
-                    <Stack alignItems="center" sx={{ py: 3 }}>
-                        <CircularProgress size="sm" />
-                    </Stack>
+                    <SkeletonRows count={3} />
                 ) : !data || data.owners.length === 0 ? (
-                    <Alert color="neutral">{t.integrations.github.repoAccess.empty}</Alert>
+                    <EmptyState
+                        body={t.integrations.github.repoAccess.empty}
+                        data-empty="github-repo-access"
+                        size="sm"
+                    />
                 ) : (
                     <Stack spacing={0.5}>
                         {data.owners.map((owner) => {

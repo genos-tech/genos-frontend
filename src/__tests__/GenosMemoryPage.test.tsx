@@ -117,6 +117,32 @@ beforeEach(() => {
     apiGet.mockReset().mockImplementation(async (url: string) => {
         if (url.includes("share-answers")) return { data: { share_answers_with_team: true } };
         if (url.includes("timezone")) return { data: { timezone: "Asia/Tokyo" } };
+        // The memory controls (MIP-1088) have their own test; here the page just has to render
+        // beside them.
+        if (url === "/user/memory/") {
+            const none = {
+                entries: 0,
+                aiApp: 0,
+                ownChanges: 0,
+                from: null,
+                to: null,
+                keptDays: 180,
+            };
+            return {
+                data: {
+                    recording: { enabled: true },
+                    stored: {
+                        ledger: none,
+                        summaries: { rows: 0, items: 0, from: null, to: null, keptDays: 365 },
+                        importance: { marks: 0, tunedSignals: 0 },
+                    },
+                    tuning: [],
+                    marks: [],
+                    marksLimit: 500,
+                    catalog: { levels: [], marks: [] },
+                },
+            };
+        }
         throw new Error(`unexpected GET ${url}`);
     });
     apiPatch.mockReset();

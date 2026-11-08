@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Box, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
+import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../context/AuthContext";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { fmt, useTranslation } from "../../../i18n";
@@ -184,11 +185,7 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
             </Stack>
 
             {/* Loading / error when nothing is available yet. */}
-            {!vm && result === null && (
-                <Stack alignItems="center" sx={{ py: 0.5 }}>
-                    <CircularProgress size="sm" />
-                </Stack>
-            )}
+            {!vm && result === null && <SkeletonLines lines={2} />}
             {!vm && result?.kind === "error" && (
                 <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
                     {t.tasks.mentionHover.statusUnavailable}

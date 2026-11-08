@@ -10,6 +10,8 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
 import { AppTooltip } from "../ui/AppTooltip";
+import { EmptyState } from "../ui/feedback/EmptyState";
+import { SkeletonRows } from "../ui/feedback/Skeleton";
 
 type Props = {
     myself: UserProps;
@@ -165,9 +167,15 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
 
             {/* Emoji grid */}
             {ownTeamEmoji.length === 0 ? (
-                <Typography level="body-sm" sx={{ opacity: 0.7, textAlign: "center", py: 2 }}>
-                    {loading ? t.common.actions.loading : t.settings.customEmoji.empty}
-                </Typography>
+                loading ? (
+                    <SkeletonRows count={2} />
+                ) : (
+                    <EmptyState
+                        body={t.settings.customEmoji.empty}
+                        data-empty="custom-emoji"
+                        size="sm"
+                    />
+                )
             ) : (
                 <Box
                     sx={{

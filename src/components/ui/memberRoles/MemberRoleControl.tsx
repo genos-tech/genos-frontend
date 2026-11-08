@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Chip, CircularProgress, Option, Select } from "@mui/joy";
+import { Chip, Option, Select } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
@@ -9,6 +9,7 @@ import {
     MemberRole,
     resolveDisplayRole,
 } from "../../../utils/memberRoles";
+import { Spinner } from "../feedback/Skeleton";
 
 type MemberRoleControlProps = {
     /** The member this control is for. */
@@ -101,7 +102,7 @@ export const MemberRoleControl = ({
     return (
         <Select
             size="sm"
-            startDecorator={saving ? <CircularProgress size="sm" /> : null}
+            startDecorator={saving ? <Spinner /> : null}
             value={current}
             variant="outlined"
             slotProps={{

@@ -65,6 +65,7 @@ import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
 import { AnalyticsPreferencesProvider } from "./hooks/common/useAnalyticsPreferences";
 import { useAppBadge } from "./hooks/common/useAppBadge";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
+import { useAppNavigateRequests } from "./hooks/common/useAppNavigateRequests";
 import { BubbleActionsPreferenceProvider } from "./hooks/common/useBubbleActionsPreference";
 import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePreference";
 import { useChangeRefresher } from "./hooks/common/useChangeRefresher";
@@ -885,6 +886,9 @@ const AppBody = () => {
     // which repaints the list and raises the notification the push may have
     // failed to deliver. See `features/inbox/inboxResyncEvent`.
     useInboxResync(myself, accessToken, useNotif.manager, useIM.setInboxItems);
+    // A toast raised outside React ("Report ready" after Run now) opens the
+    // Inbox through this, so it works after the dialog that started it is gone.
+    useAppNavigateRequests(navigate);
 
     // Global Cmd-K / Ctrl-K Spotlight overlay. The hook owns open/close
     // state, the keyboard listener, the debounced query, and an `onAsk`

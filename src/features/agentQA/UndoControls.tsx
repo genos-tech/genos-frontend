@@ -29,7 +29,7 @@ import { memo, useCallback, useSyncExternalStore } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
-import { Box, Button, CircularProgress, Typography } from "@mui/joy";
+import { Box, Button, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { fmt } from "../../i18n";
@@ -89,16 +89,12 @@ const UndoControl = memo(({ step, labelled, labels, onUndo }: UndoControlProps) 
                 aria-label={labelled ? fmt(u.buttonFor, { tool }) : undefined}
                 color="neutral"
                 disabled={disabled}
+                loading={busy}
+                loadingPosition="start"
                 size="sm"
+                startDecorator={<UndoRoundedIcon sx={{ fontSize: 16 }} />}
                 sx={{ fontSize: "0.875rem" }}
                 variant="outlined"
-                startDecorator={
-                    busy ? (
-                        <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
-                    ) : (
-                        <UndoRoundedIcon sx={{ fontSize: 16 }} />
-                    )
-                }
                 onClick={click}
             >
                 {label}

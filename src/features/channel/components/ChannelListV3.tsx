@@ -26,6 +26,7 @@ import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SearchField } from "../../../components/ui/fields/SearchField";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
@@ -180,14 +181,21 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                     <li style={{ padding: 12, opacity: 0.5 }}>{t.chat.channel.list.loading}</li>
                 )}
                 {!isLoading && channels.length === 0 && (
-                    <li style={{ padding: 12, opacity: 0.5 }}>{t.chat.channel.list.empty}</li>
+                    <li>
+                        <EmptyState
+                            body={t.chat.channel.list.empty}
+                            data-empty="channel-list"
+                            size="sm"
+                        />
+                    </li>
                 )}
                 {!isLoading && channels.length > 0 && !hasResults && (
-                    <li
-                        data-testid="channel-list-v3-no-results"
-                        style={{ padding: 12, opacity: 0.5 }}
-                    >
-                        {fmt(t.chat.channel.list.noResults, { query })}
+                    <li data-testid="channel-list-v3-no-results">
+                        <EmptyState
+                            body={fmt(t.chat.channel.list.noResults, { query })}
+                            data-empty="channel-list-search"
+                            size="sm"
+                        />
                     </li>
                 )}
                 {visibleKinds.map((kind) => {

@@ -2,7 +2,7 @@ import "@xyflow/react/dist/style.css";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from "@mui/joy";
+import { Alert, Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import {
     addEdge,
@@ -25,6 +25,7 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
@@ -1288,10 +1289,7 @@ const CanvasInner = ({
                         backdropFilter: "blur(2px)",
                     }}
                 >
-                    <CircularProgress size="lg" />
-                    <Typography level="body-sm" sx={{ mt: 1, color: P.textMuted }}>
-                        {t.tasks.diagram.loading}
-                    </Typography>
+                    <Spinner caption={t.tasks.diagram.loading} size="lg" stacked />
                 </Stack>
             )}
             {error && (

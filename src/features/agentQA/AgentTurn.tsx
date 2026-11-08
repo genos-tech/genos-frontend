@@ -68,12 +68,13 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import { Box, CircularProgress, IconButton, Typography } from "@mui/joy";
+import { Box, IconButton, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { Bubble, BubbleMeta, type BubbleLayout } from "../../components/ui/bubble";
+import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt } from "../../i18n";
 import type { PendingApprovalPayload } from "../../services/agentApi";
 import { g, type } from "../../theme/tokens";
@@ -473,10 +474,7 @@ const AgentTurnInner = ({
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         {isCurrent && isStreaming && !pendingApproval && (
                             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-                                <CircularProgress
-                                    size="sm"
-                                    sx={{ "--CircularProgress-size": "12px" }}
-                                />
+                                <Spinner size="xs" />
                                 <Typography level="body-sm" sx={{ color: g.text.secondary }}>
                                     {labels.states.streaming}
                                 </Typography>

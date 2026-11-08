@@ -14,6 +14,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
+import { EmptyState } from "../../ui/feedback/EmptyState";
 import { commentFirstLine } from "./commentMentions";
 import { useCommentAuthor } from "./useCommentAuthor";
 
@@ -421,12 +422,7 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
 
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 1 }}>
                 {rows.length === 0 ? (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: "text.tertiary", textAlign: "center", px: 2, py: 4 }}
-                    >
-                        {copy.empty}
-                    </Typography>
+                    <EmptyState body={copy.empty} data-empty="note-comments" />
                 ) : (
                     // Leaving the list (not just one row) drops the hover
                     // preview; moving between rows stays inside it, so the

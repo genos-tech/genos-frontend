@@ -15,7 +15,7 @@ import {
     useSidebarVisibility,
 } from "../../hooks/common/useSidebarVisibility";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
 import { g, type } from "../../theme/tokens";
 import { NAV_HOVER_MEDIA, NAV_SELECTED, navFocusSx, navToneSx } from "../ui/nav/navStyles";
@@ -93,6 +93,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
 
     return (
         <Box
+            aria-label={t.sidebar.navLabel}
             component="nav"
             sx={{
                 position: "fixed",
@@ -123,19 +124,35 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 // route, which would light up the Account tab everywhere.
                 const isActive = item.path !== "" && highlightPath.includes(item.path);
                 const badgeCount = getBadgeCount(item.id);
+                // The unread count is part of the tab's name, not only a badge to look at.
+                const tabName =
+                    badgeCount > 0
+                        ? fmt(t.sidebar.unreadTab, {
+                              label: t.sidebar.nav[item.labelKey],
+                              count: badgeCount,
+                          })
+                        : undefined;
+                // A real button: focusable and announced, where it used to be a clickable div.
+                // The look is the rail's (`navToneSx`: text colour, the icon colour that goes
+                // with it, selected = accent text and medium weight); a full-width tint on a
+                // 78px tab would be heavy, so the selected tab changes colour only.
+                const openTab = () => {
+                    if (item.path === "") {
+                        onOpenAccount();
+                        return;
+                    }
+                    markPending(item.path);
+                    switchService(navigate, item.path);
+                };
 
                 return (
                     <Box
                         key={item.id}
                         aria-current={isActive ? "page" : undefined}
+                        aria-label={tabName}
                         component="button"
                         data-selected={isActive ? "true" : undefined}
                         type="button"
-                        // A real button: focusable and announced, where it used to be a
-                        // clickable div. The look is the rail's (`navToneSx`: text colour,
-                        // the icon colour that goes with it, selected = accent text and
-                        // medium weight); a full-width tint on a 78px tab would be heavy,
-                        // so the selected tab changes colour only.
                         sx={[
                             navToneSx,
                             {
@@ -168,14 +185,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             },
                             navFocusSx,
                         ]}
-                        onClick={() => {
-                            if (item.path === "") {
-                                onOpenAccount();
-                                return;
-                            }
-                            markPending(item.path);
-                            switchService(navigate, item.path);
-                        }}
+                        onClick={openTab}
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}

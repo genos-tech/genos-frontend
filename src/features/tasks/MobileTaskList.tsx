@@ -4,6 +4,7 @@ import { Box, Stack, Typography } from "@mui/joy";
 
 import { TaskCard } from "./components/card";
 
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
@@ -57,12 +58,11 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
 
     if (tasks.length === 0) {
         return (
-            <Box sx={{ p: 3, textAlign: "center" }}>
-                <AssignmentRoundedIcon sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
-                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    {t.tasks.mobile.noOpenTasks}
-                </Typography>
-            </Box>
+            <EmptyState
+                data-empty="mobile-tasks"
+                icon={<AssignmentRoundedIcon />}
+                title={t.tasks.mobile.noOpenTasks}
+            />
         );
     }
 

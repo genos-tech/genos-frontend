@@ -44,6 +44,7 @@ import {
     WebhookEndpoint,
 } from "../../services/developerApi";
 import { AppTooltip } from "../ui/AppTooltip";
+import { EmptyState } from "../ui/feedback/EmptyState";
 import { SecurityLogSection } from "./SecurityLogSection";
 
 type Props = {
@@ -319,9 +320,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 )}
 
                 {loaded && keys.length === 0 && (
-                    <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                        {d.keys.empty}
-                    </Typography>
+                    <EmptyState body={d.keys.empty} data-empty="api-keys" size="xs" />
                 )}
                 {keys.map((k) => (
                     <Sheet
@@ -390,9 +389,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         {d.teamKeys.blurb}
                     </Typography>
                     {teamKeys.length === 0 && (
-                        <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                            {d.teamKeys.empty}
-                        </Typography>
+                        <EmptyState body={d.teamKeys.empty} data-empty="team-keys" size="xs" />
                     )}
                     {teamKeys.map((k) => (
                         <Sheet
@@ -619,9 +616,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 </Button>
 
                 {loaded && hooks.length === 0 && (
-                    <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                        {d.webhooks.empty}
-                    </Typography>
+                    <EmptyState body={d.webhooks.empty} data-empty="webhooks" size="xs" />
                 )}
                 {hooks.map((h) => (
                     <Sheet

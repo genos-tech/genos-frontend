@@ -14,8 +14,9 @@
 // re-cite a source that was only retrieved on turn 1. Chips stay per-turn.
 
 import { useCallback, useMemo, useRef } from "react";
-import { Stack, Typography } from "@mui/joy";
+import { Stack } from "@mui/joy";
 
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { SpotlightResult } from "../spotlight/types";
@@ -130,9 +131,11 @@ export const AgentQAConversation = ({
 
     if (state.turns.length === 0 && !hasInFlightAnswer) {
         return (
-            <Typography level="body-sm" sx={{ color: "text.tertiary", py: 1 }}>
-                {labels.conversation.empty}
-            </Typography>
+            <EmptyState
+                body={labels.conversation.empty}
+                data-empty="agent-conversation"
+                size="xs"
+            />
         );
     }
 

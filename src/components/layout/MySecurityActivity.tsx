@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "../../i18n";
 import { listMySecurityEvents, SecurityEvent } from "../../services/developerApi";
+import { SkeletonRows } from "../ui/feedback/Skeleton";
 import { SecurityEventRow } from "./SecurityLogSection";
 
 /**
@@ -63,7 +64,7 @@ export const MySecurityActivity = () => {
             <Typography level="body-xs" sx={{ mt: 0.5, mb: 1.5 }}>
                 {m.activityDescription}
             </Typography>
-            {events === null && !failed && <CircularProgress size="sm" />}
+            {events === null && !failed && <SkeletonRows count={3} twoLines />}
             {failed && (
                 <Alert color="danger" size="sm" sx={{ mb: 1 }}>
                     {m.activityLoadFailed}

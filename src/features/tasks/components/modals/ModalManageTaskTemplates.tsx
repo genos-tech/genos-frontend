@@ -10,6 +10,7 @@ import { Socket } from "socket.io-client";
 
 import { BnLocalBodyEditor } from "../../../../components/editors/bnLocalBodyEditor";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -282,12 +283,7 @@ export const ModalManageTaskTemplates: React.FC<Props> = ({
 
                     <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
                         {templates.length === 0 && (
-                            <Typography
-                                level="body-sm"
-                                sx={{ color: g.text.tertiary, textAlign: "center", py: 3 }}
-                            >
-                                {tt.empty}
-                            </Typography>
+                            <EmptyState body={tt.empty} data-empty="task-templates" size="sm" />
                         )}
 
                         {templates.map((tpl) => (

@@ -25,6 +25,9 @@ export const history = {
         years: "{count}y ago",
     },
     messageNumber: "Message #{id}",
-    empty: "Nothing here yet.",
+    emptyTitle: "No history yet",
+    emptyChats: "Open a chat or thread and it is listed here.",
+    emptyTasks: "Open a task and it is listed here.",
+    emptyNotes: "Open a note and it is listed here.",
     clear: "Clear history",
 } as const;

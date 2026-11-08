@@ -5,11 +5,13 @@ import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
-import { Box, CircularProgress, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -26,6 +28,7 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { focusRing } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
@@ -61,6 +64,13 @@ import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 import { TaskTableRows } from "./TaskTableRows";
+import {
+    GRID_COL_ATTR,
+    GRID_HEADER_ROW,
+    GRID_ROW_ATTR,
+    GridNavContext,
+    useGridNavController,
+} from "./useGridNav";
 
 // Shared empty fallback so a project without tags doesn't mint a new array
 // identity on every render (see `quickAddProjectTags`).
@@ -420,6 +430,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isDark = colorMode === "dark";
+    // The table's one tab stop (MIP-1230): see useGridNav.
+    const { nav: gridNav, gridRef } = useGridNavController();
     // Normalize mode to only "light" | "dark" | undefined (treat "system" as undefined)
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
@@ -1632,7 +1644,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
                 <Box
+                    ref={gridRef}
+                    // A treegrid (`role` below): rows expand to show subtasks. One tab
+                    // stop for the whole table, arrows between cells (useGridNav).
+                    aria-label={t.tasks.table.gridLabel}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    role="treegrid"
                     style={{
                         ...getTableContainerStyles(mode),
                         flex: 1,
@@ -1659,16 +1676,44 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         "& .MuiTypography-root.MuiTypography-body-xs": {
                             fontSize: "var(--g-type-body-xs-size)",
                         },
+                        // The cell the keyboard is on. A cell that holds a button shows
+                        // the button's own ring; a cell that only shows a value (weight,
+                        // dates) and the drag handle get this one. Inset: a cell fills
+                        // its row, an outside ring would be cut by the row below.
+                        "& [data-grid-col]:focus-visible": {
+                            ...focusRing,
+                            outlineOffset: "-2px",
+                            borderRadius: "4px",
+                        },
+                        // Moving the keyboard to a cell scrolls it into view: not under the
+                        // sticky header (the scroller's padding, so it holds for every target).
+                        scrollPaddingTop: "48px",
                     }}
                 >
                     {/* Table Header */}
-                    <div style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}>
+                    <div
+                        role="row"
+                        style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}
+                        {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}
+                    >
                         {/* Drag handle placeholder */}
-                        <div style={headerDragHandlePlaceholderStyles} />
+                        <div style={headerDragHandlePlaceholderStyles} aria-hidden />
 
                         {visibleColumns.map((column, index) => (
                             <div
                                 key={column.field}
+                                role="columnheader"
+                                aria-sort={
+                                    sortTiers[0]?.field === column.field
+                                        ? sortTiers[0].direction === "asc"
+                                            ? "ascending"
+                                            : "descending"
+                                        : undefined
+                                }
+                                // The expand column has no name and nothing to sort by.
+                                {...(column.field === "__expand"
+                                    ? {}
+                                    : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getHeaderCellStyles(
                                         getColumnWidth(column.field),
@@ -1696,6 +1741,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             >
                                 {/* Header content - clickable for sorting */}
                                 <PlainButton
+                                    tabIndex={column.field === "__expand" ? -1 : undefined}
                                     style={{
                                         display: "flex",
                                         alignItems: "center",
@@ -1804,6 +1850,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     // common parent. The drag attribute disables
                                     // the rules wholesale while a row is in flight.
                                     className={TASK_BODY_CLASS}
+                                    role="rowgroup"
                                     {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
                                     style={{
                                         minHeight: 100,
@@ -1820,39 +1867,41 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     onPointerLeave={onFamilyFocusPointerLeave}
                                     onPointerOver={onFamilyFocusPointerOver}
                                 >
-                                    <TaskTableRows
-                                        childrenByParent={childrenByParentEffective}
-                                        columns={columnsWithWidths}
-                                        customFieldDefs={customFieldDefs}
-                                        depthMap={depthMap}
-                                        displayRows={displayRows}
-                                        expandedRows={expandedRows}
-                                        familyKeyByRow={familyKeyByRow}
-                                        ghostIds={ghostInfo.ghostIds}
-                                        mode={mode}
-                                        myself={myself}
-                                        projectTags={quickAddProjectTags}
-                                        quickAddFieldRules={quickAddFieldRules}
-                                        quickAddParentId={quickAddParentId}
-                                        quickAddProjectTags={quickAddProjectTags}
-                                        resolveIsSelected={resolveIsSelected}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        sprintNamesById={sprintNamesById}
-                                        teamMembers={teamMembers}
-                                        toggleExpand={toggleExpand}
-                                        useCM={useCM}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useUISM={useUISM}
-                                        onOpenDiagram={openDiagram}
-                                        onQuickAddChild={openQuickAdd}
-                                        onQuickAddClose={closeQuickAdd}
-                                        onQuickAddDirtyChange={handleQuickAddDirtyChange}
-                                        onQuickAddSubmit={handleQuickAddSubmit}
-                                        onRequestPreview={requestPreview}
-                                        onRowUpdate={handleRowUpdate}
-                                    />
+                                    <GridNavContext.Provider value={gridNav}>
+                                        <TaskTableRows
+                                            childrenByParent={childrenByParentEffective}
+                                            columns={columnsWithWidths}
+                                            customFieldDefs={customFieldDefs}
+                                            depthMap={depthMap}
+                                            displayRows={displayRows}
+                                            expandedRows={expandedRows}
+                                            familyKeyByRow={familyKeyByRow}
+                                            ghostIds={ghostInfo.ghostIds}
+                                            mode={mode}
+                                            myself={myself}
+                                            projectTags={quickAddProjectTags}
+                                            quickAddFieldRules={quickAddFieldRules}
+                                            quickAddParentId={quickAddParentId}
+                                            quickAddProjectTags={quickAddProjectTags}
+                                            resolveIsSelected={resolveIsSelected}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            sprintNamesById={sprintNamesById}
+                                            teamMembers={teamMembers}
+                                            toggleExpand={toggleExpand}
+                                            useCM={useCM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
+                                            onOpenDiagram={openDiagram}
+                                            onQuickAddChild={openQuickAdd}
+                                            onQuickAddClose={closeQuickAdd}
+                                            onQuickAddDirtyChange={handleQuickAddDirtyChange}
+                                            onQuickAddSubmit={handleQuickAddSubmit}
+                                            onRequestPreview={requestPreview}
+                                            onRowUpdate={handleRowUpdate}
+                                        />
+                                    </GridNavContext.Provider>
                                     {provided.placeholder}
                                 </div>
                             )}
@@ -1865,62 +1914,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         the static "No tasks to display" message. */}
                     {displayRows.length === 0 &&
                         (useTM.isLoadingTasks ? (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    height: "200px",
-                                    gap: 1.5,
-                                    color: mode === "dark" ? "#9aa0c4" : "#6b7280",
-                                }}
-                            >
-                                <CircularProgress
-                                    size="md"
-                                    variant="soft"
-                                    sx={{
-                                        "--CircularProgress-size": "36px",
-                                        "--CircularProgress-trackThickness": "3px",
-                                        "--CircularProgress-progressThickness": "3px",
-                                        color:
-                                            mode === "dark"
-                                                ? "var(--gp-brandalt-400)"
-                                                : "var(--gp-brand-700)",
-                                    }}
-                                />
-                                <Typography
-                                    level="body-md"
-                                    sx={{ fontWeight: 500, color: "inherit" }}
-                                >
-                                    {t.tasks.table.loadingTasks}
-                                </Typography>
+                            <Box sx={{ minHeight: "200px", pt: 1 }}>
+                                <SkeletonRows count={6} label={t.tasks.table.loadingTasks} />
                             </Box>
                         ) : (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    height: "200px",
-                                    color: mode === "dark" ? "#666" : "#999",
-                                    gap: 1,
-                                }}
-                            >
-                                <Typography
-                                    level="body-lg"
-                                    sx={{ fontWeight: 500, color: "inherit" }}
-                                >
-                                    {t.tasks.table.emptyTitle}
-                                </Typography>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
-                                >
-                                    {t.tasks.table.emptyHint}
-                                </Typography>
-                            </Box>
+                            <EmptyState
+                                body={t.tasks.table.emptyHint}
+                                data-empty="task-table"
+                                title={t.tasks.table.emptyTitle}
+                            />
                         ))}
                 </Box>
             </div>

@@ -27,6 +27,7 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
+import { EmptyState } from "../ui/feedback/EmptyState";
 import { InlineTitleEdit } from "../ui/fields/InlineTitleEdit";
 import { SearchField } from "../ui/fields/SearchField";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
@@ -212,9 +213,11 @@ export const MentionGroupEditor = ({
                 </Typography>
             </Stack>
             {memberRows.length === 0 ? (
-                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
-                    {t.settings.mentionGroups.noMembers}
-                </Typography>
+                <EmptyState
+                    body={t.settings.mentionGroups.noMembers}
+                    data-empty="mention-group-members"
+                    size="xs"
+                />
             ) : (
                 <List sx={{ "--ListItem-paddingY": "6px" }}>
                     {memberRows.map((row) => (

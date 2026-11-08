@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     Chip,
-    CircularProgress,
     Input,
     List,
     ListItem,
@@ -17,6 +16,7 @@ import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -491,18 +491,11 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     <Stack direction="column" spacing={0.5}>
                         <Input
                             disabled={isSubmittingQuick}
+                            endDecorator={isSubmittingQuick ? <Spinner /> : null}
                             placeholder={t.tasks.subTasks.quickAddPlaceholder}
                             size="sm"
                             sx={{ borderRadius: "8px" }}
                             value={quickTitle}
-                            endDecorator={
-                                isSubmittingQuick ? (
-                                    <CircularProgress
-                                        size="sm"
-                                        sx={{ "--CircularProgress-size": "16px" }}
-                                    />
-                                ) : null
-                            }
                             slotProps={{
                                 input: {
                                     "aria-label": t.tasks.subTasks.quickAddPlaceholder,

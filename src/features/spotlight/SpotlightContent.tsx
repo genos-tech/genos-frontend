@@ -41,13 +41,14 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, Chip, CircularProgress, IconButton, Typography } from "@mui/joy";
+import { Box, Button, Chip, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
-import { SkeletonLines, SkeletonRows } from "../../components/ui/feedback/Skeleton";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import { fmt, useTranslation, type Messages } from "../../i18n";
 import type {
@@ -1322,7 +1323,7 @@ export const SpotlightContent = ({
                             py: 1,
                         }}
                     >
-                        <CircularProgress size="sm" />
+                        <Spinner />
                         <Typography
                             level="body-md"
                             sx={{
@@ -1887,18 +1888,7 @@ const HistoryListView = ({
     }
 
     if (sessions.length === 0) {
-        return (
-            <Typography
-                level="body-md"
-                sx={{
-                    color: g.text.secondary,
-                    px: 0.5,
-                    py: 1,
-                }}
-            >
-                {ts.history.empty}
-            </Typography>
-        );
+        return <EmptyState body={ts.history.empty} data-empty="spotlight-history" size="xs" />;
     }
 
     return (

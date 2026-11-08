@@ -6,13 +6,13 @@ import {
     Autocomplete,
     AutocompleteOption,
     Box,
-    CircularProgress,
     ListItemContent,
     Stack,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -255,6 +255,7 @@ export const ACTaskSelector = ({
                     </FieldCaption>
                     <Autocomplete
                         disabled={!selectedProject}
+                        endDecorator={loading ? <Spinner /> : null}
                         isOptionEqualToValue={(a, b) => a.id === b.id}
                         loading={loading}
                         options={taskOptions}
@@ -263,9 +264,6 @@ export const ACTaskSelector = ({
                         startDecorator={<SearchRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
                         sx={INPUT_SX}
                         value={selectedTask}
-                        endDecorator={
-                            loading ? <CircularProgress size="sm" variant="plain" /> : null
-                        }
                         getOptionLabel={(opt) =>
                             opt ? `${opt.displayId ?? `#${opt.id}`} ${opt.title ?? ""}`.trim() : ""
                         }
