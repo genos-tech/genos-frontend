@@ -113,7 +113,8 @@ const _CITATION_STRIP_PATTERN = new RegExp(
 // pass 3 used to eat the ids one by one and leave `[,]` in the sentence. The
 // separator class is the same one `_CITATION_DEBRIS_PATTERN` treats as
 // debris. Each member is a typed token exactly like the bare form's.
-const _GROUP_SEP = "[,;\\u3001\\uFF0C]";
+const _GROUP_SEPS = ",;\\u3001\\uFF0C";
+const _GROUP_SEP = `[${_GROUP_SEPS}]`;
 const _GROUP_MEMBER = `(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s,;\\u3001\\uFF0C]+|${_CHAT_LABEL_TOKEN}[^\\]\\s,;\\u3001\\uFF0C]*)`;
 const _GROUP_BODY = `${_GROUP_MEMBER}(?:\\s*${_GROUP_SEP}\\s*${_GROUP_MEMBER})+`;
 const _CITATION_GROUP_PATTERN = new RegExp(`\\[\\s*(${_GROUP_BODY})\\s*\\](?!\\()`, "g");
@@ -128,14 +129,39 @@ const _STRIPPED = "\uE000";
 const _STRIPPED_ALL = new RegExp(_STRIPPED, "g");
 
 // A bracket pair holding nothing but separators and at least one stripped
-// marker: `[,]`, `( )`, `（）`, `［、］`. Went with its opening bracket's
-// preceding space/tab so the sentence closes up ("API [,]." -> "API.").
-const _OPENERS = "([\\uFF08\\uFF3B";
-const _CLOSERS = ")\\]\\uFF09\\uFF3D";
+// marker: `[,]`, `( )`, `（）`, `［、］`, `【】`. Pairs are matched with their own
+// closer (a `(` never closes on a `]`), and the opening bracket takes its
+// preceding space/tab with it so the sentence closes up ("API [,]." -> "API.").
+const _BRACKET_PAIRS: ReadonlyArray<readonly [string, string]> = [
+    ["(", ")"],
+    ["[", "]"],
+    ["\uFF08", "\uFF09"], // （ ）
+    ["\uFF3B", "\uFF3D"], // ［ ］
+    ["\u3010", "\u3011"], // 【 】
+    ["\u3014", "\u3015"], // 〔 〕
+    ["\u300C", "\u300D"], // 「 」
+    ["\u300E", "\u300F"], // 『 』
+    ["\u3008", "\u3009"], // 〈 〉
+    ["\u300A", "\u300B"], // 《 》
+];
+const _escapeForRegExp = (c: string) => c.replace(/[()[\]]/g, "\\$&");
 const _CITATION_DEBRIS_PATTERN = new RegExp(
-    `[ \\t]?[${_OPENERS}](?=[^${_CLOSERS}]*${_STRIPPED})[\\s,;\\u3001\\uFF0C${_STRIPPED}]*[${_CLOSERS}]`,
+    `[ \\t]?(?:${_BRACKET_PAIRS
+        .map(
+            ([open, close]) =>
+                `${_escapeForRegExp(open)}[\\s${_GROUP_SEPS}]*${_STRIPPED}[\\s${_GROUP_SEPS}${_STRIPPED}]*${_escapeForRegExp(close)}`
+        )
+        .join("|")})`,
     "g"
 );
+// Markers left side by side with only separators between them (`[task:1],
+// [task:2]` -> marker, marker) are one removed citation list: the separators
+// between them go too, or the sentence ends "Done,.".
+const _MARKER_RUN_PATTERN = new RegExp(
+    `${_STRIPPED}(?:[ \\t]*${_GROUP_SEP}[ \\t]*${_STRIPPED})+`,
+    "g"
+);
+const _SPACE_BEFORE_MARKER_PATTERN = new RegExp(`[ \\t]+${_STRIPPED}`, "g");
 
 // Safety net for raw citation ids the model dumped into the prose WITHOUT
 // the `[type:id]` / `[prose](type:id)` syntax the two passes handle — the
@@ -293,6 +319,27 @@ export const rewriteCitations = (
     labelFor?: (source: SpotlightResult) => string
 ): string => {
     if (!answer) return answer;
+    // Pass 4: what the stripping left. `Web Animations API [,].` and
+    // `Task A（）` are a bracket with nothing in it; close them up, then drop
+    // the markers. Only a bracket that held a stripped marker goes (see
+    // `_CITATION_DEBRIS_PATTERN`), so `f(x)`, `[1]`, `[ ]` and `()` in code stay.
+    return stripCitations(answer, sourcesById, labelFor)
+        .replace(_MARKER_RUN_PATTERN, _STRIPPED)
+        .replace(_SPACE_BEFORE_MARKER_PATTERN, _STRIPPED)
+        .replace(_CITATION_DEBRIS_PATTERN, "")
+        .replace(_STRIPPED_ALL, "");
+};
+
+// Passes 1-3 of `rewriteCitations`. Whatever they remove is replaced by
+// `_STRIPPED`, which pass 4 resolves. `rawIds`, when given, collects the
+// unbracketed ids pass 3 removed, so the chip row reads them through the very
+// same pipeline instead of a second copy of it.
+const stripCitations = (
+    answer: string,
+    sourcesById: ReadonlyMap<string, SpotlightResult>,
+    labelFor?: (source: SpotlightResult) => string,
+    rawIds?: Set<string>
+): string => {
     // Pass 1: natural-prose links → sentinel links (resolved) or plain prose.
     const withLinks = answer
         .replace(_STRIPPED_ALL, "")
@@ -332,15 +379,10 @@ export const rewriteCitations = (
     // `spotlight-citation:` links from pass 1 are safe: their token is
     // always preceded by a colon, which the pattern's leading boundary
     // (`(?<![\w:/.-])`) rejects — so a valid citation link is never bitten.
-    //
-    // Pass 4: what the stripping left. `Web Animations API [,].` and
-    // `Task A（）` are a bracket with nothing in it; close them up, then drop
-    // the markers. Only a bracket that held a stripped marker goes (see
-    // `_CITATION_DEBRIS_PATTERN`), so `f(x)`, `[1]`, `[ ]` and `()` in code stay.
-    return withoutBareTokens
-        .replace(_RAW_LEAK_STRIP_PATTERN, _STRIPPED)
-        .replace(_CITATION_DEBRIS_PATTERN, "")
-        .replace(_STRIPPED_ALL, "");
+    return withoutBareTokens.replace(_RAW_LEAK_STRIP_PATTERN, (found) => {
+        rawIds?.add(found.trim());
+        return _STRIPPED;
+    });
 };
 
 // Extract the set of entity ids the answer renders INLINE as a
@@ -404,13 +446,9 @@ export const extractBareCitedIds = (answer: string): Set<string> => {
 const extractRawCitedIds = (answer: string): Set<string> => {
     const ids = new Set<string>();
     if (!answer) return ids;
-    // What the other passes strip first must not be read twice: a link's URL
-    // (`[x](task:12)`) is not a raw leak, it is the link form.
-    const bare = answer
-        .replace(new RegExp(CITATION_LINK_PATTERN.source, "g"), "")
-        .replace(_CITATION_GROUP_STRIP_PATTERN, "")
-        .replace(_CITATION_STRIP_PATTERN, "");
-    for (const m of bare.matchAll(_RAW_LEAK_STRIP_PATTERN)) ids.add(m[0].trim());
+    // An id QUOTED in a code span or block is an example, not a citation.
+    const prose = answer.replace(/```[\s\S]*?```|`[^`\n]*`/g, "");
+    stripCitations(prose, new Map(), undefined, ids);
     return ids;
 };
 
