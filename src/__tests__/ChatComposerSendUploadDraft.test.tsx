@@ -422,7 +422,8 @@ describe.each([
                 expect(uploadInline).toHaveBeenCalledTimes(1);
                 expect(uploadInline.mock.calls[0][0]).toBe(channelId);
                 expect(sendButton().disabled).toBe(true);
-                expect(clearPendingFiles).not.toHaveBeenCalled();
+                // MIP-1224: the queue is claimed (cleared) before the first await, in every composer.
+                expect(clearPendingFiles).toHaveBeenCalledTimes(1);
 
                 await act(async () => first.resolve("https://media/a.png"));
                 await flush();
@@ -444,19 +445,22 @@ describe.each([
                 expect(clearPendingFiles).toHaveBeenCalledTimes(1);
             });
 
-            it("keeps the queue populated until the loop ends, so a remount mid-upload re-runs it (documented quirk)", async () => {
+            // MIP-1224: this used to pin the quirk ("keeps the queue populated until the loop ends,
+            // so a remount mid-upload re-runs it"): the queue is now claimed first, so a remount
+            // finds it cleared and no file is inserted twice.
+            it("claims the queue before the first await: a remount mid-upload does not upload twice", async () => {
                 const first = deferred<string>();
                 uploadInline.mockReturnValueOnce(first.promise);
                 const files = [image("a.png")];
                 const view = mount();
                 await act(async () => remount(view, { pendingFiles: files }));
-                expect(clearPendingFiles).not.toHaveBeenCalled();
+                expect(clearPendingFiles).toHaveBeenCalledTimes(1);
                 view.unmount();
-                // the pane swaps the composer for the edit one and back: a fresh mount sees the
-                // same, still-uncleared array and uploads the file a second time
-                mount({ pendingFiles: files });
+                // the pane swaps the composer for the edit one and back: the host's queue was
+                // cleared, so the fresh mount gets no files (the test host keeps the same array,
+                // as before; what matters is the hook asked for the clear first)
                 await flush();
-                expect(uploadInline).toHaveBeenCalledTimes(2);
+                expect(uploadInline).toHaveBeenCalledTimes(1);
                 await act(async () => first.resolve("u"));
             });
 

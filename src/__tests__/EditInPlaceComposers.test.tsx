@@ -317,7 +317,10 @@ describe.each([
             expect(screen.getByTestId("badge").getAttribute("data-count")).toBe("0");
         });
 
-        it("do NOT hold Save while an inline upload is in flight (no gate in edit mode)", async () => {
+        // MIP-1224: this used to pin "do NOT hold Save while an inline upload is in flight (no gate
+        // in edit mode)": an image still uploading has an empty url, so saving stored a broken
+        // attachment. Save and the chord now wait, and the host does not close over the upload.
+        it("holds Save while an inline upload is in flight, then saves once it lands", async () => {
             let release!: (u: string) => void;
             vi.spyOn(channelService, "uploadInlineFile").mockReturnValue(
                 new Promise<string>((resolve) => {
@@ -331,13 +334,14 @@ describe.each([
                     new File(["x"], "a.png", { type: "image/png" })
                 );
             });
-            expect(save().disabled).toBe(false);
             await pressChord({ metaKey: true });
-            expect(edit).toHaveBeenCalledTimes(1);
+            expect(edit).not.toHaveBeenCalled();
             await act(async () => {
                 release("u");
                 await uploading;
             });
+            await pressChord({ metaKey: true });
+            expect(edit).toHaveBeenCalledTimes(1);
         });
 
         it("offer no mobile attach picker and no drop overlay", () => {

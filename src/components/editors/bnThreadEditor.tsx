@@ -123,7 +123,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         // the deleted `/chat/attachment/` route.
         uploads: { channelId: String(thread.chatId) },
         // Files dropped on the thread pane (outside the editor).
-        dropQueue: { files: pendingFiles, clear: clearPendingFiles, mode: "after" },
+        dropQueue: { files: pendingFiles, clear: clearPendingFiles },
         // Per-thread draft cache. Keyed by chatType + chatId + threadId so each thread keeps
         // its own in-progress reply separate from the parent chat's main-channel draft.
         draftKey:

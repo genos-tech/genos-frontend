@@ -153,7 +153,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         uploads: { channelId: uploadChannelId ? String(uploadChannelId) : undefined },
         // Files dropped on the comment tab (outside the editor itself). The queue is claimed
         // first and the loop skips the counter and the size guard's wrapper, as it always did.
-        dropQueue: { files: pendingFiles, clear: clearPendingFiles, mode: "claim" },
+        dropQueue: { files: pendingFiles, clear: clearPendingFiles },
         // Per-task draft cache. The hook tracks the previously-loaded key internally and won't
         // clobber the editor on re-renders where `task` is recreated but `task.id` is unchanged.
         draftKey: task?.id != null ? `task-comment:${task.id}` : null,
