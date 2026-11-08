@@ -6,7 +6,6 @@ import {
     Autocomplete,
     AutocompleteOption,
     Button,
-    CircularProgress,
     FormControl,
     FormLabel,
     Input,
@@ -281,8 +280,8 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
                         {tc.cancel}
                     </Button>
                     <Button
-                        disabled={isSubmitting || title.trim() === "" || projectId == null}
-                        startDecorator={isSubmitting ? <CircularProgress size="sm" /> : undefined}
+                        disabled={title.trim() === "" || projectId == null}
+                        loading={isSubmitting}
                         onClick={submit}
                     >
                         {tc.submit}

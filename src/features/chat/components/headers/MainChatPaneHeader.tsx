@@ -598,20 +598,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <IconButton
                             size="sm"
                             variant="plain"
-                            disabled={quickMeetLoading}
+                            loading={quickMeetLoading}
                             onClick={handleQuickMeet}
                             aria-label={t.chat.headers.quickMeetTooltip}
                         >
-                            {quickMeetLoading ? (
-                                <CircularProgress
-                                    size="sm"
-                                    sx={{ "--CircularProgress-size": "18px" }}
-                                />
-                            ) : (
-                                <VideoCameraFrontRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
-                            )}
+                            <VideoCameraFrontRoundedIcon
+                                sx={{ fontSize: 18, color: styles.accentColor }}
+                            />
                         </IconButton>
                     </AppTooltip>
                 )}

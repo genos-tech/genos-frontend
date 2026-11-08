@@ -208,14 +208,8 @@ const SaveAnswerButtons = memo((props: SaveProps) => {
                 <CheckRoundedIcon sx={iconSx} />
             </IconButton>
         ) : note.status === "saving" ? (
-            <IconButton
-                aria-label={s.note.saving}
-                size="sm"
-                sx={buttonSx}
-                variant="plain"
-                disabled
-            >
-                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "14px" }} />
+            <IconButton aria-label={s.note.saving} size="sm" sx={buttonSx} variant="plain" loading>
+                <StickyNote2RoundedIcon sx={iconSx} />
             </IconButton>
         ) : (
             <AppTooltip title={s.note.tooltip}>
