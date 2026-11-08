@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import LocalPhoneRoundedIcon from "@mui/icons-material/LocalPhoneRounded";
 import { Button, Input, Stack, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -37,10 +36,7 @@ type Props = {
  */
 export const UserProfilePhone = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const isSelfView = myself.userId === user?.userId;
     const phone = (isSelfView ? myself.phoneNumber : user?.phoneNumber) ?? "";
@@ -126,18 +122,18 @@ export const UserProfilePhone = ({ myself, setMyself, user }: Props) => {
         <Typography
             component={isSelfView ? "button" : "span"}
             startDecorator={
-                <LocalPhoneRoundedIcon fontSize="small" sx={{ color: styles.accentColor }} />
+                <LocalPhoneRoundedIcon fontSize="small" sx={{ color: g.accent.text }} />
             }
             sx={{
                 userSelect: "text",
-                color: phone ? styles.valueColor : styles.labelColor,
+                color: phone ? g.text.primary : g.text.secondary,
                 fontSize: "14px",
                 background: "none",
                 border: "none",
                 p: 0,
                 textAlign: "left",
                 cursor: isSelfView ? "pointer" : "default",
-                "&:hover": isSelfView ? { color: styles.accentColor } : undefined,
+                "&:hover": isSelfView ? { color: g.accent.text } : undefined,
             }}
             onClick={isSelfView ? () => setEditing(true) : undefined}
         >

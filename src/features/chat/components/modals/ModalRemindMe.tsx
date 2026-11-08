@@ -21,20 +21,11 @@ import { useEffect, useMemo, useState } from "react";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    Divider,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, Divider, Input, Stack, Typography } from "@mui/joy";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import {
     formatReminderTime,
     fromDatetimeLocalValue,
@@ -42,7 +33,7 @@ import {
     reminderPresets,
     toDatetimeLocalValue,
 } from "../../utils/reminderPresets";
-import { popupLayerSx, useTodoDialogLayer } from "../todo/TodoHostLayer";
+import { useTodoDialogLayer } from "../todo/TodoHostLayer";
 
 type Props = {
     open: boolean;
@@ -71,8 +62,6 @@ export const ModalRemindMe = ({
     onClose,
 }: Props) => {
     const { t, locale } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const m = t.chat.remindMe;
     // Inside the to-do modal this opens above it (MIP-1047).
     const layer = useTodoDialogLayer(10010);
@@ -125,130 +114,104 @@ export const ModalRemindMe = ({
 
     const rowSx = {
         justifyContent: "space-between",
-        borderRadius: "10px",
         fontWeight: 500,
         px: 1.5,
         py: 1,
     } as const;
 
     return (
-        <Modal
+        <ModalFrame
+            dismissible={!submitting}
+            icon={<NotificationsActiveRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
-            sx={{
-                zIndex: layer,
-                backdropFilter: "blur(4px)",
-                backgroundColor: "transparent",
-                ...popupLayerSx(layer),
-            }}
-            onClose={() => !submitting && onClose()}
+            size="sm"
+            title={m.title}
+            zIndex={layer}
+            description={
+                remindAt
+                    ? fmt(m.currentlySetFor, {
+                          time: formatReminderTime(new Date(remindAt), locale),
+                      })
+                    : (description ?? m.description)
+            }
+            ownsListboxPopups
+            onClose={onClose}
         >
-            <ModalDialog
-                sx={{
-                    borderRadius: "16px",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: 360 },
-                    maxWidth: "100vw",
-                    p: { xs: 2, md: 2.5 },
-                }}
-            >
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.5 }}>
-                    <NotificationsActiveRoundedIcon sx={{ fontSize: 20 }} />
-                    <Typography level="title-md" sx={{ fontWeight: 600 }}>
-                        {m.title}
-                    </Typography>
-                </Stack>
+            {error && (
+                <Alert color="danger" sx={{ mb: 1.5 }}>
+                    {error}
+                </Alert>
+            )}
 
-                <Typography level="body-xs" sx={{ opacity: 0.7, mb: 1.5 }}>
-                    {remindAt
-                        ? fmt(m.currentlySetFor, {
-                              time: formatReminderTime(new Date(remindAt), locale),
-                          })
-                        : (description ?? m.description)}
-                </Typography>
-
-                {error && (
-                    <Alert color="danger" sx={{ mb: 1.5, borderRadius: "10px" }}>
-                        {error}
-                    </Alert>
-                )}
-
-                <Stack spacing={0.5}>
-                    {presets.map(({ id, at }) => (
-                        <Button
-                            key={id}
-                            color="neutral"
-                            disabled={submitting}
-                            startDecorator={<AccessTimeRoundedIcon sx={{ fontSize: 18 }} />}
-                            sx={rowSx}
-                            variant="soft"
-                            onClick={() => void commit(at)}
-                        >
-                            <Box sx={{ flex: 1, textAlign: "start", ml: 1 }}>{m.presets[id]}</Box>
-                            <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                                {formatReminderTime(at, locale)}
-                            </Typography>
-                        </Button>
-                    ))}
-                </Stack>
-
-                <Divider sx={{ my: 1.5 }} />
-
-                <Typography level="body-xs" sx={{ opacity: 0.7, mb: 0.75 }}>
-                    {m.customLabel}
-                </Typography>
-                <Stack direction="row" spacing={1}>
-                    <Input
-                        disabled={submitting}
-                        slotProps={{ input: { "aria-label": m.customLabel } }}
-                        sx={{ flex: 1, borderRadius: "10px" }}
-                        type="datetime-local"
-                        value={customValue}
-                        onChange={(e) => setCustomValue(e.target.value)}
-                    />
+            <Stack spacing={0.5}>
+                {presets.map(({ id, at }) => (
                     <Button
-                        disabled={!customUsable || submitting}
-                        loading={submitting}
-                        sx={{ borderRadius: "10px", fontWeight: 600 }}
-                        onClick={() => customAt && void commit(customAt)}
+                        key={id}
+                        color="neutral"
+                        disabled={submitting}
+                        startDecorator={<AccessTimeRoundedIcon sx={{ fontSize: 18 }} />}
+                        sx={rowSx}
+                        variant="soft"
+                        onClick={() => void commit(at)}
                     >
-                        {m.setButton}
+                        <Box sx={{ flex: 1, textAlign: "start", marginInlineStart: "8px" }}>
+                            {m.presets[id]}
+                        </Box>
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                            {formatReminderTime(at, locale)}
+                        </Typography>
                     </Button>
-                </Stack>
-                {/* Only after they have typed something: telling someone
-                    their empty field is invalid is scolding, not helping. */}
-                {customValue !== "" && !customUsable && (
-                    <Typography color="danger" level="body-xs" sx={{ mt: 0.75 }}>
-                        {m.customInvalid}
-                    </Typography>
-                )}
+                ))}
+            </Stack>
 
-                {/* A real element, not a fragment: ModalDialog injects
-                    `data-last-child` into its direct children, and a
-                    React.Fragment can't accept it (React warns on every
-                    re-render once this branch is live). The explicit column
-                    keeps ModalDialog's own layout, so the Button's
-                    `alignSelf: flex-start` still resolves against a flex
-                    parent rather than stretching to full width. */}
-                {remindAt && (
-                    <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Divider sx={{ my: 1.5 }} />
-                        <Button
-                            color="danger"
-                            disabled={submitting}
-                            startDecorator={<DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />}
-                            variant="plain"
-                            sx={{
-                                borderRadius: "10px",
-                                alignSelf: "flex-start",
-                                color: isDark ? "#f87171" : "#ef4444",
-                            }}
-                            onClick={() => void handleRemove()}
-                        >
-                            {m.remove}
-                        </Button>
-                    </Box>
-                )}
-            </ModalDialog>
-        </Modal>
+            <Divider sx={{ my: 1.5 }} />
+
+            <Typography level="body-xs" sx={{ color: g.text.secondary, mb: 0.75 }}>
+                {m.customLabel}
+            </Typography>
+            <Stack direction="row" spacing={1}>
+                <Input
+                    disabled={submitting}
+                    slotProps={{ input: { "aria-label": m.customLabel } }}
+                    sx={{ flex: 1 }}
+                    type="datetime-local"
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                />
+                <Button
+                    disabled={!customUsable || submitting}
+                    loading={submitting}
+                    onClick={() => customAt && void commit(customAt)}
+                >
+                    {m.setButton}
+                </Button>
+            </Stack>
+            {/* Only after they have typed something: telling someone
+                their empty field is invalid is scolding, not helping. */}
+            {customValue !== "" && !customUsable && (
+                <Typography color="danger" level="body-xs" sx={{ mt: 0.75 }}>
+                    {m.customInvalid}
+                </Typography>
+            )}
+
+            {remindAt && (
+                <>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Button
+                        color="danger"
+                        disabled={submitting}
+                        startDecorator={<DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />}
+                        variant="plain"
+                        sx={{
+                            color: g.danger.text,
+                            "--Icon-color": g.danger.text,
+                        }}
+                        onClick={() => void handleRemove()}
+                    >
+                        {m.remove}
+                    </Button>
+                </>
+            )}
+        </ModalFrame>
     );
 };

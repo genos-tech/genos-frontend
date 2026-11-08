@@ -84,7 +84,6 @@ describe("join dialogs", () => {
                 myself={myself}
                 setOpenJoinProject={vi.fn()}
                 socket={null}
-                useCM={{} as never}
                 usePM={{} as never}
                 openJoinProject={{
                     flag: true,
@@ -106,7 +105,6 @@ describe("join dialogs", () => {
                 myself={myself}
                 setOpenJoinProject={vi.fn()}
                 socket={null}
-                useCM={{} as never}
                 usePM={{} as never}
                 openJoinProject={{
                     flag: true,
@@ -128,7 +126,6 @@ describe("join dialogs", () => {
                 myself={myself}
                 setOpenJoinProject={set}
                 socket={null}
-                useCM={{} as never}
                 usePM={{} as never}
                 openJoinProject={{
                     flag: true,

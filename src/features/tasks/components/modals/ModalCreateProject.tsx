@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -41,6 +41,11 @@ export const ModalCreateProject: React.FC<Props> = ({
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isPrivate, setIsPrivate] = useState(false);
+    // A create is a few requests in a row. Enter or a second click while they run made the
+    // project twice (MIP-1184): the ref blocks the second call in the same tick, before a
+    // re-render could disable the button.
+    const creatingRef = useRef(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [projectName, setProjectName] = useState("");
 
     // Initial-member selection — same picker UX as ModalCreateGM. The
@@ -100,11 +105,13 @@ export const ModalCreateProject: React.FC<Props> = ({
     };
 
     const handleCreateProject = () => {
-        if (projectName.trim()) {
-            createProject();
+        if (projectName.trim() && !creatingRef.current) {
+            void createProject();
         }
     };
     async function createProject(): Promise<void> {
+        creatingRef.current = true;
+        setIsCreating(true);
         try {
             const _create = async () => {
                 // Step-1: Create the project. The server makes the project's
@@ -252,16 +259,20 @@ export const ModalCreateProject: React.FC<Props> = ({
                     }
                 }
             };
-            _create();
+            await _create();
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);
             setErrorMessage(err_msg);
+        } finally {
+            creatingRef.current = false;
+            setIsCreating(false);
         }
     }
 
     return (
         <ModalFrame
+            dismissible={!isCreating}
             icon={<FolderOpenIcon sx={{ color: g.accent.text }} />}
             open={usePM.openCreateProject}
             size="md"
@@ -275,7 +286,11 @@ export const ModalCreateProject: React.FC<Props> = ({
                     >
                         {t.tasks.modals.createProject.cancelButton}
                     </Button>
-                    <Button disabled={!projectName.trim()} onClick={handleCreateProject}>
+                    <Button
+                        disabled={!projectName.trim() || isCreating}
+                        loading={isCreating}
+                        onClick={handleCreateProject}
+                    >
                         {t.tasks.modals.createProject.createButton}
                     </Button>
                 </>

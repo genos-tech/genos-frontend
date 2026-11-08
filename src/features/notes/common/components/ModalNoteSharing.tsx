@@ -8,26 +8,22 @@ import {
     Divider,
     IconButton,
     Input,
-    Modal,
-    ModalClose,
     Option,
     Select,
-    Sheet,
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles";
 
-import {
-    noteModalChildStackSx,
-    useNoteModalHostZIndex,
-} from "../../../../components/modals/noteModalHostZIndex";
+import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { NoteRoleMember } from "../../../../types/notes";
 import { ownTeamOnly } from "../../../../utils/teamRoster";
@@ -69,8 +65,7 @@ export const ModalNoteSharing = ({
     teamMembers,
     useNM,
 }: ModalNoteSharingProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
+    const theme = useTheme();
     const { t } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
 
@@ -134,124 +129,223 @@ export const ModalNoteSharing = ({
         await handleGrant(member.userId, newRoleId);
     };
 
+    const description = isOwner
+        ? t.notes.sharing.ownerDescription
+        : t.notes.sharing.viewerDescription;
+    const title = fmt(t.notes.sharing.title, { title: noteTitle || t.notes.defaults.untitled });
+
+    // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
     return (
-        <Modal open={open} sx={noteModalChildStackSx(hostZIndex)} onClose={onClose}>
-            <Sheet
-                sx={{
-                    width: { xs: "calc(100vw - 16px)", sm: 520 },
-                    maxWidth: { xs: "100vw", sm: "calc(100vw - 32px)" },
-                    // Mobile: clamp to viewport minus a small gutter +
-                    // BottomTabBar height so the sheet never lives under
-                    // the tab bar or off-screen.
-                    maxHeight: {
-                        xs: "calc(100dvh - 24px - var(--BottomTabBar-height, 60px))",
-                        sm: "calc(100vh - 64px)",
-                    },
-                    mx: "auto",
-                    // 10vh vertical margin works on desktop but
-                    // pushes the sheet half off-screen on a 700-tall
-                    // mobile viewport. Use a small fixed margin on xs.
-                    my: { xs: "12px", sm: "10vh" },
-                    p: { xs: 2, sm: 2.5 },
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    background: isDark ? "rgba(20,16,28,0.98)" : "rgba(255,255,255,0.98)",
-                    backdropFilter: "blur(10px)",
-                    border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
-                }}
-            >
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    justifyContent="space-between"
-                    sx={{ mb: 1 }}
-                >
-                    <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                        {fmt(t.notes.sharing.title, {
-                            title: noteTitle || t.notes.defaults.untitled,
+        <ModalFrame
+            description={description}
+            hostZIndex={hostZIndex}
+            open={open}
+            size="md"
+            title={title}
+            zIndex={theme.zIndex.modal}
+            actions={
+                <Button color="neutral" variant="plain" onClick={onClose}>
+                    {t.notes.sharing.done}
+                </Button>
+            }
+            clearBottomBar
+            ownsListboxPopups
+            onClose={onClose}
+        >
+            {/* Current members */}
+            <Box sx={{ mb: 1 }}>
+                {members.length === 0 ? (
+                    <Box sx={{ py: 1.5 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontStyle: "italic",
+                                color: g.text.tertiary,
+                            }}
+                        >
+                            {t.notes.sharing.noAccessYet}
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Stack spacing={0.75}>
+                        {members.map((m) => {
+                            const isSelf = String(m.userId) === String(myself.userId);
+                            const isLastOwner = m.roleId === ROLE_OWNER && ownerCount <= 1;
+                            const disableEdit = !isOwner || isSelf || savingUserId === m.userId;
+                            return (
+                                <Stack
+                                    key={m.userId}
+                                    alignItems="center"
+                                    direction="row"
+                                    spacing={1.25}
+                                    sx={{
+                                        px: 1,
+                                        py: 0.75,
+                                        borderRadius: g.radius.md,
+                                        border: `1px solid ${g.border.subtle}`,
+                                    }}
+                                >
+                                    <AvatarWithStatus
+                                        avatarSize={32}
+                                        isYou={isSelf}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        showPulseDot={false}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
+                                        avatarUser={
+                                            {
+                                                userId: m.userId,
+                                                userName: m.userName,
+                                                avatarImgPath: m.avatarUrl ?? "",
+                                            } as UserProps
+                                        }
+                                    />
+                                    <Box
+                                        sx={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: 600,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {m.userName}
+                                        </Typography>
+                                        {isSelf && (
+                                            <Chip
+                                                size="sm"
+                                                sx={{ fontSize: 10, flexShrink: 0 }}
+                                                variant="soft"
+                                            >
+                                                {t.notes.sharing.you}
+                                            </Chip>
+                                        )}
+                                    </Box>
+                                    <Select
+                                        disabled={disableEdit}
+                                        size="sm"
+                                        sx={{ minWidth: 110 }}
+                                        value={m.roleId}
+                                        onChange={(_, v) => {
+                                            if (v != null) handleRoleChange(m, v as number);
+                                        }}
+                                    >
+                                        <Option
+                                            disabled={isLastOwner || m.roleId !== ROLE_OWNER}
+                                            value={ROLE_OWNER}
+                                        >
+                                            {ROLE_LABEL[ROLE_OWNER]}
+                                        </Option>
+                                        <Option
+                                            disabled={isLastOwner && m.roleId === ROLE_OWNER}
+                                            value={ROLE_EDITOR}
+                                        >
+                                            {ROLE_LABEL[ROLE_EDITOR]}
+                                        </Option>
+                                        <Option
+                                            disabled={isLastOwner && m.roleId === ROLE_OWNER}
+                                            value={ROLE_VIEWER}
+                                        >
+                                            {ROLE_LABEL[ROLE_VIEWER]}
+                                        </Option>
+                                    </Select>
+                                    <AppTooltip title={t.notes.sharing.removeAccess}>
+                                        <IconButton
+                                            color="danger"
+                                            disabled={disableEdit || m.roleId === ROLE_OWNER}
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={() => handleRevoke(m.userId)}
+                                        >
+                                            <CloseRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                </Stack>
+                            );
                         })}
+                    </Stack>
+                )}
+            </Box>
+
+            {isOwner && (
+                <>
+                    <Divider sx={{ my: 1.5 }} />
+
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            mb: 0.75,
+                            color: g.text.secondary,
+                        }}
+                    >
+                        {t.notes.sharing.addTeammate}
                     </Typography>
-                    <ModalClose sx={{ position: "static" }} variant="plain" />
-                </Stack>
 
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
-                        mb: 2,
-                    }}
-                >
-                    {isOwner
-                        ? t.notes.sharing.ownerDescription
-                        : t.notes.sharing.viewerDescription}
-                </Typography>
+                    <Input
+                        placeholder={t.notes.sharing.searchPlaceholder}
+                        size="sm"
+                        sx={{ mb: 1 }}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
 
-                {/* Current members */}
-                <Box sx={{ overflow: "auto", flexShrink: 1, mb: 1 }}>
-                    {members.length === 0 ? (
-                        <Box sx={{ py: 1.5 }}>
+                    <Box sx={{ maxHeight: 220, overflow: "auto" }}>
+                        {candidates.length === 0 ? (
                             <Typography
                                 level="body-xs"
                                 sx={{
                                     fontStyle: "italic",
-                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                                    color: g.text.tertiary,
+                                    py: 1,
                                 }}
                             >
-                                {t.notes.sharing.noAccessYet}
+                                {search
+                                    ? t.notes.sharing.noMatchingTeammates
+                                    : t.notes.sharing.noMoreToAdd}
                             </Typography>
-                        </Box>
-                    ) : (
-                        <Stack spacing={0.75}>
-                            {members.map((m) => {
-                                const isSelf = String(m.userId) === String(myself.userId);
-                                const isLastOwner = m.roleId === ROLE_OWNER && ownerCount <= 1;
-                                const disableEdit =
-                                    !isOwner || isSelf || savingUserId === m.userId;
-                                return (
+                        ) : (
+                            <Stack spacing={0.5}>
+                                {candidates.map((u) => (
                                     <Stack
-                                        key={m.userId}
+                                        key={u.userId}
                                         alignItems="center"
                                         direction="row"
                                         spacing={1.25}
                                         sx={{
                                             px: 1,
                                             py: 0.75,
-                                            borderRadius: "8px",
-                                            border: `1px solid ${
-                                                isDark
-                                                    ? "rgba(255,255,255,0.06)"
-                                                    : "rgba(0,0,0,0.06)"
-                                            }`,
+                                            borderRadius: g.radius.md,
+                                            "&:hover": {
+                                                background: g.hover,
+                                            },
                                         }}
                                     >
                                         <AvatarWithStatus
                                             avatarSize={32}
-                                            isYou={isSelf}
+                                            avatarUser={u}
+                                            isYou={false}
                                             myself={myself}
                                             setMyself={setMyself}
                                             showPulseDot={false}
                                             socket={socket}
                                             useCM={useCM}
                                             useUISM={useUISM}
-                                            avatarUser={
-                                                {
-                                                    userId: m.userId,
-                                                    userName: m.userName,
-                                                    avatarImgPath: m.avatarUrl ?? "",
-                                                } as UserProps
-                                            }
                                         />
-                                        <Box
-                                            sx={{
-                                                flex: 1,
-                                                minWidth: 0,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                            }}
-                                        >
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography
                                                 level="body-sm"
                                                 sx={{
@@ -261,193 +355,38 @@ export const ModalNoteSharing = ({
                                                     whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                {m.userName}
+                                                {u.userName}
                                             </Typography>
-                                            {isSelf && (
-                                                <Chip
-                                                    size="sm"
-                                                    sx={{ fontSize: 10, flexShrink: 0 }}
-                                                    variant="soft"
-                                                >
-                                                    {t.notes.sharing.you}
-                                                </Chip>
-                                            )}
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: g.text.tertiary,
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {u.userEmail}
+                                            </Typography>
                                         </Box>
-                                        <Select
-                                            disabled={disableEdit}
+                                        <Button
+                                            loading={savingUserId === u.userId}
                                             size="sm"
-                                            sx={{ minWidth: 110 }}
-                                            value={m.roleId}
-                                            onChange={(_, v) => {
-                                                if (v != null) handleRoleChange(m, v as number);
-                                            }}
+                                            variant="soft"
+                                            startDecorator={
+                                                <PersonAddRoundedIcon sx={{ fontSize: 16 }} />
+                                            }
+                                            onClick={() => handleGrant(u.userId, ROLE_VIEWER)}
                                         >
-                                            <Option
-                                                disabled={isLastOwner || m.roleId !== ROLE_OWNER}
-                                                value={ROLE_OWNER}
-                                            >
-                                                {ROLE_LABEL[ROLE_OWNER]}
-                                            </Option>
-                                            <Option
-                                                disabled={isLastOwner && m.roleId === ROLE_OWNER}
-                                                value={ROLE_EDITOR}
-                                            >
-                                                {ROLE_LABEL[ROLE_EDITOR]}
-                                            </Option>
-                                            <Option
-                                                disabled={isLastOwner && m.roleId === ROLE_OWNER}
-                                                value={ROLE_VIEWER}
-                                            >
-                                                {ROLE_LABEL[ROLE_VIEWER]}
-                                            </Option>
-                                        </Select>
-                                        <AppTooltip title={t.notes.sharing.removeAccess}>
-                                            <IconButton
-                                                color="danger"
-                                                disabled={disableEdit || m.roleId === ROLE_OWNER}
-                                                size="sm"
-                                                variant="plain"
-                                                onClick={() => handleRevoke(m.userId)}
-                                            >
-                                                <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                                            </IconButton>
-                                        </AppTooltip>
+                                            {t.notes.sharing.invite}
+                                        </Button>
                                     </Stack>
-                                );
-                            })}
-                        </Stack>
-                    )}
-                </Box>
-
-                {isOwner && (
-                    <>
-                        <Divider sx={{ my: 1.5, opacity: isDark ? 0.08 : 0.12 }} />
-
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.06em",
-                                mb: 0.75,
-                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)",
-                            }}
-                        >
-                            {t.notes.sharing.addTeammate}
-                        </Typography>
-
-                        <Input
-                            placeholder={t.notes.sharing.searchPlaceholder}
-                            size="sm"
-                            sx={{ mb: 1 }}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-
-                        <Box sx={{ maxHeight: 220, overflow: "auto" }}>
-                            {candidates.length === 0 ? (
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        fontStyle: "italic",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.4)"
-                                            : "rgba(0,0,0,0.4)",
-                                        py: 1,
-                                    }}
-                                >
-                                    {search
-                                        ? t.notes.sharing.noMatchingTeammates
-                                        : t.notes.sharing.noMoreToAdd}
-                                </Typography>
-                            ) : (
-                                <Stack spacing={0.5}>
-                                    {candidates.map((u) => (
-                                        <Stack
-                                            key={u.userId}
-                                            alignItems="center"
-                                            direction="row"
-                                            spacing={1.25}
-                                            sx={{
-                                                px: 1,
-                                                py: 0.75,
-                                                borderRadius: "8px",
-                                                "&:hover": {
-                                                    background: isDark
-                                                        ? "rgba(255,255,255,0.04)"
-                                                        : "rgba(0,0,0,0.03)",
-                                                },
-                                            }}
-                                        >
-                                            <AvatarWithStatus
-                                                avatarSize={32}
-                                                avatarUser={u}
-                                                isYou={false}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                showPulseDot={false}
-                                                socket={socket}
-                                                useCM={useCM}
-                                                useUISM={useUISM}
-                                            />
-                                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {u.userName}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{
-                                                        color: isDark
-                                                            ? "rgba(255,255,255,0.4)"
-                                                            : "rgba(0,0,0,0.45)",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {u.userEmail}
-                                                </Typography>
-                                            </Box>
-                                            <Button
-                                                loading={savingUserId === u.userId}
-                                                size="sm"
-                                                variant="soft"
-                                                startDecorator={
-                                                    <PersonAddRoundedIcon sx={{ fontSize: 16 }} />
-                                                }
-                                                onClick={() => handleGrant(u.userId, ROLE_VIEWER)}
-                                            >
-                                                {t.notes.sharing.invite}
-                                            </Button>
-                                        </Stack>
-                                    ))}
-                                </Stack>
-                            )}
-                        </Box>
-                    </>
-                )}
-
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: 1,
-                        pt: 1.5,
-                    }}
-                >
-                    <Button variant="plain" onClick={onClose}>
-                        {t.notes.sharing.done}
-                    </Button>
-                </Box>
-            </Sheet>
-        </Modal>
+                                ))}
+                            </Stack>
+                        )}
+                    </Box>
+                </>
+            )}
+        </ModalFrame>
     );
 };

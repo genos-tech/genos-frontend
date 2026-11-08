@@ -33,6 +33,19 @@ describe("BaseAvatar", () => {
         );
     });
 
+    it("a no-picture circle has a visible fill and a hairline ring (MIP-1185)", () => {
+        render(<BaseAvatar data-testid="a" name="Ken" />);
+        const css = getComputedStyle(screen.getByTestId("a"));
+        // Joy's soft neutral is nearly the raised dialog surface in light mode.
+        expect(css.backgroundColor).toBe("var(--g-bg-subtle)");
+        expect(css.boxShadow).toContain("inset 0 0 0 1px var(--g-border");
+        // A status tone keeps its own tint instead.
+        render(<BaseAvatar data-testid="b" name="Ken" tone="success" />);
+        expect(getComputedStyle(screen.getByTestId("b")).backgroundColor).not.toBe(
+            "var(--g-bg-subtle)"
+        );
+    });
+
     it("defaults to the md step", () => {
         render(<BaseAvatar data-testid="a" name="Ken" />);
         expect(getComputedStyle(screen.getByTestId("a")).getPropertyValue("--Avatar-size")).toBe(
@@ -100,14 +113,10 @@ describe("UserAvatar initials", () => {
 });
 
 describe("no raw Joy Avatar outside components/ui/avatars", () => {
-    // Files whose raw Avatars are being converted in the table/board pilot and
-    // the chat-sidebar polish (MIP-1133 follow-up). This list may only SHRINK.
+    // Files whose raw Avatars are still to be converted (the milestone sidebar row: MIP-1163).
+    // This list may only SHRINK.
     const PENDING = new Set([
-        "features/tasks/components/table/DraggableTaskRow.tsx",
-        "features/tasks/components/table/TaskFilterMenu.tsx",
         "features/tasks/components/sidebar/projects_subs/MilestonesListItem.tsx",
-        "features/chat/components/sidebar/ChatListItemAvatar.tsx",
-        "features/chat/components/sidebar/chatListItemForFlagMessages.tsx",
     ]);
 
     it("imports Avatar from @mui/joy only in the pending files", () => {

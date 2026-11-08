@@ -1,5 +1,3 @@
-import { GridFilterModel } from "@mui/x-data-grid";
-
 import { TaskTypesProps } from "../../../types/tasks";
 import { PRIORITY_TONE, STATUS_TONE, Tone, toneBase, toneSolid } from "../meta/taskTone";
 
@@ -14,6 +12,12 @@ export const taskTypes: TaskTypesProps = {
     deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
 };
 
+/** The predicates a filter carries. It was `GridFilterModel` from the DataGrid package,
+ *  which nothing else in the app used (MIP-1182); only `items` is ever read or written. */
+export type FilterModel = {
+    items: { field: string; operator: string; value?: unknown; id?: number | string }[];
+};
+
 export type FilterProps = {
     // The rendered string. For predefined status / priority / effort
     // filters this is just an English fallback — the consuming UI
@@ -26,7 +30,7 @@ export type FilterProps = {
     // `t.tasks.filters[labelKey]`. Omitted for ad-hoc filters whose
     // label is user-supplied data (project tags, etc.).
     labelKey?: keyof (typeof import("../../../i18n/locales/en/tasks").tasks)["filters"];
-    filterModel: GridFilterModel;
+    filterModel: FilterModel;
     lightModeColor: string;
     darkModeColor: string;
 };

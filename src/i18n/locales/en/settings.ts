@@ -621,7 +621,7 @@ export const settings = {
         // Back to the Genos settings from the sub-view.
         backToSettings: "Genos settings",
         title: "What Genos remembers",
-        intro: "Genos doesn't keep a separate store of “memories”. Below is what it draws on when it answers you, plus one thing it notes about your connected AI apps. You can see each one here and delete what you don't want kept.",
+        intro: "Genos doesn't keep a separate store of “memories”. Below is what it draws on when it answers you, plus a private record it keeps of your activity. You can see each one here and delete what you don't want kept.",
         conversations: {
             heading: "Your Genos conversations",
             description:
@@ -679,15 +679,15 @@ export const settings = {
                 "Showing your latest {count} shared answers. There are more than this list shows.",
         },
         mcpUse: {
-            heading: "What your AI apps open",
-            switchLabel: "Notice what my AI apps open",
+            heading: "What Genos notes about your work",
+            switchLabel: "Note my activity",
             switchHelper:
-                "Genos notes which tasks, notes and projects your connected AI apps open or change (never their text), only you can see it, and it is kept 180 days. Turn it off and everything noted is deleted.",
+                "Genos notes which tasks, notes and projects your connected AI apps open or change, and when you add or remove a task collaborator or dependency, edit or delete a to-do, or share a note (never their text). Only you can see it, and it is kept 180 days. Turn it off and everything noted is deleted.",
             toggleFailed: "Couldn't change this setting. Please try again.",
             loadFailed: "Couldn't load this setting.",
             offTitle: "Stop noticing and delete what was noted?",
             offBody:
-                "Everything Genos has noted about which items your AI apps opened or changed is deleted now, and nothing new is noted. Your tasks, notes and messages are not affected. If you turn this on again, it starts fresh.",
+                "Everything Genos has noted about which items your AI apps opened or changed, and about the collaborators, dependencies, to-dos and note shares you changed, is deleted now, and nothing new is noted. Your tasks, notes and messages are not affected. If you turn this on again, it starts fresh.",
             offConfirm: "Turn off and delete",
         },
         settingsUsed: {

@@ -13,9 +13,11 @@
 
 import { useMemo, useRef, useState } from "react";
 import FolderZipRoundedIcon from "@mui/icons-material/FolderZipRounded";
-import { Button, LinearProgress, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Button, LinearProgress, Stack, Typography } from "@mui/joy";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteFolderProps, MyNoteMetaProps } from "../../../../types/notes";
 import { buildFolderExportPlan } from "../services/folderExportPlan";
@@ -100,124 +102,107 @@ export const ModalExportFolder = ({
     const noteCount = plan?.entries.length ?? 0;
 
     return (
-        <Modal
+        <ModalFrame
+            description={target?.name}
+            dismissible={!running}
+            icon={<FolderZipRoundedIcon sx={{ color: g.accent.text }} />}
             open={target != null}
-            sx={{ zIndex: 10010, backdropFilter: "blur(4px)" }}
-            onClose={running ? undefined : handleClose}
-        >
-            <ModalDialog
-                sx={{
-                    borderRadius: "16px",
-                    width: { xs: "calc(100vw - 24px)", md: "420px" },
-                    p: { xs: 2, md: 3 },
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <FolderZipRoundedIcon sx={{ fontSize: 20 }} />
-                    <Typography level="title-lg">{t.notes.exportZip.heading}</Typography>
-                </Stack>
-
-                <Typography level="title-sm" noWrap>
-                    {target?.name}
-                </Typography>
-
-                {result == null && (
-                    <Stack spacing={1} sx={{ mt: 1 }}>
-                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                            {noteCount === 0
-                                ? t.notes.exportZip.empty
-                                : fmt(t.notes.exportZip.summary, {
-                                      folders: plan?.folderCount ?? 0,
-                                      notes: noteCount,
-                                  })}
-                        </Typography>
-                        {noteCount > 0 && (
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {t.notes.exportZip.hint}
-                            </Typography>
-                        )}
-                    </Stack>
-                )}
-
-                {running && progress != null && (
-                    <Stack spacing={1} sx={{ mt: 2 }}>
-                        <LinearProgress
-                            size="sm"
-                            value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0}
-                            determinate
-                        />
-                        <Typography level="body-xs" sx={{ color: "text.tertiary" }} noWrap>
-                            {fmt(t.notes.exportZip.progress, {
-                                done: progress.done,
-                                total: progress.total,
-                            })}
-                            {progress.label ? ` · ${progress.label}` : ""}
-                        </Typography>
-                    </Stack>
-                )}
-
-                {result != null && (
-                    <Stack spacing={0.5} sx={{ mt: 2 }}>
-                        <Typography level="body-sm">
-                            {fmt(t.notes.exportZip.resultNotes, { count: result.notesExported })}
-                        </Typography>
-                        {result.imagesIncluded > 0 && (
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {fmt(t.notes.exportZip.resultImages, {
-                                    count: result.imagesIncluded,
-                                })}
-                            </Typography>
-                        )}
-                        {result.imagesFailed > 0 && (
-                            <Typography level="body-xs" sx={{ color: "warning.500" }}>
-                                {fmt(t.notes.exportZip.resultImagesFailed, {
-                                    count: result.imagesFailed,
-                                })}
-                            </Typography>
-                        )}
-                        {result.failures.length > 0 && (
-                            <Typography level="body-xs" sx={{ color: "danger.500" }}>
-                                {fmt(t.notes.exportZip.resultFailures, {
-                                    count: result.failures.length,
-                                })}
-                            </Typography>
-                        )}
-                        {result.cancelled && (
-                            <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                {t.notes.exportZip.resultCancelled}
-                            </Typography>
-                        )}
-                    </Stack>
-                )}
-
-                <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 2 }}>
-                    {result != null ? (
-                        <Button onClick={handleClose}>{t.notes.exportZip.done}</Button>
-                    ) : running ? (
-                        <Button
-                            color="danger"
-                            variant="soft"
-                            onClick={() => {
-                                cancelRef.current = true;
-                            }}
-                        >
-                            {t.notes.exportZip.stop}
+            size="md"
+            title={t.notes.exportZip.heading}
+            actions={
+                result != null ? (
+                    <Button onClick={handleClose}>{t.notes.exportZip.done}</Button>
+                ) : running ? (
+                    <Button
+                        color="danger"
+                        variant="soft"
+                        onClick={() => {
+                            cancelRef.current = true;
+                        }}
+                    >
+                        {t.notes.exportZip.stop}
+                    </Button>
+                ) : (
+                    <>
+                        <Button color="neutral" variant="plain" onClick={handleClose}>
+                            {t.common.actions.cancel}
                         </Button>
-                    ) : (
-                        <>
-                            <Button color="neutral" variant="plain" onClick={handleClose}>
-                                {t.common.actions.cancel}
-                            </Button>
-                            <Button
-                                disabled={noteCount === 0 || !accessToken}
-                                onClick={handleExport}
-                            >
-                                {t.notes.exportZip.exportButton}
-                            </Button>
-                        </>
+                        <Button disabled={noteCount === 0 || !accessToken} onClick={handleExport}>
+                            {t.notes.exportZip.exportButton}
+                        </Button>
+                    </>
+                )
+            }
+            onClose={handleClose}
+        >
+            {result == null && (
+                <Stack spacing={1}>
+                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
+                        {noteCount === 0
+                            ? t.notes.exportZip.empty
+                            : fmt(t.notes.exportZip.summary, {
+                                  folders: plan?.folderCount ?? 0,
+                                  notes: noteCount,
+                              })}
+                    </Typography>
+                    {noteCount > 0 && (
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                            {t.notes.exportZip.hint}
+                        </Typography>
                     )}
                 </Stack>
-            </ModalDialog>
-        </Modal>
+            )}
+
+            {running && progress != null && (
+                <Stack spacing={1} sx={{ mt: 2 }}>
+                    <LinearProgress
+                        size="sm"
+                        value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0}
+                        determinate
+                    />
+                    <Typography level="body-xs" sx={{ color: g.text.tertiary }} noWrap>
+                        {fmt(t.notes.exportZip.progress, {
+                            done: progress.done,
+                            total: progress.total,
+                        })}
+                        {progress.label ? ` · ${progress.label}` : ""}
+                    </Typography>
+                </Stack>
+            )}
+
+            {result != null && (
+                <Stack spacing={0.5} sx={{ mt: 2 }}>
+                    <Typography level="body-sm">
+                        {fmt(t.notes.exportZip.resultNotes, { count: result.notesExported })}
+                    </Typography>
+                    {result.imagesIncluded > 0 && (
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                            {fmt(t.notes.exportZip.resultImages, {
+                                count: result.imagesIncluded,
+                            })}
+                        </Typography>
+                    )}
+                    {result.imagesFailed > 0 && (
+                        <Typography level="body-xs" sx={{ color: g.warning.text }}>
+                            {fmt(t.notes.exportZip.resultImagesFailed, {
+                                count: result.imagesFailed,
+                            })}
+                        </Typography>
+                    )}
+                    {result.failures.length > 0 && (
+                        <Typography level="body-xs" sx={{ color: g.danger.text }}>
+                            {fmt(t.notes.exportZip.resultFailures, {
+                                count: result.failures.length,
+                            })}
+                        </Typography>
+                    )}
+                    {result.cancelled && (
+                        <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                            {t.notes.exportZip.resultCancelled}
+                        </Typography>
+                    )}
+                </Stack>
+            )}
+        </ModalFrame>
     );
 };

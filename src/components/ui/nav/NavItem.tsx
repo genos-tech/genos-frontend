@@ -10,8 +10,11 @@ import {
     NAV_HOVER_MEDIA,
     NAV_ICON_SIZE,
     NAV_KEEP_CLASS,
+    NAV_OVERLAY_BG,
+    NAV_OVERLAY_FADE,
     NAV_PAD_X,
     NAV_ROW_GAP,
+    navButtonPlateOffSx,
     navFocusSx,
     navIndentLength,
     navRowSx,
@@ -54,6 +57,17 @@ export type NavItemProps = {
      *  column at rest, the same width either way. An action with
      *  `NAV_KEEP_CLASS` (a lit pin) shows at rest too, beside what stays. */
     actionsInPlace?: boolean;
+    /** Actions that overlay the row's end instead of sitting in it: out of flow, so they
+     *  take NO width and the title does not move when they appear. For rows with two lines
+     *  or crowded ends (milestones, folders). Hidden until the row is hovered, keyboard
+     *  focused (the keyboard ring, not a mouse click) or a menu in them is open; the
+     *  buttons keep a background of the row's hover colour (opaque) and a fade to their left.
+     *  On touch they are always shown and the row keeps `reserve` (default 32px) free at
+     *  its end for them, through `--nav-actions-reserve`, which a container query on the
+     *  row can set back to 0 (a narrow list: title room is scarcer than chip room).
+     *  `top` is where the actions centre (default: the row's middle), `end` how far they
+     *  sit from the row's end. */
+    actionsOverlay?: boolean | { top?: string; end?: string; reserve?: string };
     /** Keep `actions` shown: a menu is open. (An action that carries state, a
      *  lit star or a pin, stays visible by itself: give it `NAV_KEEP_CLASS`.) */
     actionsVisible?: boolean;
@@ -102,6 +116,7 @@ export const NavItem = ({
     actions,
     actionsVisible = false,
     actionsInPlace = false,
+    actionsOverlay = false,
     selected = false,
     unread = false,
     indent,
@@ -122,6 +137,8 @@ export const NavItem = ({
     const expandable = expanded !== undefined;
     const showChevronColumn = expandable || reserveChevron;
     const hasActions = actions !== undefined && actions !== null && actions !== false;
+    const overlay =
+        hasActions && actionsOverlay ? (actionsOverlay === true ? {} : actionsOverlay) : null;
 
     // Right arrow opens, left closes: the tree keyboard idiom, and the only
     // keyboard route to a chevron that is a separate mouse target.
@@ -158,7 +175,20 @@ export const NavItem = ({
                         display: "flex",
                         alignItems: "center",
                         ...(variant === "dashed" && { border: `1px dashed ${g.border.default}` }),
-                        "&:focus-within .NavItem-actions > *": { opacity: 1 },
+                        ...(!overlay && { "&:focus-within .NavItem-actions > *": { opacity: 1 } }),
+                        ...(overlay && {
+                            // The keyboard ring on the row button, an action's own focus ring, or
+                            // an open menu. Not `:focus-within`: a mouse click on the row would
+                            // leave the actions showing. Not `:has()` (MIP-963).
+                            [`& > .Mui-focusVisible ~ .NavItem-actions button, & .NavItem-actions button:focus-visible, & .NavItem-actions button[aria-expanded="true"]`]:
+                                { opacity: 1, pointerEvents: "auto" },
+                            // Touch has no hover: the actions are always there, in their own space.
+                            "@media (hover: none)": {
+                                "--nav-actions-reserve": overlay.reserve ?? "32px",
+                                "--nav-actions-bg": "transparent",
+                                "--nav-actions-fade": "none",
+                            },
+                        }),
                         ...(actionsInPlace && {
                             "&:focus-within .NavItem-actions > *": {
                                 opacity: 1,
@@ -168,7 +198,13 @@ export const NavItem = ({
                         }),
                         // ONE hover key: a second `[NAV_HOVER_MEDIA]` would replace this one.
                         [NAV_HOVER_MEDIA]: {
-                            "&:hover .NavItem-actions > *": { opacity: 1 },
+                            ...(!overlay && { "&:hover .NavItem-actions > *": { opacity: 1 } }),
+                            ...(overlay && {
+                                "&:hover .NavItem-actions button": {
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                },
+                            }),
                             ...(actionsInPlace && {
                                 "&:hover .NavItem-actions > *": {
                                     opacity: 1,
@@ -227,22 +263,23 @@ export const NavItem = ({
                     m: 0,
                     paddingBlock: 0,
                     paddingInlineStart: `calc(${NAV_PAD_X}px + ${navIndentLength(indent)})`,
-                    paddingInlineEnd: hasActions && !actionsInPlace ? 0 : `${NAV_PAD_X}px`,
-                    gap: 1,
+                    // `--nav-pad-end` lets a crowded list (the milestone tree below 200px)
+                    // take a smaller end padding for all of its rows at once.
+                    paddingInlineEnd: overlay
+                        ? `calc(var(--nav-pad-end, ${NAV_PAD_X}px) + var(--nav-actions-reserve, 0px))`
+                        : hasActions && !actionsInPlace
+                          ? 0
+                          : `var(--nav-pad-end, ${NAV_PAD_X}px)`,
+                    // `--nav-gap`: a crowded list (the milestone tree below 200px) narrows it for all rows.
+                    gap: `var(--nav-gap, 8px)`,
                     borderRadius: "inherit",
-                    background: "transparent",
-                    color: "inherit",
+                    // Joy paints its own hover/active plate on the button; the row
+                    // box (which carries the look) is the only plate.
+                    ...navButtonPlateOffSx,
                     font: "inherit",
                     letterSpacing: "inherit",
                     textAlign: "start",
                     alignItems: "center",
-                    // Joy paints its own hover/active plate on the button with a
-                    // selector that out-ranks ours; its variables are read first,
-                    // so the row box (which carries the look) is the only plate.
-                    "--variant-plainHoverBg": "transparent",
-                    "--variant-plainActiveBg": "transparent",
-                    "--variant-plainHoverColor": "inherit",
-                    "&:hover, &:active": { background: "transparent", color: "inherit" },
                     ...navFocusSx,
                 }}
                 onKeyDown={handleKeyDown}
@@ -395,35 +432,67 @@ export const NavItem = ({
             {hasActions && (
                 <Box
                     className="NavItem-actions"
-                    sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        flexShrink: 0,
-                        gap: 0.25,
-                        paddingInlineEnd: 0.5,
-                        // Each action fades; one that carries state (a lit star)
-                        // opts out with NAV_KEEP_CLASS and stays put.
-                        [`& > *:not(.${NAV_KEEP_CLASS})`]: {
-                            opacity: actionsVisible ? 1 : 0,
-                            transition: `opacity ${g.motion.fast} ${g.ease}`,
-                            // In place: no room while hidden, but still in the tab order
-                            // (a `display: none` button cannot be focused, and focus is
-                            // what reveals it for a keyboard user).
-                            ...(actionsInPlace &&
-                                (actionsVisible ? ACTION_IN_FLOW : ACTION_OUT_OF_FLOW)),
-                        },
-                        ...(actionsInPlace &&
-                            actionsVisible && {
-                                [`.${NAV_HIDE_ON_ACTIONS_CLASS}`]: { display: "none" },
-                            }),
-                        // No hover to reveal them on touch.
-                        "@media (hover: none)": {
-                            "& > *": {
-                                opacity: 1,
-                                ...(actionsInPlace && ACTION_IN_FLOW),
-                            },
-                        },
-                    }}
+                    sx={
+                        overlay
+                            ? {
+                                  position: "absolute",
+                                  top: overlay.top ?? "50%",
+                                  insetInlineEnd:
+                                      overlay.end ?? `var(--nav-pad-end, ${NAV_PAD_X}px)`,
+                                  transform: "translateY(-50%)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  // The wrapper never takes a click itself: a hidden action
+                                  // cannot block the row. Opacity and pointer events sit on
+                                  // the BUTTONS (an opacity-0 wrapper would hide them in
+                                  // every state), which stay in the tab order.
+                                  pointerEvents: "none",
+                                  "& button": {
+                                      opacity: actionsVisible ? 1 : 0,
+                                      pointerEvents: actionsVisible ? "auto" : "none",
+                                      transition: "opacity 0.12s",
+                                      "--IconButton-size": "28px",
+                                      backgroundColor: `var(--nav-actions-bg, ${NAV_OVERLAY_BG})`,
+                                      boxShadow: `var(--nav-actions-fade, ${NAV_OVERLAY_FADE})`,
+                                  },
+                                  "@media (hover: none)": {
+                                      "& button": {
+                                          opacity: 1,
+                                          pointerEvents: "auto",
+                                          "--IconButton-size": "32px",
+                                      },
+                                  },
+                              }
+                            : {
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  flexShrink: 0,
+                                  gap: 0.25,
+                                  paddingInlineEnd: 0.5,
+                                  // Each action fades; one that carries state (a lit star)
+                                  // opts out with NAV_KEEP_CLASS and stays put.
+                                  [`& > *:not(.${NAV_KEEP_CLASS})`]: {
+                                      opacity: actionsVisible ? 1 : 0,
+                                      transition: `opacity ${g.motion.fast} ${g.ease}`,
+                                      // In place: no room while hidden, but still in the tab order
+                                      // (a `display: none` button cannot be focused, and focus is
+                                      // what reveals it for a keyboard user).
+                                      ...(actionsInPlace &&
+                                          (actionsVisible ? ACTION_IN_FLOW : ACTION_OUT_OF_FLOW)),
+                                  },
+                                  ...(actionsInPlace &&
+                                      actionsVisible && {
+                                          [`.${NAV_HIDE_ON_ACTIONS_CLASS}`]: { display: "none" },
+                                      }),
+                                  // No hover to reveal them on touch.
+                                  "@media (hover: none)": {
+                                      "& > *": {
+                                          opacity: 1,
+                                          ...(actionsInPlace && ACTION_IN_FLOW),
+                                      },
+                                  },
+                              }
+                    }
                 >
                     {actions}
                 </Box>

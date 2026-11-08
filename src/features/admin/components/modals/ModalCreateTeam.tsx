@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Alert, Button, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Alert, Button, Input } from "@mui/joy";
 
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -65,47 +66,42 @@ export const ModalCreateTeam: React.FC<Props> = ({
     }
 
     return (
-        <>
-            <Modal
-                open={openCreateTeam}
-                sx={{ zIndex: 10010 }}
-                onClose={() => setOpenCreateTeam(false)}
-            >
-                <ModalDialog>
-                    <Typography level="h4">{t.admin.createTeamModal.title}</Typography>
-                    <Input
-                        placeholder={t.admin.createTeamModal.teamNamePlaceholder}
-                        sx={{ mt: 1 }}
-                        value={teamName}
-                        onChange={(e) => setTeamName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && teamName.trim()) {
-                                handleCreateTeam();
-                            }
-                        }}
-                    />
-                    {errorMessage && errorMessage !== "" && (
-                        <Alert color="danger">{errorMessage}</Alert>
-                    )}
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button
-                            color="danger"
-                            component="a"
-                            variant="outlined"
-                            onClick={() => setOpenCreateTeam(false)}
-                        >
-                            {t.admin.createTeamModal.cancel}
-                        </Button>
-                        <Button
-                            component="a"
-                            disabled={!teamName.trim()}
-                            onClick={handleCreateTeam}
-                        >
-                            {t.admin.createTeamModal.create}
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
-        </>
+        <ModalFrame
+            open={openCreateTeam}
+            size="sm"
+            title={t.admin.createTeamModal.title}
+            zIndex={10010}
+            actions={
+                <>
+                    <Button
+                        color="neutral"
+                        variant="plain"
+                        onClick={() => setOpenCreateTeam(false)}
+                    >
+                        {t.admin.createTeamModal.cancel}
+                    </Button>
+                    <Button disabled={!teamName.trim()} onClick={handleCreateTeam}>
+                        {t.admin.createTeamModal.create}
+                    </Button>
+                </>
+            }
+            onClose={() => setOpenCreateTeam(false)}
+        >
+            <Input
+                placeholder={t.admin.createTeamModal.teamNamePlaceholder}
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && teamName.trim()) {
+                        handleCreateTeam();
+                    }
+                }}
+            />
+            {errorMessage && errorMessage !== "" && (
+                <Alert color="danger" sx={{ mt: 1.5 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+        </ModalFrame>
     );
 };

@@ -14,29 +14,18 @@
 
 import { useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Divider,
-    IconButton,
-    Link,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, CircularProgress, Divider, Link, Stack, Typography } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../i18n";
+import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { chatTypeCodeToSlug, entityRefToHref } from "../../utils/entityHref";
 import {
@@ -119,10 +108,9 @@ export const ThreadAskModal = ({
     zIndex,
     onSelectSource,
 }: ThreadAskModalProps) => {
-    const { mode } = useColorScheme();
+    const theme = useTheme();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
-    const isDark = mode === "dark";
 
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
@@ -248,169 +236,16 @@ export const ThreadAskModal = ({
         ask.pendingApproval !== null;
 
     return (
-        <Modal
+        <ModalFrame
+            closeLabel={t.threadAsk.modal.close}
+            description={chatName ? chatName : undefined}
+            icon={<AutoAwesomeRoundedIcon sx={{ color: g.accent.text }} />}
             open={state.isOpen}
-            sx={
-                zIndex != null
-                    ? {
-                          zIndex,
-                          // Joy pins Select/Autocomplete listboxes to
-                          // calc(theme.zIndex.modal + 1) and does NOT track
-                          // this raised `zIndex`, so the mentions autocomplete
-                          // would open behind the dialog. Re-stamp the popup
-                          // var on the modal root and sibling portaled
-                          // listboxes (same fix as UrlLinkModal).
-                          "--unstable_popup-zIndex": zIndex + 10,
-                          '& ~ [role="listbox"]': {
-                              "--unstable_popup-zIndex": zIndex + 10,
-                          },
-                      }
-                    : undefined
-            }
-            onClose={state.close}
-        >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="lg"
-                sx={{
-                    width: { xs: "92vw", sm: 620, md: 800 },
-                    maxHeight: "90vh",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                {/* Header */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <AutoAwesomeRoundedIcon />
-                    <Typography level="title-lg">{t.threadAsk.modal.title}</Typography>
-                    {chatName ? (
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: "text.tertiary", minWidth: 0 }}
-                            noWrap
-                        >
-                            · {chatName}
-                        </Typography>
-                    ) : null}
-                    <Box sx={{ flex: 1 }} />
-                    <IconButton
-                        aria-label={t.threadAsk.modal.close}
-                        variant="plain"
-                        onClick={state.close}
-                    >
-                        <CloseRoundedIcon />
-                    </IconButton>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-
-                {/* Summary */}
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1, mt: 0.5 }}>
-                    <Typography level="title-sm">{t.threadAsk.summary.sectionTitle}</Typography>
-                    {state.summary && !state.summaryLoading ? (
-                        <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                            {updatedLabel}
-                        </Typography>
-                    ) : null}
-                    <Box sx={{ flex: 1 }} />
-                    <Button
-                        disabled={state.summaryLoading || !state.summary}
-                        size="sm"
-                        startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="plain"
-                        onClick={state.refreshSummary}
-                    >
-                        {t.threadAsk.summary.refresh}
-                    </Button>
-                </Stack>
-
-                {state.summaryLoading && !state.summary ? (
-                    <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
-                        <CircularProgress size="sm" />
-                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                            {t.threadAsk.summary.loading}
-                        </Typography>
-                    </Stack>
-                ) : null}
-
-                {state.summaryError ? (
-                    <Alert color="danger" sx={{ mb: 1 }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-sm">{state.summaryError}</Typography>
-                            <Button size="sm" variant="soft" onClick={state.refreshSummary}>
-                                {t.threadAsk.errors.retry}
-                            </Button>
-                        </Stack>
-                    </Alert>
-                ) : null}
-
-                {state.summary ? (
-                    <Box
-                        sx={{
-                            ...markdownAnswerSx(),
-                            px: 1.25,
-                            py: 1,
-                            borderRadius: "md",
-                            bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                        }}
-                    >
-                        <ReactMarkdown
-                            components={agentMarkdownComponents}
-                            remarkPlugins={[remarkGfm]}
-                            urlTransform={agentQAUrlTransform}
-                        >
-                            {state.summary.text}
-                        </ReactMarkdown>
-                    </Box>
-                ) : null}
-
-                {state.staleSummary ? (
-                    <Alert color="warning" sx={{ mt: 1 }}>
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-sm">
-                                {t.threadAsk.summary.stale.banner}
-                            </Typography>
-                            <Button
-                                color="warning"
-                                disabled={state.summaryLoading}
-                                size="sm"
-                                variant="soft"
-                                onClick={state.refreshSummary}
-                            >
-                                {t.threadAsk.summary.stale.refreshAction}
-                            </Button>
-                        </Stack>
-                    </Alert>
-                ) : null}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Conversation */}
-                <Typography level="title-sm" sx={{ mb: 1 }}>
-                    {t.threadAsk.conversation.header}
-                </Typography>
-                <AgentQAConversation
-                    labels={labels}
-                    state={state.agentQA}
-                    turnLabels={turnLabels}
-                    onSelectSource={onSelectSource}
-                />
-
-                {/* Input — disabled until the summary loads so the
-                    agent's "context" prompt has the summary to inject. */}
-                <Box sx={{ mt: 1 }}>
-                    <AgentQAInput
-                        disabled={!state.summary}
-                        labels={labels}
-                        state={state.agentQA}
-                    />
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Footer */}
-                <Stack alignItems="center" direction="row" spacing={1}>
+            size="xl"
+            title={t.threadAsk.modal.title}
+            zIndex={zIndex ?? theme.zIndex.modal}
+            actions={
+                <>
                     <Button
                         disabled={saving || !state.summary || alreadySaved}
                         startDecorator={<SaveRoundedIcon sx={{ fontSize: 16 }} />}
@@ -430,7 +265,7 @@ export const ThreadAskModal = ({
                     <Box sx={{ flex: 1 }} />
                     {savedNoteHref ? (
                         <Stack alignItems="center" direction="row" spacing={1}>
-                            <Typography level="body-xs" sx={{ color: "success.solidBg" }}>
+                            <Typography level="body-xs" sx={{ color: g.success.text }}>
                                 {t.threadAsk.saveAsNote.success}
                             </Typography>
                             <Link
@@ -444,12 +279,111 @@ export const ThreadAskModal = ({
                         </Stack>
                     ) : null}
                     {saveError ? (
-                        <Typography level="body-xs" sx={{ color: "danger.solidBg" }}>
+                        <Typography level="body-xs" sx={{ color: g.danger.text }}>
                             {saveError}
                         </Typography>
                     ) : null}
+                </>
+            }
+            headerDivider
+            ownsListboxPopups
+            onClose={state.close}
+        >
+            {/* Summary */}
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1, mt: 0.5 }}>
+                <Typography level="title-sm">{t.threadAsk.summary.sectionTitle}</Typography>
+                {state.summary && !state.summaryLoading ? (
+                    <Typography level="body-xs" sx={{ color: g.text.tertiary }}>
+                        {updatedLabel}
+                    </Typography>
+                ) : null}
+                <Box sx={{ flex: 1 }} />
+                <Button
+                    disabled={state.summaryLoading || !state.summary}
+                    size="sm"
+                    startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
+                    variant="plain"
+                    onClick={state.refreshSummary}
+                >
+                    {t.threadAsk.summary.refresh}
+                </Button>
+            </Stack>
+
+            {state.summaryLoading && !state.summary ? (
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
+                    <CircularProgress size="sm" />
+                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
+                        {t.threadAsk.summary.loading}
+                    </Typography>
                 </Stack>
-            </ModalDialog>
-        </Modal>
+            ) : null}
+
+            {state.summaryError ? (
+                <Alert color="danger" sx={{ mb: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Typography level="body-sm">{state.summaryError}</Typography>
+                        <Button size="sm" variant="soft" onClick={state.refreshSummary}>
+                            {t.threadAsk.errors.retry}
+                        </Button>
+                    </Stack>
+                </Alert>
+            ) : null}
+
+            {state.summary ? (
+                <Box
+                    sx={{
+                        ...markdownAnswerSx(),
+                        px: 1.25,
+                        py: 1,
+                        borderRadius: "md",
+                        bgcolor: g.hover,
+                    }}
+                >
+                    <ReactMarkdown
+                        components={agentMarkdownComponents}
+                        remarkPlugins={[remarkGfm]}
+                        urlTransform={agentQAUrlTransform}
+                    >
+                        {state.summary.text}
+                    </ReactMarkdown>
+                </Box>
+            ) : null}
+
+            {state.staleSummary ? (
+                <Alert color="warning" sx={{ mt: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        <Typography level="body-sm">{t.threadAsk.summary.stale.banner}</Typography>
+                        <Button
+                            color="warning"
+                            disabled={state.summaryLoading}
+                            size="sm"
+                            variant="soft"
+                            onClick={state.refreshSummary}
+                        >
+                            {t.threadAsk.summary.stale.refreshAction}
+                        </Button>
+                    </Stack>
+                </Alert>
+            ) : null}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Conversation */}
+            <Typography level="title-sm" sx={{ mb: 1 }}>
+                {t.threadAsk.conversation.header}
+            </Typography>
+            <AgentQAConversation
+                labels={labels}
+                state={state.agentQA}
+                turnLabels={turnLabels}
+                onSelectSource={onSelectSource}
+            />
+
+            {/* Input — disabled until the summary loads so the
+                    agent's "context" prompt has the summary to inject. */}
+            <Box sx={{ mt: 1 }}>
+                <AgentQAInput disabled={!state.summary} labels={labels} state={state.agentQA} />
+            </Box>
+        </ModalFrame>
     );
 };

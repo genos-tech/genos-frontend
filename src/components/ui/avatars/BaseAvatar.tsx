@@ -30,7 +30,7 @@ export type BaseAvatarProps = Omit<AvatarProps, "size" | "children" | "color"> &
     name?: string | null;
     /** An icon (or anything) for the no-picture state; wins over `name`. */
     children?: ReactNode;
-    /** Tints the no-picture state with a status color. `neutral` keeps Joy's. */
+    /** Tints the no-picture state with a status color. `neutral` is a subtle fill with a hairline ring. */
     tone?: Tone;
     /** `rounded` is for things that are not people (a team's mark). */
     shape?: "circle" | "rounded";
@@ -54,9 +54,17 @@ export const BaseAvatar = forwardRef<HTMLDivElement, BaseAvatarProps>(function B
     ref
 ) {
     const hue = tone === "neutral" ? undefined : tone === "accent" ? g.accent : g[tone];
+    // The neutral no-picture circle is a subtle fill with a hairline ring. Joy's own soft
+    // neutral is almost the raised dialog surface in light mode, so a member picker showed
+    // a bare letter with no circle (MIP-1185).
     const tint = hue
         ? { bgcolor: hue.subtle, color: hue.text, "--Icon-color": hue.text }
-        : undefined;
+        : {
+              bgcolor: g.bg.subtle,
+              color: g.text.secondary,
+              "--Icon-color": g.text.secondary,
+              boxShadow: `inset 0 0 0 1px ${g.border.default}`,
+          };
     return (
         <Avatar
             ref={ref}

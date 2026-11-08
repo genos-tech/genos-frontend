@@ -3,7 +3,6 @@ import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRou
 import {
     Autocomplete,
     AutocompleteOption,
-    Box,
     Button,
     Checkbox,
     FormControl,
@@ -12,8 +11,6 @@ import {
     Input,
     ListItemContent,
     ListItemDecorator,
-    Modal,
-    ModalDialog,
     Option,
     Radio,
     RadioGroup,
@@ -22,11 +19,14 @@ import {
     Textarea,
     Typography,
 } from "@mui/joy";
+import { useTheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
+import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { RepeatPicker } from "../../calendar/components/RepeatPicker";
 import {
     buildRecurrence,
@@ -220,6 +220,7 @@ export const CalendarEventModal = ({
     onError,
 }: CalendarEventModalProps) => {
     const { t } = useTranslation();
+    const theme = useTheme();
     const [form, setForm] = useState<FormState>(formFromInitial(initial));
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -469,256 +470,251 @@ export const CalendarEventModal = ({
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 480, maxWidth: 560, p: 3 }}>
-                <Typography level="title-lg" sx={{ mb: 2 }}>
-                    {editingEventId ? t.calendar.event.editTitle : t.calendar.event.newTitle}
-                </Typography>
-                <Stack spacing={2}>
-                    {localError && (
-                        <Typography level="body-sm" sx={{ color: "danger.500" }}>
-                            {localError}
-                        </Typography>
+        <ModalFrame
+            open={open}
+            size="lg"
+            title={editingEventId ? t.calendar.event.editTitle : t.calendar.event.newTitle}
+            // Joy's modal layer, where this dialog has always opened.
+            zIndex={theme.zIndex.modal}
+            actions={
+                <>
+                    {/* Delete only on edit. Two-step (first click
+                            arms, second click commits); the label
+                            flips to "Confirm delete?" until clicked
+                            again or the 4 s timer reverts it. */}
+                    {editingEventId && (
+                        <Button
+                            color="danger"
+                            disabled={deleting || submitting}
+                            sx={{ marginInlineEnd: "auto" }}
+                            variant={deleteConfirm ? "solid" : "outlined"}
+                            onClick={handleDelete}
+                        >
+                            {deleting
+                                ? t.calendar.event.deleting
+                                : deleteConfirm
+                                  ? isRecurring && scope === "all"
+                                      ? t.calendar.event.deleteAll
+                                      : t.calendar.event.confirmDelete
+                                  : t.common.actions.delete}
+                        </Button>
                     )}
-                    {needsReconnect && (
-                        <ReconnectGoogleCalendarButton accessToken={accessToken} size="sm" />
-                    )}
-                    <FormControl required>
-                        <FormLabel>{t.calendar.event.titleLabel}</FormLabel>
-                        <Input
-                            value={form.summary}
-                            onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
-                        />
-                    </FormControl>
-                    {/* Target calendar. Only offered on CREATE: Google
+                    <Button color="neutral" disabled={deleting} variant="plain" onClick={onClose}>
+                        {t.common.actions.cancel}
+                    </Button>
+                    <Button disabled={submitting || deleting} onClick={submitForm}>
+                        {submitting
+                            ? t.calendar.event.saving
+                            : editingEventId
+                              ? t.common.actions.save
+                              : t.common.actions.create}
+                    </Button>
+                </>
+            }
+            onClose={onClose}
+        >
+            <Stack spacing={2}>
+                {localError && (
+                    <Typography level="body-sm" sx={{ color: g.danger.text }}>
+                        {localError}
+                    </Typography>
+                )}
+                {needsReconnect && (
+                    <ReconnectGoogleCalendarButton accessToken={accessToken} size="sm" />
+                )}
+                <FormControl required>
+                    <FormLabel>{t.calendar.event.titleLabel}</FormLabel>
+                    <Input
+                        value={form.summary}
+                        onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
+                    />
+                </FormControl>
+                {/* Target calendar. Only offered on CREATE: Google
                         can't move an existing event between calendars
                         with a PATCH (it needs a separate move call), so
                         showing an editable picker here would silently
                         do nothing. On edit the event's own calendar is
                         displayed read-only instead. */}
-                    {writableCalendars.length > 1 && !editingEventId && (
-                        <FormControl>
-                            <FormLabel>{t.calendar.target.label}</FormLabel>
-                            <Select
-                                value={
-                                    form.accountId
-                                        ? sourceKey(form.accountId, form.calendarId)
-                                        : ""
-                                }
-                                onChange={(_e, next) => {
-                                    if (!next) return;
-                                    const picked = writableCalendars.find(
-                                        (c) => sourceKey(c.account_id, c.id) === next
-                                    );
-                                    if (!picked) return;
-                                    setForm((f) => ({
-                                        ...f,
-                                        accountId: picked.account_id,
-                                        calendarId: picked.id,
-                                    }));
-                                }}
-                            >
-                                {writableCalendars.map((c) => (
-                                    <Option
-                                        key={sourceKey(c.account_id, c.id)}
-                                        value={sourceKey(c.account_id, c.id)}
-                                    >
-                                        {/* Account email is part of the
+                {writableCalendars.length > 1 && !editingEventId && (
+                    <FormControl>
+                        <FormLabel>{t.calendar.target.label}</FormLabel>
+                        <Select
+                            value={
+                                form.accountId ? sourceKey(form.accountId, form.calendarId) : ""
+                            }
+                            onChange={(_e, next) => {
+                                if (!next) return;
+                                const picked = writableCalendars.find(
+                                    (c) => sourceKey(c.account_id, c.id) === next
+                                );
+                                if (!picked) return;
+                                setForm((f) => ({
+                                    ...f,
+                                    accountId: picked.account_id,
+                                    calendarId: picked.id,
+                                }));
+                            }}
+                        >
+                            {writableCalendars.map((c) => (
+                                <Option
+                                    key={sourceKey(c.account_id, c.id)}
+                                    value={sourceKey(c.account_id, c.id)}
+                                >
+                                    {/* Account email is part of the
                                             label because two accounts
                                             both have a calendar named
                                             after the user. */}
-                                        {c.summary || c.id}
-                                        {c.account_email ? ` · ${c.account_email}` : ""}
-                                    </Option>
-                                ))}
-                            </Select>
-                            <FormHelperText>{t.calendar.target.helperText}</FormHelperText>
-                        </FormControl>
-                    )}
-                    <Checkbox
-                        checked={form.allDay}
-                        label={<Typography level="body-sm">{t.calendar.event.allDay}</Typography>}
-                        onChange={(e) => setAllDay(e.target.checked)}
+                                    {c.summary || c.id}
+                                    {c.account_email ? ` · ${c.account_email}` : ""}
+                                </Option>
+                            ))}
+                        </Select>
+                        <FormHelperText>{t.calendar.target.helperText}</FormHelperText>
+                    </FormControl>
+                )}
+                <Checkbox
+                    checked={form.allDay}
+                    label={<Typography level="body-sm">{t.calendar.event.allDay}</Typography>}
+                    onChange={(e) => setAllDay(e.target.checked)}
+                />
+                <FormControl required>
+                    <FormLabel>{t.calendar.event.startLabel}</FormLabel>
+                    <Input
+                        type={form.allDay ? "date" : "datetime-local"}
+                        value={form.startISO}
+                        onChange={(e) => setForm((f) => setStart(f, e.target.value))}
                     />
-                    <FormControl required>
-                        <FormLabel>{t.calendar.event.startLabel}</FormLabel>
-                        <Input
-                            type={form.allDay ? "date" : "datetime-local"}
-                            value={form.startISO}
-                            onChange={(e) => setForm((f) => setStart(f, e.target.value))}
-                        />
-                    </FormControl>
-                    <FormControl required>
-                        <FormLabel>{t.calendar.event.endLabel}</FormLabel>
-                        <Input
-                            // For all-day, `min` keeps the (inclusive) end on
-                            // or after the start day.
-                            slotProps={form.allDay ? { input: { min: form.startISO } } : undefined}
-                            type={form.allDay ? "date" : "datetime-local"}
-                            value={form.endISO}
-                            onChange={(e) => setForm((f) => setEnd(f, e.target.value))}
-                        />
-                        {form.allDay && (
-                            <FormHelperText>{t.calendar.event.inclusiveEndHelper}</FormHelperText>
+                </FormControl>
+                <FormControl required>
+                    <FormLabel>{t.calendar.event.endLabel}</FormLabel>
+                    <Input
+                        // For all-day, `min` keeps the (inclusive) end on
+                        // or after the start day.
+                        slotProps={form.allDay ? { input: { min: form.startISO } } : undefined}
+                        type={form.allDay ? "date" : "datetime-local"}
+                        value={form.endISO}
+                        onChange={(e) => setForm((f) => setEnd(f, e.target.value))}
+                    />
+                    {form.allDay && (
+                        <FormHelperText>{t.calendar.event.inclusiveEndHelper}</FormHelperText>
+                    )}
+                </FormControl>
+                <FormControl>
+                    <FormLabel>{t.calendar.event.descriptionLabel}</FormLabel>
+                    <Textarea
+                        minRows={2}
+                        value={form.description}
+                        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>{t.calendar.attendees.label}</FormLabel>
+                    <Autocomplete
+                        getOptionLabel={(o) => o.displayName}
+                        isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
+                        noOptionsText={t.calendar.attendees.noResults}
+                        options={teamOptions}
+                        value={form.attendees}
+                        // Equality by email so options the user
+                        // already picked render with the "selected"
+                        // indicator and don't appear duplicated in
+                        // the dropdown.
+                        // Filter manually so "alice" matches both
+                        // name AND email — Joy's default only
+                        // searches the label string.
+                        filterOptions={(opts, { inputValue }) => {
+                            const q = inputValue.trim().toLowerCase();
+                            if (!q) return opts;
+                            return opts.filter(
+                                (o) =>
+                                    o.displayName.toLowerCase().includes(q) ||
+                                    o.email.toLowerCase().includes(q)
+                            );
+                        }}
+                        placeholder={
+                            form.attendees.length === 0 ? t.calendar.attendees.placeholder : ""
+                        }
+                        renderOption={(props, option) => (
+                            <AutocompleteOption {...props} key={attendeeKey(option)}>
+                                <ListItemDecorator>
+                                    <BaseAvatar
+                                        name={option.displayName}
+                                        src={
+                                            option.avatarImgPath
+                                                ? `${media_url}/${option.avatarImgPath}`
+                                                : undefined
+                                        }
+                                    />
+                                </ListItemDecorator>
+                                <ListItemContent sx={{ minWidth: 0 }}>
+                                    <Typography level="body-sm" noWrap>
+                                        {option.displayName}
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ color: g.text.tertiary }}
+                                        noWrap
+                                    >
+                                        {option.email}
+                                    </Typography>
+                                </ListItemContent>
+                            </AutocompleteOption>
                         )}
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>{t.calendar.event.descriptionLabel}</FormLabel>
-                        <Textarea
-                            minRows={2}
-                            value={form.description}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, description: e.target.value }))
-                            }
-                        />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>{t.calendar.attendees.label}</FormLabel>
-                        <Autocomplete
-                            getOptionLabel={(o) => o.displayName}
-                            isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
-                            noOptionsText={t.calendar.attendees.noResults}
-                            options={teamOptions}
-                            value={form.attendees}
-                            // Equality by email so options the user
-                            // already picked render with the "selected"
-                            // indicator and don't appear duplicated in
-                            // the dropdown.
-                            // Filter manually so "alice" matches both
-                            // name AND email — Joy's default only
-                            // searches the label string.
-                            filterOptions={(opts, { inputValue }) => {
-                                const q = inputValue.trim().toLowerCase();
-                                if (!q) return opts;
-                                return opts.filter(
-                                    (o) =>
-                                        o.displayName.toLowerCase().includes(q) ||
-                                        o.email.toLowerCase().includes(q)
-                                );
-                            }}
-                            placeholder={
-                                form.attendees.length === 0 ? t.calendar.attendees.placeholder : ""
-                            }
-                            renderOption={(props, option) => (
-                                <AutocompleteOption {...props} key={attendeeKey(option)}>
-                                    <ListItemDecorator>
-                                        <BaseAvatar
-                                            name={option.displayName}
-                                            src={
-                                                option.avatarImgPath
-                                                    ? `${media_url}/${option.avatarImgPath}`
-                                                    : undefined
-                                            }
-                                        />
-                                    </ListItemDecorator>
-                                    <ListItemContent sx={{ minWidth: 0 }}>
-                                        <Typography level="body-sm" noWrap>
-                                            {option.displayName}
-                                        </Typography>
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: "text.tertiary" }}
-                                            noWrap
-                                        >
-                                            {option.email}
-                                        </Typography>
-                                    </ListItemContent>
-                                </AutocompleteOption>
-                            )}
-                            multiple
-                            onChange={(_e, next) => setForm((f) => ({ ...f, attendees: next }))}
-                        />
-                        <FormHelperText>
-                            {form.attendees.length === 0
-                                ? t.calendar.attendees.emptyState
-                                : t.calendar.attendees.helperText}
-                        </FormHelperText>
-                    </FormControl>
-                    {/* Scope choice, shown only for a repeating event and
+                        multiple
+                        onChange={(_e, next) => setForm((f) => ({ ...f, attendees: next }))}
+                    />
+                    <FormHelperText>
+                        {form.attendees.length === 0
+                            ? t.calendar.attendees.emptyState
+                            : t.calendar.attendees.helperText}
+                    </FormHelperText>
+                </FormControl>
+                {/* Scope choice, shown only for a repeating event and
                         placed ABOVE the repeat controls because it
                         governs what they do. Defaults to "this event":
                         the narrower, reversible action. */}
-                    {isRecurring && (
-                        <FormControl>
-                            <FormLabel>{t.calendar.scope.label}</FormLabel>
-                            <RadioGroup
-                                orientation="horizontal"
-                                value={scope}
-                                onChange={(e) => setScope(e.target.value as "this" | "all")}
-                            >
-                                <Radio label={t.calendar.scope.thisEvent} size="sm" value="this" />
-                                <Radio label={t.calendar.scope.allEvents} size="sm" value="all" />
-                            </RadioGroup>
-                            <FormHelperText>
-                                {scope === "all"
-                                    ? t.calendar.scope.seriesTimingNote
-                                    : t.calendar.scope.editHelper}
-                            </FormHelperText>
-                        </FormControl>
-                    )}
+                {isRecurring && (
+                    <FormControl>
+                        <FormLabel>{t.calendar.scope.label}</FormLabel>
+                        <RadioGroup
+                            orientation="horizontal"
+                            value={scope}
+                            onChange={(e) => setScope(e.target.value as "this" | "all")}
+                        >
+                            <Radio label={t.calendar.scope.thisEvent} size="sm" value="this" />
+                            <Radio label={t.calendar.scope.allEvents} size="sm" value="all" />
+                        </RadioGroup>
+                        <FormHelperText>
+                            {scope === "all"
+                                ? t.calendar.scope.seriesTimingNote
+                                : t.calendar.scope.editHelper}
+                        </FormHelperText>
+                    </FormControl>
+                )}
 
-                    {/* Repeat rule. On an existing series it's only
+                {/* Repeat rule. On an existing series it's only
                         editable under the "all events" scope — the rule
                         lives on the master, so changing it from a single
                         occurrence would be a no-op the user couldn't
                         see. */}
-                    <RepeatPicker
-                        disabled={isRecurring && scope !== "all"}
-                        startISO={form.startISO}
-                        value={form.recurrence}
-                        onChange={(recurrence) => setForm((f) => ({ ...f, recurrence }))}
-                    />
+                <RepeatPicker
+                    disabled={isRecurring && scope !== "all"}
+                    startISO={form.startISO}
+                    value={form.recurrence}
+                    onChange={(recurrence) => setForm((f) => ({ ...f, recurrence }))}
+                />
 
-                    <Checkbox
-                        checked={form.addMeet}
-                        label={
-                            <Stack alignItems="center" direction="row" spacing={0.75}>
-                                <VideoCameraFrontRoundedIcon sx={{ fontSize: 18 }} />
-                                <Typography level="body-sm">{t.calendar.event.addMeet}</Typography>
-                            </Stack>
-                        }
-                        onChange={(e) => setForm((f) => ({ ...f, addMeet: e.target.checked }))}
-                    />
-                    <Stack
-                        alignItems="center"
-                        direction="row"
-                        spacing={1}
-                        sx={{ flexWrap: "wrap" }}
-                    >
-                        {/* Delete only on edit. Two-step (first click
-                            arms, second click commits); the label
-                            flips to "Confirm delete?" until clicked
-                            again or the 4 s timer reverts it. */}
-                        {editingEventId && (
-                            <Button
-                                color="danger"
-                                disabled={deleting || submitting}
-                                variant={deleteConfirm ? "solid" : "outlined"}
-                                onClick={handleDelete}
-                            >
-                                {deleting
-                                    ? t.calendar.event.deleting
-                                    : deleteConfirm
-                                      ? isRecurring && scope === "all"
-                                          ? t.calendar.event.deleteAll
-                                          : t.calendar.event.confirmDelete
-                                      : t.common.actions.delete}
-                            </Button>
-                        )}
-                        <Box sx={{ flex: 1 }} />
-                        <Button disabled={deleting} variant="plain" onClick={onClose}>
-                            {t.common.actions.cancel}
-                        </Button>
-                        <Button disabled={submitting || deleting} onClick={submitForm}>
-                            {submitting
-                                ? t.calendar.event.saving
-                                : editingEventId
-                                  ? t.common.actions.save
-                                  : t.common.actions.create}
-                        </Button>
-                    </Stack>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                <Checkbox
+                    checked={form.addMeet}
+                    label={
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
+                            <VideoCameraFrontRoundedIcon sx={{ fontSize: 18 }} />
+                            <Typography level="body-sm">{t.calendar.event.addMeet}</Typography>
+                        </Stack>
+                    }
+                    onChange={(e) => setForm((f) => ({ ...f, addMeet: e.target.checked }))}
+                />
+            </Stack>
+        </ModalFrame>
     );
 };

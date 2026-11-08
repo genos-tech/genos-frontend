@@ -400,7 +400,7 @@ export const es: DeepPartial<Messages> = {
             todo: "Hacer",
             history: "Historia",
             settings: "Ajustes",
-            signOut: "desconectar",
+            signOut: "Salir",
         },
         signOutConfirm: {
             title: "¿Cerrar sesión en este espacio de trabajo?",
@@ -784,7 +784,7 @@ export const es: DeepPartial<Messages> = {
             entryOpen: "Abrir",
             backToSettings: "Ajustes de Genos",
             title: "Lo que Genos recuerda",
-            intro: "Genos no guarda un almacén aparte de «recuerdos». Abajo está lo que usa cuando te responde, más una cosa que anota sobre tus apps de IA conectadas. Aquí puedes ver cada una y eliminar lo que no quieras que se conserve.",
+            intro: "Genos no guarda un almacén aparte de «recuerdos». Abajo está lo que usa cuando te responde, más un registro privado que guarda de tu actividad. Aquí puedes ver cada una y eliminar lo que no quieras que se conserve.",
             conversations: {
                 heading: "Tus conversaciones con Genos",
                 description:
@@ -837,15 +837,15 @@ export const es: DeepPartial<Messages> = {
                     "Se muestran tus últimas {count} respuestas compartidas. Hay más de las que muestra esta lista.",
             },
             mcpUse: {
-                heading: "Lo que abren tus apps de IA",
-                switchLabel: "Registrar lo que abren mis apps de IA",
+                heading: "Lo que Genos anota de tu trabajo",
+                switchLabel: "Anotar mi actividad",
                 switchHelper:
-                    "Genos anota qué tareas, notas y proyectos abren o cambian tus apps de IA conectadas (nunca su texto), solo tú puedes verlo y se conserva 180 días. Si lo desactivas, se borra todo lo anotado.",
+                    "Genos anota qué tareas, notas y proyectos abren o cambian tus apps de IA conectadas, y cuándo añades o quitas un colaborador o una dependencia de una tarea, editas o borras un pendiente o compartes una nota (nunca su texto). Solo tú puedes verlo y se conserva 180 días. Si lo desactivas, se borra todo lo anotado.",
                 toggleFailed: "No se pudo cambiar este ajuste. Inténtalo de nuevo.",
                 loadFailed: "No se pudo cargar este ajuste.",
                 offTitle: "¿Dejar de registrar y borrar lo anotado?",
                 offBody:
-                    "Todo lo que Genos ha anotado sobre qué elementos abrieron o cambiaron tus apps de IA se borra ahora y no se anota nada nuevo. Tus tareas, notas y mensajes no se ven afectados. Si lo vuelves a activar, empieza de cero.",
+                    "Todo lo que Genos ha anotado sobre qué elementos abrieron o cambiaron tus apps de IA, y sobre los colaboradores, dependencias, pendientes y notas compartidas que cambiaste, se borra ahora y no se anota nada nuevo. Tus tareas, notas y mensajes no se ven afectados. Si lo vuelves a activar, empieza de cero.",
                 offConfirm: "Desactivar y borrar",
             },
             settingsUsed: {

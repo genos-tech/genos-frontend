@@ -3,10 +3,10 @@ import { Box, Button, FormHelperText, Stack, Textarea, Typography } from "@mui/j
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ProfileMarkdown } from "../../../../../components/ui/misc/ProfileMarkdown";
-import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
+import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -34,10 +34,9 @@ type Props = {
  */
 export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
+    // Only `ProfileMarkdown` still wants the mode (it carries its own colors).
+    const isDark = useColorScheme().mode === "dark";
 
     const isSelfView = myself.userId === user?.userId;
     const about = (isSelfView ? myself.aboutMe : user?.aboutMe) ?? "";
@@ -90,19 +89,13 @@ export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
                     autoFocus
                     onChange={(e) => setDraft(e.target.value)}
                 />
-                <FormHelperText
-                    sx={{ color: tooLong ? "var(--joy-palette-danger-500)" : styles.labelColor }}
-                >
+                <FormHelperText sx={{ color: tooLong ? g.danger.text : g.text.secondary }}>
                     {fmt(t.admin.userProfile.aboutCounter, {
                         count: trimmed.length,
                         max: MAX_LENGTH,
                     })}
                 </FormHelperText>
-                {error && (
-                    <FormHelperText sx={{ color: "var(--joy-palette-danger-500)" }}>
-                        {error}
-                    </FormHelperText>
-                )}
+                {error && <FormHelperText sx={{ color: g.danger.text }}>{error}</FormHelperText>}
                 <Stack direction="row" spacing={0.5}>
                     <Button
                         disabled={tooLong}
@@ -165,7 +158,7 @@ export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
             {about ? (
                 <ProfileMarkdown isDark={isDark} text={about} />
             ) : (
-                <Typography sx={{ color: styles.labelColor, fontSize: "14px" }}>
+                <Typography sx={{ color: g.text.secondary, fontSize: "14px" }}>
                     {t.admin.userProfile.aboutNotSet}
                 </Typography>
             )}

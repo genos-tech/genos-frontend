@@ -4,13 +4,18 @@ export {
     NAV_ICON_SIZE,
     NAV_INDENT_STEP,
     NAV_KEEP_CLASS,
+    NAV_OVERLAY_BG,
+    NAV_OVERLAY_FADE,
     navNestedListSx,
     NAV_ROW_GAP,
     NAV_PAD_X,
     NAV_TWO_LINE_FACTOR,
+    NAV_SELECTED,
+    navButtonPlateOffSx,
     navFocusSx,
     navIndentLength,
     navRowSx,
+    navToneSx,
 } from "./navStyles";
 export { SectionHeader } from "./SectionHeader";
 export type { SectionHeaderProps } from "./SectionHeader";
