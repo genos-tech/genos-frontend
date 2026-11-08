@@ -37,6 +37,7 @@ import {
     respondToExternalShare,
     respondToTeamConnection,
 } from "../../admin/services/teamConnections";
+import { useMarkReadOnView } from "../hooks/useMarkReadOnView";
 import { GENOS_REPORT_ITEM_TYPE } from "../utils/genosReport";
 import { isActivityItemType } from "../utils/inboxItemTypes";
 import { AiUsageFooter } from "./AiUsageFooter";
@@ -229,6 +230,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     // answer (a claim after ownership moved, a share the host withdrew)
     // has to say so, not no-op.
     const [respondError, setRespondError] = useState<string | null>(null);
+    // A report counts as read once it has been on screen for a moment (MIP-1292); other types
+    // get no ref.
+    const watchRef = useMarkReadOnView({
+        itemId: inboxItem.itemId,
+        itemType: inboxItem.itemType,
+        isRead: inboxItem.isRead,
+        userId: myself.userId,
+        teamId: myself.teamId,
+    });
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
     // Anything that isn't an activity is something somebody is waiting on
@@ -436,6 +446,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
             bodyOffset={1.5}
             header={headerRow}
             layout="bubble"
+            rootRef={watchRef}
             sx={{ p: { xs: 1.5, md: 2 } }}
             tail={false}
         >
