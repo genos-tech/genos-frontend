@@ -27,6 +27,7 @@ import {
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
+import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
 
 type Props = {
     /** The team on screen. Every call carries it. */
@@ -34,6 +35,9 @@ type Props = {
     /** Draw the "Schedules" heading row. A host that already titles the panel (the Genos
      *  page's dialog) turns it off so the word does not appear twice. */
     showHeading?: boolean;
+    /** Called just before the upgrade call navigates to the plans page, so a host that is a
+     *  dialog can close itself instead of staying open on top of it. */
+    onNavigateAway?: () => void;
 };
 
 type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
@@ -43,6 +47,18 @@ type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
 const SUGGESTION_TEXT = {
     morning_plan: { name: "suggestMorningName", blurb: "suggestMorningBlurb" },
     evening_recap: { name: "suggestEveningName", blurb: "suggestEveningBlurb" },
+} as const;
+
+/** The server sends a paused schedule's reason as the label of its choice, not as a code
+ *  (`pausedReason` is "the plan does not include scheduled reports", not "plan"). Those five
+ *  labels are matched exactly and said in the member's language; any other text is shown as it
+ *  came, so a new reason still shows. */
+const PAUSE_REASONS = {
+    "paused by the member": "pausedManual",
+    "paused after repeated failures": "pausedFailures",
+    "the member left the team": "pausedLeftTeam",
+    "the account is inactive": "pausedInactive",
+    "the plan does not include scheduled reports": "pausedByPlan",
 } as const;
 
 /** What "Run now" said, kept per schedule so the refetch after it keeps it. */
@@ -62,7 +78,7 @@ type RunNotice =
  * Deleting asks first, in the page, because a browser confirm dialog is not
  * available inside every host this runs in.
  */
-export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
+export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const s = t.settings.schedules;
@@ -77,6 +93,9 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
     const [error, setError] = useState<string | null>(null);
     const [notices, setNotices] = useState<Record<string, RunNotice>>({});
     const [adding, setAdding] = useState<string | null>(null);
+    // A 403 `plan_required` from an action says the plan does not include schedules even when
+    // the list on screen said it did (the plan changed since): show the upgrade prompt now.
+    const [planBlocked, setPlanBlocked] = useState(false);
 
     // Only the newest request may write: a slow answer for the team the member
     // just left must not paint over the team they are in now.
@@ -92,6 +111,7 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
             return;
         }
         setLoadFailed(false);
+        setPlanBlocked(false); // the list is the truth: its `planAllowed` decides from here
         setData(list);
     }, [accessToken, teamId]);
 
@@ -110,8 +130,26 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
         };
     }, [refresh]);
 
+    /** The plan does not include schedules (403 `plan_required`): the upgrade prompt, not a
+     *  failure. The list is read again so the page agrees with the server. */
+    const planRefused = async () => {
+        setError(null);
+        setPlanBlocked(true);
+        setMode(null);
+        setConfirming(null);
+        await refresh();
+        setPlanBlocked(true);
+    };
+
     /** A 404 means the list on screen is stale: say so and show the real one. */
-    const failed = async (res: { gone: boolean; error: string | null }, fallback: string) => {
+    const failed = async (
+        res: { gone: boolean; error: string | null; planRequired?: boolean },
+        fallback: string
+    ) => {
+        if (res.planRequired) {
+            await planRefused();
+            return;
+        }
         setError(res.error ?? (res.gone ? s.gone : fallback));
         if (res.gone) await refresh();
     };
@@ -131,6 +169,8 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
             setError(null);
             setMode(null);
             await refresh();
+        } else if (res.planRequired) {
+            await planRefused();
         } else if (res.gone) {
             setMode(null);
             await failed(res, s.saveFailed);
@@ -156,6 +196,12 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
         );
         const res = await runScheduleNow(accessToken, teamId, sch.id);
         let notice: RunNotice;
+        if (!res.ok && res.planRequired) {
+            setBusy(null);
+            setRunning(null);
+            await planRefused();
+            return;
+        }
         if (!res.ok) {
             notice = { kind: "refused", error: res.error ?? s.runFailed };
             if (res.gone) await refresh();
@@ -203,10 +249,16 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
     };
 
     const schedules = data?.schedules ?? [];
+    // Core and up. A server that predates the gate sends no `planAllowed`: that is "allowed".
+    const planBlockedNow = !!data && (data.planAllowed === false || planBlocked);
     const suggestions = data?.suggestions ?? [];
     const atLimit = !!data && data.limit > 0 && schedules.length >= data.limit;
     const zone = data?.timeZone ?? "";
     const when = (iso: string) => formatMoment(iso, zone, locale);
+    const pauseText = (reason: string): string => {
+        const known = PAUSE_REASONS[reason as keyof typeof PAUSE_REASONS];
+        return known ? s[known] : reason;
+    };
 
     const form = (existing: Schedule | null) => (
         <ScheduleFormPanel
@@ -261,7 +313,14 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                 </Alert>
             )}
 
-            {data && schedules.length === 0 && mode === null && (
+            {data && planBlockedNow && (
+                <SchedulesUpgradePrompt
+                    hasKept={schedules.length > 0}
+                    onNavigateAway={onNavigateAway}
+                />
+            )}
+
+            {data && !planBlockedNow && schedules.length === 0 && mode === null && (
                 <Stack alignItems="flex-start" spacing={1}>
                     <Typography level="body-sm" sx={{ color: g.text.secondary }}>
                         {s.empty}
@@ -276,7 +335,7 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                 </Stack>
             )}
 
-            {data && suggestions.length > 0 && mode === null && (
+            {data && !planBlockedNow && suggestions.length > 0 && mode === null && (
                 <Stack data-testid="schedule-suggestions" spacing={0.75}>
                     <Typography level="title-sm">{s.suggestedHeading}</Typography>
                     <Typography level="body-xs" sx={{ color: g.text.secondary }}>
@@ -347,7 +406,7 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                 </Stack>
             )}
 
-            {data && schedules.length > 0 && mode?.kind !== "new" && (
+            {data && !planBlockedNow && schedules.length > 0 && mode?.kind !== "new" && (
                 <Stack alignItems="flex-start" spacing={0.75}>
                     <Button
                         color="neutral"
@@ -367,10 +426,10 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                 </Stack>
             )}
 
-            {data && mode?.kind === "new" && form(null)}
+            {data && !planBlockedNow && mode?.kind === "new" && form(null)}
 
             {schedules.map((sch) => {
-                if (mode?.kind === "edit" && mode.id === sch.id) {
+                if (!planBlockedNow && mode?.kind === "edit" && mode.id === sch.id) {
                     return <Box key={sch.id}>{form(sch)}</Box>;
                 }
                 const notice = notices[sch.id];
@@ -414,7 +473,7 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                                     level="body-xs"
                                     sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
                                 >
-                                    {sch.pausedReason}
+                                    {pauseText(sch.pausedReason)}
                                 </Typography>
                             )}
                             <Typography level="body-xs" sx={{ color: g.text.secondary }}>
@@ -540,7 +599,9 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                                 >
                                     <Switch
                                         checked={sch.enabled}
-                                        disabled={rowBusy}
+                                        // Pausing is always allowed; turning one on is a Core
+                                        // feature (the server refuses it).
+                                        disabled={rowBusy || (planBlockedNow && !sch.enabled)}
                                         endDecorator={sch.enabled ? s.active : s.paused}
                                         size="sm"
                                         slotProps={{
@@ -553,26 +614,30 @@ export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
                                         }}
                                         onChange={() => void toggle(sch)}
                                     />
-                                    <Button
-                                        color="neutral"
-                                        disabled={rowBusy}
-                                        loading={running === sch.id}
-                                        size="sm"
-                                        startDecorator={<PlayArrowRoundedIcon />}
-                                        variant="outlined"
-                                        onClick={() => void runNow(sch)}
-                                    >
-                                        {s.runNow}
-                                    </Button>
-                                    <Button
-                                        color="neutral"
-                                        disabled={rowBusy}
-                                        size="sm"
-                                        variant="outlined"
-                                        onClick={() => setMode({ kind: "edit", id: sch.id })}
-                                    >
-                                        {s.edit}
-                                    </Button>
+                                    {!planBlockedNow && (
+                                        <Button
+                                            color="neutral"
+                                            disabled={rowBusy}
+                                            loading={running === sch.id}
+                                            size="sm"
+                                            startDecorator={<PlayArrowRoundedIcon />}
+                                            variant="outlined"
+                                            onClick={() => void runNow(sch)}
+                                        >
+                                            {s.runNow}
+                                        </Button>
+                                    )}
+                                    {!planBlockedNow && (
+                                        <Button
+                                            color="neutral"
+                                            disabled={rowBusy}
+                                            size="sm"
+                                            variant="outlined"
+                                            onClick={() => setMode({ kind: "edit", id: sch.id })}
+                                        >
+                                            {s.edit}
+                                        </Button>
+                                    )}
                                     <Button
                                         color="danger"
                                         disabled={rowBusy}

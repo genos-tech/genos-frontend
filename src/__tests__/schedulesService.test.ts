@@ -47,6 +47,9 @@ describe("every call names the member's team", () => {
             expect.objectContaining({ params: { team_id: TEAM } })
         );
         expect(list).toEqual({
+            // An API that predates the plan gate sends neither key: allowed.
+            planAllowed: true,
+            planMessage: "",
             timeZone: "Asia/Tokyo",
             limit: 20,
             jobs: [],
@@ -148,6 +151,7 @@ describe("failures", () => {
             ok: false,
             gone: false,
             error: "Ran a moment ago, try again in 42 seconds.",
+            planRequired: false,
         });
     });
 
@@ -157,6 +161,7 @@ describe("failures", () => {
             ok: false,
             gone: true,
             error: "Schedule not found",
+            planRequired: false,
         });
     });
 
@@ -166,8 +171,64 @@ describe("failures", () => {
             ok: false,
             gone: false,
             error: null,
+            planRequired: false,
         });
         api.get.mockRejectedValue(new Error("network"));
         expect(await listSchedules("tok", TEAM)).toBeNull();
+    });
+});
+
+describe("the plan gate (MIP-1213)", () => {
+    it("GET carries planAllowed and planMessage; only an explicit false is 'not allowed'", async () => {
+        api.get.mockResolvedValueOnce({
+            data: { planAllowed: false, planMessage: "Upgrade.", schedules: [], jobs: [] },
+        });
+        expect(await listSchedules("tok", TEAM)).toMatchObject({
+            planAllowed: false,
+            planMessage: "Upgrade.",
+        });
+        api.get.mockResolvedValueOnce({ data: { planAllowed: true, schedules: [], jobs: [] } });
+        expect(await listSchedules("tok", TEAM)).toMatchObject({ planAllowed: true });
+        // Missing, null, or anything that is not `false` reads as allowed (the API fails open).
+        for (const planAllowed of [undefined, null, "no", 0]) {
+            api.get.mockResolvedValueOnce({ data: { planAllowed, schedules: [], jobs: [] } });
+            expect(await listSchedules("tok", TEAM)).toMatchObject({ planAllowed: true });
+        }
+    });
+
+    const planRequired = {
+        response: { status: 403, data: { error: "Core and up.", code: "plan_required" } },
+    };
+
+    it("a 403 plan_required is flagged on every action that can refuse", async () => {
+        api.post.mockRejectedValueOnce(planRequired);
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({
+            ok: false,
+            planRequired: true,
+        });
+        api.patch.mockRejectedValueOnce(planRequired);
+        expect(await updateSchedule("tok", TEAM, "s1", { enabled: true })).toMatchObject({
+            ok: false,
+            planRequired: true,
+        });
+        api.post.mockRejectedValueOnce(planRequired);
+        expect(await runScheduleNow("tok", TEAM, "s1")).toMatchObject({
+            ok: false,
+            planRequired: true,
+        });
+    });
+
+    it("any other refusal is not a plan refusal", async () => {
+        api.post.mockRejectedValueOnce(refusal(400, "Pick a name."));
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({ planRequired: false });
+        // A 403 with some other code (or none) is not the plan.
+        api.post.mockRejectedValueOnce({ response: { status: 403, data: { code: "other" } } });
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({ planRequired: false });
+        api.post.mockRejectedValueOnce({
+            response: { status: 400, data: { code: "plan_required" } },
+        });
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({ planRequired: false });
+        api.post.mockRejectedValueOnce(new Error("offline"));
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({ planRequired: false });
     });
 });
