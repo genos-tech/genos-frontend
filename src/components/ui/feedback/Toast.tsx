@@ -360,7 +360,7 @@ const HostedToast = ({ item }: { item: ToastItem }) => {
             action={action}
             duration={item.duration}
             tone={item.tone}
-            onClose={() => toast.dismiss(item.id)}
+            onClose={(reason) => toast.dismiss(item.id, reason)}
         >
             {item.message}
         </ToastCard>
