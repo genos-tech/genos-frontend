@@ -1,6 +1,8 @@
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { Box } from "@mui/joy";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../i18n";
 
 /**
@@ -21,6 +23,8 @@ type NoteLoadStateProps = {
     fillHeight?: boolean;
     isLoading: boolean;
     error: boolean;
+    /** The API said 404: the note was deleted, so there is no Retry (MIP-1307). */
+    notFound?: boolean;
     onRetry: () => void;
 };
 
@@ -29,6 +33,7 @@ export const NoteLoadState = ({
     fillHeight = false,
     isLoading,
     error,
+    notFound = false,
     onRetry,
 }: NoteLoadStateProps) => {
     const { t } = useTranslation();
@@ -42,18 +47,28 @@ export const NoteLoadState = ({
                 ...(fillHeight ? { flex: 1, minHeight: 0 } : { minHeight: 240 }),
             }}
         >
-            <DataState
-                hasData={false}
-                loading={false}
-                skeleton={null}
-                errorState={{
-                    title: t.notes.editor.loadFailed,
-                    onRetry,
-                    "data-error": "note-editor",
-                }}
-                error
-                fill
-            />
+            {notFound ? (
+                <EmptyState
+                    body={t.notes.placeholder.noteNotFoundBody}
+                    data-empty="note-gone"
+                    icon={<DescriptionOutlinedIcon />}
+                    title={t.notes.placeholder.noteNotFoundTitle}
+                    fill
+                />
+            ) : (
+                <DataState
+                    hasData={false}
+                    loading={false}
+                    skeleton={null}
+                    errorState={{
+                        title: t.notes.editor.loadFailed,
+                        onRetry,
+                        "data-error": "note-editor",
+                    }}
+                    error
+                    fill
+                />
+            )}
         </Box>
     );
 };

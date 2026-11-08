@@ -1,6 +1,10 @@
 // MIP-1276: clicking a note whose body is not cached, while the request FAILS, used to
 // do nothing at all: no tab, no message. It now says "Couldn't open this note" with a
 // Retry that asks again. A 403 is not a failure (the access-request panel owns it).
+//
+// MIP-1307: with NO tab open the toast (8 s) is not enough: the failure is kept in
+// `noteOpenFailure` for the pane (see noteOpenFailurePane.test.tsx); the toast is for
+// the case where another note is still on screen.
 
 import "fake-indexeddb/auto";
 
@@ -78,41 +82,100 @@ beforeEach(() => {
     __resetToasts();
 });
 
+const renderNm = () =>
+    renderHook(() => ({
+        nm: useNoteManagement(myself, TOKEN),
+        toasts: useToasts(),
+    }));
+
 describe("opening a note from the sidebar when the request fails", () => {
-    it("says so with a Retry, and Retry opens the note", async () => {
+    it("with nothing open, keeps the failure for the pane (no toast) and Retry opens the note", async () => {
         vi.mocked(loadSpecificNote).mockResolvedValueOnce(undefined as never);
-        const hook = renderHook(() => ({
-            nm: useNoteManagement(myself, TOKEN),
-            toasts: useToasts(),
-        }));
+        const hook = renderNm();
         await settle();
 
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 7, 0);
+        });
+        expect(hook.result.current.nm.noteOpenFailure).toMatchObject({
+            noteId: 7,
+            reason: "failed",
+        });
+        expect(hook.result.current.toasts).toHaveLength(0);
+        expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(0);
+
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce(NOTE as never);
+        await act(async () => {
+            hook.result.current.nm.retryNoteOpen();
+        });
+        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
+        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+        expect(loadSpecificNote).toHaveBeenCalledTimes(2);
+    });
+
+    it("with another note open, says so with a toast and a Retry that opens the note", async () => {
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce({ ...NOTE, noteId: 8 } as never);
+        const hook = renderNm();
+        await settle();
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 8, 0);
+        });
+        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
+
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce(undefined as never);
         await act(async () => {
             await hook.result.current.nm.loadNote(1, 7, 0);
         });
         const toast = hook.result.current.toasts.find((t) => t.tone === "danger");
         expect(toast?.message).toBe(en.notes.editor.loadFailed);
         expect(toast?.action?.label).toBe(en.common.actions.retry);
-        expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(0);
+        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
 
         vi.mocked(loadSpecificNote).mockResolvedValueOnce(NOTE as never);
         await act(async () => {
             toast?.action?.onClick();
         });
-        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
-        expect(loadSpecificNote).toHaveBeenCalledTimes(2);
+        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(2));
     });
 
-    it("a 403 is not a failure: no toast", async () => {
+    it("a 404 with another note open is a toast without Retry", async () => {
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce({ ...NOTE, noteId: 8 } as never);
+        const hook = renderNm();
+        await settle();
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 8, 0);
+        });
+        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
+
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce({ error: "not_found" } as never);
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 7, 0);
+        });
+        const toast = hook.result.current.toasts.find((t) => t.tone === "danger");
+        expect(toast?.message).toBe(en.notes.placeholder.noteNotFoundTitle);
+        expect(toast?.action).toBeUndefined();
+    });
+
+    it("a 403 is not a failure: no toast, no kept failure", async () => {
         vi.mocked(loadSpecificNote).mockResolvedValueOnce({ error: "forbidden" } as never);
-        const hook = renderHook(() => ({
-            nm: useNoteManagement(myself, TOKEN),
-            toasts: useToasts(),
-        }));
+        const hook = renderNm();
         await settle();
         await act(async () => {
             await hook.result.current.nm.loadNote(1, 7, 0);
         });
         expect(hook.result.current.toasts).toHaveLength(0);
+        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+    });
+
+    it("clearNoteOpenFailure resets the kept failure", async () => {
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce(undefined as never);
+        const hook = renderNm();
+        await settle();
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 7, 0);
+        });
+        expect(hook.result.current.nm.noteOpenFailure).not.toBeNull();
+        act(() => hook.result.current.nm.clearNoteOpenFailure());
+        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
     });
 });

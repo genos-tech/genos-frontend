@@ -22,6 +22,7 @@ import { MyNoteEditorPanel } from "../../my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteEditorPanel } from "../../task-notes/components/TaskNoteEditorPanel";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
+import { NoteOpenFailure } from "./NoteOpenFailure";
 
 type NoteContentRendererProps = {
     myself: UserProps;
@@ -211,6 +212,10 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // No notes open at all
     if (useNM.tabItems.length === 0) {
+        // The route named a note and it would not open: say so (MIP-1307).
+        if (useNM.noteOpenFailure) {
+            return <NoteOpenFailure useNM={useNM} onMobileBack={onMobileBack} />;
+        }
         return (
             <EmptyState
                 data-empty="notes"

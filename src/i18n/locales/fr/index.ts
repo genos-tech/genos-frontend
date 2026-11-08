@@ -2906,6 +2906,8 @@ export const fr: DeepPartial<Messages> = {
             chooseNoteToEdit: "Choisissez une note dans la barre latérale pour commencer à éditer",
             newMyNote: "Nouvelle note personnelle",
             sharedNotesTitle: "Choisissez une note partagée dans la barre latérale",
+            noteNotFoundTitle: "Cette note n'existe plus",
+            noteNotFoundBody: "Elle a peut-être été supprimée, ou le lien est incorrect.",
         },
         header: {
             myNotesLabel: "Mes notes",

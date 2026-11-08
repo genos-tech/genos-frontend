@@ -3257,6 +3257,8 @@ export const ar: DeepPartial<Messages> = {
             chooseNoteToEdit: "اختر ملاحظة من الشريط الجانبي لبدء التعديل",
             newMyNote: "ملاحظة شخصية جديدة",
             sharedNotesTitle: "اختر ملاحظة مشتركة من الشريط الجانبي",
+            noteNotFoundTitle: "هذه الملاحظة لم تعد موجودة",
+            noteNotFoundBody: "ربما تم حذفها، أو أن الرابط غير صحيح.",
         },
         header: {
             myNotesLabel: "ملاحظاتي",

@@ -56,10 +56,13 @@ export const TaskNoteEditorPanel = ({
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const titleInputRef = useRef<HTMLInputElement | null>(null);
-    const { note, accessDenied, isLoading, error, reload } = useNoteData<TaskNoteProps>(tab, {
-        myself,
-        accessToken,
-    });
+    const { note, accessDenied, isLoading, error, notFound, reload } = useNoteData<TaskNoteProps>(
+        tab,
+        {
+            myself,
+            accessToken,
+        }
+    );
 
     const {
         noteBodySaved,
@@ -124,6 +127,7 @@ export const TaskNoteEditorPanel = ({
                 fillHeight={fillHeight}
                 isActive={isActive}
                 isLoading={isLoading}
+                notFound={notFound}
                 onRetry={reload}
             />
         );

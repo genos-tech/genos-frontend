@@ -49,10 +49,13 @@ export const MyNoteEditorPanel = ({
     useCM,
     useNM,
 }: MyNoteEditorPanelProps) => {
-    const { note, accessDenied, isLoading, error, reload } = useNoteData<MyNoteProps>(tab, {
-        myself,
-        accessToken,
-    });
+    const { note, accessDenied, isLoading, error, notFound, reload } = useNoteData<MyNoteProps>(
+        tab,
+        {
+            myself,
+            accessToken,
+        }
+    );
 
     const noteEditor = useNoteEditor({
         currentMyNote: note,
@@ -115,6 +118,7 @@ export const MyNoteEditorPanel = ({
                 fillHeight={fillHeight}
                 isActive={isActive}
                 isLoading={isLoading}
+                notFound={notFound}
                 onRetry={reload}
             />
         );
