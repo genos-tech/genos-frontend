@@ -553,9 +553,21 @@ describe.each([
                 expect(readStoredDraft(key)[0].content[0].text).toBe("hel");
             });
 
-            it("does not persist a one-block document (useEditorDraft treats length <= 1 as empty)", () => {
+            // MIP-1222: this used to PIN the bug ("a one-block document is empty"). Since BlockNote
+            // 0.57 one typed line is one block, so a one-line draft was never saved and was lost on
+            // a chat switch or a reload.
+            it("persists a one-line draft: a single block with text is a draft", () => {
                 mount();
                 typeInto("hello");
+                act(() => vi.advanceTimersByTime(800));
+                expect(readStoredDraft(key)[0].content[0].text).toBe("hello");
+            });
+
+            it("does not persist an empty document (spaces only)", () => {
+                mount();
+                typeInto("hello");
+                act(() => vi.advanceTimersByTime(800));
+                typeInto("   ");
                 act(() => vi.advanceTimersByTime(800));
                 expect(readStoredDraft(key)).toBeNull();
             });
