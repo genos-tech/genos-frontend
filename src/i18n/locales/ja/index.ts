@@ -2422,6 +2422,13 @@ export const ja: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "{provider} を切断しますか？",
+                bodyGoogle:
+                    "Genos はこの Google アカウントの保存済みアクセス権を削除します。再び接続するまで、それを使うカレンダー機能は動作しません。再接続には Google でもう一度サインインする必要があります。",
+                bodyGithub:
+                    "Genos はこの GitHub アカウントの保存済みアクセス権を削除します。再び接続するまで、プルリクエストのリンクなど、それを使う機能は動作しません。再接続には GitHub でもう一度サインインする必要があります。",
+            },
             primaryLogin: "プライマリログイン",
             noEmailShared: "(メールは共有されません)",
             notConnected: "連携されていません",
@@ -3352,6 +3359,13 @@ export const ja: DeepPartial<Messages> = {
                 allowDestructive:
                     "取り消せない操作や、アクセス権を変更する操作（カレンダーの予定・マイルストーン・スプリント・ノート・ノートフォルダの削除、プロジェクトへのメンバー追加と参加リクエストの承認、ノートの共有）も許可する",
                 destructiveChip: "削除可",
+                revokeDialog: {
+                    title: "この API キーを取り消しますか？",
+                    body: "このキーを使っているものはすぐに動作しなくなり、取り消したキーを元に戻すことはできません。まだアクセスが必要な場合は、新しいキーを作成してください。",
+                    bodyTeam:
+                        "このチームキーを使っているものはすぐに動作しなくなり、取り消したキーを元に戻すことはできません。作成者は新しいキーを作成する必要があります。",
+                    confirm: "キーを取り消す",
+                },
             },
             teamKeys: {
                 title: "チームの API キー",
@@ -3413,6 +3427,12 @@ export const ja: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Webhook を追加する",
                 delete: "消去",
+                deleteNamed: "{name} を削除",
+                deleteDialog: {
+                    title: "この Webhook を削除しますか？",
+                    body: "Genos はこの URL へのイベント送信を停止します。署名シークレットも一緒に削除されるため、同じ URL をもう一度追加すると新しいシークレットが作られます。",
+                    confirm: "Webhook を削除",
+                },
                 empty: "Webhook はまだありません。",
                 disabled: "失敗を繰り返すと無効化される",
                 managerOnly: "Webhook を追加できるのは、チームのオーナーまたは編集者のみです。",
@@ -4608,6 +4628,12 @@ export const ja: DeepPartial<Messages> = {
                 body: "この操作は取り消せません",
                 confirmButton: "タスクを削除",
                 cancelButton: "キャンセル",
+            },
+            confirmDeletedStatus: {
+                title: "このタスクを削除しますか？",
+                titleMilestone: "このマイルストーンを削除しますか？",
+                body: "すべてのリスト、ボード、ダッシュボードから消えます。元に戻すには、テーブルを「Deleted」ビューに切り替えて、別のステータスを選んでください。",
+                bodyMilestone: "すべてのリストとボードから消えます。",
             },
             deleteComment: {
                 title: "コメントを削除しますか？",

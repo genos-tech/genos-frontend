@@ -2337,6 +2337,13 @@ export const zh: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "断开 {provider}？",
+                bodyGoogle:
+                    "Genos 会删除已保存的此 Google 账号访问权限。在你重新连接之前，使用它的日历功能将无法工作；重新连接需要再次使用 Google 登录。",
+                bodyGithub:
+                    "Genos 会删除已保存的此 GitHub 账号访问权限。在你重新连接之前，使用它的功能（例如拉取请求链接）将无法工作；重新连接需要再次使用 GitHub 登录。",
+            },
             primaryLogin: "主要登录方式",
             noEmailShared: "（未共享邮箱）",
             notConnected: "未连接",
@@ -3242,6 +3249,13 @@ export const zh: DeepPartial<Messages> = {
                 allowDestructive:
                     "同时允许无法撤销或会更改访问权限的操作（删除日历事件、里程碑、冲刺、笔记和笔记文件夹；将成员加入项目或批准其加入请求；分享笔记）",
                 destructiveChip: "可删除",
+                revokeDialog: {
+                    title: "撤销此 API 密钥？",
+                    body: "使用它的一切会立即停止工作，且已撤销的密钥无法重新启用。如果仍需访问，请创建新密钥。",
+                    bodyTeam:
+                        "使用此团队密钥的一切会立即停止工作，且已撤销的密钥无法重新启用。其创建者需要重新创建一个。",
+                    confirm: "撤销密钥",
+                },
             },
             teamKeys: {
                 title: "团队 API 密钥",
@@ -3303,6 +3317,12 @@ export const zh: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "添加webhook",
                 delete: "删除",
+                deleteNamed: "删除 {name}",
+                deleteDialog: {
+                    title: "删除此 Webhook？",
+                    body: "Genos 将停止向此 URL 发送事件。其签名密钥会一并删除，因此再次添加该 URL 会生成新的密钥。",
+                    confirm: "删除 Webhook",
+                },
                 empty: "还没有webhook。",
                 disabled: "多次失败后禁用",
                 managerOnly: "只有团队所有者或编辑者可以添加 webhook。",
@@ -4452,6 +4472,12 @@ export const zh: DeepPartial<Messages> = {
                 body: "此操作无法撤销",
                 confirmButton: "删除任务",
                 cancelButton: "取消",
+            },
+            confirmDeletedStatus: {
+                title: "删除此任务？",
+                titleMilestone: "删除此里程碑？",
+                body: "它将从所有列表、看板和仪表盘中消失。若要恢复，请将表格切换到“已删除”视图，并为它选择其他状态。",
+                bodyMilestone: "它将从所有列表和看板中消失。",
             },
             deleteComment: {
                 title: "删除评论？",
