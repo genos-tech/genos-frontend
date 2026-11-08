@@ -16,20 +16,13 @@ import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
-import {
-    Badge,
-    Button,
-    CircularProgress,
-    Dropdown,
-    IconButton,
-    MenuButton,
-    Stack,
-} from "@mui/joy";
+import { Badge, Button, Dropdown, IconButton, MenuButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { Toast } from "../../../../components/ui/feedback/Toast";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
@@ -432,10 +425,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     disabled={quickMeetLoading}
                                     icon={
                                         quickMeetLoading ? (
-                                            <CircularProgress
-                                                size="sm"
-                                                sx={{ "--CircularProgress-size": "16px" }}
-                                            />
+                                            <Spinner />
                                         ) : (
                                             <VideoCameraFrontRoundedIcon />
                                         )

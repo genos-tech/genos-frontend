@@ -1,17 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-    Alert,
-    Box,
-    Button,
-    Checkbox,
-    CircularProgress,
-    Radio,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, Checkbox, Radio, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
@@ -219,7 +211,7 @@ export const OAuthConsentPage = () => {
             >
                 {(phase.kind === "loading" || phase.kind === "leaving") && (
                     <Stack alignItems="center" role="status" sx={{ gap: 2, py: 2 }}>
-                        <CircularProgress size="md" />
+                        <Spinner size="lg" />
                         <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
                             {phase.kind === "leaving"
                                 ? phase.host

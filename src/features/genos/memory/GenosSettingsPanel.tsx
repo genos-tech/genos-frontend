@@ -1,8 +1,9 @@
 import { lazy, ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
-import { Box, Button, CircularProgress, Sheet, Stack, Typography } from "@mui/joy";
+import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 
 // Fetched when the card is first opened, not with the app. The Settings dialog
@@ -74,10 +75,9 @@ export const GenosSettingsPanel = ({ teamId, children, onOpenLanguageSettings }:
                 </Button>
                 <Suspense
                     fallback={
-                        <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 1 }}>
-                            <CircularProgress size="sm" />
-                            <Typography level="body-sm">{t.common.actions.loading}</Typography>
-                        </Stack>
+                        <Box sx={{ py: 1 }}>
+                            <Spinner caption={t.common.actions.loading} />
+                        </Box>
                     }
                 >
                     <GenosMemoryPage

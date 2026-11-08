@@ -2,20 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    ButtonGroup,
-    Chip,
-    CircularProgress,
-    IconButton,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, ButtonGroup, Chip, IconButton, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../context/AuthContext";
 import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
@@ -567,7 +558,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                 {viewButton("day", t.calendar.views.day)}
                             </ButtonGroup>
                         )}
-                        {loading && <CircularProgress size="sm" />}
+                        {loading && <Spinner />}
                     </Stack>
                     {/* View tabs on their own row on mobile — four
                         equal segments across the full width so none

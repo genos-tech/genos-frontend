@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { Alert, Box, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { redirectToOAuthConnect } from "../services/oauth";
@@ -123,9 +124,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     if (result === null) {
         return (
             <Card sx={{ p: 1.5 }} variant="outlined">
-                <Stack alignItems="center" sx={{ py: 1 }}>
-                    <CircularProgress size="sm" />
-                </Stack>
+                <SkeletonLines lines={2} />
             </Card>
         );
     }
