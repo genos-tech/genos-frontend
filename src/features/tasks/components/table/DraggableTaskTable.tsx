@@ -1702,6 +1702,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         border: 0,
                                         padding: 0,
                                         font: "inherit",
+                                        textTransform: "inherit",
+                                        letterSpacing: "inherit",
                                         color: "inherit",
                                         cursor: "pointer",
                                         display: "flex",
