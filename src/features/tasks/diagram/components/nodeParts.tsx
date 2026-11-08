@@ -273,7 +273,10 @@ export const NodeDateEditor = ({
         // Empty inputs flow through as `null`, so a date is cleared by blanking
         // the field.
         <ModalFrame
-            open
+            icon={<CalendarMonthRoundedIcon sx={{ fontSize: 18, color: g.accent.text }} />}
+            size="sm"
+            title="Edit schedule"
+            zIndex={zIndex}
             actions={
                 <>
                     <Button color="neutral" size="sm" variant="plain" onClick={onClose}>
@@ -290,10 +293,7 @@ export const NodeDateEditor = ({
                     </Button>
                 </>
             }
-            icon={<CalendarMonthRoundedIcon sx={{ fontSize: 18, color: g.accent.text }} />}
-            size="sm"
-            title="Edit schedule"
-            zIndex={zIndex}
+            open
             onClose={onClose}
         >
             <Stack spacing={1.5}>
