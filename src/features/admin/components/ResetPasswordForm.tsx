@@ -391,17 +391,11 @@ export const ResetPasswordForm = () => {
                             </FormControl>
 
                             <Button
-                                disabled={submitting}
+                                loading={submitting}
                                 size="lg"
+                                startDecorator={<SaveRoundedIcon />}
                                 sx={{ mt: 1 }}
                                 type="submit"
-                                startDecorator={
-                                    submitting ? (
-                                        <CircularProgress size="sm" />
-                                    ) : (
-                                        <SaveRoundedIcon />
-                                    )
-                                }
                                 fullWidth
                             >
                                 {t.admin.auth.passwordReset.submit}

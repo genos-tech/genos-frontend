@@ -9,7 +9,6 @@ import {
     Box,
     Button,
     Checkbox,
-    CircularProgress,
     Divider,
     FormControl,
     FormLabel,
@@ -531,15 +530,10 @@ export const SignInForm = () => {
 
                     <Stack sx={{ gap: 0.75 }}>
                         <Button
-                            disabled={demoLoading}
+                            loading={demoLoading}
+                            loadingPosition="start"
+                            startDecorator={<ScienceRoundedIcon />}
                             variant="outlined"
-                            startDecorator={
-                                demoLoading ? (
-                                    <CircularProgress size="sm" />
-                                ) : (
-                                    <ScienceRoundedIcon />
-                                )
-                            }
                             sx={{
                                 py: 1.5,
                                 borderRadius: "12px",
@@ -597,12 +591,10 @@ export const SignInForm = () => {
                         </Button>
                         {!forgotSucceeded && (
                             <Button
-                                disabled={forgotSubmitting || !forgotEmail}
+                                disabled={!forgotEmail}
                                 form={forgotFormId}
+                                loading={forgotSubmitting}
                                 type="submit"
-                                startDecorator={
-                                    forgotSubmitting ? <CircularProgress size="sm" /> : null
-                                }
                             >
                                 {t.admin.auth.forgotPassword.submit}
                             </Button>
