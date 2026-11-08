@@ -8,6 +8,9 @@
  * rejects), then resolve on Retry. Mutation-checked: not recording the failure in
  * `syncChannel`, or `error={false}` on a pane, turns the matching case red.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -216,5 +219,51 @@ describe("ThreadPanelV3", () => {
         expect(screen.getByTestId("thread-panel-v3-root")).toBeInTheDocument();
         expect(document.querySelector('[data-empty="channel-replies"]')).toBeNull();
         expect(screen.getByRole("alert")).toHaveTextContent(ch.thread.loadFailed);
+    });
+});
+
+describe("ChatHistoryLoadFailed (the live chat's empty message list)", () => {
+    it("renders nothing while the sync is fine, ErrorState with Retry once it failed", async () => {
+        const { ChatHistoryLoadFailed } = await import(
+            "../features/chat/components/shared/ChatHistoryLoadFailed"
+        );
+        const view = render(wrap(<ChatHistoryLoadFailed channelId={CH} isThread={false} />));
+        expect(view.container.querySelector('[data-error="chat-history"]')).toBeNull();
+
+        const msgs = vi
+            .spyOn(svc, "fetchMessagesDelta")
+            .mockRejectedValueOnce(new Error("Network Error"));
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        await act(async () => {
+            await channelService.syncChannel(CH).catch(() => undefined);
+        });
+        expect(screen.getByRole("alert")).toHaveTextContent(ch.pane.loadFailed);
+
+        msgs.mockResolvedValue(envelope());
+        await act(async () => {
+            fireEvent.click(retry());
+        });
+        await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    });
+
+    it("is not drawn for a legacy numeric chat id", async () => {
+        const { ChatHistoryLoadFailed } = await import(
+            "../features/chat/components/shared/ChatHistoryLoadFailed"
+        );
+        const view = render(wrap(<ChatHistoryLoadFailed channelId="42" isThread={false} />));
+        expect(view.container.firstChild).toBeNull();
+    });
+});
+
+describe("adoption (source-level: the renderer is Virtuoso and too heavy to mount here)", () => {
+    it("the live message list mounts ChatHistoryLoadFailed only for an empty list", () => {
+        const src = readFileSync(
+            join(
+                dirname(fileURLToPath(import.meta.url)),
+                "../features/chat/components/shared/MessageListRenderer.tsx"
+            ),
+            "utf8"
+        );
+        expect(src).toMatch(/!hasRows\s*&&\s*\(?\s*<ChatHistoryLoadFailed/);
     });
 });

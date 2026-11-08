@@ -22,6 +22,7 @@ import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
+import { ChatHistoryLoadFailed } from "./ChatHistoryLoadFailed";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 
 interface MessageListRendererProps {
@@ -593,6 +594,10 @@ export const MessageListRenderer = ({
                 none` so it never intercepts touch/taps. Driven imperatively
                 via `thumbRef` — starts at opacity 0 until the hook measures. */}
             <div ref={thumbRef} className="chat-scroll-indicator" />
+            {/* An empty list whose history sync FAILED says so, with Retry (MIP-1299). */}
+            {!hasRows && (
+                <ChatHistoryLoadFailed channelId={String(chat.chatId)} isThread={isThread} />
+            )}
         </Box>
     );
 };
