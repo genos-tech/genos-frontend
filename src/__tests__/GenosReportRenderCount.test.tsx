@@ -43,6 +43,9 @@ vi.mock("../features/tasks/components/meta/StatusLabel", () => ({
     },
 }));
 
+// The answer buttons read the member's token (MIP-1211); a tap is the only thing that uses it.
+vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+
 const section = (key: string, n: number) => ({
     heading: key,
     key,
@@ -173,5 +176,53 @@ describe("report card render budget", () => {
         expect(timers).not.toHaveBeenCalled();
         fetchSpy.mockRestore();
         timers.mockRestore();
+    });
+});
+
+describe("answer buttons render budget (MIP-1211)", () => {
+    it("answering one task does not draw the other rows again", async () => {
+        const { act } = await import("@testing-library/react");
+        const { resetAnswerStore } = await import("../features/inbox/inboxAnswerStore");
+        resetAnswerStore();
+        rows.renders = 0;
+        const body = {
+            version: 2,
+            sections: [
+                {
+                    heading: "h",
+                    key: "overdue",
+                    items: Array.from({ length: 4 }, (_, i) => ({
+                        text: `a ${i}`,
+                        kind: "task",
+                        display_id: `T-${i}`,
+                        title: `a ${i}`,
+                        status: "Open",
+                        task_id: 100 + i,
+                        can_answer: true,
+                    })),
+                },
+            ],
+        };
+        const { getAllByRole } = render(
+            <CssVarsProvider>
+                <MemoryRouter>
+                    <GenosReportBody itemBody={body} teamId="t" userId="u" />
+                </MemoryRouter>
+            </CssVarsProvider>
+        );
+        expect(rows.renders).toBe(4);
+        const { setAnswer, answerKey } = await import("../features/inbox/inboxAnswerStore");
+        await act(async () => {
+            setAnswer(answerKey("u", "t", 101), {
+                phase: "saved",
+                answer: "on_it",
+                previous: null,
+                reason: null,
+            });
+        });
+        // The shell of that one row drew again (its Undo); no status label did.
+        expect(rows.renders).toBe(4);
+        expect(getAllByRole("button", { name: /^Undo/ }).length).toBe(1);
+        resetAnswerStore();
     });
 });

@@ -36,6 +36,7 @@ import type {
     ReportProject,
     ReportSectionV2,
 } from "../utils/genosReportV2";
+import { ANSWER_SLOT_WIDTH, ReportRowAnswers } from "./ReportRowAnswers";
 
 /** Sections open on first draw; the rest are folded so the card stays short. */
 export const OPEN_SECTIONS = 2;
@@ -70,6 +71,9 @@ const KEY_TONE: Record<string, Tone> = {
     closed: "success",
     todos_done: "success",
     ready: "success",
+    // Notes about the report, not things to act on: quiet (MIP-1211).
+    still_same: "neutral",
+    quieted: "neutral",
 };
 const toneOf = (key: string | null): Tone =>
     key !== null && Object.prototype.hasOwnProperty.call(KEY_TONE, key)
@@ -228,20 +232,29 @@ const dueFor = (
     return { text: fmt(t.tasks.dueLabel.dueOn, { when }), tone: "later" };
 };
 
+/** Who the answers on this card are for: a mark belongs to a member in a team. Absent, the
+ *  rows draw no buttons (a card shown where answering makes no sense, or an old caller). */
+type Answerer = { userId: string; teamId: string };
+
 const TaskRow = ({
     item,
     onOpen,
     todayIso,
+    answerer,
+    reserveAnswers,
 }: {
     item: ReportItemV2;
     onOpen: Open;
     todayIso: string;
+    answerer?: Answerer;
+    /** A sibling row has the buttons: keep this row's marks in the same column. */
+    reserveAnswers?: boolean;
 }) => {
     const { t } = useTranslation();
     const due = dueFor(item, todayIso, t);
     const title = item.title !== "" ? item.title : item.text;
     const notable = item.priority !== null && NOTABLE_PRIORITIES.has(item.priority);
-    return (
+    const row = (
         <RowShell
             link={item.link}
             sx={{
@@ -337,6 +350,25 @@ const TaskRow = ({
             )}
         </RowShell>
     );
+    // The buttons sit beside the link, not inside it. Only a line the server marked answerable.
+    if (answerer && item.canAnswer && item.taskId !== null) {
+        return (
+            <ReportRowAnswers
+                name={[item.displayId, title].filter(Boolean).join(" ")}
+                taskId={item.taskId}
+                teamId={answerer.teamId}
+                userId={answerer.userId}
+            >
+                {row}
+            </ReportRowAnswers>
+        );
+    }
+    // From `sm` the buttons take a slot at the row's end; a row without them keeps the slot, so
+    // the status and due-date columns stay in line down the section.
+    if (reserveAnswers) {
+        return <Box sx={{ paddingInlineEnd: { sm: `${ANSWER_SLOT_WIDTH}px` } }}>{row}</Box>;
+    }
+    return row;
 };
 
 const LineRow = ({ item, onOpen }: { item: ReportItemV2; onOpen: Open }) => {
@@ -413,6 +445,7 @@ const Section = ({
     avatars,
     onOpen,
     todayIso,
+    answerer,
 }: {
     section: ReportSectionV2;
     index: number;
@@ -421,6 +454,7 @@ const Section = ({
     avatars: ReadonlyMap<number, string>;
     onOpen: Open;
     todayIso: string;
+    answerer?: Answerer;
 }) => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(index < OPEN_SECTIONS);
@@ -440,6 +474,8 @@ const Section = ({
             ? lines.slice(0, LINES_BEFORE_MORE)
             : [...lines, ...section.items.filter((i) => i.kind === "more")];
     const groups = groupByProject(visible);
+    // Only a section that has buttons somewhere keeps room for them on its other rows.
+    const reserveAnswers = answerer !== undefined && lines.some((i) => i.canAnswer);
     const hot = tone === "danger" || tone === "warning";
 
     return (
@@ -558,7 +594,9 @@ const Section = ({
                                     <li key={`${ii}-${item.text}`}>
                                         {isTaskLine(item) ? (
                                             <TaskRow
+                                                answerer={answerer}
                                                 item={item}
+                                                reserveAnswers={reserveAnswers}
                                                 todayIso={todayIso}
                                                 onOpen={onOpen}
                                             />
@@ -606,12 +644,19 @@ const Section = ({
     );
 };
 
+// Stats that are a note about the report rather than a section of it ("4 unchanged since your
+// last report", MIP-1211): no section below says what they count, so their words stay visible
+// on a phone, where the other chips are an emoji and a number.
+const NOTE_STATS = new Set(["still_same", "quieted"]);
+
 const StatStrip = ({ report }: { report: GenosReportV2 }) => {
     const { t } = useTranslation();
     if (report.stats.length === 0) return null;
     const labelOf = (key: string): string => {
         const heading = report.sections.find((s) => s.key === key)?.heading;
         if (heading) return heading;
+        if (key === "still_same") return t.inbox.report.statUnchanged;
+        if (key === "quieted") return t.inbox.report.statQuieted;
         if (key === "comments") return t.inbox.report.statComments;
         if (key === "items") return t.inbox.report.statItems;
         return "";
@@ -624,6 +669,7 @@ const StatStrip = ({ report }: { report: GenosReportV2 }) => {
             {report.stats.map((stat) => {
                 const css = toneCss(toneOf(stat.key));
                 const label = labelOf(stat.key);
+                const note = NOTE_STATS.has(stat.key);
                 return (
                     <Box
                         key={stat.key}
@@ -663,12 +709,16 @@ const StatStrip = ({ report }: { report: GenosReportV2 }) => {
                                     color: g.text.secondary,
                                     // On a phone the strip is emoji and count; the name stays
                                     // for screen readers (and the section below says it).
-                                    position: { xs: "absolute", sm: "static" },
-                                    width: { xs: "1px", sm: "auto" },
-                                    height: { xs: "1px", sm: "auto" },
-                                    overflow: { xs: "hidden", sm: "visible" },
-                                    clipPath: { xs: "inset(50%)", sm: "none" },
-                                    whiteSpace: "nowrap",
+                                    ...(note
+                                        ? { overflowWrap: "anywhere" }
+                                        : {
+                                              position: { xs: "absolute", sm: "static" },
+                                              width: { xs: "1px", sm: "auto" },
+                                              height: { xs: "1px", sm: "auto" },
+                                              overflow: { xs: "hidden", sm: "visible" },
+                                              clipPath: { xs: "inset(50%)", sm: "none" },
+                                              whiteSpace: "nowrap",
+                                          }),
                                 }}
                                 title={label}
                             >
@@ -691,115 +741,127 @@ type CardProps = {
     avatars?: ReadonlyMap<number, string>;
     /** The footer slot: MIP-1209 puts "AI usage used" and "Turn this off" here. */
     footer?: ReactNode;
+    /** The member and team the answers are for (MIP-1211). Both, or no buttons are drawn. They
+     *  are strings, not an object, so a parent that re-renders does not redraw the card. */
+    userId?: string;
+    teamId?: string;
 };
 
-export const GenosReportCard = memo(({ report, avatars = NO_AVATARS, footer }: CardProps) => {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
-    const urlLinkModal = useUrlLinkModal();
-    // Per draw, not frozen at mount: a card drawn again after midnight names the right day.
-    const todayIso = localIso(new Date());
-    const onOpen = useMemo<Open>(
-        () => (link) => {
-            if (urlLinkModal) urlLinkModal.openModalByHref(link);
-            else navigate(link);
-        },
-        [urlLinkModal, navigate]
-    );
-    const counts = useMemo(
-        () => new Map(report.stats.map((s) => [s.key, s.count])),
-        [report.stats]
-    );
+export const GenosReportCard = memo(
+    ({ report, avatars = NO_AVATARS, footer, userId, teamId }: CardProps) => {
+        const { t } = useTranslation();
+        const navigate = useNavigate();
+        const urlLinkModal = useUrlLinkModal();
+        // Per draw, not frozen at mount: a card drawn again after midnight names the right day.
+        const todayIso = localIso(new Date());
+        const onOpen = useMemo<Open>(
+            () => (link) => {
+                if (urlLinkModal) urlLinkModal.openModalByHref(link);
+                else navigate(link);
+            },
+            [urlLinkModal, navigate]
+        );
+        const counts = useMemo(
+            () => new Map(report.stats.map((s) => [s.key, s.count])),
+            [report.stats]
+        );
+        const answerer = useMemo<Answerer | undefined>(
+            () => (userId && teamId ? { userId, teamId } : undefined),
+            [userId, teamId]
+        );
 
-    return (
-        <Box
-            data-genos-report="v2"
-            sx={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 1.5 }}
-        >
-            <Box>
-                {report.title !== "" && (
-                    <Typography
-                        component="h3"
-                        dir="auto"
+        return (
+            <Box
+                data-genos-report="v2"
+                sx={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 1.5 }}
+            >
+                <Box>
+                    {report.title !== "" && (
+                        <Typography
+                            component="h3"
+                            dir="auto"
+                            sx={{
+                                ...type("title-md"),
+                                color: g.text.primary,
+                                m: 0,
+                                overflowWrap: "anywhere",
+                            }}
+                        >
+                            {report.title}
+                        </Typography>
+                    )}
+                    {report.summary !== "" && (
+                        <Typography
+                            dir="auto"
+                            sx={{
+                                ...type("body-sm"),
+                                color: g.text.secondary,
+                                mt: report.title !== "" ? 0.25 : 0,
+                                overflowWrap: "anywhere",
+                            }}
+                        >
+                            {report.summary}
+                        </Typography>
+                    )}
+                </Box>
+                <StatStrip report={report} />
+                {report.sections.length === 0 && report.stats.length === 0 ? (
+                    <Box
+                        data-report-empty=""
                         sx={{
-                            ...type("title-md"),
-                            color: g.text.primary,
-                            m: 0,
-                            overflowWrap: "anywhere",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            px: 1.5,
+                            py: 1.5,
+                            borderRadius: g.radius.md,
+                            background: g.success.subtle,
+                            border: "1px solid",
+                            borderColor: g.success.border,
                         }}
                     >
-                        {report.title}
-                    </Typography>
+                        <Emoji size={24} value="🎉" />
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography sx={{ ...type("title-sm"), color: g.text.primary }}>
+                                {t.inbox.report.emptyTitle}
+                            </Typography>
+                            <Typography sx={{ ...type("body-sm"), color: g.text.secondary }}>
+                                {t.inbox.report.emptyBody}
+                            </Typography>
+                        </Box>
+                    </Box>
+                ) : (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        {report.sections.map((section, index) => (
+                            <Section
+                                key={`${index}-${section.key ?? section.heading}`}
+                                avatars={avatars}
+                                count={Math.max(
+                                    (section.key !== null ? counts.get(section.key) : undefined) ??
+                                        0,
+                                    section.items.filter((i) => i.kind !== "more").length
+                                )}
+                                index={index}
+                                section={section}
+                                answerer={answerer}
+                                todayIso={todayIso}
+                                onOpen={onOpen}
+                            />
+                        ))}
+                    </Box>
                 )}
-                {report.summary !== "" && (
-                    <Typography
-                        dir="auto"
-                        sx={{
-                            ...type("body-sm"),
-                            color: g.text.secondary,
-                            mt: report.title !== "" ? 0.25 : 0,
-                            overflowWrap: "anywhere",
-                        }}
+                {footer != null && (
+                    <Box
+                        data-report-footer=""
+                        sx={{ borderTop: "1px solid", borderColor: g.border.subtle, pt: 1 }}
                     >
-                        {report.summary}
-                    </Typography>
+                        {footer}
+                    </Box>
                 )}
             </Box>
-            <StatStrip report={report} />
-            {report.sections.length === 0 && report.stats.length === 0 ? (
-                <Box
-                    data-report-empty=""
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        px: 1.5,
-                        py: 1.5,
-                        borderRadius: g.radius.md,
-                        background: g.success.subtle,
-                        border: "1px solid",
-                        borderColor: g.success.border,
-                    }}
-                >
-                    <Emoji size={24} value="🎉" />
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ ...type("title-sm"), color: g.text.primary }}>
-                            {t.inbox.report.emptyTitle}
-                        </Typography>
-                        <Typography sx={{ ...type("body-sm"), color: g.text.secondary }}>
-                            {t.inbox.report.emptyBody}
-                        </Typography>
-                    </Box>
-                </Box>
-            ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    {report.sections.map((section, index) => (
-                        <Section
-                            key={`${index}-${section.key ?? section.heading}`}
-                            avatars={avatars}
-                            count={Math.max(
-                                (section.key !== null ? counts.get(section.key) : undefined) ?? 0,
-                                section.items.filter((i) => i.kind !== "more").length
-                            )}
-                            index={index}
-                            section={section}
-                            todayIso={todayIso}
-                            onOpen={onOpen}
-                        />
-                    ))}
-                </Box>
-            )}
-            {footer != null && (
-                <Box
-                    data-report-footer=""
-                    sx={{ borderTop: "1px solid", borderColor: g.border.subtle, pt: 1 }}
-                >
-                    {footer}
-                </Box>
-            )}
-        </Box>
-    );
-});
+        );
+    }
+);
 GenosReportCard.displayName = "GenosReportCard";
 
 export default GenosReportCard;

@@ -147,6 +147,11 @@ type GenosReportBodyProps = {
     allChats?: Parameters<typeof projectAvatarSrcMap>[0];
     /** A typed report's footer slot (MIP-1209: AI usage and "Turn this off"). */
     footer?: ReactNode;
+    /** The member and team a typed report's answers ("On it", "Not important") are for; without
+     *  both the rows draw no buttons (MIP-1211). Plain strings, so the memoized card is not
+     *  redrawn by a parent that re-renders. */
+    userId?: string;
+    teamId?: string;
 };
 
 const NO_AVATARS: ReadonlyMap<number, string> = new Map();
@@ -179,7 +184,13 @@ const useProjectAvatars = (
  *  without it (a report stored before the typed fields) is drawn exactly as it always was.
  *  Renders nothing for a body that is not a report. The body is parsed once per body object and
  *  both cards are memoized, so an Inbox re-render that hands the same item costs nothing here. */
-export const GenosReportBody = ({ itemBody, allChats, footer }: GenosReportBodyProps) => {
+export const GenosReportBody = ({
+    itemBody,
+    allChats,
+    footer,
+    userId,
+    teamId,
+}: GenosReportBodyProps) => {
     // Parsed once per body object: `typed` for a version-2 body, `plain` for any other.
     const { typed, plain } = useMemo(
         () =>
@@ -189,7 +200,17 @@ export const GenosReportBody = ({ itemBody, allChats, footer }: GenosReportBodyP
         [itemBody]
     );
     const avatars = useProjectAvatars(typed, allChats);
-    if (typed) return <GenosReportCard avatars={avatars} footer={footer} report={typed} />;
+    if (typed) {
+        return (
+            <GenosReportCard
+                avatars={avatars}
+                footer={footer}
+                report={typed}
+                teamId={teamId}
+                userId={userId}
+            />
+        );
+    }
     return plain ? <GenosReportView report={plain} /> : null;
 };
 

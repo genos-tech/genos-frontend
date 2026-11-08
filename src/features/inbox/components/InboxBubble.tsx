@@ -479,7 +479,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Suspense>
                 )}
                 {inboxItem.itemType === GENOS_REPORT && (
-                    <GenosReportBody allChats={useCM.allChats} itemBody={inboxItem.itemBody} />
+                    <GenosReportBody
+                        allChats={useCM.allChats}
+                        itemBody={inboxItem.itemBody}
+                        teamId={myself.teamId}
+                        userId={myself.userId}
+                    />
                 )}
                 {/* What an AI-made digest or report cost, and its off switch (MIP-1227). Draws
                     nothing for any other item, however its optionals look. */}

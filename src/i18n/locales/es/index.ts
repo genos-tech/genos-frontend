@@ -999,6 +999,7 @@ export const es: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "No es importante",
                     priority_is_right: "La prioridad es correcta",
+                    on_it: "En ello",
                 },
                 signals: {
                     others: {
@@ -3569,6 +3570,25 @@ export const es: DeepPartial<Messages> = {
             daysLate: "{days} d de retraso",
             statComments: "Comentarios",
             statItems: "Elementos",
+            statUnchanged: "sin cambios desde tu último informe",
+            statQuieted: "silenciadas por ti",
+            answersFor: "Respuestas para {task}",
+            answerOnIt: "En ello",
+            answerNotImportant: "No importante",
+            answerOnItNamed: "En ello: {task}",
+            answerNotImportantNamed: "Marcar {task} como no importante",
+            answerOnItTip: "En ello: en silencio en los informes durante 7 días",
+            answerNotImportantTip:
+                "No importante: fuera de lo principal hasta que lo quites. Vuelve a los informes si cambia.",
+            answerQuietedOnIt: "En silencio durante 7 días.",
+            answerQuietedNotImportant: "Marcada como no importante.",
+            answerUndo: "Deshacer",
+            answerUndoNamed: "Deshacer la respuesta para {task}",
+            answerRecordingOff:
+                "Genos no está registrando tu actividad, así que no puede recordar esto.",
+            answerGone: "Esa tarea ya no existe.",
+            answerFailed: "No se pudo guardar. Inténtalo de nuevo.",
+            answerUndoFailed: "No se pudo deshacer. Inténtalo de nuevo.",
         },
         aiUsage: {
             used: "Créditos de IA usados: {credits}",
