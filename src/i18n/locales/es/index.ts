@@ -4382,6 +4382,7 @@ export const es: DeepPartial<Messages> = {
             setAlwaysOffline: "Marcar siempre como desconectado",
             updateStatus: "Actualizar estado",
             setStatusPlaceholder: "Define tu estado…",
+            statusPresetsLabel: "Estados predefinidos",
             cancel: "CANCELAR",
             reset: "RESTABLECER",
             set: "GUARDAR",

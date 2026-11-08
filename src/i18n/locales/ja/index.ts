@@ -421,6 +421,7 @@ export const ja: DeepPartial<Messages> = {
             setAlwaysOffline: "常にオフラインにする",
             updateStatus: "ステータスを更新",
             setStatusPlaceholder: "ステータスを設定…",
+            statusPresetsLabel: "ステータスのプリセット",
             cancel: "キャンセル",
             reset: "リセット",
             set: "設定",

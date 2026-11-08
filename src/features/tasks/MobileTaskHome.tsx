@@ -233,6 +233,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
 
                     <Dropdown>
                         <MenuButton
+                            aria-label={t.common.ui.moreMenu.ariaLabel}
                             slotProps={{ root: { size: "sm", variant: "plain" } }}
                             slots={{ root: IconButton }}
                         >

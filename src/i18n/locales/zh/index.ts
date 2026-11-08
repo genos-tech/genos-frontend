@@ -404,6 +404,7 @@ export const zh: DeepPartial<Messages> = {
             setAlwaysOffline: "始终保持离线",
             updateStatus: "更新状态",
             setStatusPlaceholder: "设置你的状态…",
+            statusPresetsLabel: "状态预设",
             cancel: "取消",
             reset: "重置",
             set: "确定",

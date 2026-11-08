@@ -529,6 +529,7 @@ export const UserProfileStatus = ({
                                 </IconButton>
                                 <Dropdown>
                                     <MenuButton
+                                        aria-label={t.admin.status.statusPresetsLabel}
                                         slots={{ root: IconButton }}
                                         slotProps={{
                                             root: { variant: "outlined", color: "neutral" },

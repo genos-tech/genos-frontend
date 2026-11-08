@@ -417,6 +417,35 @@ describe("MessagesPaneV3 attachments integration", () => {
     });
 });
 
+describe("MessageAttachments: themes and right-to-left (MIP-1291)", () => {
+    const one = () => {
+        const att = {
+            ...fakeAttachment("a-ar", `${API_HOST}/media/chats/c/m/x.bin`, "text/plain", 2048),
+            fileName: "release-notes-very-long-file-name.md",
+        };
+        render(<MessageAttachments attachments={[att]} messageId="m-1" />);
+        return screen.getByTestId("message-attachment-link-a-ar");
+    };
+
+    it("paints the chip from role tokens, not light-only literals (dark mode)", () => {
+        const style = one().getAttribute("style") ?? "";
+        expect(style).toContain("var(--g-hover)");
+        expect(style).toContain("var(--g-border)");
+        expect(style).toContain("var(--g-text)");
+        expect(style).not.toMatch(/#[0-9a-f]{3,6}/i);
+    });
+
+    it("keeps the file name an island, so RTL truncation cuts its END", () => {
+        const island = one().querySelector("bdi.g-bidi-island");
+        expect(island?.textContent).toBe("release-notes-very-long-file-name.md");
+    });
+
+    it("keeps the size left-to-right: '2 KB', not 'KB 2'", () => {
+        const size = one().querySelector('span[dir="ltr"]');
+        expect(size?.textContent).toBe("2 KB");
+    });
+});
+
 describe("MessageAttachments: Import as note", () => {
     const named = (id: string, fileName: string, mime = "application/octet-stream") => ({
         ...fakeAttachment(id, `${API_HOST}/media/chats/c/m/${"ab12".repeat(8)}.bin`, mime, 100),
