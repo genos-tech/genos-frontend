@@ -18,7 +18,7 @@ reason is in the notes below the table.
 | Priority             | Priority  | 優先度         | 优先级   | Prioridad    | Priorité      | प्राथमिकता | الأولوية                               |
 | Effort (task)        | Effort    | Effort         | 工作量   | Esfuerzo     | Effort        | प्रयास     | الجهد                                  |
 | Inbox                | Inbox     | 受信箱         | 收件箱   | Bandeja      | Réception     | इनबॉक्स    | الوارد                                 |
-| Schedule (recurring) | Schedule  | スケジュール   | 定时任务 | Programación | Planification | शेड्यूल    | الجدول الزمني                          |
+| Schedule (recurring) | Schedule  | スケジュール   | 定时任务 | Programación | Planification | शेड्यूल    | جدول زمني                              |
 | To-Do (feature)      | To-Do     | To-Do          | 待办事项 | Por hacer    | À faire       | टू-डू      | مهام اليوم (rail), قائمة المهام (pane) |
 | Note                 | Note      | ノート         | 笔记     | Nota         | Note          | नोट        | ملاحظة                                 |
 | Thread               | Thread    | スレッド       | 话题     | Hilo         | Fil           | थ्रेड      | موضوع                                  |
@@ -52,7 +52,8 @@ webhook ids, tool ids (`create_task`), shortcuts.
 - **Japanese note is `ノート`** (the sidebar's word); `メモ` is kept only for "meeting notes"
   and for the task's own notes field. Inbox is `受信箱` (not `受信トレイ`). Effort stays
   `Effortレベル`, as the table column and the form already show it.
-- **Spanish To-Do is `Por hacer`** (an item is a `pendiente`). Sprint is never `carrera`.
+- **Spanish To-Do is `Por hacer`** (an item is a `pendiente`). Sprint is never `carrera`. The rail says `Bandeja` for the inbox (its width budget);
+  sentences say `bandeja de entrada`.
   A recurring schedule is a `programación`; `horario` is only for hours of the day (quiet
   hours).
 - **French milestone is `jalon`** (never `étape`, which is a step). A recurring schedule is a

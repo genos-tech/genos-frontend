@@ -37,45 +37,36 @@ const leaves = (node: unknown, prefix = "", out: Record<string, string> = {}) =>
 };
 
 /**
- * The argument names of an ICU message: `{name}` and `{count, plural, ...}`, including the
- * ones nested inside a branch. The words of a branch body (`one {# day}`) are text, so a
- * translation may reword them freely.
+ * What the runtime formatter (`fmt` in i18n/interpolate.ts) understands, copied so a
+ * translation that would render as raw ICU text fails here: a plural is exactly
+ * `{name, plural, one {..} other {..}}` with no nesting inside a branch.
  */
+const PLURAL = /\{(\w+),\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\}\}/g;
+
+/** The arguments of a message: plural counts and plain `{name}`s (a set: a translation may repeat or drop a repeat). */
 const placeholders = (s: string): string[] => {
     const names = new Set<string>();
-    const body = (i: number, inBranch: boolean): number => {
-        while (i < s.length) {
-            if (s[i] === "{") i = argument(i + 1);
-            else if (s[i] === "}" && inBranch) return i;
-            else i++;
-        }
-        return i;
-    };
-    const argument = (start: number): number => {
-        let j = start;
-        while (j < s.length && s[j] !== "}" && s[j] !== ",") j++;
-        names.add(s.slice(start, j).trim());
-        if (s[j] === "}") return j + 1;
-        let k = j + 1;
-        while (k < s.length && s[k] !== "," && s[k] !== "}") k++;
-        const kind = s.slice(j + 1, k).trim();
-        if (s[k] === "}") return k + 1;
-        k++;
-        if (!/^(plural|select|selectordinal)$/.test(kind)) {
-            while (k < s.length && s[k] !== "}") k++;
-            return k + 1;
-        }
-        while (k < s.length) {
-            while (/\s/.test(s[k] ?? "")) k++;
-            if (s[k] === "}") return k + 1;
-            while (k < s.length && s[k] !== "{" && s[k] !== "}") k++; // the selector: one, other, =0
-            if (s[k] !== "{") return k + 1;
-            k = body(k + 1, true) + 1;
-        }
-        return k;
-    };
-    body(0, false);
+    const rest = s.replace(PLURAL, (_m, key: string) => {
+        names.add(key);
+        return "";
+    });
+    for (const m of rest.matchAll(/\{(\w+)\}/g)) names.add(m[1]);
     return [...names].sort();
+};
+
+/** Plurals the formatter cannot read (zero/two/few/many forms, nesting, a stray brace). */
+const unreadablePlural = (s: string): boolean => /plural\s*,/.test(s.replace(PLURAL, ""));
+
+/** Plural keys whose branches carry `#` (the number) in English: a translation must keep it in `other` (`one` may spell the singular out, as Arabic does). */
+const hashKeys = (s: string): string[] =>
+    [...s.matchAll(PLURAL)]
+        .filter((m) => m[2].includes("#") || m[3].includes("#"))
+        .map((m) => m[1]);
+const dropsHash = (en: string, tr: string): string[] => {
+    const keep = new Set(hashKeys(en));
+    return [...tr.matchAll(PLURAL)]
+        .filter((m) => keep.has(m[1]) && !m[3].includes("#"))
+        .map((m) => m[1]);
 };
 
 const EN = leaves(en);
@@ -134,6 +125,13 @@ describe("whole catalog: every locale has every English key", () => {
                 (k) => k in L && placeholders(L[k]).join() !== placeholders(EN[k]).join()
             ).map((k) => `${k}: en {${placeholders(EN[k])}} vs ${name} {${placeholders(L[k])}}`);
             expect(bad, `${name} changed placeholders`).toEqual([]);
+        });
+
+        it(`${name}: every plural is one/other, and keeps its # where English has one`, () => {
+            const bad = TRANSLATABLE.filter(
+                (k) => k in L && (unreadablePlural(L[k]) || dropsHash(EN[k], L[k]).length > 0)
+            );
+            expect(bad, `${name} has a plural the formatter cannot render`).toEqual([]);
         });
 
         it(`${name} has no key that English lacks`, () => {

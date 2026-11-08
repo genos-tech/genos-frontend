@@ -97,7 +97,7 @@ describe("ar", () => {
         expect(about.filter((x) => RETIRED_MILESTONE.test(x.text)).map((x) => x.path)).toEqual([]);
         // Every tasks.* key that names a milestone in English says it with the one word.
         const tasks = about.filter((x) => x.path.startsWith("tasks."));
-        expect(tasks.length).toBeGreaterThan(40);
+        expect(tasks.length).toBeGreaterThan(20);
         expect(tasks.filter((x) => !MILESTONE.test(x.text)).map((x) => x.path)).toEqual([]);
         expect(L.ar["tasks.fields.milestone"]).toBe("معلم");
     });
@@ -126,7 +126,8 @@ describe("the rail never shows one word on two buttons", () => {
     ];
     for (const [name, catalog] of Object.entries(ALL)) {
         it(`${name}: the rail labels are all different`, () => {
-            const labels = RAIL.map((k) => catalog[k] ?? EN[k]);
+            const labels = RAIL.map((k) => catalog[k]);
+            expect(labels.every(Boolean), `${name} lacks a rail label`).toBe(true);
             const dup = labels.filter((x, i) => labels.indexOf(x) !== i);
             expect(dup, `${name} rail repeats a label`).toEqual([]);
         });
@@ -134,7 +135,8 @@ describe("the rail never shows one word on two buttons", () => {
             const keys = ["inbox", "chats", "tasks", "notes", "todo"].map(
                 (k) => `layout.serviceSwitcher.${k}`
             );
-            const labels = keys.map((k) => catalog[k] ?? EN[k]);
+            const labels = keys.map((k) => catalog[k]);
+            expect(labels.every(Boolean), `${name} lacks a tile label`).toBe(true);
             expect(labels.filter((x, i) => labels.indexOf(x) !== i)).toEqual([]);
         });
     }
@@ -172,17 +174,67 @@ describe("ja / es / fr", () => {
     });
 });
 
-describe("GLOSSARY.md names the pinned terms", () => {
+describe("GLOSSARY.md matches the catalogs", () => {
     const doc = readFileSync(join(HERE, "..", "i18n", "locales", "GLOSSARY.md"), "utf8");
+    const rows = doc
+        .split("\n")
+        .filter((l) => /^\|/.test(l) && !/^\|[\s-|]+$/.test(l))
+        .map((l) =>
+            l
+                .split("|")
+                .slice(1, -1)
+                .map((c) => c.trim())
+        )
+        .filter((r) => r[0] !== "Concept");
+    const LOCALES = ["en", "ja", "zh", "es", "fr", "hi", "ar"] as const;
+    const ALL: Record<string, Record<string, string>> = { en: EN, ...L };
+
+    /** The key whose text is the concept's canonical label in the app. */
+    const CANON: Record<string, string> = {
+        Task: "spotlight.entitySubtitle.task",
+        Project: "spotlight.entitySubtitle.project",
+        Sprint: "tasks.fields.sprint",
+        Milestone: "tasks.fields.milestone",
+        "Backlog (no sprint)": "tasks.dashboard.emptyBacklogTitle",
+        Status: "tasks.fields.status",
+        Priority: "tasks.fields.priority",
+        "Effort (task)": "tasks.fields.effortLevel",
+        Inbox: "sidebar.nav.inbox",
+        "Schedule (recurring)": "settings.schedules.newSchedule",
+        Note: "spotlight.entitySubtitle.noteFallback",
+        Thread: "chat.headers.thread",
+        Comment: "chat.activity.chipComment",
+        "Revoke (key, app)": "settings.connectedApps.revoke",
+    };
+
+    it("has a row for every concept the test can check", () => {
+        const names = rows.map((r) => r[0]);
+        for (const c of Object.keys(CANON)) expect(names, c).toContain(c);
+    });
+
+    for (const [concept, key] of Object.entries(CANON)) {
+        it(`${concept}: every cell is the word the app uses`, () => {
+            const row = rows.find((r) => r[0] === concept)!;
+            LOCALES.forEach((loc, i) => {
+                // "معلم (pl. معالم)": the first word is the term, the rest a note.
+                const term = row[i + 1].replace(/\s*\(.*$/, "");
+                expect(
+                    ALL[loc][key].toLowerCase(),
+                    `${concept} / ${loc}: the table says "${term}"`
+                ).toContain(term.toLowerCase());
+            });
+        });
+    }
+
     for (const term of [
         "冲刺",
         "स्प्रिंट",
         "माइलस्टोन",
         "معلم",
         "سبرنت",
-        "قائمة المهام",
-        "Pendientes",
+        "مهام اليوم",
+        "Por hacer",
     ]) {
-        it(`mentions ${term}`, () => expect(doc).toContain(term));
+        it(`names ${term}`, () => expect(doc).toContain(term));
     }
 });

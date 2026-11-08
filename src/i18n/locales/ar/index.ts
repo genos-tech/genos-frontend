@@ -191,7 +191,7 @@ export const ar: DeepPartial<Messages> = {
             blockNoteImage: "صورة ‏‎BlockNote‎‏",
             alertBlock: "يُحذًِر",
             mentionYou: "أنت",
-            mentionMemberCount: "{count, plural, one {#عضو} other {#أعضاء}}",
+            mentionMemberCount: "{count, plural, one {عضو واحد} other {# أعضاء}}",
             mentionGroupFallback: "مجموعة",
             mentionPerson: "شخص",
             mentionGroupLabel: "مجموعة",
@@ -1746,7 +1746,7 @@ export const ar: DeepPartial<Messages> = {
             body: {
                 mentionsYou: "يذكرك",
                 mentionsUser: "الإشارات {name}",
-                groupMembers: "{count, plural, one {#عضو} other {#أعضاء}}",
+                groupMembers: "{count, plural, one {عضو واحد} other {# أعضاء}}",
             },
         },
     },
