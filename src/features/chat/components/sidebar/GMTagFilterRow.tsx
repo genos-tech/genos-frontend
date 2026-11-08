@@ -186,7 +186,7 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                         >
                             {colorDot(tag)}
                             <Typography level="body-xs" sx={chipLabelSx(isActive)}>
-                                {tag.name}
+                                <bdi className="g-bidi-island">{tag.name}</bdi>
                             </Typography>
                         </Clickable>
                     );
@@ -248,7 +248,7 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                             >
                                 {colorDot(tag, 10)}
                                 <Typography level="body-sm" sx={{ flex: 1 }} noWrap>
-                                    {tag.name}
+                                    <bdi className="g-bidi-island">{tag.name}</bdi>
                                 </Typography>
                                 {/* Pin toggle = "show this chip by
                                         default". Stop propagation so it
