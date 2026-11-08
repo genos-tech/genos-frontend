@@ -52,6 +52,10 @@ import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMileston
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
 
+// What `UrlLinkModal`'s floating chrome takes from the top-right corner of its dialog:
+// 12px from the edge + a 36px Close + 8px + a 36px "Move to page", plus a little air.
+const MODAL_CHROME_CLEARANCE = "112px";
+
 type TaskTitleBlockProps = {
     myself: UserProps;
     taskContent: TaskProps;
@@ -361,6 +365,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // on its own line instead of off the screen.
                     flexWrap: { xs: "wrap", md: "nowrap" },
                     rowGap: 1,
+                    // Hosted in `UrlLinkModal`, the dialog floats its own "Move to page" and
+                    // Close over this corner (right 12, two 36px buttons, 8px apart): keep
+                    // the header's own actions out from under them (MIP-1169).
+                    ...(isModalHosted && { pr: MODAL_CHROME_CLEARANCE }),
                 }}
             >
                 {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
@@ -833,32 +841,36 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             );
                         })()}
 
-                    <AppTooltip title={t.tasks.titleBlock.closeTooltip}>
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                background: styles.dangerBg,
-                                border: `1px solid ${styles.dangerBorder}`,
-                                borderRadius: "10px",
-                                width: "36px",
-                                height: "36px",
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.dangerHover,
-                                    transform: "translateY(-1px)",
-                                },
-                            }}
-                            onClick={handleCloseClick}
-                        >
-                            <CancelIcon
+                    {/* In a modal the dialog's own ✕ closes; a second Close stacked
+                        under it was the overlap (MIP-1169). */}
+                    {!isModalHosted && (
+                        <AppTooltip title={t.tasks.titleBlock.closeTooltip}>
+                            <IconButton
+                                size="sm"
+                                variant="plain"
                                 sx={{
-                                    fontSize: "20px",
-                                    color: isDark ? "#f87171" : "#dc2626",
+                                    background: styles.dangerBg,
+                                    border: `1px solid ${styles.dangerBorder}`,
+                                    borderRadius: "10px",
+                                    width: "36px",
+                                    height: "36px",
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: styles.dangerHover,
+                                        transform: "translateY(-1px)",
+                                    },
                                 }}
-                            />
-                        </IconButton>
-                    </AppTooltip>
+                                onClick={handleCloseClick}
+                            >
+                                <CancelIcon
+                                    sx={{
+                                        fontSize: "20px",
+                                        color: isDark ? "#f87171" : "#dc2626",
+                                    }}
+                                />
+                            </IconButton>
+                        </AppTooltip>
+                    )}
                 </Box>
             </Stack>
 
