@@ -74,6 +74,17 @@ describe("UserAvatar with a profile that has not loaded", () => {
         expect(letters(container)).toBe("B");
     });
 
+    it("a profile with no name keeps the row's printed name ahead of the email", () => {
+        const noName = { ...person("u-9", ""), userEmail: "xyz@example.com" };
+        const { container } = render(
+            inCtx(
+                { "u-9": noName },
+                <UserAvatar fallbackName="Dan OConnor" showPulseDot={false} userId="u-9" />
+            )
+        );
+        expect(letters(container)).toBe("D");
+    });
+
     it("an explicit fallbackInitial (a chat's own letter) still wins over both", () => {
         const { container } = render(
             inCtx(
@@ -115,6 +126,28 @@ describe("the surfaces that print a name beside the avatar", () => {
             )
         );
         expect(letters(container)).toBe("C");
+    });
+
+    it("a non-DM chat row does not read dmPartnerUser", () => {
+        const chat = { chatId: "c2", chatType: 4, mdmMembers: [] } as unknown as AllChatProps;
+        expect(() =>
+            render(
+                inCtx(
+                    {},
+                    <ChatListItemAvatar
+                        chat={chat}
+                        chatType={4}
+                        isYou={false}
+                        myself={me}
+                        setMyself={() => {}}
+                        socket={null}
+                        useCM={{} as never}
+                        useTEM={{ teamMemberProfiles: {} } as never}
+                        useUISM={{} as never}
+                    />
+                )
+            )
+        ).not.toThrow();
     });
 
     it("a task card's assignee shows the stored name's initial before the roster has loaded", () => {

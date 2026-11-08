@@ -34,7 +34,7 @@ type UserAvatarProps = {
     /**
      * Optional initial override (e.g. chat-name initials in GM/PM bubbles
      * where the avatar represents the chat itself, not a single user).
-     * When unset, falls back to the user's name -> email -> `fallbackName` -> "?".
+     * When unset, falls back to the user's name -> `fallbackName` -> email -> "?".
      */
     fallbackInitial?: string;
     /**
@@ -65,7 +65,7 @@ const buildInitial = (
     userEmail: string | undefined,
     fallbackName: string | null | undefined
 ): string => {
-    const candidates = [fallbackInitial, userName, userEmail, fallbackName];
+    const candidates = [fallbackInitial, userName, fallbackName, userEmail];
     for (const candidate of candidates) {
         if ((candidate ?? "").trim().length > 0) return initialOf(candidate);
     }
