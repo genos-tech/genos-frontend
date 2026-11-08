@@ -1873,12 +1873,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     value={sprintFilterButtonLabel}
                                 />
                             </AppTooltip>
-                            <FilterMenu
-                                isDark={isDark}
-                                maxHeight="320px"
-                                minWidth="220px"
-                                styles={styles}
-                            >
+                            <FilterMenu maxHeight="320px" minWidth="220px">
                                 {([SPRINT_ALL, SPRINT_NONE] as SprintFilterKey[]).map((key) => {
                                     const isSelected = selectedSprintKeys.some((k) => k === key);
                                     const label =
@@ -2076,12 +2071,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }
                                 />
                             </AppTooltip>
-                            <FilterMenu
-                                isDark={isDark}
-                                maxHeight="320px"
-                                minWidth="220px"
-                                styles={styles}
-                            >
+                            <FilterMenu maxHeight="320px" minWidth="220px">
                                 {([MILESTONE_ALL, MILESTONE_NONE] as MilestoneFilterKey[]).map(
                                     (key) => {
                                         const isSelected = selectedMilestoneKeys.some(
@@ -2354,7 +2344,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }
                                 />
                             </AppTooltip>
-                            <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
+                            <FilterMenu minWidth="160px">
                                 {predefinedStatusFilters.map((status) => {
                                     const isSelected = selectedStatus.some(
                                         (items) => items.label === status.label
@@ -2449,12 +2439,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     value={filterLabel(selectedTags[0])}
                                 />
                             </AppTooltip>
-                            <FilterMenu
-                                isDark={isDark}
-                                maxHeight="300px"
-                                minWidth="160px"
-                                styles={styles}
-                            >
+                            <FilterMenu maxHeight="300px" minWidth="160px">
                                 {predefinedTagsFilters.map((tag) => {
                                     const isSelected = selectedTags.some(
                                         (items) => items.label === tag.label
@@ -2551,7 +2536,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             }
                         />
                     </AppTooltip>
-                    <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
+                    <FilterMenu minWidth="160px">
                         {predefinedPriorityFilters.map((priority) => {
                             const isSelected = selectedPriorities.some(
                                 (items) => items.label === priority.label
@@ -2655,7 +2640,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }
                                 />
                             </AppTooltip>
-                            <FilterMenu isDark={isDark} minWidth="160px" styles={styles}>
+                            <FilterMenu minWidth="160px">
                                 {predefinedEffortLevelFilters.map((effortLevel) => {
                                     const isSelected = selectedEffortLevels.some(
                                         (items) => items.label === effortLevel.label
@@ -2782,12 +2767,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     }
                                 />
                             </AppTooltip>
-                            <FilterMenu
-                                isDark={isDark}
-                                maxHeight="320px"
-                                minWidth="220px"
-                                styles={styles}
-                            >
+                            <FilterMenu maxHeight="320px" minWidth="220px">
                                 {([MEMBER_ALL, MEMBER_NONE] as MemberFilterKey[]).map((key) => {
                                     const isSelected = selectedMemberKeys.some((k) => k === key);
                                     const label =
