@@ -30,11 +30,8 @@ import {
 import type { SxProps } from "@mui/joy/styles/types";
 
 import { MenuRow, MenuSurface, type MenuRowProps } from "../../../../components/ui/MoreMenu";
-import type { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { fmt } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
-
-type FilterBarStyles = (typeof TaskFilterMenuStyles)["dark"];
 
 /** Wraps a trigger (`MenuButton`) and its `FilterMenu`; `open` is the parent's state. */
 export const FilterDropdown = ({
@@ -51,12 +48,7 @@ export const FilterDropdown = ({
     </Dropdown>
 );
 
-/**
- * The bar's dropdown surface: the shared menu surface (MIP-1128). The look comes
- * from the tokens; `isDark` and `styles` are accepted only so the call sites in
- * `TaskFilterMenu` / `SavedFiltersMenu` keep compiling (that file is mid-rework),
- * and are dropped from them as they are touched.
- */
+/** The bar's dropdown surface: the shared menu surface (MIP-1128); the look comes from the tokens. */
 export const FilterMenu = ({
     minWidth,
     // Material's Menu defaulted to the viewport minus a margin.
@@ -64,10 +56,6 @@ export const FilterMenu = ({
     placement = "bottom-start",
     children,
 }: {
-    /** @deprecated unused: the surface follows the theme through tokens. */
-    isDark?: boolean;
-    /** @deprecated unused: the surface follows the theme through tokens. */
-    styles?: FilterBarStyles;
     minWidth: number | string;
     maxHeight?: number | string;
     placement?: "bottom-start" | "bottom-end";

@@ -14,7 +14,6 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { TaskFilterMenuStyles } from "../components/ui/styles/commonStyle";
 import {
     FilterDropdown,
     FilterMenu,
@@ -33,12 +32,7 @@ const Harness = ({
         <CssVarsProvider>
             <FilterDropdown open={open} onOpenChange={setOpen}>
                 <MenuButton>Status</MenuButton>
-                <FilterMenu
-                    isDark={false}
-                    maxHeight={200}
-                    minWidth={160}
-                    styles={TaskFilterMenuStyles.light}
-                >
+                <FilterMenu maxHeight={200} minWidth={160}>
                     <FilterMenuItem
                         onClick={() => {
                             onPick();

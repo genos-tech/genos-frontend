@@ -319,7 +319,7 @@ export const SavedFiltersMenu = ({
                 </FilterIconMenuButton>
             </AppTooltip>
 
-            <FilterMenu isDark={isDark} maxHeight="340px" minWidth="260px" styles={styles}>
+            <FilterMenu maxHeight="340px" minWidth="260px">
                 {isLoading && saved.length === 0 && <SkeletonRows count={3} label={ts.loading} />}
 
                 {!isLoading && saved.length === 0 && (
