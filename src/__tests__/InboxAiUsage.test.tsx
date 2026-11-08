@@ -369,6 +369,21 @@ describe("AiUsageFooter", () => {
         expect(onRow).not.toHaveBeenCalled();
     });
 
+    it("a click anywhere in the footer, not only on a button, does not open the item", () => {
+        // The footer is an event boundary, not a control (the clickable-element guard, MIP-1129,
+        // accepts it because its whole handler is `stopPropagation()`): the cost line and the
+        // empty space beside the button must not open the row either.
+        const onRow = vi.fn();
+        const { container } = render(tree(<div onClick={onRow}>{footer(digest())}</div>));
+        fireEvent.click(container.querySelector("[data-ai-usage-cost]") as HTMLElement);
+        expect(onRow).not.toHaveBeenCalled();
+        fireEvent.click(container.querySelector("[data-ai-usage]") as HTMLElement);
+        expect(onRow).not.toHaveBeenCalled();
+        // And the row itself still opens, so the test can fail: only the footer is a boundary.
+        fireEvent.click(container.firstElementChild as HTMLElement);
+        expect(onRow).toHaveBeenCalledTimes(1);
+    });
+
     it("every card of the same source agrees, and another source is untouched", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
         const other = digest({ itemId: 813 });
