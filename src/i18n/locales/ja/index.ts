@@ -4759,7 +4759,7 @@ export const ja: DeepPartial<Messages> = {
                 created: "これを作成しました",
                 titleChanged: "これをから名前変更しました",
                 statusChanged: "～からステータスを変更しました",
-                priorityChanged: "優先順位をから変更しました",
+                priorityChanged: "～から優先度を変更しました",
                 effortChanged: "～からのEffortレベルを変更",
                 assigneeChanged: "から再割り当てされました",
                 reporterChanged: "から報告者を変更しました",

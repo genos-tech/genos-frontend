@@ -43,11 +43,11 @@ webhook ids, tool ids (`create_task`), shortcuts.
   Spanish: `Por hacer` (the pane's own title; `Pendientes` was too wide). The label is the same in
   the rail, the service switcher and Settings > Sidebar (`serviceSwitcherTodoLocales.test.ts`).
 - **Chinese sprint is `冲刺`** (the Scrum term; `短跑` is a footrace and the file's earlier
-  `迭代` was a software "iteration"). `状态` is status (`地位` is social standing). Effort is
-  `工作量`, never `努力`/`努力程度`. Backlog is `待办清单` and To-Do is `待办`/`待办事项`:
+  `迭代` was a software "iteration"). `状态` is status (`地位` is social standing). Task effort is
+  `工作量`, never `努力`/`努力程度`; the AI's own effort setting (Settings > Genos) is `推理强度`. Backlog is `待办清单` and To-Do is `待办`/`待办事项`:
   they sit close in Chinese, so keep the `清单` on the backlog.
 - **Hindi sprint is `स्प्रिंट`**, milestone `माइलस्टोन` (not `मील का पत्थर`), status `स्थिति`
-  (not `स्टेटस`), effort `प्रयास` (not `मेहनत`). `टिप्पणी` is a comment (older strings still say `कमेंट`: either reads fine, prefer `टिप्पणी`);
+  (not `स्टेटस`), effort `प्रयास` (not `मेहनत`). `टिप्पणी` is a comment, everywhere (`कमेंट` was retired);
   a **note** is `नोट` (never `टिप्पणी`).
 - **Japanese note is `ノート`** (the sidebar's word); `メモ` is kept only for "meeting notes"
   and for the task's own notes field. Inbox is `受信箱` (not `受信トレイ`). Effort stays

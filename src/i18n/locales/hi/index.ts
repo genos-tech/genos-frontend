@@ -248,8 +248,8 @@ export const hi: DeepPartial<Messages> = {
             emojiTypingHint: ":+टाइपिंग",
             emojiGroup: "इमोजी",
             teamEmojiGroup: "टीम इमोजी",
-            loadingComments: "कमेंट लोड हो रहे हैं…",
-            couldNotLoadComments: "कमेंट लोड नहीं हो सके।",
+            loadingComments: "टिप्पणी लोड हो रहे हैं…",
+            couldNotLoadComments: "टिप्पणी लोड नहीं हो सके।",
             commentsSidebar: {
                 title: "टिप्पणियाँ",
                 titleWithCount: "टिप्पणियाँ ({count})",
@@ -637,7 +637,7 @@ export const hi: DeepPartial<Messages> = {
         account: {
             exportHeading: "अपना डेटा एक्सपोर्ट करें",
             exportDescription:
-                "आपने जो कुछ बनाया है — प्रोफ़ाइल, नोट्स, टूडू, टास्क, संदेश और कमेंट — उसे JSON फ़ाइल में डाउनलोड करें। दूसरों द्वारा लिखी गई टीम सामग्री शामिल नहीं है।",
+                "आपने जो कुछ बनाया है — प्रोफ़ाइल, नोट्स, टूडू, टास्क, संदेश और टिप्पणी — उसे JSON फ़ाइल में डाउनलोड करें। दूसरों द्वारा लिखी गई टीम सामग्री शामिल नहीं है।",
             exportButton: "मेरा डेटा डाउनलोड करें",
             activityHeading: "आपकी सुरक्षा गतिविधि",
             activityDescription:
@@ -855,7 +855,7 @@ export const hi: DeepPartial<Messages> = {
             description:
                 "बबल: लेखक के अनुसार संरेखित लचीली-चौड़ाई वाले गुब्बारे (मौजूदा)। कॉम्पैक्ट: पूरी चौड़ाई वाली चौकोर पंक्तियाँ, लेखक बाईं ओर (Slack-स्टाइल)।",
             styleLabel: "स्टाइल",
-            styleHelper: "चैट, थ्रेड और टास्क कमेंट पर तुरंत लागू होता है।",
+            styleHelper: "चैट, थ्रेड और टास्क टिप्पणी पर तुरंत लागू होता है।",
             styleBubble: "बबल",
             styleCompact: "कॉम्पैक्ट",
         },
@@ -883,7 +883,7 @@ export const hi: DeepPartial<Messages> = {
         messageActions: {
             heading: "मेसेज कार्रवाइयाँ",
             description:
-                "वे कार्रवाइयाँ जो चैट मेसेज और थ्रेड जवाबों के होवर टूलबार पर रहेंगी, … मेन्यू के पीछे नहीं। टास्क कमेंट पर इसका असर नहीं पड़ता।",
+                "वे कार्रवाइयाँ जो चैट मेसेज और थ्रेड जवाबों के होवर टूलबार पर रहेंगी, … मेन्यू के पीछे नहीं। टास्क टिप्पणी पर इसका असर नहीं पड़ता।",
             limit: "अधिकतम {max} चुनें। बाकी … मेन्यू में रहेंगी।",
             reset: "रीसेट करें",
         },
@@ -900,7 +900,7 @@ export const hi: DeepPartial<Messages> = {
             description: "मेसेज बबल पर डबल-क्लिक करने पर क्या हो, यह चुनें।",
             toggleLabel: "डबल-क्लिक से मेसेज को To-Do में जोड़ें",
             toggleHelper:
-                "इसे बंद करें ताकि डबल-क्लिक से टेक्स्ट चुना जा सके। चैट मेसेज, थ्रेड मेसेज और टास्क कमेंट पर लागू होता है।",
+                "इसे बंद करें ताकि डबल-क्लिक से टेक्स्ट चुना जा सके। चैट मेसेज, थ्रेड मेसेज और टास्क टिप्पणी पर लागू होता है।",
         },
         spotlight: {
             heading: "Genos के जवाब",
@@ -1502,7 +1502,7 @@ export const hi: DeepPartial<Messages> = {
         activity: {
             aggregatedEarlier: "+{count} पहले इस विषय पर",
             aggregatedNew: "+{count} नई, आपके पिछली बार देखने के बाद",
-            chipTaskComment: "टास्क कमेंट",
+            chipTaskComment: "टास्क टिप्पणी",
             chipReply: "जवाब",
             chipReaction: "रिएक्शन",
             chipMention: "मेंशन",
@@ -1552,7 +1552,7 @@ export const hi: DeepPartial<Messages> = {
         },
         threadTabs: {
             ariaLabel: "थ्रेड के खंड",
-            comments: "कमेंट",
+            comments: "टिप्पणी",
             activities: "गतिविधियाँ",
         },
         bubble: {
@@ -1563,7 +1563,7 @@ export const hi: DeepPartial<Messages> = {
         },
         messageActions: {
             openTask: "टास्क खोलें",
-            addCommentToTask: "टास्क में कमेंट जोड़ें",
+            addCommentToTask: "टास्क में टिप्पणी जोड़ें",
             replyInThread: "थ्रेड में जवाब दें",
             flagForLater: "बाद के लिए फ्लैग करें",
             removeFlag: "फ्लैग हटाएँ",
@@ -2506,7 +2506,7 @@ export const hi: DeepPartial<Messages> = {
         },
         tabs: {
             ariaLabel: "टास्क टैब",
-            comments: "कमेंट",
+            comments: "टिप्पणी",
             notes: "नोट",
             attachments: "अटैचमेंट",
             activity: "गतिविधि",
@@ -3705,13 +3705,13 @@ export const hi: DeepPartial<Messages> = {
         },
         badges: {
             thread: "थ्रेड",
-            comment: "कमेंट",
+            comment: "टिप्पणी",
         },
         chip: {
-            taskComment: "{subtitle} {id} कमेंट{sep}",
+            taskComment: "{subtitle} {id} टिप्पणी{sep}",
             taskPlain: "{subtitle} {id}{sep}",
             milestone: "{subtitle}{sep}",
-            milestoneComment: "{subtitle} कमेंट{sep}",
+            milestoneComment: "{subtitle} टिप्पणी{sep}",
             chatThread: "{subtitle} थ्रेड{sep}",
             chatPlain: "{subtitle}{sep}",
             noteThread: "{subtitle} (थ्रेड){sep}",
@@ -3981,7 +3981,7 @@ export const hi: DeepPartial<Messages> = {
                 chats: "चैट",
                 threadReplies: "थ्रेड के जवाब",
                 mentions: "मेंशन",
-                taskComments: "टास्क कमेंट",
+                taskComments: "टास्क टिप्पणी",
                 comments: "टिप्पणियाँ",
                 inbox: "इनबॉक्स",
                 mentionChat: "एक चैट संदेश में",
@@ -4001,7 +4001,7 @@ export const hi: DeepPartial<Messages> = {
                 mentionTask: "टास्क में मेंशन",
                 mentionNote: "नोट में मेंशन",
                 threadReplies: "थ्रेड के जवाब",
-                taskComments: "टास्क कमेंट",
+                taskComments: "टास्क टिप्पणी",
                 inbox: "अनुरोध और सूचनाएँ",
                 chats: "सभी चैट संदेश",
                 reactions: "रिएक्शन",
@@ -4058,7 +4058,7 @@ export const hi: DeepPartial<Messages> = {
                     threadReplies:
                         "किसी भी मेसेज के नीचे पोस्ट किए गए जवाब जिन्हें आप देख सकते हैं।",
                     mentions: "जब कोई आपको @-मेंशन करे।",
-                    taskComments: "जिन टास्क में आप शामिल हैं उन पर नए कमेंट।",
+                    taskComments: "जिन टास्क में आप शामिल हैं उन पर नए टिप्पणी।",
                     comments:
                         "आपके स्वामित्व वाले या जिन तक आपकी पहुँच है, ऐसे टास्क विवरण और नोट्स पर नई टिप्पणियाँ।",
                     inbox: "जॉइन अनुरोध, स्वीकृतियाँ और अन्य इनबॉक्स आइटम।",
@@ -4113,7 +4113,7 @@ export const hi: DeepPartial<Messages> = {
                 threadReplyTitle: "{senderName} ने {parentLabel} में जवाब दिया",
                 mentionTitle: "{senderName} ने आपको {subjectLabel} में मेंशन किया",
                 mentionTitleByBot: "{subjectLabel} में आपका मेंशन हुआ",
-                taskCommentTitle: "{senderName} ने एक टास्क पर कमेंट किया",
+                taskCommentTitle: "{senderName} ने एक टास्क पर टिप्पणी किया",
                 commentTitle: "{senderName} ने टिप्पणी की",
                 activityProjectLabel: "प्रोजेक्ट • {projectName}",
                 inboxFallback: "नया इनबॉक्स आइटम",

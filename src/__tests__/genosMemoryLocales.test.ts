@@ -124,7 +124,7 @@ describe("the Spotlight -> Genos rename", () => {
         ja: "Effort",
         es: "esfuerzo",
         fr: "effort",
-        zh: "努力",
+        zh: "推理强度",
         ar: "جهد",
         hi: "कोशिश",
     } as const;

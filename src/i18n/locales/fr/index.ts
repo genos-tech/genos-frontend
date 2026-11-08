@@ -2222,7 +2222,7 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     history: {
-        title: "Histoire",
+        title: "Historique",
         close: "Fermer l'historique",
         tabs: {
             chats: "Discussions",
@@ -4039,7 +4039,7 @@ export const fr: DeepPartial<Messages> = {
         },
         actions: {
             todo: "À faire",
-            history: "Histoire",
+            history: "Archives",
             settings: "Réglages",
             signOut: "Quitter",
         },
@@ -4151,7 +4151,7 @@ export const fr: DeepPartial<Messages> = {
             answeredIn: "Répondu en {duration}",
         },
         history: {
-            header: "Histoire",
+            header: "Historique",
             detailHeader: "Conversation passée",
             openTooltip: "Afficher les conversations passées",
             closeTooltip: "Fermer l'historique",
