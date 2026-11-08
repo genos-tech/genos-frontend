@@ -28,8 +28,8 @@ export const splitPinned = <
     all: T[],
     pinned: readonly string[]
 ): { pinnedItems: T[]; menuItems: T[] } => {
-    // Ordered here, not left to `MoreMenu`: the pinned buttons never reach it,
-    // and the thread bubble's menu is not a `MoreMenu`.
+    // Ordered here as well as in `MoreMenu`: the pinned buttons never reach it,
+    // and they must follow the menu's own order.
     const shown = orderMoreMenuItems(all);
     return {
         // Pinned buttons follow the menu's own order, whatever order was stored.

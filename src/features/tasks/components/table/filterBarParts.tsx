@@ -1,8 +1,7 @@
-// The three small parts every dropdown in the task filter bar is built from
-// (MIP-1121). They are Joy `Dropdown` / `MenuButton` around the shared
-// `MenuSurface` / `MenuRow` (MIP-1128), so the filter menus no longer need a Material `Menu` + `Fade` slot
-// (which crashed under the Joy theme alone, see `SavedFiltersMenu`'s history)
-// nor the Material `ThemeProvider` around the table.
+// The small parts every dropdown in the task filter bar is built from (MIP-1121):
+// a Joy `Dropdown` / `MenuButton` trigger around the shared `MenuSurface` /
+// `MenuRow` (MIP-1128), so the filter menus need neither a Material `Menu` nor
+// the Material `ThemeProvider` around the table.
 //
 // Each menu is `open` state in the parent, with the trigger a `MenuButton` inside
 // `FilterDropdown`. The Dropdown, not the trigger's own onClick, flips it: a
@@ -53,9 +52,10 @@ export const FilterDropdown = ({
 );
 
 /**
- * The bar's dropdown surface: the shared menu surface (MIP-1128). `isDark` and `styles`
- * stay in the props so the callers do not change, but the look now comes from the
- * tokens, not from `TaskFilterMenuStyles`.
+ * The bar's dropdown surface: the shared menu surface (MIP-1128). The look comes
+ * from the tokens; `isDark` and `styles` are accepted only so the call sites in
+ * `TaskFilterMenu` / `SavedFiltersMenu` keep compiling (that file is mid-rework),
+ * and are dropped from them as they are touched.
  */
 export const FilterMenu = ({
     minWidth,
