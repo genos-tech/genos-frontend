@@ -1506,6 +1506,9 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     common: {
+        searchField: {
+            clear: "Effacer la recherche",
+        },
         feedback: {
             loading: "Chargement…",
             toast: {

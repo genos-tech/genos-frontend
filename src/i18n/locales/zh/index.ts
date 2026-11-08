@@ -1433,6 +1433,9 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     common: {
+        searchField: {
+            clear: "清除搜索",
+        },
         feedback: {
             loading: "加载中…",
             toast: {

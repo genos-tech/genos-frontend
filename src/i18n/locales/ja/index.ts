@@ -1486,6 +1486,9 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     common: {
+        searchField: {
+            clear: "検索をクリア",
+        },
         feedback: {
             loading: "読み込み中…",
             toast: {
