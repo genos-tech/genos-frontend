@@ -231,12 +231,12 @@ const renderGraph = (overview: ScheduleOverview) => {
     return wrap(
         <ModalTaskDiagram
             myself={{ userId: "u1", teamId: "t1" } as never}
-            open
             projectId={1}
             rootLabel="KDS-5 · Five"
             rootTaskId={5}
             usePM={{} as never}
             useTM={{} as never}
+            open
             onClose={vi.fn()}
         />
     );
@@ -343,8 +343,11 @@ describe("the files stay on the shared pieces", () => {
     });
 
     it("the dashboard status bars read the tone source, with no literal color", () => {
-        const text = strip(source("features/tasks/components/dashboard/TaskHomeContent.tsx"));
-        expect(text).toContain("toneCss(STATUS_TONE[status])");
+        const text = strip(
+            source("features/tasks/components/dashboard/TaskHomeContent.tsx")
+        ).replace(/\s+/g, "");
+        expect(text).toContain("toneSolid(STATUS_TONE[status])");
+        expect(text).toContain("toneCss(STATUS_TONE[cell.key])");
         // The per-status count cell and the status card are not Chips or washes.
         expect(text).not.toMatch(/sc\.(bg|text)/);
     });

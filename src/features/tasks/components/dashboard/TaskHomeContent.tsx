@@ -63,7 +63,7 @@ import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { isDeletedUser } from "../../../../utils/teamRoster";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
-import { STATUS_TONE, toneCss } from "../../meta/taskTone";
+import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
@@ -221,10 +221,11 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
 // selector also feeds the sidebar's live list, the task filter menu and the
 // milestone picker, which all keep Closed milestones that have no sprint or
 // sit in an active/upcoming sprint.
-// A status bar segment / legend swatch: the tone's color, from the one tone
-// source (`taskTone`), so a status reads the same here as in the table.
+// A status bar segment / legend swatch: the tone's solid fill (a graphic, not
+// text), from the one tone source (`taskTone`), so a status reads the same here
+// as in the table. Icons and words use the `toneCss` text role instead.
 const statusColor = (status: keyof typeof STATUS_TONE): string =>
-    toneCss(STATUS_TONE[status]).text;
+    toneSolid(STATUS_TONE[status]).bg;
 
 const isOngoingMilestone = (m: Milestone): boolean => m.status !== "Closed";
 
@@ -3768,13 +3769,19 @@ export const TaskHomeContent = ({
                                                                                     color: textPrimary,
                                                                                     // Joy icons color from --Icon-color.
                                                                                     "--Icon-color":
-                                                                                        statusColor(
-                                                                                            cell.key
-                                                                                        ),
+                                                                                        toneCss(
+                                                                                            STATUS_TONE[
+                                                                                                cell
+                                                                                                    .key
+                                                                                            ]
+                                                                                        ).text,
                                                                                     "& > svg": {
-                                                                                        color: statusColor(
-                                                                                            cell.key
-                                                                                        ),
+                                                                                        color: toneCss(
+                                                                                            STATUS_TONE[
+                                                                                                cell
+                                                                                                    .key
+                                                                                            ]
+                                                                                        ).text,
                                                                                     },
                                                                                     ...type(
                                                                                         "body-sm"
