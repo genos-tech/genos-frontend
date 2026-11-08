@@ -11,6 +11,26 @@ import { dueDisplay } from "./due";
 import { AssigneeAvatar, DueText, MilestoneFlag, TagStrip, TaskIdText, TaskTitle } from "./parts";
 import type { TaskCardTask } from "./types";
 
+/** The task graph's highlight, one at a time: the card the preview was opened
+ *  from ("current"), a card just added from the graph ("new"), a card assigned
+ *  to the person the graph was opened for ("assigned"). Each is a border and a
+ *  halo in a role color, never a re-skin of the card. */
+export type CardEmphasis = "current" | "new" | "assigned";
+
+/** Left-edge urgency stripe: overdue is danger, due soon is warning. */
+export type CardStripe = "danger" | "warning";
+
+const EMPHASIS: Record<CardEmphasis, { border: string; halo: string; fill: string | null }> = {
+    current: { border: g.accent.solid, halo: g.accent.border, fill: g.accent.subtle },
+    new: { border: g.info.solid, halo: g.info.border, fill: g.info.subtle },
+    assigned: { border: g.warning.solid, halo: g.warning.border, fill: null },
+};
+
+const STRIPE: Record<CardStripe, string> = {
+    danger: g.danger.solid,
+    warning: g.warning.solid,
+};
+
 // DOM props are accepted only so a wrapping Tooltip can attach its hover and
 // focus handlers; there is no `sx`, `style` or `className`: a caller cannot
 // re-style the surface.
@@ -29,16 +49,44 @@ type FrameProps = Omit<
     onOpen?: () => void;
     /** Accessible name when `onOpen` makes the card a button. */
     label?: string;
+    /** A task-graph highlight. A `ghost` ignores it. */
+    emphasis?: CardEmphasis;
+    /** A read-only card from outside the tree (or another member's): dashed
+     *  border, slightly dimmed, no highlight and no stripe. */
+    ghost?: boolean;
+    /** The urgency stripe on the leading edge. A `ghost` ignores it. */
+    stripe?: CardStripe;
+    /** The root of the graph: a stronger border. */
+    prominent?: boolean;
+    /** A fixed width in px (a graph node). Default: fill the parent. */
+    width?: number;
+    /** `false`: the card itself is not a control (a graph node: its parts are),
+     *  so no pointer cursor and no pressed fill on a drag. Default `true`. */
+    clickable?: boolean;
 };
 
 /**
  * The card surface, and nothing else: flat, one border, `radius.md`, the
  * surface role. Hover only strengthens the border (no lift, no shadow); a
- * dragged card takes the medium shadow. Task cards, milestone cards and the
- * dashboard's milestone card all sit on this, so they cannot drift.
+ * dragged card takes the medium shadow. Task cards, milestone cards, the
+ * dashboard's milestone card and the task graph's nodes all sit on this, so
+ * they cannot drift.
  */
 export const TaskCardFrame = forwardRef<HTMLDivElement, FrameProps>(function TaskCardFrame(
-    { children, selected = false, dragging = false, onOpen, label, ...rest },
+    {
+        children,
+        selected = false,
+        dragging = false,
+        onOpen,
+        label,
+        emphasis,
+        ghost = false,
+        stripe,
+        prominent = false,
+        width,
+        clickable = true,
+        ...rest
+    },
     ref
 ) {
     const domProps = domPropsOf(rest);
@@ -57,34 +105,73 @@ export const TaskCardFrame = forwardRef<HTMLDivElement, FrameProps>(function Tas
               },
           }
         : null;
+    // A ghost is plain: no highlight and no stripe, whatever the caller passed.
+    const emph = ghost || selected ? undefined : emphasis;
+    const stripeTone = ghost ? undefined : stripe;
+    const look = emph ? EMPHASIS[emph] : null;
+    const edge = ghost
+        ? g.border.default
+        : selected
+          ? g.accent.border
+          : look
+            ? look.border
+            : prominent
+              ? g.border.strong
+              : g.border.default;
+    const hoverEdge = look ? look.border : selected ? g.accent.border : g.border.strong;
     return (
         <Box
             ref={ref}
             data-dragging={dragging || undefined}
+            data-emphasis={emph}
+            data-ghost={ghost || undefined}
+            data-prominent={prominent || undefined}
             data-selected={selected || undefined}
+            data-stripe={stripeTone}
             data-testid="task-card"
             sx={{
+                position: "relative",
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.75,
                 minWidth: 0,
+                width: width ?? undefined,
                 p: 1.5,
                 borderRadius: g.radius.md,
-                border: `1px solid ${selected ? g.accent.border : g.border.default}`,
+                border: `1px ${ghost ? "dashed" : "solid"} ${edge}`,
                 background: selected
                     ? g.accent.subtle
-                    : dragging
-                      ? g.surface.raised
-                      : g.surface.default,
-                boxShadow: dragging ? g.shadow.md : "none",
-                cursor: "pointer",
+                    : look?.fill
+                      ? look.fill
+                      : dragging
+                        ? g.surface.raised
+                        : g.surface.default,
+                boxShadow: dragging ? g.shadow.md : look ? `0 0 0 3px ${look.halo}` : "none",
+                opacity: ghost ? 0.92 : undefined,
+                cursor: clickable || ghost ? "pointer" : "default",
                 transition: dragging
                     ? "none"
-                    : `border-color ${g.motion.fast} ${g.ease}, background ${g.motion.fast} ${g.ease}`,
-                "&:hover": { borderColor: selected ? g.accent.border : g.border.strong },
-                "&:active": { background: selected ? g.accent.subtle : g.hover },
+                    : `border-color ${g.motion.fast} ${g.ease}, background ${g.motion.fast} ${g.ease}, opacity ${g.motion.fast} ${g.ease}`,
+                "&:hover": { borderColor: hoverEdge, ...(ghost ? { opacity: 1 } : {}) },
+                "&:active":
+                    clickable || ghost
+                        ? { background: selected ? g.accent.subtle : (look?.fill ?? g.hover) }
+                        : undefined,
                 "&:focus-visible": focusRing,
+                "&::before": stripeTone
+                    ? {
+                          content: '""',
+                          position: "absolute",
+                          insetInlineStart: 0,
+                          top: 8,
+                          bottom: 8,
+                          width: "3px",
+                          borderStartEndRadius: "3px",
+                          borderEndEndRadius: "3px",
+                          background: STRIPE[stripeTone],
+                      }
+                    : undefined,
             }}
             {...domProps}
             {...interactive}

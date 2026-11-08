@@ -7,7 +7,7 @@ import { PreviewTaskIdChip } from "../features/tasks/components/PreviewTaskIdChi
 const renderChip = (task: { displayId?: string | null; id?: number | string | null }) =>
     render(
         <CssVarsProvider>
-            <PreviewTaskIdChip isDark={false} task={task} />
+            <PreviewTaskIdChip task={task} />
         </CssVarsProvider>
     );
 
@@ -40,7 +40,7 @@ describe("PreviewTaskIdChip", () => {
             configurable: true,
         });
         const { getByRole } = renderChip({ displayId: "MIP-123", id: 99 });
-        // Joy puts a Chip's onClick on its inner action button, not the label.
+        // The id is a span with role=button (Tab, then Enter or Space also copies).
         fireEvent.click(getByRole("button"));
         expect(writeText).toHaveBeenCalledWith("MIP-123");
     });

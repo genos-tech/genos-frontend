@@ -44,7 +44,7 @@ import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { MultiMemberPicker } from "../../autocompletes/MultiMemberPicker";
-import { CopyableTaskIdChip } from "../../CopyableTaskId";
+import { TaskIdText } from "../../card";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
@@ -1242,16 +1242,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     myself.userId === parentTask.assignee.userId
                                 }
                             />
-                            <CopyableTaskIdChip
-                                size="sm"
-                                task={parentTask}
-                                variant="outlined"
-                                sx={{
-                                    fontFamily: "monospace",
-                                    fontWeight: 600,
-                                    borderRadius: "5px",
-                                }}
-                            />
+                            <TaskIdText task={parentTask} focusable />
                             <StatusChip isDark={isDark} meta={parentTask.status} />
                             <Typography
                                 level="body-sm"

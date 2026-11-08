@@ -2005,15 +2005,11 @@ export const TaskHomeContent = ({
 
                                     {/* ════════ Section A2: Sprint Milestones ════════ */}
                                     <SprintMilestonesSection
-                                        isDark={isDark}
                                         myself={myself}
                                         projectId={usePM.currentProject?.projectId}
                                         selectedSprint={selectedSprint}
                                         setMyself={setMyself}
                                         socket={socket}
-                                        textMuted={textMuted}
-                                        textPrimary={textPrimary}
-                                        textSecondary={textSecondary}
                                         useCM={useCM}
                                         useSM={useSM}
                                         useTEM={useTEM}
