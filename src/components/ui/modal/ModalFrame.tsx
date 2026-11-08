@@ -1,4 +1,4 @@
-import { ReactNode, useId } from "react";
+import { ReactNode, useId, useRef } from "react";
 import { keyframes } from "@emotion/react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
@@ -182,6 +182,7 @@ export const ModalFrame = ({
     const { t } = useTranslation();
     const titleId = useId();
     const descriptionId = useId();
+    const escapeBelongsToPopup = useRef(false);
 
     const inset = "calc(100vw - 24px)";
     const inner = "calc(100dvh - 32px)";
@@ -235,8 +236,23 @@ export const ModalFrame = ({
                 backgroundColor: "transparent",
             }}
             {...FENCE}
-            onClose={() => {
+            // Escape on an open Select / Autocomplete list closes the list, not the dialog
+            // (MIP-1215). The list portals out of the dialog but is its child in the React
+            // tree, so the same keydown also reaches this Modal. Whether the key belongs to a
+            // list is read in the CAPTURE phase, before the list handles it and closes
+            // (afterwards the DOM already says "closed").
+            onClose={(_event, reason) => {
+                if (reason === "escapeKeyDown" && escapeBelongsToPopup.current) {
+                    escapeBelongsToPopup.current = false;
+                    return;
+                }
                 if (dismissible) onClose();
+            }}
+            onKeyDownCapture={(event) => {
+                escapeBelongsToPopup.current =
+                    event.key === "Escape" &&
+                    event.target instanceof Element &&
+                    event.target.closest('[role="listbox"], [aria-expanded="true"]') !== null;
             }}
         >
             <ModalDialog

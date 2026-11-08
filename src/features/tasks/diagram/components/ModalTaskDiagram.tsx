@@ -17,10 +17,12 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
+import { ToneLabel } from "../../components/meta/ToneLabel";
 import { DIAGRAM_DEFAULT_Z_INDEX, DiagramZIndexProvider } from "../diagramZIndex";
 import { ScheduleOverview, TaskGraphScope } from "../types";
-import { HEALTH_JOY_COLOR, HEALTH_TONE_COLOR } from "../utils/scheduleStatus";
+import { HEALTH_TONE } from "../utils/scheduleStatus";
 import { BurndownSparkline } from "./BurndownSparkline";
+import { HEALTH_COLOR } from "./nodeTone";
 import { TaskFlowCanvas } from "./TaskFlowCanvas";
 
 // Exported so LazyTaskDiagram can mirror this signature without a value
@@ -157,19 +159,12 @@ export const ModalTaskDiagram = ({
                         expectedPct: Math.round(overview.health.expectedPct),
                     })}
                 >
-                    <Chip
-                        color={HEALTH_JOY_COLOR[overview.health.tone]}
-                        size="md"
-                        variant="soft"
-                        sx={{
-                            fontWeight: 600,
-                            borderRadius: "8px",
-                            "--Chip-paddingInline": "10px",
-                            "--Chip-minHeight": "28px",
-                        }}
-                    >
-                        {healthLabel}
-                    </Chip>
+                    {/* A plain element for the tooltip to anchor on: ToneLabel is not a ref target. */}
+                    <Box component="span" sx={{ display: "inline-flex", cursor: "help" }}>
+                        <ToneLabel size="sm" tone={HEALTH_TONE[overview.health.tone]} dot>
+                            {healthLabel}
+                        </ToneLabel>
+                    </Box>
                 </AppTooltip>
             )}
 
@@ -255,59 +250,34 @@ export const ModalTaskDiagram = ({
                                 sx={{ flexWrap: "wrap", rowGap: 0.5 }}
                             >
                                 {overview.overdueCount > 0 && (
-                                    <Chip
-                                        color="danger"
-                                        size="sm"
-                                        variant="soft"
-                                        startDecorator={
-                                            <WarningAmberRoundedIcon sx={{ fontSize: 12 }} />
-                                        }
-                                        sx={{
-                                            fontSize: "0.7rem",
-                                            fontWeight: 600,
-                                            borderRadius: "5px",
-                                        }}
+                                    <ToneLabel
+                                        icon={<WarningAmberRoundedIcon sx={{ fontSize: 12 }} />}
+                                        tone="danger"
                                     >
                                         {fmt(t.tasks.diagram.overdueCount, {
                                             count: overview.overdueCount,
                                         })}
-                                    </Chip>
+                                    </ToneLabel>
                                 )}
                                 {overview.dueSoonCount > 0 && (
-                                    <Chip
-                                        color="warning"
-                                        size="sm"
-                                        variant="soft"
-                                        startDecorator={
-                                            <ScheduleRoundedIcon sx={{ fontSize: 12 }} />
-                                        }
-                                        sx={{
-                                            fontSize: "0.7rem",
-                                            fontWeight: 600,
-                                            borderRadius: "5px",
-                                        }}
+                                    <ToneLabel
+                                        icon={<ScheduleRoundedIcon sx={{ fontSize: 12 }} />}
+                                        tone="warning"
                                     >
                                         {fmt(t.tasks.diagram.dueSoonCount, {
                                             count: overview.dueSoonCount,
                                         })}
-                                    </Chip>
+                                    </ToneLabel>
                                 )}
                                 {overview.blockedCount > 0 && (
-                                    <Chip
-                                        color="neutral"
-                                        size="sm"
-                                        startDecorator={<BlockRoundedIcon sx={{ fontSize: 12 }} />}
-                                        variant="soft"
-                                        sx={{
-                                            fontSize: "0.7rem",
-                                            fontWeight: 600,
-                                            borderRadius: "5px",
-                                        }}
+                                    <ToneLabel
+                                        icon={<BlockRoundedIcon sx={{ fontSize: 12 }} />}
+                                        tone="danger"
                                     >
                                         {fmt(t.tasks.diagram.blockedCount, {
                                             count: overview.blockedCount,
                                         })}
-                                    </Chip>
+                                    </ToneLabel>
                                 )}
                             </Stack>
                         )}
@@ -344,8 +314,7 @@ export const ModalTaskDiagram = ({
                                                 bottom: -2,
                                                 left: `${overview.health.expectedPct}%`,
                                                 width: "2px",
-                                                background:
-                                                    HEALTH_TONE_COLOR[overview.health.tone],
+                                                background: HEALTH_COLOR[overview.health.tone],
                                                 borderRadius: "1px",
                                                 boxShadow: `0 0 0 1px ${g.surface.raised}`,
                                                 cursor: "help",

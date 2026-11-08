@@ -10,6 +10,7 @@
  * browser; see the evidence page linked from the PR.
  */
 import { CacheProvider } from "@emotion/react";
+import { Option, Select } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -396,5 +397,45 @@ describe("ModalFrame", () => {
         const css = cssOf(dialog());
         expect(css).toContain("text-align: start");
         expect(css).not.toMatch(/text-align:\s*(left|right)/);
+    });
+});
+
+// MIP-1215: Escape on an open Select list closed the whole dialog with it, and a half-filled
+// form was lost. The list closes first; a second Escape closes the dialog.
+describe("ModalFrame with a Select inside", () => {
+    const mountSelect = () => {
+        const onClose = vi.fn();
+        mount({
+            onClose,
+            children: (
+                <Select aria-label="Project" defaultValue="a">
+                    <Option value="a">Alpha</Option>
+                    <Option value="b">Beta</Option>
+                </Select>
+            ),
+        });
+        return onClose;
+    };
+    const openList = () => {
+        const trigger = screen.getByRole("combobox");
+        fireEvent.keyDown(trigger, { key: "ArrowDown" });
+        return trigger;
+    };
+
+    it("Escape on the open list closes the list and not the dialog; a second Escape closes the dialog", () => {
+        const onClose = mountSelect();
+        const trigger = openList();
+        expect(screen.getByRole("listbox")).toBeTruthy();
+        fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
+        expect(onClose).not.toHaveBeenCalled();
+        expect(dialog()).toBeTruthy();
+        fireEvent.keyDown(trigger, { key: "Escape" });
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("Escape with no list open still closes the dialog at once", () => {
+        const onClose = mountSelect();
+        fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });
+        expect(onClose).toHaveBeenCalledTimes(1);
     });
 });

@@ -25,7 +25,7 @@
     "features/admin:brandVars": 10,
     "features/admin:gradients": 4,
     "features/admin:heavyFontWeights": 10,
-    "features/admin:isDarkTernaries": 22,
+    "features/admin:isDarkTernaries": 21,
     "features/admin:literalColors": 11,
     "features/agentQA:brandVars": 2,
     "features/agentQA:heavyFontWeights": 33,

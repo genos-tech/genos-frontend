@@ -5,7 +5,8 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { BurndownPoint } from "../types";
-import { HEALTH_TONE_COLOR, ScheduleHealthTone } from "../utils/scheduleStatus";
+import { ScheduleHealthTone } from "../utils/scheduleStatus";
+import { HEALTH_COLOR } from "./nodeTone";
 
 type Props = {
     data: BurndownPoint[];
@@ -23,7 +24,7 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
-    const actualColor = HEALTH_TONE_COLOR[tone];
+    const actualColor = HEALTH_COLOR[tone];
 
     if (data.length === 0 || total <= 0) {
         return null;
@@ -82,12 +83,12 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
                     <polyline
                         fill="none"
                         points={actualPath}
-                        stroke={actualColor}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
+                        style={{ stroke: actualColor }}
                     />
-                    <circle cx={lastX} cy={lastY} fill={actualColor} r={3} />
+                    <circle cx={lastX} cy={lastY} r={3} style={{ fill: actualColor }} />
                 </svg>
             </Box>
         </AppTooltip>

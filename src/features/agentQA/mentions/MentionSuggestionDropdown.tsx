@@ -57,7 +57,7 @@ import {
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
-import { TaskStatusChip } from "../../tasks/components/TaskStatusChip";
+import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
 
 // Above the Spotlight sheet (13100) and every Joy modal so the portaled
@@ -141,11 +141,11 @@ const renderIdentity = (c: AgentMentionCandidate, isDark: boolean) => {
 // candidate carries no such detail.
 const renderTrailing = (c: AgentMentionCandidate, isDark: boolean) => {
     if (c.ref.kind === "task") {
-        // The canonical dashboard status chip, so a status reads
+        // The table's StatusLabel, so a status reads
         // identically here, in the editor menu, and in the task surfaces.
         // No chip at all when the status is unknown, rather than a
         // misleading "Open".
-        return c.status ? <TaskStatusChip iconSize={11} status={c.status} /> : undefined;
+        return c.status ? <StatusLabel iconSize={11} status={c.status} /> : undefined;
     }
     if (c.ref.kind === "group") {
         return c.memberCount == null ? undefined : <MentionCountChip count={c.memberCount} />;

@@ -2,8 +2,8 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../i18n";
 import { Milestone } from "../../sprint-milestone/types";
 import { TaskCardFrame } from "../card";
+import { StatusLabel } from "../meta/StatusLabel";
 import { MilestoneCardBody } from "../MilestoneCardBody";
-import { TaskStatusChip } from "../TaskStatusChip";
 
 type Props = {
     milestone: Milestone;
@@ -33,7 +33,7 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                 <MilestoneCardBody
                     milestone={milestone}
                     sprintName={sprintName}
-                    topRight={<TaskStatusChip status={milestone.status} />}
+                    topRight={<StatusLabel status={milestone.status} />}
                 />
             </TaskCardFrame>
         </AppTooltip>

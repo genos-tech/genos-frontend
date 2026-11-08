@@ -14,7 +14,7 @@ import {
     recentsVisibleToReveal,
     RecentTaskGroup,
 } from "../../utils/groupRecentTasks";
-import { CopyableTaskIdChip } from "../CopyableTaskId";
+import { TaskIdText } from "../card";
 import { StatusLabel } from "../meta/StatusLabel";
 import { useSidebarOpen } from "./useSidebarOpen";
 
@@ -122,20 +122,7 @@ export const RecentProjectGroup = ({
                                                 minWidth: 0,
                                             }}
                                         >
-                                            <CopyableTaskIdChip
-                                                key={`task-id-chip-${task.taskId}`}
-                                                color="neutral"
-                                                task={task}
-                                                variant="outlined"
-                                                sx={{
-                                                    borderRadius: g.radius.xs,
-                                                    fontWeight: 500,
-                                                    fontSize: 10,
-                                                    minHeight: 18,
-                                                    px: 0.5,
-                                                    flexShrink: 0,
-                                                }}
-                                            />
+                                            <TaskIdText task={task} />
                                             <StatusLabel iconOnly status={task.status.status} />
                                             <Box
                                                 component="span"

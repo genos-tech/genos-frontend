@@ -1,7 +1,6 @@
 import { Key, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -14,7 +13,6 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
-import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
@@ -60,11 +58,12 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { isDeletedUser } from "../../../../utils/teamRoster";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
+import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
@@ -76,9 +75,10 @@ import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { TaskCard, TaskListItem, TaskListPanel } from "../card";
+import { getStatusIcon } from "../meta/statusIcons";
+import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { ProjectTagChip } from "../ProjectTagChip";
-import { STATUS_COLORS } from "../TaskStatusChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
 import { TaskVelocitySection } from "./TaskVelocitySection";
@@ -221,6 +221,12 @@ const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upco
 // selector also feeds the sidebar's live list, the task filter menu and the
 // milestone picker, which all keep Closed milestones that have no sprint or
 // sit in an active/upcoming sprint.
+// A status bar segment / legend swatch: the tone's solid fill (a graphic, not
+// text), from the one tone source (`taskTone`), so a status reads the same here
+// as in the table. Icons and words use the `toneCss` text role instead.
+const statusColor = (status: keyof typeof STATUS_TONE): string =>
+    toneSolid(STATUS_TONE[status]).bg;
+
 const isOngoingMilestone = (m: Milestone): boolean => m.status !== "Closed";
 
 // Maps a backend status enum to the i18n key whose value renders in
@@ -2837,23 +2843,23 @@ export const TaskHomeContent = ({
                                                 {renderStackedBar(
                                                     [
                                                         {
-                                                            color: STATUS_COLORS.Open.text,
+                                                            color: statusColor("Open"),
                                                             value: stats.openCount,
                                                         },
                                                         {
-                                                            color: STATUS_COLORS.WIP.text,
+                                                            color: statusColor("WIP"),
                                                             value: stats.wipCount,
                                                         },
                                                         {
-                                                            color: STATUS_COLORS.Blocked.text,
+                                                            color: statusColor("Blocked"),
                                                             value: stats.blockedCount,
                                                         },
                                                         {
-                                                            color: STATUS_COLORS.Pending.text,
+                                                            color: statusColor("Pending"),
                                                             value: stats.pendingCount,
                                                         },
                                                         {
-                                                            color: STATUS_COLORS.Closed.text,
+                                                            color: statusColor("Closed"),
                                                             value: stats.closedCount,
                                                         },
                                                     ],
@@ -2879,55 +2885,29 @@ export const TaskHomeContent = ({
                                         >
                                             {(
                                                 [
-                                                    {
-                                                        key: "Open",
-                                                        count: stats.openCount,
-                                                        icon: <RadioButtonUncheckedRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "WIP",
-                                                        count: stats.wipCount,
-                                                        icon: <PlayCircleOutlineRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "Blocked",
-                                                        count: stats.blockedCount,
-                                                        icon: <BlockRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "Pending",
-                                                        count: stats.pendingCount,
-                                                        icon: <PendingActionsRoundedIcon />,
-                                                    },
-                                                    {
-                                                        key: "Closed",
-                                                        count: stats.closedCount,
-                                                        icon: <CheckCircleOutlineRoundedIcon />,
-                                                    },
+                                                    { key: "Open", count: stats.openCount },
+                                                    { key: "WIP", count: stats.wipCount },
+                                                    { key: "Blocked", count: stats.blockedCount },
+                                                    { key: "Pending", count: stats.pendingCount },
+                                                    { key: "Closed", count: stats.closedCount },
                                                 ] as const
                                             ).map((s) => {
-                                                const sc = STATUS_COLORS[s.key];
                                                 const pct =
                                                     stats.totalTasks > 0
                                                         ? Math.round(
                                                               (s.count / stats.totalTasks) * 100
                                                           )
                                                         : 0;
+                                                // The table's status (icon in the status color,
+                                                // word neutral) on a plain card: no per-status wash.
                                                 return (
                                                     <Card
                                                         key={s.key}
-                                                        variant="soft"
+                                                        data-status-card={s.key}
+                                                        variant="outlined"
                                                         sx={{
                                                             p: 2,
-                                                            background: isDark
-                                                                ? sc.bg
-                                                                : sc.bg.replace("0.12", "0.08"),
-                                                            border: "1px solid",
                                                             borderColor: cardBorder,
-                                                            transition: "transform 0.2s ease",
-                                                            "&:hover": {
-                                                                transform: "translateY(-2px)",
-                                                            },
                                                         }}
                                                     >
                                                         <Stack spacing={1}>
@@ -2935,44 +2915,12 @@ export const TaskHomeContent = ({
                                                                 alignItems="center"
                                                                 direction="row"
                                                                 justifyContent="space-between"
+                                                                sx={{ gap: 1, minWidth: 0 }}
                                                             >
-                                                                <Box
-                                                                    sx={{
-                                                                        width: 32,
-                                                                        height: 32,
-                                                                        borderRadius: "8px",
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        justifyContent: "center",
-                                                                        color: sc.text,
-                                                                        backgroundColor: isDark
-                                                                            ? "rgba(255,255,255,0.06)"
-                                                                            : "rgba(255,255,255,0.8)",
-                                                                    }}
-                                                                >
-                                                                    {s.icon}
-                                                                </Box>
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{
-                                                                        color: sc.text,
-                                                                        fontWeight: 600,
-                                                                    }}
-                                                                >
-                                                                    {pct}%
-                                                                </Typography>
-                                                            </Stack>
-                                                            <Box>
-                                                                <Typography
-                                                                    level="h3"
-                                                                    sx={{
-                                                                        fontWeight: 700,
-                                                                        fontSize: "1.4rem",
-                                                                        color: textPrimary,
-                                                                    }}
-                                                                >
-                                                                    {s.count}
-                                                                </Typography>
+                                                                <StatusLabel
+                                                                    iconSize={16}
+                                                                    status={s.key}
+                                                                />
                                                                 <Typography
                                                                     level="body-xs"
                                                                     sx={{
@@ -2980,16 +2928,19 @@ export const TaskHomeContent = ({
                                                                         fontWeight: 500,
                                                                     }}
                                                                 >
-                                                                    {
-                                                                        t.tasks.dashboard
-                                                                            .statusLabels[
-                                                                            STATUS_LABEL_KEYS[
-                                                                                s.key
-                                                                            ] ?? "open"
-                                                                        ]
-                                                                    }
+                                                                    {pct}%
                                                                 </Typography>
-                                                            </Box>
+                                                            </Stack>
+                                                            <Typography
+                                                                level="h3"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    fontSize: "1.4rem",
+                                                                    color: textPrimary,
+                                                                }}
+                                                            >
+                                                                {s.count}
+                                                            </Typography>
                                                         </Stack>
                                                     </Card>
                                                 );
@@ -3804,24 +3755,48 @@ export const TaskHomeContent = ({
                                                                         }}
                                                                     >
                                                                         {cell.val > 0 ? (
-                                                                            <Chip
-                                                                                size="sm"
-                                                                                variant="soft"
+                                                                            <Box
+                                                                                component="span"
+                                                                                data-status-count={
+                                                                                    cell.key
+                                                                                }
                                                                                 sx={{
-                                                                                    minWidth: 28,
-                                                                                    backgroundColor:
-                                                                                        STATUS_COLORS[
-                                                                                            cell
-                                                                                                .key
-                                                                                        ].bg,
-                                                                                    color: STATUS_COLORS[
-                                                                                        cell.key
-                                                                                    ].text,
-                                                                                    fontWeight: 600,
+                                                                                    display:
+                                                                                        "inline-flex",
+                                                                                    alignItems:
+                                                                                        "center",
+                                                                                    gap: 0.5,
+                                                                                    color: textPrimary,
+                                                                                    // Joy icons color from --Icon-color.
+                                                                                    "--Icon-color":
+                                                                                        toneCss(
+                                                                                            STATUS_TONE[
+                                                                                                cell
+                                                                                                    .key
+                                                                                            ]
+                                                                                        ).text,
+                                                                                    "& > svg": {
+                                                                                        color: toneCss(
+                                                                                            STATUS_TONE[
+                                                                                                cell
+                                                                                                    .key
+                                                                                            ]
+                                                                                        ).text,
+                                                                                    },
+                                                                                    ...type(
+                                                                                        "body-sm"
+                                                                                    ),
+                                                                                    fontWeight: 500,
+                                                                                    fontVariantNumeric:
+                                                                                        "tabular-nums",
                                                                                 }}
                                                                             >
+                                                                                {getStatusIcon(
+                                                                                    cell.key,
+                                                                                    13
+                                                                                )}
                                                                                 {cell.val}
-                                                                            </Chip>
+                                                                            </Box>
                                                                         ) : (
                                                                             <Typography
                                                                                 level="body-xs"
@@ -4091,7 +4066,7 @@ export const TaskHomeContent = ({
 
                                                 {/* Status legend — the per-row Status bars
                                                     are unlabeled, so this maps each color to
-                                                    its status. Same STATUS_COLORS the bars use. */}
+                                                    its status. Same colors the bars use. */}
                                                 <Stack
                                                     alignItems="center"
                                                     direction="row"
@@ -4127,7 +4102,7 @@ export const TaskHomeContent = ({
                                                                     height: 10,
                                                                     borderRadius: "3px",
                                                                     backgroundColor:
-                                                                        STATUS_COLORS[s].text,
+                                                                        statusColor(s),
                                                                 }}
                                                             />
                                                             <Typography
@@ -4263,33 +4238,33 @@ export const TaskHomeContent = ({
                                                                             {renderStackedBar(
                                                                                 [
                                                                                     {
-                                                                                        color: STATUS_COLORS
-                                                                                            .Open
-                                                                                            .text,
+                                                                                        color: statusColor(
+                                                                                            "Open"
+                                                                                        ),
                                                                                         value: row.open,
                                                                                     },
                                                                                     {
-                                                                                        color: STATUS_COLORS
-                                                                                            .WIP
-                                                                                            .text,
+                                                                                        color: statusColor(
+                                                                                            "WIP"
+                                                                                        ),
                                                                                         value: row.wip,
                                                                                     },
                                                                                     {
-                                                                                        color: STATUS_COLORS
-                                                                                            .Blocked
-                                                                                            .text,
+                                                                                        color: statusColor(
+                                                                                            "Blocked"
+                                                                                        ),
                                                                                         value: row.blocked,
                                                                                     },
                                                                                     {
-                                                                                        color: STATUS_COLORS
-                                                                                            .Pending
-                                                                                            .text,
+                                                                                        color: statusColor(
+                                                                                            "Pending"
+                                                                                        ),
                                                                                         value: row.pending,
                                                                                     },
                                                                                     {
-                                                                                        color: STATUS_COLORS
-                                                                                            .Closed
-                                                                                            .text,
+                                                                                        color: statusColor(
+                                                                                            "Closed"
+                                                                                        ),
                                                                                         value: row.closed,
                                                                                     },
                                                                                 ],

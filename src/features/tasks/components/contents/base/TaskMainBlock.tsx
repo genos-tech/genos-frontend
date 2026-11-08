@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -45,6 +44,7 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { MultiMemberPicker } from "../../autocompletes/MultiMemberPicker";
 import { TaskIdText } from "../../card";
+import { StatusLabel } from "../../meta/StatusLabel";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
@@ -546,21 +546,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             {blocked && (
                 <Box sx={{ mb: 1 }}>
                     <AppTooltip title={t.tasks.dependencies.blockedTooltip}>
-                        <Chip
-                            color="warning"
-                            size="sm"
-                            startDecorator={<BlockRoundedIcon sx={{ fontSize: 14 }} />}
-                            variant="soft"
-                            sx={{
-                                fontWeight: 700,
-                                letterSpacing: "0.04em",
-                                textTransform: "uppercase",
-                                fontSize: "0.7rem",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {t.tasks.dependencies.blockedBadge}
-                        </Chip>
+                        {/* A derived "a blocker is still open" flag, not the status
+                            field: the table's Blocked look (icon and word). */}
+                        <Box component="span" sx={{ display: "inline-flex" }} data-blocked-badge>
+                            <StatusLabel status="Blocked" />
+                        </Box>
                     </AppTooltip>
                 </Box>
             )}
@@ -869,9 +859,36 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </ListItem>
                 )}
 
-                {/* Priority and Effort Level Row */}
-                <Grid spacing={1} container>
-                    <Grid sm={6} xs={12}>
+                {/* Status, Priority and Effort Level: ONE row (MIP-1217), in that order.
+                    Status only exists on a saved task, so the create form keeps its two.
+                    The width that decides is the PANEL's, not the window's (this preview
+                    lives in a side pane, a modal and a full page): a container query. Below
+                    the threshold every field has its own row, as on a phone. */}
+                <Box sx={{ containerType: "inline-size", width: "100%" }}>
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: "minmax(0, 1fr)",
+                            gap: 1,
+                            [`@container (min-width: ${isPreviewMode ? 680 : 440}px)`]: {
+                                gridTemplateColumns: `repeat(${isPreviewMode ? 3 : 2}, minmax(0, 1fr))`,
+                            },
+                        }}
+                    >
+                        {isPreviewMode && (
+                            <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                                <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <ACTaskStatus
+                                        setTaskContent={setTaskContent}
+                                        setTaskStatusUpdated={setTaskStatusUpdated}
+                                        setTaskUpdated={setTaskUpdated}
+                                        socket={socket}
+                                        taskContent={taskContent}
+                                    />
+                                </Box>
+                            </ListItem>
+                        )}
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark} required={isRequired("priority")}>
                                 {t.tasks.fields.priority}
@@ -884,8 +901,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                             </Box>
                         </ListItem>
-                    </Grid>
-                    <Grid sm={6} xs={12}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark} required={isRequired("effortLevel")}>
                                 {t.tasks.fields.effortLevel}
@@ -898,30 +913,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                             </Box>
                         </ListItem>
-                    </Grid>
-                </Grid>
-
-                {/* Status (only in preview mode) */}
-                {isPreviewMode && (
-                    <ListItem
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            width: { xs: "100%", sm: "49%" },
-                        }}
-                    >
-                        <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <ACTaskStatus
-                                setTaskContent={setTaskContent}
-                                setTaskStatusUpdated={setTaskStatusUpdated}
-                                setTaskUpdated={setTaskUpdated}
-                                socket={socket}
-                                taskContent={taskContent}
-                            />
-                        </Box>
-                    </ListItem>
-                )}
+                    </Box>
+                </Box>
 
                 {/* Due Date — the only date field shown by default.
                     Start Date is a secondary, opt-in attribute: a small
