@@ -48,6 +48,22 @@ describe("NavItem", () => {
         expect(screen.getByTestId("trail")).toBeInTheDocument();
     });
 
+    // MIP-1188: Joy's neutral ListItemButton resets `--Icon-color`, so the row's tone never
+    // reached the icon. The icon wrapper carries its own: tertiary at rest (as it always
+    // looked), the label's colour on hover, the accent when selected.
+    it("the icon follows the row's states through its own colour variable", () => {
+        mount({ icon: <svg data-testid="icon" /> });
+        const css = cssOf(row()).replace(/\s+/g, " ");
+        expect(css).toMatch(/\.NavItem-icon \{ ?--Icon-color: var\(--g-text-tertiary\)/);
+        expect(css).toMatch(/:hover \.NavItem-icon \{ ?--Icon-color: var\(--g-text\)/);
+        expect(css).toMatch(
+            /\[data-selected="true"\] \.NavItem-icon \{ ?--Icon-color: var\(--g-accent-text\)/
+        );
+        expect(css).toMatch(
+            /\[data-selected="true"\]:hover \.NavItem-icon \{ ?--Icon-color: var\(--g-accent-text\)/
+        );
+    });
+
     it("selected: the row says so for assistive tech and styling, unselected does not", () => {
         mount({ selected: true });
         expect(button()).toHaveAttribute("aria-current", "true");
