@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
+import { hasSendableContent } from "../../components/editors/utils/messageBlocks";
 import { readDraft, removeDraft, writeDraft } from "../../utils/editorDraftStorage";
 
 /**
@@ -9,9 +10,11 @@ import { readDraft, removeDraft, writeDraft } from "../../utils/editorDraftStora
  *   stored draft and call `editor.replaceBlocks(editor.document, …)`.
  *   No draft → clear the editor (matches the previous "wipe on
  *   target change" behaviour each call site used to do inline).
- * - **Save**: debounced (~400 ms). Empty docs (`length <= 1`, matching
- *   the existing `> 1` send threshold) remove the key instead of
- *   writing an empty entry.
+ * - **Save**: debounced (~400 ms). A document with nothing in it (no text, chip,
+ *   image or file: `hasSendableContent`) removes the key instead of writing an
+ *   empty entry. It used to be `length <= 1`, true of every empty editor in
+ *   BlockNote 0.49 (a real blank block at the end) but, since 0.57, also of a
+ *   single typed line, so a one-line draft was never saved (MIP-1222).
  * - **Clear**: cancels any pending debounced save and synchronously
  *   removes the key. Call this from every send-success path.
  *
@@ -92,7 +95,7 @@ export const useEditorDraft = (
             // content for the new context — writing `doc` now would
             // poison the new key with the old context's content.
             if (cacheKeyRef.current !== key) return;
-            if (!Array.isArray(doc) || doc.length <= 1) {
+            if (!Array.isArray(doc) || !hasSendableContent(doc)) {
                 removeDraft(key);
             } else {
                 writeDraft(key, doc);
