@@ -6,6 +6,7 @@ import { UserProfile } from "../../../features/admin/components/modals/ModalUser
 import { fmt, useTranslation } from "../../../i18n";
 import { initialOf } from "../../../utils/initials";
 import { AppTooltip } from "../AppTooltip";
+import { PRESENCE_COLOR } from "../misc/presenceColor";
 import { PulseDot } from "../misc/PulseDot";
 import { useAvatarContext, useUserProfile } from "./AvatarContext";
 import { avatarPx } from "./avatarSize";
@@ -199,7 +200,10 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                             // right corner regardless of avatar size.
                             sx={{ "& > span": { marginLeft: 0 } }}
                         >
-                            <PulseDot color={isOnline ? "#4caf50" : "#999"} size={dotSize} />
+                            <PulseDot
+                                color={isOnline ? PRESENCE_COLOR.online : PRESENCE_COLOR.offline}
+                                size={dotSize}
+                            />
                         </Box>
                     )}
                     {homeTeam && (

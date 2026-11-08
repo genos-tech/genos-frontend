@@ -18,6 +18,7 @@ import {
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../../components/ui/avatars/AvatarContext";
+import { PRESENCE_COLOR } from "../../../../../components/ui/misc/presenceColor";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MenuDivider, MenuRow, MenuSurface } from "../../../../../components/ui/MoreMenu";
@@ -61,9 +62,6 @@ const PRESET_STATUSES = [
     "⛔ OOO",
     "🚫 Do Not Disturb",
 ];
-
-const PRESENCE_GREEN = "#4caf50";
-const PRESENCE_GREY = "#999";
 
 type Props = {
     myself: UserProps;
@@ -112,7 +110,7 @@ export const UserProfileStatus = ({
     const isOffline = isSelfView
         ? myself.isOfflineForced === "true"
         : profileUser?.isOnline !== true || profileUser?.isOfflineForced === "true";
-    const presenceColor = isOffline ? PRESENCE_GREY : PRESENCE_GREEN;
+    const presenceColor = isOffline ? PRESENCE_COLOR.offline : PRESENCE_COLOR.online;
     const presenceLabel = isOffline
         ? isSelfView
             ? t.admin.status.offlineForced
@@ -404,13 +402,13 @@ export const UserProfileStatus = ({
                                         this chip (they are a separate concern
                                         from online/offline). */}
                                     <MenuRow
-                                        icon={<PulseDot color={PRESENCE_GREEN} />}
+                                        icon={<PulseDot color={PRESENCE_COLOR.online} />}
                                         onClick={() => persistPresence("false")}
                                     >
                                         {t.admin.status.setOnline}
                                     </MenuRow>
                                     <MenuRow
-                                        icon={<PulseDot color={PRESENCE_GREY} />}
+                                        icon={<PulseDot color={PRESENCE_COLOR.offline} />}
                                         onClick={() => persistPresence("true")}
                                     >
                                         {t.admin.status.setAlwaysOffline}

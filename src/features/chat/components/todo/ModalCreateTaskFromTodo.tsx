@@ -94,10 +94,6 @@ type ModalCreateTaskFromTodoProps = {
     /** Open the created task in the shared UrlLinkModal once it exists. Default
      *  true (the to-do flow). A caller that offers its own "Open" says false. */
     openCreatedTask?: boolean;
-    /** Kept for callers. The frame now always keeps keydown, click and mousedown
-     *  (and pointer and touch events) inside the dialog, which is what this flag
-     *  asked for; it used to default to false. */
-    isolateEvents?: boolean;
     /** Chat list — resolves each project option's avatar from its PM
      *  chat, so the picker matches the task sidebar / TaskPreview. */
     useCM?: ChatManagementState;

@@ -19,7 +19,7 @@ type Props = {
     /** Stacking level of the hosting surface. Present ⇒ the comment
      * bubble lives inside a modal-hosted preview (UrlLinkModal family,
      * z 10020+), so the dialog lifts to host+2 (`ModalFrame`'s
-     * `hostZIndex`, the same convention as `noteModalChildStackSx`).
+     * `hostZIndex`, the same convention as the other dialogs).
      * Absent ⇒ page-hosted; the 10010 default applies. Hardcoding 10010
      * would repeat the known bug where sibling dialogs open invisibly
      * BEHIND the preview modal. */

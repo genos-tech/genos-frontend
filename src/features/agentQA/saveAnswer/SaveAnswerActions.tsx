@@ -275,7 +275,6 @@ const SaveAnswerButtons = memo((props: SaveProps) => {
                             heading: s.task.modal.heading,
                             description: s.task.modal.description,
                         }}
-                        isolateEvents
                         open
                         onClose={closeDialog}
                         onCreated={(taskId, info) => {

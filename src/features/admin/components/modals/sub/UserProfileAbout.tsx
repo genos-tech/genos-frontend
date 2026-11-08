@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Box, Button, FormHelperText, Stack, Textarea, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { ProfileMarkdown } from "../../../../../components/ui/misc/ProfileMarkdown";
 import { useAuth } from "../../../../../context/AuthContext";
@@ -35,8 +34,6 @@ type Props = {
 export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    // Only `ProfileMarkdown` still wants the mode (it carries its own colors).
-    const isDark = useColorScheme().mode === "dark";
 
     const isSelfView = myself.userId === user?.userId;
     const about = (isSelfView ? myself.aboutMe : user?.aboutMe) ?? "";
@@ -156,7 +153,7 @@ export const UserProfileAbout = ({ myself, setMyself, user }: Props) => {
             }
         >
             {about ? (
-                <ProfileMarkdown isDark={isDark} text={about} />
+                <ProfileMarkdown text={about} />
             ) : (
                 <Typography sx={{ color: g.text.secondary, fontSize: "14px" }}>
                     {t.admin.userProfile.aboutNotSet}
