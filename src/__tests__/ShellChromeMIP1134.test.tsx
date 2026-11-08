@@ -26,6 +26,7 @@ import { BottomTabBar } from "../components/layout/BottomTabBar";
 import { ServiceSwitcherOverlay } from "../components/layout/ServiceSwitcherOverlay";
 import {
     PERMISSION_BANNER_HEIGHT,
+    PERMISSION_BANNER_HEIGHT_CSS,
     PermissionBanner,
 } from "../services/notifications/PermissionBanner";
 
@@ -80,12 +81,19 @@ describe("the notification banner is in the layout", () => {
         expect(css).not.toContain("z-index");
         expect(css).not.toContain("gradient");
         expect(css).not.toContain("box-shadow");
-        expect(css).toContain(`height: ${PERMISSION_BANNER_HEIGHT}px`);
+        // The bar's height plus the status-bar inset (a notched iPhone PWA, MIP-1220). jsdom's CSS
+        // parser mangles `env()`, so this is read from the source, not from the computed style.
+        const src = code("services/notifications/PermissionBanner.tsx");
+        expect(src).toContain(
+            "calc(${PERMISSION_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))"
+        );
+        expect(src).toMatch(/height: PERMISSION_BANNER_HEIGHT_CSS/);
+        expect(src).toMatch(/paddingTop: "env\(safe-area-inset-top, 0px\)"/);
     });
 
     it("reserves its own height while it shows and gives it back when dismissed", () => {
         mountBanner();
-        expect(bannerVar()).toBe(`${PERMISSION_BANNER_HEIGHT}px`);
+        expect(bannerVar()).toBe(PERMISSION_BANNER_HEIGHT_CSS);
         fireEvent.click(screen.getByRole("button", { name: "Close" }));
         expect(screen.queryByTestId("permission-banner")).toBeNull();
         expect(bannerVar()).toBe("");
@@ -187,6 +195,15 @@ describe("the mobile tab bar", () => {
         for (const other of ["Inbox", "Chats", "Notes", "Account"]) {
             expect(tab(other), other).not.toHaveAttribute("aria-current");
         }
+    });
+
+    // MIP-1220: the bar has a name, and a tab's unread count is part of ITS name.
+    it("names the navigation, and puts the unread count in the tab's name", () => {
+        mount("/workspace/tasks");
+        expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeTruthy();
+        // Chats has 3 unread (the fake `useCM`); the others have none and keep their text name.
+        expect(screen.getByRole("button", { name: "Chats, 3 unread" })).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Tasks" })).toBeTruthy();
     });
 
     it("a tap is a tap: no double-tap-zoom delay on a tab", () => {

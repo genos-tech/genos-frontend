@@ -1,4 +1,6 @@
 export const sidebar = {
+    navLabel: "Main navigation",
+    unreadTab: "{label}, {count} unread",
     nav: {
         inbox: "Inbox",
         chats: "Chats",

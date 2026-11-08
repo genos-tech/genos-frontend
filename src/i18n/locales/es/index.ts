@@ -378,6 +378,8 @@ export const es: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "Navegación principal",
+        unreadTab: "{label}, {count} sin leer",
         nav: {
             inbox: "Bandeja",
             chats: "Chats",

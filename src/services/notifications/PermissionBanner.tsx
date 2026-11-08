@@ -28,6 +28,10 @@ const markDismissed = () => {
 /** Height of the bar in px. Fixed, so the shell can reserve exactly this much
  *  (`--app-banner-h`, read by `--app-vh` in index.css) without measuring. */
 export const PERMISSION_BANNER_HEIGHT = 44;
+/** The same height plus the status-bar inset: in a standalone PWA on a notched iPhone
+ *  (`viewport-fit=cover`) the bar would otherwise sit under the status bar. `env()` is 0
+ *  everywhere else. */
+export const PERMISSION_BANNER_HEIGHT_CSS = `calc(${PERMISSION_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))`;
 const BANNER_HEIGHT_VAR = "--app-banner-h";
 
 /**
@@ -64,7 +68,7 @@ export const PermissionBanner = ({
     useLayoutEffect(() => {
         if (!visible) return undefined;
         const root = document.documentElement;
-        root.style.setProperty(BANNER_HEIGHT_VAR, `${PERMISSION_BANNER_HEIGHT}px`);
+        root.style.setProperty(BANNER_HEIGHT_VAR, PERMISSION_BANNER_HEIGHT_CSS);
         return () => {
             root.style.removeProperty(BANNER_HEIGHT_VAR);
         };
@@ -92,7 +96,8 @@ export const PermissionBanner = ({
             role="region"
             sx={{
                 boxSizing: "border-box",
-                height: PERMISSION_BANNER_HEIGHT,
+                height: PERMISSION_BANNER_HEIGHT_CSS,
+                paddingTop: "env(safe-area-inset-top, 0px)",
                 display: "flex",
                 alignItems: "center",
                 gap: 1.5,
