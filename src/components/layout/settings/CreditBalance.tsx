@@ -19,6 +19,7 @@ import { Box, LinearProgress, Stack, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { CreditsBlock } from "../../../services/agentApi";
+import { formatCredits } from "../../../utils/formatCredits";
 
 /**
  * "Resets today / tomorrow / in N days" from the server's ISO instant.
@@ -42,10 +43,6 @@ const useResetLabel = (periodEndIso: string): string => {
         return fmt(t.settings.llmModel.creditsResetsInDays, { days });
     }, [periodEndIso, t]);
 };
-
-/** Two decimals, but no trailing ".00" on a whole number. */
-const formatCredits = (value: number): string =>
-    Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0$/, "");
 
 type Props = {
     credits: CreditsBlock;

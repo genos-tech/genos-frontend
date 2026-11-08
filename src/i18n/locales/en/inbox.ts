@@ -44,6 +44,33 @@ export const inbox = {
         statComments: "Comments",
         statItems: "Items",
     },
+    // What an AI-made item cost and its off switch (MIP-1227). The unit is the one Plan & usage
+    // uses: "AI credits". The digest and a report each say what was turned off, in the member's
+    // words; the server's own sentence is English-only and is not shown.
+    aiUsage: {
+        used: "AI credits used: {credits}",
+        usedAtLeast: "AI credits used: at least {credits}",
+        usedTiny: "AI credits used: less than 0.01",
+        unmeasured: "Genos used AI for this. The amount wasn't measured.",
+        deductedNone: "None deducted from your balance",
+        deducted: "{credits} deducted from your balance",
+        scheduleFallback: "This schedule",
+        turnOff: "Turn this off",
+        turnOffNamed: "Turn this off: {name}",
+        turnBackOn: "Turn back on",
+        turnBackOnNamed: "Turn back on: {name}",
+        undo: "Undo",
+        undoNamed: "Undo: turn {name} back on",
+        offDigest:
+            "{name} is off. No more will be written, and no more AI credits spent on it, until you turn it back on.",
+        offSchedule: "{name} is off. It won't run or use AI credits until you turn it back on.",
+        alreadyOff: "{name} is already off.",
+        restingOff: "{name} is turned off.",
+        onAgain: "{name} is on again.",
+        gone: "The schedule that made this report no longer exists, so there is nothing to turn off.",
+        failed: "That didn't work. Try again in a moment.",
+        planNeeded: "Turning this on needs the Core plan or higher.",
+    },
     // A reminder that has come due (item_type 9). The card is written from
     // the reader's side — they asked for this, so it says so.
     messageReminder: {

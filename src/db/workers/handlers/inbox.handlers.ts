@@ -60,6 +60,20 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
         });
     },
 
+    patchInboxAiSource: async ({ kind, scheduleId, enabled }) => {
+        const result = await inboxRepo.getAll();
+        const rows = result.success && result.data ? result.data : [];
+        const changed = rows
+            .filter(
+                (row) =>
+                    row.aiSource?.kind === kind &&
+                    (kind === "digest" || row.aiSource.schedule_id === scheduleId) &&
+                    row.aiSource.enabled !== enabled
+            )
+            .map((row) => ({ ...row, aiSource: { ...row.aiSource!, enabled } }));
+        if (changed.length > 0) await inboxRepo.batchInsert(changed);
+    },
+
     popInboxItems: async () => {
         const result = await inboxRepo.getAll();
         const items: InboxItemProps[] = result.success && result.data ? result.data : [];

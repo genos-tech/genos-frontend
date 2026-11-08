@@ -56,6 +56,14 @@ export type InboxRequests = {
     addInboxItem: { req: { inboxItem: InboxItemProps }; res: void };
     loadInbox: { req: { myself: UserProps; accessToken: string }; res: void };
     popInboxItems: { req: Record<string, never>; res: InboxItemProps[] };
+    /** After the member switches an AI source on or off from an Inbox card (MIP-1227): the
+     *  stored rows of that source carry the new state, so a reload does not draw "Turn this
+     *  off" for something already off. Turning a source off changes no row on the server, so
+     *  the incremental sync would never bring the new state back. */
+    patchInboxAiSource: {
+        req: { kind: "digest" | "schedule"; scheduleId?: string; enabled: boolean };
+        res: void;
+    };
 };
 
 // ---- activity channel -----------------------------------------------------

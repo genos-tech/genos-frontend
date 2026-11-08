@@ -39,6 +39,7 @@ import {
 } from "../../admin/services/teamConnections";
 import { GENOS_REPORT_ITEM_TYPE } from "../utils/genosReport";
 import { isActivityItemType } from "../utils/inboxItemTypes";
+import { AiUsageFooter } from "./AiUsageFooter";
 import { DigestHeadline } from "./DigestHeadline";
 import { GenosReportBody } from "./GenosReportBody";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
@@ -480,6 +481,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 {inboxItem.itemType === GENOS_REPORT && (
                     <GenosReportBody allChats={useCM.allChats} itemBody={inboxItem.itemBody} />
                 )}
+                {/* What an AI-made digest or report cost, and its off switch (MIP-1227). Draws
+                    nothing for any other item, however its optionals look. */}
+                <AiUsageFooter
+                    aiSource={inboxItem.aiSource}
+                    itemId={inboxItem.itemId}
+                    itemOptionals={inboxItem.itemOptionals}
+                    itemType={inboxItem.itemType}
+                    userId={myself.userId}
+                />
                 {legacyText !== "" && (
                     <Typography
                         level="body-sm"

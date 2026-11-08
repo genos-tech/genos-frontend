@@ -35,6 +35,18 @@ export type ReactionProps = {
 // itemType:10: Genos report: what a member's own schedule produced. NOT a
 //              request; `itemBody` is {title, text, sections} (`text` is the
 //              one-line summary). See `features/inbox/utils/genosReport.ts`.
+/** Where an AI-made Inbox item came from and whether it is on (genos-api `inbox_ai.Source`,
+ *  MIP-1209). Present only on items that spent AI usage; the server computes it from the item
+ *  and the member's own switches, never from anything a sender wrote. */
+export type InboxAiSource = {
+    kind: "digest" | "schedule";
+    enabled: boolean;
+    label: string;
+    schedule_id?: string;
+    /** The schedule that made the report was deleted: there is nothing to switch. */
+    gone?: true;
+};
+
 export type InboxItemProps = {
     itemId: number;
     itemBody: PartialBlock[] | any[];
@@ -52,4 +64,7 @@ export type InboxItemProps = {
         note_title?: string;
         [key: string]: unknown;
     } | null;
+    /** The source of an AI-made item (digest or report) and its switch state. Absent otherwise.
+     *  Read it only through `readAiUsage`, which also checks the item type. */
+    aiSource?: InboxAiSource | null;
 };
