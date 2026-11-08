@@ -6,7 +6,7 @@
  * not shipped, the word "MVP" (Ken, 2026-11-08), a screenshot that is declared but missing, and the
  * language handoff into the app.
  */
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -155,5 +155,27 @@ describe("screenshots", () => {
             }
         }
         expect(missing).toEqual([]);
+    });
+});
+
+describe("wording", () => {
+    // Ken, 2026-11-08: Genos is not called an MVP anymore. The blog articles are synced from
+    // genos-docs/marketing (`npm run blog:sync`), so this also catches a stale source coming back.
+    it('no text under src/lp calls anything an "MVP"', () => {
+        const root = join(__dirname, "..", "lp");
+        const found: string[] = [];
+        const walk = (dir: string) => {
+            for (const name of readdirSync(dir)) {
+                const path = join(dir, name);
+                if (statSync(path).isDirectory()) walk(path);
+                else if (
+                    /\.(tsx?|md|json)$/.test(name) &&
+                    /\bMVP\b/.test(readFileSync(path, "utf8"))
+                )
+                    found.push(path.slice(root.length + 1));
+            }
+        };
+        walk(root);
+        expect(found).toEqual([]);
     });
 });

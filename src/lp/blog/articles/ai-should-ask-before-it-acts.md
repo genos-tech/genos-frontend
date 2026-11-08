@@ -123,7 +123,7 @@ available on demand.
 
 ### How I applied the rule
 
-Full disclosure: I built **Genos**, a browser-based MVP for chat, tasks,
+Full disclosure: I built **Genos**, a browser-based product for chat, tasks,
 collaborative notes, and AI-assisted work.
 
 Its action layer follows the rule above. Read tools can run immediately. Write
@@ -137,7 +137,7 @@ clicking through every underlying operation.
 That does not make the agent infallible. It makes the product acknowledge where
 fallibility becomes consequential.
 
-Genos is solo-built and still an MVP. The demo is available without an account
+Genos is solo-built and still early. The demo is available without an account
 at **[genosai.dev](https://genosai.dev)**, with a free plan and no credit card.
 
 The best agent is not the one that asks permission least often. It is the one

@@ -172,7 +172,7 @@ preserving events whose durable record carries separate meaning.”
 
 ### How this works in the product I built
 
-Full disclosure: I built **Genos**, a browser-based MVP that includes chat,
+Full disclosure: I built **Genos**, a browser-based product that includes chat,
 tasks, collaborative notes, and an activity inbox.
 
 The frontend already tracked the active surface to avoid showing an in-app
@@ -194,7 +194,7 @@ the activity in place. The frontend and API also pin the shared token formats
 in tests so an accidental mismatch fails toward notification rather than
 silence.
 
-Genos is solo-built, web-only, and still an MVP. The demo works without an
+Genos is solo-built, web-only, and still early. The demo works without an
 account at **[genosai.dev](https://genosai.dev)**; there is a free plan and no
 credit card.
 

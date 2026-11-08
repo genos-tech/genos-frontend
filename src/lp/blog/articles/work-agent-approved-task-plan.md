@@ -37,7 +37,7 @@ chat/task/note inputs.
 
 Current limitations:
 
-- solo-built MVP; web only;
+- solo-built; web only;
 - plan quality depends on the source discussion and model output;
 - approval is whole-batch; there is no partial selection;
 - no general undo transaction across every entity yet (version history covers
