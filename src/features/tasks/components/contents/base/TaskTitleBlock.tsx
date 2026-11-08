@@ -22,6 +22,7 @@ import { useLocation } from "react-router-dom";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { Toast } from "../../../../../components/ui/feedback/Toast";
 import { InlineTitleEdit } from "../../../../../components/ui/fields/InlineTitleEdit";
+import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modalChrome";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
@@ -52,7 +53,6 @@ import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
-import { MODAL_CHROME_CLEARANCE } from "../modalChrome";
 
 type TaskTitleBlockProps = {
     myself: UserProps;
@@ -364,7 +364,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     flexWrap: { xs: "wrap", md: "nowrap" },
                     rowGap: 1,
                     // Hosted in `UrlLinkModal`, the dialog floats its own "Move to page" and
-                    // Close over this corner (right 12, two 36px buttons, 8px apart): keep
+                    // Close over this corner (see ui/modal/modalChrome): keep
                     // the header's own actions out from under them (MIP-1169).
                     ...(isModalHosted && { pr: MODAL_CHROME_CLEARANCE }),
                 }}
