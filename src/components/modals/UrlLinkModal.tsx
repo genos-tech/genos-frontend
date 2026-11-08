@@ -18,6 +18,7 @@ import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { AppTooltip } from "../ui/AppTooltip";
 import { Spinner } from "../ui/feedback/Skeleton";
+import { MODAL_CHROME_EDGE, MODAL_CHROME_GAP, modalChromeVarsSx } from "../ui/modal/modalChrome";
 import { NoteModalHostZIndexProvider } from "./noteModalHostZIndex";
 
 // Lazy on purpose: these views transitively import the chat panes,
@@ -54,6 +55,11 @@ const ViewLoadingFallback = () => (
 // with the mode; a hardcoded white-on-white once made the X vanish in dark).
 const floatingChromeSx = {
     zIndex: 2,
+    // 36px with a mouse, 44px on a touch screen (`--modal-chrome-size`, published on the
+    // dialog below): Joy sizes an IconButton from `--IconButton-size`.
+    "--IconButton-size": "var(--modal-chrome-size)",
+    minWidth: "var(--modal-chrome-size)",
+    minHeight: "var(--modal-chrome-size)",
     backgroundColor: g.surface.raised,
     border: `1px solid ${g.border.default}`,
     color: g.text.secondary,
@@ -215,6 +221,9 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                 // root, so no height / width / centring transform is set for it.
                 layout={fullScreen ? "fullscreen" : "center"}
                 sx={{
+                    // The chrome's size and the room a hosted header keeps for it: the views
+                    // inside read these variables (ui/modal/modalChrome).
+                    ...modalChromeVarsSx,
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -254,12 +263,12 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                             variant="plain"
                             sx={{
                                 ...floatingChromeSx,
-                                // Immediately left of the ✕ (12 + its 36px
-                                // width + an 8px gap). Both sit in the same
-                                // corner the views keep clear for chrome.
+                                // Immediately left of the ✕ (its edge distance + its
+                                // width + a gap). Both sit in the same corner the
+                                // views keep clear for chrome.
                                 position: "absolute",
-                                right: 56,
-                                top: 12,
+                                right: `calc(${MODAL_CHROME_EDGE}px + var(--modal-chrome-size) + ${MODAL_CHROME_GAP}px)`,
+                                top: MODAL_CHROME_EDGE,
                             }}
                             onClick={onOpenFullPage}
                         >
@@ -275,8 +284,8 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                         aria-label={t.common.actions.close}
                         sx={{
                             ...floatingChromeSx,
-                            right: 12,
-                            top: 12,
+                            right: MODAL_CHROME_EDGE,
+                            top: MODAL_CHROME_EDGE,
                         }}
                     />
                 </AppTooltip>

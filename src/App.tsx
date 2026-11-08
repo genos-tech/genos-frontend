@@ -2222,7 +2222,7 @@ const AppBody = () => {
                                                                                                         useIM={
                                                                                                             useIM
                                                                                                         }
-                                                                                                        onOpenAccount={() =>
+                                                                                                        onOpenMore={() =>
                                                                                                             setAccountSheetOpen(
                                                                                                                 true
                                                                                                             )
@@ -2234,6 +2234,12 @@ const AppBody = () => {
                                                                                                         }
                                                                                                         open={
                                                                                                             accountSheetOpen
+                                                                                                        }
+                                                                                                        onOpenHistory={
+                                                                                                            openHistory
+                                                                                                        }
+                                                                                                        onOpenTodo={
+                                                                                                            toggleTodoModal
                                                                                                         }
                                                                                                         setMyself={
                                                                                                             setMyself

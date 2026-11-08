@@ -404,6 +404,7 @@ export const zh: DeepPartial<Messages> = {
             setAlwaysOffline: "始终保持离线",
             updateStatus: "更新状态",
             setStatusPlaceholder: "设置你的状态…",
+            statusPresetsLabel: "状态预设",
             cancel: "取消",
             reset: "重置",
             set: "确定",
@@ -2337,6 +2338,13 @@ export const zh: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            disconnectDialog: {
+                title: "断开 {provider}？",
+                bodyGoogle:
+                    "Genos 会删除已保存的此 Google 账号访问权限。在你重新连接之前，使用它的日历功能将无法工作；重新连接需要再次使用 Google 登录。",
+                bodyGithub:
+                    "Genos 会删除已保存的此 GitHub 账号访问权限。在你重新连接之前，使用它的功能（例如拉取请求链接）将无法工作；重新连接需要再次使用 GitHub 登录。",
+            },
             primaryLogin: "主要登录方式",
             noEmailShared: "（未共享邮箱）",
             notConnected: "未连接",
@@ -3242,6 +3250,13 @@ export const zh: DeepPartial<Messages> = {
                 allowDestructive:
                     "同时允许无法撤销或会更改访问权限的操作（删除日历事件、里程碑、冲刺、笔记和笔记文件夹；将成员加入项目或批准其加入请求；分享笔记）",
                 destructiveChip: "可删除",
+                revokeDialog: {
+                    title: "撤销此 API 密钥？",
+                    body: "使用它的一切会立即停止工作，且已撤销的密钥无法重新启用。如果仍需访问，请创建新密钥。",
+                    bodyTeam:
+                        "使用此团队密钥的一切会立即停止工作，且已撤销的密钥无法重新启用。其创建者需要重新创建一个。",
+                    confirm: "撤销密钥",
+                },
             },
             teamKeys: {
                 title: "团队 API 密钥",
@@ -3303,6 +3318,12 @@ export const zh: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "添加webhook",
                 delete: "删除",
+                deleteNamed: "删除 {name}",
+                deleteDialog: {
+                    title: "删除此 Webhook？",
+                    body: "Genos 将停止向此 URL 发送事件。其签名密钥会一并删除，因此再次添加该 URL 会生成新的密钥。",
+                    confirm: "删除 Webhook",
+                },
                 empty: "还没有webhook。",
                 disabled: "多次失败后禁用",
                 managerOnly: "只有团队所有者或编辑者可以添加 webhook。",
@@ -3718,6 +3739,18 @@ export const zh: DeepPartial<Messages> = {
             milestoneNone: "没有可选择的里程碑。",
             milestoneLoadFailed: "无法加载里程碑。请关闭此表单后重试。",
             errorMilestone: "请选择一个里程碑。",
+            paramAiSentences: "AI 一句话说明",
+            paramAiSentencesHint:
+                "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI。关闭后为普通报告。",
+            effortLabel: "AI 推理强度",
+            effortDefaultMark: "{level}(默认)",
+            effortCostAbout: "每次运行约 {credits} 积分。这只是估算。",
+            effortCostRange: "每次运行约 {from} 至 {to} 积分。这只是估算。",
+            effortCostTiny: "每次运行不到 0.01 积分。这只是估算。",
+            effortHint:
+                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际数字会显示在每份报告上。",
+            effortHeld: "你的套餐以“{level}”运行此定时任务。",
+            rowEffort: "AI 推理强度:{level}",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
             duplicateName: "你已经有一个名为“{name}”的定时任务。请换一个名称。",
             suggestExists: "你已经有这一项了:{name}。",
@@ -4115,7 +4148,7 @@ export const zh: DeepPartial<Messages> = {
             chats: "聊天",
             tasks: "任务",
             notes: "笔记",
-            account: "账户",
+            more: "更多",
             integrations: "集成",
             search: "Genos",
         },
@@ -4441,6 +4474,12 @@ export const zh: DeepPartial<Messages> = {
                 confirmButton: "删除任务",
                 cancelButton: "取消",
             },
+            confirmDeletedStatus: {
+                title: "删除此任务？",
+                titleMilestone: "删除此里程碑？",
+                body: "它将从所有列表、看板和仪表盘中消失。若要恢复，请将表格切换到“已删除”视图，并为它选择其他状态。",
+                bodyMilestone: "它将从所有列表和看板中消失。",
+            },
             createProject: {
                 heading: "新建项目",
                 namePlaceholder: "请输入项目名称…",
@@ -4683,6 +4722,15 @@ export const zh: DeepPartial<Messages> = {
             bootstrapFailed: "无法准备新任务。请检查网络连接后重试。",
             bootstrapRetry: "重试",
             bootstrapCancel: "取消",
+            discardTaskTitle: "放弃此草稿？",
+            discardTaskBody: "标题、正文和附件将丢失，此操作无法撤销。",
+            discardMilestoneTitle: "放弃此里程碑草稿？",
+            discardMilestoneBody: "标题、描述及其他更改将丢失，此操作无法撤销。",
+            discardConfirm: "放弃草稿",
+            discardKeepEditing: "继续编辑",
+            closeDraftTitle: "关闭此草稿？",
+            closeDraftBody: "你可以放弃更改、隐藏表单（草稿会保存，之后可继续），或继续编辑。",
+            closeDraftHide: "隐藏（保存草稿）",
             description: "描述",
             attachments: "附件",
             templates: {
@@ -5297,7 +5345,8 @@ export const zh: DeepPartial<Messages> = {
             overdueCount: "{count} 逾期",
             dueSoonCount: "{count} 即将到期",
             blockedCount: "{count} 被阻止",
-            confirmDelete: "删除该任务及其所有子任务？",
+            confirmDelete: "删除此任务？",
+            confirmDeleteBody: "该任务将被标记为已删除。其子任务会保留，但不再计入统计。",
             errors: {
                 load: "无法加载任务图。",
                 update: "更新失败。",

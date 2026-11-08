@@ -74,6 +74,16 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
         if (changed.length > 0) await inboxRepo.batchInsert(changed);
     },
 
+    markInboxItemsRead: async ({ itemIds }) => {
+        const wanted = new Set(itemIds);
+        const result = await inboxRepo.getAll();
+        const rows = result.success && result.data ? result.data : [];
+        const changed = rows
+            .filter((row) => wanted.has(row.itemId) && !row.isRead)
+            .map((row) => ({ ...row, isRead: true }));
+        if (changed.length > 0) await inboxRepo.batchInsert(changed);
+    },
+
     popInboxItems: async () => {
         const result = await inboxRepo.getAll();
         const items: InboxItemProps[] = result.success && result.data ? result.data : [];

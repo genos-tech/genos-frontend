@@ -35,22 +35,12 @@
     --breakpoint-tablet: 768px;
     --breakpoint-desktop: 1024px;
 
-    /* Code Colors - Updated for new bubble colors */
+    /* Code colors of the inbox preview (the message bubbles and task comments
+       carry theirs in their own rules below). */
     --code-light-bg: rgba(0, 0, 0, 0.08);
     --code-light-color: #be185d;
     --code-dark-bg: rgba(0, 0, 0, 0.3);
     --code-dark-color: #fb923c;
-    /* Sent message code colors */
-    --code-dark-me-bg: rgba(255, 255, 255, 0.15);
-    --code-dark-me-color: #fbbf24;
-    --code-light-me-bg: rgba(99, 102, 241, 0.15);
-    --code-light-me-color: var(--gp-brand-700);
-
-    /* Bubble text colors for reference */
-    --bubble-light-received-text: #111827;
-    --bubble-light-sent-text: #1e1b4b;
-    --bubble-dark-received-text: #f3f4f6;
-    --bubble-dark-sent-text: #e0e7ff;
 }
 
 /* ==========================================================================
@@ -288,11 +278,11 @@ input[type="checkbox"] {
     color: #4b5563; /* Muted gray against the body's near-black */
 }
 
-/* Light mode - Sent messages (light indigo background #eef2ff) */
+/* Light mode - Sent messages (the accent wash: `Bubble` paints the fill from tokens) */
 .bn-message-bubble-box-light-me .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: #1e1b4b; /* Dark indigo text on light indigo background */
+    color: var(--g-text);
 }
 
 .bn-message-bubble-box-light-me code {
@@ -305,7 +295,7 @@ input[type="checkbox"] {
     color: #4338ca; /* Lighter indigo against the body's deep indigo */
 }
 
-/* Dark mode - Received messages (dark gray background #1f2937) */
+/* Dark mode - Received messages (the bubble fills are `Bubble` tokens, since MIP-1130) */
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
@@ -318,7 +308,7 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-dark [data-content-type="quote"] blockquote {
-    border-left-color: #818cf8;
+    border-left-color: var(--g-accent-text);
     color: #cbd5e1;
 }
 
@@ -340,16 +330,16 @@ input[type="checkbox"] {
     color: #c7d2fe;
 }
 
-/* Dark mode - Sent messages (deep indigo background #312e81) */
+/* Dark mode - Sent messages (the accent wash) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: #e0e7ff; /* Light indigo text on deep indigo background */
+    color: var(--g-text);
 }
 
 .bn-message-bubble-box-dark-me code {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    color: #fbbf24; /* Amber for code */
+    background-color: var(--g-active) !important;
+    color: var(--g-warning-text);
 }
 
 .bn-message-bubble-box-dark-me [data-content-type="quote"] blockquote {
@@ -755,19 +745,12 @@ input[type="checkbox"] {
     color: var(--g-text) !important;
 }
 
-/* Dark mode file block text colors */
-.bn-message-bubble-box-dark .bn-file-name-with-icon,
-.bn-message-bubble-box-dark-me .bn-file-name-with-icon {
-    color: #1b60ae !important;
-}
-.bn-message-bubble-box-dark .bn-file-name-with-icon:hover,
-.bn-message-bubble-box-dark-me .bn-file-name-with-icon:hover {
-    color: #0800ff !important;
-}
-
+/* The file name in a dark bubble is the accent as text, and its hover the text
+   color, from the rules above: it used to be forced to #1b60ae / #0800ff, 2:1 and
+   1.5:1 on a dark bubble. The size is secondary text. */
 .bn-message-bubble-box-dark .bn-file-size,
 .bn-message-bubble-box-dark-me .bn-file-size {
-    color: #af9c9e !important;
+    color: var(--g-text-secondary) !important;
 }
 
 .bn-chat-editor-box-light .bn-file-size,
@@ -893,14 +876,14 @@ div[data-floating-ui-focusable] {
 }
 
 .task-comment-preview-dark .bn-editor {
-    color: #e0e7ff; /* Light indigo text on dark indigo background */
+    color: var(--g-text);
     background-color: transparent;
     padding-inline: 2px;
 }
 
 .task-comment-preview-dark code {
-    background-color: rgba(255, 255, 255, 0.12) !important;
-    color: #fbbf24;
+    background-color: var(--g-active) !important;
+    color: var(--g-warning-text);
 }
 
 /* Same pair as the dark sent bubble — identical indigo background. */

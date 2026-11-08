@@ -23,6 +23,7 @@ import type { CSSProperties } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useProtectedMediaSrc } from "../../../hooks/common/useProtectedMediaSrc";
+import { g } from "../../../theme/tokens";
 import type { MessageAttachment } from "../../../types/channel";
 import { downloadFile } from "../../../utils/downloadUtils";
 import { AttachmentActionsMenu } from "../../notes/common/components/AttachmentActionsMenu";
@@ -52,11 +53,11 @@ const CHIP_STYLE: CSSProperties = {
     alignItems: "center",
     gap: 6,
     padding: "4px 8px",
-    background: "#f4f4f4",
-    border: "1px solid #ddd",
-    borderRadius: 4,
+    background: g.hover,
+    border: `1px solid ${g.border.default}`,
+    borderRadius: g.radius.sm,
     fontSize: 12,
-    color: "#222",
+    color: g.text.primary,
     textDecoration: "none",
     maxWidth: 280,
 };
@@ -65,8 +66,8 @@ const PREVIEW_STYLE: CSSProperties = {
     display: "block",
     maxWidth: 240,
     maxHeight: 180,
-    borderRadius: 4,
-    border: "1px solid #ddd",
+    borderRadius: g.radius.sm,
+    border: `1px solid ${g.border.default}`,
     marginBottom: 4,
 };
 
@@ -143,9 +144,14 @@ function AttachmentChip({ messageId, attachment, onImportAsNote }: AttachmentChi
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            {filename}
+                            {/* An island: in an RTL row the ellipsis would eat the START
+                                of a Latin file name (App.css, g-bidi-island). */}
+                            <bdi className="g-bidi-island">{filename}</bdi>
                         </span>
-                        <span style={{ opacity: 0.6, flexShrink: 0 }}>{sizeLabel}</span>
+                        {/* "2 KB" is a number and a unit: in RTL it read "KB 2". */}
+                        <span dir="ltr" style={{ opacity: 0.6, flexShrink: 0 }}>
+                            {sizeLabel}
+                        </span>
                     </a>
                 </AppTooltip>
                 {onImportAsNote && isImportableTextFile(filename) && (
